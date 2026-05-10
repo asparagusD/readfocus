@@ -1,0 +1,28 @@
+.rf-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(26, 23, 20, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.rf-modal-panel {
+  background-color: var(--paper);
+  border: 1px solid var(--paper-mid);
+  border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(26, 23, 20, 0.12);
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  outline: none; /* Focus trap outline removal */
+  max-height: 90vh;
+  overflow-y: auto;
+}

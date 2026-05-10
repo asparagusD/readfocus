@@ -1,10 +1,12 @@
 import React from 'react';
 import { Button } from '../components/ui/Button';
+import { usePageTransition } from '../hooks/usePageTransition';
 import './Reader.css';
 
 export function Reader() {
+  usePageTransition();
   return (
-    <div className="rf-reader-container">
+    <div className="rf-reader-container page">
       <header className="rf-reader-header">
         <div className="rf-reader-meta">
           <span className="rf-reader-chapter">Chunk 1 of 42</span>

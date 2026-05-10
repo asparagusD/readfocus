@@ -58,37 +58,13 @@ a:hover {
   outline-offset: 2px;
 }
 
-/* Animations are whispers */
-.fade-in {
-  animation: fadeIn 120ms ease-out forwards;
-}
-
-.fade-out {
-  animation: fadeOut 120ms ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-/* Route transitions wrapper */
-.page-transition-enter {
+/* Page Transition Classes */
+.page {
   opacity: 0;
+  transition: opacity 150ms ease-out;
 }
-.page-transition-enter-active {
-  opacity: 1;
-  transition: opacity 120ms ease-out;
-}
-.page-transition-exit {
+
+.page.visible {
   opacity: 1;
 }
-.page-transition-exit-active {
-  opacity: 0;
-  transition: opacity 120ms ease-out;
-}
+

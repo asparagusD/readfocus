@@ -1,11 +1,13 @@
 import React from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { usePageTransition } from '../hooks/usePageTransition';
 import './Tester.css';
 
 export function Tester() {
+  usePageTransition();
   return (
-    <div className="rf-tester">
+    <div className="rf-tester page">
       <header className="rf-tester-header">
         <h1 className="rf-tester-title">Comprehension Check</h1>
         <p className="rf-tester-subtitle">Answer the following questions based on your reading.</p>

@@ -1,0 +1,15 @@
+.rf-skeleton {
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--paper-dark) 0%, var(--paper-mid) 50%, var(--paper-dark) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

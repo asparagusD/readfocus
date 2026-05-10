@@ -3,11 +3,13 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Link } from 'react-router-dom';
 import { BookPlus } from 'lucide-react';
+import { usePageTransition } from '../hooks/usePageTransition';
 import './Dashboard.css';
 
 export function Dashboard() {
+  usePageTransition();
   return (
-    <div className="rf-dashboard">
+    <div className="rf-dashboard page">
       <header className="rf-dashboard-header">
         <h1 className="rf-title">Your Library</h1>
         <Button variant="primary">

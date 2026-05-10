@@ -5,14 +5,18 @@ export function Button({
   children, 
   variant = 'primary', 
   className = '', 
+  loading = false,
+  disabled,
   ...props 
 }) {
   return (
     <button 
-      className={`rf-btn rf-btn-${variant} ${className}`}
+      className={`rf-btn rf-btn-${variant} ${loading ? 'rf-btn-loading' : ''} ${className}`}
+      disabled={loading || disabled}
       {...props}
     >
-      {children}
+      <span className="rf-btn-content">{children}</span>
+      {loading && <div className="rf-btn-loader" />}
     </button>
   );
 }

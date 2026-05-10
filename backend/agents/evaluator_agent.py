@@ -109,18 +109,11 @@ async def evaluator_node(state: AgentState) -> dict:
             if prog_resp.data:
                 prog_id = prog_resp.data[0]["id"]
                 chunks_completed = prog_resp.data[0]["chunks_completed"] + len(chunk_indices)
-                re_read_queue = prog_resp.data[0]["re_read_queue"] or []
-                
-                if percentage < 50:
-                    for idx in chunk_indices:
-                        if idx not in re_read_queue:
-                            re_read_queue.append(idx)
                             
                 supabase.table("reading_progress").update({
                     "average_score": avg_score,
                     "last_chunk_index": chunk_indices[-1] if chunk_indices else -1,
-                    "chunks_completed": chunks_completed,
-                    "re_read_queue": re_read_queue
+                    "chunks_completed": chunks_completed
                 }).eq("id", prog_id).execute()
     except Exception as e:
         print(f"Failed to update reading_progress: {e}")

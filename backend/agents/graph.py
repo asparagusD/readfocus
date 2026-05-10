@@ -4,6 +4,7 @@ from backend.agents.state import AgentState
 from backend.agents.planner_agent import planner_node
 from backend.agents.test_generator_agent import test_generator_node
 from backend.agents.evaluator_agent import evaluator_node
+from backend.agents.optimizer_agent import optimizer_node
 
 # ---------------------------------------------------------
 # Node Stubs
@@ -11,10 +12,6 @@ from backend.agents.evaluator_agent import evaluator_node
 
 async def orchestrator_node(state: AgentState) -> dict:
     """Orchestrator: reviews state and allows routing to proceed."""
-    return {}
-
-async def optimizer_node(state: AgentState) -> dict:
-    """Optimizer: recommends pace adjustments based on evaluation."""
     return {}
 
 # ---------------------------------------------------------

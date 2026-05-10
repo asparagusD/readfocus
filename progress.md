@@ -19,11 +19,14 @@
 - [x] Implement Agentic Planner Logic (assigning chunks based on history)
 - [x] Implement agentic comprehension test generator logic
 - [x] Implement agentic evaluator logic (grading free-text answers)
-- [ ] Implement adaptive difficulty adjustment logic based on session scores
+- [x] Implement adaptive difficulty adjustment logic based on session scores
 - [ ] Create UI for file upload and reading session display
 - [ ] Integrate authentication using Supabase
 
 ## Recent Updates
+- Implemented `backend/agents/optimizer_agent.py` to handle adaptive difficulty sizing dynamically based on score thresholds (e.g. >=40 grows multiplier, <10 forces emergency re-read priority).
+- Shifted the `re_read_queue` updating logic from the Evaluator into the Optimizer exactly as required by the specification.
+- Created `002_add_pace.sql` migration to add a JSONB `pace_recommendation` field to the `reading_progress` table so the planner can easily use it on the next run.
 - Implemented `backend/agents/evaluator_agent.py` which grades the user's free-text test answers concurrently using LLMs.
 - Engineered logic to calculate a rolling 10-session average score and update `reading_progress` dynamically in the database.
 - Added re-read queue fallback: if a user bombs a test (< 50%), the evaluator actively pushes the chunk into the `re_read_queue` to ensure the Planner reassigns it.

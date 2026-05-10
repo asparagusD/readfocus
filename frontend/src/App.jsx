@@ -18,18 +18,20 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            
-            {/* Protected Routes */}
-            <Route path="/" element={<AuthGuard><Dashboard /></AuthGuard>} />
-            <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
-            <Route path="/read/:bookId" element={<AuthGuard><Reader /></AuthGuard>} />
-            <Route path="/test/:sessionId" element={<AuthGuard><Tester /></AuthGuard>} />
-            <Route path="/results/:sessionId" element={<AuthGuard><div>Results (WIP)</div></AuthGuard>} />
-          </Routes>
-        </Layout>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/*" element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<AuthGuard><Dashboard /></AuthGuard>} />
+                <Route path="dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+                <Route path="read/:bookId" element={<AuthGuard><Reader /></AuthGuard>} />
+                <Route path="test/:sessionId" element={<AuthGuard><Tester /></AuthGuard>} />
+                <Route path="results/:sessionId" element={<AuthGuard><div>Results (WIP)</div></AuthGuard>} />
+              </Routes>
+            </Layout>
+          } />
+        </Routes>
       </BrowserRouter>
     </AuthProvider>
   );

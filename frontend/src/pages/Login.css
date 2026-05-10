@@ -1,0 +1,172 @@
+.rf-login-page {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.rf-login-left {
+  width: 55%;
+  background-color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px;
+}
+
+.rf-login-quote-container {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.rf-login-quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(22px, 3vw, 32px);
+  color: var(--paper);
+  line-height: 1.4;
+  margin: 0 0 16px 0;
+}
+
+.rf-login-quote-author {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--paper-mid);
+  margin-bottom: 64px;
+}
+
+.rf-login-tagline {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.rf-login-right {
+  width: 45%;
+  background-color: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rf-auth-container {
+  width: 100%;
+  max-width: 360px;
+  padding: 32px;
+}
+
+.rf-auth-wordmark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 24px;
+  color: var(--ink);
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.rf-auth-tabs {
+  display: flex;
+  gap: 8px; /* Using gap to visually separate if needed, or flush if desired. Spec says side by side 50% width */
+  margin-bottom: 32px;
+}
+
+.rf-tab-pill {
+  width: 50%;
+  height: 36px;
+  border-radius: 18px;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-light);
+  border: 1px solid var(--paper-mid);
+}
+
+.rf-tab-pill.active {
+  background-color: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.rf-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rf-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.rf-label {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-light);
+  margin-bottom: 6px;
+}
+
+.rf-input {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: var(--paper-dark);
+  border: 1px solid var(--paper-mid);
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 150ms ease-out;
+}
+
+.rf-input:focus {
+  border-color: var(--amber);
+}
+
+.rf-auth-error {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--red-soft);
+  margin-top: 6px;
+}
+
+.rf-auth-success {
+  text-align: center;
+}
+
+.rf-success-message {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 24px;
+}
+
+.rf-back-btn {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--amber);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media (max-width: 767px) {
+  .rf-login-left {
+    display: none;
+  }
+  
+  .rf-login-right {
+    width: 100%;
+  }
+}

@@ -2,72 +2,143 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePageTransition } from '../hooks/usePageTransition';
 import { Button } from '../components/ui/Button';
+import './Login.css';
 
 export function Login() {
   const { signIn, signUp } = useAuth();
   const navigateTo = usePageTransition();
+  const [activeTab, setActiveTab] = useState('signin'); // 'signin' or 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    let error;
-    if (isSignUp) {
-      const res = await signUp(email, password);
-      error = res.error;
-    } else {
-      const res = await signIn(email, password);
-      error = res.error;
-    }
-    setLoading(false);
+    setErrorMsg('');
     
-    if (!error) {
-      if (isSignUp) {
-        alert('Check your email for the confirmation link!');
+    if (activeTab === 'signup') {
+      const { error } = await signUp(email, password);
+      setLoading(false);
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        setSignupSuccess(true);
+      }
+    } else {
+      const { error } = await signIn(email, password);
+      setLoading(false);
+      if (error) {
+        setErrorMsg(error.message);
       } else {
         navigateTo('/');
       }
-    } else {
-      alert(error.message);
     }
   };
 
   return (
-    <div className="page" style={{ maxWidth: '400px', margin: '100px auto', padding: '24px' }}>
-      <h1 style={{ fontFamily: 'var(--font-display)', marginBottom: '24px' }}>
-        {isSignUp ? 'Create an Account' : 'Sign In'}
-      </h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <input 
-          type="email" 
-          placeholder="Email" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
-          required 
-          style={{ padding: '12px', borderRadius: '4px', border: '1px solid var(--paper-mid)' }}
-        />
-        <input 
-          type="password" 
-          placeholder="Password" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-          required 
-          style={{ padding: '12px', borderRadius: '4px', border: '1px solid var(--paper-mid)' }}
-        />
-        <Button type="submit" variant="primary" loading={loading}>
-          {isSignUp ? 'Sign Up' : 'Sign In'}
-        </Button>
-      </form>
-      <div style={{ marginTop: '16px', textAlign: 'center' }}>
-        <button 
-          onClick={() => setIsSignUp(!isSignUp)}
-          style={{ background: 'none', border: 'none', color: 'var(--amber)', cursor: 'pointer', fontFamily: 'var(--font-ui)' }}
-        >
-          {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-        </button>
+    <div className="rf-login-page page">
+      <div className="rf-login-left">
+        <div className="rf-login-quote-container">
+          <blockquote className="rf-login-quote">
+            "The reading of all good books is like a conversation with the finest minds of past centuries."
+          </blockquote>
+          <p className="rf-login-quote-author">— Descartes</p>
+          <div className="rf-login-tagline">
+            ReadFocus — intelligent reading, deeply understood.
+          </div>
+        </div>
+      </div>
+
+      <div className="rf-login-right">
+        <div className="rf-auth-container">
+          <div className="rf-auth-wordmark">ReadFocus</div>
+          
+          {signupSuccess ? (
+            <div className="rf-auth-success">
+              <p className="rf-success-message">Check your inbox — we sent you a confirmation link.</p>
+              <button 
+                className="rf-back-btn" 
+                onClick={() => {
+                  setSignupSuccess(false);
+                  setActiveTab('signin');
+                }}
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="rf-auth-tabs">
+                <button 
+                  className={`rf-tab-pill ${activeTab === 'signin' ? 'active' : ''}`}
+                  onClick={() => { setActiveTab('signin'); setErrorMsg(''); }}
+                  type="button"
+                >
+                  Sign in
+                </button>
+                <button 
+                  className={`rf-tab-pill ${activeTab === 'signup' ? 'active' : ''}`}
+                  onClick={() => { setActiveTab('signup'); setErrorMsg(''); }}
+                  type="button"
+                >
+                  Sign up
+                </button>
+              </div>
+
+              <form className="rf-auth-form" onSubmit={handleSubmit}>
+                {activeTab === 'signup' && (
+                  <div className="rf-form-group">
+                    <label className="rf-label">Display Name</label>
+                    <input 
+                      type="text" 
+                      className="rf-input"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
+                <div className="rf-form-group">
+                  <label className="rf-label">Email</label>
+                  <input 
+                    type="email" 
+                    className="rf-input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="rf-form-group">
+                  <label className="rf-label">Password</label>
+                  <input 
+                    type="password" 
+                    className="rf-input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {errorMsg && <div className="rf-auth-error">{errorMsg}</div>}
+
+                <Button 
+                  type="submit" 
+                  variant="primary" 
+                  loading={loading}
+                  style={{ width: '100%', marginTop: '8px' }}
+                >
+                  {activeTab === 'signin' ? 'Sign In' : 'Sign Up'}
+                </Button>
+              </form>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

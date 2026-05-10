@@ -1,0 +1,223 @@
+.rf-library-header {
+  margin-bottom: 40px;
+}
+
+.rf-library-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.rf-library-subtitle {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--ink-faint);
+}
+
+.rf-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  border: 1.5px dashed var(--paper-mid);
+  border-radius: 6px;
+  background-color: var(--paper-dark);
+  cursor: pointer;
+  margin-bottom: 40px;
+  transition: all 150ms ease-out;
+}
+
+.rf-upload-zone.drag-over {
+  border-color: var(--amber);
+  background-color: var(--amber-pale);
+}
+
+.rf-upload-text {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--ink-faint);
+  margin: 8px 0 2px 0;
+}
+
+.rf-upload-btn {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--amber);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rf-books-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.rf-book-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 72px;
+  padding: 16px 20px;
+  background-color: var(--paper);
+  border: 1px solid var(--paper-mid);
+  border-radius: 6px;
+  margin-bottom: 12px;
+  transition: all 150ms ease-out;
+}
+
+.rf-book-card:hover {
+  background-color: var(--paper-dark);
+  border-color: var(--paper-mid);
+}
+
+.rf-card-bar {
+  width: 3px;
+  height: 40px;
+  border-radius: 2px;
+  background-color: var(--paper-mid);
+  flex-shrink: 0;
+}
+
+.rf-card-bar.started {
+  background-color: var(--amber);
+}
+
+.rf-card-middle {
+  flex: 1;
+  margin-left: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.rf-card-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--ink);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rf-card-meta {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--ink-faint);
+  display: flex;
+  align-items: center;
+}
+
+.rf-dot {
+  margin: 0 6px;
+}
+
+.rf-ext {
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rf-processing-skeleton {
+  width: 240px;
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+.rf-card-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+
+.rf-progress-text {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.rf-processing-text {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--ink-faint);
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+/* Amber sweep animation */
+.rf-processing-text::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--amber);
+  transform: translateX(-100%);
+  animation: sweep 1.2s infinite ease-out;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+.rf-action-link {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--amber);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.rf-arrow {
+  margin-left: 4px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 150ms ease-out;
+}
+
+.rf-book-card:hover .rf-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.rf-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 64px;
+}
+
+.rf-empty-state h2 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+
+.rf-empty-state p {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--ink-faint);
+}

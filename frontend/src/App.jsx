@@ -2,7 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { Layout } from './components/Layout';
-import { Dashboard } from './pages/Dashboard';
+import { Library } from './pages/Library';
 import { Reader } from './pages/Reader';
 import { Tester } from './pages/Tester';
 import { Login } from './pages/Login';
@@ -23,8 +23,8 @@ function App() {
           <Route path="/*" element={
             <Layout>
               <Routes>
-                <Route path="/" element={<AuthGuard><Dashboard /></AuthGuard>} />
-                <Route path="dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+                <Route path="/" element={<AuthGuard><Library /></AuthGuard>} />
+                <Route path="dashboard" element={<AuthGuard><Library /></AuthGuard>} />
                 <Route path="read/:bookId" element={<AuthGuard><Reader /></AuthGuard>} />
                 <Route path="test/:sessionId" element={<AuthGuard><Tester /></AuthGuard>} />
                 <Route path="results/:sessionId" element={<AuthGuard><div>Results (WIP)</div></AuthGuard>} />

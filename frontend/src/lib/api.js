@@ -6,9 +6,13 @@ export async function fetchApi(endpoint, options = {}) {
   const { data: { session } } = await supabase.auth.getSession();
   
   const headers = {
-    'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
+
+  // Only set application/json if we are not sending FormData
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (session?.access_token) {
     headers['Authorization'] = `Bearer ${session.access_token}`;

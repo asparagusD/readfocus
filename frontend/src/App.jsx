@@ -1,7 +1,7 @@
-import React from 'react';
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { Layout } from './components/layout/Layout';
+import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Reader } from './pages/Reader';
 import { Tester } from './pages/Tester';

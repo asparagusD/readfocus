@@ -1,4 +1,4 @@
-import React from 'react';
+
 import './ScoreBadge.css';
 
 export function ScoreBadge({ percentage, className = '' }) {

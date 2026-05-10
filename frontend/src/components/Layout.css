@@ -1,0 +1,140 @@
+.rf-layout-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.rf-global-nav {
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--paper);
+  border-bottom: 1px solid var(--paper-mid);
+  display: flex;
+  align-items: center;
+}
+
+.rf-nav-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rf-wordmark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.rf-wordmark:hover {
+  opacity: 1; /* Override default a hover */
+}
+
+.rf-nav-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 32px;
+}
+
+.rf-nav-links {
+  display: flex;
+  gap: 32px;
+}
+
+.rf-nav-link {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--ink-light);
+  text-decoration: none;
+  transition: color 150ms ease-out;
+}
+
+.rf-nav-link:hover {
+  color: var(--ink);
+  opacity: 1; /* Override default a hover */
+}
+
+.rf-nav-link.active {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--amber);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+}
+
+.rf-nav-divider {
+  width: 1px;
+  height: 18px;
+  background-color: var(--paper-mid);
+}
+
+.rf-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rf-display-name {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.rf-signout-btn {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 150ms ease-out;
+}
+
+.rf-signout-btn:hover {
+  color: var(--red-soft);
+}
+
+.rf-main-content {
+  padding-top: 48px;
+  padding-bottom: 80px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  flex: 1;
+  width: 100%;
+}
+
+@media (max-width: 639px) {
+  .rf-global-nav {
+    height: 48px;
+  }
+  
+  .rf-nav-links {
+    display: none;
+  }
+  
+  .rf-nav-divider {
+    display: none;
+  }
+  
+  .rf-display-name {
+    display: none;
+  }
+  
+  .rf-nav-right {
+    gap: 0; /* No gap needed since only signout btn is left */
+  }
+}

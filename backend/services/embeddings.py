@@ -13,8 +13,8 @@ if not OPENROUTER_API_KEY:
 embeddings_client = OpenAIEmbeddings(
     base_url=OPENROUTER_BASE_URL,
     api_key=OPENROUTER_API_KEY,
-    # Using a default embedding model supported via OpenRouter
-    model="nomic-ai/nomic-embed-text"
+    # Using an embedding model that explicitly exists on OpenRouter and matches our 1536 dimensions
+    model="openai/text-embedding-3-small"
 )
 
 def generate_embedding(text: str) -> list[float]:

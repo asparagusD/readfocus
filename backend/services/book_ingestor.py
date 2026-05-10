@@ -17,6 +17,7 @@ def extract_text_from_pdf(file_bytes: bytes) -> list[str]:
     for page in reader.pages:
         text = page.extract_text()
         if text:
+            text = text.replace('\x00', '')
             pages.append(text)
     return pages
 
@@ -34,6 +35,7 @@ def extract_text_from_epub(file_bytes: bytes) -> list[str]:
                 soup = BeautifulSoup(item.get_body_content(), 'html.parser')
                 text = soup.get_text(separator='\n\n', strip=True)
                 if text:
+                    text = text.replace('\x00', '')
                     chapters.append(text)
     finally:
         if os.path.exists(temp_file_path):

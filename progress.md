@@ -18,11 +18,16 @@
 - [x] Build LangGraph state graph skeleton and define agent nodes
 - [x] Implement Agentic Planner Logic (assigning chunks based on history)
 - [x] Implement agentic comprehension test generator logic
+- [x] Implement agentic evaluator logic (grading free-text answers)
 - [ ] Implement adaptive difficulty adjustment logic based on session scores
 - [ ] Create UI for file upload and reading session display
 - [ ] Integrate authentication using Supabase
 
 ## Recent Updates
+- Implemented `backend/agents/evaluator_agent.py` which grades the user's free-text test answers concurrently using LLMs.
+- Engineered logic to calculate a rolling 10-session average score and update `reading_progress` dynamically in the database.
+- Added re-read queue fallback: if a user bombs a test (< 50%), the evaluator actively pushes the chunk into the `re_read_queue` to ensure the Planner reassigns it.
+- Logged all final results into the `test_results` PostgreSQL table correctly.
 - Implemented `backend/agents/test_generator_agent.py` to automatically generate personalized comprehension tests.
 - Configured the LLM prompt to dynamically generate 3 factual, 1 inference, and 1 summary question per session.
 - Setup `TestQuestion` Pydantic models to strictly parse JSON arrays and provide evaluation `guidance` for the upcoming evaluator node.

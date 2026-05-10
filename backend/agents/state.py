@@ -11,6 +11,7 @@ class AgentState(TypedDict, total=False):
     test_questions: list[dict]
     user_answers: list[str]
     evaluation_result: dict
+    time_taken_seconds: int
     pace_recommendation: dict
     enriched_context: dict
     error: str

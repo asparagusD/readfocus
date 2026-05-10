@@ -1,0 +1,11 @@
+.rf-card {
+  background-color: var(--paper);
+  border: 1px solid var(--paper-mid);
+  border-radius: 6px;
+  padding: 24px;
+  transition: background-color 150ms ease-out;
+}
+
+.rf-card-hoverable:hover {
+  background-color: var(--paper-dark);
+}

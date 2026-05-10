@@ -2,6 +2,7 @@ from langgraph.graph import StateGraph, END
 
 from backend.agents.state import AgentState
 from backend.agents.planner_agent import planner_node
+from backend.agents.test_generator_agent import test_generator_node
 
 # ---------------------------------------------------------
 # Node Stubs
@@ -9,10 +10,6 @@ from backend.agents.planner_agent import planner_node
 
 async def orchestrator_node(state: AgentState) -> dict:
     """Orchestrator: reviews state and allows routing to proceed."""
-    return {}
-
-async def test_generator_node(state: AgentState) -> dict:
-    """Test Generator: creates comprehension questions from chunks."""
     return {}
 
 async def evaluator_node(state: AgentState) -> dict:

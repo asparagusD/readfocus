@@ -17,12 +17,15 @@
 - [x] Create API endpoints for book upload, polling, and reading progress
 - [x] Build LangGraph state graph skeleton and define agent nodes
 - [x] Implement Agentic Planner Logic (assigning chunks based on history)
-- [ ] Implement agentic comprehension test generator logic
+- [x] Implement agentic comprehension test generator logic
 - [ ] Implement adaptive difficulty adjustment logic based on session scores
 - [ ] Create UI for file upload and reading session display
 - [ ] Integrate authentication using Supabase
 
 ## Recent Updates
+- Implemented `backend/agents/test_generator_agent.py` to automatically generate personalized comprehension tests.
+- Configured the LLM prompt to dynamically generate 3 factual, 1 inference, and 1 summary question per session.
+- Setup `TestQuestion` Pydantic models to strictly parse JSON arrays and provide evaluation `guidance` for the upcoming evaluator node.
 - Implemented `backend/agents/planner_agent.py` which dynamically assigns reading chunks based on a user's previous comprehension history.
 - Extracted `AgentState` into `state.py` to prevent circular dependencies across agent node modules.
 - Replaced the planner stub in `graph.py` with the fully-functioning LangChain logic that utilizes `PydanticOutputParser` and standardizes outputs as JSON.

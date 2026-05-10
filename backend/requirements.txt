@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+supabase
+langchain
+langchain-openai
+langchain-community
+langgraph
+langchain-mcp-adapters
+pypdf
+ebooklib
+lxml
+beautifulsoup4
+python-dotenv
+httpx
+pydantic
+python-multipart

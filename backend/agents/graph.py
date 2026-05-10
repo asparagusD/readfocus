@@ -1,20 +1,7 @@
-from typing import TypedDict, List, Dict, Optional
 from langgraph.graph import StateGraph, END
 
-class AgentState(TypedDict, total=False):
-    user_id: str
-    book_id: str
-    session_id: str
-    event_type: str  # 'plan_session', 'generate_test', 'evaluate_answers', 'optimize_pace'
-    chunk_indices: list[int]
-    chunk_texts: list[str]
-    session_plan: dict
-    test_questions: list[dict]
-    user_answers: list[str]
-    evaluation_result: dict
-    pace_recommendation: dict
-    enriched_context: dict
-    error: str
+from backend.agents.state import AgentState
+from backend.agents.planner_agent import planner_node
 
 # ---------------------------------------------------------
 # Node Stubs
@@ -22,10 +9,6 @@ class AgentState(TypedDict, total=False):
 
 async def orchestrator_node(state: AgentState) -> dict:
     """Orchestrator: reviews state and allows routing to proceed."""
-    return {}
-
-async def planner_node(state: AgentState) -> dict:
-    """Planner: determines session chunk assignments."""
     return {}
 
 async def test_generator_node(state: AgentState) -> dict:

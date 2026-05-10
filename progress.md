@@ -16,12 +16,17 @@
 - [x] Implement backend PDF/EPUB parsing and chunking logic
 - [x] Create API endpoints for book upload, polling, and reading progress
 - [x] Build LangGraph state graph skeleton and define agent nodes
+- [x] Implement Agentic Planner Logic (assigning chunks based on history)
 - [ ] Implement agentic comprehension test generator logic
 - [ ] Implement adaptive difficulty adjustment logic based on session scores
 - [ ] Create UI for file upload and reading session display
 - [ ] Integrate authentication using Supabase
 
 ## Recent Updates
+- Implemented `backend/agents/planner_agent.py` which dynamically assigns reading chunks based on a user's previous comprehension history.
+- Extracted `AgentState` into `state.py` to prevent circular dependencies across agent node modules.
+- Replaced the planner stub in `graph.py` with the fully-functioning LangChain logic that utilizes `PydanticOutputParser` and standardizes outputs as JSON.
+- Handled re-read logic specifically; the planner prioritizes reading queue chunks if comprehension was poor previously.
 - Scaffolded the multi-agent system in `backend/agents/graph.py` using LangGraph.
 - Defined `AgentState` schema to carry conversation state across the workflow.
 - Created async stub functions for the `orchestrator`, `planner`, `test_generator`, `evaluator`, and `optimizer` agents.

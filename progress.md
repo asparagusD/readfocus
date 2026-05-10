@@ -13,13 +13,16 @@
 - [x] Add `.gitignore` and root `requirements.txt`
 - [x] Database Schema: Write initial Supabase migrations with pgvector
 - [x] Create FastAPI backend entry point and initialize LLM models
-- [ ] Implement backend PDF/EPUB parsing and chunking logic
+- [x] Implement backend PDF/EPUB parsing and chunking logic
 - [ ] Build agentic comprehension test generator
 - [ ] Implement adaptive difficulty adjustment logic based on session scores
 - [ ] Create UI for file upload and reading session display
 - [ ] Integrate authentication using Supabase
 
 ## Recent Updates
+- Created `backend/services/book_ingestor.py` with pure Python functions to extract text from PDF and EPUB files.
+- Implemented `chunk_text` to smartly group paragraphs into chunks of 400-900 words, maintaining paragraph and sentence boundaries.
+- Built `ingest_book` to orchestrate file extraction, chunking, embedding generation, and saving all data sequentially to Supabase.
 - Created FastAPI entry point `backend/main.py` with placeholder routers (`/auth`, `/books`, `/sessions`, `/agent`).
 - Initialized specialized OpenRouter LangChain LLMs in `services/llm.py` (Orchestrator, Planner, Test, Evaluator, Optimizer, Owl).
 - Created backend services for Supabase Python client and OpenRouter Embeddings.

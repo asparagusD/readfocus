@@ -21,7 +21,7 @@ owl_llm = ChatOpenAI(
 
 # Orchestrator — Used for routing events and calling MCP tools
 orchestrator_llm = ChatOpenAI(
-    model="nvidia/nemotron-3-super-120b-a12b:free",
+    model="meta-llama/llama-3.3-70b-instruct:free",
     base_url=OPENROUTER_BASE_URL,
     api_key=OPENROUTER_API_KEY,
 )

@@ -29,7 +29,7 @@ async def start_session(req: StartSessionRequest, user_id: str = Depends(get_cur
     if not plan:
         raise HTTPException(status_code=500, detail="Planner failed to generate a session plan.")
         
-    chunk_indices = plan.get("chunk_indices", [])
+    chunk_indices = plan.chunk_indices
     if not chunk_indices:
         raise HTTPException(status_code=400, detail="No more chunks available to read.")
         
@@ -43,8 +43,8 @@ async def start_session(req: StartSessionRequest, user_id: str = Depends(get_cur
         "book_id": req.book_id,
         "chunk_start_index": chunk_indices[0],
         "chunk_end_index": chunk_indices[-1],
-        "assigned_words": plan.get("assigned_words", 0),
-        "focus_duration_minutes": plan.get("focus_duration_minutes", 20),
+        "assigned_words": getattr(plan, "assigned_words", 0),
+        "focus_duration_minutes": getattr(plan, "focus_duration_minutes", 20),
         "status": "reading",
         "started_at": datetime.utcnow().isoformat()
     }).execute()
@@ -57,8 +57,8 @@ async def start_session(req: StartSessionRequest, user_id: str = Depends(get_cur
     return {
         "session_id": session_id,
         "chunk_indices": chunk_indices,
-        "focus_duration_minutes": plan.get("focus_duration_minutes", 20),
-        "reason": plan.get("reason", ""),
+        "focus_duration_minutes": getattr(plan, "focus_duration_minutes", 20),
+        "reason": getattr(plan, "reason", ""),
         "chunks": chunks_data
     }
 

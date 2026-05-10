@@ -118,7 +118,7 @@ async def planner_node(state: AgentState) -> dict:
     }
 
 async def plan_session(user_id: str, book_id: str) -> Optional[SessionPlan]:
-    from backend.agents.graph import workflow
+    from backend.agents.graph import orchestrator_node
     
     initial_state = {
         "user_id": user_id,
@@ -127,11 +127,12 @@ async def plan_session(user_id: str, book_id: str) -> Optional[SessionPlan]:
         "event_type": "plan_session"
     }
     
-    result = await workflow.ainvoke(initial_state)
+    state = initial_state
+    orchestrator_update = await orchestrator_node(state)
+    state.update(orchestrator_update)
     
-    if "error" in result and result["error"]:
-        print(f"Plan Session Error: {result['error']}")
-        return None
-        
-    plan_dict = result.get("session_plan")
+    planner_update = await planner_node(state)
+    state.update(planner_update)
+    
+    plan_dict = state.get("session_plan")
     return SessionPlan(**plan_dict) if plan_dict else None

@@ -12,6 +12,7 @@
 - [x] Define core features for the book reading comprehension app in README
 - [x] Add `.gitignore` and root `requirements.txt`
 - [x] Database Schema: Write initial Supabase migrations with pgvector
+- [x] Create FastAPI backend entry point and initialize LLM models
 - [ ] Implement backend PDF/EPUB parsing and chunking logic
 - [ ] Build agentic comprehension test generator
 - [ ] Implement adaptive difficulty adjustment logic based on session scores
@@ -19,6 +20,9 @@
 - [ ] Integrate authentication using Supabase
 
 ## Recent Updates
+- Created FastAPI entry point `backend/main.py` with placeholder routers (`/auth`, `/books`, `/sessions`, `/agent`).
+- Initialized specialized OpenRouter LangChain LLMs in `services/llm.py` (Orchestrator, Planner, Test, Evaluator, Optimizer, Owl).
+- Created backend services for Supabase Python client and OpenRouter Embeddings.
 - Written initial Supabase migration `001_initial.sql` defining `profiles`, `books`, `chunks`, `sessions`, `test_results`, and `reading_progress` tables.
 - Configured RLS to restrict users to their own data, and set up a private `books` storage bucket.
 - Created `match_chunks` function for pgvector similarity search over chunk embeddings.

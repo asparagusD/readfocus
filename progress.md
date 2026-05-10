@@ -14,12 +14,16 @@
 - [x] Database Schema: Write initial Supabase migrations with pgvector
 - [x] Create FastAPI backend entry point and initialize LLM models
 - [x] Implement backend PDF/EPUB parsing and chunking logic
+- [x] Create API endpoints for book upload, polling, and reading progress
 - [ ] Build agentic comprehension test generator
 - [ ] Implement adaptive difficulty adjustment logic based on session scores
 - [ ] Create UI for file upload and reading session display
 - [ ] Integrate authentication using Supabase
 
 ## Recent Updates
+- Implemented `backend/routers/books.py` with endpoints for uploading books (`/books/upload`), listing books (`/books`), getting details (`/books/{book_id}`), and polling status (`/books/{book_id}/status`).
+- Added a FastAPI `BackgroundTask` in the upload route so users receive an immediate response while their book processes in the background.
+- Included an HTTPBearer `get_current_user` dependency to protect the routes, including a local dev-bypass to make testing easy via Swagger UI.
 - Created `backend/services/book_ingestor.py` with pure Python functions to extract text from PDF and EPUB files.
 - Implemented `chunk_text` to smartly group paragraphs into chunks of 400-900 words, maintaining paragraph and sentence boundaries.
 - Built `ingest_book` to orchestrate file extraction, chunking, embedding generation, and saving all data sequentially to Supabase.

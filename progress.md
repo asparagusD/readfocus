@@ -20,10 +20,13 @@
 - [x] Implement agentic comprehension test generator logic
 - [x] Implement agentic evaluator logic (grading free-text answers)
 - [x] Implement adaptive difficulty adjustment logic based on session scores
-- [ ] Create UI for file upload and reading session display
+- [x] Create UI for file upload and reading session display
 - [ ] Integrate authentication using Supabase
 
 ## Recent Updates
+- Created `backend/routers/sessions.py` to seamlessly orchestrate the LangGraph agent pipeline from the frontend.
+- Handled transient storage of hidden test guidance using a `test_questions` JSONB column on the `sessions` table (via `003_session_questions.sql` migration) so users can't cheat by looking at network payloads.
+- Mapped out the entire interaction lifecycle (`/start`, `/finish-reading`, `/submit-answers`, `/abandon`).
 - Implemented `backend/agents/optimizer_agent.py` to handle adaptive difficulty sizing dynamically based on score thresholds (e.g. >=40 grows multiplier, <10 forces emergency re-read priority).
 - Shifted the `re_read_queue` updating logic from the Evaluator into the Optimizer exactly as required by the specification.
 - Created `002_add_pace.sql` migration to add a JSONB `pace_recommendation` field to the `reading_progress` table so the planner can easily use it on the next run.

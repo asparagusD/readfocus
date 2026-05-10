@@ -11,8 +11,8 @@ if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY is not set in the environment variables.")
 
 embeddings_client = OpenAIEmbeddings(
-    openai_api_base=OPENROUTER_BASE_URL,
-    openai_api_key=OPENROUTER_API_KEY,
+    base_url=OPENROUTER_BASE_URL,
+    api_key=OPENROUTER_API_KEY,
     # Using a default embedding model supported via OpenRouter
     model="nomic-ai/nomic-embed-text"
 )

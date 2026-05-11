@@ -49,14 +49,18 @@ async def orchestrator_node(state: AgentState) -> dict:
         
         Please use your tools to:
         1. Get the reading history and comprehension trend.
-        2. If there are chunk indices, use get_chunk_context to fetch them.
+        (Note: Do NOT fetch the full chunk content here to save tokens. Downstream agents will fetch the text directly.)
         
         Output a concise summary of the context you found so downstream agents can use it."""
         
         inputs = {"messages": [("user", prompt)]}
-        result = await agent.ainvoke(inputs)
         
-        summary = result["messages"][-1].content
+        try:
+            result = await agent.ainvoke(inputs)
+            summary = result["messages"][-1].content
+        except Exception as e:
+            print(f"Orchestrator Error (e.g. rate limit): {e}")
+            summary = "Fallback: Orchestrator unavailable. Proceeding with default routing."
         
         enriched_context = state.get("enriched_context", {})
         enriched_context["orchestrator_summary"] = summary

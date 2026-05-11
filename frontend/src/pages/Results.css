@@ -1,0 +1,239 @@
+/* Results Page Layout */
+.rf-results-page {
+  padding: 40px 24px;
+}
+
+/* Score Section */
+.rf-results-score-section {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.rf-results-score-label {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
+}
+
+.rf-results-score-number-wrapper {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rf-results-score-number {
+  font-family: var(--font-display);
+  font-size: 96px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.rf-results-score-max {
+  font-family: var(--font-display);
+  font-size: 36px;
+  color: var(--ink-faint);
+}
+
+.rf-results-percentage {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 18px;
+  color: var(--ink-light);
+  margin-top: 12px;
+}
+
+.rf-results-verdict {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  margin-top: 8px;
+}
+
+/* Verdict Colors */
+.rf-verdict-excellent {
+  color: var(--green-soft);
+}
+.rf-verdict-good {
+  color: var(--ink-light);
+}
+.rf-verdict-needs-review {
+  color: var(--amber);
+}
+.rf-verdict-re-read {
+  color: var(--red-soft);
+}
+
+/* Question Breakdown */
+.rf-results-breakdown-heading {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
+}
+
+.rf-results-q-row {
+  padding: 20px 0;
+  border-top: 1px solid var(--paper-mid);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rf-results-q-row:last-child {
+  border-bottom: 1px solid var(--paper-mid);
+}
+
+.rf-results-q-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.rf-results-q-text {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--ink-light);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.rf-results-q-score {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.rf-score-high {
+  color: var(--green-soft);
+}
+.rf-score-mid {
+  color: var(--amber);
+}
+.rf-score-low {
+  color: var(--red-soft);
+}
+
+.rf-results-q-answer {
+  font-family: var(--font-reading);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-faint);
+  padding-left: 12px;
+  border-left: 2px solid var(--paper-mid);
+}
+
+.rf-results-q-feedback {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--ink-light);
+  background-color: var(--paper-dark);
+  padding: 12px 16px;
+  border-radius: 4px;
+}
+
+/* Next Session Panel */
+.rf-results-next-panel {
+  height: 72px;
+  background-color: var(--paper-dark);
+  border: 1px solid var(--paper-mid);
+  border-radius: 6px;
+  margin-top: 40px;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rf-results-next-info {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--ink-light);
+}
+
+.rf-results-next-btn {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--amber);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.rf-results-next-btn:hover {
+  opacity: 0.75;
+}
+
+/* Re-read Panel */
+.rf-results-reread-panel {
+  margin-top: 40px;
+  padding: 16px 20px;
+  background-color: var(--amber-pale);
+  border-radius: 0 6px 6px 0;
+  border-left: 3px solid var(--amber);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rf-results-reread-title {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.rf-results-reread-desc {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* Bottom Links */
+.rf-results-bottom {
+  display: flex;
+  flex-direction: row;
+  margin-top: 32px;
+  gap: 24px;
+}
+
+.rf-results-library-link {
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--ink-faint);
+  text-decoration: none;
+  transition: color 150ms ease-out;
+}
+
+.rf-results-library-link:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.rf-results-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  font-family: var(--font-ui);
+  color: var(--ink-light);
+}

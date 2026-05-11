@@ -80,14 +80,17 @@ export function ComprehensionTest() {
     setIsSubmitting(true);
     
     try {
-      await fetchApi(`/sessions/${sessionId}/submit-answers`, {
+      const data = await fetchApi(`/sessions/${sessionId}/submit-answers`, {
         method: 'POST',
         body: JSON.stringify({ 
           answers: answers,
           time_taken_seconds: 300 - timeLeft
         })
       });
-      navigateTo(`/results/${sessionId}`);
+      // Use standard navigate to pass state, bypassing transition delay if needed, 
+      // or we can use transition but we don't have it setup to pass state easily.
+      // Wait, let's just use standard navigate since we want to pass state.
+      navigate(`/results/${sessionId}`, { state: { resultsData: data, userAnswers: answers } });
     } catch (err) {
       alert('Failed to submit answers: ' + err.message);
       setIsSubmitting(false);

@@ -5,6 +5,7 @@ import { Layout } from './components/Layout';
 import { Library } from './pages/Library';
 import { ReadingSession } from './pages/ReadingSession';
 import { ComprehensionTest } from './pages/ComprehensionTest';
+import { Results } from './pages/Results';
 import { Login } from './pages/Login';
 
 function AuthGuard({ children }) {
@@ -27,7 +28,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<AuthGuard><Library /></AuthGuard>} />
                 <Route path="dashboard" element={<AuthGuard><Library /></AuthGuard>} />
-                <Route path="results/:sessionId" element={<AuthGuard><div>Results (WIP)</div></AuthGuard>} />
+                <Route path="results/:sessionId" element={<AuthGuard><Results /></AuthGuard>} />
               </Routes>
             </Layout>
           } />

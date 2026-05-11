@@ -199,13 +199,30 @@
 
 .rf-distraction-free .rf-chrome-bar,
 .rf-distraction-free .rf-timer-strip,
-.rf-distraction-free .rf-reason-strip {
+.rf-distraction-free .rf-reason-strip,
+.rf-distraction-free .rf-abandon-container {
   opacity: 0;
   pointer-events: none;
 }
 
 .rf-distraction-free .rf-floating-timer {
   opacity: 1;
+}
+
+/* Chunk Progress Bar */
+.rf-chunk-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: transparent;
+}
+
+.rf-chunk-progress-fill {
+  height: 100%;
+  background-color: var(--amber);
+  transition: width 1s linear;
 }
 
 /* Distraction Free Toggle Button */

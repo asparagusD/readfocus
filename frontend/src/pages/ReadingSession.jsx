@@ -5,6 +5,7 @@ import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { usePageTransition } from '../hooks/usePageTransition';
+import { CalibrationFlow } from '../components/CalibrationFlow';
 import './ReadingSession.css';
 
 export function ReadingSession() {
@@ -12,6 +13,10 @@ export function ReadingSession() {
   const navigateTo = usePageTransition();
   const navigate = useNavigate();
   
+  const [profileChecked, setProfileChecked] = useState(false);
+  const [isCalibrated, setIsCalibrated] = useState(true);
+  const [wpm, setWpm] = useState(200);
+
   const [loading, setLoading] = useState(true);
   const [sessionData, setSessionData] = useState(null);
   
@@ -25,8 +30,30 @@ export function ReadingSession() {
   const [isFinishing, setIsFinishing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Initialize session
+  // 1. Check Profile Calibration
   useEffect(() => {
+    async function checkProfile() {
+      try {
+        const profile = await fetchApi('/auth/profile');
+        setWpm(profile.reading_goal_wpm || 200);
+        if (!profile.is_calibrated) {
+          setIsCalibrated(false);
+        }
+        setProfileChecked(true);
+      } catch (err) {
+        console.error("Failed to check profile", err);
+        // Fallback to calibrated to prevent blocking the user on error
+        setIsCalibrated(true);
+        setProfileChecked(true);
+      }
+    }
+    checkProfile();
+  }, []);
+
+  // 2. Initialize session (only after calibration is confirmed)
+  useEffect(() => {
+    if (!profileChecked || !isCalibrated) return;
+
     async function startSession() {
       try {
         const data = await fetchApi('/sessions/start', {
@@ -42,7 +69,7 @@ export function ReadingSession() {
       }
     }
     startSession();
-  }, [bookId, navigate]);
+  }, [bookId, navigate, profileChecked, isCalibrated]);
 
   // Handle visibility transition after loading completes
   useEffect(() => {
@@ -79,6 +106,12 @@ export function ReadingSession() {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progressPct * circumference);
 
+  // Chunk Word Count Progress Estimate
+  const elapsedMinutes = (totalSeconds - timeLeft) / 60;
+  const estimatedWordsRead = wpm * elapsedMinutes;
+  const assignedWords = sessionData?.assigned_words || 1;
+  const chunkProgressPct = Math.min(100, Math.max(0, (estimatedWordsRead / assignedWords) * 100));
+
   const handleFinishReading = async () => {
     if (!sessionData) return;
     setIsFinishing(true);
@@ -101,6 +134,17 @@ export function ReadingSession() {
     navigateTo('/');
   };
 
+  if (!profileChecked) {
+    return <div className="rf-reading-loading page"></div>;
+  }
+
+  if (!isCalibrated) {
+    return <CalibrationFlow onComplete={(newWpm) => {
+      setWpm(newWpm);
+      setIsCalibrated(true);
+    }} />;
+  }
+
   if (loading) {
     return (
       <div className="rf-reading-loading page">
@@ -110,7 +154,6 @@ export function ReadingSession() {
   }
 
   // Split text into paragraphs for rendering
-  // PDF extraction often puts single newlines for line wraps, and double newlines for paragraphs.
   const paragraphs = sessionData.chunks
     .map(c => c.content)
     .join('\n\n')
@@ -173,6 +216,10 @@ export function ReadingSession() {
               {isFinishing ? 'Saving…' : 'Done reading'}
             </button>
           </div>
+        </div>
+        {/* Word Count Progress Bar */}
+        <div className="rf-chunk-progress-bar">
+          <div className="rf-chunk-progress-fill" style={{ width: `${chunkProgressPct}%` }}></div>
         </div>
       </div>
 

@@ -17,8 +17,9 @@ class SessionPlan(BaseModel):
 
 parser = PydanticOutputParser(pydantic_object=SessionPlan)
 
-system_prompt = """You are a reading session planner. Given the user's reading history and comprehension scores, decide how many chunks to assign for this session and how many minutes to allocate. Output only JSON: {format_instructions}.
-Rules: new users start at 1 chunk / 20 minutes. Increase chunks if avg score > 80%. Reduce if avg score < 50%. Max 3 chunks per session. Min 15 minutes, max 60 minutes."""
+system_prompt = """You are a reading session planner. Given the user's reading history, comprehension scores, and their calibrated reading speed ({wpm} words per minute), decide how many chunks to assign for this session and how many minutes to allocate. Output only JSON: {format_instructions}.
+Rules: new users start at 1 chunk. Increase chunks if avg score > 80%. Reduce if avg score < 50%. Max 3 chunks per session.
+Crucially, calculate the exact `focus_duration_minutes` required to read the assigned_words based on the user's {wpm} WPM speed. You may add a 10% buffer if their past scores were poor. Minimum 10 minutes, maximum 120 minutes."""
 
 prompt_template = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
@@ -29,7 +30,11 @@ async def planner_node(state: AgentState) -> dict:
     user_id = state.get("user_id")
     book_id = state.get("book_id")
     
-    # 1. Fetch reading_progress
+    # 1. Fetch user profile for WPM
+    profile_resp = supabase.table("profiles").select("reading_goal_wpm").eq("user_id", user_id).execute()
+    wpm = profile_resp.data[0]["reading_goal_wpm"] if profile_resp.data else 200
+    
+    # 2. Fetch reading_progress
     progress_resp = supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id).execute()
     if progress_resp.data:
         progress = progress_resp.data[0]
@@ -114,6 +119,7 @@ async def planner_node(state: AgentState) -> dict:
     
     plan: SessionPlan = await chain.ainvoke({
         "format_instructions": parser.get_format_instructions(),
+        "wpm": wpm,
         "history": history_string,
         "last_chunk_index": last_chunk_index,
         "next_chunks_words": json.dumps(next_chunks_words)

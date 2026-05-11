@@ -21,9 +21,6 @@ It is a quiet, serious tool for serious readers.
   - [2. Configure environment variables](#2-configure-environment-variables)
   - [3. Apply Supabase migrations](#3-apply-supabase-migrations)
   - [4. Run the app](#4-run-the-app)
-- [Deployment](#deployment)
-  - [Backend → Render](#backend--render)
-  - [Frontend → Vercel](#frontend--vercel)
 - [Project Structure](#project-structure)
 
 ---
@@ -219,28 +216,6 @@ npm run dev
 ```
 
 Open `http://localhost:5173` (or whichever port Vite selects).
-
----
-
-## Deployment
-
-### Backend → Render
-
-1. Push this repository to GitHub.
-2. In the [Render dashboard](https://render.com), create a new **Web Service** and connect your repository.
-3. Set **Dockerfile path** to `backend/Dockerfile`.
-4. Add all environment variables from `.env` in the Render **Environment** tab.
-5. Deploy. Render will use `backend/render.yaml` for service configuration.
-
-### Frontend → Vercel
-
-1. Import the repository in the [Vercel dashboard](https://vercel.com).
-2. Set the **root directory** to `frontend/`.
-3. Add environment variables from `frontend/.env.production` in the Vercel project settings:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_API_URL` (your Render backend URL)
-4. Deploy. `frontend/vercel.json` handles the React Router rewrite rule automatically.
 
 ---
 

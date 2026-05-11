@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Any, List, Optional, cast
 from datetime import datetime
 
 from backend.dependencies import get_current_user
@@ -35,7 +35,7 @@ async def start_session(req: StartSessionRequest, user_id: str = Depends(get_cur
         
     # 2. Fetch chunk content
     resp = supabase.table("chunks").select("chunk_index, content, word_count").eq("book_id", req.book_id).in_("chunk_index", chunk_indices).execute()
-    chunks_data = sorted(resp.data or [], key=lambda x: x["chunk_index"])
+    chunks_data: list[dict[str, Any]] = sorted(cast(list[dict[str, Any]], resp.data or []), key=lambda x: x["chunk_index"])
     
     # 3. Create session row
     session_resp = supabase.table("sessions").insert({
@@ -52,7 +52,7 @@ async def start_session(req: StartSessionRequest, user_id: str = Depends(get_cur
     if not session_resp.data:
         raise HTTPException(status_code=500, detail="Failed to create session.")
         
-    session_id = session_resp.data[0]["id"]
+    session_id = cast(dict[str, Any], session_resp.data[0])["id"]
     
     return {
         "session_id": session_id,
@@ -69,9 +69,10 @@ async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: st
     if not sess_resp.data:
         raise HTTPException(status_code=404, detail="Session not found.")
         
-    book_id = sess_resp.data[0]["book_id"]
-    start_idx = sess_resp.data[0]["chunk_start_index"]
-    end_idx = sess_resp.data[0]["chunk_end_index"]
+    sess = cast(dict[str, Any], sess_resp.data[0])
+    book_id = sess["book_id"]
+    start_idx = sess["chunk_start_index"]
+    end_idx = sess["chunk_end_index"]
     chunk_indices = list(range(start_idx, end_idx + 1))
     
     # 2. Update session status
@@ -110,11 +111,12 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: st
     if not sess_resp.data:
         raise HTTPException(status_code=404, detail="Session not found.")
         
-    book_id = sess_resp.data[0]["book_id"]
-    start_idx = sess_resp.data[0]["chunk_start_index"]
-    end_idx = sess_resp.data[0]["chunk_end_index"]
+    sess = cast(dict[str, Any], sess_resp.data[0])
+    book_id = sess["book_id"]
+    start_idx = sess["chunk_start_index"]
+    end_idx = sess["chunk_end_index"]
     chunk_indices = list(range(start_idx, end_idx + 1))
-    test_questions = sess_resp.data[0].get("test_questions", [])
+    test_questions = sess.get("test_questions", [])
     
     if not test_questions:
         raise HTTPException(status_code=400, detail="No test questions found. Did you call finish-reading?")
@@ -171,11 +173,11 @@ async def get_session(session_id: str, user_id: str = Depends(get_current_user))
     if not sess_resp.data:
         raise HTTPException(status_code=404, detail="Session not found.")
         
-    session = sess_resp.data[0]
+    session: dict[str, Any] = cast(dict[str, Any], sess_resp.data[0])
     
     if session["status"] == "completed":
         test_resp = supabase.table("test_results").select("*").eq("session_id", session_id).execute()
         if test_resp.data:
-            session["test_results"] = test_resp.data[0]
+            session["test_results"] = cast(dict[str, Any], test_resp.data[0])
             
     return session

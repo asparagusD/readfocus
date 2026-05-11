@@ -1,3 +1,5 @@
+
+from typing import Any, cast
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from backend.dependencies import get_current_user
@@ -14,7 +16,7 @@ async def get_profile(user_id: str = Depends(get_current_user)):
         resp = supabase.table("profiles").select("*").eq("user_id", user_id).execute()
         if not resp.data:
             raise HTTPException(status_code=404, detail="Profile not found.")
-        profile = resp.data[0]
+        profile: dict[str, Any] = cast(dict[str, Any], resp.data[0])
         if "is_calibrated" not in profile:
             profile["is_calibrated"] = False
         return profile

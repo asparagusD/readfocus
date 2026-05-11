@@ -1,7 +1,10 @@
+from typing import Any, cast
 from fastapi import APIRouter, Depends
 from datetime import datetime, timedelta, timezone
 from backend.dependencies import get_current_user
 from backend.services.supabase_client import supabase
+
+Row = dict[str, Any]
 
 router = APIRouter()
 
@@ -15,25 +18,26 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
     books_resp = supabase.table("books").select(
         "id, title, author, total_chunks, total_words, status"
     ).eq("user_id", user_id).eq("status", "ready").execute()
-    books = books_resp.data or []
+    books: list[Row] = cast(list[Row], books_resp.data or [])
     book_ids = [b["id"] for b in books]
 
     progress_resp = supabase.table("reading_progress").select(
         "book_id, chunks_completed, average_score"
     ).eq("user_id", user_id).execute()
-    progress_by_book = {p["book_id"]: p for p in (progress_resp.data or [])}
+    progress_data: list[Row] = cast(list[Row], progress_resp.data or [])
+    progress_by_book = {p["book_id"]: p for p in progress_data}
 
     # ── 2. All completed sessions ─────────────────────────────────────────────
     sessions_resp = supabase.table("sessions").select(
         "id, book_id, assigned_words, completed_at, started_at, chunk_start_index, chunk_end_index"
     ).eq("user_id", user_id).eq("status", "completed").order("completed_at", desc=False).execute()
-    sessions = sessions_resp.data or []
+    sessions: list[Row] = cast(list[Row], sessions_resp.data or [])
 
     # ── 3. All test_results ───────────────────────────────────────────────────
     results_resp = supabase.table("test_results").select(
         "session_id, total_score, max_score, created_at, answers"
     ).eq("user_id", user_id).order("created_at", desc=False).execute()
-    results = results_resp.data or []
+    results: list[Row] = cast(list[Row], results_resp.data or [])
     results_by_session = {r["session_id"]: r for r in results}
 
     # ── 4. Build book progress list ───────────────────────────────────────────

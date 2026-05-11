@@ -1,4 +1,5 @@
 import uuid
+from typing import Any, cast
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException
 from backend.services.book_ingestor import ingest_book
 from backend.services.supabase_client import supabase
@@ -81,7 +82,7 @@ async def get_book_details(book_id: str, user_id: str = Depends(get_current_user
     if not book_resp.data:
         raise HTTPException(status_code=404, detail="Book not found")
         
-    book = book_resp.data[0]
+    book: dict[str, Any] = cast(dict[str, Any], book_resp.data[0])
     
     progress_resp = supabase.table("reading_progress").select("*").eq("book_id", book_id).eq("user_id", user_id).execute()
     

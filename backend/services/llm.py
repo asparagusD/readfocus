@@ -61,7 +61,7 @@ orchestrator_llm = ChatOpenAI(
 # Reason: The planner sends short, structured prompts (session history + scoring trend). 
 # Cerebras gives 1M tokens/day free. Prompts stay well under the 8K context cap on the free tier.
 planner_llm = ChatOpenAI(
-    model="gpt-oss-120b",
+    model="llama-3.3-70b",
     openai_api_base="https://api.cerebras.ai/v1",
     openai_api_key=CEREBRAS_API_KEY,
 ).with_fallbacks([sambanova_llm])

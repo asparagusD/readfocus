@@ -82,19 +82,39 @@ async def planner_node(state: AgentState) -> dict:
     next_chunks = next_chunks_resp.data
     next_chunks_words = {str(c["chunk_index"]): c["word_count"] for c in next_chunks}
     
-    # Fetch last 5 sessions for context
-    history_resp = supabase.table("sessions").select(
-        "chunk_start_index, chunk_end_index, assigned_words, focus_duration_minutes, actual_duration_minutes, status, test_results(total_score, max_score)"
-    ).eq("user_id", user_id).eq("book_id", book_id).order("started_at", desc=True).limit(5).execute()
+    # Fetch recent session context for the planner
+    recent_sessions = (
+        supabase
+        .table("sessions")
+        .select("chunk_start_index, chunk_end_index, focus_duration_minutes, actual_duration_minutes")
+        .eq("user_id", user_id)
+        .eq("book_id", book_id)
+        .eq("status", "completed")
+        .order("completed_at", desc=True)
+        .limit(5)
+        .execute()
+        .data
+    )
+
+    recent_scores = (
+        supabase
+        .table("test_results")
+        .select("total_score, max_score, chunk_index, created_at")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .limit(5)
+        .execute()
+        .data
+    )
     
-    history_data = history_resp.data
+    history_string = f"## Recent reading history\nSessions: {json.dumps(recent_sessions)}\nScores: {json.dumps(recent_scores)}"
     
     # 5. Invoke Planner LLM
     chain = prompt_template | planner_llm | parser
     
     plan: SessionPlan = await chain.ainvoke({
         "format_instructions": parser.get_format_instructions(),
-        "history": json.dumps(history_data),
+        "history": history_string,
         "last_chunk_index": last_chunk_index,
         "next_chunks_words": json.dumps(next_chunks_words)
     })

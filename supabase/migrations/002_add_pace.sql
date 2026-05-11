@@ -1,1 +1,1 @@
-ALTER TABLE public.reading_progress ADD COLUMN pace_recommendation jsonb;
+ALTER TABLE public.reading_progress ADD COLUMN IF NOT EXISTS pace_recommendation jsonb;

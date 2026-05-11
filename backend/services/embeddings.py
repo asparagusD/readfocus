@@ -1,6 +1,7 @@
 import os
 import asyncio
 from dotenv import load_dotenv
+# pyrefly: ignore [missing-import]
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 load_dotenv()

@@ -19,6 +19,7 @@ SambaNova     | Fallback (all)        | ~600**    | varies      | 128K
 
 import os
 from langchain_openai import ChatOpenAI
+# pyrefly: ignore [missing-import]
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 

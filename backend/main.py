@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from backend.routers import auth, books, sessions, agent
+from backend.routers import auth, books, sessions, agent, dashboard
 
 load_dotenv()
 
@@ -54,6 +54,7 @@ app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])
 app.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
 app.include_router(agent.router, prefix="/agent", tags=["Agent"])
+app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 
 @app.get("/health")
 def health_check():

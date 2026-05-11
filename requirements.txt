@@ -3,6 +3,7 @@ uvicorn[standard]
 supabase
 langchain
 langchain-openai
+langchain-google-genai
 langchain-community
 langgraph
 langchain-mcp-adapters

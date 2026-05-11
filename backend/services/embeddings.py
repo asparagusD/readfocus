@@ -1,24 +1,31 @@
 import os
+import asyncio
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 load_dotenv()
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+GOOGLE_AI_STUDIO_KEY = os.getenv("GOOGLE_AI_STUDIO_KEY")
 
-if not OPENROUTER_API_KEY:
-    raise ValueError("OPENROUTER_API_KEY is not set in the environment variables.")
+if not GOOGLE_AI_STUDIO_KEY:
+    raise ValueError("GOOGLE_AI_STUDIO_KEY is not set in the environment variables.")
 
-embeddings_client = OpenAIEmbeddings(
-    base_url=OPENROUTER_BASE_URL,
-    api_key=OPENROUTER_API_KEY,
-    # Using an embedding model that explicitly exists on OpenRouter and matches our 1536 dimensions
-    model="openai/text-embedding-3-small"
+embeddings_client = GoogleGenerativeAIEmbeddings(
+    google_api_key=GOOGLE_AI_STUDIO_KEY,
+    model="models/text-embedding-004"
 )
 
-def generate_embedding(text: str) -> list[float]:
+async def generate_embedding(text: str) -> list[float]:
     """
-    Generates an embedding for the given text using OpenRouter's OpenAIEmbeddings.
+    Generates an embedding for the given text using Google AI Studio.
+    Google's embedding API is free with no hard daily limit stated in docs — it shares the project quota. 
+    If rate limited, we retry once with a 0.5s delay.
     """
-    return embeddings_client.embed_query(text)
+    try:
+        # Using aembed_query to execute asynchronously
+        return await embeddings_client.aembed_query(text)
+    except Exception as e:
+        # If rate limited or other error, retry once
+        print(f"Embedding error: {e}. Retrying after 0.5s...")
+        await asyncio.sleep(0.5)
+        return await embeddings_client.aembed_query(text)

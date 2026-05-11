@@ -116,7 +116,7 @@ def chunk_text(pages: list[str], target_words: int = 600) -> list[str]:
 
     return chunks
 
-def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: str, target_words: int = 600) -> dict:
+async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: str, target_words: int = 600) -> dict:
     """
     Coordinates extraction, chunking, embedding generation, and database inserts.
     """
@@ -135,8 +135,8 @@ def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: str, t
         wc = len(chunk.split())
         total_words += wc
         
-        # 1) generate an embedding
-        embedding = generate_embedding(chunk)
+        # 1) generate an embedding asynchronously
+        embedding = await generate_embedding(chunk)
         
         # 2) insert a row into the chunks table
         supabase.table("chunks").insert({

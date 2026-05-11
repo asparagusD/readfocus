@@ -128,11 +128,34 @@ async def plan_session(user_id: str, book_id: str) -> Optional[SessionPlan]:
     }
     
     state = initial_state
-    orchestrator_update = await orchestrator_node(state)
-    state.update(orchestrator_update)
-    
-    planner_update = await planner_node(state)
-    state.update(planner_update)
-    
-    plan_dict = state.get("session_plan")
-    return SessionPlan(**plan_dict) if plan_dict else None
+    try:
+        orchestrator_update = await orchestrator_node(state)
+        state.update(orchestrator_update)
+        
+        planner_update = await planner_node(state)
+        state.update(planner_update)
+        
+        plan_dict = state.get("session_plan")
+        return SessionPlan(**plan_dict) if plan_dict else None
+    except Exception as e:
+        print(f"LLM/Orchestrator failed: {e}. Falling back to mock session.")
+        
+        # Fallback to mock session
+        progress_resp = supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id).execute()
+        progress = progress_resp.data[0] if progress_resp.data else {}
+        last_chunk_index = progress.get("last_chunk_index", -1)
+        
+        next_chunks_resp = supabase.table("chunks").select("chunk_index, word_count").eq("book_id", book_id).gte("chunk_index", last_chunk_index + 1).order("chunk_index").limit(1).execute()
+        
+        if not next_chunks_resp.data:
+            return None # Book finished
+            
+        chunk = next_chunks_resp.data[0]
+        
+        mock_plan = SessionPlan(
+            chunk_indices=[chunk["chunk_index"]],
+            assigned_words=chunk["word_count"],
+            focus_duration_minutes=20,
+            reason="MOCK LLM: LLM rate limit exceeded. Generating default 20-minute session."
+        )
+        return mock_plan

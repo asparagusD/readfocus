@@ -1,60 +1,93 @@
+"""
+LLM Services module.
+
+Provider      | Agent(s)              | Free RPD  | Free TPM    | Context
+--------------|-----------------------|-----------|-------------|--------
+Groq          | Orchestrator          | 1,000     | 6,000       | 128K
+Cerebras      | Planner, Optimizer    | ~33,000*  | 60,000      | 8K ⚠️
+Google AI     | Test gen, Evaluator   | 1,500     | 1,000,000   | 1M
+SambaNova     | Fallback (all)        | ~600**    | varies      | 128K
+
+* Cerebras free tier is 1M tokens/day. At ~30 tokens/call average for
+  planner/optimizer, this is ~33,000 effective calls/day.
+** SambaNova RPD is approximate; used only on fallback so this rarely matters.
+
+⚠️  Cerebras 8K context cap: ONLY use Cerebras for planner and optimizer.
+    Never route test_llm or evaluator_llm through Cerebras — book chunks
+    + RAG context + system prompt will exceed 8K tokens.
+"""
+
 import os
-from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
+from dotenv import load_dotenv
 
 load_dotenv()
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+# Read API keys from environment variables
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
+GOOGLE_AI_STUDIO_KEY = os.getenv("GOOGLE_AI_STUDIO_KEY")
+SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
-if not OPENROUTER_API_KEY:
-    raise ValueError("OPENROUTER_API_KEY is not set in the environment variables.")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY is missing. Get it from https://console.groq.com")
+if not CEREBRAS_API_KEY:
+    raise ValueError("CEREBRAS_API_KEY is missing. Get it from https://cloud.cerebras.ai")
+if not GOOGLE_AI_STUDIO_KEY:
+    raise ValueError("GOOGLE_AI_STUDIO_KEY is missing. Get it from https://aistudio.google.com")
+if not SAMBANOVA_API_KEY:
+    raise ValueError("SAMBANOVA_API_KEY is missing. Get it from https://cloud.sambanova.ai")
 
-# Fallback model
-# Note: This model logs prompts/completions to the provider - do not use for sensitive content.
-# 1.05M context makes it the best fallback for long-context edge cases.
-owl_llm = ChatOpenAI(
-    model="openrouter/owl-alpha",
-    base_url=OPENROUTER_BASE_URL,
-    api_key=OPENROUTER_API_KEY,
+# 1. Fallback for all agents — SambaNova
+# Reason: SambaNova offers a persistent free tier (no credit card, no expiry) with Llama 3.3 70B. 
+# It is used exclusively as a fallback when a primary provider returns a 429 or 503.
+sambanova_llm = ChatOpenAI(
+    model="Meta-Llama-3.3-70B-Instruct",
+    openai_api_base="https://api.sambanova.ai/v1",
+    openai_api_key=SAMBANOVA_API_KEY,
 )
 
-# Orchestrator — Used for routing events and calling MCP tools
+# 2. Orchestrator — Groq
+# Reason: The orchestrator is called once per session start. Groq's LPU hardware means near-instant routing decisions. 1,000 RPD is sufficient.
 orchestrator_llm = ChatOpenAI(
-    model="meta-llama/llama-3.3-70b-instruct:free",
-    base_url=OPENROUTER_BASE_URL,
-    api_key=OPENROUTER_API_KEY,
-)
+    model="llama-3.3-70b-versatile",
+    openai_api_base="https://api.groq.com/openai/v1",
+    openai_api_key=GROQ_API_KEY,
+).with_fallbacks([sambanova_llm])
 
-# Planner — Used for session planning and reading progress analysis
+# 3. Session planner — Cerebras
+# Reason: The planner sends short, structured prompts (session history + scoring trend). 
+# Cerebras gives 1M tokens/day free. Prompts stay well under the 8K context cap on the free tier.
 planner_llm = ChatOpenAI(
-    model="nvidia/nemotron-3-super-120b-a12b:free",
-    base_url=OPENROUTER_BASE_URL,
-    api_key=OPENROUTER_API_KEY,
-    model_kwargs={"reasoning": {"enabled": True}},
-)
+    model="gpt-oss-120b",
+    openai_api_base="https://api.cerebras.ai/v1",
+    openai_api_key=CEREBRAS_API_KEY,
+).with_fallbacks([sambanova_llm])
 
-# Test LLM — Used for generating comprehension questions
-test_llm_primary = ChatOpenAI(
-    model="nvidia/nemotron-3-super-120b-a12b:free",
-    base_url=OPENROUTER_BASE_URL,
-    api_key=OPENROUTER_API_KEY,
-    model_kwargs={"reasoning": {"enabled": True}},
-)
-test_llm = test_llm_primary.with_fallbacks([owl_llm])
+# 4. Test generator — Google AI Studio (Gemini)
+# Reason: The test generator receives a full book chunk (~600–900 words) plus RAG context. This easily exceeds 8K tokens. 
+# Gemini 2.5 Flash has a 1M token context window even on the free tier, and 1,500 RPD.
+test_llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    google_api_key=GOOGLE_AI_STUDIO_KEY,
+    convert_system_message_to_human=True,
+).with_fallbacks([sambanova_llm])
 
-# Evaluator LLM — Used for scoring free-text answers
-evaluator_llm_primary = ChatOpenAI(
-    model="nvidia/nemotron-3-super-120b-a12b:free",
-    base_url=OPENROUTER_BASE_URL,
-    api_key=OPENROUTER_API_KEY,
-    model_kwargs={"reasoning": {"enabled": True}},
-)
-evaluator_llm = evaluator_llm_primary.with_fallbacks([owl_llm])
+# 5. Answer evaluator — Google AI Studio (Gemini)
+# Reason: The evaluator receives the chunk text + the user's answer for each question. Long context is essential. 
+# Shares the 1,500 RPD budget with the test generator.
+evaluator_llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
+    google_api_key=GOOGLE_AI_STUDIO_KEY,
+    convert_system_message_to_human=True,
+).with_fallbacks([sambanova_llm])
 
-# Optimizer LLM — Used only for producing a focus duration recommendation as structured JSON
+# 6. Pace optimizer — Cerebras
+# Reason: The optimizer only needs to produce a short JSON output: {focus_duration_minutes, reason}. 
+# This is the lightest call in the system — use the smallest, fastest model.
 optimizer_llm = ChatOpenAI(
-    model="z-ai/glm-4.5-air:free",
-    base_url=OPENROUTER_BASE_URL,
-    api_key=OPENROUTER_API_KEY,
-)
+    model="llama3.1-8b",
+    openai_api_base="https://api.cerebras.ai/v1",
+    openai_api_key=CEREBRAS_API_KEY,
+).with_fallbacks([sambanova_llm])

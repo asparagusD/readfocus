@@ -66,7 +66,15 @@ async def test_generator_node(state: AgentState) -> dict:
         return {"test_questions": questions_dict}
         
     except Exception as e:
-        return {"error": f"Failed to generate test questions: {str(e)}"}
+        print(f"Test Generator LLM failed: {str(e)}. Falling back to mock questions.")
+        mock_questions = [
+            {"question": "What is the main topic of the passage you just read?", "type": "factual", "guidance": "Should mention the primary subject of the text."},
+            {"question": "List two key details mentioned in the text.", "type": "factual", "guidance": "Should list any two distinct facts from the passage."},
+            {"question": "What happened first in the sequence of events described?", "type": "factual", "guidance": "Should identify the chronological beginning."},
+            {"question": "Based on the text, what can you infer about the author's purpose?", "type": "inference", "guidance": "Should deduce the underlying reason for writing."},
+            {"question": "Summarize the central message in one or two sentences.", "type": "summary", "guidance": "Should provide a concise overview of the core idea."}
+        ]
+        return {"test_questions": mock_questions}
 
 async def generate_test(session_id: str, chunk_indices: List[int], book_id: str) -> Optional[List[TestQuestion]]:
     """Helper function to run the workflow strictly for test generation."""

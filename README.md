@@ -15,7 +15,6 @@ It is a quiet, serious tool for serious readers.
   - [Agent Graph](#agent-graph)
   - [Multi-Provider LLM Strategy](#multi-provider-llm-strategy)
   - [Database](#database)
-- [Project Structure](#project-structure)
 
 ---
 
@@ -134,53 +133,3 @@ Supabase PostgreSQL with **pgvector** for embedding storage and similarity searc
 
 Row Level Security (RLS) is enabled on all tables — users can only access their own data.
 
----
-
-## Project Structure
-
-```
-readfocus/
-├── backend/
-│   ├── agents/
-│   │   ├── graph.py              # LangGraph state machine
-│   │   ├── orchestrator_agent.py
-│   │   ├── planner_agent.py
-│   │   ├── test_generator_agent.py
-│   │   ├── evaluator_agent.py
-│   │   └── optimizer_agent.py
-│   ├── routers/
-│   │   ├── auth.py               # Profile + calibration
-│   │   ├── books.py              # Upload + ingest
-│   │   ├── sessions.py           # Session lifecycle
-│   │   └── dashboard.py          # Aggregated stats
-│   ├── services/
-│   │   ├── llm.py                # Multi-provider LLM instances
-│   │   ├── embeddings.py         # Google AI Studio embeddings
-│   │   ├── retriever.py          # pgvector RAG retriever
-│   │   ├── book_ingestor.py      # PDF/EPUB parsing + chunking
-│   │   └── supabase_client.py
-│   ├── Dockerfile
-│   ├── render.yaml
-│   └── main.py
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Library.jsx
-│   │   │   ├── ReadingSession.jsx
-│   │   │   ├── ComprehensionTest.jsx
-│   │   │   ├── Results.jsx
-│   │   │   └── Dashboard.jsx
-│   │   ├── components/
-│   │   │   ├── CalibrationFlow.jsx
-│   │   │   ├── Layout.jsx
-│   │   │   └── ui/
-│   │   └── lib/
-│   │       ├── api.js
-│   │       └── supabase.js
-│   ├── vercel.json
-│   └── vite.config.js
-├── supabase/
-│   └── migrations/
-├── Makefile
-└── requirements.txt
-```

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import Any, List, Optional, cast
+from typing import Any, List, cast
 from datetime import datetime
 
 from backend.dependencies import get_current_user

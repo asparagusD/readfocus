@@ -1,4 +1,9 @@
 import os
+import subprocess
+import sys
+from datetime import datetime
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -6,11 +11,6 @@ from dotenv import load_dotenv
 from backend.routers import auth, books, sessions, agent, dashboard
 
 load_dotenv()
-
-import subprocess
-import sys
-from datetime import datetime
-from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

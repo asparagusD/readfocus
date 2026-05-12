@@ -19,7 +19,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
         "id, title, author, total_chunks, total_words, status"
     ).eq("user_id", user_id).eq("status", "ready").execute()
     books: list[Row] = cast(list[Row], books_resp.data or [])
-    book_ids = [b["id"] for b in books]
+    [b["id"] for b in books]
 
     progress_resp = supabase.table("reading_progress").select(
         "book_id, chunks_completed, average_score"
@@ -80,7 +80,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
     # ── 5. Score over time (one entry per completed test, keyed by book) ──────
     score_over_time = []
     for result in results:
-        session = results_by_session.get(result["session_id"])
+        results_by_session.get(result["session_id"])
         # Find book_id from session
         matched_session = next((s for s in sessions if s["id"] == result["session_id"]), None)
         if not matched_session:

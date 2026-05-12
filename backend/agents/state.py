@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Dict, Optional
+from typing import TypedDict
 
 class AgentState(TypedDict, total=False):
     user_id: str

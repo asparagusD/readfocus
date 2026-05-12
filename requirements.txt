@@ -2,7 +2,8 @@ fastapi
 uvicorn[standard]
 supabase
 langchain
-langchain-openai
+groq
+langchain-groq
 langchain-google-genai
 langchain-community
 langgraph

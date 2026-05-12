@@ -13,7 +13,7 @@ if not GOOGLE_AI_STUDIO_KEY:
 
 embeddings_client = GoogleGenerativeAIEmbeddings(
     google_api_key=GOOGLE_AI_STUDIO_KEY,
-    model="models/text-embedding-004"
+    model="models/gemini-embedding-2"
 )
 
 async def generate_embedding(text: str) -> list[float]:

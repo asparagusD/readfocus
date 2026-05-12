@@ -181,6 +181,13 @@ export function Library() {
                       Processing upload…
                     </div>
                   </>
+                ) : book.status === 'error' ? (
+                  <>
+                    <div className="rf-card-title">{book.title}</div>
+                    <div className="rf-card-meta" style={{color: 'var(--red-mid)'}}>
+                      Upload failed due to processing error.
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div className="rf-card-title">{book.title}</div>
@@ -193,6 +200,8 @@ export function Library() {
               <div className="rf-card-right">
                 {book.status === 'processing' ? (
                   <span className="rf-processing-text">Analysing book…</span>
+                ) : book.status === 'error' ? (
+                  <span className="rf-processing-text" style={{color: 'var(--red-mid)'}}>Upload failed</span>
                 ) : (
                   <>
                     {/* Placeholder for progress/score if available in the future. For now, we mock the display */}

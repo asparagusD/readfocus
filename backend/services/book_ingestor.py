@@ -120,43 +120,51 @@ async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: 
     """
     Coordinates extraction, chunking, embedding generation, and database inserts.
     """
-    if file_type.lower() == 'pdf':
-        pages = extract_text_from_pdf(file_bytes)
-    elif file_type.lower() == 'epub':
-        pages = extract_text_from_epub(file_bytes)
-    else:
-        raise ValueError("Unsupported file type. Must be 'pdf' or 'epub'.")
+    try:
+        if file_type.lower() == 'pdf':
+            pages = extract_text_from_pdf(file_bytes)
+        elif file_type.lower() == 'epub':
+            pages = extract_text_from_epub(file_bytes)
+        else:
+            raise ValueError("Unsupported file type. Must be 'pdf' or 'epub'.")
 
-    chunks = chunk_text(pages, target_words)
-    total_chunks = len(chunks)
-    total_words = 0
+        chunks = chunk_text(pages, target_words)
+        total_chunks = len(chunks)
+        total_words = 0
 
-    for i, chunk in enumerate(chunks):
-        wc = len(chunk.split())
-        total_words += wc
-        
-        # 1) generate an embedding asynchronously
-        embedding = await generate_embedding(chunk)
-        
-        # 2) insert a row into the chunks table
-        supabase.table("chunks").insert({
-            "book_id": book_id,
-            "user_id": user_id,
-            "chunk_index": i,
-            "word_count": wc,
-            "content": chunk,
-            "embedding": embedding
-        }).execute()
-        
-    # update the books table
-    supabase.table("books").update({
-        "total_chunks": total_chunks,
-        "total_words": total_words,
-        "status": "ready"
-    }).eq("id", book_id).execute()
+        for i, chunk in enumerate(chunks):
+            wc = len(chunk.split())
+            total_words += wc
+            
+            # 1) generate an embedding asynchronously
+            embedding = await generate_embedding(chunk)
+            
+            # 2) insert a row into the chunks table
+            supabase.table("chunks").insert({
+                "book_id": book_id,
+                "user_id": user_id,
+                "chunk_index": i,
+                "word_count": wc,
+                "content": chunk,
+                "embedding": embedding
+            }).execute()
+            
+        # update the books table
+        supabase.table("books").update({
+            "total_chunks": total_chunks,
+            "total_words": total_words,
+            "status": "ready"
+        }).eq("id", book_id).execute()
 
-    return {
-        "total_chunks": total_chunks,
-        "total_words": total_words,
-        "status": "ready"
-    }
+        return {
+            "total_chunks": total_chunks,
+            "total_words": total_words,
+            "status": "ready"
+        }
+    except Exception as e:
+        # If any step fails, mark the book as failed so it doesn't stay 'processing' forever
+        print(f"Failed to ingest book {book_id}: {e}")
+        supabase.table("books").update({
+            "status": "error"
+        }).eq("id", book_id).execute()
+        return {"status": "error", "error": str(e)}

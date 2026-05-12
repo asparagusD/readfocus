@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { UploadCloud, ArrowRight } from 'lucide-react';
+import { UploadCloud, ArrowRight, Trash2 } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
@@ -40,6 +40,17 @@ export function Library() {
   useEffect(() => {
     loadBooks();
   }, [loadBooks]);
+
+  const handleDeleteBook = async (bookId) => {
+    if (!window.confirm("Are you sure you want to delete this book from your library?")) return;
+    
+    try {
+      await fetchApi(`/books/${bookId}`, { method: 'DELETE' });
+      setBooks(prev => prev.filter(b => b.id !== bookId));
+    } catch (err) {
+      alert("Failed to delete book: " + err.message);
+    }
+  };
 
   // Polling logic for processing books
   useEffect(() => {
@@ -197,20 +208,31 @@ export function Library() {
                   </>
                 )}
               </div>
-              <div className="rf-card-right">
-                {book.status === 'processing' ? (
-                  <span className="rf-processing-text">Analysing book…</span>
-                ) : book.status === 'error' ? (
-                  <span className="rf-processing-text" style={{color: 'var(--red-mid)'}}>Upload failed</span>
-                ) : (
-                  <>
-                    {/* Placeholder for progress/score if available in the future. For now, we mock the display */}
-                    <span className="rf-progress-text">Ch. 1 of {book.total_chunks || '?'}</span>
-                    <Link to={`/read/${book.id}`} className="rf-action-link">
-                      Continue <ArrowRight size={14} className="rf-arrow" />
-                    </Link>
-                  </>
-                )}
+              <div className="rf-card-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {book.status === 'processing' ? (
+                    <span className="rf-processing-text">Analysing book…</span>
+                  ) : book.status === 'error' ? (
+                    <span className="rf-processing-text" style={{color: 'var(--red-mid)'}}>Upload failed</span>
+                  ) : (
+                    <>
+                      {/* Placeholder for progress/score if available in the future. For now, we mock the display */}
+                      <span className="rf-progress-text">Ch. 1 of {book.total_chunks || '?'}</span>
+                      <Link to={`/read/${book.id}`} className="rf-action-link">
+                        Continue <ArrowRight size={14} className="rf-arrow" />
+                      </Link>
+                    </>
+                  )}
+                </div>
+                <button 
+                  onClick={() => handleDeleteBook(book.id)} 
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--ink-light)', display: 'flex' }}
+                  title="Delete Book"
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--red-mid)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--ink-light)'}
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
           ))

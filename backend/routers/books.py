@@ -97,3 +97,29 @@ async def get_book_status(book_id: str, user_id: str = Depends(get_current_user)
         raise HTTPException(status_code=404, detail="Book not found")
         
     return resp.data[0]
+
+@router.delete("/{book_id}")
+async def delete_book(book_id: str, user_id: str = Depends(get_current_user)):
+    # 1. Fetch book to get storage path and verify ownership
+    resp = supabase.table("books").select("storage_path").eq("id", book_id).eq("user_id", user_id).execute()
+    if not resp.data:
+        raise HTTPException(status_code=404, detail="Book not found")
+        
+    book: dict[str, Any] = cast(dict[str, Any], resp.data[0])
+    storage_path = str(book.get("storage_path")) if book.get("storage_path") else None
+    
+    # 2. Delete from Storage if path exists
+    if storage_path and storage_path != "None":
+        try:
+            supabase.storage.from_("books").remove([storage_path])
+        except Exception as e:
+            # We can log this, but we should still delete the db record
+            print(f"Failed to delete storage object {storage_path}: {e}")
+            
+    # 3. Delete from DB (CASCADE will handle related records)
+    try:
+        supabase.table("books").delete().eq("id", book_id).eq("user_id", user_id).execute()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete book record: {str(e)}")
+        
+    return {"status": "success", "message": "Book deleted successfully"}

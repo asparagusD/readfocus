@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import Any, List, cast
 from datetime import datetime
@@ -12,6 +12,19 @@ from backend.agents.optimizer_agent import optimize_pace
 
 router = APIRouter()
 
+async def generate_test_background(session_id: str, chunk_indices: List[int], book_id: str):
+    """Generates test questions in the background and saves them to the session."""
+    try:
+        questions_pydantic = await generate_test(session_id, chunk_indices, book_id)
+        if questions_pydantic:
+            test_questions = [q.model_dump() if hasattr(q, 'model_dump') else q.dict() for q in questions_pydantic]
+            supabase.table("sessions").update({
+                "test_questions": test_questions
+            }).eq("id", session_id).execute()
+    except Exception as e:
+        print(f"Background test generation failed: {e}")
+
+
 class StartSessionRequest(BaseModel):
     book_id: str
 
@@ -23,7 +36,7 @@ class SubmitAnswersRequest(BaseModel):
     time_taken_seconds: int
 
 @router.post("/start")
-async def start_session(req: StartSessionRequest, user_id: str = Depends(get_current_user)):
+async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     # 1. Run planner agent
     plan = await plan_session(user_id, req.book_id)
     if not plan:
@@ -54,6 +67,9 @@ async def start_session(req: StartSessionRequest, user_id: str = Depends(get_cur
         
     session_id = cast(dict[str, Any], session_resp.data[0])["id"]
     
+    # 4. Kick off background test generation
+    background_tasks.add_task(generate_test_background, session_id, chunk_indices, req.book_id)
+    
     return {
         "session_id": session_id,
         "chunk_indices": chunk_indices,
@@ -65,7 +81,7 @@ async def start_session(req: StartSessionRequest, user_id: str = Depends(get_cur
 @router.post("/{session_id}/finish-reading")
 async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: str = Depends(get_current_user)):
     # 1. Fetch session
-    sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index").eq("id", session_id).eq("user_id", user_id).execute()
+    sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
     if not sess_resp.data:
         raise HTTPException(status_code=404, detail="Session not found.")
         
@@ -74,6 +90,7 @@ async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: st
     start_idx = sess["chunk_start_index"]
     end_idx = sess["chunk_end_index"]
     chunk_indices = list(range(start_idx, end_idx + 1))
+    test_questions = sess.get("test_questions")
     
     # 2. Update session status
     supabase.table("sessions").update({
@@ -81,20 +98,22 @@ async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: st
         "actual_duration_minutes": req.actual_duration_minutes
     }).eq("id", session_id).execute()
     
-    # 3. Call generate_test
-    questions_pydantic = await generate_test(session_id, chunk_indices, book_id)
-    if not questions_pydantic:
-        raise HTTPException(status_code=500, detail="Failed to generate test.")
+    # 3. Check if we already have questions from background task
+    if not test_questions:
+        print("Questions not found from background task. Generating synchronously...")
+        questions_pydantic = await generate_test(session_id, chunk_indices, book_id)
+        if not questions_pydantic:
+            raise HTTPException(status_code=500, detail="Failed to generate test.")
+            
+        test_questions = [q.model_dump() if hasattr(q, 'model_dump') else q.dict() for q in questions_pydantic]
         
-    test_questions = [q.model_dump() if hasattr(q, 'model_dump') else q.dict() for q in questions_pydantic]
-    
-    # Save test questions to DB so we can grade them later
-    try:
-        supabase.table("sessions").update({
-            "test_questions": test_questions
-        }).eq("id", session_id).execute()
-    except Exception as e:
-        print(f"Migration missing? Error: {e}")
+        # Save test questions to DB so we can grade them later
+        try:
+            supabase.table("sessions").update({
+                "test_questions": test_questions
+            }).eq("id", session_id).execute()
+        except Exception as e:
+            print(f"Migration missing? Error: {e}")
     
     # 4. Filter guidance out for the frontend
     filtered_questions = [{"question": q["question"], "type": q["type"]} for q in test_questions]

@@ -17,17 +17,21 @@ embeddings_client = GoogleGenerativeAIEmbeddings(
     output_dimensionality=1536
 )
 
+from tenacity import retry, wait_exponential, stop_after_attempt
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Wait 2^x * 1 seconds between each retry, up to 60 seconds, max 10 attempts
+@retry(
+    wait=wait_exponential(multiplier=1, min=2, max=60), 
+    stop=stop_after_attempt(10),
+    before_sleep=lambda retry_state: logger.warning(f"Rate limited or error. Retrying embedding in {retry_state.next_action.sleep}s...")
+)
 async def generate_embedding(text: str) -> list[float]:
     """
     Generates an embedding for the given text using Google AI Studio.
-    Google's embedding API is free with no hard daily limit stated in docs — it shares the project quota. 
-    If rate limited, we retry once with a 0.5s delay.
+    Uses exponential backoff to handle 429 RESOURCE_EXHAUSTED errors gracefully.
     """
-    try:
-        # Using aembed_query to execute asynchronously
-        return await embeddings_client.aembed_query(text)
-    except Exception as e:
-        # If rate limited or other error, retry once
-        print(f"Embedding error: {e}. Retrying after 0.5s...")
-        await asyncio.sleep(0.5)
-        return await embeddings_client.aembed_query(text)
+    return await embeddings_client.aembed_query(text)

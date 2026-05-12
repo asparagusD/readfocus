@@ -130,6 +130,9 @@ async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: 
 
         chunks = chunk_text(pages, target_words)
         total_chunks = len(chunks)
+        
+        # Pre-calculate total words to update DB early
+        total_words_estimated = sum(len(c.split()) for c in chunks)
         total_words = 0
 
         for i, chunk in enumerate(chunks):
@@ -149,16 +152,25 @@ async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: 
                 "embedding": embedding
             }).execute()
             
-        # update the books table
-        supabase.table("books").update({
-            "total_chunks": total_chunks,
-            "total_words": total_words,
-            "status": "ready"
-        }).eq("id", book_id).execute()
+            # 3) Check if we reached 5 chunks, if so, unlock the book for reading
+            if i == 4:
+                supabase.table("books").update({
+                    "total_chunks": total_chunks,
+                    "total_words": total_words_estimated,
+                    "status": "ready"
+                }).eq("id", book_id).execute()
+            
+        # If the book was short (<= 5 chunks), we still need to set it to ready at the end
+        if total_chunks <= 5:
+            supabase.table("books").update({
+                "total_chunks": total_chunks,
+                "total_words": total_words_estimated,
+                "status": "ready"
+            }).eq("id", book_id).execute()
 
         return {
             "total_chunks": total_chunks,
-            "total_words": total_words,
+            "total_words": total_words_estimated,
             "status": "ready"
         }
     except Exception as e:

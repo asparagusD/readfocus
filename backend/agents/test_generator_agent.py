@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
@@ -22,18 +22,28 @@ parser = PydanticOutputParser(pydantic_object=TestQuestionList)
 async def test_generator_node(state: AgentState) -> dict:
     book_id = state.get("book_id")
     chunk_indices = state.get("chunk_indices", [])
+    session_id = state.get("session_id")
     
     if not book_id or not chunk_indices:
         return {"error": "Missing book_id or chunk_indices in state."}
+        
+    # 0. Check cache
+    if session_id and chunk_indices:
+        first_chunk = chunk_indices[0]
+        cache_resp = supabase.table("test_results").select("questions").eq("session_id", session_id).eq("chunk_index", first_chunk).execute()
+        cache_data = cast(list[dict], cache_resp.data or [])
+        if cache_data and cache_data[0].get("questions"):
+            return {"test_questions": cache_data[0]["questions"]}
     
     # 1. Fetch chunk texts
     passage = ""
     # Supabase allows .in_() for array filtering
     resp = supabase.table("chunks").select("chunk_index, content").eq("book_id", book_id).in_("chunk_index", chunk_indices).execute()
+    chunk_data = cast(list[dict], resp.data or [])
     
-    if resp.data:
+    if chunk_data:
         # Sort them to maintain correct reading order
-        sorted_chunks = sorted(resp.data, key=lambda x: x["chunk_index"])
+        sorted_chunks = sorted(chunk_data, key=lambda x: x["chunk_index"])
         passage = "\n\n".join(c["content"] for c in sorted_chunks)
             
     if not passage:
@@ -97,12 +107,12 @@ async def generate_test(session_id: str, chunk_indices: List[int], book_id: str)
     """Helper function to run the workflow strictly for test generation."""
     from backend.agents.graph import workflow
     
-    initial_state = {
+    initial_state = cast(AgentState, {
         "session_id": session_id,
         "book_id": book_id,
         "chunk_indices": chunk_indices,
-        "event_type": "generate_test"
-    }
+        "status": "testing"
+    })
     
     result = await workflow.ainvoke(initial_state)
     

@@ -49,13 +49,7 @@ sambanova_llm = ChatOpenAI(
     openai_api_key=SAMBANOVA_API_KEY,
 )
 
-# 2. Orchestrator — Groq
-# Reason: The orchestrator is called once per session start. Groq's LPU hardware means near-instant routing decisions. 1,000 RPD is sufficient.
-orchestrator_llm = ChatOpenAI(
-    model="llama-3.3-70b-versatile",
-    openai_api_base="https://api.groq.com/openai/v1",
-    openai_api_key=GROQ_API_KEY,
-).with_fallbacks([sambanova_llm])
+
 
 # 3. Session planner — Cerebras
 # Reason: The planner sends short, structured prompts (session history + scoring trend). 

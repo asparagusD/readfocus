@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional
+from typing import List, Optional, cast
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
@@ -39,7 +39,8 @@ async def optimizer_node(state: AgentState) -> dict:
     re_read_mode = False
     
     prog_resp = supabase.table("reading_progress").select("id, re_read_queue").eq("user_id", user_id).eq("book_id", book_id).execute()
-    re_read_queue = prog_resp.data[0]["re_read_queue"] or [] if prog_resp.data else []
+    prog_data = cast(list[dict], prog_resp.data or [])
+    re_read_queue = prog_data[0]["re_read_queue"] or [] if prog_data else []
     
     if total_score >= 40:
         next_chunk_multiplier = 1.15 # grow
@@ -83,8 +84,8 @@ async def optimizer_node(state: AgentState) -> dict:
     }
         
     # 4 & 5. Update reading_progress
-    if prog_resp.data:
-        prog_id = prog_resp.data[0]["id"]
+    if prog_data:
+        prog_id = prog_data[0]["id"]
         
         try:
             supabase.table("reading_progress").update({
@@ -107,7 +108,7 @@ async def optimize_pace(session_id: str, user_id: str, book_id: str, chunk_indic
         "book_id": book_id,
         "chunk_indices": chunk_indices,
         "evaluation_result": evaluation_result,
-        "event_type": "optimize_pace"
+        "status": "completed"
     }
     
     result = await workflow.ainvoke(initial_state)

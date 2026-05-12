@@ -4,7 +4,7 @@ class AgentState(TypedDict, total=False):
     user_id: str
     book_id: str
     session_id: str
-    event_type: str  # 'plan_session', 'generate_test', 'evaluate_answers', 'optimize_pace'
+    status: str  # 'reading', 'testing', 'evaluating', 'completed'
     chunk_indices: list[int]
     chunk_texts: list[str]
     session_plan: dict

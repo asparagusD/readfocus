@@ -21,12 +21,13 @@ It is a quiet, serious tool for serious readers.
 
 ## How It Works
 
-1. **Upload** a PDF or EPUB book. The backend chunks it into ~600-word segments and generates vector embeddings for each chunk using Google AI Studio.
-2. **Start a session**. An AI planner agent reads your reading history and comprehension scores to decide how many chunks to assign and how long the session should be. Your calibrated reading speed (WPM) is factored in for accurate time estimates.
-3. **Read** in a distraction-free environment. A pacing bar shows your estimated position in the text. A circular timer tracks your focus duration.
-4. **Take the test**. After reading, you are given 5 timed questions — 3 factual recall, 1 inference, 1 summary. The test generator uses RAG to surface questions about how the current passage connects to earlier sections you have read, making later questions progressively harder.
-5. **Get evaluated**. Your written answers are graded by a large language model (Google Gemini). Each answer receives a score out of 10 and personalised written feedback.
+1. **Upload** a PDF or EPUB book. The backend chunks it into ~600-word segments and generates vector embeddings. To ensure a zero-wait experience, the first 5 chunks are processed immediately to mark the book as `ready`, while the remaining chunks continue processing in the background.
+2. **Start a session**. An AI planner agent reads your reading history and comprehension scores to decide how many chunks to assign and how long the session should be.
+3. **Read** in a distraction-free environment. A pacing bar shows your estimated position in the text. As soon as you click "Start Reading", a background task begins generating the 5 comprehension questions concurrently.
+4. **Take the test**. Since questions are pre-generated in the background, the test loads instantly. You are given 5 timed questions — 3 factual recall, 1 inference, 1 summary.
+5. **Get evaluated**. To eliminate the final submission delay, your written answers are evaluated in the background as you navigate between questions. When you hit submit, any remaining ungraded answers are evaluated concurrently.
 6. **Review your progress**. The Dashboard shows your comprehension score trend over time, reading streak, words read this week, book-by-book progress, and recent evaluator feedback quotes.
+
 
 ---
 
@@ -103,20 +104,20 @@ orchestrator_node
 
 **Planner context**: the planner fetches the last 5 completed sessions and their scores via direct SQL queries (not a vector search) to assess whether comprehension is improving, stable, or declining.
 
-### Multi-Provider LLM Strategy
+### LLM Strategy
 
-All five LLM instances are on different free-tier providers to avoid shared rate limit pools:
+To simplify setup and reduce SDK dependencies, all agents have been consolidated to use **Groq** as the sole provider:
 
-| Agent | Provider | Model | Reason |
-|---|---|---|---|
-| Orchestrator | **Groq** | `llama-3.3-70b-versatile` | LPU hardware, near-instant routing |
-| Planner | **Cerebras** | `llama-3.3-70b` | 1 M tokens/day free, short structured prompts |
-| Optimizer | **Cerebras** | `llama3.1-8b` | Lightest call in the system |
-| Test Generator | **Google AI Studio** | `gemini-2.5-flash` | 1 M context window for chunk + RAG context |
-| Evaluator | **Google AI Studio** | `gemini-2.5-flash` | Long-context grading of written answers |
-| Fallback (all) | **SambaNova** | `Meta-Llama-3.3-70B-Instruct` | Persistent free tier, no expiry |
+| Agent | Provider | Model |
+|---|---|---|
+| Orchestrator | **Groq** | `llama-3.3-70b-versatile` |
+| Planner | **Groq** | `llama-3.3-70b-versatile` |
+| Optimizer | **Groq** | `llama-3.3-70b-versatile` |
+| Test Generator | **Groq** | `llama-3.3-70b-versatile` |
+| Evaluator | **Groq** | `llama-3.3-70b-versatile` |
 
-Each primary LLM is wrapped with `.with_fallbacks([sambanova_llm])` so any 429 or 503 degrades gracefully without returning a 500 to the frontend.
+*Note: Google AI Studio is still used exclusively for generating high-quality text embeddings in `embeddings.py`.*
+
 
 ### Database
 

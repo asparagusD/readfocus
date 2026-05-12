@@ -95,6 +95,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-width: 0;
 }
 
 .rf-card-title {
@@ -114,6 +115,9 @@
   color: var(--ink-faint);
   display: flex;
   align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rf-dot {

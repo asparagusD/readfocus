@@ -35,6 +35,53 @@ class SubmitAnswersRequest(BaseModel):
     answers: List[str]
     time_taken_seconds: int
 
+class EvaluateSingleRequest(BaseModel):
+    index: int
+    answer: str
+
+async def evaluate_single_background(session_id: str, index: int, answer: str, user_id: str):
+    """Background task to evaluate a single answer and cache it."""
+    try:
+        from backend.agents.evaluator_agent import evaluate_single_answer
+        
+        # 1. Fetch session and questions
+        sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
+        if not sess_resp.data:
+            return
+            
+        sess = cast(dict[str, Any], sess_resp.data[0])
+        book_id = sess["book_id"]
+        start_idx = sess["chunk_start_index"]
+        end_idx = sess["chunk_end_index"]
+        chunk_indices = list(range(start_idx, end_idx + 1))
+        test_questions = sess.get("test_questions", [])
+        
+        if not test_questions or index >= len(test_questions):
+            return
+            
+        question = test_questions[index]
+        
+        # 2. Fetch passage
+        passage = ""
+        resp = supabase.table("chunks").select("chunk_index, content").eq("book_id", book_id).in_("chunk_index", chunk_indices).execute()
+        chunk_data = cast(list[dict], resp.data or [])
+        if chunk_data:
+            sorted_chunks = sorted(chunk_data, key=lambda x: x["chunk_index"])
+            passage = "\n\n".join(c["content"] for c in sorted_chunks)
+            
+        # 3. Evaluate
+        result = await evaluate_single_answer(passage, question, answer)
+        
+        # 4. Save to DB
+        test_questions[index]["cached_eval"] = result
+        
+        supabase.table("sessions").update({
+            "test_questions": test_questions
+        }).eq("id", session_id).execute()
+        
+    except Exception as e:
+        print(f"Background single evaluation failed: {e}")
+
 @router.post("/start")
 async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     # 1. Run planner agent
@@ -122,6 +169,11 @@ async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: st
         "test_id": session_id,
         "questions": filtered_questions
     }
+
+@router.post("/{session_id}/evaluate-single")
+async def evaluate_single(session_id: str, req: EvaluateSingleRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+    background_tasks.add_task(evaluate_single_background, session_id, req.index, req.answer, user_id)
+    return {"status": "queued"}
 
 @router.post("/{session_id}/submit-answers")
 async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: str = Depends(get_current_user)):

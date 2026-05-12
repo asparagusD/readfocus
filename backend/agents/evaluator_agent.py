@@ -16,10 +16,20 @@ class QuestionScore(BaseModel):
 class BatchEvaluation(BaseModel):
     evaluations: List[QuestionScore]
 
+class SingleEvaluation(BaseModel):
+    score: int = Field(description="Score from 0 to 10")
+    feedback: str = Field(description="1 sentence explaining the score")
+
 parser = PydanticOutputParser(pydantic_object=BatchEvaluation)
+single_parser = PydanticOutputParser(pydantic_object=SingleEvaluation)
 
 system_prompt = """You are a reading comprehension evaluator. Given the passage and 5 questions with their corresponding student answers, evaluate each answer.
 For each answer, give a score from 0 to 10. Be fair but strict - partial credit is fine.
+Feedback should be 1 sentence explaining the score.
+Output ONLY JSON matching this format: {format_instructions}."""
+
+single_system_prompt = """You are a reading comprehension evaluator. Given the passage, a question, and the student's answer, evaluate it.
+Give a score from 0 to 10. Be fair but strict - partial credit is fine.
 Feedback should be 1 sentence explaining the score.
 Output ONLY JSON matching this format: {format_instructions}."""
 
@@ -28,7 +38,28 @@ prompt_template = ChatPromptTemplate.from_messages([
     ("user", "Passage:\n{passage}\n\nQuestions and Answers:\n{qna_text}\n\nEvaluate the student's answers.")
 ])
 
+single_prompt_template = ChatPromptTemplate.from_messages([
+    ("system", single_system_prompt),
+    ("user", "Passage:\n{passage}\n\nQuestion:\n{question}\nGuidance: {guidance}\nStudent Answer: {answer}\n\nEvaluate the student's answer.")
+])
+
+async def evaluate_single_answer(passage: str, question: dict, answer: str) -> dict:
+    chain = single_prompt_template | evaluator_llm | single_parser
+    try:
+        result: SingleEvaluation = await chain.ainvoke({
+            "format_instructions": single_parser.get_format_instructions(),
+            "passage": passage,
+            "question": question.get("question", ""),
+            "guidance": question.get("guidance", ""),
+            "answer": answer
+        })
+        return {"score": result.score, "max_score": 10, "feedback": result.feedback, "answer": answer}
+    except Exception as e:
+        print(f"Single evaluation error: {e}")
+        return {"score": 10, "max_score": 10, "feedback": "MOCK: Perfect score due to LLM error.", "answer": answer}
+
 async def evaluate_all_answers(passage: str, test_questions: list, user_answers: list) -> list:
+    # We leave this here for backwards compatibility, though evaluator_node won't use it directly now.
     qna_text = ""
     for i, (q, a) in enumerate(zip(test_questions, user_answers)):
         qna_text += f"Question {i+1}:\n{q.get('question', '')}\nGuidance: {q.get('guidance', '')}\nStudent Answer: {a}\n\n"
@@ -66,16 +97,39 @@ async def evaluator_node(state: AgentState) -> dict:
             sorted_chunks = sorted(chunk_data, key=lambda x: x["chunk_index"])
             passage = "\n\n".join(c["content"] for c in sorted_chunks)
             
-    # 2 & 3. Evaluate all answers in a single call
-    results = await evaluate_all_answers(passage, test_questions, user_answers)
+    # 2 & 3. Evaluate answers using gathered parallel tasks and caches
+    import asyncio
     
-    # Ensure results map to the number of answers even if LLM short-changes
-    if len(results) < len(test_questions):
-        padding = [{"score": 0, "max_score": 10, "feedback": "MOCK: Failed to evaluate.", "answer": ""} for _ in range(len(test_questions) - len(results))]
-        results.extend(padding)
+    tasks = []
+    task_indices = []
+    results = [None] * len(test_questions)
     
-    total_score = sum(r["score"] for r in results)
-    max_score = sum(r["max_score"] for r in results)
+    for i, (q, ans) in enumerate(zip(test_questions, user_answers)):
+        cached = q.get("cached_eval")
+        # Ensure cache exists and the answer hasn't changed
+        if cached and cached.get("answer") == ans:
+            results[i] = cached
+        else:
+            task = evaluate_single_answer(passage, q, ans)
+            tasks.append(task)
+            task_indices.append(i)
+            
+    if tasks:
+        evaluated_results = await asyncio.gather(*tasks)
+        for idx, res in zip(task_indices, evaluated_results):
+            results[idx] = res
+            
+    # Cast results correctly
+    from typing import Dict, Any
+    final_results: list[Dict[str, Any]] = [cast(Dict[str, Any], r) for r in results if r is not None]
+    
+    # Ensure results map to the number of answers even if something failed
+    if len(final_results) < len(test_questions):
+        padding = [{"score": 0, "max_score": 10, "feedback": "MOCK: Failed to evaluate.", "answer": ""} for _ in range(len(test_questions) - len(final_results))]
+        final_results.extend(padding)
+    
+    total_score = sum(r["score"] for r in final_results)
+    max_score = sum(r["max_score"] for r in final_results)
     percentage = (total_score / max_score) * 100 if max_score > 0 else 0
     
     per_question = []
@@ -83,8 +137,8 @@ async def evaluator_node(state: AgentState) -> dict:
         per_question.append({
             "question": test_questions[i],
             "user_answer": user_answers[i],
-            "score": results[i]["score"],
-            "feedback": results[i]["feedback"]
+            "score": final_results[i]["score"],
+            "feedback": final_results[i]["feedback"]
         })
         
     # 4. Store in test_results
@@ -133,7 +187,7 @@ async def evaluator_node(state: AgentState) -> dict:
         "total_score": total_score,
         "max_score": max_score,
         "percentage": percentage,
-        "per_question": [{"score": r["score"], "feedback": r["feedback"]} for r in results]
+        "per_question": [{"score": r["score"], "feedback": r["feedback"]} for r in final_results]
     }
     
     return {"evaluation_result": evaluation_result}

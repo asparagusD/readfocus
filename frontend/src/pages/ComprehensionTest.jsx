@@ -18,6 +18,7 @@ export function ComprehensionTest() {
   // Test State
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState(['', '', '', '', '']);
+  const [lastEvaluatedAnswers, setLastEvaluatedAnswers] = useState(['', '', '', '', '']);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -99,6 +100,19 @@ export function ComprehensionTest() {
 
   const navigateQuestion = (index) => {
     if (index === currentIndex || isSubmitting) return;
+    
+    // Trigger background evaluation if answer changed
+    if (answers[currentIndex].trim() !== lastEvaluatedAnswers[currentIndex].trim() && answers[currentIndex].trim() !== '') {
+      fetchApi(`/sessions/${sessionId}/evaluate-single`, {
+        method: 'POST',
+        body: JSON.stringify({ index: currentIndex, answer: answers[currentIndex] })
+      }).catch(console.error);
+      
+      const newLastEval = [...lastEvaluatedAnswers];
+      newLastEval[currentIndex] = answers[currentIndex];
+      setLastEvaluatedAnswers(newLastEval);
+    }
+    
     setSlideDirection('out');
     setTimeout(() => {
       setCurrentIndex(index);

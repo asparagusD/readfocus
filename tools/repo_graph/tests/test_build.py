@@ -179,6 +179,10 @@ def test_external_services_and_banned_flag(graph):
     nodes = {n["id"]: n for n in graph["nodes"]}
     assert nodes["external:groq"]["banned"] is True
     assert nodes["external:supabase"]["banned"] is False
+    lines = {(e["from"], e["to"]): e["line"]
+             for e in graph["edges"] if e["type"] == "calls_external"}
+    assert lines[DB, "external:groq"] == 3
+    assert lines["file:frontend/src/lib/api.js", "external:supabase"] == 1
 
 
 def test_langgraph_nodes_and_edges(graph):

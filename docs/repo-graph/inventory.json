@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 120,
-    "inventoried": 110,
-    "excluded": 10
+    "tracked": 123,
+    "inventoried": 112,
+    "excluded": 11
   },
   "files": [
     {
@@ -330,7 +330,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 244,
-      "size_bytes": 19098,
+      "size_bytes": 19742,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -841,8 +841,8 @@
     {
       "path": "tools/repo_graph/build.py",
       "language": "python",
-      "lines": 376,
-      "size_bytes": 16352,
+      "lines": 383,
+      "size_bytes": 16780,
       "role": "script",
       "purpose": "Builds docs/repo-graph/graph.json: typed nodes and edges for files, endpoints, tables, functions, env vars, external services and LangGraph nodes."
     },
@@ -857,10 +857,18 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 112,
-      "size_bytes": 14626,
+      "lines": 114,
+      "size_bytes": 14965,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
+    },
+    {
+      "path": "tools/repo_graph/render.py",
+      "language": "python",
+      "lines": 227,
+      "size_bytes": 9061,
+      "role": "script",
+      "purpose": "Renders docs/repo-graph/REPO_MAP.md: Mermaid layer and LangGraph diagrams plus endpoint, table, function, service, env var and file tables."
     },
     {
       "path": "tools/repo_graph/tests/__init__.py",
@@ -873,8 +881,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 237,
-      "size_bytes": 9501,
+      "lines": 241,
+      "size_bytes": 9735,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },
@@ -885,9 +893,21 @@
       "size_bytes": 3168,
       "role": "test",
       "purpose": "Pytest: role, language and exclusion rules, CRLF-safe measuring, purpose checks, and completeness of the real inventory."
+    },
+    {
+      "path": "tools/repo_graph/tests/test_render.py",
+      "language": "python",
+      "lines": 71,
+      "size_bytes": 2562,
+      "role": "test",
+      "purpose": "Pytest: diagram links, lookup table rows and the file list of the rendered map, on the fixture repo and the real one."
     }
   ],
   "excluded": [
+    {
+      "path": "docs/repo-graph/REPO_MAP.md",
+      "reason": "generated"
+    },
     {
       "path": "docs/repo-graph/graph.json",
       "reason": "generated"

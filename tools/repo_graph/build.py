@@ -18,8 +18,9 @@ external, graph_node. Edges:
     defines_function  file -> function    CREATE FUNCTION in a migration
     uses_env          file -> env         os.getenv, os.environ, import.meta.env
     declares_env      file -> env         KEY= in .env.example, "- key:" in YAML
-    calls_external    file -> external    imports of third-party services; `banned`
-                                          marks providers ruled out by CLAUDE.md
+    calls_external    file -> external    imports of third-party services, with the
+                                          line of first use; `banned` marks providers
+                                          ruled out by CLAUDE.md
     graph_node        file -> graph_node  LangGraph add_node
     graph_edge        graph_node -> graph_node  add_edge, add_conditional_edges
 
@@ -119,9 +120,10 @@ class Graph:
         return node_id
 
     def edge(self, edge_type: str, source: str, target: str, **attrs) -> None:
-        self.edges[(edge_type, source, target)] = {
-            "type": edge_type, "from": source, "to": target, **attrs
-        }
+        key = (edge_type, source, target)
+        old = self.edges.get(key)
+        if old is None or attrs.get("line", 0) < old.get("line", 0):  # keep first use
+            self.edges[key] = {"type": edge_type, "from": source, "to": target, **attrs}
 
     def miss(self, source: str, edge_type: str, target: str) -> None:
         self.unresolved.append({"from": source, "type": edge_type, "target": target})
@@ -220,11 +222,15 @@ def py_endpoints(graph: Graph, path: str, tree: ast.AST, prefix: str) -> None:
             graph.edge("defines_endpoint", f"file:{path}", endpoint)
 
 
-def external(graph: Graph, source: str, name: str) -> None:
+def line_of(text: str, position: int) -> int:
+    return text.count("\n", 0, position) + 1
+
+
+def external(graph: Graph, source: str, name: str, line: int) -> None:
     service = EXTERNALS.get(name)
     if service:
         node = graph.node("external", service, banned=service in BANNED_SERVICES)
-        graph.edge("calls_external", source, node)
+        graph.edge("calls_external", source, node, line=line)
 
 
 def graph_name(node: ast.AST) -> str | None:
@@ -246,9 +252,9 @@ def py_edges(graph: Graph, path: str, text: str, tree: ast.AST, bound: dict) -> 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                external(graph, source, alias.name.split(".")[0])
+                external(graph, source, alias.name.split(".")[0], node.lineno)
         elif isinstance(node, ast.ImportFrom) and not node.level:
-            external(graph, source, (node.module or "").split(".")[0])
+            external(graph, source, (node.module or "").split(".")[0], node.lineno)
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             calls.append((node.func.attr, node.args, [graph_name(a) for a in node.args]))
     for attr, args, names in calls:  # nodes first, so each keeps its handler
@@ -278,7 +284,7 @@ def text_edges(graph: Graph, path: str, lang: str, text: str) -> None:
             graph.edge(edge_type, source, graph.node(node_type, name))
     if lang == "html":
         for host in (h for h in EXTERNALS if "." in h and h in text):
-            external(graph, source, host)
+            external(graph, source, host, line_of(text, text.index(host)))
 
 
 def route_key(method: str, path: str) -> str:
@@ -288,9 +294,10 @@ def route_key(method: str, path: str) -> str:
 
 def js_edges(graph: Graph, path: str, text: str, paths: set[str], routes: dict) -> None:
     source = f"file:{path}"
-    for spec in JS_IMPORT.findall(text):
+    for found in JS_IMPORT.finditer(text):
+        spec = found.group(1)
         if not spec.startswith("."):
-            external(graph, source, spec)
+            external(graph, source, spec, line_of(text, found.start(1)))
             continue
         base = posixpath.normpath(posixpath.join(posixpath.dirname(path), spec))
         target = next((base + s for s in JS_SUFFIXES if base + s in paths), None)

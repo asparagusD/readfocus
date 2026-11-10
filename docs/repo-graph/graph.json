@@ -836,6 +836,12 @@
       "language": "json"
     },
     {
+      "id": "file:tools/repo_graph/render.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:tools/repo_graph/tests/__init__.py",
       "type": "file",
       "role": "test",
@@ -849,6 +855,12 @@
     },
     {
       "id": "file:tools/repo_graph/tests/test_inventory.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/tests/test_render.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1002,72 +1014,86 @@
     {
       "type": "calls_external",
       "from": "file:backend/agents/evaluator_agent.py",
-      "to": "external:langchain"
+      "to": "external:langchain",
+      "line": 3
     },
     {
       "type": "calls_external",
       "from": "file:backend/agents/graph.py",
-      "to": "external:langgraph"
+      "to": "external:langgraph",
+      "line": 1
     },
     {
       "type": "calls_external",
       "from": "file:backend/agents/optimizer_agent.py",
-      "to": "external:langchain"
+      "to": "external:langchain",
+      "line": 4
     },
     {
       "type": "calls_external",
       "from": "file:backend/agents/planner_agent.py",
-      "to": "external:langchain"
+      "to": "external:langchain",
+      "line": 5
     },
     {
       "type": "calls_external",
       "from": "file:backend/agents/test_generator_agent.py",
-      "to": "external:langchain"
+      "to": "external:langchain",
+      "line": 3
     },
     {
       "type": "calls_external",
       "from": "file:backend/mcp_server.py",
-      "to": "external:mcp"
+      "to": "external:mcp",
+      "line": 3
     },
     {
       "type": "calls_external",
       "from": "file:backend/mcp_server.py",
-      "to": "external:supabase"
+      "to": "external:supabase",
+      "line": 4
     },
     {
       "type": "calls_external",
       "from": "file:backend/services/embeddings.py",
-      "to": "external:google_ai_studio"
+      "to": "external:google_ai_studio",
+      "line": 5
     },
     {
       "type": "calls_external",
       "from": "file:backend/services/llm.py",
-      "to": "external:groq"
+      "to": "external:groq",
+      "line": 8
     },
     {
       "type": "calls_external",
       "from": "file:backend/services/retriever.py",
-      "to": "external:langchain"
+      "to": "external:langchain",
+      "line": 1
     },
     {
       "type": "calls_external",
       "from": "file:backend/services/supabase_client.py",
-      "to": "external:supabase"
+      "to": "external:supabase",
+      "line": 3
     },
     {
       "type": "calls_external",
       "from": "file:frontend/index.html",
-      "to": "external:google_fonts"
+      "to": "external:google_fonts",
+      "line": 8
     },
     {
       "type": "calls_external",
       "from": "file:frontend/src/lib/supabase.js",
-      "to": "external:supabase"
+      "to": "external:supabase",
+      "line": 1
     },
     {
       "type": "calls_external",
       "from": "file:scripts/dev/create_test_users.py",
-      "to": "external:supabase"
+      "to": "external:supabase",
+      "line": 23
     },
     {
       "type": "calls_function",
@@ -1886,6 +1912,16 @@
     },
     {
       "type": "imports",
+      "from": "file:tools/repo_graph/render.py",
+      "to": "file:tools/repo_graph/build.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/render.py",
+      "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
       "from": "file:tools/repo_graph/tests/test_build.py",
       "to": "file:tools/repo_graph/build.py"
     },
@@ -1898,6 +1934,26 @@
       "type": "imports",
       "from": "file:tools/repo_graph/tests/test_inventory.py",
       "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_render.py",
+      "to": "file:tools/repo_graph/build.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_render.py",
+      "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_render.py",
+      "to": "file:tools/repo_graph/render.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_render.py",
+      "to": "file:tools/repo_graph/tests/test_build.py"
     },
     {
       "type": "reads_table",

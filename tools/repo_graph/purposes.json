@@ -106,7 +106,9 @@
   "tools/repo_graph/build.py": "Builds docs/repo-graph/graph.json: typed nodes and edges for files, endpoints, tables, functions, env vars, external services and LangGraph nodes.",
   "tools/repo_graph/inventory.py": "Builds docs/repo-graph/inventory.json: path, language, lines, size, role and purpose for every tracked file, plus the exclusions.",
   "tools/repo_graph/purposes.json": "Hand-written one-line purpose for every inventoried file, written after reading it.",
+  "tools/repo_graph/render.py": "Renders docs/repo-graph/REPO_MAP.md: Mermaid layer and LangGraph diagrams plus endpoint, table, function, service, env var and file tables.",
   "tools/repo_graph/tests/__init__.py": "Package marker for tools.repo_graph.tests.",
   "tools/repo_graph/tests/test_build.py": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph.",
-  "tools/repo_graph/tests/test_inventory.py": "Pytest: role, language and exclusion rules, CRLF-safe measuring, purpose checks, and completeness of the real inventory."
+  "tools/repo_graph/tests/test_inventory.py": "Pytest: role, language and exclusion rules, CRLF-safe measuring, purpose checks, and completeness of the real inventory.",
+  "tools/repo_graph/tests/test_render.py": "Pytest: diagram links, lookup table rows and the file list of the rendered map, on the fixture repo and the real one."
 }

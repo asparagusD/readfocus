@@ -87,6 +87,86 @@ and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
 
+### C9.0: ingestion and cold start before C9 (2026-11-11)
+
+The "before" for C9 (speed and durability), at `5e5fcfb`: ingestion is
+still a FastAPI background task, the model is downloaded and loaded on
+first use. Each run starts a fresh server (`--cold`), uploads the book as
+dev test user A, polls once a second (twice in the container), and deletes
+the book afterwards. Books:
+
+- `sample.pdf`: 3.6 MB journal paper, 7 chunks, 55 bank questions.
+- `pride-and-prejudice.epub`: Project Gutenberg ebook 1342 (public
+  domain, 609 KB, `https://www.gutenberg.org/ebooks/1342.epub.noimages`),
+  kept in the git-ignored `.cache/bench/`. 204 chunks, 130,536 words,
+  1,718 bank questions. Extraction 0.29 s and chunking 0.008 s in process.
+
+"Done" is the last change to the book's chunk, embedding and question
+counts once every chunk is stored and embedded and nothing has moved for
+`--quiet` seconds (there is no done signal before C9). "Chunk 0 questions"
+is the first moment the bank has a question for chunk 0, which the first
+session reads. The tables were pasted from the script's output.
+
+Windows, the machine above:
+
+```bash
+python scripts/bench.py --ingest sample.pdf .cache/bench/pride-and-prejudice.epub --flow-runs 3 --cold --quiet 30
+```
+
+<!-- bench:c9-before-windows:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /books/upload (sample.pdf)` | 3 | 1.58 s | 2.33 s | |
+| `upload -> ready (sample.pdf)` | 3 | 2.33 s | 2.58 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 4.67 s | 5.05 s | |
+| `upload -> done (sample.pdf)` | 3 | 4.67 s | 5.05 s | |
+| `POST /books/upload (pride-and-prejudice.epub)` | 3 | 1.09 s | 1.10 s | |
+| `upload -> ready (pride-and-prejudice.epub)` | 3 | 2.36 s | 2.38 s | |
+| `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 3 | 4.70 s | 4.73 s | |
+| `upload -> done (pride-and-prejudice.epub)` | 3 | 138.34 s | 148.44 s | |
+<!-- bench:c9-before-windows:end -->
+
+Process start to `/health`: 2.60 to 2.63 s. Peak server RSS (sampled each
+poll): 320 to 321 MB for `sample.pdf`, 349 to 352 MB for the long book.
+
+Linux container like Render Free: the repo `Dockerfile` built as
+`readfocus-c9-before` (728 MB image), `--cpus=0.1 --memory=512m`, only the
+Supabase variables passed and no model cache, so every start downloads the
+model from Hugging Face as Render does today. `sample.pdf` only: at 0.1 CPU
+the long book would take close to an hour per run.
+
+```bash
+python scripts/bench.py --base-url http://127.0.0.1:8001 --ingest sample.pdf --flow-runs 3 --cold --quiet 120 --poll 2 --docker rf-c9 --server-cmd "docker run --rm --name rf-c9 --cpus=0.1 --memory=512m -p 8001:8000 --env-file <supabase-only env file> readfocus-c9-before" --stop-cmd "docker stop rf-c9"
+```
+
+<!-- bench:c9-before-container:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /books/upload (sample.pdf)` | 3 | 1.84 s | 2.12 s | |
+| `upload -> ready (sample.pdf)` | 3 | 26.29 s | 27.87 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 53.64 s | 55.08 s | |
+| `upload -> done (sample.pdf)` | 3 | 61.70 s | 63.39 s | |
+<!-- bench:c9-before-container:end -->
+
+Process start to `/health`: 12.40, 13.21 and 14.41 s. The model download
+took about 12 s of each run (the server log's "Fetching 5 files" bar).
+Peak container memory (`docker stats`, cgroup usage, not RSS): 319 to
+326 MB.
+
+What this says for C9, read from these numbers only:
+
+- On Render-like CPU the reader waits about 26 s for `ready` and about
+  54 s before the first session's questions exist; on Windows 2.3 and
+  4.7 s. The download, the model load and the first batch's five
+  embeddings all sit before `ready`.
+- Extraction is not a cost worth streaming (0.29 s for 204 chunks), so
+  C9.2 drops streaming extraction.
+- A long book keeps the server busy for over two minutes on Windows,
+  which on Render is the window a restart or spin-down can cut.
+
+Not measured: Render itself; the long book in the container; requests
+from a reader during ingestion; a restart mid-ingestion (C9.1b and C9.5).
+
 ### C8.6: session lifecycle through the LangGraph workflow (2026-11-11)
 
 Backend on this machine (`uvicorn backend.main:app --port 8000`, from

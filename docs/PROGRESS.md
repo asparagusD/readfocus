@@ -1497,10 +1497,16 @@ Risks and open questions:
 - The three `docs/repo-graph/` files show as modified at chunk start with
   an empty `git diff --stat`: line endings only, as before.
 
+Replanned after C9.0 (2026-11-11 05:57): extraction and chunking of a
+204-chunk EPUB take 0.3 s, so C9.2 drops streaming extraction. The long
+book runs on Windows only; in the 0.1-CPU container it would take about an
+hour per run, so the container measures `sample.pdf`.
+
 ### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C9.0a, C9.0b | `db14228`, this commit | `scripts/bench.py --ingest` times upload → ready, → chunk 0 questions, → done, with peak memory, and `--cold` starts a fresh server (local or container) per run; before numbers in `docs/BENCHMARKS.md` (C9.0) | `pytest backend/tests/test_bench.py -q`: 9 passed; the two bench runs in BENCHMARKS (Windows: ready 2.33 s, done 138 s for 204 chunks; container: /health 13 s, ready 26 s, chunk 0 questions 54 s); standard checks below | 2026-11-11 05:57 | Container numbers for `sample.pdf` only; "done" is inferred from a quiet window until C9.1 adds a done signal |
 
 ## C10
 

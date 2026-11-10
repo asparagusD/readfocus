@@ -5,7 +5,7 @@
   ".claude/skills/free-intelligence/SKILL.md": "Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern.",
   ".claude/skills/repo-graph/SKILL.md": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see.",
   ".env.example": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE, and the two provider keys due for removal in C8.",
-  ".github/workflows/ci.yml": "CI on every push: ruff on backend/, pytest on backend/tests, frontend build; triggers the Render deploy hook on main.",
+  ".github/workflows/ci.yml": "CI on every push: ruff on backend/, pytest on backend/tests, frontend build, repo graph freshness and tooling tests; triggers the Render deploy hook on main.",
   ".gitignore": "Root ignore rules: env files, node_modules, Python caches and virtualenvs, .cache/, the Impeccable binary, OS files.",
   "CLAUDE.md": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills.",
   "Dockerfile": "Backend image for Render: python:3.11-slim, installs root requirements.txt, copies backend/, runs uvicorn on port 8000.",

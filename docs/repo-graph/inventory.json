@@ -57,10 +57,10 @@
     {
       "path": ".github/workflows/ci.yml",
       "language": "yaml",
-      "lines": 70,
-      "size_bytes": 1952,
+      "lines": 97,
+      "size_bytes": 2795,
       "role": "config",
-      "purpose": "CI on every push: ruff on backend/, pytest on backend/tests, frontend build; triggers the Render deploy hook on main."
+      "purpose": "CI on every push: ruff on backend/, pytest on backend/tests, frontend build, repo graph freshness and tooling tests; triggers the Render deploy hook on main."
     },
     {
       "path": ".gitignore",
@@ -338,7 +338,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 249,
-      "size_bytes": 21448,
+      "size_bytes": 21763,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -866,7 +866,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 117,
-      "size_bytes": 15551,
+      "size_bytes": 15591,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

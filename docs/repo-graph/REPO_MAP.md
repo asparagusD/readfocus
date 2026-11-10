@@ -329,7 +329,7 @@ Each use is the file and line of the first import of that service.
 | File | Lines | Purpose |
 |---|---|---|
 | `.env.example` | 23 | Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE, and the two provider keys due for removal in C8. |
-| `.github/workflows/ci.yml` | 70 | CI on every push: ruff on backend/, pytest on backend/tests, frontend build; triggers the Render deploy hook on main. |
+| `.github/workflows/ci.yml` | 97 | CI on every push: ruff on backend/, pytest on backend/tests, frontend build, repo graph freshness and tooling tests; triggers the Render deploy hook on main. |
 | `.gitignore` | 28 | Root ignore rules: env files, node_modules, Python caches and virtualenvs, .cache/, the Impeccable binary, OS files. |
 | `Dockerfile` | 15 | Backend image for Render: python:3.11-slim, installs root requirements.txt, copies backend/, runs uvicorn on port 8000. |
 | `Makefile` | 19 | Targets: dev-backend (uvicorn with reload), dev-frontend (Vite), dev (both via concurrently), graph (regenerate docs/repo-graph/). |

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 149,
-    "inventoried": 138,
+    "tracked": 152,
+    "inventoried": 141,
     "excluded": 11
   },
   "files": [
@@ -281,10 +281,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 182,
-      "size_bytes": 6707,
+      "lines": 196,
+      "size_bytes": 7286,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds and inserts each chunk, marks the book ready after five chunks."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks."
     },
     {
       "path": "backend/services/embeddings.py",
@@ -343,6 +343,14 @@
       "purpose": "Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked)."
     },
     {
+      "path": "backend/tests/test_backfill.py",
+      "language": "python",
+      "lines": 74,
+      "size_bytes": 2782,
+      "role": "test",
+      "purpose": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development."
+    },
+    {
       "path": "backend/tests/test_bench.py",
       "language": "python",
       "lines": 40,
@@ -373,6 +381,14 @@
       "size_bytes": 410,
       "role": "test",
       "purpose": "Pytest: /health returns 200 with status ok and a timestamp."
+    },
+    {
+      "path": "backend/tests/test_ingest_embeddings.py",
+      "language": "python",
+      "lines": 92,
+      "size_bytes": 3917,
+      "role": "test",
+      "purpose": "Pytest on the fake database: ingest_book stores every chunk once with a 384-value embedding_local, in batches, unlocks the book after the first five, marks it error if embedding fails, and does not use the Google client."
     },
     {
       "path": "backend/tests/test_ingestor.py",
@@ -433,10 +449,10 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 239,
-      "size_bytes": 12120,
+      "lines": 262,
+      "size_bytes": 13176,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, and the C3.5 API baseline with its caveats."
+      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
@@ -457,8 +473,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 486,
-      "size_bytes": 66700,
+      "lines": 485,
+      "size_bytes": 69086,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -839,6 +855,14 @@
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/; still includes the Groq and Google AI Studio packages until C8."
     },
     {
+      "path": "scripts/backfill_local_embeddings.py",
+      "language": "python",
+      "lines": 104,
+      "size_bytes": 4221,
+      "role": "script",
+      "purpose": "Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development."
+    },
+    {
       "path": "scripts/bench.py",
       "language": "python",
       "lines": 196,
@@ -1049,8 +1073,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 140,
-      "size_bytes": 20765,
+      "lines": 143,
+      "size_bytes": 21625,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -71,6 +71,29 @@ and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
 
+### C4.6: ingestion on local embeddings (2026-11-10)
+
+Windows, backend started with `uvicorn backend.main:app` and
+`GOOGLE_AI_STUDIO_KEY` empty, one upload of `sample.pdf` (3.6 MB, 7 chunks)
+as dev test user A through `POST /books/upload`, one run:
+
+| Measure | Before (C3.5 baseline, Google AI Studio) | After (local model) |
+|---|---|---|
+| `POST /books/upload` | 1.72 s p50 | 2.57 s |
+| upload -> status ready | 5.07 s p50 | 3.81 s |
+| upload -> all 7 chunks stored | not recorded | 3.92 s |
+| Server RSS | 142 MB idle | 120 MB before the upload, 306 MB peak during ingestion, 303 MB after |
+
+The first upload after a start also loads the model (about 0.7 s on this
+machine). Not measured: Render, where C4.1 puts embedding at about 0.6 s
+per chunk; a long book; two uploads at once.
+
+Backfill of the dev database with `python
+scripts/backfill_local_embeddings.py`: 622 chunks in 106.7 s (5.8 per
+second, one update per chunk), after a `--limit 20` run of 4.1 s. A second
+full run embedded 0 chunks in 0.1 s. All 642 chunks now have
+`embedding_local`.
+
 ### C4.1: embedding model, Gate G2 (2026-11-10)
 
 Gate G2 thresholds: RSS after load above 300 MB, or a throttled 32-text

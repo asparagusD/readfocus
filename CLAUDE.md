@@ -71,9 +71,8 @@ your score.
 | Word lookup | Free Dictionary API and Wikipedia |
 | Hosting | Render Free (backend), Vercel (frontend) |
 
-This is the 2.0 target. Until the migration chunks land, `backend/services/`
-still calls Groq and Google AI Studio; that code is being removed, not
-extended (constraint 1).
+Since C8.8 no backend code, dependency or config uses an LLM or embedding
+API; `backend/tests/test_no_paid_ai.py` keeps it that way (constraint 1).
 
 Python versions disagree across the repo: `.venv` is 3.11, CI installs 3.12,
 `pyrightconfig.json` says 3.14. Write code that runs on 3.11.
@@ -120,8 +119,8 @@ Baseline when this file was written (C1.1; the last row was added in C2.4):
 
 | Check | Result |
 |---|---|
-| `ruff check backend/` | fails: 36 errors in existing code (40 until C8.5, 84 until C3.4, 83 until C4.5, 82 until C5.5, 81 until C6.4, 64 until C8.3, 63 until C8.4a, 48 until C8.4b) |
-| `pytest backend/tests -q` | passes: 538 tests, offline (527 until C8.7, 525 until the C8.5 fix of issue 32, 524 until the C8.5 fix of issue 31, 516 until C8.6, 495 until C8.5, 485 until C8.4b, 472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
+| `ruff check backend/` | fails: 32 errors in existing code (36 until C8.8, 40 until C8.5, 84 until C3.4, 83 until C4.5, 82 until C5.5, 81 until C6.4, 64 until C8.3, 63 until C8.4a, 48 until C8.4b) |
+| `pytest backend/tests -q` | passes: 541 tests, offline (538 until C8.8, 527 until C8.7, 525 until the C8.5 fix of issue 32, 524 until the C8.5 fix of issue 31, 516 until C8.6, 495 until C8.5, 485 until C8.4b, 472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
 | `npm --prefix frontend run lint` | fails: 22 errors, 2 warnings in existing code |
 | `npm --prefix frontend run build` | passes |
 | `python -c "import backend.main"` | passes |
@@ -178,5 +177,6 @@ fresh clone has to reinstall them.
 - `docs/DEBUG_LOG.md`: one entry per failure (added in C1.7).
 - `docs/repo-graph/`: generated repo graph (added in C2).
 - `docs/BENCHMARKS.md`: measured numbers with their commands (added in C3.4).
-- `README.md`: product overview. It still describes the pre-2.0 LLM setup.
+- `README.md`: product overview. Its architecture, agent and "No Paid AI"
+  sections are current since C8.8; "How It Works" still describes pre-2.0 steps.
 - `progress.md` (repo root): the pre-2.0 tracker, kept for history only.

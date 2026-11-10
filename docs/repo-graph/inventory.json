@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 195,
-    "inventoried": 183,
+    "tracked": 194,
+    "inventoried": 182,
     "excluded": 12
   },
   "files": [
@@ -33,8 +33,8 @@
     {
       "path": ".claude/skills/free-intelligence/SKILL.md",
       "language": "markdown",
-      "lines": 210,
-      "size_bytes": 8365,
+      "lines": 208,
+      "size_bytes": 8368,
       "role": "doc",
       "purpose": "Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern."
     },
@@ -49,10 +49,10 @@
     {
       "path": ".env.example",
       "language": "dotenv",
-      "lines": 26,
-      "size_bytes": 842,
+      "lines": 20,
+      "size_bytes": 670,
       "role": "config",
-      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE, the optional EMBED_THREADS, and the two provider keys due for removal in C8."
+      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE and the optional EMBED_THREADS; no AI provider key (since C8.8)."
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7706,
+      "size_bytes": 7792,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -97,10 +97,10 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 135,
-      "size_bytes": 7543,
+      "lines": 137,
+      "size_bytes": 7896,
       "role": "doc",
-      "purpose": "Product overview and architecture; still describes the pre-2.0 Groq and Google AI Studio setup and an orchestrator node that no longer exists."
+      "purpose": "Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour."
     },
     {
       "path": "backend/__init__.py",
@@ -439,22 +439,6 @@
       "purpose": "The concepts of a book in the concepts table: save upserts one row per (user, book, concept key) for a batch of chunks, keeping the first label, growing chunk_indices and taking the highest weight; concepts_for_chunks reads the concepts some chunks mention; link_key_terms (pure) ties a question's key terms to concept keys."
     },
     {
-      "path": "backend/services/embeddings.py",
-      "language": "python",
-      "lines": 37,
-      "size_bytes": 1259,
-      "role": "service",
-      "purpose": "Google AI Studio embedding client (gemini-embedding-2, 1536 dimensions) with retry; raises at import if the key is missing. Banned provider."
-    },
-    {
-      "path": "backend/services/llm.py",
-      "language": "python",
-      "lines": 37,
-      "size_bytes": 744,
-      "role": "service",
-      "purpose": "Groq ChatGroq client (llama-3.3-70b-versatile) exported under five agent names; raises at import if the key is missing. Banned provider."
-    },
-    {
       "path": "backend/services/question_bank.py",
       "language": "python",
       "lines": 73,
@@ -489,10 +473,10 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 119,
-      "size_bytes": 3311,
+      "lines": 82,
+      "size_bytes": 2291,
       "role": "test",
-      "purpose": "Offline test setup: dummy environment, a fake Supabase client, Groq and Google embedding classes that raise when called, and a guard that blocks non-loopback connections."
+      "purpose": "Offline test setup: dummy environment, a fake Supabase client, and a guard that blocks non-loopback connections."
     },
     {
       "path": "backend/tests/fixtures/answers.json",
@@ -663,12 +647,20 @@
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy."
     },
     {
+      "path": "backend/tests/test_no_paid_ai.py",
+      "language": "python",
+      "lines": 75,
+      "size_bytes": 2872,
+      "role": "test",
+      "purpose": "Pytest, hard constraint 1: no backend file imports a banned LLM or embedding SDK or the LangChain chat-model stack (AST scan) or reads a provider key, requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
+    },
+    {
       "path": "backend/tests/test_offline.py",
       "language": "python",
-      "lines": 62,
-      "size_bytes": 1884,
+      "lines": 44,
+      "size_bytes": 1350,
       "role": "test",
-      "purpose": "Pytest: the suite uses the dummy environment and the fakes, outbound connections are blocked, loopback works, and a protected endpoint answers 401."
+      "purpose": "Pytest: the suite uses the dummy environment and the fake Supabase client, outbound connections are blocked, loopback works, and a protected endpoint answers 401."
     },
     {
       "path": "backend/tests/test_optimizer_pace.py",
@@ -753,8 +745,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 406,
-      "size_bytes": 20969,
+      "lines": 414,
+      "size_bytes": 21957,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -778,7 +770,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1360,
-      "size_bytes": 229112,
+      "size_bytes": 232518,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1145,18 +1137,18 @@
     {
       "path": "render.yaml",
       "language": "yaml",
-      "lines": 23,
-      "size_bytes": 533,
+      "lines": 15,
+      "size_bytes": 332,
       "role": "config",
-      "purpose": "Render blueprint for the Docker backend; declares Supabase, Groq, Cerebras, Google AI Studio and SambaNova keys."
+      "purpose": "Render blueprint for the Docker backend; declares the Supabase keys and FRONTEND_URL, and no AI provider key (since C8.8)."
     },
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 42,
-      "size_bytes": 1027,
+      "lines": 36,
+      "size_bytes": 969,
       "role": "config",
-      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/; still includes the Groq and Google AI Studio packages until C8."
+      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
     {
       "path": "scripts/backfill_local_embeddings.py",
@@ -1169,8 +1161,8 @@
     {
       "path": "scripts/bench.py",
       "language": "python",
-      "lines": 196,
-      "size_bytes": 7681,
+      "lines": 195,
+      "size_bytes": 7574,
       "role": "script",
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
     },
@@ -1409,8 +1401,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 185,
-      "size_bytes": 37642,
+      "lines": 184,
+      "size_bytes": 37641,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1457,16 +1449,16 @@
     {
       "path": "tools/repo_graph/tests/test_query.py",
       "language": "python",
-      "lines": 80,
-      "size_bytes": 3363,
+      "lines": 77,
+      "size_bytes": 3185,
       "role": "test",
       "purpose": "Pytest: file, endpoint and table queries, path forms, unknown targets, and the importers of llm.py in the real graph."
     },
     {
       "path": "tools/repo_graph/tests/test_render.py",
       "language": "python",
-      "lines": 71,
-      "size_bytes": 2562,
+      "lines": 72,
+      "size_bytes": 2664,
       "role": "test",
       "purpose": "Pytest: diagram links, lookup table rows and the file list of the rendered map, on the fixture repo and the real one."
     }

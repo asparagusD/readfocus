@@ -13,7 +13,7 @@ It is a quiet, serious tool for serious readers.
   - [Frontend](#frontend)
   - [Backend](#backend)
   - [Agent Graph](#agent-graph)
-  - [Multi-Provider LLM Strategy](#multi-provider-llm-strategy)
+  - [No Paid AI](#no-paid-ai)
   - [Database](#database)
 
 ---
@@ -43,12 +43,12 @@ It is a quiet, serious tool for serious readers.
 ┌──────────────────▼──────────────────────────────┐
 │              FastAPI Backend                     │
 │  /books  /sessions  /auth  /dashboard           │
-│  Uvicorn · LangGraph · LangChain                │
+│  Uvicorn · LangGraph (no LLM)                   │
 │                                                  │
 │  ┌────────────────────────────────────────────┐ │
 │  │              Agent Graph (LangGraph)       │ │
-│  │  Orchestrator → Planner → TestGenerator   │ │
-│  │              → Evaluator → Optimizer       │ │
+│  │  Planner · TestGenerator · Evaluator       │ │
+│  │      → KnowledgeState → Optimizer          │ │
 │  └────────────────────────────────────────────┘ │
 └──────────────────┬──────────────────────────────┘
                    │
@@ -81,41 +81,40 @@ Built with **FastAPI** and **Uvicorn**. All routes require a Supabase JWT token 
 | `auth.py` | `/auth` | Profile fetch, reading speed calibration |
 | `dashboard.py` | `/dashboard` | Aggregated stats for the Dashboard page |
 
-Book ingestion runs as a **FastAPI BackgroundTask**: it parses the PDF/EPUB, splits content into ~600-word chunks, generates vector embeddings via Google AI Studio, and stores everything in Supabase.
+Book ingestion runs as a **FastAPI BackgroundTask**: it parses the PDF/EPUB, splits content into ~600-word chunks, embeds them with a local model (fastembed, all-MiniLM-L6-v2, 384 dimensions), extracts their concepts and fills the question bank, and stores everything in Supabase.
 
 ### Agent Graph
 
-The agent pipeline is built with **LangGraph** and runs as an async state machine:
+Five algorithmic agents run as **LangGraph** nodes, chained by event from
+`__start__` (`backend/agents/graph.py`; diagram in
+[`docs/repo-graph/AGENT_GRAPH.md`](docs/repo-graph/AGENT_GRAPH.md)):
 
-```
-orchestrator_node
-    │
-    ├── planner_node       (decide chunk assignment and session duration)
-    │
-    ├── test_generator_node (generate 5 questions + RAG context injection)
-    │
-    ├── evaluator_node     (grade written answers, produce feedback)
-    │
-    └── optimizer_node     (tune next session's focus duration)
-```
+| Event | Flow |
+|---|---|
+| `start_session` | planner |
+| `finish_reading` | test_generator |
+| `submit_answers` | evaluator → knowledge_state → optimizer → planner (the optimizer is skipped when every grade is low-confidence) |
+| `abandon` | optimizer |
 
-**RAG in the test generator**: before calling the LLM, `get_similar_chunks()` uses pgvector cosine similarity to retrieve the 3 most semantically related chunks from the user's reading history. These are injected into the system prompt, so inference and summary questions explicitly bridge earlier and current content.
+Each agent is a pure `decide()` with its constants in `backend/agents/policy.py`;
+the node around it reads state, persists, and appends one entry to the run's
+decisions, which are stored in `agent_decisions` so the app can explain its
+choices.
 
-**Planner context**: the planner fetches the last 5 completed sessions and their scores via direct SQL queries (not a vector search) to assess whether comprehension is improving, stable, or declining.
+| Agent | Decides |
+|---|---|
+| Planner | Which sections next: the re-read queue first, otherwise sections scored on weak concepts, unread, difficulty fit and due reviews; minutes, question mix and a one-line reason |
+| Test generator | The session's test from the precomputed question bank |
+| Evaluator | Grades answers locally (exact and fuzzy matching, embedding similarity, key terms) with a confidence |
+| Knowledge state | Per-concept mastery and review dates |
+| Optimizer | The next pace and re-read queue from rolling scores, abandonment and per-question-type failure, within fixed bounds |
 
-### LLM Strategy
+### No Paid AI
 
-To simplify setup and reduce SDK dependencies, all agents have been consolidated to use **Groq** as the sole provider:
-
-| Agent | Provider | Model |
-|---|---|---|
-| Orchestrator | **Groq** | `llama-3.3-70b-versatile` |
-| Planner | **Groq** | `llama-3.3-70b-versatile` |
-| Optimizer | **Groq** | `llama-3.3-70b-versatile` |
-| Test Generator | **Groq** | `llama-3.3-70b-versatile` |
-| Evaluator | **Groq** | `llama-3.3-70b-versatile` |
-
-*Note: Google AI Studio is still used exclusively for generating high-quality text embeddings in `embeddings.py`.*
+ReadFocus calls no LLM or embedding API and needs no AI provider key: every
+decision above is an algorithm or runs on the local embedding model. The
+only external services are Supabase and, for word lookup, the free
+Dictionary API and Wikipedia.
 
 
 ### Database
@@ -126,10 +125,13 @@ Supabase PostgreSQL with **pgvector** for embedding storage and similarity searc
 |---|---|
 | `profiles` | User display name, `reading_goal_wpm`, `is_calibrated` |
 | `books` | Book metadata, ingestion status |
-| `chunks` | 600-word text segments + `vector(1536)` embeddings |
+| `chunks` | 600-word text segments + local `vector(384)` embeddings (the old `vector(1536)` column is unused) |
 | `sessions` | Reading session records, duration, status |
 | `test_results` | Question/answer/score JSON per session |
-| `reading_progress` | Per-book progress, average score, re-read queue |
+| `reading_progress` | Per-book progress, average score, re-read queue, pace recommendation |
+| `question_bank` | Precomputed questions per chunk |
+| `concepts`, `user_concept_mastery` | A book's concepts and the reader's mastery of each |
+| `agent_decisions` | What each agent decided, per workflow run |
 
 Row Level Security (RLS) is enabled on all tables — users can only access their own data.
 

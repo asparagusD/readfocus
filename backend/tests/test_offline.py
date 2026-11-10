@@ -1,6 +1,5 @@
-"""The backend suite runs with no .env, no Supabase, no LLM and no network."""
+"""The backend suite runs with no .env, no Supabase and no network."""
 
-import asyncio
 import os
 import socket
 
@@ -21,23 +20,6 @@ def test_supabase_client_is_the_fake(fake_supabase):
     assert supabase is fake_supabase
     with pytest.raises(OfflineError):
         supabase.auth.get_user("any-token")
-
-
-def test_llm_client_refuses_to_run():
-    from backend.services.llm import groq_client, planner_llm
-
-    assert planner_llm is groq_client
-    with pytest.raises(OfflineError):
-        groq_client.invoke("hello")
-    with pytest.raises(OfflineError):
-        asyncio.run(groq_client.ainvoke("hello"))
-
-
-def test_embedding_client_refuses_to_run():
-    from backend.services.embeddings import embeddings_client
-
-    with pytest.raises(OfflineError):
-        asyncio.run(embeddings_client.aembed_query("hello"))
 
 
 def test_outbound_connections_are_blocked():

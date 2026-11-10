@@ -8,10 +8,9 @@ then measures:
   /books/{id}/status until ready, POST /sessions/start, finish-reading,
   submit-answers. Each flow's book is deleted afterwards unless --keep.
 
-Until the 2.0 agents land, the flow goes through the old LLM path: one
-upload is about 8 Google AI Studio embedding calls and one session about 8
-Groq calls. A step that does not return 200 is reported as "not measurable"
-with the reason; no number is made up.
+Since C8.8 the flow calls no LLM or embedding API. A step that does not
+return 200 is reported as "not measurable" with the reason; no number is
+made up.
 
 Run from the repo root with the virtualenv active and the backend up
 (`make dev-backend`):

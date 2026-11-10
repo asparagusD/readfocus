@@ -114,10 +114,6 @@
       "handler": "submit_answers"
     },
     {
-      "id": "env:CEREBRAS_API_KEY",
-      "type": "env"
-    },
-    {
       "id": "env:EMBED_THREADS",
       "type": "env"
     },
@@ -131,18 +127,6 @@
     },
     {
       "id": "env:FRONTEND_URL",
-      "type": "env"
-    },
-    {
-      "id": "env:GOOGLE_AI_STUDIO_KEY",
-      "type": "env"
-    },
-    {
-      "id": "env:GROQ_API_KEY",
-      "type": "env"
-    },
-    {
-      "id": "env:SAMBANOVA_API_KEY",
       "type": "env"
     },
     {
@@ -170,19 +154,9 @@
       "type": "env"
     },
     {
-      "id": "external:google_ai_studio",
-      "type": "external",
-      "banned": true
-    },
-    {
       "id": "external:google_fonts",
       "type": "external",
       "banned": false
-    },
-    {
-      "id": "external:groq",
-      "type": "external",
-      "banned": true
     },
     {
       "id": "external:langgraph",
@@ -524,18 +498,6 @@
       "language": "python"
     },
     {
-      "id": "file:backend/services/embeddings.py",
-      "type": "file",
-      "role": "service",
-      "language": "python"
-    },
-    {
-      "id": "file:backend/services/llm.py",
-      "type": "file",
-      "role": "service",
-      "language": "python"
-    },
-    {
       "id": "file:backend/services/question_bank.py",
       "type": "file",
       "role": "service",
@@ -687,6 +649,12 @@
     },
     {
       "id": "file:backend/tests/test_migrations.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_no_paid_ai.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1498,18 +1466,6 @@
     },
     {
       "type": "calls_external",
-      "from": "file:backend/services/embeddings.py",
-      "to": "external:google_ai_studio",
-      "line": 5
-    },
-    {
-      "type": "calls_external",
-      "from": "file:backend/services/llm.py",
-      "to": "external:groq",
-      "line": 8
-    },
-    {
-      "type": "calls_external",
       "from": "file:backend/services/supabase_client.py",
       "to": "external:supabase",
       "line": 3
@@ -1517,20 +1473,8 @@
     {
       "type": "calls_external",
       "from": "file:backend/tests/conftest.py",
-      "to": "external:google_ai_studio",
-      "line": 20
-    },
-    {
-      "type": "calls_external",
-      "from": "file:backend/tests/conftest.py",
-      "to": "external:groq",
-      "line": 21
-    },
-    {
-      "type": "calls_external",
-      "from": "file:backend/tests/conftest.py",
       "to": "external:supabase",
-      "line": 24
+      "line": 22
     },
     {
       "type": "calls_external",
@@ -1590,16 +1534,6 @@
     {
       "type": "declares_env",
       "from": "file:.env.example",
-      "to": "env:GOOGLE_AI_STUDIO_KEY"
-    },
-    {
-      "type": "declares_env",
-      "from": "file:.env.example",
-      "to": "env:GROQ_API_KEY"
-    },
-    {
-      "type": "declares_env",
-      "from": "file:.env.example",
       "to": "env:SUPABASE_ANON_KEY"
     },
     {
@@ -1630,27 +1564,7 @@
     {
       "type": "declares_env",
       "from": "file:render.yaml",
-      "to": "env:CEREBRAS_API_KEY"
-    },
-    {
-      "type": "declares_env",
-      "from": "file:render.yaml",
       "to": "env:FRONTEND_URL"
-    },
-    {
-      "type": "declares_env",
-      "from": "file:render.yaml",
-      "to": "env:GOOGLE_AI_STUDIO_KEY"
-    },
-    {
-      "type": "declares_env",
-      "from": "file:render.yaml",
-      "to": "env:GROQ_API_KEY"
-    },
-    {
-      "type": "declares_env",
-      "from": "file:render.yaml",
-      "to": "env:SAMBANOVA_API_KEY"
     },
     {
       "type": "declares_env",
@@ -2656,16 +2570,6 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_offline.py",
-      "to": "file:backend/services/embeddings.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_offline.py",
-      "to": "file:backend/services/llm.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_offline.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -3372,16 +3276,6 @@
       "type": "uses_env",
       "from": "file:backend/nlp/embedder.py",
       "to": "env:FASTEMBED_CACHE"
-    },
-    {
-      "type": "uses_env",
-      "from": "file:backend/services/embeddings.py",
-      "to": "env:GOOGLE_AI_STUDIO_KEY"
-    },
-    {
-      "type": "uses_env",
-      "from": "file:backend/services/llm.py",
-      "to": "env:GROQ_API_KEY"
     },
     {
       "type": "uses_env",

@@ -62,19 +62,16 @@ def test_windows_and_dotted_paths_are_accepted(view):
 
 
 def test_unknown_target_exits_2_with_suggestions(capsys):
-    assert query.main(["backend/services/lm.py"]) == 2
-    assert query.main(["llm.py"]) == 2
+    assert query.main(["backend/services/retreiver.py"]) == 2
+    assert query.main(["retriever.py"]) == 2
     err = capsys.readouterr().err
-    assert "Nothing in the graph matches 'llm.py'" in err
-    assert "did you mean: backend/services/llm.py" in err
+    assert "Nothing in the graph matches 'retriever.py'" in err
+    assert "did you mean: backend/services/retriever.py" in err
     assert query.main([]) == 2
 
 
-def test_real_graph_lists_every_agent_that_uses_llm(capsys):
-    assert query.main(["backend/services/llm.py"]) == 0
-    out = capsys.readouterr().out
-    # Tests may import llm.py too, so count only the agents among importers.
-    imported_by = out.split("Imported by (")[1].split("Imports (")[0]
-    agents = [p for p in imported_by.split() if p.startswith("backend/agents/")]
-    assert agents == []  # the planner and test generator left in C8.4a, the optimizer in C8.4b
-    assert "External calls (1):\n  groq (banned) (line 8)" in out
+def test_real_graph_has_no_paid_ai():
+    # C8.8 removed the Groq and Google AI Studio clients: neither file nor service is in the graph.
+    for target in ("backend/services/llm.py", "backend/services/embeddings.py", "groq", "google_ai_studio"):
+        assert query.main([target]) == 2, target
+    assert query.main(["langgraph"]) == 0

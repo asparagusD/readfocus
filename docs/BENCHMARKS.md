@@ -67,6 +67,14 @@ One row per model or heavy dependency (the memory rule in the
 | 2026-11-10 | C4.4 | `rapidfuzz` 3.14.6, imported | 16.9 MB (Windows) | 19.0 MB | 2 MB | as above |
 | 2026-11-11 | C8.8 | **Removed**: `langchain`, `langchain-community`, `langchain-groq`, `groq`, `langchain-google-genai`, `tenacity` from `requirements.txt` (`langgraph` 1.2.20 and its `langchain-core` 1.7.6 kept) | 132.4 MB with `backend.main` and the LangGraph workflow imported; 327.0 MB with the embedding model loaded and 8 chunks embedded (Windows, median of 3) | 132.0 MB; 327.0 MB (same stages, the removed packages made unimportable) | 0 MB at run time: no app code had imported them since C8.4b | 134.0 MB idle, 2 processes, before and after (`scripts/dev/measure_rss.py`, 3 runs each) |
 
+Gate G3 (C8.G), 2026-11-11: after one full journey on the dev project
+(upload, start, finish-reading, submit, results, dashboard) with no AI
+provider key in the server's environment, the uvicorn server process held
+336.4 MB RSS with the embedding model loaded (plus 4.4 MB for the Windows
+venv launcher process that started it). Same order as the 327 MB measured
+in one process above, with the web server, LangGraph runs and Supabase
+client on top.
+
 C8.8 install size, fresh Python 3.11.9 venvs on Windows (`pip install -r
 requirements.txt`): 123 packages and 363.3 MB of site-packages with the
 C8.7 requirements, 106 packages and 296.4 MB with C8.8's: 17 packages and

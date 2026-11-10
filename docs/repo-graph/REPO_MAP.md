@@ -486,7 +486,7 @@ Each use is the file and line of the first import of that service.
 | `.claude/skills/repo-graph/SKILL.md` | 122 | Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see. |
 | `CLAUDE.md` | 182 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
 | `README.md` | 137 | Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour. |
-| `docs/BENCHMARKS.md` | 414 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
+| `docs/BENCHMARKS.md` | 422 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
 | `docs/DEBUG_LOG.md` | 873 | Debug log rules, entry template, and one entry per failure. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
 | `docs/PROGRESS.md` | 1361 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |

@@ -745,8 +745,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 414,
-      "size_bytes": 21957,
+      "lines": 422,
+      "size_bytes": 22407,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -770,7 +770,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1361,
-      "size_bytes": 233619,
+      "size_bytes": 236057,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

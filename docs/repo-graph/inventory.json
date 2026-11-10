@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 131,
-    "inventoried": 120,
+    "tracked": 134,
+    "inventoried": 123,
     "excluded": 11
   },
   "files": [
@@ -42,7 +42,7 @@
       "path": ".claude/skills/repo-graph/SKILL.md",
       "language": "markdown",
       "lines": 122,
-      "size_bytes": 4910,
+      "size_bytes": 4938,
       "role": "doc",
       "purpose": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see."
     },
@@ -73,8 +73,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 181,
-      "size_bytes": 7173,
+      "lines": 182,
+      "size_bytes": 7267,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -177,18 +177,18 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 64,
-      "size_bytes": 1718,
+      "lines": 48,
+      "size_bytes": 1256,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the five routers, /health, and a lifespan hook that starts backend/mcp_server.py as a subprocess."
+      "purpose": "FastAPI app: CORS, the five routers and /health. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
       "language": "python",
-      "lines": 75,
-      "size_bytes": 3209,
+      "lines": 100,
+      "size_bytes": 4285,
       "role": "entry",
-      "purpose": "Standalone FastMCP server with three Supabase tools (reading history, comprehension trend, chunk context); started by main.py, not called by any agent."
+      "purpose": "Standalone FastMCP server with three Supabase tools (reading history, comprehension trend, chunk context); not started by the app since C3.4 and not called by any agent; kept for manual use."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -343,6 +343,22 @@
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
     },
     {
+      "path": "backend/tests/test_startup.py",
+      "language": "python",
+      "lines": 22,
+      "size_bytes": 643,
+      "role": "test",
+      "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
+    },
+    {
+      "path": "docs/BENCHMARKS.md",
+      "language": "markdown",
+      "lines": 56,
+      "size_bytes": 1881,
+      "role": "doc",
+      "purpose": "Measured numbers with the command, machine and date for each; starts with backend idle memory before and after C3.4."
+    },
+    {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
       "lines": 245,
@@ -362,7 +378,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 337,
-      "size_bytes": 36477,
+      "size_bytes": 37586,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -738,7 +754,7 @@
       "path": "requirements.txt",
       "language": "text",
       "lines": 36,
-      "size_bytes": 918,
+      "size_bytes": 924,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned; still includes the Groq and Google AI Studio packages until C8."
     },
@@ -749,6 +765,14 @@
       "size_bytes": 3514,
       "role": "script",
       "purpose": "Creates or resets two confirmed dev test users and writes .env.test; refuses to run unless ENV=development."
+    },
+    {
+      "path": "scripts/dev/measure_rss.py",
+      "language": "python",
+      "lines": 69,
+      "size_bytes": 2234,
+      "role": "script",
+      "purpose": "Starts uvicorn on a spare port, waits for /health, then prints the psutil RSS of the server and every child process."
     },
     {
       "path": "scripts/manual/README.md",
@@ -905,8 +929,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 122,
-      "size_bytes": 16708,
+      "lines": 125,
+      "size_bytes": 17117,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

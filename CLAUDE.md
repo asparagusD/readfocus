@@ -120,8 +120,8 @@ Baseline when this file was written (C1.1; the last row was added in C2.4):
 
 | Check | Result |
 |---|---|
-| `ruff check backend/` | fails: 84 errors in existing code |
-| `pytest backend/tests -q` | passes: 23 tests, offline (8 until C3.1) |
+| `ruff check backend/` | fails: 83 errors in existing code (84 until C3.4) |
+| `pytest backend/tests -q` | passes: 24 tests, offline (8 until C3.1) |
 | `npm --prefix frontend run lint` | fails: 22 errors, 2 warnings in existing code |
 | `npm --prefix frontend run build` | passes |
 | `python -c "import backend.main"` | passes |
@@ -177,5 +177,6 @@ fresh clone has to reinstall them.
 - `docs/PROGRESS.md`: one row per subchunk (added in C1.7).
 - `docs/DEBUG_LOG.md`: one entry per failure (added in C1.7).
 - `docs/repo-graph/`: generated repo graph (added in C2).
+- `docs/BENCHMARKS.md`: measured numbers with their commands (added in C3.4).
 - `README.md`: product overview. It still describes the pre-2.0 LLM setup.
 - `progress.md` (repo root): the pre-2.0 tracker, kept for history only.

@@ -446,6 +446,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_startup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:docs/BENCHMARKS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/DEBUG_LOG.md",
       "type": "file",
       "role": "doc",
@@ -747,6 +759,12 @@
     },
     {
       "id": "file:scripts/dev/create_test_users.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/measure_rss.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -1093,13 +1111,13 @@
       "type": "calls_external",
       "from": "file:backend/mcp_server.py",
       "to": "external:mcp",
-      "line": 3
+      "line": 28
     },
     {
       "type": "calls_external",
       "from": "file:backend/mcp_server.py",
       "to": "external:supabase",
-      "line": 4
+      "line": 29
     },
     {
       "type": "calls_external",
@@ -1710,6 +1728,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_offline.py",
       "to": "file:backend/tests/conftest.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_startup.py",
+      "to": "file:backend/main.py"
     },
     {
       "type": "imports",

@@ -1,8 +1,5 @@
 import os
-import subprocess
-import sys
 from datetime import datetime
-from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,20 +9,7 @@ from backend.routers import auth, books, sessions, agent, dashboard
 
 load_dotenv()
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Start the MCP server subprocess on boot
-    mcp_process = subprocess.Popen(
-        [sys.executable, "backend/mcp_server.py"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    yield
-    # Terminate the subprocess on shutdown
-    mcp_process.terminate()
-
-app = FastAPI(title="ReadFocus API", lifespan=lifespan)
+app = FastAPI(title="ReadFocus API")
 
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 

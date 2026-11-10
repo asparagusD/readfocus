@@ -32,5 +32,5 @@ groq==0.37.1
 langchain-google-genai==4.4.3
 tenacity==9.1.4
 
-# backend/mcp_server.py, started by main.py. Removed with it in C3.4.
+# backend/mcp_server.py only. The app does not start it (C3.4); manual use.
 mcp==1.30.0

@@ -115,8 +115,8 @@ Search by hand for these, and say so in the commit's `Notes`:
 - **Text matches.** Table, env var and RPC edges come from regexes on the
   file text, so a commented-out call still counts and a table name built at
   run time is missed.
-- **Processes and storage.** `backend/main.py` starting
-  `backend/mcp_server.py` through `subprocess`, and Supabase Storage bucket
-  use, are not edges.
+- **Processes and storage.** A file started through `subprocess` (as
+  `backend/main.py` started `backend/mcp_server.py` until C3.4) and Supabase
+  Storage bucket use are not edges.
 - **The tooling itself.** Files under `tools/repo_graph/` are scanned for
   imports only.

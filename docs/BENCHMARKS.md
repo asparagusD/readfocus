@@ -55,6 +55,144 @@ and the provider clients.
 Not measured: Linux or Render, where there is no launcher process and the
 numbers will differ; memory under load; memory during book ingestion.
 
+## Local models and dependencies
+
+One row per model or heavy dependency (the memory rule in the
+`free-intelligence` skill). RSS is measured with psutil in a fresh process.
+
+| Date | Subchunk | What was added | RSS before | RSS after | Delta | Backend RSS after startup |
+|---|---|---|---|---|---|---|
+| 2026-11-10 | C4.1 | `fastembed` 0.9.1 with `sentence-transformers/all-MiniLM-L6-v2` (ONNX, 384 dimensions, 86 MB on disk), loaded | 19 MB (Windows), 15 MB (Linux container) | 180 MB (Windows), 213 MB (Linux container, 0.1 CPU) | 161 MB, 198 MB | Windows: 135 MB with `backend.main` imported, 264 MB once the model is loaded. Unchanged at startup, because the model loads on first use. Not measured on Linux |
+| 2026-11-10 | C4.4 | `yake` 0.7.3 (brings `networkx`, `jellyfish`, `segtok`, `regex`, `tabulate`, `click`), imported | 16.7 MB (Windows) | 47.9 MB; 48.6 MB after one 600-word extraction | 31 MB, of which `numpy` is already paid for by the embedder | Unchanged: nothing the app imports at startup uses `backend/nlp/concepts.py` yet. A process with `backend.nlp.concepts` and `book_ingestor` imported is 137 MB, and 279 MB after the first extraction with embeddings (model loaded) |
+| 2026-11-10 | C4.4 | `rapidfuzz` 3.14.6, imported | 16.9 MB (Windows) | 19.0 MB | 2 MB | as above |
+
+Concept extraction time per chunk, Windows, `sample.pdf` chunks of 507, 740
+and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
+merge; 24, 30 and 37 ms without it. Not measured in the throttled
+container.
+
+### C4.6: ingestion on local embeddings (2026-11-10)
+
+Windows, backend started with `uvicorn backend.main:app` and
+`GOOGLE_AI_STUDIO_KEY` empty, one upload of `sample.pdf` (3.6 MB, 7 chunks)
+as dev test user A through `POST /books/upload`, one run:
+
+| Measure | Before (C3.5 baseline, Google AI Studio) | After (local model) |
+|---|---|---|
+| `POST /books/upload` | 1.72 s p50 | 2.57 s |
+| upload -> status ready | 5.07 s p50 | 3.81 s |
+| upload -> all 7 chunks stored | not recorded | 3.92 s |
+| Server RSS | 142 MB idle | 120 MB before the upload, 306 MB peak during ingestion, 303 MB after |
+
+The first upload after a start also loads the model (about 0.7 s on this
+machine). Not measured: Render, where C4.1 puts embedding at about 0.6 s
+per chunk; a long book; two uploads at once.
+
+Backfill of the dev database with `python
+scripts/backfill_local_embeddings.py`: 622 chunks in 106.7 s (5.8 per
+second, one update per chunk), after a `--limit 20` run of 4.1 s. A second
+full run embedded 0 chunks in 0.1 s. All 642 chunks now have
+`embedding_local`.
+
+### C4.1: embedding model, Gate G2 (2026-11-10)
+
+Gate G2 thresholds: RSS after load above 300 MB, or a throttled 32-text
+batch above 5 s. The first candidate, `BAAI/bge-small-en-v1.5`, was stopped
+at the gate; the user chose `sentence-transformers/all-MiniLM-L6-v2`, which
+is what `backend/nlp/embedder.py` loads. Both sets of numbers are kept.
+
+#### Committed model: all-MiniLM-L6-v2
+
+Same commands and settings as in the next section (one thread, four texts
+per model call). The model truncates at 256 tokens, so a 600-word chunk
+costs the same as a 300-word one and is represented by its opening.
+
+| Measure | Windows, no limit (3 runs) | Linux container, no limit | Linux container, 0.1 CPU and 512 MB |
+|---|---|---|---|
+| Model load, files on disk | 0.67 s | 0.85 s | 4.80 s |
+| RSS after load | 179 to 180 MB | 209 MB | 213 MB |
+| 32 short texts, median | 0.18 s | 0.18 s | **1.80 s** (max 1.80 s, 3 runs) |
+| RSS after short batches | 184 MB | 211 MB | 215 MB |
+| 32 chunk texts, median | 1.77 to 1.79 s | 1.83 s | **18.3 s** (max 18.8 s, 3 runs) |
+| RSS after chunk batches | 240 to 242 MB | 264 MB | 267 MB |
+
+| Check | Result | Verdict |
+|---|---|---|
+| RSS after load, embedder alone | 180 MB Windows, 213 MB Linux | under 300 MB |
+| RSS after load, whole backend | 264 MB Windows; Linux not measured | under on Windows |
+| Throttled batch of 32 short texts | 1.80 s | under 5 s |
+| Throttled batch of 32 chunk texts | 18.3 s, 267 MB | over 5 s; accepted by the user with this model. About 0.6 s per chunk, so ingestion embeds in the background |
+
+#### First candidate: bge-small-en-v1.5 (stopped at the gate)
+
+Commands, from the repo root. Windows, virtualenv active, model already in
+`.cache/fastembed`:
+
+```bash
+python scripts/dev/measure_embedder.py
+```
+
+Linux container with Render-like limits (`readfocus-g2` is
+`python:3.11-slim` plus `fastembed==0.9.1 numpy==2.4.6 psutil==7.2.2`; the
+repo is mounted read-only and the model is in a mounted cache):
+
+```bash
+docker run --rm --cpus=0.1 --memory=512m -v <repo>:/app:ro -v <cache>:/cache -e FASTEMBED_CACHE=/cache -e HF_HUB_OFFLINE=1 readfocus-g2 python scripts/dev/measure_embedder.py --runs 3 --words 25
+```
+
+Settings: one ONNX Runtime thread, four texts per model call.
+"Short" texts are 25 words (a question or an answer); "chunk" texts are 600
+words, the size ingestion stores, which the model truncates to 512 tokens.
+Docker Desktop 29.9.2 on the machine above, 12 logical CPUs.
+
+| Measure | Windows, no limit | Linux container, no limit | Linux container, 0.1 CPU and 512 MB |
+|---|---|---|---|
+| Model load, files on disk | 0.76 to 0.79 s (3 runs) | 1.06 s | 5.80 s |
+| RSS after load | 198 to 199 MB | 263 MB | 263 MB |
+| 32 short texts, median | 0.41 to 0.43 s | not run with these settings | **4.00 s** (max 4.00 s, 3 runs) |
+| RSS after short batches | 206 MB | | 266 MB |
+| 32 chunk texts, median | 9.6 to 10.0 s | not run with these settings | **98.1 s** (3 runs) |
+| RSS after chunk batches | 334 MB | | 365 MB |
+
+First load with a download (64 MB from Hugging Face, no key): 11.8 s on
+Windows, 11.5 s in the container.
+
+What the defaults were chosen from (32 texts, median):
+
+| Setting | Short texts | Chunk texts | RSS after chunk texts |
+|---|---|---|---|
+| Windows, 12 threads, 32 per call (fastembed-style defaults) | 0.10 s | 5.5 s | 1,247 MB |
+| Windows, 12 threads, 8 per call | | 5.2 s | 463 MB |
+| Windows, 12 threads, 4 per call | | 4.6 s | 335 MB |
+| Windows, 12 threads, 1 per call | | 3.6 s | 233 MB |
+| Windows, 1 thread, 4 per call | 0.43 s | 10.6 s | 331 MB |
+| Container 0.1 CPU, default threads (12), 32 per call | 39.6 s | killed by the 512 MB limit after 14 s (exit 137) | |
+| Container 0.1 CPU, 1 thread, 32 per call | 4.10 s | | |
+
+So: 32 chunk-sized texts in one model call do not fit in 512 MB, and on a
+0.1-CPU container the runtime's default of one thread per core is ten
+times slower than one thread.
+
+Against the gate:
+
+| Check | Result | Verdict |
+|---|---|---|
+| RSS after load, embedder alone | 199 MB Windows, 263 MB Linux | under 300 MB |
+| RSS after load, whole backend | 283 MB Windows; Linux not measured, and the embedder alone is 64 MB heavier there | under on Windows, likely over on Linux |
+| Throttled batch of 32 short texts | 4.00 s | under 5 s, by a small margin |
+| Throttled batch of 32 chunk texts | 98.1 s, 365 MB | over 5 s, about 20 times |
+
+Probe of the options before the choice, Windows, 1 thread, 4 per call, 32
+texts, one process per model:
+
+| Model | RSS after load | 25 words | 150 words | 300 words | 600 words | RSS after 600 words |
+|---|---|---|---|---|---|---|
+| `BAAI/bge-small-en-v1.5` (512-token window) | 199 MB | 0.43 s | 2.52 s | 5.12 s | 9.93 s | 369 MB |
+| `sentence-transformers/all-MiniLM-L6-v2` (256-token window, also 384 dimensions) | 180 MB | 0.20 s | 1.09 s | 1.92 s | 1.92 s | 246 MB |
+
+Not measured: Render itself; the whole backend in a Linux container;
+retrieval quality of either model; concurrent requests during a batch.
+
 ## Baseline
 
 API timings before the 2.0 migration, as seen by a client on the same

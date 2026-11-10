@@ -1,3 +1,4 @@
+import asyncio
 import io
 import os
 import re
@@ -7,8 +8,13 @@ import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
 
-from backend.services.embeddings import generate_embedding
+from backend.nlp import embedder
 from backend.services.supabase_client import supabase
+
+# Chunks embedded and inserted together. The first batch is smaller so the
+# book unlocks for reading as soon as five chunks are stored.
+FIRST_BATCH = 5
+EMBED_BATCH = 8
 
 def extract_text_from_pdf(file_bytes: bytes) -> list[str]:
     """Extract text from a PDF file, returning a list of page strings."""
@@ -119,6 +125,10 @@ def chunk_text(pages: list[str], target_words: int = 600) -> list[str]:
 async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: str, target_words: int = 600) -> dict:
     """
     Coordinates extraction, chunking, embedding generation, and database inserts.
+
+    Chunks are embedded with the local model (backend/nlp/embedder.py) in
+    batches, off the event loop, and stored in chunks.embedding_local. The
+    1536-dimension `embedding` column is no longer written.
     """
     try:
         if file_type.lower() == 'pdf':
@@ -133,38 +143,42 @@ async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: 
         
         # Pre-calculate total words to update DB early
         total_words_estimated = sum(len(c.split()) for c in chunks)
-        total_words = 0
 
-        for i, chunk in enumerate(chunks):
-            wc = len(chunk.split())
-            total_words += wc
-            
-            # 1) generate an embedding asynchronously
-            embedding = await generate_embedding(chunk)
-            
-            # 2) insert a row into the chunks table
-            supabase.table("chunks").insert({
-                "book_id": book_id,
-                "user_id": user_id,
-                "chunk_index": i,
-                "word_count": wc,
-                "content": chunk,
-                "embedding": embedding
-            }).execute()
-            
-            # 3) Check if we reached 5 chunks, if so, unlock the book for reading
-            if i == 4:
+        start = 0
+        while start < total_chunks:
+            batch = chunks[start:start + (FIRST_BATCH if start == 0 else EMBED_BATCH)]
+
+            # 1) embed the batch locally, in a worker thread
+            vectors = await asyncio.to_thread(embedder.embed, batch)
+
+            # 2) insert the batch into the chunks table in one call
+            supabase.table("chunks").insert([
+                {
+                    "book_id": book_id,
+                    "user_id": user_id,
+                    "chunk_index": start + offset,
+                    "word_count": len(chunk.split()),
+                    "content": chunk,
+                    "embedding_local": [float(value) for value in vectors[offset]],
+                }
+                for offset, chunk in enumerate(batch)
+            ]).execute()
+
+            # 3) after the first batch (five chunks, or the whole of a
+            # shorter book), unlock the book for reading
+            if start == 0:
                 supabase.table("books").update({
                     "total_chunks": total_chunks,
                     "total_words": total_words_estimated,
                     "status": "ready"
                 }).eq("id", book_id).execute()
-            
-        # If the book was short (<= 5 chunks), we still need to set it to ready at the end
-        if total_chunks <= 5:
+            start += len(batch)
+
+        # A book with no text at all is still marked ready, as before
+        if total_chunks == 0:
             supabase.table("books").update({
-                "total_chunks": total_chunks,
-                "total_words": total_words_estimated,
+                "total_chunks": 0,
+                "total_words": 0,
                 "status": "ready"
             }).eq("id", book_id).execute()
 

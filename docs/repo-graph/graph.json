@@ -111,6 +111,10 @@
       "type": "env"
     },
     {
+      "id": "env:EMBED_THREADS",
+      "type": "env"
+    },
+    {
       "id": "env:ENV",
       "type": "env"
     },
@@ -332,6 +336,30 @@
       "language": "python"
     },
     {
+      "id": "file:backend/nlp/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/nlp/concepts.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/nlp/embedder.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/nlp/text.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/__init__.py",
       "type": "file",
       "role": "router",
@@ -422,7 +450,25 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_concepts.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_embedder.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -434,7 +480,19 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_ingest_embeddings.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_ingestor.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_migrations.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -452,7 +510,19 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_retriever.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_startup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_text.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -764,13 +834,31 @@
       "language": "text"
     },
     {
+      "id": "file:scripts/backfill_local_embeddings.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/bench.py",
       "type": "file",
       "role": "script",
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/check_retriever.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/create_test_users.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/measure_embedder.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -872,6 +960,18 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/005_local_embeddings.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/006_chunk_text_search.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -952,6 +1052,14 @@
       "type": "function"
     },
     {
+      "id": "function:match_chunks_local",
+      "type": "function"
+    },
+    {
+      "id": "function:search_chunks_text",
+      "type": "function"
+    },
+    {
       "id": "graph_node:__end__",
       "type": "graph_node"
     },
@@ -1023,6 +1131,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/004_add_is_calibrated.sql",
       "to": "table:profiles"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/005_local_embeddings.sql",
+      "to": "table:chunks"
     },
     {
       "type": "calls_endpoint",
@@ -1145,12 +1258,6 @@
     },
     {
       "type": "calls_external",
-      "from": "file:backend/services/retriever.py",
-      "to": "external:langchain",
-      "line": 1
-    },
-    {
-      "type": "calls_external",
       "from": "file:backend/services/supabase_client.py",
       "to": "external:supabase",
       "line": 3
@@ -1194,7 +1301,12 @@
     {
       "type": "calls_function",
       "from": "file:backend/services/retriever.py",
-      "to": "function:match_chunks"
+      "to": "function:match_chunks_local"
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/services/retriever.py",
+      "to": "function:search_chunks_text"
     },
     {
       "type": "declares_env",
@@ -1375,6 +1487,16 @@
       "type": "defines_function",
       "from": "file:supabase/migrations/001_initial.sql",
       "to": "function:match_chunks"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/005_local_embeddings.sql",
+      "to": "function:match_chunks_local"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/006_chunk_text_search.sql",
+      "to": "function:search_chunks_text"
     },
     {
       "type": "defines_table",
@@ -1618,6 +1740,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/nlp/concepts.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/nlp/concepts.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/auth.py",
       "to": "file:backend/dependencies.py"
     },
@@ -1684,7 +1816,7 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
-      "to": "file:backend/services/embeddings.py"
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",
@@ -1694,7 +1826,12 @@
     {
       "type": "imports",
       "from": "file:backend/services/retriever.py",
-      "to": "file:backend/services/embeddings.py"
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/retriever.py",
+      "to": "file:backend/nlp/text.py"
     },
     {
       "type": "imports",
@@ -1708,8 +1845,28 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_backfill.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill.py",
+      "to": "file:scripts/backfill_local_embeddings.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concepts.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_embedder.py",
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",
@@ -1718,8 +1875,23 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_ingestor.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_migrations.py",
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",
@@ -1748,8 +1920,23 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_retriever.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_retriever.py",
+      "to": "file:backend/services/retriever.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_startup.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_text.py",
+      "to": "file:backend/nlp/text.py"
     },
     {
       "type": "imports",
@@ -1990,6 +2177,46 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/pages/Results.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/retriever.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_embedder.py",
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",
@@ -2238,7 +2465,12 @@
     },
     {
       "type": "reads_table",
-      "from": "file:backend/services/retriever.py",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/dev/check_retriever.py",
       "to": "table:chunks"
     },
     {
@@ -2260,6 +2492,16 @@
       "type": "uses_env",
       "from": "file:backend/mcp_server.py",
       "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/nlp/embedder.py",
+      "to": "env:EMBED_THREADS"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/nlp/embedder.py",
+      "to": "env:FASTEMBED_CACHE"
     },
     {
       "type": "uses_env",
@@ -2295,6 +2537,16 @@
       "type": "uses_env",
       "from": "file:frontend/src/lib/supabase.js",
       "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "env:ENV"
     },
     {
       "type": "uses_env",
@@ -2354,6 +2606,21 @@
     {
       "type": "writes_table",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/dev/check_retriever.py",
       "to": "table:chunks"
     },
     {

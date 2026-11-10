@@ -56,6 +56,55 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C4.3 — ruff count committed one above the baseline
+
+**Status:** fixed
+
+### Symptom
+The C4.3 commit `54fa014` went in with `ruff check backend/` at 84 errors;
+the baseline is 83, and the commit message says 83.
+
+    ruff check backend/
+    Found 84 errors.
+    [*] 1 fixable with `--fix`.
+
+    ruff check backend/nlp backend/tests/test_text.py --output-format concise
+    backend\nlp\text.py:12:1: I001 [*] Import block is un-sorted or un-formatted
+    Found 1 error.
+
+### Repro
+Fails every time at `54fa014`:
+
+    ruff check backend/nlp/text.py
+
+### Hypotheses
+1. The `_words` helper added just before the commit sits one blank line
+   below the imports, and ruff's import rule wants two before a function.
+   Evidence: I001 points at the import block of `text.py`, and the helper
+   was the last edit. Ruled out if: adding the blank line leaves I001 in
+   place. Result: confirmed; with the blank line the file is clean.
+
+### Root cause
+Two things. In the code: `backend/nlp/text.py:12`, one blank line between
+the imports and `def _words` (added to clear three SIM905 findings). In the
+process: the fix for SIM905, the re-run of the checks and `git commit` were
+one shell command with no stop on the ruff count, so the count of 84 was
+printed and committed in the same step.
+
+### Fix
+Added the blank line. The commit command is no longer chained to the
+checks: the checks run and are read first, then the commit is a separate
+command. No behaviour change in `text.py`.
+
+### Regression test
+None added: the check that catches this is `ruff check backend/` itself,
+which is a standard check and runs in CI. Failed before the fix: yes (84
+errors, I001 above). Passes after: yes (83 errors, baseline; `ruff check
+backend/nlp backend/tests/test_text.py`: All checks passed).
+
+### Commit
+fix(nlp): restore ruff baseline after the C4.3 commit
+
 ## 2026-11-10 C3.3 — graph tooling test fails after a test imports llm.py
 
 **Status:** fixed

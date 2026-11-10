@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 136,
-    "inventoried": 125,
+    "tracked": 152,
+    "inventoried": 141,
     "excluded": 11
   },
   "files": [
@@ -49,10 +49,10 @@
     {
       "path": ".env.example",
       "language": "dotenv",
-      "lines": 23,
-      "size_bytes": 683,
+      "lines": 26,
+      "size_bytes": 842,
       "role": "config",
-      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE, and the two provider keys due for removal in C8."
+      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE, the optional EMBED_THREADS, and the two provider keys due for removal in C8."
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7267,
+      "size_bytes": 7284,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -191,6 +191,38 @@
       "purpose": "Standalone FastMCP server with three Supabase tools (reading history, comprehension trend, chunk context); not started by the app since C3.4 and not called by any agent; kept for manual use."
     },
     {
+      "path": "backend/nlp/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 64,
+      "role": "lib",
+      "purpose": "Package marker for backend.nlp, the local NLP building blocks (no API calls)."
+    },
+    {
+      "path": "backend/nlp/concepts.py",
+      "language": "python",
+      "lines": 129,
+      "size_bytes": 5356,
+      "role": "lib",
+      "purpose": "Concepts of a chunk: YAKE key phrases, normalised (lower case, stopwords stripped, plurals reduced), near-duplicates merged by rapidfuzz, embedding cosine or shared words, each with a stable concept key slug and a 0..1 weight."
+    },
+    {
+      "path": "backend/nlp/embedder.py",
+      "language": "python",
+      "lines": 74,
+      "size_bytes": 2600,
+      "role": "lib",
+      "purpose": "Local embeddings: one lazily loaded, thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE); embed and embed_one return unit-length float32 vectors."
+    },
+    {
+      "path": "backend/nlp/text.py",
+      "language": "python",
+      "lines": 134,
+      "size_bytes": 5442,
+      "role": "lib",
+      "purpose": "Pure text utilities, standard library only: normalize (PDF hyphenation, line breaks, quotes), split_sentences with an abbreviation guard, tokenize, STOPWORDS, content_words, and informativeness, a 0..1 sentence score."
+    },
+    {
       "path": "backend/routers/__init__.py",
       "language": "python",
       "lines": 1,
@@ -249,10 +281,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 182,
-      "size_bytes": 6707,
+      "lines": 196,
+      "size_bytes": 7286,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds and inserts each chunk, marks the book ready after five chunks."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks."
     },
     {
       "path": "backend/services/embeddings.py",
@@ -273,10 +305,10 @@
     {
       "path": "backend/services/retriever.py",
       "language": "python",
-      "lines": 39,
-      "size_bytes": 1476,
+      "lines": 92,
+      "size_bytes": 3592,
       "role": "service",
-      "purpose": "Similar-chunk lookup through the match_chunks RPC, plus an unused LangChain SupabaseVectorStore retriever."
+      "purpose": "Hybrid retrieval over one book's chunks: local-embedding vector search (match_chunks_local) and Postgres full-text search (search_chunks_text) merged with reciprocal rank fusion; get_similar_chunks keeps its signature."
     },
     {
       "path": "backend/services/supabase_client.py",
@@ -311,12 +343,36 @@
       "purpose": "Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked)."
     },
     {
+      "path": "backend/tests/test_backfill.py",
+      "language": "python",
+      "lines": 74,
+      "size_bytes": 2782,
+      "role": "test",
+      "purpose": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development."
+    },
+    {
       "path": "backend/tests/test_bench.py",
       "language": "python",
       "lines": 40,
       "size_bytes": 1555,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+    },
+    {
+      "path": "backend/tests/test_concepts.py",
+      "language": "python",
+      "lines": 124,
+      "size_bytes": 5271,
+      "role": "test",
+      "purpose": "Pytest: plural reduction, phrase normalisation, concept key slugs, merging of identical, fuzzy, overlapping and embedding-close phrases, and extract_concepts on a fixed passage without the real model."
+    },
+    {
+      "path": "backend/tests/test_embedder.py",
+      "language": "python",
+      "lines": 126,
+      "size_bytes": 4186,
+      "role": "test",
+      "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
       "path": "backend/tests/test_health.py",
@@ -327,12 +383,28 @@
       "purpose": "Pytest: /health returns 200 with status ok and a timestamp."
     },
     {
+      "path": "backend/tests/test_ingest_embeddings.py",
+      "language": "python",
+      "lines": 92,
+      "size_bytes": 3917,
+      "role": "test",
+      "purpose": "Pytest on the fake database: ingest_book stores every chunk once with a 384-value embedding_local, in batches, unlocks the book after the first five, marks it error if embedding fails, and does not use the Google client."
+    },
+    {
       "path": "backend/tests/test_ingestor.py",
       "language": "python",
       "lines": 86,
       "size_bytes": 3961,
       "role": "test",
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
+    },
+    {
+      "path": "backend/tests/test_migrations.py",
+      "language": "python",
+      "lines": 78,
+      "size_bytes": 2808,
+      "role": "test",
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, and 006 adds the full-text index and search_chunks_text."
     },
     {
       "path": "backend/tests/test_offline.py",
@@ -351,6 +423,14 @@
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
     },
     {
+      "path": "backend/tests/test_retriever.py",
+      "language": "python",
+      "lines": 134,
+      "size_bytes": 5640,
+      "role": "test",
+      "purpose": "Pytest on a mocked database: reciprocal rank fusion, the OR text query, both searches called and fused, one search or the embedder failing, and the unchanged get_similar_chunks signature."
+    },
+    {
       "path": "backend/tests/test_startup.py",
       "language": "python",
       "lines": 22,
@@ -359,18 +439,26 @@
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
     },
     {
+      "path": "backend/tests/test_text.py",
+      "language": "python",
+      "lines": 110,
+      "size_bytes": 5336,
+      "role": "test",
+      "purpose": "Pytest, table-driven: sentence splitting (abbreviations, quotes, lists, hyphenated line breaks), normalisation, tokens, stopwords, and informativeness rankings."
+    },
+    {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 124,
-      "size_bytes": 5607,
+      "lines": 262,
+      "size_bytes": 13176,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, and the C3.5 API baseline with its caveats."
+      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 245,
-      "size_bytes": 9493,
+      "lines": 294,
+      "size_bytes": 11348,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -385,8 +473,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 368,
-      "size_bytes": 41526,
+      "lines": 538,
+      "size_bytes": 72249,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -761,10 +849,18 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 36,
-      "size_bytes": 924,
+      "lines": 42,
+      "size_bytes": 1027,
       "role": "config",
-      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned; still includes the Groq and Google AI Studio packages until C8."
+      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/; still includes the Groq and Google AI Studio packages until C8."
+    },
+    {
+      "path": "scripts/backfill_local_embeddings.py",
+      "language": "python",
+      "lines": 104,
+      "size_bytes": 4221,
+      "role": "script",
+      "purpose": "Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development."
     },
     {
       "path": "scripts/bench.py",
@@ -775,12 +871,28 @@
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
     },
     {
+      "path": "scripts/dev/check_retriever.py",
+      "language": "python",
+      "lines": 91,
+      "size_bytes": 4214,
+      "role": "script",
+      "purpose": "Integration check of the hybrid retriever on the dev database: inserts sample.pdf's chunks with local embeddings as a fixture book for test user A, runs searches with expected chunks, deletes the fixture; refuses to run unless ENV=development."
+    },
+    {
       "path": "scripts/dev/create_test_users.py",
       "language": "python",
       "lines": 117,
       "size_bytes": 3514,
       "role": "script",
       "purpose": "Creates or resets two confirmed dev test users and writes .env.test; refuses to run unless ENV=development."
+    },
+    {
+      "path": "scripts/dev/measure_embedder.py",
+      "language": "python",
+      "lines": 86,
+      "size_bytes": 3047,
+      "role": "script",
+      "purpose": "Measures the embedding model in a fresh process: psutil RSS before and after import, load and batches, model load time, and the latency of a batch of short and of chunk-sized texts."
     },
     {
       "path": "scripts/dev/measure_rss.py",
@@ -911,6 +1023,22 @@
       "purpose": "Adds profiles.is_calibrated (boolean, default false)."
     },
     {
+      "path": "supabase/migrations/005_local_embeddings.sql",
+      "language": "sql",
+      "lines": 46,
+      "size_bytes": 1642,
+      "role": "migration",
+      "purpose": "Adds chunks.embedding_local vector(384) with an HNSW cosine index and match_chunks_local, which runs as the caller so RLS applies; the 1536 column and match_chunks are untouched."
+    },
+    {
+      "path": "supabase/migrations/006_chunk_text_search.sql",
+      "language": "sql",
+      "lines": 42,
+      "size_bytes": 1439,
+      "role": "migration",
+      "purpose": "Adds a GIN full-text index on chunks.content and search_chunks_text (websearch_to_tsquery, ranked), which runs as the caller so RLS applies."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -945,8 +1073,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 127,
-      "size_bytes": 17549,
+      "lines": 143,
+      "size_bytes": 21625,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -978,7 +1106,7 @@
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
       "lines": 241,
-      "size_bytes": 9735,
+      "size_bytes": 9741,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

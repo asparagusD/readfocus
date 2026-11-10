@@ -348,6 +348,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/nlp/text.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/__init__.py",
       "type": "file",
       "role": "router",
@@ -481,6 +487,12 @@
     },
     {
       "id": "file:backend/tests/test_startup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_text.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1814,6 +1826,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_startup.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_text.py",
+      "to": "file:backend/nlp/text.py"
     },
     {
       "type": "imports",

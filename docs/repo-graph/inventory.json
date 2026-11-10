@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 142,
-    "inventoried": 131,
+    "tracked": 144,
+    "inventoried": 133,
     "excluded": 11
   },
   "files": [
@@ -207,6 +207,14 @@
       "purpose": "Local embeddings: one lazily loaded, thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE); embed and embed_one return unit-length float32 vectors."
     },
     {
+      "path": "backend/nlp/text.py",
+      "language": "python",
+      "lines": 133,
+      "size_bytes": 5441,
+      "role": "lib",
+      "purpose": "Pure text utilities, standard library only: normalize (PDF hyphenation, line breaks, quotes), split_sentences with an abbreviation guard, tokenize, STOPWORDS, content_words, and informativeness, a 0..1 sentence score."
+    },
+    {
       "path": "backend/routers/__init__.py",
       "language": "python",
       "lines": 1,
@@ -391,6 +399,14 @@
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
     },
     {
+      "path": "backend/tests/test_text.py",
+      "language": "python",
+      "lines": 110,
+      "size_bytes": 5336,
+      "role": "test",
+      "purpose": "Pytest, table-driven: sentence splitting (abbreviations, quotes, lists, hyphenated line breaks), normalisation, tokens, stopwords, and informativeness rankings."
+    },
+    {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
       "lines": 232,
@@ -418,7 +434,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 486,
-      "size_bytes": 59779,
+      "size_bytes": 61520,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -993,8 +1009,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 133,
-      "size_bytes": 18896,
+      "lines": 135,
+      "size_bytes": 19338,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -979,3 +979,50 @@ purpose; it now puts the session back to `testing` first.
 
 ### Commit
 fix(api): grade a session once and replay its result on resubmit
+
+## 2026-11-11 C8 follow-up — issue 34: a session's test is assembled and stored twice
+
+**Status:** fixed
+
+### Symptom
+The stored node durations of every benchmark session showed two
+`finish_reading` runs: `finish-reading` called right after `start` runs the
+test generator inline while the background run from `start` is still going.
+Both store a test with an unconditional update, so the later one overwrites
+the earlier, and `question_bank.times_used` goes up twice. If the
+background run stores last, the test graded is not the one the reader was
+shown.
+
+### Repro
+    pytest "backend/tests/test_api_sessions.py::test_a_second_assembly_returns_the_stored_test_and_counts_nothing" -q
+
+Fails before the fix: the second assembly overwrites the stored test and
+counts its questions again. On dev (scratchpad script, start then
+finish-reading at once, 3 sessions) the old code showed the stored test
+in all 3: there the inline run stored last, so the mismatch itself was not
+reproduced; the double run and double count were.
+
+### Hypotheses
+1. `assemble_session_test` stores with an unconditional update and counts
+   use even when another run already stored a test. Evidence:
+   `backend/services/question_bank.py`, the `sessions` update and the
+   `times_used` loop. Result: confirmed by the test.
+
+### Root cause
+The store in `assemble_session_test` (`backend/services/question_bank.py`)
+was not conditional, so overlapping runs both wrote.
+
+### Fix
+The store is conditional on `test_questions is null`; the run that finds a
+test already stored returns that test and counts nothing. finish-reading
+therefore always shows the test that is graded.
+
+### Regression test
+`test_a_second_assembly_returns_the_stored_test_and_counts_nothing`
+(fails before, passes after) and
+`test_finish_reading_shows_the_test_that_is_graded` (passes before too:
+the fake runs the two in order; it guards the response). On dev with the
+fix: 3 of 3 sessions show the stored test.
+
+### Commit
+fix(api): store a session's test once

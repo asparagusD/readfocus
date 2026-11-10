@@ -3266,6 +3266,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/question_bank.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_local_embeddings.py",
       "to": "table:chunks"
     },

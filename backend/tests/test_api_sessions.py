@@ -63,6 +63,11 @@ class Query:
         self.filters.append(lambda r: r.get(column) in values)
         return self
 
+    def is_(self, column, value):
+        assert value == "null"
+        self.filters.append(lambda r: r.get(column) is None)
+        return self
+
     def neq(self, column, value):
         self.filters.append(lambda r: r.get(column) != value)
         return self
@@ -547,3 +552,22 @@ def test_a_completed_session_with_no_stored_result_is_a_conflict(api):
     api.db.tables["sessions"][0]["status"] = "completed"
     response = submit(api, session_id)
     assert response.status_code == 409 and "already" in response.json()["detail"]
+
+
+# --- a session's test is assembled once (issue 34) ------------------------------------------------
+
+def test_a_second_assembly_returns_the_stored_test_and_counts_nothing(api):
+    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    stored = api.db.tables["sessions"][0]["test_questions"]  # the background run at start
+    uses = {row["id"]: row["times_used"] for row in api.db.tables["question_bank"]}
+    again = question_bank.assemble_session_test(session_id, USER, BOOK, [0], [(["cloze"], 5)])  # a different mix
+    assert again == stored and api.db.tables["sessions"][0]["test_questions"] == stored
+    assert {row["id"]: row["times_used"] for row in api.db.tables["question_bank"]} == uses
+
+
+def test_finish_reading_shows_the_test_that_is_graded(api):
+    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    api.db.tables["sessions"][0]["test_questions"] = None  # as if the background run had not stored yet
+    shown = api.client.post(f"/sessions/{session_id}/finish-reading", json={"actual_duration_minutes": 3}).json()
+    stored = api.db.tables["sessions"][0]["test_questions"]
+    assert [q["question"] for q in shown["questions"]] == [q["question"] for q in stored]

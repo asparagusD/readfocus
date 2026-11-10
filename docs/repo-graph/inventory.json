@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7899,
+      "size_bytes": 7927,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -441,10 +441,10 @@
     {
       "path": "backend/services/question_bank.py",
       "language": "python",
-      "lines": 73,
-      "size_bytes": 3818,
+      "lines": 83,
+      "size_bytes": 4483,
       "role": "service",
-      "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session and increments times_used."
+      "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session only if it has none yet (otherwise returns the stored test; issue 34) and increments times_used for the run that stored."
     },
     {
       "path": "backend/services/retriever.py",
@@ -521,8 +521,8 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 549,
-      "size_bytes": 26699,
+      "lines": 573,
+      "size_bytes": 28120,
       "role": "test",
       "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict."
     },
@@ -761,8 +761,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 981,
-      "size_bytes": 42280,
+      "lines": 1028,
+      "size_bytes": 44290,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -777,8 +777,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1364,
-      "size_bytes": 240055,
+      "lines": 1365,
+      "size_bytes": 241391,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1418,7 +1418,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 186,
-      "size_bytes": 38477,
+      "size_bytes": 38571,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

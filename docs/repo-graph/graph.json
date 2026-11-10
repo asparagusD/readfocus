@@ -332,12 +332,6 @@
       "language": "python"
     },
     {
-      "id": "file:backend/requirements.txt",
-      "type": "file",
-      "role": "lib",
-      "language": "text"
-    },
-    {
       "id": "file:backend/routers/__init__.py",
       "type": "file",
       "role": "router",
@@ -429,6 +423,12 @@
     },
     {
       "id": "file:backend/tests/test_ingestor.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_requirements.py",
       "type": "file",
       "role": "test",
       "language": "python"

@@ -314,13 +314,12 @@ Each use is the file and line of the first import of that service.
 | `frontend/src/hooks/useAuth.jsx` | 43 | AuthProvider and useAuth: Supabase session state plus signIn, signUp and signOut. |
 | `frontend/src/hooks/usePageTransition.js` | 33 | Adds the .visible class on mount and returns navigateTo, which fades the page out before routing. |
 
-### lib (5)
+### lib (4)
 
 | File | Lines | Purpose |
 |---|---|---|
 | `backend/__init__.py` | 1 | Package marker for backend. |
 | `backend/dependencies.py` | 20 | get_current_user FastAPI dependency: resolves a Supabase JWT to a user id through supabase.auth.get_user; anything else is a 401. |
-| `backend/requirements.txt` | 19 | Second dependency list that differs from the root one (adds mcp, lacks langchain-google-genai); not used by the Dockerfile or CI. |
 | `frontend/src/lib/api.js` | 40 | fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response. |
 | `frontend/src/lib/supabase.js` | 6 | Creates the browser Supabase client; falls back to a hard-coded project URL and publishable key when the env vars are unset. |
 
@@ -342,11 +341,11 @@ Each use is the file and line of the first import of that service.
 | `package.json` | 5 | Root package with one dev dependency, the Supabase CLI. |
 | `pyrightconfig.json` | 5 | Pyright config pointing at .venv with pythonVersion 3.14. |
 | `render.yaml` | 23 | Render blueprint for the Docker backend; declares Supabase, Groq, Cerebras, Google AI Studio and SambaNova keys. |
-| `requirements.txt` | 18 | Backend dependencies used by the Dockerfile and CI, unpinned; includes groq, langchain-groq and langchain-google-genai. |
+| `requirements.txt` | 36 | The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned; still includes the Groq and Google AI Studio packages until C8. |
 | `supabase/.gitignore` | 8 | Ignores Supabase CLI branch and temp folders and local env key files. |
 | `supabase/config.toml` | 408 | Supabase CLI local-development config (ports, auth, storage), close to the generated defaults. |
 
-### test (17)
+### test (18)
 
 | File | Lines | Purpose |
 |---|---|---|
@@ -354,6 +353,7 @@ Each use is the file and line of the first import of that service.
 | `backend/tests/test_auth.py` | 73 | Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked). |
 | `backend/tests/test_health.py` | 19 | Pytest: /health returns 200 with status ok and a timestamp. |
 | `backend/tests/test_ingestor.py` | 86 | Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation. |
+| `backend/tests/test_requirements.py` | 60 | Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file. |
 | `test_evaluator.py` | 57 | Manual script: generates a test then grades canned answers against hard-coded user and book ids. Not a pytest test. |
 | `test_generator.py` | 25 | Manual script: generates questions for a hard-coded book id and prints them. Not a pytest test. |
 | `test_graph.py` | 25 | Manual script: invokes the workflow with an event_type key that the graph no longer reads. Not a pytest test. |

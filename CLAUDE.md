@@ -121,7 +121,7 @@ Baseline when this file was written (C1.1; the last row was added in C2.4):
 | Check | Result |
 |---|---|
 | `ruff check backend/` | fails: 84 errors in existing code |
-| `pytest backend/tests -q` | passes: 13 tests (8 until C3.1) |
+| `pytest backend/tests -q` | passes: 16 tests (8 until C3.1) |
 | `npm --prefix frontend run lint` | fails: 22 errors, 2 warnings in existing code |
 | `npm --prefix frontend run build` | passes |
 | `python -c "import backend.main"` | passes |

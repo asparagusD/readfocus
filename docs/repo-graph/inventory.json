@@ -191,14 +191,6 @@
       "purpose": "Standalone FastMCP server with three Supabase tools (reading history, comprehension trend, chunk context); started by main.py, not called by any agent."
     },
     {
-      "path": "backend/requirements.txt",
-      "language": "text",
-      "lines": 19,
-      "size_bytes": 226,
-      "role": "lib",
-      "purpose": "Second dependency list that differs from the root one (adds mcp, lacks langchain-google-genai); not used by the Dockerfile or CI."
-    },
-    {
       "path": "backend/routers/__init__.py",
       "language": "python",
       "lines": 1,
@@ -327,6 +319,14 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_requirements.py",
+      "language": "python",
+      "lines": 60,
+      "size_bytes": 2162,
+      "role": "test",
+      "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
+    },
+    {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
       "lines": 194,
@@ -346,7 +346,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 338,
-      "size_bytes": 33330,
+      "size_bytes": 34610,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -713,10 +713,10 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 18,
-      "size_bytes": 222,
+      "lines": 36,
+      "size_bytes": 918,
       "role": "config",
-      "purpose": "Backend dependencies used by the Dockerfile and CI, unpinned; includes groq, langchain-groq and langchain-google-genai."
+      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned; still includes the Groq and Google AI Studio packages until C8."
     },
     {
       "path": "scripts/dev/create_test_users.py",
@@ -874,7 +874,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 118,
-      "size_bytes": 15745,
+      "size_bytes": 15824,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

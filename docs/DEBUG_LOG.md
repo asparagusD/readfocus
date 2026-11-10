@@ -932,3 +932,50 @@ test.
 
 ### Commit
 fix(backend): give the shared Supabase client an HTTP/1.1 pool
+
+## 2026-11-11 C8 follow-up — issue 33: a resubmitted session is graded and paced again
+
+**Status:** fixed
+
+### Symptom
+From the code (C8.7): `submit-answers` for a session that is already
+`completed` runs the whole submit flow again. Mastery moves once (the
+`last_event_id` guard), but the evaluator inserts a second `test_results`
+row and the optimizer moves the pace and re-read queue a second time.
+
+### Repro
+    pytest "backend/tests/test_api_sessions.py::test_a_resubmitted_session_returns_the_stored_result_and_runs_nothing_again" -q
+
+Fails before the fix: two `test_results` rows, two submit runs.
+
+### Hypotheses
+1. `submit_answers` never looks at the session's status and marks it
+   `completed` only after the run, so neither a later resubmit nor a
+   concurrent one is stopped. Evidence: `backend/routers/sessions.py`,
+   the select and the final update. Result: confirmed.
+
+### Root cause
+No guard and no claim on the session in `submit_answers`
+(`backend/routers/sessions.py`).
+
+### Fix
+The session is claimed before the run with a conditional update
+(`status` not `completed` -> `completed`); a session already completed,
+or a claim lost to a concurrent submit, gets the stored result rebuilt
+from `test_results` and the current pace recommendation, in the same
+response shape, with nothing re-run (409 if no result is stored yet). If
+grading fails, the claim is released so the reader can submit again. The
+page is unchanged: a resubmit now gets a 200 with the same score instead
+of a second grading.
+
+### Regression test
+`test_a_resubmitted_session_returns_the_stored_result_and_runs_nothing_again`,
+`test_a_failed_grading_releases_the_session_for_another_try`,
+`test_a_completed_session_with_no_stored_result_is_a_conflict`
+(`backend/tests/test_api_sessions.py`). With the fix stashed 2 failed and
+1 passed (the release test: the old code never claimed the session, so it
+guards the new claim rather than reproducing the bug); restored 3 passed. `test_a_cached_grade_is_reused...` resubmitted on
+purpose; it now puts the session back to `testing` first.
+
+### Commit
+fix(api): grade a session once and replay its result on resubmit

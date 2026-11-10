@@ -63,6 +63,10 @@ class Query:
         self.filters.append(lambda r: r.get(column) in values)
         return self
 
+    def neq(self, column, value):
+        self.filters.append(lambda r: r.get(column) != value)
+        return self
+
     def lte(self, column, value):
         self.filters.append(lambda r: r.get(column) is not None and r[column] <= value)
         return self
@@ -407,6 +411,7 @@ def test_a_cached_grade_is_reused_for_the_same_answer_and_not_for_a_changed_one(
     submit(api, session_id)
     assert api.embeds == []  # the only free-text answer was already graded; closed and empty ones need no model
     api.db.tables["test_results"].clear()
+    api.db.tables["sessions"][0]["status"] = "testing"  # a resubmit is now replayed (issue 33): submit afresh
     changed = [*ANSWERS[:3], "They were made of gravel on deep foundations, engineers said.", ""]
     submit(api, session_id, changed)
     assert len(api.embeds) == 1 and changed[3] in api.embeds[0]
@@ -504,3 +509,41 @@ def test_abandon_runs_the_optimizer_and_keeps_its_response(api):
     assert row["agent"] == "optimizer" and row["session_id"] == session_id
     (progress,) = api.db.tables["reading_progress"]
     assert progress["pace_recommendation"]["band"] == "none"
+
+
+# --- a session is graded once (issue 33) ----------------------------------------------------------
+
+def test_a_resubmitted_session_returns_the_stored_result_and_runs_nothing_again(api):
+    session_id, _ = start_and_finish(api)
+    first = submit(api, session_id).json()
+    progress = json.dumps(api.db.tables["reading_progress"])
+    again = submit(api, session_id, answers=["", "", "", "", ""])
+    assert again.status_code == 200
+    body = again.json()
+    for key in ("total_score", "max_score", "percentage", "per_question", "low_confidence_count"):
+        assert body[key] == first[key], key
+    assert body["pace_recommendation"]["band"] == first["pace_recommendation"]["band"]
+    assert len(api.db.tables["test_results"]) == 1
+    assert len({row["run_id"] for row in decisions(api, "submit_answers")}) == 1  # one graph run
+    assert json.dumps(api.db.tables["reading_progress"]) == progress  # pace and queue untouched
+
+
+def test_a_failed_grading_releases_the_session_for_another_try(api, monkeypatch):
+    session_id, _ = start_and_finish(api)
+    real, broken = sessions.run_submit, {"on": True}
+
+    async def sometimes_failing(*args, **kwargs):
+        return {"error": "Missing questions in state."} if broken["on"] else await real(*args, **kwargs)
+
+    monkeypatch.setattr(sessions, "run_submit", sometimes_failing)
+    assert submit(api, session_id).status_code == 500
+    assert api.db.tables["sessions"][0]["status"] == "testing"
+    broken["on"] = False
+    assert submit(api, session_id).status_code == 200
+
+
+def test_a_completed_session_with_no_stored_result_is_a_conflict(api):
+    session_id, _ = start_and_finish(api)
+    api.db.tables["sessions"][0]["status"] = "completed"
+    response = submit(api, session_id)
+    assert response.status_code == 409 and "already" in response.json()["detail"]

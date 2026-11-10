@@ -3237,6 +3237,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
       "to": "table:sessions"
     },
     {

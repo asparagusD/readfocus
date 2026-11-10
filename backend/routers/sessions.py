@@ -46,6 +46,29 @@ class SubmitAnswersRequest(BaseModel):
     answers: list[str]
     time_taken_seconds: int
 
+PUBLIC_GRADE_KEYS = ("score", "max_score", "feedback", "confidence", "matched_concepts", "missing_concepts")
+
+
+def stored_result(session_id: str, user_id: str, book_id: str) -> dict:
+    """The submit response for a session already graded, rebuilt from what was stored (issue 33)."""
+    rows = supabase.table("test_results").select("total_score, max_score, answers").eq("session_id", session_id).eq(
+        "user_id", user_id).execute().data
+    if not rows:
+        raise HTTPException(status_code=409, detail="This test has already been submitted.")
+    row = cast(dict[str, Any], rows[0])
+    answers = row.get("answers") or []
+    progress = supabase.table("reading_progress").select("pace_recommendation").eq("user_id", user_id).eq(
+        "book_id", book_id).execute().data
+    return {
+        "total_score": row["total_score"], "max_score": row["max_score"],
+        "percentage": row["total_score"] / row["max_score"] * 100 if row["max_score"] else 0,
+        "per_question": [{key: answer.get(key) for key in PUBLIC_GRADE_KEYS} for answer in answers],
+        "low_confidence_count": sum(answer.get("confidence") == "low" for answer in answers),
+        "pace_recommendation": cast(dict[str, Any], progress[0]).get("pace_recommendation") if progress else None,
+        "next_session": None,
+    }
+
+
 class EvaluateSingleRequest(BaseModel):
     index: int
     answer: str
@@ -151,12 +174,14 @@ async def submit_answers(
     session_id: str, req: SubmitAnswersRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)
 ):
     # 1. Fetch session and questions
-    sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
+    sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions, status").eq("id", session_id).eq("user_id", user_id).execute()
     if not sess_resp.data:
         raise HTTPException(status_code=404, detail="Session not found.")
         
     sess = cast(dict[str, Any], sess_resp.data[0])
     book_id = sess["book_id"]
+    if sess.get("status") == "completed":  # graded already: the same answer again, nothing re-run (issue 33)
+        return stored_result(session_id, user_id, book_id)
     start_idx = sess["chunk_start_index"]
     end_idx = sess["chunk_end_index"]
     chunk_indices = list(range(start_idx, end_idx + 1))
@@ -165,22 +190,32 @@ async def submit_answers(
     if not test_questions:
         raise HTTPException(status_code=400, detail="No test questions found. Did you call finish-reading?")
         
-    # 2. Run the submit_answers flow: evaluator -> knowledge state -> optimizer -> planner
-    final = await run_submit(
-        session_id, user_id, book_id, chunk_indices, test_questions, req.answers, req.time_taken_seconds
-    )
+    # 2. Claim the session, so two submits at once cannot both grade it (issue 33)
+    claimed = supabase.table("sessions").update({
+        "status": "completed", "completed_at": datetime.utcnow().isoformat()
+    }).eq("id", session_id).eq("user_id", user_id).neq("status", "completed").execute()
+    if not claimed.data:
+        return stored_result(session_id, user_id, book_id)
+
+    def release():
+        supabase.table("sessions").update({"status": sess.get("status") or "testing", "completed_at": None}).eq(
+            "id", session_id).eq("user_id", user_id).execute()
+
+    # 3. Run the submit_answers flow: evaluator -> knowledge state -> optimizer -> planner
+    try:
+        final = await run_submit(
+            session_id, user_id, book_id, chunk_indices, test_questions, req.answers, req.time_taken_seconds
+        )
+    except Exception:
+        release()
+        raise
     eval_result = final.get("evaluation_result")
     if final.get("error") or not eval_result:
         print(f"Evaluate Answers Error: {final.get('error')}")
+        release()
         raise HTTPException(status_code=500, detail="Failed to evaluate answers.")
     next_plan = final.get("plan") or {}
     background_tasks.add_task(save_decisions, final)
-    
-    # 4. Update session
-    supabase.table("sessions").update({
-        "status": "completed",
-        "completed_at": datetime.utcnow().isoformat()
-    }).eq("id", session_id).execute()
     
     return {
         "total_score": eval_result.get("total_score"),

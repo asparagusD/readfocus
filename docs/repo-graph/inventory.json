@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7522,
+      "size_bytes": 7555,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -153,10 +153,10 @@
     {
       "path": "backend/agents/graph.py",
       "language": "python",
-      "lines": 59,
-      "size_bytes": 1837,
+      "lines": 65,
+      "size_bytes": 2136,
       "role": "agent",
-      "purpose": "Builds the LangGraph workflow: routes from __start__ by state status to planner, test_generator, evaluator or optimizer, each ending at END."
+      "purpose": "Builds the LangGraph workflow: routes from __start__ by state status to planner, test_generator, evaluator, knowledge_state or optimizer, each ending at END."
     },
     {
       "path": "backend/agents/knowledge_state/__init__.py",
@@ -169,10 +169,10 @@
     {
       "path": "backend/agents/knowledge_state/agent.py",
       "language": "python",
-      "lines": 63,
-      "size_bytes": 3107,
+      "lines": 92,
+      "size_bytes": 4823,
       "role": "agent",
-      "purpose": "The I/O around mastery.decide: record_test reads the reader's mastery rows for the concepts a graded test's questions name, moves them and upserts them with last_seen and next_review, once per session id; apply_test is the submit flow's call, which logs a failure instead of raising."
+      "purpose": "The I/O around mastery.decide: record_test reads the reader's mastery rows for the concepts a graded test's questions name, moves them and upserts them with last_seen and next_review, once per session id; knowledge_state_node wraps it as a LangGraph node (a failure is an errors entry); apply_test, the submit flow's background call, runs that node through the workflow and logs errors."
     },
     {
       "path": "backend/agents/knowledge_state/mastery.py",
@@ -201,10 +201,10 @@
     {
       "path": "backend/agents/optimizer_agent.py",
       "language": "python",
-      "lines": 120,
-      "size_bytes": 4727,
+      "lines": 93,
+      "size_bytes": 4831,
       "role": "agent",
-      "purpose": "Optimizer node: score thresholds set the chunk multiplier and re-read queue; the Groq LLM picks the next focus duration; saves pace_recommendation."
+      "purpose": "Optimizer node, no LLM: reads progress and the stored pace recommendation (previous multiplier, recent percentages, recent question outcomes, question mix), the book's recent sessions (this one's words and minutes, earlier abandonments) and the profile speed; calls optimizer.pace.decide; stores the recommendation with its history and the re-read queue (creating the progress row for older books); returns it with one decisions entry. optimize_pace runs it through the workflow."
     },
     {
       "path": "backend/agents/planner/__init__.py",
@@ -233,8 +233,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 284,
-      "size_bytes": 10996,
+      "lines": 288,
+      "size_bytes": 11154,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer."
     },
@@ -401,8 +401,8 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 229,
-      "size_bytes": 10156,
+      "lines": 230,
+      "size_bytes": 10198,
       "role": "router",
       "purpose": "Session lifecycle endpoints: start (planner, then the test generator node assembles the test from the question bank in the planner's mix and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question, and moves the reader's concept mastery in a background task), abandon, get; no answer or evidence is sent to the client before the test is submitted."
     },
@@ -497,10 +497,10 @@
     {
       "path": "backend/tests/test_agent_nodes.py",
       "language": "python",
-      "lines": 151,
-      "size_bytes": 7167,
+      "lines": 271,
+      "size_bytes": 13168,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: the planner node creates the progress row once, continues after the last section, uses the optimizer's pace and speed, pops a re-read, brings a weak concept's section back, reads difficulty from the bank; plan_session through the workflow; the test generator node stores a test in the plan's mix, also through the workflow; one decisions entry each; no LLM."
+      "purpose": "Pytest on the in-memory database: the planner node creates the progress row once, continues after the last section, uses the optimizer's pace and speed, pops a re-read, brings a weak concept's section back, reads difficulty from the bank; plan_session through the workflow; the test generator node stores a test in the plan's mix, also through the workflow; the knowledge state node reports the rows it moved and turns a failure into an errors entry, and apply_test goes through the workflow; the optimizer node stores its recommendation with percentage and outcome history, creates a missing progress row, counts abandoned sessions and moves the mix across tests; one decisions entry each; no LLM."
     },
     {
       "path": "backend/tests/test_agent_state.py",
@@ -754,7 +754,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1355,
-      "size_bytes": 212592,
+      "size_bytes": 215650,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1370,7 +1370,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 180,
-      "size_bytes": 34278,
+      "size_bytes": 35037,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1402,7 +1402,7 @@
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
       "lines": 244,
-      "size_bytes": 9817,
+      "size_bytes": 9836,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },
@@ -1418,7 +1418,7 @@
       "path": "tools/repo_graph/tests/test_query.py",
       "language": "python",
       "lines": 80,
-      "size_bytes": 3370,
+      "size_bytes": 3363,
       "role": "test",
       "purpose": "Pytest: file, endpoint and table queries, path forms, unknown targets, and the importers of llm.py in the real graph."
     },

@@ -164,7 +164,7 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, background_
     if not eval_result:
         raise HTTPException(status_code=500, detail="Failed to evaluate answers.")
 
-    # 2b. Move the reader's concept mastery, after the response is sent (direct call until C8)
+    # 2b. Move the reader's concept mastery after the response is sent: the knowledge state node
     background_tasks.add_task(
         apply_test, user_id, book_id, session_id, test_questions, eval_result.get("per_question") or []
     )
@@ -175,7 +175,8 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, background_
         user_id=user_id,
         book_id=book_id,
         chunk_indices=chunk_indices,
-        evaluation_result=eval_result
+        evaluation_result=eval_result,
+        test_questions=test_questions,
     )
     
     # 4. Update session

@@ -120,8 +120,8 @@ Baseline when this file was written (C1.1; the last row was added in C2.4):
 
 | Check | Result |
 |---|---|
-| `ruff check backend/` | fails: 48 errors in existing code (84 until C3.4, 83 until C4.5, 82 until C5.5, 81 until C6.4, 64 until C8.3, 63 until C8.4a) |
-| `pytest backend/tests -q` | passes: 485 tests, offline (472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
+| `ruff check backend/` | fails: 40 errors in existing code (84 until C3.4, 83 until C4.5, 82 until C5.5, 81 until C6.4, 64 until C8.3, 63 until C8.4a, 48 until C8.4b) |
+| `pytest backend/tests -q` | passes: 495 tests, offline (485 until C8.4b, 472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
 | `npm --prefix frontend run lint` | fails: 22 errors, 2 warnings in existing code |
 | `npm --prefix frontend run build` | passes |
 | `python -c "import backend.main"` | passes |

@@ -282,3 +282,7 @@ OPT_REREAD_QUEUE_MAX = 5
 OPT_TYPE_FAIL_BELOW = 0.5
 OPT_TYPE_MIN_SAMPLES = 2
 OPT_MIX_PLACES_RANGE = (1, 3)
+
+# Recent question outcomes (strategy, 0..1 score) kept with the pace
+# recommendation, newest first, for the per-type failure rule.
+OPT_OUTCOME_HISTORY = 15

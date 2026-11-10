@@ -76,5 +76,5 @@ def test_real_graph_lists_every_agent_that_uses_llm(capsys):
     # Tests may import llm.py too, so count only the agents among importers.
     imported_by = out.split("Imported by (")[1].split("Imports (")[0]
     agents = [p for p in imported_by.split() if p.startswith("backend/agents/")]
-    assert agents == ["backend/agents/optimizer_agent.py"]  # planner and test generator left in C8.4a
+    assert agents == []  # the planner and test generator left in C8.4a, the optimizer in C8.4b
     assert "External calls (1):\n  groq (banned) (line 8)" in out

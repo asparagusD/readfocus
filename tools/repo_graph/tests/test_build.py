@@ -239,6 +239,6 @@ def test_real_graph_has_the_schema_and_the_agents():
         "file:backend/services/retriever.py", "function:match_chunks_local",
     ) in edges(graph, "calls_function")
     assert {to for _, to in edges(graph, "graph_node")} == {
-        f"graph_node:{n}" for n in ("planner", "test_generator", "evaluator", "optimizer")
+        f"graph_node:{n}" for n in ("planner", "test_generator", "evaluator", "knowledge_state", "optimizer")
     }
     assert {n["type"] for n in graph["nodes"]} == set(build.NODE_TYPES)

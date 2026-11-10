@@ -185,11 +185,6 @@
       "banned": true
     },
     {
-      "id": "external:langchain",
-      "type": "external",
-      "banned": false
-    },
-    {
       "id": "external:langgraph",
       "type": "external",
       "banned": false
@@ -1307,6 +1302,12 @@
       "type": "graph_node"
     },
     {
+      "id": "graph_node:knowledge_state",
+      "type": "graph_node",
+      "handler": "knowledge_state_node",
+      "handler_file": "backend/agents/knowledge_state/agent.py"
+    },
+    {
       "id": "graph_node:optimizer",
       "type": "graph_node",
       "handler": "optimizer_node",
@@ -1460,12 +1461,6 @@
       "from": "file:backend/agents/graph.py",
       "to": "external:langgraph",
       "line": 1
-    },
-    {
-      "type": "calls_external",
-      "from": "file:backend/agents/optimizer_agent.py",
-      "to": "external:langchain",
-      "line": 4
     },
     {
       "type": "calls_external",
@@ -1809,6 +1804,12 @@
     {
       "type": "graph_edge",
       "from": "graph_node:__start__",
+      "to": "graph_node:knowledge_state",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
       "to": "graph_node:optimizer",
       "conditional": true
     },
@@ -1833,6 +1834,11 @@
       "type": "graph_edge",
       "from": "graph_node:first",
       "to": "graph_node:silent"
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:knowledge_state",
+      "to": "graph_node:__end__"
     },
     {
       "type": "graph_edge",
@@ -1863,6 +1869,11 @@
       "type": "graph_node",
       "from": "file:backend/agents/graph.py",
       "to": "graph_node:evaluator"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:knowledge_state"
     },
     {
       "type": "graph_node",
@@ -1952,6 +1963,11 @@
     {
       "type": "imports",
       "from": "file:backend/agents/graph.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/graph.py",
       "to": "file:backend/agents/optimizer_agent.py"
     },
     {
@@ -1972,7 +1988,17 @@
     {
       "type": "imports",
       "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
       "to": "file:backend/agents/knowledge_state/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/agents/state.py"
     },
     {
       "type": "imports",
@@ -1997,12 +2023,17 @@
     {
       "type": "imports",
       "from": "file:backend/agents/optimizer_agent.py",
-      "to": "file:backend/agents/state.py"
+      "to": "file:backend/agents/optimizer/pace.py"
     },
     {
       "type": "imports",
       "from": "file:backend/agents/optimizer_agent.py",
-      "to": "file:backend/services/llm.py"
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "file:backend/agents/state.py"
     },
     {
       "type": "imports",
@@ -2317,12 +2348,27 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
       "to": "file:backend/agents/planner/strategy.py"
     },
     {
       "type": "imports",
       "from": "file:backend/tests/test_agent_nodes.py",
       "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",
@@ -3082,12 +3128,17 @@
     {
       "type": "reads_table",
       "from": "file:backend/agents/optimizer_agent.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/optimizer_agent.py",
       "to": "table:reading_progress"
     },
     {
       "type": "reads_table",
       "from": "file:backend/agents/optimizer_agent.py",
-      "to": "table:test_results"
+      "to": "table:sessions"
     },
     {
       "type": "reads_table",

@@ -56,6 +56,101 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C3.3 — graph tooling test fails after a test imports llm.py
+
+**Status:** fixed
+
+### Symptom
+After adding `backend/tests/test_offline.py` and running `make graph`, the
+sixth standard check went from 61 passed to 1 failed, 60 passed.
+
+    pytest tools/repo_graph/tests -q
+    .......................................................F.....            [100%]
+    _______________ test_real_graph_lists_every_agent_that_uses_llm _______________
+        def test_real_graph_lists_every_agent_that_uses_llm(capsys):
+            assert query.main(["backend/services/llm.py"]) == 0
+            out = capsys.readouterr().out
+    >       imported_by = out.split("Imported by (4):\n")[1].split("Imports (")[0]
+    E       IndexError: list index out of range
+    tools\repo_graph\tests\test_query.py:76: IndexError
+    1 failed, 60 passed in 0.95s
+
+### Repro
+    pytest tools/repo_graph/tests/test_query.py::test_real_graph_lists_every_agent_that_uses_llm -q
+
+Fails every time with the regenerated graph.
+
+### Hypotheses
+1. The test hard-codes the number of files that import `llm.py`, and the new
+   offline test is a fifth importer. Evidence: `python
+   tools/repo_graph/query.py backend/services/llm.py` prints
+   `Imported by (5):` with `backend/tests/test_offline.py` last. Ruled out
+   if: the output still says `(4)`. Result: confirmed.
+
+### Root cause
+`tools/repo_graph/tests/test_query.py:76` split the output on the literal
+`Imported by (4):`. The test is about which agents use `llm.py`, but it
+asserted the total number of importers, so any other importer broke it. The
+graph and `query.py` are correct.
+
+### Fix
+The test now takes the "Imported by" section whatever its count and compares
+only the paths under `backend/agents/`. The offline test keeps its import of
+`llm.py`: checking that the LLM client is the fake is its purpose. First
+attempt; no failed attempts.
+
+### Regression test
+The same test, `test_query.py::test_real_graph_lists_every_agent_that_uses_llm`.
+Failed before the fix: yes (`1 failed, 60 passed`). Passes after: yes
+(`61 passed`).
+
+### Commit
+test: isolate manual scripts and make backend tests run offline
+
+## 2026-11-10 C3.1 — any raw UUID is accepted as a bearer token
+
+**Status:** fixed
+
+### Symptom
+Found by reading in C2.1 (issue 10, audit section 8.1), not by a crash.
+`get_current_user` returned the bearer token itself as the user id when the
+token was 36 characters with four hyphens, in every environment. Expected: a
+401 for anything Supabase Auth does not accept.
+
+    pytest backend/tests/test_auth.py -q
+    FAILED backend/tests/test_auth.py::test_raw_uuid_token_is_rejected - Failed: DID NOT RAISE HTTPException
+    FAILED backend/tests/test_auth.py::test_raw_uuid_token_is_rejected_in_development
+    2 failed, 3 passed in 0.87s
+
+### Repro
+    pytest backend/tests/test_auth.py::test_raw_uuid_token_is_rejected -q
+
+Fails every time before the fix.
+
+### Hypotheses
+1. The "Local Dev Bypass" block returns before `supabase.auth.get_user` is
+   called and checks nothing but the token's shape. Evidence:
+   `backend/dependencies.py:13-18` at `052c9af`. Ruled out if: the fake
+   `get_user` sees the UUID. Result: confirmed; `get_user` was never called.
+
+### Root cause
+`backend/dependencies.py:16-17` (at `052c9af`): a development shortcut with
+no check of `ENV`, in front of the real token check. With the service-role
+client behind every query, a known user id was full access to that account.
+
+### Fix
+The block is deleted, not gated: the two dev test users in `.env.test` sign
+in for real JWTs, so nothing needs the shortcut. Every token now goes to
+`supabase.auth.get_user`. First attempt; no failed attempts.
+
+### Regression test
+`backend/tests/test_auth.py::test_raw_uuid_token_is_rejected` and
+`::test_raw_uuid_token_is_rejected_in_development`. Failed before the fix:
+yes (`2 failed, 3 passed`). Passes after: yes (`5 passed`).
+
+### Commit
+security(api): remove raw-UUID authentication bypass in production
+
 ## 2026-11-10 C2.3 — inventory gives test_generator_agent.py the role "test"
 
 **Status:** fixed

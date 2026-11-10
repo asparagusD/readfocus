@@ -73,8 +73,10 @@ def test_unknown_target_exits_2_with_suggestions(capsys):
 def test_real_graph_lists_every_agent_that_uses_llm(capsys):
     assert query.main(["backend/services/llm.py"]) == 0
     out = capsys.readouterr().out
-    imported_by = out.split("Imported by (4):\n")[1].split("Imports (")[0]
-    assert imported_by.split() == [
+    # Tests may import llm.py too, so count only the agents among importers.
+    imported_by = out.split("Imported by (")[1].split("Imports (")[0]
+    agents = [p for p in imported_by.split() if p.startswith("backend/agents/")]
+    assert agents == [
         f"backend/agents/{name}_agent.py"
         for name in ("evaluator", "optimizer", "planner", "test_generator")
     ]

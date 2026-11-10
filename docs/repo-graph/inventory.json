@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 126,
-    "inventoried": 115,
+    "tracked": 136,
+    "inventoried": 125,
     "excluded": 11
   },
   "files": [
@@ -42,7 +42,7 @@
       "path": ".claude/skills/repo-graph/SKILL.md",
       "language": "markdown",
       "lines": 122,
-      "size_bytes": 4910,
+      "size_bytes": 4938,
       "role": "doc",
       "purpose": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see."
     },
@@ -73,8 +73,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 181,
-      "size_bytes": 7148,
+      "lines": 182,
+      "size_bytes": 7267,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -169,34 +169,26 @@
     {
       "path": "backend/dependencies.py",
       "language": "python",
-      "lines": 27,
-      "size_bytes": 1096,
+      "lines": 20,
+      "size_bytes": 752,
       "role": "lib",
-      "purpose": "get_current_user FastAPI dependency: resolves a Supabase JWT to a user id, and accepts any raw UUID as the user id (dev bypass, not gated by ENV)."
+      "purpose": "get_current_user FastAPI dependency: resolves a Supabase JWT to a user id through supabase.auth.get_user; anything else is a 401."
     },
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 64,
-      "size_bytes": 1718,
+      "lines": 48,
+      "size_bytes": 1256,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the five routers, /health, and a lifespan hook that starts backend/mcp_server.py as a subprocess."
+      "purpose": "FastAPI app: CORS, the five routers and /health. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
       "language": "python",
-      "lines": 75,
-      "size_bytes": 3209,
+      "lines": 100,
+      "size_bytes": 4285,
       "role": "entry",
-      "purpose": "Standalone FastMCP server with three Supabase tools (reading history, comprehension trend, chunk context); started by main.py, not called by any agent."
-    },
-    {
-      "path": "backend/requirements.txt",
-      "language": "text",
-      "lines": 19,
-      "size_bytes": 226,
-      "role": "lib",
-      "purpose": "Second dependency list that differs from the root one (adds mcp, lacks langchain-google-genai); not used by the Dockerfile or CI."
+      "purpose": "Standalone FastMCP server with three Supabase tools (reading history, comprehension trend, chunk context); not started by the app since C3.4 and not called by any agent; kept for manual use."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -303,6 +295,30 @@
       "purpose": "Package marker for backend.tests."
     },
     {
+      "path": "backend/tests/conftest.py",
+      "language": "python",
+      "lines": 119,
+      "size_bytes": 3311,
+      "role": "test",
+      "purpose": "Offline test setup: dummy environment, a fake Supabase client, Groq and Google embedding classes that raise when called, and a guard that blocks non-loopback connections."
+    },
+    {
+      "path": "backend/tests/test_auth.py",
+      "language": "python",
+      "lines": 73,
+      "size_bytes": 2199,
+      "role": "test",
+      "purpose": "Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked)."
+    },
+    {
+      "path": "backend/tests/test_bench.py",
+      "language": "python",
+      "lines": 40,
+      "size_bytes": 1555,
+      "role": "test",
+      "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+    },
+    {
       "path": "backend/tests/test_health.py",
       "language": "python",
       "lines": 19,
@@ -319,10 +335,42 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_offline.py",
+      "language": "python",
+      "lines": 62,
+      "size_bytes": 1884,
+      "role": "test",
+      "purpose": "Pytest: the suite uses the dummy environment and the fakes, outbound connections are blocked, loopback works, and a protected endpoint answers 401."
+    },
+    {
+      "path": "backend/tests/test_requirements.py",
+      "language": "python",
+      "lines": 60,
+      "size_bytes": 2162,
+      "role": "test",
+      "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
+    },
+    {
+      "path": "backend/tests/test_startup.py",
+      "language": "python",
+      "lines": 22,
+      "size_bytes": 643,
+      "role": "test",
+      "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
+    },
+    {
+      "path": "docs/BENCHMARKS.md",
+      "language": "markdown",
+      "lines": 124,
+      "size_bytes": 5607,
+      "role": "doc",
+      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, and the C3.5 API baseline with its caveats."
+    },
+    {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 150,
-      "size_bytes": 5522,
+      "lines": 245,
+      "size_bytes": 9493,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -337,8 +385,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 254,
-      "size_bytes": 23026,
+      "lines": 368,
+      "size_bytes": 41526,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -695,6 +743,14 @@
       "purpose": "Pyright config pointing at .venv with pythonVersion 3.14."
     },
     {
+      "path": "pytest.ini",
+      "language": "text",
+      "lines": 3,
+      "size_bytes": 126,
+      "role": "config",
+      "purpose": "Limits a bare pytest run to backend/tests and tools/repo_graph/tests, so scripts/manual/ is never collected."
+    },
+    {
       "path": "render.yaml",
       "language": "yaml",
       "lines": 23,
@@ -705,10 +761,18 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 18,
-      "size_bytes": 222,
+      "lines": 36,
+      "size_bytes": 924,
       "role": "config",
-      "purpose": "Backend dependencies used by the Dockerfile and CI, unpinned; includes groq, langchain-groq and langchain-google-genai."
+      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned; still includes the Groq and Google AI Studio packages until C8."
+    },
+    {
+      "path": "scripts/bench.py",
+      "language": "python",
+      "lines": 196,
+      "size_bytes": 7681,
+      "role": "script",
+      "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
     },
     {
       "path": "scripts/dev/create_test_users.py",
@@ -717,6 +781,86 @@
       "size_bytes": 3514,
       "role": "script",
       "purpose": "Creates or resets two confirmed dev test users and writes .env.test; refuses to run unless ENV=development."
+    },
+    {
+      "path": "scripts/dev/measure_rss.py",
+      "language": "python",
+      "lines": 69,
+      "size_bytes": 2234,
+      "role": "script",
+      "purpose": "Starts uvicorn on a spare port, waits for /health, then prints the psutil RSS of the server and every child process."
+    },
+    {
+      "path": "scripts/manual/README.md",
+      "language": "markdown",
+      "lines": 47,
+      "size_bytes": 2200,
+      "role": "script",
+      "purpose": "Explains that the eight manual scripts are not tests, need live Supabase, Groq and Google AI Studio, and must not be run during the sprint; lists each script's known problems."
+    },
+    {
+      "path": "scripts/manual/test_evaluator.py",
+      "language": "python",
+      "lines": 57,
+      "size_bytes": 2250,
+      "role": "script",
+      "purpose": "Manual script: generates a test then grades canned answers against hard-coded user and book ids. Not a pytest test."
+    },
+    {
+      "path": "scripts/manual/test_generator.py",
+      "language": "python",
+      "lines": 25,
+      "size_bytes": 820,
+      "role": "script",
+      "purpose": "Manual script: generates questions for a hard-coded book id and prints them. Not a pytest test."
+    },
+    {
+      "path": "scripts/manual/test_graph.py",
+      "language": "python",
+      "lines": 25,
+      "size_bytes": 820,
+      "role": "script",
+      "purpose": "Manual script: invokes the workflow with an event_type key that the graph no longer reads. Not a pytest test."
+    },
+    {
+      "path": "scripts/manual/test_ingest.py",
+      "language": "python",
+      "lines": 48,
+      "size_bytes": 1473,
+      "role": "script",
+      "purpose": "Manual script that runs at import: creates a user and book, then calls ingest_book on sample.pdf without awaiting it."
+    },
+    {
+      "path": "scripts/manual/test_optimizer.py",
+      "language": "python",
+      "lines": 46,
+      "size_bytes": 1612,
+      "role": "script",
+      "purpose": "Manual script: runs optimize_pace with a 7/50 score against hard-coded ids. Not a pytest test."
+    },
+    {
+      "path": "scripts/manual/test_orchestrator.py",
+      "language": "python",
+      "lines": 38,
+      "size_bytes": 1383,
+      "role": "script",
+      "purpose": "Manual script: imports orchestrator_node from backend.agents.graph, which does not exist, so it fails at import."
+    },
+    {
+      "path": "scripts/manual/test_planner.py",
+      "language": "python",
+      "lines": 25,
+      "size_bytes": 795,
+      "role": "script",
+      "purpose": "Manual script: runs plan_session against hard-coded ids and prints the plan. Not a pytest test."
+    },
+    {
+      "path": "scripts/manual/test_sessions_api.py",
+      "language": "python",
+      "lines": 64,
+      "size_bytes": 2989,
+      "role": "script",
+      "purpose": "Manual end-to-end script: start, finish-reading and submit-answers through TestClient, authenticating with a raw UUID, which has been rejected with 401 since C3.1."
     },
     {
       "path": "supabase/.gitignore",
@@ -767,70 +911,6 @@
       "purpose": "Adds profiles.is_calibrated (boolean, default false)."
     },
     {
-      "path": "test_evaluator.py",
-      "language": "python",
-      "lines": 57,
-      "size_bytes": 2250,
-      "role": "test",
-      "purpose": "Manual script: generates a test then grades canned answers against hard-coded user and book ids. Not a pytest test."
-    },
-    {
-      "path": "test_generator.py",
-      "language": "python",
-      "lines": 25,
-      "size_bytes": 820,
-      "role": "test",
-      "purpose": "Manual script: generates questions for a hard-coded book id and prints them. Not a pytest test."
-    },
-    {
-      "path": "test_graph.py",
-      "language": "python",
-      "lines": 25,
-      "size_bytes": 820,
-      "role": "test",
-      "purpose": "Manual script: invokes the workflow with an event_type key that the graph no longer reads. Not a pytest test."
-    },
-    {
-      "path": "test_ingest.py",
-      "language": "python",
-      "lines": 48,
-      "size_bytes": 1473,
-      "role": "test",
-      "purpose": "Manual script that runs at import: creates a user and book, then calls ingest_book on sample.pdf without awaiting it."
-    },
-    {
-      "path": "test_optimizer.py",
-      "language": "python",
-      "lines": 46,
-      "size_bytes": 1612,
-      "role": "test",
-      "purpose": "Manual script: runs optimize_pace with a 7/50 score against hard-coded ids. Not a pytest test."
-    },
-    {
-      "path": "test_orchestrator.py",
-      "language": "python",
-      "lines": 38,
-      "size_bytes": 1383,
-      "role": "test",
-      "purpose": "Manual script: imports orchestrator_node from backend.agents.graph, which does not exist, so it fails at import."
-    },
-    {
-      "path": "test_planner.py",
-      "language": "python",
-      "lines": 25,
-      "size_bytes": 795,
-      "role": "test",
-      "purpose": "Manual script: runs plan_session against hard-coded ids and prints the plan. Not a pytest test."
-    },
-    {
-      "path": "test_sessions_api.py",
-      "language": "python",
-      "lines": 64,
-      "size_bytes": 2989,
-      "role": "test",
-      "purpose": "Manual end-to-end script: start, finish-reading and submit-answers through TestClient, authenticating with the raw-UUID bypass."
-    },
-    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -865,8 +945,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 117,
-      "size_bytes": 15591,
+      "lines": 127,
+      "size_bytes": 17549,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -913,8 +993,8 @@
     {
       "path": "tools/repo_graph/tests/test_query.py",
       "language": "python",
-      "lines": 81,
-      "size_bytes": 3274,
+      "lines": 83,
+      "size_bytes": 3414,
       "role": "test",
       "purpose": "Pytest: file, endpoint and table queries, path forms, unknown targets, and the importers of llm.py in the real graph."
     },

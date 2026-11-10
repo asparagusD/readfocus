@@ -28,19 +28,21 @@ kept for history only.
 | 6 | `backend/services/llm.py`, `backend/services/embeddings.py` and three packages in `requirements.txt` use banned providers (hard constraint 1). `.env.example` marks the two keys "to be removed in C8". | C0.4, C1.5 | C8 |
 | 7 | `CLAUDE.md` lists commit types without `perf` and `merge`, which the `atomic-commit` skill adds. | C1.2 | unassigned |
 | 8 | No motion tokens, no `prefers-reduced-motion` rule, and `transition: all` in 3 stylesheets under `frontend/src`. | C1.6 | unassigned |
-| 9 | C0.1, C0.2 and C0.5 have no record; chunk titles for C3–C7 and C9–C15 are not filled in. Both need the promptbook. | C1.7 | user |
-| 10 | `backend/dependencies.py` accepts any raw UUID as a bearer token and returns it as the user id, in every environment. With the service-role client behind it, anyone who knows a user id can act as that user. | C2.1 | unassigned |
+| 9 | C0.1, C0.2 and C0.5 have no record; chunk titles for C4–C7 and C9–C15 are not filled in. Both need the promptbook. | C1.7 | user |
+| 10 | `backend/dependencies.py` accepts any raw UUID as a bearer token and returns it as the user id, in every environment. With the service-role client behind it, anyone who knows a user id can act as that user. **Closed in C3.1.** | C2.1 | C3 |
 | 11 | `frontend/src/lib/supabase.js` falls back to a hard-coded Supabase project URL and publishable key when the env vars are unset. Which project it points at is not confirmed. | C2.1 | unassigned |
-| 12 | The eight root `test_*.py` files are manual scripts, not tests: hard-coded ids, live LLM calls, `test_ingest.py` runs at import, `test_orchestrator.py` imports a function that does not exist. `pytest` from the repo root would collect them. | C2.1 | unassigned |
-| 13 | Dead or stale files: `frontend/src/App.css`, `hero.png`, `react.svg`, `vite.svg` and `icons.svg` are not referenced; `Card.jsx` is unused; `backend/routers/agent.py` has no endpoints; `backend/mcp_server.py` is started but never called; `backend/requirements.txt` differs from the root file and is unused; `render.yaml` declares Cerebras and SambaNova keys. | C2.1 | unassigned |
+| 12 | The eight root `test_*.py` files are manual scripts, not tests: hard-coded ids, live LLM calls, `test_ingest.py` runs at import, `test_orchestrator.py` imports a function that does not exist. `pytest` from the repo root would collect them. **Moved to `scripts/manual/` in C3.3; `pytest.ini` keeps them out of collection.** | C2.1 | C3 |
+| 13 | Dead or stale files: `frontend/src/App.css`, `hero.png`, `react.svg`, `vite.svg` and `icons.svg` are not referenced; `Card.jsx` is unused; `backend/routers/agent.py` has no endpoints; `backend/mcp_server.py` is started but never called; `backend/requirements.txt` differs from the root file and is unused (deleted in C3.2); `render.yaml` declares Cerebras and SambaNova keys. | C2.1 | unassigned |
 | 14 | Three endpoints have no frontend caller: `GET /books/{book_id}/status` (Library polls `GET /books` instead), `POST /sessions/{session_id}/abandon` (the Abandon button only navigates away, so the session stays `reading`), and `GET /health`, which is expected. | C2.2a | unassigned |
 | 15 | The graph does not see three things: `backend/main.py` starting `backend/mcp_server.py` through `subprocess` (a path string, not an import), Supabase Storage bucket use (`storage.from_("books")`), and which columns each query touches. `FASTEMBED_CACHE`, `CEREBRAS_API_KEY` and `SAMBANOVA_API_KEY` are declared but read by no code. | C2.2b | unassigned |
 | 16 | `reading_progress` is never populated: no code inserts a row, and the dev database has 0 rows against 21 completed sessions. Every session plans from chunk 0; re-read, averages and pacing are never stored. `docs/MIGRATION_AUDIT.md` section 5. | C2.5 | unassigned |
 | 17 | `POST /sessions/start` does not check that the book belongs to the caller, so it returns another user's chunk text for a known `book_id`. From the code; not exercised. Audit section 8. | C2.5 | unassigned |
 | 18 | A failed LLM grade is recorded as 10/10; auto-submit at zero sends blank answers (from the code, not reproduced); `GET /sessions/{id}` returns the hidden `guidance`; recorded test time is always 180 s. Audit section 9. | C2.5 | unassigned |
-| 19 | The CI test job presumably fails on every push: `backend.main` cannot be imported without Supabase config and the workflow supplies none. Not confirmed on GitHub. Audit section 8. | C2.5 | unassigned |
+| 19 | The CI test job presumably fails on every push: `backend.main` cannot be imported without Supabase config and the workflow supplies none. Not confirmed on GitHub. Audit section 8. **C3.3: the suite now runs with no config (`backend/tests/conftest.py`); still not observed on GitHub.** | C2.5 | C3 |
 | 20 | Stuck rows in the dev database: 1 of 8 books `processing`, 39 of 72 sessions `reading`, 12 `testing`, none `abandoned`. Audit section 6. | C2.5 | unassigned |
 | 21 | `make graph` reads `git ls-files` and the working tree, so the two must agree. A tracked file deleted without `git rm` makes `inventory.py` stop with a `FileNotFoundError` traceback, and a new file that is not yet `git add`-ed is silently left out of the graph. Workaround: stage additions and deletions before `make graph`. CI is unaffected (clean checkout). Found in the C2 close review; not blocking. | C2 close | unassigned |
+| 22 | Every Groq call fails with `404 model_not_found` for `llama-3.3-70b-versatile` using the key in `.env`, and the app hides it: canned plan, generic questions, 10/10 for every answer, fallback pace. Readers on this configuration get no real planning or grading today. Whether production has the same key or model access is not known. Not fixed: the code is removed in C8 (issue 6). `docs/BENCHMARKS.md`, Baseline. | C3.5 | C8 |
+| 23 | The test generator's prompt has unescaped braces (`{0,1}`, `{z }`), so `ChatPromptTemplate` raises "missing variables" before any LLM request and the generic fallback questions are always returned. Seen in the server log during the benchmark; the prompt file was not inspected further. Not fixed, same reason as issue 22. | C3.5 | C8 |
 
 ## C0 — setup
 
@@ -161,12 +163,124 @@ Risks and open questions:
 
 Close review (2026-11-10): `git diff readfocus-2.0...HEAD` touches 24 files, none under `backend/`, `frontend/`, `supabase/` or `scripts/` and none of the root scripts or deploy files. No blocking findings; one non-blocking finding logged as issue 21. Time: about 1 h 5 min of wall-clock, from the C1 merge at 07:10 to this review at 08:16, against 1.5 h budgeted.
 
-## C3
+## C3 — stabilize
 
-Title to be filled from the promptbook.
+Branch `chunk/C3-stabilize`, created from `readfocus-2.0` at `052c9af`.
+Goal: the current app runs locally, the critical security and dependency
+issues are fixed, and a baseline is recorded. Behaviour does not change
+except for the fixes: the LLM and embedding code stays as it is until its
+own chunks (issue 6), and nothing under `frontend/src` or
+`supabase/migrations/` is edited.
+
+### Plan (written at chunk start, before any code)
+
+Design decisions that apply to every subchunk:
+
+- No new runtime dependency. `psutil` (already in `.venv`, 7.2.2) and
+  `pytest` become pinned dev dependencies in C3.2.
+- No call to Groq or Google AI Studio at any point, including the benchmark
+  (constraint 1). Tests run with dummy keys and a fake Supabase client.
+- Every new tracked file gets a line in `tools/repo_graph/purposes.json`,
+  and `make graph` output is committed with the change. New files are
+  `git add`-ed before `make graph` (issue 21).
+- Estimated lines are hand-written lines, tests included; lockfiles and
+  `docs/repo-graph/` do not count.
+
+| Step | Files | Est. lines | Tests | Est. time |
+|---|---|---|---|---|
+| C3.1 remove the raw-UUID auth bypass (issue 10) | `backend/dependencies.py` (delete lines 13-18, the 36-character check; the JWT path and its error text are untouched), `backend/tests/test_auth.py` (new), `docs/DEBUG_LOG.md` (entry, since this is a `fix`), `tools/repo_graph/purposes.json` | 75 (-6 code, 55 tests, 15 log, 2 purposes); actual 127 (-8 code, 74 tests, 42 log, 3 purposes) | 4 planned, 5 written, calling `get_current_user` with `supabase.auth.get_user` monkeypatched: a raw UUID is rejected with 401 (fails before, passes after); a token Supabase accepts returns that user's id; a token Supabase rejects gives 401; `get_user` raising gives 401. Needs `.env` until C3.3a makes imports offline | 20 min |
+| C3.2 dependency hygiene (audit issue 2, issues 4 and 13 in part) | `requirements.txt` (add `tenacity`, imported at `backend/services/embeddings.py:20` but only installed transitively; drop `groq` and `langchain`, which no file imports; pin every line to the version in `.venv`), `requirements-dev.txt` (new: `pytest`, `ruff`, `psutil`, pinned), `backend/requirements.txt` (delete: unused duplicate), `.github/workflows/ci.yml` (install from `requirements-dev.txt`; Python 3.11 to match the Dockerfile and `.venv`), `pyrightconfig.json` (3.11), `backend/tests/test_requirements.py` (new), `tools/repo_graph/purposes.json`, `CLAUDE.md` (Python version note) | 120 (45 requirements, 50 tests, 25 config and docs) | 2: every third-party module imported under `backend/` (found with `ast`) maps to a line in `requirements.txt`; every line in both files is pinned with `==`. Plus, run by hand: install into a fresh venv in the scratchpad, `python -c "import backend.main"`, `pytest backend/tests -q`, `pip check` | 35 min |
+| C3.3a offline test harness (issue 19) | `backend/tests/conftest.py` (new: sets dummy `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `GROQ_API_KEY`, `GOOGLE_AI_STUDIO_KEY` before any import, which wins over `.env` because `load_dotenv` does not override; an autouse fixture that fails any socket connection to a non-loopback address), `pytest.ini` (new: `testpaths = backend/tests tools/repo_graph/tests`, so a bare `pytest` no longer collects the root scripts), `backend/tests/test_offline.py` (new), `tools/repo_graph/purposes.json` | 90 (45 conftest, 5 ini, 35 tests, 5 purposes) | 3: `backend.main` imports with no `.env` values; the guard raises on an outbound connection; the guard allows loopback (asyncio on Windows needs it). Plus, run by hand: the suite with `.env` renamed away and with the network adapter's route blocked by the guard only | 30 min |
+| C3.3b endpoint tests on a fake Supabase client | `backend/tests/fakes.py` (new: in-memory stand-in for the chained `table().select().eq()...execute()` calls the routers use, and for `auth.get_user`), `backend/tests/test_api_auth.py` (new), `backend/tests/test_api_books.py` (new), `tools/repo_graph/purposes.json` | 195 (85 fake, 105 tests, 5 purposes) | About 10: each of the 14 protected endpoints returns 401 or 403 with no token and 401 with a raw UUID (parametrized, counted as 2); `GET /books` returns only the caller's rows; `GET /books/{id}` and `DELETE /books/{id}` refuse another user's book; `GET /auth/profile` returns the caller's profile; `GET /dashboard` answers for a user with no data. No test goes through an agent, so no LLM object is called | 50 min |
+| C3.3c retire the root `test_*.py` scripts (issue 12) | Delete `test_evaluator.py`, `test_generator.py`, `test_graph.py`, `test_ingest.py`, `test_optimizer.py`, `test_orchestrator.py`, `test_planner.py`, `test_sessions_api.py` (328 lines); remove their eight lines from `tools/repo_graph/purposes.json`. **Needs the user's yes before it runs** | 8 hand-written, 328 deleted (deletion only, so over the ~200 limit on purpose) | none added; `pytest` with no arguments from the repo root collects only the two real suites | 10 min |
+| C3.4 stop the unused MCP subprocess (issue 13 in part) | `backend/main.py` (remove the `lifespan` hook and the `subprocess`, `sys` and `asynccontextmanager` imports), `backend/mcp_server.py` (delete: nothing imports or calls it), `requirements.txt` (drop `langchain-mcp-adapters`), `backend/tests/test_startup.py` (new), `tools/repo_graph/purposes.json` | 50 hand-written (-14 `main.py`, 30 tests, 4 other), 75 deleted | 1: starting the app inside `with TestClient(app)` while `subprocess.Popen` is patched to raise does not raise (fails before, passes after). Plus, run by hand: process count and psutil RSS of `uvicorn backend.main:app` before and after; the audit measured about 73 MB for the child | 20 min |
+| C3.5 baseline benchmark | `scripts/dev/benchmark.py` (new: runs each measurement in a fresh subprocess and prints a table and JSON), `backend/tests/test_benchmark.py` (new), `docs/BASELINE.md` (new: numbers, machine, date, commands), `CLAUDE.md` (baseline table updated to the new test counts), `tools/repo_graph/purposes.json` | 195 (110 script, 30 tests, 45 doc, 10 other) | 2 on the pure helpers: the median and spread of timing samples; the table formatter. Measured, each 5 runs: import time and RSS of `backend.main`; `/health` latency through `TestClient`; `chunk_text` words per second on generated text and on `sample.pdf` extraction; `pytest` wall time; `npm run build` time and `dist/` sizes; the six standard-check results. Not measured: anything that calls an LLM or the embedding API | 40 min |
+
+Total: about 730 hand-written lines and 400 deleted, in 7 commits, about
+3.5 hours.
+
+Smoke test at chunk close ("runs locally"): `make dev-backend` with
+`GET /health` 200, `make dev-frontend` with 200 on 5173, and a sign-in as a
+dev test user from `.env.test` followed by `GET /books` in the browser, to
+show that real JWTs still work after C3.1.
+
+Safe to cut, in this order: C3.3b down to the 401 tests only; the
+`sample.pdf` and frontend build measurements in C3.5; the Python version
+alignment in C3.2; C3.3c (the `pytest.ini` from C3.3a already keeps the
+scripts out of collection).
+
+Risks and open questions:
+
+- **C3.3c deletes eight tracked files.** They have no assertions, call the
+  live LLM, and `test_sessions_api.py` stops working once C3.1 lands. The
+  alternative is moving them to `scripts/manual/` unchanged. Waiting for the
+  user's choice; nothing is deleted until then.
+- **C3.4 deletes `backend/mcp_server.py`** as well as stopping it, as the
+  audit's section 11 proposes. If the file should stay for later reuse, only
+  the `main.py` change is made and `langchain-mcp-adapters` stays.
+- **Order.** C3.1 comes first as asked, so its tests need `.env` to import
+  the Supabase client until C3.3a lands. They touch no network: `get_user`
+  is patched.
+- **No LLM latency in the baseline.** Planning, question generation and
+  grading times would be the most useful "before" numbers for the 2.0
+  speed goal, but measuring them means calling Groq, which constraint 1
+  forbids. C3.5 records the count of calls per session from the audit (8
+  Groq, 1 embedding) and no timings, unless the user allows a one-off run.
+- **Pinning.** Versions are pinned to what `.venv` has today (for example
+  `fastapi==0.162.2`, `supabase==2.34.1`, `langgraph==1.2.20`). The fresh
+  venv install in C3.2 is what shows the set resolves on 3.11; if it does
+  not, that is a debug-protocol entry, not a silent unpin.
+- **`lxml`** is imported by no file but `ebooklib` may need it at run time;
+  it stays unless `pip show ebooklib` lists it as a requirement, in which
+  case it can go.
+- **Not in this chunk**, though security-related: the missing ownership
+  check in `POST /sessions/start` (issue 17), the hard-coded Supabase
+  fallback in `frontend/src/lib/supabase.js` (issue 11), the `guidance`
+  leak (issue 18), and the ruff and ESLint baselines (issues 1, 2). Fixing
+  17 is about 10 lines plus a test and fits here if wanted.
+- The three `docs/repo-graph/` files show as modified in `git status` at
+  chunk start, but `git diff --stat` is empty: line endings only
+  (`core.autocrlf`). They are left alone until a subchunk regenerates them.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C3.1 remove the raw-UUID auth bypass | `b64811a` | `get_current_user` no longer accepts a raw UUID as a bearer token; every token goes to `supabase.auth.get_user`. Removed, not gated behind `ENV` and `ALLOW_DEV_AUTH`. Added `backend/tests/test_auth.py`. | Tests written first: `pytest backend/tests/test_auth.py -q` gave 2 failed, 3 passed before the change and 5 passed after. Standard checks: ruff 84 errors (baseline), `pytest backend/tests -q` 13 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, `pytest tools/repo_graph/tests -q` 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 11:36 | Issue 10 closed. `test_sessions_api.py` (root script) relied on the bypass and now gets 401; retired in C3.3c. Not exercised against a running server |
+| [x] C3.2 dependency hygiene | `e302ab8` | `requirements.txt` is the only backend dependency file and matches the imports: added `tenacity`, `langchain-core` and `mcp` (imported, previously only transitive); removed `langchain-mcp-adapters` and `lxml` (no importer; `lxml` still arrives through `ebooklib`); all 20 lines pinned to the `.venv` versions. Deleted `backend/requirements.txt`. Added `backend/tests/test_requirements.py`. Narrower than planned, per the C3.2 prompt: no `requirements-dev.txt`, and CI and `pyrightconfig.json` keep their Python versions (issue 4 stays open); `groq` and `langchain` stay until C8. | Tests written first: 3 failed before, 3 passed after. Fresh Python 3.11.9 venv in the scratchpad: `pip install -r requirements.txt` exit 0, `python -c "import backend.main"` exit 0, `pip check` "No broken requirements found", then with `pytest` added `pytest backend/tests -q` 16 passed. Standard checks in `.venv`: ruff 84 errors (baseline), 16 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 11:43 | Installed on Windows only, not in the Linux Docker image. CI still installs `pytest` and `httpx` by hand, unpinned. `pytest`, `ruff` and `psutil` are pinned nowhere |
+| [x] C3.3 offline backend tests (planned as C3.3a and C3.3c; one commit at the user's request) | `dde7af3` | `backend/tests/conftest.py` sets a dummy environment, replaces `supabase.create_client` with one fake client and the Groq and Google embedding classes with ones that raise, and blocks non-loopback connections and lookups. Added `backend/tests/test_offline.py` (7 tests) and `pytest.ini` (`testpaths`). The eight root `test_*.py` scripts moved unchanged to `scripts/manual/` with a `README.md`; not deleted, as the user chose. `.github/workflows/ci.yml` is unchanged: its test path is still `backend/tests/`. | Test written first: collection error before `conftest.py` existed, 7 passed after. `pytest backend/tests -q`: 23 passed. Same command in a scratchpad copy of `backend/` with no `.env` and no Supabase or provider variables: 23 passed (and `import backend.main` there fails for lack of config, which shows the copy had none). Bare `pytest --collect-only -q`: 84 tests, none from `scripts/manual/`. Standard checks: ruff 84 errors (baseline), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. One failure on the way, fixed under the debug protocol: a tooling test hard-coded four importers of `llm.py` and the offline test is a fifth. | 2026-11-10 11:52 | One `docs/DEBUG_LOG.md` entry. Issues 12 and 19 addressed; CI not observed on GitHub. The network adapter was not disabled: offline is shown by the guard and the copy without config. The moved scripts were not run (constraint 1). `test_inventory.py` still has a root `test_planner.py` case; it tests the rule, not the file |
+| [ ] C3.3b endpoint tests on a fake Supabase client | | Not asked for in the C3.3 prompt; still planned. The fake client and `fake_supabase` fixture it needs are in place. | | | |
+| [x] C3.4 stop the unused MCP subprocess | `b202cca` | `backend/main.py` no longer has a lifespan hook and starts no process. `backend/mcp_server.py` is kept, as the user chose, with a docstring on manual use; `mcp` stays in `requirements.txt` for it. Added `scripts/dev/measure_rss.py`, `backend/tests/test_startup.py` and `docs/BENCHMARKS.md`. | Graph: `query.py backend/mcp_server.py` shows 0 importers and `query.py mcp` shows that file as the only user; `git grep` finds no other reference outside `main.py`. Test written first: 1 failed before, 1 passed after. `python scripts/dev/measure_rss.py`, three runs each: 216.1, 215.7, 216.1 MB in 4 processes before; 142.0, 141.9, 142.0 MB in 2 processes after. Standard checks: ruff 83 errors (baseline 84; one went with the removed code in `main.py`, new baseline 83), `pytest backend/tests -q` 24 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 11:56 | Measured on Windows only. Manual use of `mcp_server.py` as the docstring describes was not exercised. The empty `/agent` router stays (issue 13) |
+| [x] C3.5 baseline benchmark | `dc1c333` | Added `scripts/bench.py` (as the C3.5 prompt names it; the plan said `scripts/dev/benchmark.py`), `backend/tests/test_bench.py`, and a script-written "Baseline" section in `docs/BENCHMARKS.md`. p50 / p95: `GET /health` 1 / 4 ms, `GET /books` 193 / 242 ms, upload 1.72 / 2.24 s, upload to ready 5.07 / 5.10 s, `GET /dashboard` 465 / 486 ms. The three session steps are recorded as "LLM path not measurable": every Groq call returned 404, so their times (1.2 to 1.8 s) are the app's fallbacks. | Tests written first: collection error before the script existed, 6 passed after. Backend started with `uvicorn backend.main:app --port 8000`; `python scripts/bench.py --runs 20 --flow-runs 3` run twice (the second with `--write`), both complete, same picture. Server log of the second run: 21 `model_not_found` lines, 6 prompt-variable errors, 0 embedding retries, 0 ingestion failures, 3 uploads and 3 deletes with 200. Standard checks: ruff 83 errors (baseline), `pytest backend/tests -q` 30 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 12:04 | Issues 22 and 23. The run called Google AI Studio (about 48 embedding calls over two runs) and Groq (about 42 calls, all failed), as the C3.5 prompt asked; nothing in the code calls them more than before. p95 of the flow steps is over 3 runs |
+
+Close review (2026-11-10 12:18):
+
+- **Checks.** ruff 83 errors and ESLint 22 errors, 2 warnings (both at the
+  pre-sprint baseline, not zero); `pytest backend/tests -q` 30 passed;
+  frontend build passes; `import backend.main` exit 0; tooling 61 passed;
+  `make graph` leaves `git diff --exit-code docs/repo-graph/` at 0.
+- **Exit criteria.** Backend boots (`uvicorn backend.main:app`, `/health`
+  200, no `mcp_server` process); frontend boots (Vite, 200 on 5173 with the
+  root element). Against the running backend: the real id of test user A as
+  a bearer token gets 401, no token gets 401, a real Supabase JWT gets 200
+  on `GET /books`. Baseline recorded in `docs/BENCHMARKS.md`, with the LLM
+  path as "not measurable". No sign-in was done in a browser.
+- **Diff.** `git diff readfocus-2.0...HEAD`: 33 files, 1,487 insertions,
+  270 deletions; `git diff --check` clean; no secret-like strings.
+  Application code touched: `backend/dependencies.py`, `backend/main.py`,
+  the `backend/mcp_server.py` docstring, and the deleted
+  `backend/requirements.txt`. Nothing under `frontend/` or `supabase/`.
+- **Blocking findings.** None.
+- **Non-blocking.** The pins were installed on Python 3.11 only and CI runs
+  3.12 (issue 4). C3.3b, endpoint tests on the fake client, is not done.
+  `scripts/dev/measure_rss.py` raises in its cleanup if the server has
+  already exited. The headers `security(...)` and `build(...)` are not in
+  the type list (issue 7). Issues 22 and 23 mean the dev app runs on LLM
+  fallbacks today.
+- **Time.** About 1 hour of work against 1.5 h budgeted: the plan at 08:26,
+  then C3.1 to C3.5 from about 11:30 to 12:04 and this review to 12:18.
+  Wall-clock from branch creation is 3 h 52 min because of the pause between
+  the plan and C3.1.
 
 ## C4
 

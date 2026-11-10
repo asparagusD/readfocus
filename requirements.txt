@@ -1,18 +1,36 @@
-fastapi
-uvicorn[standard]
-supabase
-langchain
-groq
-langchain-groq
-langchain-google-genai
-langchain-community
-langgraph
-langchain-mcp-adapters
-pypdf
-ebooklib
-lxml
-beautifulsoup4
-python-dotenv
-httpx
-pydantic
-python-multipart
+# Backend dependencies. This is the only requirements file: the Dockerfile
+# and CI install it. Every package backend/ imports is listed and pinned;
+# backend/tests/test_requirements.py checks both.
+
+# Web
+fastapi==0.162.2
+uvicorn[standard]==0.54.0
+# Not imported: FastAPI needs it for the upload form in routers/books.py.
+python-multipart==0.0.33
+# Not imported: needed by fastapi.testclient; also used by supabase.
+httpx==0.28.1
+pydantic==2.14.3
+python-dotenv==1.2.4
+
+# Data
+supabase==2.34.1
+
+# Book parsing
+pypdf==7.0.0
+ebooklib==0.21
+beautifulsoup4==4.15.0
+
+# Agents. LangGraph stays.
+langgraph==1.2.20
+
+# LLM and embedding providers. Banned by CLAUDE.md constraint 1; removed in C8.
+langchain==1.4.9
+langchain-core==1.7.6
+langchain-community==0.4.2
+langchain-groq==1.1.3
+groq==0.37.1
+langchain-google-genai==4.4.3
+tenacity==9.1.4
+
+# backend/mcp_server.py only. The app does not start it (C3.4); manual use.
+mcp==1.30.0

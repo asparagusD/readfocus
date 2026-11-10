@@ -9,7 +9,9 @@ from backend.services.supabase_client import supabase
 from backend.services.question_bank import assemble_session_test
 from backend.agents.planner_agent import plan_session
 from backend.agents.question_generation.assembler import public_question
-from backend.agents.evaluator_agent import evaluate_answers
+from backend.agents.evaluator_agent import (
+    evaluate_answers, evaluate_single_answer, load_passage, warm_up,
+)
 from backend.agents.optimizer_agent import optimize_pace
 
 router = APIRouter()
@@ -20,6 +22,7 @@ def assemble_test_background(session_id: str, user_id: str, book_id: str, chunk_
         assemble_session_test(session_id, user_id, book_id, chunk_indices)
     except Exception as e:
         print(f"Background test assembly failed: {e}")
+    warm_up()  # load the grading model while the reader reads, not when they answer
 
 
 class StartSessionRequest(BaseModel):
@@ -35,49 +38,6 @@ class SubmitAnswersRequest(BaseModel):
 class EvaluateSingleRequest(BaseModel):
     index: int
     answer: str
-
-async def evaluate_single_background(session_id: str, index: int, answer: str, user_id: str):
-    """Background task to evaluate a single answer and cache it."""
-    try:
-        from backend.agents.evaluator_agent import evaluate_single_answer
-        
-        # 1. Fetch session and questions
-        sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
-        if not sess_resp.data:
-            return
-            
-        sess = cast(dict[str, Any], sess_resp.data[0])
-        book_id = sess["book_id"]
-        start_idx = sess["chunk_start_index"]
-        end_idx = sess["chunk_end_index"]
-        chunk_indices = list(range(start_idx, end_idx + 1))
-        test_questions = sess.get("test_questions", [])
-        
-        if not test_questions or index >= len(test_questions):
-            return
-            
-        question = test_questions[index]
-        
-        # 2. Fetch passage
-        passage = ""
-        resp = supabase.table("chunks").select("chunk_index, content").eq("book_id", book_id).in_("chunk_index", chunk_indices).execute()
-        chunk_data = cast(list[dict], resp.data or [])
-        if chunk_data:
-            sorted_chunks = sorted(chunk_data, key=lambda x: x["chunk_index"])
-            passage = "\n\n".join(c["content"] for c in sorted_chunks)
-            
-        # 3. Evaluate
-        result = await evaluate_single_answer(passage, question, answer)
-        
-        # 4. Save to DB
-        test_questions[index]["cached_eval"] = result
-        
-        supabase.table("sessions").update({
-            "test_questions": test_questions
-        }).eq("id", session_id).execute()
-        
-    except Exception as e:
-        print(f"Background single evaluation failed: {e}")
 
 @router.post("/start")
 async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
@@ -149,9 +109,26 @@ async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: st
     }
 
 @router.post("/{session_id}/evaluate-single")
-async def evaluate_single(session_id: str, req: EvaluateSingleRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
-    background_tasks.add_task(evaluate_single_background, session_id, req.index, req.answer, user_id)
-    return {"status": "queued"}
+async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: str = Depends(get_current_user)):
+    """Grade one answer now and cache it with the session, so submit has less to do.
+
+    The grade stays on the server: its feedback quotes the passage, and the test is not over.
+    """
+    sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
+    if not sess_resp.data:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    sess = cast(dict[str, Any], sess_resp.data[0])
+    test_questions = sess.get("test_questions") or []
+    if not 0 <= req.index < len(test_questions):
+        raise HTTPException(status_code=400, detail="No such question in this test.")
+
+    question = test_questions[req.index]
+    passage = ""
+    if not question.get("evidence"):
+        passage = load_passage(sess["book_id"], list(range(sess["chunk_start_index"], sess["chunk_end_index"] + 1)))
+    test_questions[req.index]["cached_eval"] = await evaluate_single_answer(question, req.answer, passage)
+    supabase.table("sessions").update({"test_questions": test_questions}).eq("id", session_id).eq("user_id", user_id).execute()
+    return {"status": "graded"}
 
 @router.post("/{session_id}/submit-answers")
 async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: str = Depends(get_current_user)):
@@ -177,7 +154,8 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: st
         book_id=book_id,
         chunk_indices=chunk_indices,
         test_questions=test_questions,
-        user_answers=req.answers
+        user_answers=req.answers,
+        time_taken_seconds=req.time_taken_seconds
     )
     if not eval_result:
         raise HTTPException(status_code=500, detail="Failed to evaluate answers.")
@@ -202,6 +180,7 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: st
         "max_score": eval_result.get("max_score"),
         "percentage": eval_result.get("percentage"),
         "per_question": eval_result.get("per_question"),
+        "low_confidence_count": eval_result.get("low_confidence_count", 0),
         "pace_recommendation": pace_rec
     }
 

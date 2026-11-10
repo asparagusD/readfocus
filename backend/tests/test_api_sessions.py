@@ -1,14 +1,22 @@
-"""Session endpoints serve tests from the question bank, on an in-memory database. No LLM, no network."""
+"""Session endpoints on an in-memory database: tests from the question bank, answers graded inline.
+
+No LLM, no network, no real model: the embedder is a bag-of-words fake.
+"""
 
 import inspect
 import json
+import zlib
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
+from backend.agents import evaluator_agent
+from backend.agents.evaluation.feedback import LOW_CONFIDENCE
 from backend.dependencies import get_current_user
 from backend.main import app
+from backend.nlp import embedder
 from backend.routers import sessions
 from backend.services import question_bank
 
@@ -37,6 +45,12 @@ class Query:
 
     def in_(self, column, values):
         self.filters.append(lambda r: r.get(column) in values)
+        return self
+
+    def order(self, *args, **kwargs):
+        return self
+
+    def limit(self, count):
         return self
 
     def execute(self):
@@ -73,11 +87,17 @@ def bank_rows(chunk_index, chunk_id):
             "key_terms": [f"SECRET-TERM-{n}"], "distractors": list(distractors), "difficulty": 0.3,
             "quality": 0.8, "times_used": 0, "prompt_hash": f"h{n}",
         }
+    why = row(7, "why_how", "inference")
+    why.update(
+        prompt='Why is this so: "The roads stayed usable"?', answer="engineers laid deep foundations of gravel",
+        evidence="The roads stayed usable because engineers laid deep foundations of gravel.",
+        key_terms=["deep foundations", "gravel"],
+    )
     return [
         row(1, "multiple_choice", distractors=["wrong a", "wrong b", "wrong c"]),
         row(2, "multiple_choice", distractors=["wrong d", "wrong e", "wrong f"]),
         row(3, "cloze"), row(4, "cloze"), row(5, "cloze"), row(6, "cloze"),
-        row(7, "why_how", "inference"), row(8, "main_idea", "summary"),
+        why, row(8, "main_idea", "summary"),
     ]
 
 
@@ -89,8 +109,25 @@ def api(monkeypatch):
          "word_count": 2} for i in range(3)
     ]
     db.tables["question_bank"] = bank_rows(0, "chunk-0")
-    for module in (sessions, question_bank):
+    for module in (sessions, question_bank, evaluator_agent):
         monkeypatch.setattr(module, "supabase", db)
+    embeds = []
+
+    def fake_embed(texts):  # bag of words: texts that share words are close
+        embeds.append(list(texts))
+        vectors = np.zeros((len(texts), 64), dtype=np.float32)
+        for row, text in enumerate(texts):
+            for word in text.lower().split():
+                vectors[row, zlib.crc32(word.strip('.,?"').encode()) % 64] += 1.0
+        return vectors / np.maximum(np.linalg.norm(vectors, axis=1, keepdims=True), 1e-9)
+
+    monkeypatch.setattr(embedder, "embed", fake_embed)
+    monkeypatch.setattr(embedder, "get_model", lambda: None)
+
+    async def fake_pace(**kwargs):
+        return {"next_chunk_multiplier": 1.0, "total_score_seen": kwargs["evaluation_result"]["total_score"]}
+
+    monkeypatch.setattr(sessions, "optimize_pace", fake_pace)
     plan = SimpleNamespace(chunk_indices=[0], assigned_words=600, focus_duration_minutes=20, reason="test")
 
     async def fake_plan(user_id, book_id):
@@ -101,7 +138,7 @@ def api(monkeypatch):
     monkeypatch.setattr(question_bank.question_agent, "run", lambda book_id, ids: generated.append(list(ids)))
     app.dependency_overrides[get_current_user] = lambda: USER
     with TestClient(app) as client:
-        yield SimpleNamespace(client=client, db=db, plan=plan, generated=generated)
+        yield SimpleNamespace(client=client, db=db, plan=plan, generated=generated, embeds=embeds)
     app.dependency_overrides.clear()
 
 
@@ -200,3 +237,121 @@ def test_finish_reading_of_an_unknown_session_is_404(api):
 def test_the_session_router_no_longer_uses_the_llm_test_generator():
     source = inspect.getsource(sessions)
     assert "test_generator_agent" not in source and "generate_test" not in source
+
+
+# --- grading (C6.4): inline, local, with a confidence ------------------------
+
+GOOD_WHY = "Because engineers laid deep foundations of gravel under them."
+# One answer per question of the default test: q0-1 and q0-2 (multiple choice), q0-3 (cloze), q0-7 (why), q0-8 (main idea).
+ANSWERS = ["right option 1", "wrong d", "SECRET-ANSWER-0-3", GOOD_WHY, ""]
+
+
+def submit(api, session_id, answers=ANSWERS, seconds=142):
+    return api.client.post(
+        f"/sessions/{session_id}/submit-answers", json={"answers": answers, "time_taken_seconds": seconds}
+    )
+
+
+def test_submit_answers_grades_inline_and_returns_confidence_and_feedback(api):
+    session_id, _ = start_and_finish(api)
+    response = submit(api, session_id)
+    assert response.status_code == 200
+    body = response.json()
+    per_question = body["per_question"]
+    assert [q["score"] for q in per_question[:3]] == [10, 0, 10] and per_question[4]["score"] == 0
+    assert [q["confidence"] for q in per_question] == ["high", "high", "high", "medium", "high"]
+    assert per_question[0]["feedback"] == "Correct — the answer is right option 1."
+    assert per_question[3]["feedback"] == "You captured deep foundations and gravel."
+    assert per_question[4]["feedback"].startswith("No answer was given.")
+    assert 7 <= per_question[3]["score"] <= 10
+    assert body["max_score"] == 50 and body["total_score"] == sum(q["score"] for q in per_question)
+    assert body["percentage"] == pytest.approx(body["total_score"] / 50 * 100)
+    assert body["low_confidence_count"] == 0
+    assert body["pace_recommendation"]["total_score_seen"] == body["total_score"]
+    assert api.db.tables["sessions"][0]["status"] == "completed"
+
+
+def test_test_results_row_keeps_the_shape_the_results_page_and_dashboard_read(api):
+    session_id, _ = start_and_finish(api)
+    body = submit(api, session_id).json()
+    (row,) = api.db.tables["test_results"]
+    assert row["session_id"] == session_id and row["user_id"] == USER and row["time_taken_seconds"] == 142
+    assert isinstance(row["total_score"], int) and row["total_score"] == body["total_score"] and row["max_score"] == 50
+    assert len(row["questions"]) == len(row["answers"]) == 5
+    for answer, sent in zip(row["answers"], ANSWERS):
+        assert answer["user_answer"] == sent and answer["question"]["question"]
+        assert isinstance(answer["score"], int) and answer["max_score"] == 10 and answer["feedback"]
+        assert answer["confidence"] in ("high", "medium", "low")
+    # GET /sessions/{id} is what Results.jsx reads after a refresh.
+    results = api.client.get(f"/sessions/{session_id}").json()["test_results"]
+    assert [a["score"] for a in results["answers"]] == [q["score"] for q in body["per_question"]]
+    assert results["answers"][3]["feedback"] == body["per_question"][3]["feedback"]
+    assert not any(f'"{key}"' in json.dumps(results) for key in SECRETS)
+
+
+def test_evaluate_single_grades_inline_caches_and_tells_the_client_nothing(api):
+    session_id, _ = start_and_finish(api)
+    response = api.client.post(f"/sessions/{session_id}/evaluate-single", json={"index": 3, "answer": GOOD_WHY})
+    assert response.status_code == 200 and response.json() == {"status": "graded"}
+    cached = api.db.tables["sessions"][0]["test_questions"][3]["cached_eval"]
+    assert cached["answer"] == GOOD_WHY and cached["confidence"] == "medium" and cached["score"] >= 7
+    assert "BackgroundTasks" not in str(inspect.signature(sessions.evaluate_single))
+    assert not hasattr(sessions, "evaluate_single_background")
+
+
+def test_a_cached_grade_is_reused_for_the_same_answer_and_not_for_a_changed_one(api):
+    session_id, _ = start_and_finish(api)
+    api.client.post(f"/sessions/{session_id}/evaluate-single", json={"index": 3, "answer": GOOD_WHY})
+    api.embeds.clear()
+    submit(api, session_id)
+    assert api.embeds == []  # the only free-text answer was already graded; closed and empty ones need no model
+    api.db.tables["test_results"].clear()
+    changed = [*ANSWERS[:3], "They were made of gravel on deep foundations, engineers said.", ""]
+    submit(api, session_id, changed)
+    assert len(api.embeds) == 1 and changed[3] in api.embeds[0]
+    assert api.db.tables["test_results"][0]["answers"][3]["user_answer"] == changed[3]
+
+
+def test_a_failing_embedder_never_gives_full_marks_and_is_low_confidence(api, monkeypatch):
+    def broken(texts):
+        raise RuntimeError("model missing")
+
+    monkeypatch.setattr(embedder, "embed", broken)
+    session_id, _ = start_and_finish(api)
+    body = submit(api, session_id, [*ANSWERS[:3], "It was to do with how they were built, I think.", ""]).json()
+    why = body["per_question"][3]
+    assert why["confidence"] == "low" and why["score"] < 5 and why["feedback"].startswith(LOW_CONFIDENCE)
+    assert body["low_confidence_count"] == 1
+    assert [q["score"] for q in body["per_question"][:3]] == [10, 0, 10]  # string matches need no model
+
+
+def test_missing_answers_count_as_blank(api):
+    session_id, _ = start_and_finish(api)
+    body = submit(api, session_id, ["right option 1"]).json()
+    assert [q["score"] for q in body["per_question"]] == [10, 0, 0, 0, 0] and body["max_score"] == 50
+    assert all(q["feedback"].startswith("No answer was given.") for q in body["per_question"][1:])
+
+
+def test_a_question_with_no_evidence_is_graded_against_the_passage_at_low_confidence(api):
+    api.db.tables["question_bank"] = []
+    api.db.tables["chunks"][0]["content"] = (
+        "Roman engineers laid their roads on deep foundations of gravel. The roads stayed usable for centuries."
+    )
+    session_id, finished = start_and_finish(api)
+    assert len(finished.json()["questions"]) == 1  # the fallback question: no answer, no evidence
+    body = submit(api, session_id, ["Roman roads lasted because of their deep gravel foundations."]).json()
+    (only,) = body["per_question"]
+    assert only["confidence"] == "low" and only["feedback"].startswith(LOW_CONFIDENCE)
+    assert "Roman engineers laid their roads" in only["feedback"] and body["low_confidence_count"] == 1
+
+
+def test_evaluate_single_rejects_an_unknown_session_and_a_bad_index(api):
+    session_id, _ = start_and_finish(api)
+    assert api.client.post("/sessions/nope/evaluate-single", json={"index": 0, "answer": "x"}).status_code == 404
+    assert api.client.post(f"/sessions/{session_id}/evaluate-single", json={"index": 9, "answer": "x"}).status_code == 400
+
+
+def test_the_evaluator_uses_no_llm():
+    source = inspect.getsource(evaluator_agent)
+    for banned in ("services.llm", "langchain", "ChatPromptTemplate", "evaluator_llm", "MOCK"):
+        assert banned not in source

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 165,
-    "inventoried": 154,
+    "tracked": 172,
+    "inventoried": 161,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7315,
+      "size_bytes": 7362,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -119,12 +119,36 @@
       "purpose": "Package marker for backend.agents."
     },
     {
+      "path": "backend/agents/evaluation/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 83,
+      "role": "agent",
+      "purpose": "Package marker for backend.agents.evaluation, answer grading with no LLM."
+    },
+    {
+      "path": "backend/agents/evaluation/feedback.py",
+      "language": "python",
+      "lines": 105,
+      "size_bytes": 4638,
+      "role": "agent",
+      "purpose": "Feedback for a graded answer, pure: render(grade, evidence) builds one or two sentences from fixed templates, the question's key terms and a verbatim evidence snippet; low confidence gives no verdict, closed questions name the expected answer, free text says what was captured and missed and never 'correct'."
+    },
+    {
+      "path": "backend/agents/evaluation/grader.py",
+      "language": "python",
+      "lines": 225,
+      "size_bytes": 10382,
+      "role": "agent",
+      "purpose": "Answer grader: pure decide(GradeInput) gives a 0..1 score, a high, medium or low confidence, matched and missing key terms, the rule used and its components; cloze and multiple choice by exact or rapidfuzz match, free text by a weighted sum of evidence cosine, key-term coverage and a relevance check; grade_all embeds a test's free-text answers in one call with the embedder it is given."
+    },
+    {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
-      "lines": 216,
-      "size_bytes": 9752,
+      "lines": 184,
+      "size_bytes": 9175,
       "role": "agent",
-      "purpose": "Evaluator node: grades each answer 0-10 with the Groq LLM (full marks on LLM error), inserts test_results, updates the rolling average in reading_progress."
+      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and appends to decisions; a question with no evidence is graded against the passage at low confidence."
     },
     {
       "path": "backend/agents/graph.py",
@@ -153,10 +177,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 106,
-      "size_bytes": 3528,
+      "lines": 184,
+      "size_bytes": 6668,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far the question generation ones."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading and feedback."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -201,10 +225,10 @@
     {
       "path": "backend/agents/state.py",
       "language": "python",
-      "lines": 17,
-      "size_bytes": 459,
+      "lines": 18,
+      "size_bytes": 557,
       "role": "agent",
-      "purpose": "AgentState TypedDict shared by all agent nodes."
+      "purpose": "AgentState TypedDict shared by all agent nodes, including the decisions audit trail."
     },
     {
       "path": "backend/agents/test_generator_agent.py",
@@ -313,10 +337,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 241,
-      "size_bytes": 10222,
+      "lines": 220,
+      "size_bytes": 9676,
       "role": "router",
-      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank in the background), finish-reading (returns the public part of the test), evaluate-single (background grade), submit-answers (evaluator and optimizer), abandon, get; no answer or evidence is sent to the client."
+      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question), abandon, get; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -391,12 +415,28 @@
       "purpose": "Offline test setup: dummy environment, a fake Supabase client, Groq and Google embedding classes that raise when called, and a guard that blocks non-loopback connections."
     },
     {
+      "path": "backend/tests/fixtures/answers.json",
+      "language": "json",
+      "lines": 40,
+      "size_bytes": 16853,
+      "role": "test",
+      "purpose": "Labelled answers for calibrating the grader: 34 cases over five questions, each with question, type, evidence, key terms, an answer, a category (correct, paraphrase, partial, wrong, off-topic, empty, copy of the question) and a hand-given human_score from 0 to 1."
+    },
+    {
+      "path": "backend/tests/test_answer_fixtures.py",
+      "language": "python",
+      "lines": 61,
+      "size_bytes": 2523,
+      "role": "test",
+      "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
+    },
+    {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 202,
-      "size_bytes": 8926,
+      "lines": 357,
+      "size_bytes": 17009,
       "role": "test",
-      "purpose": "Pytest on an in-memory database through TestClient: finish-reading returns five bank questions in one round trip, nothing secret reaches the client, times_used goes up, and chunks without bank rows are generated on demand."
+      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, and test_results keeps the shape the results page and dashboard read."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -437,6 +477,22 @@
       "size_bytes": 4186,
       "role": "test",
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; similar sentences beat unrelated ones on the real model when it is cached."
+    },
+    {
+      "path": "backend/tests/test_feedback.py",
+      "language": "python",
+      "lines": 141,
+      "size_bytes": 7198,
+      "role": "test",
+      "purpose": "Pytest: each feedback template and its conditions, term lists, the evidence snippet, and over the labelled fixtures that feedback holds only template words, key terms and verbatim evidence."
+    },
+    {
+      "path": "backend/tests/test_grader.py",
+      "language": "python",
+      "lines": 247,
+      "size_bytes": 11548,
+      "role": "test",
+      "purpose": "Pytest: closed-question matching, the free-text formula and its components, every confidence rule and its boundary, grade_all's single embedding call and its failure path, on hand-made numbers; plus agreement with the labelled answer fixtures on the real model when it is cached."
     },
     {
       "path": "backend/tests/test_health.py",
@@ -545,16 +601,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 307,
-      "size_bytes": 15558,
+      "lines": 371,
+      "size_bytes": 18920,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 389,
-      "size_bytes": 15092,
+      "lines": 443,
+      "size_bytes": 17701,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -569,8 +625,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 736,
-      "size_bytes": 114061,
+      "lines": 987,
+      "size_bytes": 152605,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1177,8 +1233,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 156,
-      "size_bytes": 24863,
+      "lines": 163,
+      "size_bytes": 27604,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1226,7 +1282,7 @@
       "path": "tools/repo_graph/tests/test_query.py",
       "language": "python",
       "lines": 83,
-      "size_bytes": 3414,
+      "size_bytes": 3401,
       "role": "test",
       "purpose": "Pytest: file, endpoint and table queries, path forms, unknown targets, and the importers of llm.py in the real graph."
     },

@@ -56,6 +56,60 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C6.2 — "a computer" is graded as option (a), wrong, at high confidence
+
+**Status:** fixed
+
+### Symptom
+Found in the C6 close review, reading `_grade_closed`. A multiple-choice
+answer that starts with a one-letter word is taken for an option letter and
+the rest of the answer is ignored. With the options of a real question from
+the C6.4 browser check, expecting "computer" (option d):
+
+    python -c "from backend.agents.evaluation.grader import GradeInput, decide; \
+      print(decide(GradeInput(question='other _____ companies.', answer='a computer', \
+      strategy='multiple_choice', expected='computer', \
+      options=['design','computer organization','computer architecture','computer'])))"
+    score=0.0 confidence='high' ... method='option'
+
+No exception: a wrong grade, presented as certain. The same for "A computer
+company" and "c computer". Also "computer organization" (a full option)
+came back `unmatched_option` at low confidence, because "computer" is
+inside it and two options matched.
+
+### Repro
+    pytest "backend/tests/test_grader.py::test_multiple_choice_reads_the_words_before_a_leading_letter" -q
+    5 failed, 5 passed (before the fix)
+
+### Hypotheses
+1. `_LETTER` (`^\(?([a-h])\)?[.):]?(?:\s+.*)?$`) accepts any text after the
+   letter, and a letter match short-circuits the text match. Evidence: the
+   code path; "a computer" matches with group 1 = "a". Ruled out if: the
+   grade's method were not `option`. Result: confirmed by the repro.
+2. The two-match case: `_ratio` matches an option against any stretch of the
+   answer, so a short option inside a longer one matches too. Evidence:
+   "computer organization" gives two matches. Result: confirmed.
+
+### Root cause
+`backend/agents/evaluation/grader.py`, `_grade_closed`: a leading letter
+was trusted over the words that followed it, and options were matched only
+as substrings, never as the whole answer.
+
+### Fix
+`_chosen_option`: an answer that is nothing but a letter ("a", "(a)", "a.")
+picks that option. Otherwise the words decide: the one option equal to the
+whole answer (rapidfuzz ratio at least 90), else the one option found
+inside it. A letter set off by punctuation ("b) ...") is used only when the
+words do not settle it. Anything else is `unmatched_option`, low
+confidence, as before. First attempt; no failed attempts.
+
+### Regression test
+`backend/tests/test_grader.py::test_multiple_choice_reads_the_words_before_a_leading_letter`
+(10 cases). Failed before the fix: yes, 5 of 10. Passes after: yes.
+
+### Commit
+fix(agents): read a multiple-choice answer's words before a leading letter
+
 ## 2026-11-10 C5.5 — committed repo graph is stale by one file size
 
 **Status:** fixed

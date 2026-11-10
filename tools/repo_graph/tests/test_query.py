@@ -78,6 +78,6 @@ def test_real_graph_lists_every_agent_that_uses_llm(capsys):
     agents = [p for p in imported_by.split() if p.startswith("backend/agents/")]
     assert agents == [
         f"backend/agents/{name}_agent.py"
-        for name in ("evaluator", "optimizer", "planner", "test_generator")
+        for name in ("optimizer", "planner", "test_generator")
     ]
     assert "External calls (1):\n  groq (banned) (line 8)" in out

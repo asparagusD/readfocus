@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 126,
-    "inventoried": 115,
+    "tracked": 127,
+    "inventoried": 116,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 181,
-      "size_bytes": 7148,
+      "size_bytes": 7164,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -169,10 +169,10 @@
     {
       "path": "backend/dependencies.py",
       "language": "python",
-      "lines": 27,
-      "size_bytes": 1096,
+      "lines": 20,
+      "size_bytes": 752,
       "role": "lib",
-      "purpose": "get_current_user FastAPI dependency: resolves a Supabase JWT to a user id, and accepts any raw UUID as the user id (dev bypass, not gated by ENV)."
+      "purpose": "get_current_user FastAPI dependency: resolves a Supabase JWT to a user id through supabase.auth.get_user; anything else is a 401."
     },
     {
       "path": "backend/main.py",
@@ -303,6 +303,14 @@
       "purpose": "Package marker for backend.tests."
     },
     {
+      "path": "backend/tests/test_auth.py",
+      "language": "python",
+      "lines": 73,
+      "size_bytes": 2199,
+      "role": "test",
+      "purpose": "Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked)."
+    },
+    {
       "path": "backend/tests/test_health.py",
       "language": "python",
       "lines": 19,
@@ -321,8 +329,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 150,
-      "size_bytes": 5522,
+      "lines": 194,
+      "size_bytes": 7347,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -337,8 +345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 254,
-      "size_bytes": 23026,
+      "lines": 338,
+      "size_bytes": 33330,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -865,8 +873,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 117,
-      "size_bytes": 15591,
+      "lines": 118,
+      "size_bytes": 15745,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

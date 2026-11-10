@@ -56,6 +56,50 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C3.1 — any raw UUID is accepted as a bearer token
+
+**Status:** fixed
+
+### Symptom
+Found by reading in C2.1 (issue 10, audit section 8.1), not by a crash.
+`get_current_user` returned the bearer token itself as the user id when the
+token was 36 characters with four hyphens, in every environment. Expected: a
+401 for anything Supabase Auth does not accept.
+
+    pytest backend/tests/test_auth.py -q
+    FAILED backend/tests/test_auth.py::test_raw_uuid_token_is_rejected - Failed: DID NOT RAISE HTTPException
+    FAILED backend/tests/test_auth.py::test_raw_uuid_token_is_rejected_in_development
+    2 failed, 3 passed in 0.87s
+
+### Repro
+    pytest backend/tests/test_auth.py::test_raw_uuid_token_is_rejected -q
+
+Fails every time before the fix.
+
+### Hypotheses
+1. The "Local Dev Bypass" block returns before `supabase.auth.get_user` is
+   called and checks nothing but the token's shape. Evidence:
+   `backend/dependencies.py:13-18` at `052c9af`. Ruled out if: the fake
+   `get_user` sees the UUID. Result: confirmed; `get_user` was never called.
+
+### Root cause
+`backend/dependencies.py:16-17` (at `052c9af`): a development shortcut with
+no check of `ENV`, in front of the real token check. With the service-role
+client behind every query, a known user id was full access to that account.
+
+### Fix
+The block is deleted, not gated: the two dev test users in `.env.test` sign
+in for real JWTs, so nothing needs the shortcut. Every token now goes to
+`supabase.auth.get_user`. First attempt; no failed attempts.
+
+### Regression test
+`backend/tests/test_auth.py::test_raw_uuid_token_is_rejected` and
+`::test_raw_uuid_token_is_rejected_in_development`. Failed before the fix:
+yes (`2 failed, 3 passed`). Passes after: yes (`5 passed`).
+
+### Commit
+security(api): remove raw-UUID authentication bypass in production
+
 ## 2026-11-10 C2.3 — inventory gives test_generator_agent.py the role "test"
 
 **Status:** fixed

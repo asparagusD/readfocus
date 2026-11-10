@@ -9,14 +9,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     Extracts the user_id from the Supabase JWT Bearer token.
     """
     token = credentials.credentials
-    
-    # --- Local Dev Bypass for easy testing ---
-    # If you pass a raw UUID instead of a JWT token, we'll accept it as the user_id.
-    # This saves you from having to manually generate JWTs while testing the API!
-    if len(token) == 36 and token.count("-") == 4:
-        return token
-    # -----------------------------------------
-    
+
     try:
         user_resp = supabase.auth.get_user(token)
         if user_resp and user_resp.user:

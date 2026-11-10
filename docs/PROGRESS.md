@@ -46,6 +46,8 @@ kept for history only.
 | 24 | Server RSS peaks at 347 MB during ingestion on Windows (306 MB before C5.4), above the 300 MB line from Gate G2; the model is 30 to 60 MB heavier on Linux and Render Free is believed to allow 512 MB. Question generation is about 0.6 s per chunk here and an estimated 4 s per chunk on Render. Neither is measured on Linux. `docs/BENCHMARKS.md`, C5.4. | C5.4 | unassigned |
 | 25 | Question bank quality on `sample.pdf`: a main idea "about licensee mdpi", 2 questions from the reference list, vague cloze answers ("design", "model"), weak multiple-choice distractors, no definition question; distractors depend on which chunks are in a batch. The rules are tuned on one English journal paper; no novel and no EPUB has been tried. | C5.2 to C5.4 | unassigned |
 | 26 | The test page has no multiple-choice UI: options are appended to the question text and also sent as `options`. Not looked at in a browser. Grading still goes through the Groq evaluator, which now gets the reference answer as `guidance`. **C6.4: grading is local; a multiple-choice answer may be typed as the letter or the option's text.** | C5.5 | unassigned |
+| 27 | The local grader agrees with one labeller's scores on about three answers in four (26 of 34, tuned on the same cases). An answer that reverses the evidence in its own words scores 0.86 to 0.91, and a paraphrase 0.44 to 0.79, because key-term coverage is literal. Free-text grades are therefore capped at medium confidence, but the Results page shows a bare score: the doubt reaches the reader only in the feedback sentence. `docs/BENCHMARKS.md`, C6.2. | C6.2, C6.4 | unassigned |
+| 28 | `POST /sessions/{id}/submit-answers` takes about 830 ms locally against a 500 ms target: about eight Supabase round trips in sequence at about 100 ms each; grading is about 96 ms. The optimizer and the planner still call the LLM and still fall back. `backend.main` cannot be imported with `GROQ_API_KEY` unset. | C6.4 | optimizer and planner chunks, C8 |
 
 ## C0 — setup
 
@@ -842,7 +844,83 @@ Risks and open questions:
 | [x] C6.3 grounded template feedback | `fc64ee9` | Added `backend/agents/evaluation/feedback.py`, pure: `render(grade, evidence) -> str` from fixed templates, the question's key terms and a verbatim evidence snippet (`snippet`: the evidence sentence holding a missed term, else the first, cut at a word at 160 characters). Low confidence: "We couldn't judge this confidently; compare your answer with the passage below." and the snippet, with no verdict. Free text: "You captured X and Y." and "You missed Z — see: “...”", at most three terms each, plus "This score is an estimate." when the grade's reasons go beyond the C6.2b cap; an answer with relevance 0 is told it is not about this part of the passage; with no key terms, "close to" or "differs from what the passage says". Free text never says "correct". Closed questions: "Correct — the answer is X." or "Not quite — the answer is X. See: “...”". Empty: "No answer was given." and the snippet. The constants are in `policy.py`. Added `backend/tests/test_feedback.py`. | Tests written first: collection error (no `feedback` module), then 16 passed, including one over all 34 fixture answers: every quotation is verbatim in the evidence and every other word is a template word or one of the question's key terms. Read by eye on the fixture with the real model (one-off, not committed). Standard checks: ruff 81 errors (baseline), `pytest backend/tests -q` 320 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 15:59 | **"You missed" means the literal term was not found**: the photosynthesis paraphrase ("light", "CO2", "sugar") is told it missed sunlight, carbon dioxide and glucose. A complete answer with five key terms reads "You captured sunlight, water and carbon dioxide." (three named), which can sound partial. The reversed answers are told what they captured, with no warning; nothing calls them correct. An off-topic answer whose relevance is small but not 0 gets "You missed ..." instead of the off-topic line. "the passage below" assumes the snippet that follows, or the page, shows the passage; `Results.jsx` shows only this string. A closed answer is named in the key term's stored form ("gutenberg", lower case). English only; one wording per case, no variants. Not wired in yet (C6.4) |
 | [x] C6.4 answers graded inline by the local evaluator (planned as C6.4a; one commit as asked) | `c935668` | `backend/agents/evaluator_agent.py` rewritten in place: the prompts, parsers, `evaluator_llm` and the 10/10 fallback are gone. `grade_answers` turns stored session questions into grader inputs, grades them with `grader.grade_all` (one embedding call, on a worker thread) and writes feedback with `feedback.render`; the node reuses a `cached_eval` whose answer text is unchanged, treats a missing answer as blank, inserts `test_results` (each answer keeps `question`, `user_answer`, `score` 0 to 10, `feedback`, `max_score` and gains `confidence`, `matched_concepts`, `missing_concepts`, `method`, `reasons`, `components`), updates the rolling average as before, and appends to `decisions` (new key in `state.py`). A question with no evidence (the fallback question, or one stored before C5.5) is graded against the passage's three most informative sentences and always marked low. `backend/routers/sessions.py`: `evaluate-single` grades inline and caches the grade (no `BackgroundTasks`; 404 for an unknown session, 400 for a bad index); `submit-answers` passes the page's `time_taken_seconds` (was a fixed 180) and returns `confidence` and `feedback` per question plus `low_confidence_count`; the grading model is warmed in the background at session start. | Graph first: `query.py` on `sessions.py`, the two endpoints, `evaluator_agent.py` and `state.py`; `Results.jsx` and `dashboard.py` read for the fields they use (`score`, `feedback`, `max_score`, `user_answer`, `question`, `total_score`, `max_score`). Tests written first: 9 failed against the old code, then 17 passed in `test_api_sessions.py`. On dev as test user A, `sample.pdf`, five sessions, Groq pointed at a local 404 stub: **`submit-answers` p50 840 ms, max 854 ms (target under 500 ms: missed)**; `evaluate-single` p50 502 ms; grading five answers in process 96 ms; one Supabase query 101 ms. `GET /sessions/{id}` after submit: status `completed`, totals and the recorded time (77 s) as sent, no secret key in the payload; `GET /dashboard` 200 with 3 feedback quotes. Server log: no request to Groq, no traceback. Standard checks: ruff 64 errors (baseline 81; 17 went with the old evaluator and the removed background function, new baseline 64), `pytest backend/tests -q` 329 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. Banned-provider grep: the same four files. | 2026-11-10 16:14 | **The 500 ms target is missed: 840 ms.** Grading is about 96 ms of it; the rest is about eight Supabase round trips in sequence at about 100 ms each, three of them in the evaluator (insert, two reads for the rolling average) and two in the optimizer, which also still calls Groq. Getting under 500 ms needs the optimizer rewritten and the reads merged, not a faster grader. **The Results page was not seen rendering**: the browser pane is not signed in and the sign-in form posts to the hosted Supabase project, so the test credentials were not typed in; the fields the page reads were checked through the API and against `Results.jsx` instead. Session `f94bdc1a-02cf-4347-9045-ffb14ad2a4bf` (test user A, book "c64-check") is left on dev for that look and should be deleted after. **`evaluate-single` returns only `{"status": "graded"}`**, not the confidence and feedback: the feedback quotes the passage and names the expected answer, and the test is still running; they are in the `submit-answers` response. The page shows a bare score: a low or medium confidence reaches the reader only through the feedback sentence (the plan's C6.4b, not asked for). On `sample.pdf` the grades reflect issue 25: a cloze expecting "BPSO-CNN framework", a main idea "about licensee mdpi". The optimizer and the planner still import `llm.py`; `evaluate_single` still rewrites the whole `test_questions` array. `scripts/manual/test_evaluator.py` still runs but depends on the LLM test generator. `.claude/launch.json` (frontend preview) was created and is not committed. About 330 hand-written lines changed in one commit |
 | [x] C6.4 check: Results page seen in the browser | `36f1f40` | No code change. Closes the open point of the C6.4 row: the Results page renders a locally graded test. | With the user's go-ahead, one session run through the UI in the browser pane on the user's own signed-in dev account (the pane was not signed in as test user A, whose session correctly gave 404): Library, reading page, "Done reading", five answers typed (a letter for the multiple choice, a cloze answer, one left blank, a wrong cloze, a free-text main idea), "Submit answers". The Results page showed 27 / 50, "54% correct", "Needs review" and five rows: 10 / 10 "Correct — the answer is design.", 10 / 10 "Correct — the answer is Digital Design.", 0 / 10 "No answer was given. ..." with the evidence, 0 / 10 "Not quite — the answer is Computer Architecture. See: ...", and 7 / 10 "You captured ... You missed ... This score is an estimate." Reloading the page (the path that rebuilds from `GET /sessions/{id}`) showed the same content. No new console error. `make graph` twice, no diff after the second; tooling 61 passed. | 2026-11-10 16:20 | The session, its `test_results` row and the question-bank rows generated for that chunk stay in the user's dev account. The fixture book "c64-check" of test user A was deleted (200) and the servers started for the check were stopped. Seen on the page, all known: "What is Harris?" (a person; issue 25 and the C5.2b note), a cloze with two blanks and one answer, multiple-choice options inside the question text (issue 26), a main idea "about verilog and vhdl". The multiple-choice answer was typed as the letter "a" and graded right. Not looked at: 375 px width, the dashboard page |
-| [x] C6.2 fix: a multiple-choice answer's words before a leading letter (found in the close review) | this commit | `grader.py`: "a computer" was read as option (a) and graded 0 at high confidence when "computer" was the right option; "computer organization", a whole option, came back unmatched because "computer" is inside it. New `_chosen_option`: an answer that is nothing but a letter picks that option; otherwise the one option equal to the whole answer, else the one option found inside it; a letter set off by punctuation ("b) ...") is used only when the words do not settle it. | Debug protocol, `docs/DEBUG_LOG.md` entry. Regression test written first: 5 of its 10 cases failed, then all passed; first attempt. Standard checks: ruff 64 errors (baseline), `pytest backend/tests -q` 339 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 16:26 | "a) computer" where (a) is another option is graded by the word, so the letter is ignored when the two disagree. The fixture has no multiple-choice case, so the agreement figure does not cover this path |
+| [x] C6.2 fix: a multiple-choice answer's words before a leading letter (found in the close review) | `056f9da` | `grader.py`: "a computer" was read as option (a) and graded 0 at high confidence when "computer" was the right option; "computer organization", a whole option, came back unmatched because "computer" is inside it. New `_chosen_option`: an answer that is nothing but a letter picks that option; otherwise the one option equal to the whole answer, else the one option found inside it; a letter set off by punctuation ("b) ...") is used only when the words do not settle it. | Debug protocol, `docs/DEBUG_LOG.md` entry. Regression test written first: 5 of its 10 cases failed, then all passed; first attempt. Standard checks: ruff 64 errors (baseline), `pytest backend/tests -q` 339 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 16:26 | "a) computer" where (a) is another option is graded by the word, so the letter is ignored when the two disagree. The fixture has no multiple-choice case, so the agreement figure does not cover this path |
+
+Close review (2026-11-10 16:27):
+
+- **Checks.** ruff 64 errors and ESLint 22 errors, 2 warnings (both at the
+  current baseline, not zero); `pytest backend/tests -q` 339 passed;
+  frontend build passes; `import backend.main` exit 0; tooling 61 passed;
+  `make graph` leaves `git status --short docs/repo-graph/` empty.
+- **Ticks.** C6.1, C6.2, C6.2b, C6.3 and C6.4 are ticked with their
+  hashes, plus the C6.4 page check and one fix. The plan table above shows
+  the subchunks as first planned (JSONL fixtures with a holdout split, a
+  separate signals module, a `not_graded` verdict, a C6.4b for the page);
+  the log rows are what was built.
+- **Agreement.** 26 of 34 labelled answers within 0.25 of the human score
+  (76.5%) with the committed constants, 25 of 34 (73.5%) as first written;
+  tuned on the same 34 cases, one labeller. By category: correct 5 of 5,
+  paraphrase 1 of 5, partial 5 of 5, wrong 1 of 5, off-topic 5 of 5, empty
+  4 of 4, question copy 5 of 5. No multiple-choice case in the fixture.
+- **Exit criteria.** Read to test to results on dev as test user A,
+  `sample.pdf`, three sessions in a row, backend started with
+  `GROQ_API_KEY` set to a dummy value, `GOOGLE_AI_STUDIO_KEY` empty and the
+  Groq client pointed at a local stub answering 404: upload, start,
+  `finish-reading` (5 questions), `evaluate-single`, `submit-answers`
+  (per-question score, feedback and confidence), `GET /sessions/{id}`
+  (completed, no secret key in the payload), `GET /dashboard` 200; book
+  deleted afterwards. Server log: no traceback, no request to Groq or
+  Google; three planner and three optimizer fallbacks. **Not with no key at
+  all: `GROQ_API_KEY= python -c "import backend.main"` raises
+  `ValueError: GROQ_API_KEY is missing`**, because the planner and the
+  optimizer still import `backend/services/llm.py` (issue 6, C8). Grading,
+  question generation and embeddings use no key; planning and pacing are
+  still the LLM path and ran on their fallbacks. The Results page was seen
+  in the browser on a real session (C6.4 check row).
+- **Latency.** `submit-answers` p50 824 ms, max 848 ms at close (840 ms in
+  C6.4), against a 500 ms target: missed. `evaluate-single` p50 488 ms.
+  Grading five answers in process 96 ms; 34 answers 213 ms.
+- **Diff.** `git diff readfocus-2.0...HEAD`: 21 files, 1,800 insertions,
+  302 deletions; `git diff --check` clean; no secret-like strings; no
+  banned provider added (the grep lists the same four files, and
+  `evaluator_agent.py` no longer imports `llm.py`). Nothing under
+  `frontend/`, `supabase/`, `requirements.txt`, `Dockerfile`, `render.yaml`
+  or `.github/`. Application code touched: `backend/agents/evaluator_agent.py`,
+  `backend/routers/sessions.py`, `backend/agents/state.py`,
+  `backend/agents/policy.py` and the new `backend/agents/evaluation/`. No
+  migration, no new dependency.
+- **Blocking findings.** One, fixed in `056f9da`: a multiple-choice answer
+  starting with a one-letter word ("a computer") was read as option (a)
+  and graded 0 at high confidence.
+- **Non-blocking.**
+  - Agreement is about three in four and the reversed-answer and
+    paraphrase weaknesses stand (issue 27).
+  - The page shows no confidence; only the feedback sentence carries it
+    (issue 27).
+  - `submit-answers` misses the latency target; the app does not start
+    without a Groq key (issue 28).
+  - `evaluate-single` returns only `{"status": "graded"}`, by choice: its
+    feedback would reveal the answer during the test.
+  - The grading model is loaded at session start (`warm_up`) in the web
+    process; memory on Linux is still unmeasured (issue 24).
+  - `copies_question` zeroes any answer made only of the question's words,
+    which can include a terse right answer to a question that names it.
+  - Feedback names at most three terms and reports literal matches only.
+  - `evaluate_single` rewrites the whole `test_questions` array; two quick
+    pre-grades can lose one cache entry (the answer is then graded at
+    submit).
+  - Low-confidence scores count at face value in the total the optimizer
+    reads.
+  - Question quality on real books is unchanged (issue 25): seen in the
+    browser check, "What is Harris?" and a cloze with two blanks.
+  - Three of the seven commits are over the ~200-line guideline, where one
+    commit per subchunk was asked for.
+  - `CLAUDE.md` still lists five agents and says `backend/services/` calls
+    Google AI Studio; not edited here. `.claude/launch.json` is untracked.
+  - One session, its result and one chunk's question-bank rows were added
+    to the user's own dev account for the page check.
+- **Time.** About 1 h 10 min of wall-clock, from branch creation at 15:18
+  to this review at 16:27, against 2.0 h budgeted.
 
 ## C7
 

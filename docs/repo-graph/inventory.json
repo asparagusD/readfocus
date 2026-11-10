@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 123,
-    "inventoried": 112,
+    "tracked": 125,
+    "inventoried": 114,
     "excluded": 11
   },
   "files": [
@@ -10,15 +10,15 @@
       "path": ".claude/skills/atomic-commit/SKILL.md",
       "language": "markdown",
       "lines": 186,
-      "size_bytes": 5909,
+      "size_bytes": 5921,
       "role": "doc",
       "purpose": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes."
     },
     {
       "path": ".claude/skills/debug-protocol/SKILL.md",
       "language": "markdown",
-      "lines": 198,
-      "size_bytes": 6149,
+      "lines": 200,
+      "size_bytes": 6269,
       "role": "doc",
       "purpose": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template."
     },
@@ -41,10 +41,10 @@
     {
       "path": ".claude/skills/repo-graph/SKILL.md",
       "language": "markdown",
-      "lines": 113,
-      "size_bytes": 4287,
+      "lines": 122,
+      "size_bytes": 4910,
       "role": "doc",
-      "purpose": "Project skill: query the repo graph before an edit and regenerate it after a structural change."
+      "purpose": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see."
     },
     {
       "path": ".env.example",
@@ -73,8 +73,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 179,
-      "size_bytes": 7075,
+      "lines": 181,
+      "size_bytes": 7148,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -89,10 +89,10 @@
     {
       "path": "Makefile",
       "language": "makefile",
-      "lines": 13,
-      "size_bytes": 337,
+      "lines": 19,
+      "size_bytes": 539,
       "role": "config",
-      "purpose": "Dev targets: dev-backend (uvicorn with reload), dev-frontend (Vite), dev (both via concurrently)."
+      "purpose": "Targets: dev-backend (uvicorn with reload), dev-frontend (Vite), dev (both via concurrently), graph (regenerate docs/repo-graph/)."
     },
     {
       "path": "README.md",
@@ -330,7 +330,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 244,
-      "size_bytes": 19742,
+      "size_bytes": 20255,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -857,10 +857,18 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 114,
-      "size_bytes": 14965,
+      "lines": 116,
+      "size_bytes": 15336,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
+    },
+    {
+      "path": "tools/repo_graph/query.py",
+      "language": "python",
+      "lines": 164,
+      "size_bytes": 6356,
+      "role": "script",
+      "purpose": "CLI that prints what a file, endpoint, table or other graph node touches and what touches it, from graph.json."
     },
     {
       "path": "tools/repo_graph/render.py",
@@ -893,6 +901,14 @@
       "size_bytes": 3168,
       "role": "test",
       "purpose": "Pytest: role, language and exclusion rules, CRLF-safe measuring, purpose checks, and completeness of the real inventory."
+    },
+    {
+      "path": "tools/repo_graph/tests/test_query.py",
+      "language": "python",
+      "lines": 81,
+      "size_bytes": 3274,
+      "role": "test",
+      "purpose": "Pytest: file, endpoint and table queries, path forms, unknown targets, and the importers of llm.py in the real graph."
     },
     {
       "path": "tools/repo_graph/tests/test_render.py",

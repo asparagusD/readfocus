@@ -10,10 +10,8 @@ import which, which endpoints call which services, which code reads and
 writes which tables, and how the LangGraph agents connect. Use it so that an
 edit accounts for everything upstream and downstream of the file.
 
-> **Status: the tooling is built in C2.** Until then `make graph`,
-> `tools/repo_graph/` and `docs/repo-graph/` do not exist. Use the
-> [manual fallback](#until-c2-manual-fallback) and do not claim the graph was
-> queried or regenerated.
+The tooling is in `tools/repo_graph/` (built in C2) and uses only the Python
+standard library. Run it from the repo root with the virtualenv active.
 
 ## Where it lives
 
@@ -22,12 +20,17 @@ files by hand.
 
 | File | For | Contents |
 |---|---|---|
-| `graph.json` | Tools | The machine-readable graph that `query.py` reads |
-| `REPO_MAP.md` | People and Claude | The readable map of files, endpoints and tables |
-| `AGENT_GRAPH.md` | People and Claude | The LangGraph agents and how they connect |
+| `inventory.json` | Tools | Every tracked file: language, lines, size, role, one-line purpose; plus the excluded files |
+| `graph.json` | Tools | The typed graph that `query.py` reads: files, endpoints, tables, database functions, env vars, external services, LangGraph nodes |
+| `REPO_MAP.md` | People and Claude | Layer diagram, LangGraph diagram, and lookup tables for endpoints, tables, services, env vars and files |
 
-C2 defines the exact format of each file. If this table and the generated
-files disagree, the generated files are right; fix this skill.
+If this table and the generated files disagree, the generated files are
+right; fix this skill.
+
+A new tracked file needs a one-line purpose in
+`tools/repo_graph/purposes.json`, written after reading the file, or
+`make graph` fails and names the file. Remove the purpose when the file is
+deleted.
 
 ## Before editing a file
 
@@ -37,13 +40,22 @@ Query the graph for the thing you are about to change:
 python tools/repo_graph/query.py <file|endpoint|table>
 ```
 
-For example (shapes to be confirmed in C2):
+For example:
 
 ```bash
 python tools/repo_graph/query.py backend/routers/sessions.py
-python tools/repo_graph/query.py /sessions/start
+python tools/repo_graph/query.py "POST /sessions/start"
 python tools/repo_graph/query.py reading_progress
 ```
+
+It also accepts a database function, env var, external service or LangGraph
+node name. An endpoint can be given without its method (`/sessions/start`)
+in PowerShell; Git Bash rewrites an argument that starts with `/`, so give
+the method there. Exit code 2 means nothing matched, and the output suggests
+close names.
+
+The query reads the committed `graph.json`. If you have already changed the
+code, run `make graph` first.
 
 Then:
 
@@ -91,23 +103,20 @@ change, the committed graph was stale. Commit the refresh on its own as
 - **Debugging**: step 3 of `debug-protocol` uses the same query to find the
   files around a failure.
 - **Orientation**: read `REPO_MAP.md` at the start of a chunk instead of
-  listing directories, and `AGENT_GRAPH.md` before touching
+  listing directories, and its "LangGraph wiring" section before touching
   `backend/agents/`.
 
-## Until C2: manual fallback
+## What the graph does not see
 
-Find a file's neighbours by search. For a backend module such as
-`backend/services/book_ingestor.py`:
+Search by hand for these, and say so in the commit's `Notes`:
 
-- **Upstream**: read the `import` lines at the top of the file.
-- **Downstream**: search `backend/` for `book_ingestor`.
-- **Endpoints**: search `backend/routers/` for the path, and `frontend/src/`
-  for where it is called.
-- **Tables**: search `backend/` for `.table("<name>")` and
-  `supabase/migrations/` for the table name.
-- **Agents**: read `backend/agents/graph.py`, which wires the nodes.
-
-For a frontend file, search `frontend/src/` for its import path.
-
-Say in the commit's `Notes` that neighbours were found by search, not by the
-graph.
+- **Columns.** Table edges say which file reads or writes a table, not
+  which columns. Before changing a column, search for its name.
+- **Text matches.** Table, env var and RPC edges come from regexes on the
+  file text, so a commented-out call still counts and a table name built at
+  run time is missed.
+- **Processes and storage.** `backend/main.py` starting
+  `backend/mcp_server.py` through `subprocess`, and Supabase Storage bucket
+  use, are not edges.
+- **The tooling itself.** Files under `tools/repo_graph/` are scanned for
+  imports only.

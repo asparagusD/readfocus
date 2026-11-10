@@ -836,6 +836,12 @@
       "language": "json"
     },
     {
+      "id": "file:tools/repo_graph/query.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:tools/repo_graph/render.py",
       "type": "file",
       "role": "script",
@@ -855,6 +861,12 @@
     },
     {
       "id": "file:tools/repo_graph/tests/test_inventory.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/tests/test_query.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1912,6 +1924,16 @@
     },
     {
       "type": "imports",
+      "from": "file:tools/repo_graph/query.py",
+      "to": "file:tools/repo_graph/build.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/query.py",
+      "to": "file:tools/repo_graph/render.py"
+    },
+    {
+      "type": "imports",
       "from": "file:tools/repo_graph/render.py",
       "to": "file:tools/repo_graph/build.py"
     },
@@ -1934,6 +1956,21 @@
       "type": "imports",
       "from": "file:tools/repo_graph/tests/test_inventory.py",
       "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_query.py",
+      "to": "file:tools/repo_graph/query.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_query.py",
+      "to": "file:tools/repo_graph/render.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_query.py",
+      "to": "file:tools/repo_graph/tests/test_build.py"
     },
     {
       "type": "imports",

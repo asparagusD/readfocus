@@ -139,6 +139,83 @@ def test_007_touches_no_existing_table():
     assert not re.search(r"\b(INSERT|UPDATE)\b", sql)
 
 
+def migration_008() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "008_concept_mastery.sql"))
+
+
+def table_definition(sql: str, table: str) -> dict[str, str]:
+    """The lines of a CREATE TABLE body, keyed by their first word (a column name, or UNIQUE / PRIMARY)."""
+    body = re.search(rf"CREATE TABLE IF NOT EXISTS public\.{table} \((.*?)\);", sql)
+    assert body, f"{table} is not created with IF NOT EXISTS"
+    lines = (line.strip().partition(" ") for line in re.split(r",(?![^(]*\))", body.group(1)))
+    return {name: definition for name, _, definition in lines}
+
+
+OWNER = "uuid NOT NULL REFERENCES public.profiles(user_id) ON DELETE CASCADE"
+BOOK = "uuid NOT NULL REFERENCES public.books(id) ON DELETE CASCADE"
+CONCEPT_TABLES = {
+    "concepts": {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "user_id": OWNER,
+        "book_id": BOOK,
+        "concept_key": "text NOT NULL",
+        "label": "text NOT NULL",
+        "chunk_indices": "integer[] NOT NULL DEFAULT '{}'",
+        "weight": "real",
+        "UNIQUE": "(user_id, book_id, concept_key)",
+    },
+    "user_concept_mastery": {
+        "user_id": OWNER,
+        "book_id": BOOK,
+        "concept_key": "text NOT NULL",
+        "mastery": "real NOT NULL DEFAULT 0.3 CHECK (mastery >= 0 AND mastery <= 1)",
+        "attempts": "integer NOT NULL DEFAULT 0",
+        "correct": "integer NOT NULL DEFAULT 0",
+        "last_seen": "timestamptz",
+        "next_review": "timestamptz",
+        "last_event_id": "text",
+        "PRIMARY": "KEY (user_id, book_id, concept_key)",
+    },
+}
+
+
+@pytest.mark.parametrize("table", sorted(CONCEPT_TABLES))
+def test_008_creates_the_table_with_the_agreed_columns_and_key(table):
+    definition = table_definition(migration_008(), table)
+    assert list(definition) == list(CONCEPT_TABLES[table])
+    for name, expected in CONCEPT_TABLES[table].items():
+        assert definition[name] == expected, f"{table}.{name}: {definition[name]}"
+
+
+@pytest.mark.parametrize("table", sorted(CONCEPT_TABLES))
+def test_008_rows_belong_to_their_user_under_row_level_security(table):
+    sql = migration_008()
+    assert f"ALTER TABLE public.{table} ENABLE ROW LEVEL SECURITY" in sql
+    assert re.search(
+        rf"CREATE POLICY \"[^\"]+\" ON public\.{table} FOR ALL "
+        r"USING \(auth\.uid\(\) = user_id\) WITH CHECK \(auth\.uid\(\) = user_id\)",
+        sql,
+    )
+    assert "SECURITY DEFINER" not in sql
+
+
+def test_008_has_the_lookup_indexes():
+    sql = migration_008()
+    for table, columns in (
+        ("concepts", "user_id, book_id"),
+        ("user_concept_mastery", "user_id, book_id"),
+        ("user_concept_mastery", "user_id, next_review"),
+    ):
+        assert re.search(rf"CREATE INDEX IF NOT EXISTS \w+ ON public\.{table} \({columns}\)", sql), (table, columns)
+
+
+def test_008_touches_no_existing_table():
+    sql = migration_008()
+    assert sorted(set(re.findall(r"ALTER TABLE public\.(\w+)", sql))) == sorted(CONCEPT_TABLES)
+    assert sorted(re.findall(r"CREATE TABLE IF NOT EXISTS public\.(\w+)", sql)) == sorted(CONCEPT_TABLES)
+    assert not re.search(r"\b(INSERT|UPDATE)\b", sql)
+
+
 def test_005_leaves_the_old_column_and_function_alone():
     sql = migration_005()
     assert not re.search(r"\bmatch_chunks\s*\(", sql)

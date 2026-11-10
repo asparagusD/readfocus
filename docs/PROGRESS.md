@@ -48,6 +48,8 @@ kept for history only.
 | 26 | The test page has no multiple-choice UI: options are appended to the question text and also sent as `options`. Not looked at in a browser. Grading still goes through the Groq evaluator, which now gets the reference answer as `guidance`. **C6.4: grading is local; a multiple-choice answer may be typed as the letter or the option's text.** | C5.5 | unassigned |
 | 27 | The local grader agrees with one labeller's scores on about three answers in four (26 of 34, tuned on the same cases). An answer that reverses the evidence in its own words scores 0.86 to 0.91, and a paraphrase 0.44 to 0.79, because key-term coverage is literal. Free-text grades are therefore capped at medium confidence, but the Results page shows a bare score: the doubt reaches the reader only in the feedback sentence. `docs/BENCHMARKS.md`, C6.2. | C6.2, C6.4 | unassigned |
 | 28 | `POST /sessions/{id}/submit-answers` takes about 830 ms locally against a 500 ms target: about eight Supabase round trips in sequence at about 100 ms each; grading is about 96 ms. The optimizer and the planner still call the LLM and still fall back. `backend.main` cannot be imported with `GROQ_API_KEY` unset. | C6.4 | optimizer and planner chunks, C8 |
+| 29 | `finish-reading` returned 500 once in three runs of the C7.4 check: `httpx.RemoteProtocolError: Server disconnected` from Supabase inside `assemble_session_test`, for both the background assembly and the inline retry. Cause not established (an idle HTTP/2 connection, or two threads on the one shared client). `docs/DEBUG_LOG.md`, C7.4, status open. | C7.4 | unassigned |
+| 30 | Mastery moves once per question that names a concept, and the key-term link is broad, so one test can move a concept several times: on `sample.pdf`, `antenna-design` was named by 4 of 5 questions and went 0.3 to 0.83 after one good test, then to 0.26 after one blank test. Boilerplate concepts (`licensee-mdpi`, `basel`, `switzerland`) get mastery rows too (issue 25). | C7.4 | unassigned |
 
 ## C0 — setup
 
@@ -922,12 +924,200 @@ Close review (2026-11-10 16:27):
 - **Time.** About 1 h 10 min of wall-clock, from branch creation at 15:18
   to this review at 16:27, against 2.0 h budgeted.
 
-## C7
+## C7 — knowledge state
 
-Title to be filled from the promptbook.
+Branch `chunk/C7-knowledge-state`, created from `readfocus-2.0` at
+`a10701a`. Goal: track per-user, per-concept mastery. Every concept of a
+book is stored when the book is ingested, and every graded test moves the
+reader's mastery of the concepts its questions were about. Nothing reads
+mastery yet: the planner and the optimizer keep their current code, and
+there is no UI in this chunk.
+
+### Plan (written at chunk start, 2026-11-10 16:32, before any code)
+
+What there is to build on (read from the code):
+
+- `backend/nlp/concepts.py` gives each concept a stable `key` (a slug of
+  the normalised phrase), a `label`, a `weight` (0 to 1 within its chunk)
+  and `aliases`. `QuestionGenerationAgent.run` already extracts them for
+  every chunk it sees (`use_embeddings=False`, top 10, body sentences only)
+  and then throws them away.
+- A question stored in `sessions.test_questions` carries `chunk_index`,
+  `key_terms`, `evidence` and `strategy`, but no concept key. A graded
+  answer carries `score` (0 to 10), `max_score` and `confidence` (`high`,
+  `medium`, `low`).
+- `submit-answers` already takes about 830 ms against a 500 ms target
+  (issue 28), at about 100 ms per Supabase round trip.
+
+Design decisions that apply to every subchunk:
+
+- **Three tables, one migration (`008_knowledge_state.sql`).** `concepts`
+  (one row per book and concept key), `chunk_concepts` (which chunk
+  mentions which concept, and how strongly), `concept_mastery` (one row per
+  user and concept). Additive only, dev project only (constraint 2),
+  applied with `npx supabase db push --linked` after a dry run, as 007 was.
+- **A question is tied to concepts when it is graded, not when it is
+  stored.** A pure function matches the question's `key_terms` and
+  evidence against the concepts of its chunk (label or alias, after
+  `normalize_phrase`). `question_bank` and the stored session question are
+  not changed, so questions generated before C7 work too. A question that
+  matches no concept (the fallback question, a main idea with no key term)
+  moves nothing.
+- **Mastery is a number from 0 to 1 with a count of observations behind
+  it.** Update rule, pure: each graded question is an observation
+  `score / max_score` with a weight from its confidence (issue 27: a
+  low-confidence grade moves mastery less); the observations of one concept
+  in one test are combined by weighted mean; then
+  `new = old + rate * weight * (observed - old)`, with
+  `rate = max(MASTERY_RATE, 1 / (observations + 1))` so the first test
+  counts fully and later ones smooth. A concept with no row has no mastery
+  ("new"), not 0. Status bands (`new`, `weak`, `learning`, `mastered`) come
+  from the number and the count. Every constant is in
+  `backend/agents/policy.py`.
+- **No clock in the update.** Forgetting over time is not modelled in this
+  chunk; `last_seen_at` is stored so a later chunk can add decay.
+- **The hook runs after the response.** `submit_answers` adds it as a
+  FastAPI background task, so the three extra round trips do not add to
+  the 830 ms. A failure is logged and nothing more; the reader's result is
+  already stored.
+- **A test counts once.** `concept_mastery.last_session_id` is checked
+  before the update, so a second `submit-answers` for the same session
+  does not move mastery twice.
+- **Not a LangGraph node.** The module follows the agent pattern (Pydantic
+  models, pure `decide`, policy constants, thin I/O wrapper), but it is
+  called directly, like the question generation agent. `graph.py` and
+  `AgentState` are not edited.
+- **No new dependency**, so no RSS measurement (constraint 5). What is
+  measured instead: ingestion time for `sample.pdf` before and after C7.2,
+  and `submit-answers` latency before and after C7.4.
+- New package `backend/agents/knowledge_state/`. Every new tracked file
+  gets a line in `tools/repo_graph/purposes.json`; new files are
+  `git add`-ed before `make graph` (issue 21) and `docs/repo-graph/` is
+  committed with the change.
+- Estimated lines are hand-written lines, tests included; the migration
+  and `docs/repo-graph/` do not count.
+
+| Step | Files | Est. lines | Tests | Est. time |
+|---|---|---|---|---|
+| C7.1 concepts and mastery schema (dev only) | `supabase/migrations/008_knowledge_state.sql` (new: `concepts` with `id`, `user_id`, `book_id`, `key`, `label`, `aliases` jsonb, `weight`, `first_chunk_index`, `created_at`, unique `(book_id, key)`; `chunk_concepts` with `chunk_id`, `concept_id`, `user_id`, `book_id`, `chunk_index`, `weight`, primary key `(chunk_id, concept_id)`, index `(book_id, chunk_index)`; `concept_mastery` with `user_id`, `concept_id`, `book_id`, `mastery` (check 0 to 1), `observations`, `last_score`, `last_session_id`, `last_seen_at`, `updated_at`, primary key `(user_id, concept_id)`, index `(user_id, book_id)`; foreign keys with `ON DELETE CASCADE`; RLS on with the own-rows policy on all three), `backend/tests/test_migrations.py`, `tools/repo_graph/purposes.json` | 50 (plus about 75 SQL) | 5 static: 008 has no destructive statement (the existing parametrized test covers it); the three tables have the agreed columns; each has RLS enabled and a policy on `auth.uid() = user_id` with `WITH CHECK`; the unique rule and the two indexes exist; 008 touches no existing table. By hand on dev after the dry run lists only 008: insert and read a fixture concept, link and mastery row as test user A, nothing for user B or the anon key, a duplicate `(book_id, key)` is refused, a mastery of 1.5 is refused, deleting the fixture book removes all three; row counts of the other tables unchanged | 25 min |
+| C7.2a persist concepts at ingestion | `backend/services/concept_store.py` (new: pure `concept_rows(chunk, concepts)` and `link_rows(chunk, concepts, ids)`; `save(prepared)` upserts `concepts` on `(book_id, key)` ignoring duplicates, reads the ids back, upserts `chunk_concepts`; three round trips per batch whatever its size), `backend/agents/question_generation/agent.py` (`run` hands the concepts it already extracted to `concept_store.save` inside a try/except: a failure is logged and the questions are still stored), `backend/tests/test_concept_store.py` (new), `backend/tests/test_question_generation_agent.py` (its fake database gets the two tables), `tools/repo_graph/purposes.json` | 180 (70 code, 100 tests, 10 other) | 8 on the in-memory database: one `concepts` row per distinct key in a book; the same key in two chunks gives one concept and two links; a second run adds nothing; the first label and aliases are kept; links carry the chunk's weight and index; a chunk with no concepts writes nothing; `save` raising does not stop `question_bank` rows being stored; no second YAKE pass (the extractor is called once per chunk). By hand: upload `sample.pdf` on dev, count concepts and links, time upload to fully ingested against C5.4 | 35 min |
+| C7.2b backfill concepts for existing dev books | `scripts/backfill_concepts.py` (new, modelled on `scripts/backfill_local_embeddings.py`: refuses to run unless `ENV=development`; pages through chunks with no `chunk_concepts` row, extracts and saves in batches; idempotent, resumable, `--dry-run`, `--limit`, `--book-id`), `backend/tests/test_backfill_concepts.py` (new), `tools/repo_graph/purposes.json` | 120 (70 script, 45 tests, 5 other) | 4: refuses outside development; only chunks without links are processed; a second run writes nothing; `--dry-run` writes nothing. By hand: run on dev (8 books, 642 chunks at C5.1), then read-only counts | 25 min |
+| C7.3 mastery update (pure function) | `backend/agents/knowledge_state/__init__.py`, `backend/agents/knowledge_state/mastery.py` (new, no I/O: Pydantic `Observation` (concept key, score 0 to 1, confidence), `MasteryState` (mastery or none, observations), `MasteryUpdate`; `concepts_for_question(question, chunk_concepts)`; `decide(states, observations) -> list[MasteryUpdate]` with the rule above; `status(mastery, observations)`), `backend/agents/policy.py` (knowledge state section: `MASTERY_RATE`, `MASTERY_CONFIDENCE_WEIGHT`, `MASTERY_WEAK_BELOW`, `MASTERY_MASTERED_FROM`, `MASTERY_MIN_OBSERVATIONS`), `backend/tests/test_mastery.py` (new), `tools/repo_graph/purposes.json` | 200 (85 code, 15 policy, 95 tests, 5 other) | About 14 on hand-made numbers: the first observation sets mastery to the observed value at high confidence; a low-confidence one moves it less; a right answer never lowers and a wrong one never raises; the result stays inside 0 to 1; two questions on one concept combine by weight; a concept with no observation is not in the output; `observations` goes up by one per test, not per question; each status band at both sides of its boundary, and `mastered` needs the minimum count; a key term matches a concept by label, by alias and after plural reduction, and an unrelated term does not; a question with no key terms matches nothing; same input, same output; the module imports no Supabase client, embedder or clock | 40 min |
+| C7.4a hook after grading | `backend/agents/knowledge_state/agent.py` (new, the I/O around `decide`: `record_test(user_id, book_id, session_id, chunk_indices, questions, per_question)` reads the session's chunk concepts in one query and the reader's mastery rows in one, skips rows whose `last_session_id` is this session, upserts the updates in one call, returns a report (questions matched, concepts updated)), `backend/routers/sessions.py` (`submit_answers` takes `BackgroundTasks` and schedules `record_test` after the evaluator returns; the response is unchanged), `backend/tests/test_knowledge_state_agent.py` (new), `backend/tests/test_api_sessions.py` (its fake database gets the three tables and `upsert`), `tools/repo_graph/purposes.json` | 190 (75 code, 105 tests, 10 other) | 8: a submitted test creates mastery rows only for concepts its questions match; a second test updates them; submitting the same session twice changes nothing the second time; a blank answer lowers mastery; a low-confidence grade moves it less than a high one; a book with no stored concepts writes nothing and does not raise; `record_test` raising leaves the `submit-answers` response at 200 with the same body; the response has the same keys as before. By hand on dev as test user A: one full session, the mastery rows read back, `submit-answers` p50 over 5 runs against 830 ms | 40 min |
+| C7.4b `GET /mastery` | `backend/routers/mastery.py` (new: `GET /mastery?book_id=` returns the caller's concepts for one book, or all books without the parameter: `key`, `label`, `mastery`, `status`, `observations`, `last_seen_at`, weakest first, plus counts per status; two queries), `backend/main.py` (mount the router), `backend/tests/test_api_mastery.py` (new), `tools/repo_graph/purposes.json` | 130 (50 code, 75 tests, 5 other) | 6 through `TestClient` on the fake database: 401 with no token; only the caller's rows; `book_id` filters; weakest first; the counts add up to the list; a reader with no mastery gets an empty list and zero counts, not an error. By hand on dev: the endpoint with user A's token after the C7.4a session, and with user B's (empty) | 30 min |
+
+Total: about 870 hand-written lines plus about 75 lines of SQL, in 6
+commits, about 3 h 15 min. No budget for C7 is recorded in this file.
+
+Safe to cut, in this order: C7.2b (old dev books then have no concepts and
+their tests move no mastery); the per-status counts in C7.4b; the
+`last_session_id` guard (double submission is rare); `chunk_concepts.weight`.
+
+Risks and open questions:
+
+- **Concept quality limits mastery quality.** YAKE phrases on `sample.pdf`
+  include weak ones (issue 25: "licensee mdpi", "design", "model"). They
+  will get mastery rows like any other. Not fixed here.
+- **Matching is literal.** A question is tied to a concept only when a key
+  term equals its label or an alias after normalisation. How many
+  questions of a real test match at least one concept is not known until
+  C7.4a is run on dev; the number goes in the log. If it is low, the
+  fallback is to credit the chunk's top concept, which is cruder.
+- **Concepts are per book.** "photosynthesis" in two books is two concepts
+  with two masteries. Merging across books is left for later.
+- **A concept's label is the first one seen.** Later batches of the same
+  book do not rename it or add aliases (`ON CONFLICT DO NOTHING`).
+- **Low-confidence grades still count**, at a reduced weight. The weights
+  (proposed: high 1.0, medium 0.6, low 0.25) are a guess with no data
+  behind them.
+- **The background task runs in the web process.** If the instance stops
+  between the response and the task, that test's mastery is lost; the
+  test result itself is stored before.
+- **`GET /mastery` has no frontend caller** in this chunk, so the repo
+  graph will list it with none (as issue 14 does for three others).
+- **`CLAUDE.md` lists five agents**; this is a sixth module under
+  `backend/agents/`. Not edited unless asked.
+- The three `docs/repo-graph/` files show as modified at chunk start with
+  an empty `git diff --stat`: line endings only, as in C3. Left alone
+  until a subchunk regenerates them.
+
+Replanned by the C7.1 prompt (2026-11-10 16:40). The schema is the
+prompt's, not the plan's, and the later rows above are read with these
+changes:
+
+- Two tables, `concepts` and `user_concept_mastery`, in
+  `008_concept_mastery.sql`. There is no `chunk_concepts` table: a concept
+  lists its chunks in `chunk_indices`, so C7.2 has to merge that array
+  when a later batch mentions a concept again (an upsert that ignores
+  duplicates is not enough).
+- Mastery is keyed by `(user_id, book_id, concept_key)`, not by a concept
+  id, and starts at a prior of 0.3 instead of having no value.
+- `attempts` and `correct` replace `observations`; `last_event_id` (text)
+  replaces `last_session_id` as the count-once guard; `next_review` is new
+  and nothing in the plan sets it yet, so C7.3 needs a rule for it.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C7.1 concepts and concept mastery tables (dev only) | `c37b5e4` | Added `supabase/migrations/008_concept_mastery.sql` (the C7.1 prompt says `007_concept_mastery.sql`; 007 is taken by `007_question_bank.sql`): `concepts` (`id`, `user_id`, `book_id`, `concept_key`, `label`, `chunk_indices int[]`, `weight`, unique `(user_id, book_id, concept_key)`) and `user_concept_mastery` (`mastery` default 0.3, `attempts`, `correct`, `last_seen`, `next_review`, `last_event_id`, primary key `(user_id, book_id, concept_key)`), RLS on both with one own-rows policy each (`USING` and `WITH CHECK`), indexes on `(user_id, book_id)` for both tables and `(user_id, next_review)` for mastery. Beyond the prompt: foreign keys to `profiles` and `books` with `ON DELETE CASCADE`, `NOT NULL` on the keys, `label` and the counters, `chunk_indices` defaults to `'{}'`, and a check that `mastery` is within 0 to 1. Applied to the dev project only. Added six tests to `backend/tests/test_migrations.py`. This commit also carries the C7 plan above. | Tests written first: 6 failed (no 008 file), then 24 passed. The linked project is the one in `.env` (`ENV=development`); `npx supabase db push --linked --dry-run` listed only 008; applied; `migration list` shows 001 to 008 on both sides. On dev, with a fixture book of test user A (removed afterwards; 8 books, 642 chunks, 10 `question_bank` rows, 73 sessions, 23 `test_results`, 0 rows in the new tables, before and after): defaults filled (`mastery` 0.3, `attempts` 0, `correct` 0, the three nullable columns null, `id` set), the `int[]` round-trips, a duplicate key is refused in both tables (23505), `mastery` 1.5 is refused (23514), a null `label` is refused (23502); user A reads one row in each table and updates their mastery row; user B and the anon key read none; user B's update changes 0 rows and user B cannot insert as user A (42501); deleting the book removes the rows of both tables. Standard checks: ruff 64 errors (baseline), `pytest backend/tests -q` 346 passed (baseline 339, 7 new cases), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no change after the second. One failure on the way, fixed under the debug protocol: the tooling test that pins the table names. | 2026-11-10 16:40 | One `docs/DEBUG_LOG.md` entry. Not applied to production. The `(user_id, book_id)` indexes repeat the leading columns of each table's unique or primary key; kept because the prompt asks for them. Nothing reads or writes the tables yet. The commit is over the ~200-line guideline because the plan rides with it |
+| [x] C7.2 persist extracted concepts per book (planned as C7.2a; one commit at the user's request) | `f2041a3` | Added `backend/services/concept_store.py`: `save` upserts one `concepts` row per (user, book, concept key) for a batch of chunks on the table's unique key, keeping the first label, adding the batch's chunks to `chunk_indices` and taking the highest weight (a read, then an upsert of the new or changed rows only); `concepts_for_chunks` reads the concepts some chunks mention; pure `link_key_terms` ties key terms to concept keys (the term is the key after normalising, or all its words are words of the key). `QuestionGenerationAgent.run` hands the concepts it already extracts to `save` (no second YAKE pass; a failure is logged and the questions are still stored), so ingestion and on-demand generation both store them. `assemble_session_test` gives each stored session question `concept_keys`, from the concepts of its own chunk, strongest first; the client never sees them. No migration, no new dependency, no change to `question_bank` rows. | Tests written first: collection error before the module existed. `pytest backend/tests -q`: 368 passed (22 new cases: 18 in `test_concept_store.py`, 2 in the agent's tests, 1 in `test_api_sessions.py`, and the parametrized additive check is unchanged). One new test first failed on my own wrong guess of a fixture's concepts ("chlorophyll" is not in YAKE's top ten for that passage); the expectation was corrected, no code changed. On dev, with a fixture book of test user A made from the first 7 chunks of `sample.pdf` (removed afterwards; counts of `books`, `chunks`, `question_bank`, `sessions` and both new tables the same before and after): two batches (5 and 2 chunks) wrote 45 and 18 rows in 236 and 222 ms and left 57 concepts, 6 of them with chunks from both batches (`antenna` in all 7); the first batch again wrote 0 rows in 98 ms; `concepts_for_chunks` for chunks 6 and 7 returned 10 rows, all mentioning one of them; 52 of the book's 55 bank questions link to at least one concept (cloze 32 of 32, multiple choice 11 of 11, main idea 6 of 6, why/how 3 of 6). Standard checks: ruff 64 errors (baseline), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed; the banned-provider grep lists the same four files. `make graph` twice, no change after the second. | 2026-11-10 16:46 | Each ingestion batch now takes about 230 ms longer and test assembly one more round trip (in the background); a full upload was not timed. The word rule links broadly: the key term "design" links to both `design` and `antenna-design`. Concept quality is YAKE's (issue 25): `turn`, `green`, `energy-that-plant` on the test passages. Existing dev books have no concepts until they are backfilled (planned C7.2b, not asked for here). `concept_keys` exist only on session questions assembled from now on. Over the ~200-line guideline (about 300, 200 of them tests) |
+| [x] C7.3 knowledge state mastery update (pure function) | `b130a89` | Added `backend/agents/knowledge_state/mastery.py`: Pydantic `MasteryRow`, `ConceptGrade` (the concept keys a graded question names, its 0 to 1 score, the grader's confidence) and `MasteryUpdate`; pure `decide(current_rows, grades, event_id)` with the prompt's rule, not the plan's moving average: correct (score at or above 0.7) `m + 0.30 * (1 - m)`, wrong (below 0.4) `m * 0.75`, partial a straight line between those two results by score; a low-confidence grade moves mastery half as far (medium counts in full); the result is clamped to 0 to 1; `review_in_days` is 1, 3, 7 or 14 by band (below 0.4, 0.6, 0.8, otherwise); a concept with no row starts from the 0.3 prior; a row whose `last_event_id` is the event is skipped. `attempts` goes up per grade and `correct` per correct grade; several grades of one concept apply in order. Nine constants in `backend/agents/policy.py`. No I/O and no clock: the caller turns `review_in_days` into `next_review`. Nothing calls it yet. | Tests written first: collection error before the package existed, then `pytest backend/tests/test_mastery.py -q` 32 passed: both rules and their boundaries, partial credit at the ends and middle of its band, bounds and monotonicity in the score and in the starting mastery over a grid, 40 correct then 60 wrong answers staying inside 0 to 1, half weight for low confidence, the prior, counters, one grade naming several concepts, each review band at both sides of its boundary, idempotency (same event skipped, a replay of its own output gives nothing, a new event applies), and that `decide` does not change its input and its source names no database, embedder, clock or randomness. Standard checks: ruff 64 errors (baseline; 65 on the first run, an unsorted import in the new test, fixed before the commit), `pytest backend/tests -q` 400 passed (368 before), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed; the banned-provider grep lists the same four files. `make graph` twice, no change after the second. No new dependency. | 2026-11-10 16:51 | The partial band meets the wrong rule at 0.4 and the correct rule at 0.7 with no jump, so a score of 0.5 from mastery 0.5 still lowers it slightly (to 0.47). Medium confidence counts in full, and free-text grades are capped at medium (issue 27). `decide` returns days, not a date, to stay pure. The numbers are the prompt's; none is tuned on data. About 280 changed lines, 146 of them tests |
+| [x] C7.4 update and expose concept mastery (planned as C7.4a and C7.4b; one commit at the user's request) | `8ea8462` | Added `backend/agents/knowledge_state/agent.py`: `record_test` turns a graded test into `ConceptGrade`s (points over maximum, the grader's confidence, the question's `concept_keys`), reads the reader's `user_concept_mastery` rows for those concepts, calls `mastery.decide` with the session id as the event id, and upserts the result with `last_seen` and `next_review`: two round trips, none when no question names a concept; `apply_test` logs a failure instead of raising. `submit_answers` schedules `apply_test` as a background task after grading: a direct call, not a LangGraph node, until C8; the response is unchanged. Added `backend/routers/mastery.py`, mounted at `/mastery`: `GET /mastery?book_id=&limit=&offset=` (token required; `book_id` optional; `limit` 1 to 200, default 50; `offset` from 0) returns `items` (book, concept key, label, mastery, attempts, correct, last seen, next review), weakest first then by key, with `total`, `limit` and `offset`; a page past the last row is empty. | Tests written first: collection errors before the modules existed; `pytest backend/tests -q` 409 passed (400 before): 7 in `test_api_mastery.py`, 2 in `test_api_sessions.py`. On dev, local backend (`uvicorn backend.main:app --port 8000`), as test user A, three runs of a one-off script that uploads `sample.pdf` (7 chunks, 57 concepts), sits two tests and deletes the book (table counts the same before and after each run). Test 1, every answer the reference answer, 47 of 50: 8 mastery rows appear, all above the 0.3 prior (0.51 for a concept named once, `design` 0.76 after 3 questions, `antenna-design` 0.83 after 4), `last_event_id` the session, both dates set. Test 2 on the same chunk, every answer blank, 0 of 50: all 8 go down (0.51 to 0.38, `antenna-design` 0.83 to 0.26). Submitting test 2 again changes nothing. `GET /mastery?book_id=` returns the 8 rows weakest first with labels; `limit=2&offset=1` is items 1 and 2 of the full list with `total` 8; `offset=500` gives 200 and an empty page (500 before the fix, below); `limit=0` gives 422; no token 401; user B gets an empty list. Standard checks: ruff 64 errors (baseline; 66 on the first run, two `timezone.utc` spellings in new code, fixed before the commit), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed; the banned-provider grep lists the same four files. `make graph` twice, no change after the second. Two failures on the way, both in `docs/DEBUG_LOG.md`: `GET /mastery` gave 500 for an offset past the last row (PostgREST PGRST103; fixed, with a regression case after the fake database was made to raise it too), and one `finish-reading` 500 in the second run from a dropped Supabase connection in older code (open, issue 29). | 2026-11-10 17:08 | Issues 29 and 30. `submit-answers` took 1,031 and 909 ms in the last run against about 830 ms in C6.4 (issue 28): two samples, so not shown to be unchanged, though the update runs after the response. If the process stops between the response and the task, that test's mastery is lost. A non-UUID `book_id` is not validated and would be a 500 from Postgres. The endpoint has no frontend caller. Sessions assembled before C7.2 have no `concept_keys` and move nothing. The session flow still calls Groq from the planner and the optimizer (both 404, issue 22), as before. `.claude/launch.json` (untracked) gained a `backend` entry for the check. About 450 changed lines excluding the graph: 200 tests, 120 debug log |
+
+Close review (2026-11-10 17:14):
+
+- **Checks.** ruff 64 errors and ESLint 22 errors, 2 warnings (both at
+  baseline, not zero); `pytest backend/tests -q` 409 passed; frontend build
+  passes; `import backend.main` exit 0; tooling 61 passed; `make graph`
+  leaves `git diff --exit-code docs/repo-graph/` at 0.
+- **Steps.** C7.1 to C7.4 are ticked, one commit each (`c37b5e4`,
+  `f2041a3`, `b130a89`, `8ea8462`). The planned C7.2b (backfill of
+  existing dev books) was not asked for and is not done.
+- **Exit check.** Run again at `8ea8462` on dev, local backend, test user
+  A, `sample.pdf` uploaded and deleted afterwards (table counts the same
+  before and after). A test answered with the reference answers (47 of
+  50) created 8 mastery rows above the 0.3 prior; the same test answered
+  blank (0 of 50) lowered all 8; submitting it again changed nothing;
+  `GET /mastery?book_id=` returned the 8 rows weakest first. Examples
+  (prior, after the good test, after the blank test): `antenna` 0.30,
+  0.51, 0.38 (attempts 0, 1, 2); `design` 0.30, 0.76, 0.32 (0, 3, 6);
+  `antenna-design` 0.30, 0.83, 0.26 (0, 4, 8).
+- **Diff.** `git diff readfocus-2.0...HEAD`: 25 files, 1,746 insertions,
+  74 deletions; `git diff --check` clean; no secret-like strings; no
+  banned provider added (the grep lists the same four files). Nothing
+  under `frontend/`, `requirements.txt`, `Dockerfile`, `render.yaml` or
+  `.github/`. One migration (008, dev only), no new dependency.
+  Application code touched: `backend/routers/sessions.py`,
+  `backend/main.py`, `backend/services/question_bank.py`,
+  `backend/agents/question_generation/agent.py`, `backend/agents/policy.py`
+  and the new `backend/routers/mastery.py`,
+  `backend/services/concept_store.py` and `backend/agents/knowledge_state/`.
+- **Blocking findings.** None. Both mastery queries and the update filter
+  on the user id from the token (the service-role client bypasses RLS,
+  so that filter is what protects the rows), and the book id comes from
+  the caller's own session row.
+- **Non-blocking.**
+  - One `finish-reading` 500 in four dev runs, a dropped Supabase
+    connection in older code; cause not established (issue 29).
+  - Mastery swings widely within one test and boilerplate concepts get
+    rows (issue 30).
+  - The count-once guard compares only the last event: submitting an
+    older session again after a newer one would apply it twice. The page
+    does not offer this; the API allows it.
+  - `submit-answers` took 909 to 1,091 ms over six samples against about
+    830 ms in C6.4 (issue 28). The mastery update runs after the
+    response, so the cause is not known.
+  - Existing dev books have no concepts, and sessions assembled before
+    C7.2 carry no `concept_keys`: their tests move no mastery.
+  - `GET /mastery` does not validate `book_id` as a UUID and has no
+    frontend caller. Nothing reads mastery for planning yet.
+  - `next_review` is written but nothing schedules reviews from it.
+  - All four commits are over the ~200-line guideline, where one commit
+    per subchunk was asked for.
+  - `CLAUDE.md` still lists five agents; not edited here.
+- **Time.** About 45 minutes of wall-clock, from branch creation at 16:31
+  to this review at 17:14, against 1.5 h budgeted.
 
 ## C8
 

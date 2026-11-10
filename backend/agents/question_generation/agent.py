@@ -22,6 +22,7 @@ from backend.agents.question_generation.strategies import Question, Sentence
 from backend.nlp import concepts as concept_extraction
 from backend.nlp import embedder
 from backend.nlp.concepts import Concept
+from backend.services import concept_store
 from backend.services.supabase_client import supabase
 
 # question_bank.evidence is one text column; a sentence never contains a
@@ -103,6 +104,10 @@ class QuestionGenerationAgent:
             # Concepts come from the body text only, so a name in the front matter cannot be the topic.
             body = " ".join(sentence.text for sentence in sentences)
             prepared.append((chunk, sentences, concept_extraction.extract_concepts(body, use_embeddings=False)))
+        try:  # the book's concepts are kept for the knowledge state; questions do not depend on it
+            concept_store.save([(chunk, concepts) for chunk, _, concepts in prepared])
+        except Exception as error:  # noqa: BLE001
+            print(f"Storing concepts failed for book {book_id}: {error}")
         # Distractors come from the concepts of the chunks in this batch.
         labels = sorted({concept.label for _, _, concepts in prepared for concept in concepts})
         concept_vectors = dict(zip(labels, embedder.embed(labels))) if labels else {}

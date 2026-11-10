@@ -56,6 +56,171 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C7.4 — finish-reading returns 500 once: "Server disconnected" from Supabase
+
+**Status:** open (outside C7.4; logged, not fixed)
+
+### Symptom
+In the second of three runs of the C7.4 check against the local backend on
+the dev project, the second session's `finish-reading` returned HTTP 500.
+The first and third runs passed with the same code path. Server log:
+
+    Background test assembly failed: Server disconnected
+    INFO:     "POST /sessions/40f680ae-519f-4a16-853b-a73bbbcb133a/finish-reading HTTP/1.1" 500 Internal Server Error
+    ERROR:    Exception in ASGI application
+    Traceback (most recent call last):
+      ... (httpcore HTTP/2 frames) ...
+      File "I:\readfocus\.venv\Lib\site-packages\httpcore\_sync\http2.py", line 443, in _read_incoming_data
+        raise RemoteProtocolError("Server disconnected")
+    httpcore.RemoteProtocolError: Server disconnected
+    The above exception was the direct cause of the following exception:
+      ... (uvicorn, starlette and fastapi frames) ...
+      File "I:\readfocus\backend\routers\sessions.py", line 102, in finish_reading
+        test_questions = await run_in_threadpool(
+      File "I:\readfocus\backend\services\question_bank.py", line 66, in assemble_session_test
+        supabase.table("sessions").update({"test_questions": questions}).eq("id", session_id).eq("user_id", user_id).execute()
+      File "I:\readfocus\.venv\Lib\site-packages\postgrest\_sync\request_builder.py", line 103, in execute
+        r = send_with_retry(self.request)
+      ... (httpx frames) ...
+    httpx.RemoteProtocolError: Server disconnected
+
+### Repro
+Not reproducible on demand: 1 of 3 runs of the same script (upload
+`sample.pdf`, a first full test, then `POST /sessions/start` followed at
+once by `finish-reading`).
+
+### Hypotheses
+None tested; the cause is outside this subchunk.
+1. Supabase closed an idle HTTP/2 connection and the shared client used it
+   once more. Evidence: both the background assembly and the inline retry
+   failed with the same error within one request. Ruled out if: it also
+   happens on a connection used a moment before.
+2. Two threads used the one shared sync client at the same time: the
+   background assembly started by `sessions/start` and the inline assembly
+   in `finish-reading`, which the script calls immediately. Evidence: both
+   were running. C7.2 added one round trip to assembly, which lengthens
+   the overlap. Ruled out if: it happens with a pause between the calls.
+
+### Root cause
+Not established.
+
+### Fix
+None. The failing line (`question_bank.py:66`) and the two callers are
+older than C7.4. Recorded as issue 29 in `docs/PROGRESS.md`.
+
+### Regression test
+None.
+
+### Commit
+None.
+
+## 2026-11-10 C7.4 — GET /mastery returns 500 for an offset past the last row
+
+**Status:** fixed
+
+### Symptom
+In the C7.4 check against the local backend on the dev project, with 8
+mastery rows for the caller, `GET /mastery?book_id=<id>&offset=500` returned
+HTTP 500. Expected: 200 with an empty page and `total` 8. The unit test for
+the same request passed, because the in-memory database returned an empty
+list.
+
+    GET http://127.0.0.1:8000/mastery?book_id=<id>&offset=500
+    ERROR:    Exception in ASGI application
+    Traceback (most recent call last):
+      ... (uvicorn, starlette and fastapi frames) ...
+      File "I:\readfocus\.venv\Lib\site-packages\fastapi\routing.py", line 372, in run_endpoint_function
+        return await dependant.call(**values)
+      File "I:\readfocus\backend\routers\mastery.py", line 26, in get_mastery
+        page = query.order("mastery").order("concept_key").range(offset, offset + limit - 1).execute()
+      File "I:\readfocus\.venv\Lib\site-packages\postgrest\_sync\request_builder.py", line 109, in execute
+        raise APIError(dict(json_obj))
+    postgrest.exceptions.APIError: {'message': 'Requested range not satisfiable', 'code': 'PGRST103', 'hint': None, 'details': 'An offset of 500 was requested, but there are only 8 rows.'}
+
+### Repro
+Against the dev project, as a user with at least one mastery row:
+
+    GET /mastery?offset=500
+
+Offline, once the in-memory database behaves like PostgREST:
+
+    pytest backend/tests/test_api_mastery.py::test_get_mastery_is_paginated -q
+
+### Hypotheses
+1. PostgREST answers a range that starts past the last row with an error
+   (PGRST103) when an exact count is requested, instead of an empty list,
+   and the endpoint does not handle it. Evidence: the error text itself.
+   Ruled out if: the same request without the offset also fails. Result:
+   confirmed; every request with an offset inside the rows returned 200.
+
+### Root cause
+`backend/routers/mastery.py:26` assumed a page past the end is an empty
+list. With `count="exact"` PostgREST raises PGRST103 for it. The fake
+database in `backend/tests/test_api_sessions.py` returned `[]`, so the
+test could not see it.
+
+### Fix
+`get_mastery` treats PGRST103 as what it means, an empty page, and asks
+for the total with a count-only query; any other API error still raises.
+The fake database now raises the same error for a range that starts past
+the last row.
+
+### Regression test
+`backend/tests/test_api_mastery.py::test_get_mastery_is_paginated` (its
+`offset=50` and `offset=7` cases). Failed before the fix: yes, with the
+fake raising PGRST103 (`postgrest.exceptions.APIError`). Passes after: yes.
+Re-run against dev: `offset=500` returns 200, `items` empty, `total` 8.
+
+### Commit
+feat(api): update and expose concept mastery after each test (C7.4); found
+before the commit, so there is no separate fix commit.
+
+## 2026-11-10 C7.1 — graph tooling test fails after two more tables are added
+
+**Status:** fixed
+
+### Symptom
+After adding `supabase/migrations/008_concept_mastery.sql` and running
+`make graph`, the tooling suite went from 61 passed to 1 failed, 60 passed:
+
+    pytest tools/repo_graph/tests -q
+    ________________ test_real_graph_has_the_schema_and_the_agents ________________
+        def test_real_graph_has_the_schema_and_the_agents():
+            graph = build.build_repo()
+            tables = {"profiles", "books", "chunks", "sessions", "test_results", "reading_progress", "question_bank"}
+    >       assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
+    E       AssertionError: assert {'table:books...rogress', ...} == {'table:books...essions', ...}
+    E         Extra items in the left set:
+    E         'table:user_concept_mastery'
+    E         'table:concepts'
+    tools\repo_graph\tests\test_build.py:230: AssertionError
+
+### Repro
+    pytest tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents -q
+
+### Hypotheses
+1. The same cause as the C5.1 entry below: the test pins the exact set of
+   tables, and 008 defines two new ones on purpose. Evidence: the only
+   extra items are `table:concepts` and `table:user_concept_mastery`.
+   Ruled out if: any other table is extra or missing. Result: confirmed.
+
+### Root cause
+Not a defect in the graph: the expectation at
+`tools/repo_graph/tests/test_build.py:229` lists the tables by name, so
+every new table has to be added to it.
+
+### Fix
+Added `concepts` and `user_concept_mastery` to the expected set. The
+assertion stays exact, so a bogus table would still fail it.
+
+### Regression test
+The same test. Failed before the change: yes (output above). Passes after:
+yes, 61 passed.
+
+### Commit
+feat(db): add concepts and concept mastery tables (C7.1); found before the
+commit, so there is no separate fix commit.
+
 ## 2026-11-10 C6.2 — "a computer" is graded as option (a), wrong, at high confidence
 
 **Status:** fixed

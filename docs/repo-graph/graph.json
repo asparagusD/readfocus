@@ -51,6 +51,13 @@
       "handler": "health_check"
     },
     {
+      "id": "endpoint:GET /mastery",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/mastery",
+      "handler": "get_mastery"
+    },
+    {
       "id": "endpoint:GET /sessions/{session_id}",
       "type": "endpoint",
       "method": "GET",
@@ -312,6 +319,24 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/knowledge_state/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/knowledge_state/agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/knowledge_state/mastery.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/agents/optimizer_agent.py",
       "type": "file",
       "role": "agent",
@@ -444,6 +469,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/mastery.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/sessions.py",
       "type": "file",
       "role": "router",
@@ -457,6 +488,12 @@
     },
     {
       "id": "file:backend/services/book_ingestor.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/concept_store.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -516,6 +553,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_mastery.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_sessions.py",
       "type": "file",
       "role": "test",
@@ -535,6 +578,12 @@
     },
     {
       "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_concept_store.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -577,6 +626,12 @@
     },
     {
       "id": "file:backend/tests/test_ingestor.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_mastery.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1092,6 +1147,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/008_concept_mastery.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -1220,6 +1281,10 @@
       "type": "table"
     },
     {
+      "id": "table:concepts",
+      "type": "table"
+    },
+    {
       "id": "table:profiles",
       "type": "table"
     },
@@ -1237,6 +1302,10 @@
     },
     {
       "id": "table:test_results",
+      "type": "table"
+    },
+    {
+      "id": "table:user_concept_mastery",
       "type": "table"
     }
   ],
@@ -1568,6 +1637,11 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/mastery.py",
+      "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:GET /sessions/{session_id}"
     },
@@ -1650,6 +1724,16 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/007_question_bank.sql",
       "to": "table:question_bank"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/008_concept_mastery.sql",
+      "to": "table:concepts"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/008_concept_mastery.sql",
+      "to": "table:user_concept_mastery"
     },
     {
       "type": "graph_edge",
@@ -1813,6 +1897,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/agents/knowledge_state/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/mastery.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/agents/optimizer_agent.py",
       "to": "file:backend/agents/graph.py"
     },
@@ -1870,6 +1969,11 @@
       "type": "imports",
       "from": "file:backend/agents/question_generation/agent.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/services/concept_store.py"
     },
     {
       "type": "imports",
@@ -1964,6 +2068,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/sessions.py"
     },
     {
@@ -2013,8 +2122,23 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/routers/mastery.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/mastery.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/sessions.py",
       "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/sessions.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
     },
     {
       "type": "imports",
@@ -2063,6 +2187,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/question_bank.py",
       "to": "file:backend/agents/question_generation/agent.py"
     },
@@ -2070,6 +2204,11 @@
       "type": "imports",
       "from": "file:backend/services/question_bank.py",
       "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/services/concept_store.py"
     },
     {
       "type": "imports",
@@ -2093,6 +2232,31 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/routers/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/agents/evaluation/feedback.py"
     },
@@ -2100,6 +2264,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
     },
     {
       "type": "imports",
@@ -2120,6 +2289,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/services/concept_store.py"
     },
     {
       "type": "imports",
@@ -2145,6 +2319,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concept_store.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concept_store.py",
+      "to": "file:backend/services/concept_store.py"
     },
     {
       "type": "imports",
@@ -2205,6 +2389,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingestor.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_mastery.py",
+      "to": "file:backend/agents/knowledge_state/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_mastery.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",
@@ -2733,6 +2927,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/agents/optimizer_agent.py",
       "to": "table:reading_progress"
     },
@@ -2828,6 +3027,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/mastery.py",
+      "to": "table:concepts"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/mastery.py",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
       "to": "table:chunks"
     },
@@ -2840,6 +3049,11 @@
       "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
       "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/concept_store.py",
+      "to": "table:concepts"
     },
     {
       "type": "reads_table",
@@ -2963,6 +3177,11 @@
     },
     {
       "type": "writes_table",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "writes_table",
       "from": "file:backend/agents/optimizer_agent.py",
       "to": "table:reading_progress"
     },
@@ -3000,6 +3219,11 @@
       "type": "writes_table",
       "from": "file:backend/services/book_ingestor.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/concept_store.py",
+      "to": "table:concepts"
     },
     {
       "type": "writes_table",

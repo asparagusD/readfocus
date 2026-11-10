@@ -97,7 +97,30 @@ def db(monkeypatch):
     fake = FakeDb([dict(row) for row in CHUNKS])
     monkeypatch.setattr(agent_module, "supabase", fake)
     monkeypatch.setattr(embedder, "embed", fake_embed)
+    fake.concepts = []  # what the agent hands to the concept store, one list per run
+    monkeypatch.setattr(agent_module.concept_store, "save", fake.concepts.append)
     return fake
+
+
+def test_run_hands_each_chunks_concepts_to_the_concept_store(db):
+    QuestionGenerationAgent().run("book-1", ["c0", "c1"])
+    (saved,) = db.concepts
+    assert [(chunk["id"], chunk["user_id"], chunk["chunk_index"]) for chunk, _ in saved] == [
+        ("c0", "user-1", 0), ("c1", "user-1", 1),
+    ]
+    keys = [{concept.key for concept in concepts} for _, concepts in saved]
+    assert "photosynthesis" in keys[0] and "respiration" in keys[1]
+    # A cloze question's key term is a stored concept's label.
+    labels = {concept.label for _, concepts in saved for concept in concepts}
+    assert {row["key_terms"][0] for row in db.bank if row["strategy"] == "cloze"} <= labels
+
+
+def test_questions_are_stored_even_if_storing_concepts_fails(db, monkeypatch):
+    def broken(extracted):
+        raise RuntimeError("concepts table is down")
+
+    monkeypatch.setattr(agent_module.concept_store, "save", broken)
+    assert QuestionGenerationAgent().run("book-1", ["c0", "c1"]).stored == len(db.bank) > 0
 
 
 def test_run_stores_grounded_rows_for_the_chunks_asked_for(db):

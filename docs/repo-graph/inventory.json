@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 172,
-    "inventoried": 161,
+    "tracked": 181,
+    "inventoried": 170,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7362,
+      "size_bytes": 7426,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -159,6 +159,30 @@
       "purpose": "Builds the LangGraph workflow: routes from __start__ by state status to planner, test_generator, evaluator or optimizer, each ending at END."
     },
     {
+      "path": "backend/agents/knowledge_state/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 108,
+      "role": "agent",
+      "purpose": "Package marker for backend.agents.knowledge_state, per-concept mastery from graded answers with no LLM."
+    },
+    {
+      "path": "backend/agents/knowledge_state/agent.py",
+      "language": "python",
+      "lines": 63,
+      "size_bytes": 3107,
+      "role": "agent",
+      "purpose": "The I/O around mastery.decide: record_test reads the reader's mastery rows for the concepts a graded test's questions name, moves them and upserts them with last_seen and next_review, once per session id; apply_test is the submit flow's call, which logs a failure instead of raising."
+    },
+    {
+      "path": "backend/agents/knowledge_state/mastery.py",
+      "language": "python",
+      "lines": 104,
+      "size_bytes": 3832,
+      "role": "agent",
+      "purpose": "Mastery update, pure: decide(current_rows, grades, event_id) moves each concept a graded question names (correct closes 30% of the gap to 1, wrong takes 25% away, partial interpolates by score, low confidence at half weight), clamps to 0..1, sets the review interval by mastery band, counts attempts and correct, and skips rows already updated by the same event."
+    },
+    {
       "path": "backend/agents/optimizer_agent.py",
       "language": "python",
       "lines": 120,
@@ -177,10 +201,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 184,
-      "size_bytes": 6668,
+      "lines": 209,
+      "size_bytes": 7635,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading and feedback."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback and the knowledge state's mastery update."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -193,10 +217,10 @@
     {
       "path": "backend/agents/question_generation/agent.py",
       "language": "python",
-      "lines": 133,
-      "size_bytes": 6405,
+      "lines": 138,
+      "size_bytes": 6760,
       "role": "agent",
-      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); returns a GenerationReport."
+      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); hands each chunk's concepts to the concept store; returns a GenerationReport."
     },
     {
       "path": "backend/agents/question_generation/assembler.py",
@@ -249,10 +273,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 48,
-      "size_bytes": 1256,
+      "lines": 49,
+      "size_bytes": 1337,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the five routers and /health. Starts no other process."
+      "purpose": "FastAPI app: CORS, the six routers and /health. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -335,12 +359,20 @@
       "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback."
     },
     {
+      "path": "backend/routers/mastery.py",
+      "language": "python",
+      "lines": 49,
+      "size_bytes": 2316,
+      "role": "router",
+      "purpose": "GET /mastery?book_id=&limit=&offset=: the caller's concept mastery rows with their labels, weakest first, one page per call with the total; a page past the last row is empty."
+    },
+    {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 220,
-      "size_bytes": 9676,
+      "lines": 226,
+      "size_bytes": 10000,
       "role": "router",
-      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question), abandon, get; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question, and moves the reader's concept mastery in a background task), abandon, get; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -357,6 +389,14 @@
       "size_bytes": 8196,
       "role": "service",
       "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks, then has the question generation agent fill the question bank for each batch."
+    },
+    {
+      "path": "backend/services/concept_store.py",
+      "language": "python",
+      "lines": 76,
+      "size_bytes": 3686,
+      "role": "service",
+      "purpose": "The concepts of a book in the concepts table: save upserts one row per (user, book, concept key) for a batch of chunks, keeping the first label, growing chunk_indices and taking the highest weight; concepts_for_chunks reads the concepts some chunks mention; link_key_terms (pure) ties a question's key terms to concept keys."
     },
     {
       "path": "backend/services/embeddings.py",
@@ -377,10 +417,10 @@
     {
       "path": "backend/services/question_bank.py",
       "language": "python",
-      "lines": 58,
-      "size_bytes": 2923,
+      "lines": 73,
+      "size_bytes": 3818,
       "role": "service",
-      "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, stores the picked questions with the session and increments times_used."
+      "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session and increments times_used."
     },
     {
       "path": "backend/services/retriever.py",
@@ -431,12 +471,20 @@
       "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
     },
     {
+      "path": "backend/tests/test_api_mastery.py",
+      "language": "python",
+      "lines": 125,
+      "size_bytes": 6345,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: record_test writes one row per concept with review dates, weighs low confidence, applies an event once and makes no round trip without concepts; GET /mastery needs a token and returns only the caller's rows, weakest first, with labels, paginated, empty past the end."
+    },
+    {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 357,
-      "size_bytes": 17009,
+      "lines": 450,
+      "size_bytes": 21404,
       "role": "test",
-      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, and test_results keeps the shape the results page and dashboard read."
+      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -461,6 +509,14 @@
       "size_bytes": 1555,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+    },
+    {
+      "path": "backend/tests/test_concept_store.py",
+      "language": "python",
+      "lines": 150,
+      "size_bytes": 6027,
+      "role": "test",
+      "purpose": "Pytest on an in-memory concepts table: one row per concept of a book, later batches add their chunks and keep the first label, a repeated batch writes nothing, other books are untouched, and key terms link to concept keys by key or by the words of the key."
     },
     {
       "path": "backend/tests/test_concepts.py",
@@ -519,12 +575,20 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_mastery.py",
+      "language": "python",
+      "lines": 151,
+      "size_bytes": 6547,
+      "role": "test",
+      "purpose": "Pytest on hand-made rows and grades: the correct, wrong and partial rules and their boundaries, bounds and monotonicity, low-confidence half weight, the prior for untested concepts, counters, review intervals by band, idempotency per event, and that decide is pure."
+    },
+    {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 145,
-      "size_bytes": 5295,
+      "lines": 222,
+      "size_bytes": 8443,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, and 006 adds the full-text index and search_chunks_text."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, and 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies."
     },
     {
       "path": "backend/tests/test_offline.py",
@@ -545,10 +609,10 @@
     {
       "path": "backend/tests/test_question_generation_agent.py",
       "language": "python",
-      "lines": 181,
-      "size_bytes": 8140,
+      "lines": 204,
+      "size_bytes": 9310,
       "role": "test",
-      "purpose": "Pytest on an in-memory database and a fake embedder: stored rows are grounded in their chunk, the report matches them, a second run adds nothing, questions per chunk are capped, and no LLM is used."
+      "purpose": "Pytest on an in-memory database and a fake embedder: stored rows are grounded in their chunk, the report matches them, a second run adds nothing, questions per chunk are capped, each chunk's concepts go to the concept store (whose failure loses no question), and no LLM is used."
     },
     {
       "path": "backend/tests/test_question_quality.py",
@@ -609,8 +673,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 443,
-      "size_bytes": 17701,
+      "lines": 608,
+      "size_bytes": 25210,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -625,8 +689,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 987,
-      "size_bytes": 152605,
+      "lines": 1177,
+      "size_bytes": 182240,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1199,6 +1263,14 @@
       "purpose": "Adds the question_bank table (one precomputed question per row, tied to a user, book and chunk) with row-level security, a (user_id, book_id, chunk_index) index and a unique (chunk_id, strategy, prompt_hash) rule."
     },
     {
+      "path": "supabase/migrations/008_concept_mastery.sql",
+      "language": "sql",
+      "lines": 70,
+      "size_bytes": 3036,
+      "role": "migration",
+      "purpose": "Adds the concepts table (a book's concepts, unique per user, book and concept key) and user_concept_mastery (a reader's 0..1 mastery, attempts and next review per concept), both with row-level security, and indexes on (user_id, book_id) and (user_id, next_review)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1233,8 +1305,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 163,
-      "size_bytes": 27604,
+      "lines": 172,
+      "size_bytes": 30851,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1265,8 +1337,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 241,
-      "size_bytes": 9758,
+      "lines": 244,
+      "size_bytes": 9817,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

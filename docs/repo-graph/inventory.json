@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 173,
-    "inventoried": 162,
+    "tracked": 175,
+    "inventoried": 164,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7378,
+      "size_bytes": 7394,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -193,10 +193,10 @@
     {
       "path": "backend/agents/question_generation/agent.py",
       "language": "python",
-      "lines": 133,
-      "size_bytes": 6405,
+      "lines": 138,
+      "size_bytes": 6760,
       "role": "agent",
-      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); returns a GenerationReport."
+      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); hands each chunk's concepts to the concept store; returns a GenerationReport."
     },
     {
       "path": "backend/agents/question_generation/assembler.py",
@@ -359,6 +359,14 @@
       "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks, then has the question generation agent fill the question bank for each batch."
     },
     {
+      "path": "backend/services/concept_store.py",
+      "language": "python",
+      "lines": 76,
+      "size_bytes": 3686,
+      "role": "service",
+      "purpose": "The concepts of a book in the concepts table: save upserts one row per (user, book, concept key) for a batch of chunks, keeping the first label, growing chunk_indices and taking the highest weight; concepts_for_chunks reads the concepts some chunks mention; link_key_terms (pure) ties a question's key terms to concept keys."
+    },
+    {
       "path": "backend/services/embeddings.py",
       "language": "python",
       "lines": 37,
@@ -377,10 +385,10 @@
     {
       "path": "backend/services/question_bank.py",
       "language": "python",
-      "lines": 58,
-      "size_bytes": 2923,
+      "lines": 73,
+      "size_bytes": 3818,
       "role": "service",
-      "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, stores the picked questions with the session and increments times_used."
+      "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session and increments times_used."
     },
     {
       "path": "backend/services/retriever.py",
@@ -433,8 +441,8 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 357,
-      "size_bytes": 17009,
+      "lines": 381,
+      "size_bytes": 18184,
       "role": "test",
       "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, and test_results keeps the shape the results page and dashboard read."
     },
@@ -461,6 +469,14 @@
       "size_bytes": 1555,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+    },
+    {
+      "path": "backend/tests/test_concept_store.py",
+      "language": "python",
+      "lines": 150,
+      "size_bytes": 6027,
+      "role": "test",
+      "purpose": "Pytest on an in-memory concepts table: one row per concept of a book, later batches add their chunks and keep the first label, a repeated batch writes nothing, other books are untouched, and key terms link to concept keys by key or by the words of the key."
     },
     {
       "path": "backend/tests/test_concepts.py",
@@ -545,10 +561,10 @@
     {
       "path": "backend/tests/test_question_generation_agent.py",
       "language": "python",
-      "lines": 181,
-      "size_bytes": 8140,
+      "lines": 204,
+      "size_bytes": 9310,
       "role": "test",
-      "purpose": "Pytest on an in-memory database and a fake embedder: stored rows are grounded in their chunk, the report matches them, a second run adds nothing, questions per chunk are capped, and no LLM is used."
+      "purpose": "Pytest on an in-memory database and a fake embedder: stored rows are grounded in their chunk, the report matches them, a second run adds nothing, questions per chunk are capped, each chunk's concepts go to the concept store (whose failure loses no question), and no LLM is used."
     },
     {
       "path": "backend/tests/test_question_quality.py",
@@ -625,8 +641,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1118,
-      "size_bytes": 169125,
+      "lines": 1119,
+      "size_bytes": 172077,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1241,8 +1257,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 164,
-      "size_bytes": 28036,
+      "lines": 166,
+      "size_bytes": 28892,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

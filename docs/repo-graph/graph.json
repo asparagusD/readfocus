@@ -462,6 +462,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/concept_store.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/embeddings.py",
       "type": "file",
       "role": "service",
@@ -535,6 +541,12 @@
     },
     {
       "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_concept_store.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1898,6 +1910,11 @@
     {
       "type": "imports",
       "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -2087,6 +2104,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/question_bank.py",
       "to": "file:backend/agents/question_generation/agent.py"
     },
@@ -2094,6 +2121,11 @@
       "type": "imports",
       "from": "file:backend/services/question_bank.py",
       "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/services/concept_store.py"
     },
     {
       "type": "imports",
@@ -2148,6 +2180,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/services/question_bank.py"
     },
     {
@@ -2169,6 +2206,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concept_store.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concept_store.py",
+      "to": "file:backend/services/concept_store.py"
     },
     {
       "type": "imports",
@@ -2867,6 +2914,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/concept_store.py",
+      "to": "table:concepts"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:chunks"
     },
@@ -3024,6 +3076,11 @@
       "type": "writes_table",
       "from": "file:backend/services/book_ingestor.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/concept_store.py",
+      "to": "table:concepts"
     },
     {
       "type": "writes_table",

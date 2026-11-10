@@ -12,6 +12,7 @@ from collections import defaultdict
 from backend.agents.question_generation import assembler
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.agents.question_generation.assembler import AssemblyInput, BankQuestion
+from backend.services import concept_store
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
@@ -37,6 +38,19 @@ def _generate_missing(book_id: str, chunk_indices: list[int]) -> bool:
     return True
 
 
+def _link_concepts(questions: list[dict], user_id: str, book_id: str, chunk_indices: list[int]) -> None:
+    """Give each question `concept_keys`: the concepts of its own chunk that its key terms name."""
+    try:
+        concepts = concept_store.concepts_for_chunks(user_id, book_id, chunk_indices)
+    except Exception as e:  # noqa: BLE001 - a test without concept links is still a test
+        print(f"Reading concepts failed for book {book_id}: {e}")
+        concepts = []
+    concepts.sort(key=lambda row: (-(row["weight"] or 0.0), row["concept_key"]))
+    for question in questions:
+        own = [row for row in concepts if question.get("chunk_index") in row["chunk_indices"]]
+        question["concept_keys"] = concept_store.link_key_terms(question.get("key_terms") or [], own)
+
+
 def assemble_session_test(
     session_id: str, user_id: str, book_id: str, chunk_indices: list[int], mix: list | None = None,
 ) -> list[dict]:
@@ -48,6 +62,7 @@ def assemble_session_test(
 
     picked = assembler.decide(AssemblyInput(questions=[BankQuestion(**row) for row in rows], mix=mix)).questions
     questions = [assembler.session_question(question) for question in picked] or [assembler.fallback_question()]
+    _link_concepts(questions, user_id, book_id, chunk_indices)
     supabase.table("sessions").update({"test_questions": questions}).eq("id", session_id).eq("user_id", user_id).execute()
 
     by_use = defaultdict(list)

@@ -18,10 +18,10 @@ from backend.dependencies import get_current_user
 from backend.main import app
 from backend.nlp import embedder
 from backend.routers import sessions
-from backend.services import question_bank
+from backend.services import concept_store, question_bank
 
 USER, BOOK = "user-1", "book-1"
-SECRETS = ("answer", "evidence", "key_terms", "guidance", "distractors", "cached_eval")
+SECRETS = ("answer", "evidence", "key_terms", "guidance", "distractors", "cached_eval", "concept_keys")
 
 
 class Query:
@@ -45,6 +45,10 @@ class Query:
 
     def in_(self, column, values):
         self.filters.append(lambda r: r.get(column) in values)
+        return self
+
+    def overlaps(self, column, values):
+        self.filters.append(lambda r: bool(set(r.get(column) or []) & set(values)))
         return self
 
     def order(self, *args, **kwargs):
@@ -109,7 +113,12 @@ def api(monkeypatch):
          "word_count": 2} for i in range(3)
     ]
     db.tables["question_bank"] = bank_rows(0, "chunk-0")
-    for module in (sessions, question_bank, evaluator_agent):
+    db.tables["concepts"] = [
+        {"user_id": USER, "book_id": BOOK, "concept_key": key, "label": key.replace("-", " "),
+         "chunk_indices": indices, "weight": weight}
+        for key, indices, weight in (("gravel", [0, 2], 0.5), ("deep-foundation", [0], 0.9), ("gravel-road", [1], 1.0))
+    ]
+    for module in (sessions, question_bank, evaluator_agent, concept_store):
         monkeypatch.setattr(module, "supabase", db)
     embeds = []
 
@@ -161,6 +170,21 @@ def test_finish_reading_returns_five_questions_from_the_bank(api):
     assert [q["id"] for q in stored["test_questions"]] == ["q0-1", "q0-2", "q0-3", "q0-7", "q0-8"]
     assert stored["test_questions"][2]["answer"] == "SECRET-ANSWER-0-3"  # kept server-side for grading
     assert "right option 1" in body["questions"][0]["options"]
+
+
+def test_stored_questions_are_linked_to_the_concepts_of_their_own_chunk(api, monkeypatch):
+    start_and_finish(api)
+    stored = api.db.tables["sessions"][0]["test_questions"]
+    # Strongest first; gravel-road belongs to another chunk; "SECRET-TERM-n" names no concept.
+    assert [q["concept_keys"] for q in stored] == [[], [], [], ["deep-foundation", "gravel"], []]
+
+    def broken(*args):
+        raise RuntimeError("concepts table is down")
+
+    monkeypatch.setattr(concept_store, "concepts_for_chunks", broken)
+    start_and_finish(api)
+    again = api.db.tables["sessions"][1]["test_questions"]
+    assert len(again) == 5 and all(q["concept_keys"] == [] for q in again)
 
 
 def test_no_answer_or_evidence_reaches_the_client(api):

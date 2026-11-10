@@ -11,10 +11,13 @@ quotes included), so each piece satisfies `piece in chunk`.
 cloze       blank the highest-weight concept in an informative sentence
 definition  "What is X?" for "X is a ...", "X refers to ...", "known as X"
 why_how     a sentence with a causal marker: ask for the cause it states
+main_idea   open question; evidence is the two sentences nearest the centroid
+multiple_choice  a cloze question plus three distractors from the book's concepts
 """
 
 import re
 
+import numpy as np
 from pydantic import BaseModel
 
 from backend.agents import policy
@@ -40,7 +43,10 @@ class Question(BaseModel):
     concept: str | None = None  # label of the concept the question is about
 
 
-_EITHER_QUOTE = {"'": "['‘’]", '"': '["“”]'}
+CLOZE_LEAD = "Fill in the blank: "
+CHOICE_LEAD = "Choose the answer that fills the blank: "
+
+_EITHER_QUOTE ={"'": "['‘’]", '"': '["“”]'}
 _IS_A = re.compile(r"\s+(?:is|are)\s+(?:an?|the)\b", re.IGNORECASE)
 _MEANS = re.compile(r"\s+(?:refers? to|means?|(?:is|are|can be) (?:defined as|known as|called))\b", re.IGNORECASE)
 _NAMED = re.compile(r"\b(?:known as|defined as|called|termed)\s+(?:(?:an?|the)\s+)?$", re.IGNORECASE)
@@ -121,7 +127,7 @@ def cloze(sentences: list[Sentence], concepts: list[Concept]) -> list[Question]:
             for pattern in patterns:  # every form of the answer goes, or the prompt gives it away
                 blanked = pattern.sub(policy.BLANK, blanked)
             questions.append(Question(
-                type="factual", strategy="cloze", prompt=f"Fill in the blank: {blanked}",
+                type="factual", strategy="cloze", prompt=f"{CLOZE_LEAD}{blanked}",
                 answer=match.group(0), evidence=[sentence.span], key_terms=[concept.label],
                 difficulty=policy.DIFFICULTY["cloze"], concept=concept.label,
             ))
@@ -213,4 +219,69 @@ def why_how(sentences: list[Sentence]) -> list[Question]:
             type="inference", strategy="why_how", prompt=prompt, answer=cause, evidence=evidence,
             key_terms=_key_terms(cause), difficulty=policy.DIFFICULTY["why_how"],
         ))
+    return questions
+
+
+def _unit(vectors: np.ndarray) -> np.ndarray:
+    vectors = np.asarray(vectors, dtype=np.float64)
+    norms = np.linalg.norm(vectors, axis=-1, keepdims=True)
+    return vectors / np.where(norms == 0, 1.0, norms)
+
+
+def main_idea(sentences: list[Sentence], concepts: list[Concept], sentence_vectors: np.ndarray) -> list[Question]:
+    """One open question on the chunk's main idea, or none for an empty chunk.
+
+    `sentence_vectors` holds one embedding per sentence, in order. The
+    evidence is the sentences closest to their centroid, in reading order.
+    """
+    if len(sentence_vectors) != len(sentences):
+        raise ValueError(f"{len(sentences)} sentences but {len(sentence_vectors)} vectors")
+    if not sentences:
+        return []
+    vectors = _unit(sentence_vectors)
+    closeness = vectors @ _unit(vectors.mean(axis=0))
+    nearest = sorted(range(len(sentences)), key=lambda i: (-closeness[i], i))[: policy.MAIN_IDEA_SENTENCES]
+    chosen = [sentences[i] for i in sorted(nearest)]
+    ranked = _strongest_first(concepts)
+    top = ranked[0].label if ranked else None
+    about = f" about {top}" if top else ""
+    return [Question(
+        type="summary", strategy="main_idea",
+        prompt=f"In your own words, what is the main idea of this passage{about}?",
+        answer=" ".join(sentence.text for sentence in chosen), evidence=[sentence.span for sentence in chosen],
+        key_terms=[concept.label for concept in ranked[: policy.KEY_TERMS_MAX]],
+        difficulty=policy.DIFFICULTY["main_idea"], concept=top,
+    )]
+
+
+def multiple_choice(cloze_questions: list[Question], concept_vectors: dict[str, np.ndarray]) -> list[Question]:
+    """A multiple-choice version of each cloze question that has enough distractors.
+
+    `concept_vectors` maps the labels of the book's concepts to their
+    embeddings. A distractor is another concept whose cosine to the answer
+    lies in the policy band: near enough to be plausible, far enough to be
+    wrong. It may not appear in the sentence or share a word with the answer.
+    """
+    questions = []
+    labels = sorted(concept_vectors)
+    units = {label: _unit(concept_vectors[label]) for label in labels}
+    for question in cloze_questions:
+        if question.concept not in units:
+            continue
+        answer_words = set(question.concept.split())
+        sentence = question.prompt.lower()
+        scored = []
+        for label in labels:
+            cosine = float(units[label] @ units[question.concept])
+            usable = label != question.concept and label not in sentence and not answer_words & set(label.split())
+            if usable and policy.DISTRACTOR_MIN_COSINE <= cosine <= policy.DISTRACTOR_MAX_COSINE:
+                scored.append((-cosine, label))
+        if len(scored) < policy.DISTRACTOR_COUNT:
+            continue
+        questions.append(question.model_copy(update={
+            "strategy": "multiple_choice",
+            "prompt": question.prompt.replace(CLOZE_LEAD, CHOICE_LEAD, 1),
+            "distractors": [label for _, label in sorted(scored)[: policy.DISTRACTOR_COUNT]],
+            "difficulty": policy.DIFFICULTY["multiple_choice"],
+        }))
     return questions

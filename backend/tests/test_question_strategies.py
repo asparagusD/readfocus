@@ -1,5 +1,6 @@
 """Question strategies on fixed text: no model, no database, no network."""
 
+import numpy as np
 import pytest
 
 from backend.agents import policy
@@ -170,3 +171,81 @@ def test_why_how_asks_for_the_causal_clause():
 ])
 def test_why_how_needs_a_marker_and_two_clauses(chunk):
     assert strategies.why_how(strategies.sentences_of(chunk)) == []
+
+
+# One 2-d vector per sentence of CHUNK. The mean points along (0.78, 0.62);
+# sentences 1 and 3 are the closest to it (cosine 0.84 and 0.81).
+SENTENCE_VECTORS = np.array([[1, 0], [0.9, 0.1], [0, 1], [1, 0.05], [-0.2, 1]], dtype=np.float32)
+
+
+def test_main_idea_cites_the_two_sentences_nearest_the_centroid():
+    (question,) = strategies.main_idea(SENTENCES, CONCEPTS, SENTENCE_VECTORS)
+    assert question.prompt == (
+        "In your own words, what is the main idea of this passage about photosynthesis?"
+    )
+    assert question.evidence == [SENTENCES[1].span, SENTENCES[3].span]
+    assert question.answer == f"{SENTENCES[1].text} {SENTENCES[3].text}"
+    assert (question.type, question.strategy, question.concept) == ("summary", "main_idea", "photosynthesis")
+    assert question.key_terms == ["photosynthesis", "chlorophyll", "light energy", "plant"]
+    assert_evidence_is_verbatim([question])
+
+
+def test_main_idea_edge_cases():
+    one = strategies.sentences_of("Roots take up water from the soil.")
+    (question,) = strategies.main_idea(one, [], np.array([[0.3, 0.4]]))
+    assert question.prompt == "In your own words, what is the main idea of this passage?"
+    assert question.evidence == ["Roots take up water from the soil."] and question.concept is None
+    assert strategies.main_idea([], CONCEPTS, np.zeros((0, 2))) == []
+    with pytest.raises(ValueError):
+        strategies.main_idea(SENTENCES, CONCEPTS, SENTENCE_VECTORS[:3])
+
+
+def at(degrees: float) -> np.ndarray:
+    """A unit vector; the cosine between two of them is the cosine of the angle between."""
+    return np.array([np.cos(np.radians(degrees)), np.sin(np.radians(degrees))])
+
+
+# Cosine to photosynthesis (0 degrees) in brackets; the band is 0.40 to 0.75.
+BOOK_CONCEPTS = {
+    "photosynthesis": at(0),
+    "chlorophyll": at(10),
+    "osmosis": at(30),        # 0.87: too close, could also be right
+    "glycolysis": at(45),     # 0.71
+    "respiration": at(50),    # 0.64
+    "plant": at(55),          # 0.57, but the sentence itself says "plants"
+    "fermentation": at(60),   # 0.50
+    "digestion": at(65),      # 0.42
+    "tax law": at(85),        # 0.09: too far to be plausible
+}
+
+
+def test_multiple_choice_adds_three_plausible_distractors_from_the_book():
+    cloze = strategies.cloze(SENTENCES, CONCEPTS)
+    (question,) = strategies.multiple_choice(cloze, BOOK_CONCEPTS)
+    assert question.distractors == ["glycolysis", "respiration", "fermentation"]
+    assert question.answer == "Photosynthesis" and question.concept == "photosynthesis"
+    assert question.prompt == (
+        f"Choose the answer that fills the blank: {policy.BLANK} is the process by which green plants "
+        "turn sunlight into chemical energy."
+    )
+    assert (question.type, question.strategy) == ("factual", "multiple_choice")
+    assert question.evidence == cloze[0].evidence
+    assert_evidence_is_verbatim([question])
+
+
+def test_multiple_choice_needs_three_distractors_and_a_vector_for_the_answer():
+    cloze = strategies.cloze(SENTENCES, CONCEPTS)
+    # chlorophyll (10 degrees) has only fermentation and digestion in the band.
+    assert all(q.concept != "chlorophyll" for q in strategies.multiple_choice(cloze, BOOK_CONCEPTS))
+    without_answer = {label: vector for label, vector in BOOK_CONCEPTS.items() if label != "photosynthesis"}
+    assert strategies.multiple_choice(cloze[:1], without_answer) == []
+    assert strategies.multiple_choice(cloze, {}) == [] and strategies.multiple_choice([], BOOK_CONCEPTS) == []
+
+
+def test_multiple_choice_skips_distractors_that_share_a_word_with_the_answer():
+    chunk = "Leaves store light energy as sugar during the long days of summer."
+    cloze = strategies.cloze(strategies.sentences_of(chunk), [concept("light energy", 1.0)])
+    book = {"light energy": at(0), "heat energy": at(50), "glycolysis": at(45), "respiration": at(50),
+            "fermentation": at(60)}
+    (question,) = strategies.multiple_choice(cloze, book)
+    assert question.distractors == ["glycolysis", "respiration", "fermentation"]

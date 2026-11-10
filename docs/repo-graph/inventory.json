@@ -137,8 +137,8 @@
     {
       "path": "backend/agents/evaluation/grader.py",
       "language": "python",
-      "lines": 205,
-      "size_bytes": 9426,
+      "lines": 225,
+      "size_bytes": 10382,
       "role": "agent",
       "purpose": "Answer grader: pure decide(GradeInput) gives a 0..1 score, a high, medium or low confidence, matched and missing key terms, the rule used and its components; cloze and multiple choice by exact or rapidfuzz match, free text by a weighted sum of evidence cosine, key-term coverage and a relevance check; grade_all embeds a test's free-text answers in one call with the embedder it is given."
     },
@@ -489,8 +489,8 @@
     {
       "path": "backend/tests/test_grader.py",
       "language": "python",
-      "lines": 234,
-      "size_bytes": 10746,
+      "lines": 247,
+      "size_bytes": 11548,
       "role": "test",
       "purpose": "Pytest: closed-question matching, the free-text formula and its components, every confidence rule and its boundary, grade_all's single embedding call and its failure path, on hand-made numbers; plus agreement with the labelled answer fixtures on the real model when it is cached."
     },
@@ -609,8 +609,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 389,
-      "size_bytes": 15092,
+      "lines": 443,
+      "size_bytes": 17701,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -625,8 +625,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 908,
-      "size_bytes": 145853,
+      "lines": 909,
+      "size_bytes": 147017,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

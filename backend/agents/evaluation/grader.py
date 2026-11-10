@@ -32,7 +32,8 @@ from backend.nlp import text
 from backend.nlp.concepts import lemma, normalize_phrase
 
 CLOSED = ("cloze", "multiple_choice")
-_LETTER = re.compile(r"^\(?([a-h])\)?[.):]?(?:\s+.*)?$", re.DOTALL)
+# "(b) oxygen", "b) oxygen", "b. oxygen", "(b)": an option letter set off by punctuation, then the rest.
+_MARKED = re.compile(r"^(?:\(([a-h])\)|([a-h])[.):])\s*(.*)$", re.DOTALL)
 
 
 class GradeInput(BaseModel):
@@ -85,17 +86,36 @@ def _closed_result(expected: str, right: bool, confidence: str, method: str, sco
     )
 
 
+def _chosen_option(options: list[str], answer: str) -> str | None:
+    """The option an answer picks: by its words first, by a letter only when the words do not settle it.
+
+    "a computer" is the option "computer", not option (a); a bare "a" or "(a)" is option (a).
+    """
+    given = answer.strip().lower()
+    marked = _MARKED.match(given)
+    letter = (marked.group(1) or marked.group(2)) if marked else (given if len(given) == 1 else None)
+    body = marked.group(3) if marked else given
+    by_letter = None
+    if letter and "a" <= letter <= "h" and ord(letter) - ord("a") < len(options):
+        by_letter = options[ord(letter) - ord("a")]
+    if by_letter and not body.strip(letter + " "):
+        return by_letter  # nothing but the letter
+    spoken = " ".join(text.tokenize(body))
+    whole = [o for o in options if fuzz.ratio(" ".join(text.tokenize(o)), spoken) >= policy.GRADE_FUZZY_RATIO]
+    inside = [o for o in options if _ratio(o, body) >= policy.GRADE_FUZZY_RATIO]
+    for matches in (whole, inside):
+        if len(matches) == 1:
+            return matches[0]
+    return by_letter if marked else None
+
+
 def _grade_closed(data: GradeInput) -> Grade:
     expected = data.expected or (data.key_terms[0] if data.key_terms else "")
     if data.options:
-        letter = _LETTER.match(data.answer.strip().lower())
-        if letter and ord(letter.group(1)) - ord("a") < len(data.options):
-            chosen = [data.options[ord(letter.group(1)) - ord("a")]]
-        else:
-            chosen = [option for option in data.options if _ratio(option, data.answer) >= policy.GRADE_FUZZY_RATIO]
-        if len(chosen) != 1:
+        chosen = _chosen_option(data.options, data.answer)
+        if chosen is None:
             return _closed_result(expected, False, "low", "unmatched_option")
-        right = " ".join(text.tokenize(chosen[0])) == " ".join(text.tokenize(expected))
+        right = " ".join(text.tokenize(chosen)) == " ".join(text.tokenize(expected))
         return _closed_result(expected, right, "high", "option")
     ratio = _ratio(expected, data.answer)
     if ratio >= policy.GRADE_FUZZY_RATIO:

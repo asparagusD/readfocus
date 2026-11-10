@@ -82,6 +82,19 @@ def test_multiple_choice_wrong_option_is_zero_and_unmatched_text_is_low_confiden
     assert (unknown.score, unknown.confidence) == (0.0, "low")
 
 
+@pytest.mark.parametrize(("answer", "score"), [
+    ("a computer", 1.0), ("A computer company", 1.0), ("c computer", 1.0), ("computer", 1.0), ("d", 1.0), ("(d) computer", 1.0),
+    ("computer organization", 0.0), ("b) computer organization", 0.0), ("a", 0.0), ("a) computer", 1.0),
+])
+def test_multiple_choice_reads_the_words_before_a_leading_letter(answer, score):
+    # Regression (docs/DEBUG_LOG.md, C6.2): "a computer" was read as option (a) and marked wrong at high confidence.
+    grade = decide(GradeInput(
+        question="He has consulted at other _____ companies.", answer=answer, strategy="multiple_choice",
+        expected="computer", options=["design", "computer organization", "computer architecture", "computer"],
+    ))
+    assert (grade.score, grade.confidence) == (score, "high")
+
+
 @pytest.mark.parametrize("answer", ["", "   ", "\n"])
 def test_an_empty_answer_is_zero_and_certain_for_every_kind(answer):
     for grade in (cloze(answer), free(answer, cosine=None)):

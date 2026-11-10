@@ -142,6 +142,8 @@ Risks and open questions:
   writes it) and `python -m tools.repo_graph.build` (module form) both have
   to work; `query.py` handles its own import path.
 
+**G1: PASS (approved 2026-11-10).**
+
 ### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
@@ -153,8 +155,8 @@ Risks and open questions:
 | [x] C2.3 repository map with diagrams | `822c2e2` | Added `tools/repo_graph/render.py` and tests; generated `docs/repo-graph/REPO_MAP.md` (layer diagram, LangGraph diagram, six lookup tables, file list). `calls_external` edges now carry the line of first use. | `npx -y @mermaid-js/mermaid-cli -i docs/repo-graph/REPO_MAP.md`: 2 charts found, both rendered, exit 0; `pytest tools/repo_graph/tests -q`: 55 passed; standard checks at baseline. | 2026-11-10 07:43 | `AGENT_GRAPH.md` is not generated |
 | [x] C2.4 query CLI and `make graph` | `60ddce8` | Added `tools/repo_graph/query.py` and tests, the `graph` Makefile target, and a sixth standard check; `CLAUDE.md` and the repo-graph, atomic-commit and debug-protocol skills no longer say the tooling is missing. | `python tools/repo_graph/query.py backend/services/llm.py` lists the four agents that import it; `make graph` run three times, no diff in `docs/repo-graph/` after the second and third; `pytest tools/repo_graph/tests -q`: 61 passed; other checks at baseline. | 2026-11-10 07:52 | Git Bash rewrites a bare `/path` argument; documented |
 | [x] C2.5 migration audit | `c49dac4` | Added `docs/MIGRATION_AUDIT.md`: a verdict with evidence on each of the eight suspected issues, plus architecture, feature map, LLM and embedding calls with file:line, schema and RLS, background tasks, dead code, security, must-not-regress list, risks and files likely to change. | Line references spot-checked with `sed`; `pip show`, an import with `SUPABASE_URL` empty, RSS with `psutil`, and read-only row counts on the dev database (ENV=development); `make graph` twice, no diff; six standard checks at baseline. | 2026-11-10 08:02 | Issues 16-20 |
-| [x] C2.6 graph freshness in CI | this commit | Added a `graph` job to `.github/workflows/ci.yml`: `make graph`, then `git diff --exit-code docs/repo-graph/`, then the tooling tests. | Workflow parsed with PyYAML. The job's commands run in a fresh clone with `core.autocrlf=false` (all files LF, as on the runner): no diff on Python 3.14 and 3.11, 61 tests passed, and exit 1 after a deliberate edit. Six standard checks at baseline. | see `git log` | Not run on GitHub; `deploy-render` does not depend on the new job |
-| [ ] C2.G 🚦 Gate G1: audit approval | | | | | |
+| [x] C2.6 graph freshness in CI | `e30748b` | Added a `graph` job to `.github/workflows/ci.yml`: `make graph`, then `git diff --exit-code docs/repo-graph/`, then the tooling tests. | Workflow parsed with PyYAML. The job's commands run in a fresh clone with `core.autocrlf=false` (all files LF, as on the runner): no diff on Python 3.14 and 3.11, 61 tests passed, and exit 1 after a deliberate edit. Six standard checks at baseline. | 2026-11-10 08:06 | Not run on GitHub; `deploy-render` does not depend on the new job |
+| [x] C2.G 🚦 Gate G1: audit approval | this commit | **G1: PASS (approved 2026-11-10)**. The user reviewed the two `REPO_MAP.md` diagrams, the audit's security, must-not-regress and risks sections, the file counts, the exclusions and the eight verdicts, and approved with no corrections. | Approval given by the user in the session ("Approve G1"). `make graph` twice, no diff; six standard checks at baseline. | see `git log` | Issues 10-20 stay open for later chunks; chunk not yet merged into `readfocus-2.0` |
 
 ## C3
 

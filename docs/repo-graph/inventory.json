@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 192,
-    "inventoried": 181,
-    "excluded": 11
+    "tracked": 195,
+    "inventoried": 183,
+    "excluded": 12
   },
   "files": [
     {
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7690,
+      "size_bytes": 7706,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -89,10 +89,10 @@
     {
       "path": "Makefile",
       "language": "makefile",
-      "lines": 19,
-      "size_bytes": 539,
+      "lines": 24,
+      "size_bytes": 773,
       "role": "config",
-      "purpose": "Targets: dev-backend (uvicorn with reload), dev-frontend (Vite), dev (both via concurrently), graph (regenerate docs/repo-graph/)."
+      "purpose": "Targets: dev-backend (uvicorn with reload), dev-frontend (Vite), dev (both via concurrently), graph (regenerate docs/repo-graph/), agent-graph (regenerate docs/repo-graph/AGENT_GRAPH.md from the compiled workflow; needs .env)."
     },
     {
       "path": "README.md",
@@ -297,8 +297,8 @@
     {
       "path": "backend/agents/workflow.py",
       "language": "python",
-      "lines": 94,
-      "size_bytes": 4362,
+      "lines": 95,
+      "size_bytes": 4415,
       "role": "agent",
       "purpose": "The only callers of the compiled graph: run_start, run_finish, run_submit and run_abandon invoke one event flow each with a recursion limit of 10 and return the final state; save_decisions stores a run's decisions entries in agent_decisions in one insert, numbered under one run id, logging any failure."
     },
@@ -609,10 +609,18 @@
     {
       "path": "backend/tests/test_graph.py",
       "language": "python",
-      "lines": 179,
-      "size_bytes": 8225,
+      "lines": 254,
+      "size_bytes": 11374,
       "role": "test",
-      "purpose": "Pytest: each router function of the graph, the exact set of compiled edges, the recursion limit, and on the in-memory database the submit chain in order, the low-confidence skip of the optimizer, an evaluator error ending the run, the plan after submit as a preview that does not pop the re-read queue, and the start, finish-reading, abandon and unknown-event flows."
+      "purpose": "Pytest: each router function of the graph, the exact set of compiled edges, the recursion limit, and on the in-memory database the submit chain in order, the low-confidence skip of the optimizer, an evaluator error ending the run, the plan after submit as a preview that does not pop the re-read queue, and the start, finish-reading, abandon and unknown-event flows; the exact node visit order of every event from astream(stream_mode='updates'), including the low-confidence branch and an evaluator error; the same submit twice moving mastery once; and the recursion limit enforced, with the four-node submit flow needing five steps."
+    },
+    {
+      "path": "backend/tests/test_graph_doc.py",
+      "language": "python",
+      "lines": 17,
+      "size_bytes": 664,
+      "role": "test",
+      "purpose": "Pytest: the committed docs/repo-graph/AGENT_GRAPH.md equals what scripts/export_agent_graph.py renders now, and the diagram has every node and edge of the compiled workflow."
     },
     {
       "path": "backend/tests/test_health.py",
@@ -769,8 +777,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1359,
-      "size_bytes": 226425,
+      "lines": 1360,
+      "size_bytes": 229112,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1199,6 +1207,14 @@
       "purpose": "Starts uvicorn on a spare port, waits for /health, then prints the psutil RSS of the server and every child process."
     },
     {
+      "path": "scripts/export_agent_graph.py",
+      "language": "python",
+      "lines": 53,
+      "size_bytes": 1578,
+      "role": "script",
+      "purpose": "Writes docs/repo-graph/AGENT_GRAPH.md from the compiled LangGraph workflow: an event table from graph.ENTRY and workflow.get_graph().draw_mermaid(); needs .env, so it is the agent-graph Makefile target, not part of graph."
+    },
+    {
       "path": "scripts/manual/README.md",
       "language": "markdown",
       "lines": 47,
@@ -1393,8 +1409,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 183,
-      "size_bytes": 36805,
+      "lines": 185,
+      "size_bytes": 37642,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1456,6 +1472,10 @@
     }
   ],
   "excluded": [
+    {
+      "path": "docs/repo-graph/AGENT_GRAPH.md",
+      "reason": "generated"
+    },
     {
       "path": "docs/repo-graph/REPO_MAP.md",
       "reason": "generated"

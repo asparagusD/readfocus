@@ -2,7 +2,8 @@
 
 The only callers of the compiled graph: each runner invokes it once with
 its event and a recursion limit (the longest flow, submit, visits four
-nodes) and returns the final state. save_decisions stores a run's
+nodes, which LangGraph counts as five steps with the input) and returns
+the final state. save_decisions stores a run's
 decisions entries in agent_decisions (migration 009) in one insert; the
 router calls it after the response, and a failure is logged, never raised.
 """

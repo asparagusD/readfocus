@@ -656,6 +656,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_graph_doc.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_health.py",
       "type": "file",
       "role": "test",
@@ -1089,6 +1095,12 @@
     },
     {
       "id": "file:scripts/dev/measure_rss.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/export_agent_graph.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -2593,6 +2605,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_graph_doc.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph_doc.py",
+      "to": "file:scripts/export_agent_graph.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_health.py",
       "to": "file:backend/main.py"
     },
@@ -3025,6 +3047,11 @@
       "type": "imports",
       "from": "file:scripts/dev/measure_embedder.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/export_agent_graph.py",
+      "to": "file:backend/agents/graph.py"
     },
     {
       "type": "imports",

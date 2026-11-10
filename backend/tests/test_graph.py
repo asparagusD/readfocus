@@ -177,3 +177,78 @@ def test_an_abandoned_re_read_goes_back_to_the_front_of_the_queue(db):
     db.tables["sessions"][0]["status"] = "abandoned"
     asyncio.run(workflow.run_abandon("s1", USER, BOOK, plan.chunk_indices))
     assert db.tables["reading_progress"][0]["re_read_queue"] == [2, 1]  # issue 32: not lost
+
+
+# --- node visit order per event, from the graph's own stream (C8.7) -------------------------------
+
+
+def visits(state, config=workflow.RUN_CONFIG):
+    """The nodes a run visits, in order, from astream(stream_mode="updates")."""
+    async def collect():
+        return [node async for chunk in graph.workflow.astream(state, config=config, stream_mode="updates")
+                for node in chunk]
+    return asyncio.run(collect())
+
+
+def submit_state(questions=QUESTIONS, chunk_indices=(0,)):
+    return {"event": "submit_answers", "session_id": "s1", "user_id": USER, "book_id": BOOK,
+            "chunk_indices": list(chunk_indices), "test_questions": questions, "answers": ["a", "b"],
+            "user_answers": ["a", "b"], "time_taken_seconds": 120}
+
+
+def test_start_session_visits_the_planner_only(db):
+    assert visits({"event": "start_session", "user_id": USER, "book_id": BOOK}) == ["planner"]
+
+
+def test_finish_reading_visits_the_test_generator_only(db):
+    state = {"event": "finish_reading", "session_id": "s1", "user_id": USER, "book_id": BOOK, "chunk_indices": [0]}
+    assert visits(state) == ["test_generator"]
+
+
+def test_submit_answers_visits_the_four_agents_in_order(db, monkeypatch):
+    grades_with(monkeypatch, "high", "low")
+    assert visits(submit_state()) == ["evaluator", "knowledge_state", "optimizer", "planner"]
+
+
+def test_all_low_confidence_visits_skip_the_optimizer(db, monkeypatch):
+    grades_with(monkeypatch, "low", "low")
+    assert visits(submit_state()) == ["evaluator", "knowledge_state", "planner"]
+
+
+def test_an_evaluator_error_visits_the_evaluator_only(db):
+    assert visits(submit_state(questions=[])) == ["evaluator"]
+
+
+def test_abandon_visits_the_optimizer_only(db):
+    state = {"event": "abandon", "session_id": "s1", "user_id": USER, "book_id": BOOK, "chunk_indices": [0]}
+    assert visits(state) == ["optimizer"]
+
+
+def test_an_unknown_event_visits_nothing():
+    assert visits({"event": "nope"}) == []
+
+
+# --- idempotency and the recursion limit -----------------------------------------------------------
+
+
+def test_the_same_submit_twice_moves_mastery_once(db, monkeypatch):
+    grades_with(monkeypatch, "high", "high")
+    first = submit()
+    rows = {r["concept_key"]: dict(r) for r in db.tables["user_concept_mastery"]}
+    second = submit()
+    assert {r["concept_key"]: r for r in db.tables["user_concept_mastery"]} == rows  # unchanged
+    assert all(row["attempts"] == 1 for row in rows.values())
+    concepts = [next(d for d in run["decisions"] if d["agent"] == "knowledge_state")["output_summary"]["concepts"]
+                for run in (first, second)]
+    assert concepts == [2, 0]
+
+
+def test_the_recursion_limit_is_enforced_and_fits_the_longest_flow(db, monkeypatch):
+    from langgraph.errors import GraphRecursionError
+
+    grades_with(monkeypatch, "high", "high")
+    # LangGraph counts the input step too: four nodes need a limit of five.
+    with pytest.raises(GraphRecursionError):
+        visits(submit_state(), config={"recursion_limit": 4})
+    assert len(visits(submit_state(), config={"recursion_limit": 5})) == 4
+    assert workflow.RUN_CONFIG["recursion_limit"] >= 5

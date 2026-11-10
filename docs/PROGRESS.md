@@ -1119,13 +1119,180 @@ Close review (2026-11-10 17:14):
 - **Time.** About 45 minutes of wall-clock, from branch creation at 16:31
   to this review at 17:14, against 1.5 h budgeted.
 
-## C8
+## C8 — LangGraph agents
 
-Removes `GROQ_API_KEY` and `GOOGLE_AI_STUDIO_KEY` (per `.env.example`). Full
-title and subchunks to be filled from the promptbook.
+Branch `chunk/C8-langgraph-agents`, created from `readfocus-2.0` at
+`58d9fdf`. Goal: write the last two agents (planner and optimizer) as pure
+`decide` functions, then rewire `backend/agents/graph.py` so the five
+algorithmic agents (planner, test_generator, evaluator, knowledge_state,
+optimizer) run as real, chained LangGraph nodes that the routers invoke.
+LangGraph stays; Groq, the LangChain chat-model stack and Google AI go
+(issues 6, 22, 23).
+
+### Plan (written at chunk start, 2026-11-11 02:55, before any code)
+
+What there is to build on (read from the code):
+
+- `graph.py` routes from `__start__` on `state["status"]` to one of four
+  nodes and every node goes straight to `END`: nothing is chained. Each
+  router helper (`plan_session`, `evaluate_answers`, `optimize_pace`)
+  invokes the whole workflow for one node.
+- `planner_agent.py` and `optimizer_agent.py` call Groq through
+  `langchain_core` prompt chains (both 404 today, issue 22), so every
+  session gets the canned 20-minute fallback. `test_generator_agent.py` is
+  still a graph node but no router has used it since C5.5; the real test
+  comes from `assemble_session_test` (question bank).
+- The evaluator is already local and appends to `decisions`; the knowledge
+  state is a pure `decide` called as a background task, not a node.
+- **No code ever inserts a `reading_progress` row** (issue 16). The planner
+  reads it, and the evaluator and optimizer only update a row that already
+  exists, so `last_chunk_index`, `re_read_queue` and `pace_recommendation`
+  never persist and every session plans from chunk 0. The column default
+  for `last_chunk_index` is 0, while the code treats -1 as "nothing read".
+- The optimizer's thresholds (`total_score >= 40` and so on) assume five
+  questions of 10 points; they should be percentages.
+- The frontend reads `focus_duration_minutes` and `reason` from
+  `POST /sessions/start`, and `pace_recommendation.focus_duration_minutes`
+  and `.re_read_mode` on Results. Those shapes are kept.
+
+Design decisions that apply to every subchunk:
+
+- **Agent pattern from `free-intelligence`.** Each new agent is a package
+  with Pydantic input and output models and a pure `decide` (no database,
+  clock, randomness or network), every constant in `backend/agents/policy.py`,
+  and table-driven unit tests with no mocks. The node is the thin I/O
+  wrapper around it.
+- **Two flows, one graph.** `__start__` routes on a typed `event`:
+  - `start`: `planner` → `test_generator` → `END`. The planner node creates
+    the session row (so the test generator has a session to store into)
+    and ensures the `reading_progress` row exists (closes issue 16).
+  - `submit`: `evaluator` → `knowledge_state` → `optimizer` → `END`, so the
+    optimizer can see this test's mastery changes.
+  - Any node that sets `error` routes to `END`.
+- **`test_generator` is the question bank, not an LLM.** The node wraps
+  `assemble_session_test`. In the `start` flow it assembles only when the
+  bank already has rows for the planned chunks; otherwise it records
+  "deferred" and `finish-reading` keeps its inline fallback, so
+  `POST /sessions/start` never waits for on-demand question generation.
+- **Decisions are an append-only audit trail.** `AgentState.decisions` gets
+  an `operator.add` reducer, so a node returns only its own entry. The
+  routers persist a run's decisions to a new `agent_decisions` table in one
+  insert, after the response (background task).
+- **No new dependency**, so no RSS measurement is needed for C8.1 to C8.7.
+  C8.8 removes packages and is measured (idle and after a full session),
+  since it should lower RSS.
+- **Latency is measured, not assumed.** `POST /sessions/start` and
+  `submit-answers` p50 over 5 runs on dev before C8.6 and after it (issue
+  28 is 830 ms against a 500 ms target).
+- **The repo graph must see the wiring.** `add_node` and the edge calls stay
+  literal module-level calls in `graph.py`, so `tools/repo_graph/build.py`
+  picks them up; C8.5 checks the LangGraph diagram in `REPO_MAP.md`.
+- Database: one additive migration, dev only (constraint 2).
+- Estimated lines are hand-written lines, tests included; migrations and
+  `docs/repo-graph/` do not count.
+
+| Step | Files | Est. lines | Tests | Est. time |
+|---|---|---|---|---|
+| C8.1 reading strategy (planner) agent | `backend/agents/planning/__init__.py`, `backend/agents/planning/strategy.py` (new, pure: `ChunkInfo` (index, word count), `PlannerInput` (wpm, last chunk index, re-read queue, recent percentages, the optimizer's last `pace_recommendation`, up to `PLANNER_LOOKAHEAD` next chunks), `SessionPlan` (chunk indices, assigned words, focus minutes, mode `new`/`re_read`/`finished`, reason, the rule used); `decide`: the re-read queue head first; else a word target of `PLANNER_BASE_WORDS` scaled by the optimizer's multiplier, filled with whole chunks in order, at least one and at most `PLANNER_MAX_CHUNKS`; focus minutes = words / wpm with a buffer when recent scores are low, clamped to 10..120; the reason from fixed templates; no chunks left gives `finished`), `backend/agents/policy.py` (planner section), `backend/tests/test_planning_strategy.py` (new), `tools/repo_graph/purposes.json` | 190 (80 code, 15 policy, 90 tests, 5 other) | About 14: a new reader gets one chunk at the base target; the multiplier grows and shrinks the word target; a chunk longer than the target is still assigned alone; `PLANNER_MAX_CHUNKS` is respected; re-read takes the queue head and only it; focus minutes at both clamps and with and without the low-score buffer; a wpm of 0 or missing uses the default; no next chunks is `finished`; the reason names the rule; same input, same output; the source names no database, LLM, clock or randomness | 30 min |
+| C8.2 learning optimizer agent | `backend/agents/optimization/__init__.py`, `backend/agents/optimization/pace.py` (new, pure: `OptimizerInput` (this test's percentage, recent percentages for the book, this session's chunk indices and words, the current re-read queue, the mastery of this session's concepts after the update, the actual reading minutes against the planned ones); `PaceRecommendation` with the keys Results reads (`next_chunk_multiplier`, `focus_duration_minutes`, `re_read_mode`, `reason`) plus `re_read_queue` and the rule; `decide`: percentage bands (grow, hold, reduce and queue, reduce and re-read first) instead of raw points; a weak-mastery share above `OPT_WEAK_SHARE` queues the chunk even when the score holds; a trend over recent tests damps a single bad or good test; focus minutes from the next target and the reader's real minutes per word; the queue keeps order and no duplicates), `backend/agents/policy.py` (optimizer section), `backend/tests/test_optimization_pace.py` (new), `tools/repo_graph/purposes.json` | 190 (80 code, 15 policy, 90 tests, 5 other) | About 14: each band at both sides of its boundary; queue append and push-to-front without duplicates; weak mastery queues a chunk at a passing score; no mastery data changes nothing; trend damping; multiplier stays inside its bounds after many tests; focus minutes clamp; zero planned minutes; output has the four keys Results reads; same input, same output; no I/O in the source | 30 min |
+| C8.3 typed graph state | `backend/agents/state.py` (`AgentState` with `event: Literal["start", "submit"]`, typed keys for each node's output (`session_plan`, `test_report`, `evaluation_result`, `mastery_report`, `pace_recommendation`), `decisions: Annotated[list[Decision], operator.add]`, a `Decision` TypedDict (agent, input, output, rule); `status` kept until C8.5), `backend/agents/evaluator_agent.py` (return only its own decision entry, which the reducer now appends), `backend/tests/test_agent_state.py` (new), `tools/repo_graph/purposes.json` | 110 (45 code, 60 tests, 5 other) | 5: two nodes' decisions are both kept in order through a compiled two-node graph; a node that returns no `decisions` loses none; the evaluator adds exactly one entry; every key a node returns is declared in `AgentState`; `event` takes only the two values. `test_api_sessions.py` passes unchanged | 20 min |
+| C8.4 register agents as nodes | `backend/agents/planner_agent.py` (rewritten: `planner_node` reads the profile, progress and next chunks, calls `planning.decide`, upserts `reading_progress` with `last_chunk_index = -1` when missing, pops the re-read queue, inserts the session row, appends its decision; no LangChain), `backend/agents/optimizer_agent.py` (rewritten the same way around `optimization.decide`; saves `pace_recommendation` and the queue with an upsert, not an update of a row that may not exist), `backend/agents/test_bank_node.py` (new: `test_generator_node` around `assemble_session_test`, assembling only when bank rows exist), `backend/agents/knowledge_state/agent.py` (`knowledge_state_node` around `record_test`), `backend/agents/graph.py` (register the five nodes; routing still one node per run, so `plan_session`, `evaluate_answers` and `optimize_pace` keep working), `backend/tests/test_agent_nodes.py` (new), `tools/repo_graph/purposes.json` | 200 (110 code, 85 tests, 5 other); split into a (planner, test generator) and b (knowledge state, optimizer) if over | 8 on the in-memory database: the planner node creates the progress row once and the session row, and a second session continues after the first; a re-read pops the queue; the optimizer node writes `pace_recommendation` when no progress row existed; the test generator node stores questions when the bank has rows and defers when it has none; the knowledge state node returns its report; each node appends one decision; no node imports `services.llm` or `langchain` | 40 min |
+| C8.5 rewire edges (real chaining) | `backend/agents/graph.py` (route on `event`; `planner` → `test_generator` → `END`; `evaluator` → `knowledge_state` → `optimizer` → `END`; conditional edges to `END` on `error` or a `finished` plan; `status` routing removed), `backend/agents/workflow.py` (new: `run_start(user_id, book_id)` and `run_submit(...)`, the only callers of `workflow.ainvoke`), `backend/tests/test_graph.py` (new), `tools/repo_graph/purposes.json` | 180 (70 code, 105 tests, 5 other) | 7 with every node patched to a recorder: `start` visits planner then test_generator; `submit` visits evaluator, knowledge_state, optimizer in that order; an evaluator error stops before knowledge_state; a finished book stops after the planner; an unknown event goes to `END`; the optimizer receives the knowledge state's report; the compiled graph's edges equal the expected set. `make graph`: the `REPO_MAP.md` LangGraph diagram shows the chains | 30 min |
+| C8.6 routers invoke the graph + `agent_decisions` | `supabase/migrations/009_agent_decisions.sql` (new, dev only: `agent_decisions` with `id`, `user_id`, `book_id`, `session_id`, `run_id`, `event`, `step` (order in the run), `agent`, `input` jsonb, `output` jsonb, `rule`, `created_at`; foreign keys with `ON DELETE CASCADE`; RLS own-rows select; index on `(session_id, step)`), `backend/agents/workflow.py` (`save_decisions(state)`: one insert per run, a failure logged), `backend/routers/sessions.py` (`start` calls `run_start`, which now creates the session; `submit-answers` calls `run_submit` once instead of the evaluator, the mastery background task and the optimizer; decisions saved in a background task; responses unchanged), `backend/tests/test_api_sessions.py` (patch points move to `run_start` / `run_submit`), `backend/tests/test_migrations.py`, `tools/repo_graph/purposes.json` | 190 (50 code, 120 tests, 20 other; SQL not counted) | 7 through `TestClient` on the fake database: start and submit return the same keys as before; one graph run per request; the start run's decisions are stored with `event = start` and steps 1 to 2, the submit run's with steps 1 to 3; a failing decisions insert leaves the response at 200; submitting twice stores mastery once; plus the migration's static checks. By hand on dev as test user A: one full session, the `agent_decisions` rows read back, user B sees none; p50 of `start` and `submit-answers` over 5 runs before and after | 40 min |
+| C8.7 graph tests + `AGENT_GRAPH.md` | `docs/AGENT_GRAPH.md` (new: the two flows as a Mermaid diagram, one row per node (reads, decides, writes, state keys in and out, policy constants), the `decisions` format and an example run from the dev session), `backend/tests/test_graph_docs.py` (new), `backend/tests/test_graph.py` (an end-to-end `start` then `submit` on the fake database and fake embedder with no node patched), `tools/repo_graph/purposes.json` | 180 (110 doc, 65 tests, 5 other) | 3: the edges in `AGENT_GRAPH.md`'s diagram equal the compiled graph's (so the doc cannot go stale silently); every node in the graph has a row; the end-to-end run produces a plan, a stored test, a grade, mastery rows, a pace recommendation and five decisions. Mermaid rendered with `npx -y @mermaid-js/mermaid-cli` | 30 min |
+| C8.8 remove paid AI, keep LangGraph | Delete `backend/services/llm.py`, `backend/services/embeddings.py`, `backend/agents/test_generator_agent.py`; `requirements.txt` (drop `langchain`, `langchain-community`, `langchain-groq`, `groq`, `langchain-google-genai`, `tenacity`; `langchain-core` stays pinned only if `langgraph` needs it, which `pip show langgraph` decides), `backend/tests/conftest.py` (the Groq and Google fakes go; the network guard stays), `backend/tests/test_offline.py`, `.env.example`, `render.yaml` (the four provider keys), `tools/repo_graph/purposes.json`, `tools/repo_graph/tests/test_query.py` (its real-graph `llm.py` case), `backend/tests/test_no_paid_ai.py` (new), `README.md` (AI section), `docs/BENCHMARKS.md` (RSS row) | 120 hand-written, about 250 deleted (deletion over the ~200 limit on purpose) | 3: no file under `backend/` imports a banned SDK or names a banned key (AST and text scan); `requirements.txt` lists no banned package; `backend.main` imports with no provider key set. By hand: fresh Python 3.11 venv, `pip install -r requirements.txt`, `pip check`, `pip show groq` not found; RSS idle and after a session, before and after | 30 min |
+| C8.G 🚦 Gate G3: no paid AI, graph passes | No new files. Present the evidence below and stop. Merge into `readfocus-2.0` only after the user passes G3 | 0 | See the criteria below | user |
+
+Total: about 1,360 hand-written lines plus one migration, in 8 commits
+(9 if C8.4 splits), about 4 h 20 min plus the G3 wait. No budget for C8 is
+recorded in this file.
+
+#### 🚦 Gate G3: no paid AI, graph passes (proposed criteria)
+
+1. `grep -rnilE "groq|openai|anthropic|generativeai|genai|cerebras|sambanova|openrouter" backend requirements.txt .env.example render.yaml`
+   lists only `backend/tests/test_no_paid_ai.py` (which holds the list).
+2. `REPO_MAP.md` lists no banned external service, and its LangGraph
+   diagram shows `planner → test_generator` and
+   `evaluator → knowledge_state → optimizer`.
+3. Fresh 3.11 venv: install, `pip check` clean, `import backend.main` with
+   no provider key in the environment.
+4. Six standard checks at or better than baseline; `pytest backend/tests -q`
+   includes the graph, node and agent tests.
+5. One full session on dev (start, finish-reading, submit) as test user A
+   with a server log free of provider calls: the plan is not the canned
+   20-minute fallback, the next session continues after the first (issue
+   16), `pace_recommendation` is stored, and `agent_decisions` holds 2 + 3
+   rows for the session.
+6. p50 of `start` and `submit-answers` recorded against the pre-C8.6 numbers,
+   and RSS before and after C8.8 in `docs/BENCHMARKS.md`.
+
+Safe to cut, in this order: the end-to-end test and example run in C8.7
+(keep the diagram check); the mastery input to the optimizer (C8.2 then
+uses scores only, and `knowledge_state` can stay a background task);
+the trend damping in C8.2. `agent_decisions` as a table is not on the cut
+list: the user chose it.
+
+Risks and open questions:
+
+- **`agent_decisions` needs migration 009 on dev.** The prompt names it but
+  not its shape. **Decided by the user (2026-11-11): a new table, as in
+  C8.6**, not a `decisions` jsonb column on `sessions`. The columns above
+  are still a proposal; applied to dev only, after a dry run that lists
+  only 009.
+- **Chaining `knowledge_state` before the optimizer puts its two round trips
+  on the `submit-answers` path** (about 200 ms at the C7.4 numbers), which
+  is already over target (issue 28). Removing the two Groq calls should
+  more than pay for it, but that is measured in C8.6, not assumed. If it is
+  slower, the fallback is the cut above.
+- **The planner node now writes**: the session row moves out of the router,
+  and the progress row is created. Rows from before C8 (21 completed
+  sessions, 0 progress rows on dev) are not backfilled, so existing dev
+  readers restart a book at chunk 0 once more, then continue.
+- **Planner word target and buffers are guesses** (proposed: 600 words
+  base, 1 to 3 chunks, 10% buffer below 50%). None is tuned on data.
+- **`scripts/manual/` scripts import `plan_session`, `optimize_pace` and the
+  old test generator**; they stop importing after C8.6 and C8.8. They are
+  not run in the sprint and are left as they are (noted in their README).
+- **`render.yaml` is deploy config.** Removing the four keys from the
+  blueprint does not delete them from the Render dashboard; the user does
+  that at release.
+- **`CLAUDE.md` names an orchestrator as the fifth agent**; after C8 the
+  graph router is the orchestrator and `knowledge_state` is a node. The
+  stack row is updated in C8.8, and the `test_generator` node name is kept
+  for the bank-backed node so the diagram and audit stay readable.
+- The three `docs/repo-graph/` files show as modified at chunk start with
+  an empty `git diff --stat`: line endings only, as before.
+
+Replanned by the C8.1 prompt (2026-11-11 02:58). The C8.1 row above is
+read with these changes, and C8.4 builds the planner node on them:
+
+- The package is `backend/agents/planner/` (module `strategy.py`), not
+  `planning/`.
+- Instead of a word target alone, candidate sections are scored
+  `0.35 weak_concept_coverage + 0.25 unread + 0.20 difficulty_fit +
+  0.20 due_for_review`. To keep reading order, the candidates are the next
+  unread section and the read sections that have a weak or due concept;
+  later unread sections only extend a new-reading session.
+- The plan also carries a question mix per mode (`new`, `re_read`,
+  `review`) in the assembler's `TEST_MIX` form, and every candidate's score
+  and components for the audit trail.
+- The node (C8.4) has to load the concept states (`user_concept_mastery`
+  joined to `concepts` for labels and chunks) and a difficulty per chunk
+  (the mean `question_bank` difficulty), and pass `now`.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C8.1 rule-based reading strategy planner | this commit | Added `backend/agents/planner/strategy.py`, pure `decide(PlannerInput) -> SessionPlan`: the first re-read queue entry that is a candidate wins; otherwise the next unread section and every read section with a weak (tested, mastery below 0.5) or due concept are scored on the four weighted components and the best wins, ties to the earlier section; new reading is extended with the following sections while within 600 words times the optimizer's multiplier (0.5 to 2.0), capped by its recommended minutes times wpm, at most 3 sections; minutes are words over wpm (default 200), plus 10% for re-reading, review or a recent mean below 50%, clamped to 10..120; a question mix per mode; a reason from templates ("Revisiting *opportunity cost* — you missed it twice."); no candidate means `finished`. Fifteen constants in `backend/agents/policy.py`. Nothing calls it yet. This commit also carries the C8 plan above. | Tests written first: collection error (no `backend.agents.planner`), then `pytest backend/tests/test_planner_strategy.py -q` 24 passed: the prompt's four cases (cold start, everything read, weak concept, re-read queue priority) plus the score formula, the weak boundary, an untested concept at the prior, due-only review, difficulty fit by recent scores, ties, the multiplier both ways, the minutes cap, a long section alone, the section cap, a gap in the candidates, duration clamps and buffer, a zero wpm, every mix fills five places, the reason wording, a queue entry that is not a candidate, determinism and no I/O in the source. Standard checks: ruff 64 errors (baseline; 65 on the first run, an unsorted import in the new test, fixed with `ruff --fix` before the commit), `pytest backend/tests -q` 433 passed (409 before), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed; the banned-provider grep lists the same four files. `make graph` twice, no change after the second. No new dependency. | 2026-11-11 03:03 | A half-weak read section (1 weak concept of 2, nothing due) scores below the next unread one, so it is not revisited; by the weights, not tuned on data. The difficulty input has no source yet (C8.4 decides it); with none, every section fits at 0.5. The reason for a re-read assumes the queue holds low-score sections, which is how the optimizer fills it. About 470 changed lines excluding the graph and the plan, 214 of them tests: over the ~200-line guideline, one commit as asked |
+| [ ] C8.2 learning optimizer agent | | | | | |
+| [ ] C8.3 typed graph state | | | | | |
+| [ ] C8.4 register agents as nodes | | | | | |
+| [ ] C8.5 rewire edges (real chaining) | | | | | |
+| [ ] C8.6 routers invoke the graph + `agent_decisions` | | | | | |
+| [ ] C8.7 graph tests + `AGENT_GRAPH.md` | | | | | |
+| [ ] C8.8 remove paid AI, keep LangGraph | | | | | |
+| [ ] C8.G 🚦 Gate G3: no paid AI, graph passes | | | | | |
 
 ## C9
 

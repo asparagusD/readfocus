@@ -207,3 +207,48 @@ MASTERY_CONFIDENCE_WEIGHT = {"high": 1.0, "medium": 1.0, "low": 0.5}
 # at or above the last bound, the maximum.
 MASTERY_REVIEW_DAYS = [(0.4, 1), (0.6, 3), (0.8, 7)]
 MASTERY_REVIEW_DAYS_MAX = 14
+
+# --- Reading strategy (backend/agents/planner/strategy.py) ------------------
+
+# A candidate chunk's score: the weighted sum of four 0..1 components.
+PLANNER_WEIGHTS = {
+    "weak_concept_coverage": 0.35,  # share of its concepts the reader is weak on
+    "unread": 0.25,                 # 1 for the next unread section, 0 for one already read
+    "difficulty_fit": 0.20,         # how close its difficulty is to the reader's target
+    "due_for_review": 0.20,         # share of its concepts whose next review has come
+}
+
+# A concept the reader has been tested on is weak below this mastery; an
+# untested one is never weak, whatever its prior.
+PLANNER_WEAK_BELOW = 0.5
+
+# Target difficulty from the mean of the last few test percentages: below
+# the low score, at or above the high score, or in between (and with no
+# history). A chunk's fit falls linearly to 0 at this distance from the target.
+PLANNER_RECENT_TESTS = 3
+PLANNER_LOW_SCORE = 0.5
+PLANNER_HIGH_SCORE = 0.8
+PLANNER_TARGET_DIFFICULTY = {"low": 0.3, "mid": TEST_TARGET_DIFFICULTY, "high": 0.6}
+PLANNER_DIFFICULTY_SPAN = 0.5
+PLANNER_UNKNOWN_DIFFICULTY_FIT = 0.5  # a chunk with no difficulty estimate
+
+# Words in a new-reading session before the optimizer's multiplier, the
+# bounds on that multiplier, and the most sections in one session. A
+# section longer than the target is still read whole, alone.
+PLANNER_BASE_WORDS = 600
+PLANNER_MULTIPLIER_RANGE = (0.5, 2.0)
+PLANNER_MAX_CHUNKS = 3
+
+# Reading speed when the profile has none, extra time for re-reading,
+# review or low recent scores, and the bounds on a session's minutes.
+PLANNER_DEFAULT_WPM = 200
+PLANNER_SLOW_BUFFER = 0.10
+PLANNER_MINUTES_RANGE = (10, 120)
+
+# Test mix per session mode, in the assembler's TEST_MIX form. Re-reading
+# and review lean on recall (cloze, definitions) of what was missed.
+PLANNER_QUESTION_MIX = {
+    "new": TEST_MIX,
+    "re_read": [(["cloze"], 2), (["multiple_choice"], 1), (["definition", "why_how"], 1), (["main_idea"], 1)],
+    "review": [(["cloze"], 2), (["definition"], 1), (["multiple_choice"], 1), (["why_how", "main_idea"], 1)],
+}

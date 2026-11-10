@@ -343,6 +343,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/planner/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/planner/strategy.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/agents/planner_agent.py",
       "type": "file",
       "role": "agent",
@@ -644,6 +656,12 @@
     },
     {
       "id": "file:backend/tests/test_offline.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_planner_strategy.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1932,6 +1950,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/agents/planner/strategy.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/agents/planner_agent.py",
       "to": "file:backend/agents/graph.py"
     },
@@ -2429,6 +2452,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_offline.py",
       "to": "file:backend/tests/conftest.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_planner_strategy.py",
+      "to": "file:backend/agents/planner/strategy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_planner_strategy.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 181,
-    "inventoried": 170,
+    "tracked": 184,
+    "inventoried": 173,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7426,
+      "size_bytes": 7442,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -191,6 +191,22 @@
       "purpose": "Optimizer node: score thresholds set the chunk multiplier and re-read queue; the Groq LLM picks the next focus duration; saves pace_recommendation."
     },
     {
+      "path": "backend/agents/planner/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 106,
+      "role": "agent",
+      "purpose": "Package marker for backend.agents.planner, the rule-based reading strategy with no LLM."
+    },
+    {
+      "path": "backend/agents/planner/strategy.py",
+      "language": "python",
+      "lines": 210,
+      "size_bytes": 8721,
+      "role": "agent",
+      "purpose": "Reading strategy, pure: decide(PlannerInput) serves the re-read queue first, otherwise scores the next unread section and every read section with a weak or due concept on weak-concept coverage, unread, difficulty fit and due-for-review (weights in policy.py), extends new reading within the optimizer's word and time target, and returns sections, minutes, a question mix per mode and a one-line reason naming the concept and how often it was missed."
+    },
+    {
       "path": "backend/agents/planner_agent.py",
       "language": "python",
       "lines": 189,
@@ -201,10 +217,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 209,
-      "size_bytes": 7635,
+      "lines": 254,
+      "size_bytes": 9730,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback and the knowledge state's mastery update."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update and the reading strategy planner."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -599,6 +615,14 @@
       "purpose": "Pytest: the suite uses the dummy environment and the fakes, outbound connections are blocked, loopback works, and a protected endpoint answers 401."
     },
     {
+      "path": "backend/tests/test_planner_strategy.py",
+      "language": "python",
+      "lines": 220,
+      "size_bytes": 9947,
+      "role": "test",
+      "purpose": "Pytest on hand-made chunks and concept states: cold start, a finished book, a weak concept brought back with its reason, re-read queue priority, the score formula and its boundaries, difficulty fit, the optimizer's multiplier and minutes, size and duration bounds, question mixes, and that decide is pure."
+    },
+    {
       "path": "backend/tests/test_question_assembler.py",
       "language": "python",
       "lines": 125,
@@ -689,8 +713,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1177,
-      "size_bytes": 182240,
+      "lines": 1344,
+      "size_bytes": 203923,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1305,8 +1329,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 172,
-      "size_bytes": 30851,
+      "lines": 175,
+      "size_bytes": 31858,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

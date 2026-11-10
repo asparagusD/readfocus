@@ -1092,6 +1092,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/008_concept_mastery.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -1220,6 +1226,10 @@
       "type": "table"
     },
     {
+      "id": "table:concepts",
+      "type": "table"
+    },
+    {
       "id": "table:profiles",
       "type": "table"
     },
@@ -1237,6 +1247,10 @@
     },
     {
       "id": "table:test_results",
+      "type": "table"
+    },
+    {
+      "id": "table:user_concept_mastery",
       "type": "table"
     }
   ],
@@ -1650,6 +1664,16 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/007_question_bank.sql",
       "to": "table:question_bank"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/008_concept_mastery.sql",
+      "to": "table:concepts"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/008_concept_mastery.sql",
+      "to": "table:user_concept_mastery"
     },
     {
       "type": "graph_edge",

@@ -56,6 +56,52 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C7.1 — graph tooling test fails after two more tables are added
+
+**Status:** fixed
+
+### Symptom
+After adding `supabase/migrations/008_concept_mastery.sql` and running
+`make graph`, the tooling suite went from 61 passed to 1 failed, 60 passed:
+
+    pytest tools/repo_graph/tests -q
+    ________________ test_real_graph_has_the_schema_and_the_agents ________________
+        def test_real_graph_has_the_schema_and_the_agents():
+            graph = build.build_repo()
+            tables = {"profiles", "books", "chunks", "sessions", "test_results", "reading_progress", "question_bank"}
+    >       assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
+    E       AssertionError: assert {'table:books...rogress', ...} == {'table:books...essions', ...}
+    E         Extra items in the left set:
+    E         'table:user_concept_mastery'
+    E         'table:concepts'
+    tools\repo_graph\tests\test_build.py:230: AssertionError
+
+### Repro
+    pytest tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents -q
+
+### Hypotheses
+1. The same cause as the C5.1 entry below: the test pins the exact set of
+   tables, and 008 defines two new ones on purpose. Evidence: the only
+   extra items are `table:concepts` and `table:user_concept_mastery`.
+   Ruled out if: any other table is extra or missing. Result: confirmed.
+
+### Root cause
+Not a defect in the graph: the expectation at
+`tools/repo_graph/tests/test_build.py:229` lists the tables by name, so
+every new table has to be added to it.
+
+### Fix
+Added `concepts` and `user_concept_mastery` to the expected set. The
+assertion stays exact, so a bogus table would still fail it.
+
+### Regression test
+The same test. Failed before the change: yes (output above). Passes after:
+yes, 61 passed.
+
+### Commit
+feat(db): add concepts and concept mastery tables (C7.1); found before the
+commit, so there is no separate fix commit.
+
 ## 2026-11-10 C6.2 — "a computer" is graded as option (a), wrong, at high confidence
 
 **Status:** fixed

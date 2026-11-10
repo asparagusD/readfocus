@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 172,
-    "inventoried": 161,
+    "tracked": 173,
+    "inventoried": 162,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7362,
+      "size_bytes": 7378,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -521,10 +521,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 145,
-      "size_bytes": 5295,
+      "lines": 222,
+      "size_bytes": 8443,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, and 006 adds the full-text index and search_chunks_text."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, and 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies."
     },
     {
       "path": "backend/tests/test_offline.py",
@@ -609,8 +609,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 443,
-      "size_bytes": 17701,
+      "lines": 489,
+      "size_bytes": 19648,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -625,8 +625,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 987,
-      "size_bytes": 152605,
+      "lines": 1118,
+      "size_bytes": 169125,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1199,6 +1199,14 @@
       "purpose": "Adds the question_bank table (one precomputed question per row, tied to a user, book and chunk) with row-level security, a (user_id, book_id, chunk_index) index and a unique (chunk_id, strategy, prompt_hash) rule."
     },
     {
+      "path": "supabase/migrations/008_concept_mastery.sql",
+      "language": "sql",
+      "lines": 70,
+      "size_bytes": 3036,
+      "role": "migration",
+      "purpose": "Adds the concepts table (a book's concepts, unique per user, book and concept key) and user_concept_mastery (a reader's 0..1 mastery, attempts and next review per concept), both with row-level security, and indexes on (user_id, book_id) and (user_id, next_review)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1233,8 +1241,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 163,
-      "size_bytes": 27604,
+      "lines": 164,
+      "size_bytes": 28036,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1265,8 +1273,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 241,
-      "size_bytes": 9758,
+      "lines": 244,
+      "size_bytes": 9817,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

@@ -72,6 +72,73 @@ def test_006_adds_full_text_search_that_respects_row_level_security():
     assert "auth.uid()" in sql and "c.book_id = p_book_id" in sql
 
 
+def migration_007() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "007_question_bank.sql"))
+
+
+QUESTION_BANK_COLUMNS = {
+    "id": "uuid PRIMARY KEY",
+    "user_id": "uuid NOT NULL REFERENCES public.profiles(user_id) ON DELETE CASCADE",
+    "book_id": "uuid NOT NULL REFERENCES public.books(id) ON DELETE CASCADE",
+    "chunk_id": "uuid NOT NULL REFERENCES public.chunks(id) ON DELETE CASCADE",
+    "chunk_index": "integer NOT NULL",
+    "type": "text NOT NULL",
+    "prompt": "text NOT NULL",
+    "answer": "text",
+    "evidence": "text",
+    "key_terms": "jsonb",
+    "distractors": "jsonb",
+    "difficulty": "real",
+    "strategy": "text NOT NULL",
+    "quality": "real",
+    "prompt_hash": "text NOT NULL",
+    "times_used": "integer NOT NULL DEFAULT 0",
+    "created_at": "timestamptz NOT NULL DEFAULT now()",
+}
+
+
+def test_007_creates_question_bank_with_the_agreed_columns():
+    sql = migration_007()
+    body = re.search(r"CREATE TABLE IF NOT EXISTS public\.question_bank \((.*?)\);", sql)
+    assert body, "question_bank is not created with IF NOT EXISTS"
+    columns = {}
+    for line in re.split(r",(?![^(]*\))", body.group(1)):
+        name, _, definition = line.strip().partition(" ")
+        columns[name] = definition
+    assert list(columns) == list(QUESTION_BANK_COLUMNS)
+    for name, start in QUESTION_BANK_COLUMNS.items():
+        assert columns[name].startswith(start), f"{name}: {columns[name]}"
+
+
+def test_007_rows_belong_to_their_user_under_row_level_security():
+    sql = migration_007()
+    assert "ALTER TABLE public.question_bank ENABLE ROW LEVEL SECURITY" in sql
+    assert re.search(
+        r"CREATE POLICY \"[^\"]+\" ON public\.question_bank FOR ALL "
+        r"USING \(auth\.uid\(\) = user_id\) WITH CHECK \(auth\.uid\(\) = user_id\)",
+        sql,
+    )
+    assert "SECURITY DEFINER" not in sql
+
+
+def test_007_has_the_lookup_index_and_the_uniqueness_rule():
+    sql = migration_007()
+    assert re.search(
+        r"CREATE INDEX IF NOT EXISTS \w+ ON public\.question_bank \(user_id, book_id, chunk_index\)", sql
+    )
+    assert re.search(
+        r"CREATE UNIQUE INDEX IF NOT EXISTS \w+ ON public\.question_bank \(chunk_id, strategy, prompt_hash\)",
+        sql,
+    )
+
+
+def test_007_touches_no_existing_table():
+    sql = migration_007()
+    assert "ALTER TABLE public.question_bank" in sql
+    assert re.findall(r"ALTER TABLE public\.(\w+)", sql) == ["question_bank"]
+    assert not re.search(r"\b(INSERT|UPDATE)\b", sql)
+
+
 def test_005_leaves_the_old_column_and_function_alone():
     sql = migration_005()
     assert not re.search(r"\bmatch_chunks\s*\(", sql)

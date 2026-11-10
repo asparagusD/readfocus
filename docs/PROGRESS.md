@@ -459,12 +459,142 @@ Close review (2026-11-10 14:20):
 - **Time.** 1 h 55 min of wall-clock, from branch creation at 12:20 to this
   review at 14:15, against 2.5 h budgeted.
 
-## C5
+## C5 — question generation
 
-Title to be filled from the promptbook.
+Branch `chunk/C5-question-generation`, created from `readfocus-2.0` at
+`df0b510`. Goal: replace LLM test generation with a precomputed,
+source-grounded question bank built at ingestion, so a test loads with one
+database read and no model call. Grading is not in this chunk: the evaluator
+keeps its current code and still receives `question`, `type` and `guidance`.
+Nothing under `frontend/` is edited.
+
+### Plan (written at chunk start, before any code)
+
+Design decisions that apply to every subchunk:
+
+- **Every question is built from one sentence of the chunk it tests** and
+  stores that sentence (`source_sentence`), its reference answer and the
+  concept it is about. No question needs knowledge outside the passage.
+- **Question format stays open-answer.** The test page is a textarea, so
+  there are no multiple-choice distractors. `type` stays one of `factual`,
+  `inference`, `summary` (the badge the page shows); the new `strategy`
+  field says how the question was made.
+- **Six strategies**, all pure and deterministic: `cloze` (a key concept or
+  number blanked out of an informative sentence), `definition` ("X is / means
+  / refers to ..." turned into "What is X?"), `cause` (a sentence with
+  because / therefore / as a result: the effect is quoted, the reason is
+  asked for), `contrast` (however / whereas / unlike), `concept` ("What does
+  the passage say about X?", answered by the sentences that mention X) and
+  `summary` (reference answer is the top sentences by `informativeness`;
+  always available, so no chunk is left without a question).
+- **No new dependency**, so no memory row is required (constraint 5). What
+  is measured instead: milliseconds per chunk for generation, server RSS
+  during ingestion with the hook on (306 MB peak today), and
+  `finish-reading` latency against the C3.5 baseline.
+- **Layers.** Pure text-to-candidates code goes in `backend/nlp/` (no I/O,
+  thresholds passed in as arguments). The agents follow the
+  `free-intelligence` pattern: Pydantic input and output, a pure `decide`,
+  constants in the new `backend/agents/policy.py`, a thin node that appends
+  to `decisions`. Database writes go in `backend/services/`.
+- **Concepts come from `extract_concepts(..., use_embeddings=False)`**: C4.4
+  measured the embedding merge as two to four times slower with no change
+  in output.
+- **A missing bank never blocks a test.** If the session's chunks have too
+  few bank rows (books ingested before C5, or ingestion still running), the
+  test generator runs the same pure generator on the chunk text in the
+  request and stores the rows. Bank generation failing never marks a book
+  `error`.
+- **Database: dev project only, additive only** (constraint 2).
+- Tests are written first, run offline, and use the fake Supabase client.
+  Every new tracked file gets a line in `tools/repo_graph/purposes.json`;
+  new files are `git add`-ed before `make graph` (issue 21).
+- Estimated lines are hand-written lines, tests included; migrations and
+  `docs/repo-graph/` do not count. Subchunks over ~200 lines are split a/b
+  up front.
+
+| Step | Files | Est. lines | Tests | Est. time |
+|---|---|---|---|---|
+| C5.1 `question_bank` schema (dev only) | `supabase/migrations/007_question_bank.sql` (new: table `question_bank` with `id`, `book_id` and `chunk_id` (both `ON DELETE CASCADE`), `user_id`, `chunk_index`, `type` (check: factual, inference, summary), `strategy`, `question`, `answer`, `guidance`, `source_sentence`, `sentence_index`, `concept_key`, `difficulty` (1 to 3), `quality` (0 to 1), `question_hash`, `generator_version`, `created_at`; unique `(chunk_id, question_hash)` so a re-run cannot duplicate; index `(book_id, chunk_index)`; RLS on, with the same own-rows policy as the other tables), `backend/tests/test_migrations.py`, `tools/repo_graph/purposes.json` | 40 (plus about 45 SQL) | 4 static: 007 has no destructive statement; it creates the table with RLS enabled and a policy on `auth.uid() = user_id`; the `type` check lists exactly the three types; 001 to 006 unchanged. By hand on dev after `npx supabase db push --linked --dry-run` lists only 007: insert and read a fixture row as test user A, `[]` for user B and for the anon key, deleting the fixture book removes its rows, row counts of the other tables unchanged | 25 min + user |
+| C5.2a candidate model, `cloze` and `definition` | `backend/nlp/question_strategies.py` (new: Pydantic `Candidate` with the bank's content fields; `cloze(sentences, concepts)` blanks the highest-weight concept or a number in a sentence, never the first word, one blank per sentence; `definition(sentences, concepts)` matches a concept followed by is / are / means / refers to / is defined as), `backend/tests/test_question_strategies.py` (new), `tools/repo_graph/purposes.json` | 190 (95 code, 90 tests, 5 other) | About 10 on fixed passages: the blank removes exactly the answer and the answer is not left elsewhere in the stem; a number is blanked when no concept is present; a sentence with no concept or number gives nothing; "X is ..." gives "What is X?" with the sentence as the answer; "it is ..." and "there is ..." do not; `source_sentence` is verbatim from the chunk; same input, same output; empty text gives `[]` | 35 min |
+| C5.2b `cause`, `contrast`, `concept`, `summary` and `generate_candidates` | `backend/nlp/question_strategies.py`, `backend/tests/test_question_strategies.py` | 190 (100 code, 90 tests) | About 10: a because / therefore sentence yields a question quoting the effect with the reason as the answer; a marker at the very start of a sentence (reason in the previous sentence) is skipped; however / whereas yields a contrast question; `concept` answers with every sentence that mentions the concept; `summary` exists for any chunk with one sentence or more and names the top concepts in `guidance`; `generate_candidates(text, concepts)` returns candidates from every strategy with the right `type` and `strategy`; time per 600-word chunk measured on `sample.pdf` | 35 min |
+| C5.3 quality filter | `backend/nlp/question_quality.py` (new, pure: `chunk_kind(text)` flags reference lists, tables of contents and front matter by citation, year and digit density, where only `summary` is allowed or nothing; `reject_reason(candidate, ...)` for a source sentence that opens with a pronoun, is a caption or bibliography entry, is too short or long, has low `informativeness`, an answer that is a stopword or too long, a stem that contains its own answer; `quality(candidate)` from 0 to 1; `filter_candidates(candidates, min_quality, per_chunk, per_type)` drops rejects, merges near-duplicates with rapidfuzz, keeps the best per sentence and caps per chunk), `backend/tests/test_question_quality.py` (new), `tools/repo_graph/purposes.json` | 195 (95 code, 95 tests, 5 other) | About 12, table-driven: each reject reason fires on its example and not on a clean one; a bibliography chunk and a contents page are flagged, a body chunk with two citations is not; two questions at ratio 90 or more collapse to the better one; caps and `min_quality` respected; the order is stable; nothing rejected is returned. By hand on `sample.pdf` (7 chunks): kept and rejected counts by reason, and the kept questions for chunks 0, 3 and 5 pasted in the commit body for the user to read | 40 min |
+| C5.4a bank agent (pure) | `backend/agents/policy.py` (new: `GENERATOR_VERSION`, `MIN_QUALITY`, `MAX_PER_CHUNK`, per-type caps, concept `top_k`), `backend/agents/question_bank_agent.py` (new: `BankInput` (chunk id, index, text), `BankOutput` (rows ready to insert, with `question_hash`, plus rejected counts by reason), pure `decide` = concepts, then strategies, then filter), `backend/tests/test_question_bank_agent.py` (new), `tools/repo_graph/purposes.json` | 180 (95 code, 80 tests, 5 other) | 7: a body passage gives at least one factual and one summary row; every row has the bank's required fields and a `quality` at or above the threshold; the hash is stable and differs between questions; a reference-list chunk gives no factual rows; the cap holds; empty text gives no rows; the module imports no LangChain, no `llm.py` and no Supabase client | 30 min |
+| C5.4b ingestion hook | `backend/services/question_bank.py` (new: `build_for_chunks(book_id, user_id, chunk_rows)` runs `decide` per chunk in a worker thread and upserts on `(chunk_id, question_hash)`; `fetch(book_id, chunk_indices)`), `backend/services/book_ingestor.py` (after each batch insert, and for the first batch after the book is marked ready, call `build_for_chunks` inside its own try / except), `backend/tests/test_question_bank_service.py` (new), `backend/tests/test_ingest_embeddings.py`, `tools/repo_graph/purposes.json` | 170 (70 code, 95 tests, 5 other) | 6 on the fake database: every ingested chunk gets bank rows with its own `chunk_id`, `book_id` and `user_id`; the book is `ready` before the first bank write; a generator that raises leaves the book `ready` and the chunks stored; running twice adds no duplicate; `fetch` returns only the asked chunks; the existing ingestion tests still pass. By hand: upload `sample.pdf` (ready 3.81 s, all chunks 3.92 s in C4.6), rows per chunk on dev, server RSS peak | 35 min |
+| C5.4c backfill for existing dev books | `scripts/backfill_question_bank.py` (new, same shape as `scripts/backfill_local_embeddings.py`: only chunks with no bank rows at the current `GENERATOR_VERSION`, resumable, `--dry-run`, `--limit`, `--book-id`, refuses to run unless `ENV=development`), `backend/tests/test_backfill_question_bank.py` (new), `docs/BENCHMARKS.md` (ms per chunk, rows per chunk, rejects by reason), `tools/repo_graph/purposes.json` | 140 (70 script, 50 tests, 20 other) | 4: refuses outside development; skips chunks that already have rows; `--dry-run` writes nothing; `--book-id` limits the run. By hand: dry run, `--limit 20`, the full run over the 642 dev chunks, a second run that writes 0 | 25 min |
+| C5.5a test assembly (pure) | `backend/agents/test_generator_agent.py` (add `AssembleInput` (bank rows for the session's chunks, ids already asked of this reader, a seed derived from the session id), `AssembleOutput`, and a pure `decide`: 3 factual, 1 inference, 1 summary; spread across the session's chunks and across concepts; unseen before seen; higher `quality` first; a missing type is filled from the next best; the old node is untouched in this commit), `backend/agents/policy.py` (test shape and weights), `backend/tests/test_test_generator.py` (new) | 185 (85 code, 95 tests, 5 other) | 9: five questions in the 3 / 1 / 1 shape; no two from the same sentence; every chunk of a three-chunk session is represented; a seen question is used only when nothing unseen is left; a bank with no inference rows still returns five; fewer than five rows returns what exists, with the summary; the same seed gives the same test and a different seed can differ; output keeps `question`, `type`, `guidance` and adds `id`, `answer`, `source_sentence`, `concept_key`; no I/O in `decide` | 35 min |
+| C5.5b serve tests from the bank | `backend/agents/test_generator_agent.py` (node becomes a thin wrapper: `fetch` the bank, lazy fill for chunks with no rows, `decide`, return `test_questions` and a `decisions` entry; the prompt, parser, `test_llm` import, retriever call and generic mock questions are deleted; `generate_test` keeps its signature), `backend/agents/state.py` (`decisions`), `backend/routers/sessions.py` (`GET /sessions/{id}` returns only `question` and `type` of each question, so reference answers never reach the browser; closes the `guidance` part of issue 18), `backend/tests/test_test_generator.py`, `backend/tests/test_api_sessions.py` (new), `tools/repo_graph/tests/test_query.py` (it hard-codes the importers of `llm.py`, which drop by one), `tools/repo_graph/purposes.json` | 195 (75 code, 110 tests, 10 other; about 90 deleted) | 7 on the fake database: the node returns five bank questions for the session's chunks with no chat-model object constructed; a book with an empty bank still gets a test and the rows are stored; a second session on the same chunks avoids the first one's questions; `finish-reading` returns `question` and `type` only; `GET /sessions/{id}` has no `answer`, `guidance` or `source_sentence`; `submit-answers` still finds the full questions; the module no longer imports `llm.py`, `retriever.py` or LangChain | 40 min |
+| C5.5c measure and close | `docs/BENCHMARKS.md` (`python scripts/bench.py` session steps against the C3.5 baseline, where test generation was 1.2 to 1.8 s on fallbacks), `CLAUDE.md` (pytest count in the baseline table; the stack note on what still calls Groq), `scripts/manual/README.md` (`test_generator.py` no longer calls an LLM) | 40 | none added. By hand: backend up, a full session as test user A on a backfilled book and on a fresh upload; server log shows no Groq request during `finish-reading`; the banned-provider grep lists one file fewer | 20 min |
+
+Total: about 1,500 hand-written lines in 10 commits, about 5.5 hours
+including the waits. No budget for C5 is recorded in this file; if the
+promptbook gives less, the cut list below applies.
+
+Exit criteria for the chunk:
+
+- `finish-reading` makes no LLM call and answers in well under the C3.5
+  figure; target p95 at most 400 ms locally, which is about two Supabase
+  round trips.
+- A freshly uploaded book and a pre-C5 book both produce a five-question
+  test whose every question quotes or blanks a sentence from the assigned
+  chunks.
+- No reference answer in any response the browser receives.
+- `backend/agents/test_generator_agent.py` leaves the banned-provider grep
+  list.
+
+Safe to cut, in this order: `contrast` (C5.2b); C5.4c as a script (the lazy
+fill covers old books on first use); avoiding already-asked questions
+(C5.5a); `chunk_kind` front-matter detection beyond reference lists (C5.3);
+`cause` (C5.2b). Not safe to cut: the answer stripping in C5.5b.
+
+Risks and open questions:
+
+- **Applying migration 007 to the dev project needs the user's go-ahead**,
+  as 005 and 006 did. Nothing is pushed before it; production is not
+  touched.
+- **Question wording is the main quality risk.** Templates over raw
+  sentences read stiffly, and `cause` and `contrast` depend on clean clause
+  boundaries. C5.3 ends with the kept questions for three `sample.pdf`
+  chunks in the commit body so the user can judge them before C5.4 builds
+  on them. `sample.pdf` is one academic paper; no novel or narrative
+  non-fiction has been tried, and the dev database holds the only other
+  texts.
+- **Inference questions are the weakest type.** With no model, "inference"
+  means cause, contrast and concept questions, which are closer to guided
+  recall than to reading between the lines.
+- **Grading does not improve in this chunk.** The evaluator still calls
+  Groq and, on this machine, falls back to 10/10 (issues 18 and 22). The
+  bank stores `answer` and `source_sentence` so the evaluator chunk can
+  grade against them; the `guidance` it reads today is filled from the same
+  reference answer.
+- **`GET /sessions/{id}` changes shape** for `test_questions` (two keys per
+  question instead of all). `ComprehensionTest.jsx` and `Results.jsx` read
+  only `question` and `type`, checked by grep; no frontend edit is planned.
+- **Ingestion gets slower and heavier.** Concept extraction was 24 to 37 ms
+  per chunk on Windows without embeddings; Render's shared CPU is several
+  times slower, and the server already peaked at 306 MB during ingestion.
+  The hook runs after the book is marked ready so time-to-first-read does
+  not move; both numbers are re-measured in C5.4b, and if RSS rises
+  noticeably the hook moves to after the last embedding batch.
+- **Regeneration.** Improving a strategy later means bumping
+  `GENERATOR_VERSION` and adding rows; old rows stay (additive) and
+  assembly reads only the current version. Bank ids stored in past
+  sessions therefore stay valid.
+- **Repeat avoidance** reads the reader's earlier `sessions.test_questions`
+  for the book: one extra query per test, no new table.
+- **Not in this chunk:** the evaluator, planner and optimizer rewrites, the
+  orchestrator, multiple-choice questions and any test-page change, the
+  fixed 180 s test time and blank auto-submit (issue 18), the ownership
+  check in `POST /sessions/start` (issue 17), and removal of `llm.py` and
+  the provider packages (C8).
+- The three `docs/repo-graph/` files show as modified at chunk start with
+  an empty `git diff --stat`: line endings only, as in C3. Left alone until
+  a subchunk regenerates them.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C5.1 `question_bank` table (dev only) | this commit | Added `supabase/migrations/007_question_bank.sql` (the C5.1 prompt says `006_question_bank.sql`; 006 is taken by `006_chunk_text_search.sql`): table `question_bank` with the prompt's columns (`prompt`, `evidence`, `key_terms`, `distractors`, `prompt_hash`, `times_used`, not the plan's `question`, `source_sentence`, `guidance`, `question_hash`), foreign keys to `profiles`, `books` and `chunks` with `ON DELETE CASCADE`, `NOT NULL` on the ids, `chunk_index`, `type`, `prompt`, `strategy` and `prompt_hash`, index `(user_id, book_id, chunk_index)`, unique `(chunk_id, strategy, prompt_hash)`, RLS on with one own-rows policy (`USING` and `WITH CHECK`). Applied to the dev project only. Added four tests to `backend/tests/test_migrations.py`. | Tests written first: 4 failed (no 007 file), then 17 passed. The linked project is the one in `.env` (`ENV=development`); `npx supabase db push --linked --dry-run` listed only 007; applied; `migration list` shows 001 to 007 on both sides. On dev, with a one-chunk fixture book of test user A (removed afterwards; 8 books, 642 chunks, 0 `question_bank` rows before and after): defaults filled (`times_used` 0, `created_at`, `id`), jsonb arrays round-trip, a duplicate `(chunk_id, strategy, prompt_hash)` is refused (23505) and the same hash under another strategy is accepted, a null `prompt` is refused; user A reads and updates the two rows; user B and the anon key read none; user B cannot insert a row for user A (RLS violation), nor update or delete A's row; deleting the book removes its questions. Standard checks: ruff 82 errors (baseline), `pytest backend/tests -q` 161 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 14:30 | One `docs/DEBUG_LOG.md` entry: a tooling test lists the tables by name and needed the seventh. No check constraint on `type` or `strategy`, and no `generator_version` column, both of which the plan had: the prompt's column list was followed. The plan's later rows still use the old field names; C5.2 onwards follow the table. The dev check script was a one-off and is not committed. Production not touched |
 
 ## C6
 

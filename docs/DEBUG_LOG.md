@@ -56,6 +56,52 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C5.1 — graph tooling test fails after a seventh table is added
+
+**Status:** fixed
+
+### Symptom
+After adding `supabase/migrations/007_question_bank.sql` and running
+`make graph`, the tooling suite went from 61 passed to 1 failed, 60 passed:
+
+    pytest tools/repo_graph/tests -q
+    ________________ test_real_graph_has_the_schema_and_the_agents ________________
+        def test_real_graph_has_the_schema_and_the_agents():
+            graph = build.build_repo()
+            tables = {"profiles", "books", "chunks", "sessions", "test_results", "reading_progress"}
+    >       assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
+    E       AssertionError: assert {'table:books...essions', ...} == {'table:books...test_results'}
+    E         Extra items in the left set:
+    E         'table:question_bank'
+    tools\repo_graph\tests\test_build.py:230: AssertionError
+
+### Repro
+    pytest tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents -q
+
+### Hypotheses
+1. The test pins the exact set of tables the migrations define, and 007
+   defines a new one on purpose. Evidence: the only extra item is
+   `table:question_bank`, and `query.py question_bank` shows it defined in
+   007 and nowhere else. Ruled out if: any other table is extra or missing.
+   Result: confirmed.
+
+### Root cause
+Not a defect in the graph: the expectation at
+`tools/repo_graph/tests/test_build.py:228` lists the tables by name (added
+in C2.2b to catch bogus tables), so every new table has to be added to it.
+
+### Fix
+Added `question_bank` to the expected set. The assertion stays exact, so a
+bogus table would still fail it.
+
+### Regression test
+The same test. Failed before the change: yes (output above). Passes after:
+yes, 61 passed.
+
+### Commit
+feat(db): add question_bank table with RLS (C5.1); found before the commit,
+so there is no separate fix commit.
+
 ## 2026-11-10 C4.3 — ruff count committed one above the baseline
 
 **Status:** fixed

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 152,
-    "inventoried": 141,
+    "tracked": 153,
+    "inventoried": 142,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7284,
+      "size_bytes": 7300,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -401,8 +401,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 78,
-      "size_bytes": 2808,
+      "lines": 145,
+      "size_bytes": 5295,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, and 006 adds the full-text index and search_chunks_text."
     },
@@ -457,8 +457,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 294,
-      "size_bytes": 11348,
+      "lines": 340,
+      "size_bytes": 13270,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -473,8 +473,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 538,
-      "size_bytes": 72249,
+      "lines": 668,
+      "size_bytes": 91091,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1039,6 +1039,14 @@
       "purpose": "Adds a GIN full-text index on chunks.content and search_chunks_text (websearch_to_tsquery, ranked), which runs as the caller so RLS applies."
     },
     {
+      "path": "supabase/migrations/007_question_bank.sql",
+      "language": "sql",
+      "lines": 51,
+      "size_bytes": 2241,
+      "role": "migration",
+      "purpose": "Adds the question_bank table (one precomputed question per row, tied to a user, book and chunk) with row-level security, a (user_id, book_id, chunk_index) index and a unique (chunk_id, strategy, prompt_hash) rule."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1073,8 +1081,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 143,
-      "size_bytes": 21625,
+      "lines": 144,
+      "size_bytes": 21889,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1106,7 +1114,7 @@
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
       "lines": 241,
-      "size_bytes": 9741,
+      "size_bytes": 9758,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

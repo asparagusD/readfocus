@@ -972,6 +972,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/007_question_bank.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -1101,6 +1107,10 @@
     },
     {
       "id": "table:profiles",
+      "type": "table"
+    },
+    {
+      "id": "table:question_bank",
       "type": "table"
     },
     {
@@ -1527,6 +1537,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/001_initial.sql",
       "to": "table:test_results"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/007_question_bank.sql",
+      "to": "table:question_bank"
     },
     {
       "type": "graph_edge",

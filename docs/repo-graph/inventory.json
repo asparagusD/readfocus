@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 161,
-    "inventoried": 150,
+    "tracked": 165,
+    "inventoried": 154,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7300,
+      "size_bytes": 7315,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -153,8 +153,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 88,
-      "size_bytes": 2961,
+      "lines": 106,
+      "size_bytes": 3528,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far the question generation ones."
     },
@@ -173,6 +173,14 @@
       "size_bytes": 6405,
       "role": "agent",
       "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); returns a GenerationReport."
+    },
+    {
+      "path": "backend/agents/question_generation/assembler.py",
+      "language": "python",
+      "lines": 138,
+      "size_bytes": 5699,
+      "role": "agent",
+      "purpose": "Pure test assembly: picks a session's questions from bank rows by a mix of strategies, preferring unused, difficulty-matched questions; builds the stored form (with answers) and the public form (question, type, options only)."
     },
     {
       "path": "backend/agents/question_generation/quality.py",
@@ -204,7 +212,7 @@
       "lines": 124,
       "size_bytes": 5815,
       "role": "agent",
-      "purpose": "Test generator node: returns cached questions or asks the Groq LLM for five (3 factual, 1 inference, 1 summary) with RAG context; falls back to generic questions."
+      "purpose": "Old test generator node: asks the Groq LLM for five questions with RAG context and falls back to generic ones. Still wired into the LangGraph workflow, but no longer called by the session router since C5.5."
     },
     {
       "path": "backend/dependencies.py",
@@ -305,10 +313,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 254,
-      "size_bytes": 10609,
+      "lines": 241,
+      "size_bytes": 10222,
       "role": "router",
-      "purpose": "Session lifecycle endpoints: start (planner), finish-reading (test), evaluate-single (background grade), submit-answers (evaluator and optimizer), abandon, get."
+      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank in the background), finish-reading (returns the public part of the test), evaluate-single (background grade), submit-answers (evaluator and optimizer), abandon, get; no answer or evidence is sent to the client."
     },
     {
       "path": "backend/services/__init__.py",
@@ -343,6 +351,14 @@
       "purpose": "Groq ChatGroq client (llama-3.3-70b-versatile) exported under five agent names; raises at import if the key is missing. Banned provider."
     },
     {
+      "path": "backend/services/question_bank.py",
+      "language": "python",
+      "lines": 58,
+      "size_bytes": 2923,
+      "role": "service",
+      "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, stores the picked questions with the session and increments times_used."
+    },
+    {
       "path": "backend/services/retriever.py",
       "language": "python",
       "lines": 92,
@@ -373,6 +389,14 @@
       "size_bytes": 3311,
       "role": "test",
       "purpose": "Offline test setup: dummy environment, a fake Supabase client, Groq and Google embedding classes that raise when called, and a guard that blocks non-loopback connections."
+    },
+    {
+      "path": "backend/tests/test_api_sessions.py",
+      "language": "python",
+      "lines": 202,
+      "size_bytes": 8926,
+      "role": "test",
+      "purpose": "Pytest on an in-memory database through TestClient: finish-reading returns five bank questions in one round trip, nothing secret reaches the client, times_used goes up, and chunks without bank rows are generated on demand."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -455,6 +479,14 @@
       "purpose": "Pytest: the suite uses the dummy environment and the fakes, outbound connections are blocked, loopback works, and a protected endpoint answers 401."
     },
     {
+      "path": "backend/tests/test_question_assembler.py",
+      "language": "python",
+      "lines": 125,
+      "size_bytes": 6299,
+      "role": "test",
+      "purpose": "Pytest on hand-made bank rows: the default mix, unused and difficulty preferences, no repeated sentence or answer, spread over chunks, option order, and the public form of a question."
+    },
+    {
       "path": "backend/tests/test_question_generation_agent.py",
       "language": "python",
       "lines": 181,
@@ -513,8 +545,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 285,
-      "size_bytes": 14399,
+      "lines": 307,
+      "size_bytes": 15558,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -537,8 +569,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 673,
-      "size_bytes": 102158,
+      "lines": 675,
+      "size_bytes": 109080,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1145,8 +1177,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 152,
-      "size_bytes": 23661,
+      "lines": 156,
+      "size_bytes": 24863,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

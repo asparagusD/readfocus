@@ -1,28 +1,25 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from typing import Any, List, cast
 from datetime import datetime
 
 from backend.dependencies import get_current_user
 from backend.services.supabase_client import supabase
+from backend.services.question_bank import assemble_session_test
 from backend.agents.planner_agent import plan_session
-from backend.agents.test_generator_agent import generate_test
+from backend.agents.question_generation.assembler import public_question
 from backend.agents.evaluator_agent import evaluate_answers
 from backend.agents.optimizer_agent import optimize_pace
 
 router = APIRouter()
 
-async def generate_test_background(session_id: str, chunk_indices: List[int], book_id: str):
-    """Generates test questions in the background and saves them to the session."""
+def assemble_test_background(session_id: str, user_id: str, book_id: str, chunk_indices: List[int]):
+    """Picks the session's questions from the question bank while the reader reads."""
     try:
-        questions_pydantic = await generate_test(session_id, chunk_indices, book_id)
-        if questions_pydantic:
-            test_questions = [q.model_dump() if hasattr(q, 'model_dump') else q.dict() for q in questions_pydantic]
-            supabase.table("sessions").update({
-                "test_questions": test_questions
-            }).eq("id", session_id).execute()
+        assemble_session_test(session_id, user_id, book_id, chunk_indices)
     except Exception as e:
-        print(f"Background test generation failed: {e}")
+        print(f"Background test assembly failed: {e}")
 
 
 class StartSessionRequest(BaseModel):
@@ -114,8 +111,8 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         
     session_id = cast(dict[str, Any], session_resp.data[0])["id"]
     
-    # 4. Kick off background test generation
-    background_tasks.add_task(generate_test_background, session_id, chunk_indices, req.book_id)
+    # 4. Assemble the test from the question bank in the background
+    background_tasks.add_task(assemble_test_background, session_id, user_id, req.book_id, chunk_indices)
     
     return {
         "session_id": session_id,
@@ -127,47 +124,28 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
 
 @router.post("/{session_id}/finish-reading")
 async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: str = Depends(get_current_user)):
-    # 1. Fetch session
-    sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
-    if not sess_resp.data:
-        raise HTTPException(status_code=404, detail="Session not found.")
-        
-    sess = cast(dict[str, Any], sess_resp.data[0])
-    book_id = sess["book_id"]
-    start_idx = sess["chunk_start_index"]
-    end_idx = sess["chunk_end_index"]
-    chunk_indices = list(range(start_idx, end_idx + 1))
-    test_questions = sess.get("test_questions")
-    
-    # 2. Update session status
-    supabase.table("sessions").update({
+    # 1. Mark the session as testing; the update returns the row, so this is the only round trip
+    sess_resp = supabase.table("sessions").update({
         "status": "testing",
         "actual_duration_minutes": req.actual_duration_minutes
-    }).eq("id", session_id).execute()
-    
-    # 3. Check if we already have questions from background task
+    }).eq("id", session_id).eq("user_id", user_id).execute()
+    if not sess_resp.data:
+        raise HTTPException(status_code=404, detail="Session not found.")
+
+    sess = cast(dict[str, Any], sess_resp.data[0])
+    test_questions = sess.get("test_questions")
+
+    # 2. The test is normally assembled in the background at start; if it is not there yet, do it now
     if not test_questions:
-        print("Questions not found from background task. Generating synchronously...")
-        questions_pydantic = await generate_test(session_id, chunk_indices, book_id)
-        if not questions_pydantic:
-            raise HTTPException(status_code=500, detail="Failed to generate test.")
-            
-        test_questions = [q.model_dump() if hasattr(q, 'model_dump') else q.dict() for q in questions_pydantic]
-        
-        # Save test questions to DB so we can grade them later
-        try:
-            supabase.table("sessions").update({
-                "test_questions": test_questions
-            }).eq("id", session_id).execute()
-        except Exception as e:
-            print(f"Migration missing? Error: {e}")
-    
-    # 4. Filter guidance out for the frontend
-    filtered_questions = [{"question": q["question"], "type": q["type"]} for q in test_questions]
-    
+        chunk_indices = list(range(sess["chunk_start_index"], sess["chunk_end_index"] + 1))
+        test_questions = await run_in_threadpool(
+            assemble_session_test, session_id, user_id, sess["book_id"], chunk_indices
+        )
+
+    # 3. Only the public part of each question leaves the server: no answers, evidence or hints
     return {
         "test_id": session_id,
-        "questions": filtered_questions
+        "questions": [public_question(q) for q in test_questions]
     }
 
 @router.post("/{session_id}/evaluate-single")
@@ -245,10 +223,19 @@ async def get_session(session_id: str, user_id: str = Depends(get_current_user))
         raise HTTPException(status_code=404, detail="Session not found.")
         
     session: dict[str, Any] = cast(dict[str, Any], sess_resp.data[0])
-    
+
+    # Questions are stored with their answers for grading; the client gets the public part only.
+    session["test_questions"] = [public_question(q) for q in session.get("test_questions") or []]
+
     if session["status"] == "completed":
         test_resp = supabase.table("test_results").select("*").eq("session_id", session_id).execute()
         if test_resp.data:
-            session["test_results"] = cast(dict[str, Any], test_resp.data[0])
-            
+            results = cast(dict[str, Any], test_resp.data[0])
+            results["questions"] = [public_question(q) for q in results.get("questions") or []]
+            results["answers"] = [
+                {**answer, "question": public_question(answer.get("question") or {})}
+                for answer in results.get("answers") or []
+            ]
+            session["test_results"] = results
+
     return session

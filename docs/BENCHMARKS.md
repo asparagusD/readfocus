@@ -71,6 +71,28 @@ and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
 
+### C5.5: session tests from the question bank (2026-11-10)
+
+Windows, backend started with `uvicorn backend.main:app` against the dev
+project, `sample.pdf` uploaded as dev test user A, then 8 sessions in a
+row (`POST /sessions/start`, wait for the background assembly,
+`POST /sessions/{id}/finish-reading`, `GET /sessions/{id}`). Client-side
+wall time per request, authentication included:
+
+| Step | C3.5 baseline | C5.5 |
+|---|---|---|
+| `POST /sessions/{id}/finish-reading` | 1.2 to 1.8 s, on LLM fallbacks ("not measurable") | p50 187 ms, max 197 ms |
+| `GET /sessions/{id}` | not recorded | p50 184 ms |
+| `POST /sessions/start` | as above | p50 1,090 ms (the planner is unchanged) |
+| Test stored after start (background) | n/a | 0.4 s |
+
+Each test had 5 questions. `finish-reading` is one Supabase round trip
+after the token check. With the bank rows of the book deleted first, the
+test was stored 1.0 s after start (one chunk generated on demand) and
+`finish-reading` took 248 ms. An earlier run of 6 sessions on the same code
+path had one request at 274 ms. Not measured: Render; a session of several
+chunks; `finish-reading` arriving before the background assembly is done.
+
 ### C5.4: question bank generated during ingestion (2026-11-10)
 
 No new dependency; `yake` and `rapidfuzz` are now imported at startup

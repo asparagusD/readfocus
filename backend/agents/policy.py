@@ -75,6 +75,24 @@ QUESTION_CAP_DEFAULT = 3  # a strategy not listed above
 # Most questions stored for one chunk, over all strategies.
 MAX_QUESTIONS_PER_CHUNK = 12
 
+# --- Test assembly (backend/agents/question_generation/assembler.py) -------
+
+# Questions in one session test.
+TEST_QUESTION_COUNT = 5
+
+# The default mix: (strategies that may fill the place, how many places).
+# Places that cannot be filled go to the best of the remaining questions.
+TEST_MIX = [
+    (["multiple_choice"], 2),
+    (["cloze"], 1),
+    (["definition", "why_how"], 1),
+    (["main_idea"], 1),
+]
+
+# Difficulty (0..1) a question should be near when nothing is known about
+# the reader; the optimizer can pass another value.
+TEST_TARGET_DIFFICULTY = 0.4
+
 # Most key terms stored with one question.
 KEY_TERMS_MAX = 6
 

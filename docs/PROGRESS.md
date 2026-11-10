@@ -29,6 +29,10 @@ kept for history only.
 | 7 | `CLAUDE.md` lists commit types without `perf` and `merge`, which the `atomic-commit` skill adds. | C1.2 | unassigned |
 | 8 | No motion tokens, no `prefers-reduced-motion` rule, and `transition: all` in 3 stylesheets under `frontend/src`. | C1.6 | unassigned |
 | 9 | C0.1, C0.2 and C0.5 have no record; chunk titles for C3–C7 and C9–C15 are not filled in. Both need the promptbook. | C1.7 | user |
+| 10 | `backend/dependencies.py` accepts any raw UUID as a bearer token and returns it as the user id, in every environment. With the service-role client behind it, anyone who knows a user id can act as that user. | C2.1 | unassigned |
+| 11 | `frontend/src/lib/supabase.js` falls back to a hard-coded Supabase project URL and publishable key when the env vars are unset. Which project it points at is not confirmed. | C2.1 | unassigned |
+| 12 | The eight root `test_*.py` files are manual scripts, not tests: hard-coded ids, live LLM calls, `test_ingest.py` runs at import, `test_orchestrator.py` imports a function that does not exist. `pytest` from the repo root would collect them. | C2.1 | unassigned |
+| 13 | Dead or stale files: `frontend/src/App.css`, `hero.png`, `react.svg`, `vite.svg` and `icons.svg` are not referenced; `Card.jsx` is unused; `backend/routers/agent.py` has no endpoints; `backend/mcp_server.py` is started but never called; `backend/requirements.txt` differs from the root file and is unused; `render.yaml` declares Cerebras and SambaNova keys. | C2.1 | unassigned |
 
 ## C0 — setup
 
@@ -60,18 +64,91 @@ passes). No application code changed in C1.
 | [x] C1.4 | `a97aead` | Added the `repo-graph` skill (definition only). | Listed in the session's skills; cited paths checked; standard checks. `make graph` and `query.py` do not exist until C2. | 2026-11-10 07:01 | File descriptions are provisional until C2 |
 | [x] C1.5 | `d0e9448` | Added the `free-intelligence` skill. | Listed in the session's skills; its grep and three Python snippets executed; standard checks. | 2026-11-10 07:03 | Issue 6; `fastembed`, `yake`, `scikit-learn`, `rapidfuzz` not installed |
 | [x] C1.6 | `5c7381b` | Added the `design-review` skill. | Listed in the session's skills; frontend gaps measured with grep; standard checks. The review chain was not run. | 2026-11-10 07:06 | Issues 3, 8 |
-| [x] C1.7 | this commit | Added `docs/PROGRESS.md` and `docs/DEBUG_LOG.md`. | Hashes and times checked against `git log`; standard checks. | see `git log` | Issue 9 |
+| [x] C1.7 | `1ba0be2` | Added `docs/PROGRESS.md` and `docs/DEBUG_LOG.md`. | Hashes and times checked against `git log`; standard checks. | 2026-11-10 07:09 | Issue 9 |
 
-Not done in C1: the chunk is not merged into `readfocus-2.0` and nothing is
-pushed.
+C1 was merged into `readfocus-2.0` as `7a3327f` (2026-11-10 07:10);
+`origin/readfocus-2.0` contains it.
 
-## C2 — repo graph tooling
+## C2 — repo graph
 
-Builds `tools/repo_graph/`, `make graph` and `docs/repo-graph/` (per the C1.4
-prompt). Full title and subchunks to be filled from the promptbook.
+Branch `chunk/C2-repo-graph`. Full-repo read, then a machine-readable graph
+and a human-readable map. No application code changes in this chunk: nothing
+under `backend/`, `frontend/`, `supabase/` or `scripts/` is edited, and the
+root `test_*.py` files stay as they are.
+
+### Scope of the read
+
+`git ls-files` lists 110 files. 102 are read in full (8,631 lines). Excluded:
+
+| Excluded | Reason |
+|---|---|
+| `frontend/public/favicon.svg`, `frontend/public/icons.svg`, `frontend/src/assets/react.svg`, `frontend/src/assets/vite.svg` | binary/asset (`*.svg`) |
+| `frontend/src/assets/hero.png` | binary (`*.png`) |
+| `sample.pdf` | binary (`*.pdf`) |
+| `package-lock.json`, `frontend/package-lock.json` | lockfile |
+
+### Plan (written at chunk start, before any code)
+
+Design decisions that apply to every subchunk:
+
+- Standard library only, Python 3.11 syntax. No new dependency, so no RSS
+  measurement is needed (constraint 5).
+- Code in `tools/repo_graph/`, tests in `tools/repo_graph/tests/`, run with
+  `pytest tools/repo_graph/tests -q`. This becomes a sixth standard check in
+  `CLAUDE.md` in C2.4.
+- Generated output in `docs/repo-graph/` is deterministic: sorted keys and
+  lists, POSIX paths, LF newlines, no timestamps or absolute paths. That is
+  what makes the C2.6 freshness check possible across Windows and CI.
+- Estimated lines are hand-written lines, tests included. Generated files do
+  not count towards the ~200-line limit.
+
+| Step | Files | Est. lines | Tests | Est. time |
+|---|---|---|---|---|
+| C2.1 file inventory and full read | `tools/__init__.py`, `tools/repo_graph/__init__.py`, `tools/repo_graph/inventory.py` (lists `git ls-files`, assigns language and role, measures lines and size, applies the exclusion rules), `tools/repo_graph/purposes.json` (one hand-written line per file, written after reading it), `tools/repo_graph/tests/`; generates `docs/repo-graph/inventory.json`. Done as one commit at the user's request (planned as C2.1a and C2.1b) | 386 actual, 110 of them `purposes.json` | 7 test functions, 35 cases: role, language and exclusion rules; CRLF-safe measuring; sorting and counts; missing and stale purposes rejected; real inventory complete and byte-identical on a second run | 60 min |
+| C2.2a graph schema and import edges | `tools/repo_graph/schema.py` (node types `file`, `endpoint`, `table`, `agent_node`, `external_service`; edge types `imports`, `defines_endpoint`, `calls_endpoint`, `reads_table`, `writes_table`, `migrates_table`, `agent_edge`, `calls_external`), `tools/repo_graph/extract_imports.py` (Python via `ast`, JS/JSX via regex, relative imports resolved to tracked files), `tools/repo_graph/tests/test_imports.py` | 190 | 6: absolute and relative Python imports; JS relative import with and without extension; CSS import; third-party imports are not file edges; unresolvable import is reported, not dropped | 35 min |
+| C2.2b endpoint and table edges | `tools/repo_graph/extract_api.py` (FastAPI route decorators plus the router prefixes in `backend/main.py`; frontend calls matched to endpoints), `tools/repo_graph/extract_tables.py` (`.table("x")` calls classified read or write by the chained method; `create table` / `alter table` in migrations), `tools/repo_graph/tests/test_api_tables.py` | 200 | 7: prefix + path joined; path parameters normalised; frontend call matched to its endpoint; select is a read; insert/update/upsert/delete are writes; migration creates a table; migration alters a table | 40 min |
+| C2.2c agent edges and `graph.json` | `tools/repo_graph/extract_agents.py` (`add_node`, `add_edge`, conditional edges in `backend/agents/graph.py`; imports of banned providers as `calls_external`), `tools/repo_graph/build.py` (assembles everything, validates against the schema, writes `docs/repo-graph/graph.json`), `tools/repo_graph/tests/test_build.py`; generates `graph.json` | 180 | 5: agent nodes and edges from a fixture graph; external-service edge; every edge endpoint is an existing node; edge types are in the schema; built graph for this repo is byte-identical on a second run | 35 min |
+| C2.3 readable maps | `tools/repo_graph/render.py`, `tools/repo_graph/tests/test_render.py`; generates `docs/repo-graph/REPO_MAP.md` (files by area with description, imports and imported-by; endpoint table with handler and frontend callers; table-usage matrix; excluded files) and `docs/repo-graph/AGENT_GRAPH.md` (Mermaid diagram plus a node table) | 180 | 4: every inventoried file appears once; endpoint table matches the graph; table matrix matches the graph; Mermaid block has one line per agent edge | 30 min |
+| C2.4 query CLI and `make graph` | `tools/repo_graph/query.py` (accepts a file, an endpoint path or a table name; prints upstream, downstream, endpoints, tables, agents; non-zero exit on unknown target), `tools/repo_graph/tests/test_query.py`, `Makefile` (`graph` target), `CLAUDE.md` (drop "arrive in C2", add the sixth check), `.claude/skills/repo-graph/SKILL.md` and `.claude/skills/debug-protocol/SKILL.md` (remove the manual-fallback status, confirm command shapes) | 190 | 5: file query; endpoint query; table query; unknown target exits 2 with a message; Windows backslash path is accepted | 30 min |
+| C2.5 migration audit | `docs/AUDIT.md`, hand-written from the read and the graph: (1) schema audit of migrations 001–004, tables, columns, RLS and pgvector, against the tables and columns the code uses; (2) the 2.0 migration list: every file that calls a banned provider and what replaces it; (3) dead or misplaced files, such as the eight root `test_*.py`; (4) which open issues each finding belongs to. `tools/repo_graph/audit.py` and a test back the mechanical parts | 200 (120 prose, 80 code and test) | 3: table used in code but absent from migrations is reported; table in migrations never used is reported; tracked file with no inbound edge and no entry-point role is reported | 45 min |
+| C2.6 graph freshness in CI | `tools/repo_graph/build.py` (`--check`: rebuild in memory, exit 1 and name the stale files if `docs/repo-graph/` differs), `tools/repo_graph/tests/test_check.py`, `.github/workflows/ci.yml` (new `graph` job: `python -m tools.repo_graph.build --check` and `pytest tools/repo_graph/tests -q`; `deploy-render` also needs it) | 90 | 3: fresh graph exits 0; modified graph exits 1 and names the file; missing graph file exits 1 | 20 min |
+| C2.G 🚦 Gate G1: audit approval | No new files. Present `docs/AUDIT.md` and `docs/repo-graph/REPO_MAP.md` to the user and stop. Merge into `readfocus-2.0` only after approval | 0 | Standard checks plus `make graph` leaving `git status --short docs/repo-graph/` empty | user |
+
+Total: about 1,630 hand-written lines in 8 commits, about 5 hours.
+
+Safe to cut, in this order: `AGENT_GRAPH.md` Mermaid diagram (keep the node
+table); frontend `calls_endpoint` edges; the `audit.py` helper (keep the
+prose audit); C2.6 as a CI job (keep `--check` for local use).
+
+Risks and open questions:
+
+- `core.autocrlf` is `true` on this machine. Generated files are written
+  with LF and the freshness check must compare normalised content, or it
+  will pass locally and fail in CI.
+- The CI `lint` job is already red (issue 1). The new `graph` job is
+  separate, so its result stays readable. Whether `deploy-render` should
+  depend on it is the user's call; the plan assumes yes.
+- "Migration audit" is read here as the audit Gate G1 approves: the Supabase
+  schema plus the list of code that has to move off banned providers. It
+  compares migrations with code only. Comparing with the live dev database
+  needs a read-only query against it and is not planned unless asked for.
+- `python tools/repo_graph/query.py <file>` (script form, as `CLAUDE.md`
+  writes it) and `python -m tools.repo_graph.build` (module form) both have
+  to work; `query.py` handles its own import path.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C2.1 file inventory and full read | this commit | Read all 102 non-excluded tracked files; added `tools/repo_graph/inventory.py`, `purposes.json` and tests; generated `docs/repo-graph/inventory.json` (path, language, lines, size, role, purpose). | `python tools/repo_graph/inventory.py`: 117 tracked = 108 inventoried + 9 excluded, equal to `git ls-files \| wc -l`; `pytest tools/repo_graph/tests -q`: 35 passed; standard checks at baseline. | see `git log` | Issues 10-13 |
+| [ ] C2.2a graph schema and import edges | | | | | |
+| [ ] C2.2b endpoint and table edges | | | | | |
+| [ ] C2.2c agent edges and `graph.json` | | | | | |
+| [ ] C2.3 readable maps | | | | | |
+| [ ] C2.4 query CLI and `make graph` | | | | | |
+| [ ] C2.5 migration audit | | | | | |
+| [ ] C2.6 graph freshness in CI | | | | | |
+| [ ] C2.G 🚦 Gate G1: audit approval | | | | | |
 
 ## C3
 

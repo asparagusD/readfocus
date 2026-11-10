@@ -1,0 +1,912 @@
+{
+  "version": 1,
+  "counts": {
+    "tracked": 117,
+    "inventoried": 108,
+    "excluded": 9
+  },
+  "files": [
+    {
+      "path": ".claude/skills/atomic-commit/SKILL.md",
+      "language": "markdown",
+      "lines": 186,
+      "size_bytes": 5909,
+      "role": "doc",
+      "purpose": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes."
+    },
+    {
+      "path": ".claude/skills/debug-protocol/SKILL.md",
+      "language": "markdown",
+      "lines": 198,
+      "size_bytes": 6149,
+      "role": "doc",
+      "purpose": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template."
+    },
+    {
+      "path": ".claude/skills/design-review/SKILL.md",
+      "language": "markdown",
+      "lines": 157,
+      "size_bytes": 6191,
+      "role": "doc",
+      "purpose": "Project skill: the gate for UI changes; chains the three design skills, then a checklist and a before/after commit note."
+    },
+    {
+      "path": ".claude/skills/free-intelligence/SKILL.md",
+      "language": "markdown",
+      "lines": 210,
+      "size_bytes": 8365,
+      "role": "doc",
+      "purpose": "Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern."
+    },
+    {
+      "path": ".claude/skills/repo-graph/SKILL.md",
+      "language": "markdown",
+      "lines": 113,
+      "size_bytes": 4287,
+      "role": "doc",
+      "purpose": "Project skill: query the repo graph before an edit and regenerate it after a structural change."
+    },
+    {
+      "path": ".env.example",
+      "language": "dotenv",
+      "lines": 23,
+      "size_bytes": 683,
+      "role": "config",
+      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE, and the two provider keys due for removal in C8."
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "language": "yaml",
+      "lines": 70,
+      "size_bytes": 1952,
+      "role": "config",
+      "purpose": "CI on every push: ruff on backend/, pytest on backend/tests, frontend build; triggers the Render deploy hook on main."
+    },
+    {
+      "path": ".gitignore",
+      "language": "gitignore",
+      "lines": 28,
+      "size_bytes": 370,
+      "role": "config",
+      "purpose": "Root ignore rules: env files, node_modules, Python caches and virtualenvs, .cache/, the Impeccable binary, OS files."
+    },
+    {
+      "path": "CLAUDE.md",
+      "language": "markdown",
+      "lines": 179,
+      "size_bytes": 7075,
+      "role": "doc",
+      "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
+    },
+    {
+      "path": "Dockerfile",
+      "language": "dockerfile",
+      "lines": 15,
+      "size_bytes": 303,
+      "role": "config",
+      "purpose": "Backend image for Render: python:3.11-slim, installs root requirements.txt, copies backend/, runs uvicorn on port 8000."
+    },
+    {
+      "path": "Makefile",
+      "language": "makefile",
+      "lines": 13,
+      "size_bytes": 337,
+      "role": "config",
+      "purpose": "Dev targets: dev-backend (uvicorn with reload), dev-frontend (Vite), dev (both via concurrently)."
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "lines": 135,
+      "size_bytes": 7543,
+      "role": "doc",
+      "purpose": "Product overview and architecture; still describes the pre-2.0 Groq and Google AI Studio setup and an orchestrator node that no longer exists."
+    },
+    {
+      "path": "backend/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 7,
+      "role": "lib",
+      "purpose": "Package marker for backend."
+    },
+    {
+      "path": "backend/agents/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 7,
+      "role": "agent",
+      "purpose": "Package marker for backend.agents."
+    },
+    {
+      "path": "backend/agents/evaluator_agent.py",
+      "language": "python",
+      "lines": 216,
+      "size_bytes": 9752,
+      "role": "agent",
+      "purpose": "Evaluator node: grades each answer 0-10 with the Groq LLM (full marks on LLM error), inserts test_results, updates the rolling average in reading_progress."
+    },
+    {
+      "path": "backend/agents/graph.py",
+      "language": "python",
+      "lines": 59,
+      "size_bytes": 1837,
+      "role": "agent",
+      "purpose": "Builds the LangGraph workflow: routes from __start__ by state status to planner, test_generator, evaluator or optimizer, each ending at END."
+    },
+    {
+      "path": "backend/agents/optimizer_agent.py",
+      "language": "python",
+      "lines": 120,
+      "size_bytes": 4727,
+      "role": "agent",
+      "purpose": "Optimizer node: score thresholds set the chunk multiplier and re-read queue; the Groq LLM picks the next focus duration; saves pace_recommendation."
+    },
+    {
+      "path": "backend/agents/planner_agent.py",
+      "language": "python",
+      "lines": 189,
+      "size_bytes": 8084,
+      "role": "agent",
+      "purpose": "Planner node: serves the re-read queue first, otherwise asks the Groq LLM how many of the next three chunks to assign; falls back to one chunk for 20 minutes."
+    },
+    {
+      "path": "backend/agents/state.py",
+      "language": "python",
+      "lines": 17,
+      "size_bytes": 459,
+      "role": "agent",
+      "purpose": "AgentState TypedDict shared by all agent nodes."
+    },
+    {
+      "path": "backend/agents/test_generator_agent.py",
+      "language": "python",
+      "lines": 124,
+      "size_bytes": 5815,
+      "role": "test",
+      "purpose": "Test generator node: returns cached questions or asks the Groq LLM for five (3 factual, 1 inference, 1 summary) with RAG context; falls back to generic questions."
+    },
+    {
+      "path": "backend/dependencies.py",
+      "language": "python",
+      "lines": 27,
+      "size_bytes": 1096,
+      "role": "lib",
+      "purpose": "get_current_user FastAPI dependency: resolves a Supabase JWT to a user id, and accepts any raw UUID as the user id (dev bypass, not gated by ENV)."
+    },
+    {
+      "path": "backend/main.py",
+      "language": "python",
+      "lines": 64,
+      "size_bytes": 1718,
+      "role": "entry",
+      "purpose": "FastAPI app: CORS, the five routers, /health, and a lifespan hook that starts backend/mcp_server.py as a subprocess."
+    },
+    {
+      "path": "backend/mcp_server.py",
+      "language": "python",
+      "lines": 75,
+      "size_bytes": 3209,
+      "role": "entry",
+      "purpose": "Standalone FastMCP server with three Supabase tools (reading history, comprehension trend, chunk context); started by main.py, not called by any agent."
+    },
+    {
+      "path": "backend/requirements.txt",
+      "language": "text",
+      "lines": 19,
+      "size_bytes": 226,
+      "role": "lib",
+      "purpose": "Second dependency list that differs from the root one (adds mcp, lacks langchain-google-genai); not used by the Dockerfile or CI."
+    },
+    {
+      "path": "backend/routers/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 7,
+      "role": "router",
+      "purpose": "Package marker for backend.routers."
+    },
+    {
+      "path": "backend/routers/agent.py",
+      "language": "python",
+      "lines": 3,
+      "size_bytes": 52,
+      "role": "router",
+      "purpose": "Empty APIRouter mounted at /agent; defines no endpoints."
+    },
+    {
+      "path": "backend/routers/auth.py",
+      "language": "python",
+      "lines": 49,
+      "size_bytes": 1845,
+      "role": "router",
+      "purpose": "GET /auth/profile and POST /auth/profile/calibrate: read the profile and save the calibrated reading speed."
+    },
+    {
+      "path": "backend/routers/books.py",
+      "language": "python",
+      "lines": 125,
+      "size_bytes": 4670,
+      "role": "router",
+      "purpose": "Book endpoints: upload to Storage and start ingestion in the background, list, details with progress, status poll, delete."
+    },
+    {
+      "path": "backend/routers/dashboard.py",
+      "language": "python",
+      "lines": 155,
+      "size_bytes": 7374,
+      "role": "router",
+      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback."
+    },
+    {
+      "path": "backend/routers/sessions.py",
+      "language": "python",
+      "lines": 254,
+      "size_bytes": 10609,
+      "role": "router",
+      "purpose": "Session lifecycle endpoints: start (planner), finish-reading (test), evaluate-single (background grade), submit-answers (evaluator and optimizer), abandon, get."
+    },
+    {
+      "path": "backend/services/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 7,
+      "role": "service",
+      "purpose": "Package marker for backend.services."
+    },
+    {
+      "path": "backend/services/book_ingestor.py",
+      "language": "python",
+      "lines": 182,
+      "size_bytes": 6707,
+      "role": "service",
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds and inserts each chunk, marks the book ready after five chunks."
+    },
+    {
+      "path": "backend/services/embeddings.py",
+      "language": "python",
+      "lines": 37,
+      "size_bytes": 1259,
+      "role": "service",
+      "purpose": "Google AI Studio embedding client (gemini-embedding-2, 1536 dimensions) with retry; raises at import if the key is missing. Banned provider."
+    },
+    {
+      "path": "backend/services/llm.py",
+      "language": "python",
+      "lines": 37,
+      "size_bytes": 744,
+      "role": "service",
+      "purpose": "Groq ChatGroq client (llama-3.3-70b-versatile) exported under five agent names; raises at import if the key is missing. Banned provider."
+    },
+    {
+      "path": "backend/services/retriever.py",
+      "language": "python",
+      "lines": 39,
+      "size_bytes": 1476,
+      "role": "service",
+      "purpose": "Similar-chunk lookup through the match_chunks RPC, plus an unused LangChain SupabaseVectorStore retriever."
+    },
+    {
+      "path": "backend/services/supabase_client.py",
+      "language": "python",
+      "lines": 14,
+      "size_bytes": 490,
+      "role": "service",
+      "purpose": "Creates the shared service-role Supabase client; raises at import if the URL or key is missing."
+    },
+    {
+      "path": "backend/tests/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 24,
+      "role": "test",
+      "purpose": "Package marker for backend.tests."
+    },
+    {
+      "path": "backend/tests/test_health.py",
+      "language": "python",
+      "lines": 19,
+      "size_bytes": 410,
+      "role": "test",
+      "purpose": "Pytest: /health returns 200 with status ok and a timestamp."
+    },
+    {
+      "path": "backend/tests/test_ingestor.py",
+      "language": "python",
+      "lines": 86,
+      "size_bytes": 3961,
+      "role": "test",
+      "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
+    },
+    {
+      "path": "docs/DEBUG_LOG.md",
+      "language": "markdown",
+      "lines": 59,
+      "size_bytes": 1672,
+      "role": "doc",
+      "purpose": "Debug log rules and entry template; no entries yet."
+    },
+    {
+      "path": "docs/PROGRESS.md",
+      "language": "markdown",
+      "lines": 243,
+      "size_bytes": 17654,
+      "role": "doc",
+      "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
+    },
+    {
+      "path": "frontend/.env.example",
+      "language": "dotenv",
+      "lines": 6,
+      "size_bytes": 232,
+      "role": "config",
+      "purpose": "Frontend environment template: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL."
+    },
+    {
+      "path": "frontend/.gitignore",
+      "language": "gitignore",
+      "lines": 24,
+      "size_bytes": 253,
+      "role": "config",
+      "purpose": "Vite template ignore rules: logs, node_modules, dist, editor files."
+    },
+    {
+      "path": "frontend/README.md",
+      "language": "markdown",
+      "lines": 16,
+      "size_bytes": 1027,
+      "role": "doc",
+      "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
+    },
+    {
+      "path": "frontend/eslint.config.js",
+      "language": "javascript",
+      "lines": 21,
+      "size_bytes": 568,
+      "role": "config",
+      "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx."
+    },
+    {
+      "path": "frontend/index.html",
+      "language": "html",
+      "lines": 16,
+      "size_bytes": 732,
+      "role": "entry",
+      "purpose": "Vite HTML shell: loads the Google Fonts (DM Mono, DM Sans, Lora, Playfair Display) and mounts /src/main.jsx."
+    },
+    {
+      "path": "frontend/package.json",
+      "language": "json",
+      "lines": 33,
+      "size_bytes": 802,
+      "role": "config",
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview); lists Tailwind, which the Vite config does not load."
+    },
+    {
+      "path": "frontend/src/App.css",
+      "language": "css",
+      "lines": 184,
+      "size_bytes": 2891,
+      "role": "asset",
+      "purpose": "Leftover Vite template styles; not imported by any file."
+    },
+    {
+      "path": "frontend/src/App.jsx",
+      "language": "jsx",
+      "lines": 42,
+      "size_bytes": 1480,
+      "role": "entry",
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout."
+    },
+    {
+      "path": "frontend/src/components/CalibrationFlow.jsx",
+      "language": "jsx",
+      "lines": 87,
+      "size_bytes": 4329,
+      "role": "component",
+      "purpose": "First-session reading speed test: times a 200-word passage and posts the WPM to /auth/profile/calibrate."
+    },
+    {
+      "path": "frontend/src/components/Layout.css",
+      "language": "css",
+      "lines": 140,
+      "size_bytes": 2282,
+      "role": "component",
+      "purpose": "Styles for the global nav and main content column; hides nav links below 640 px."
+    },
+    {
+      "path": "frontend/src/components/Layout.jsx",
+      "language": "jsx",
+      "lines": 54,
+      "size_bytes": 1550,
+      "role": "component",
+      "purpose": "Global nav (wordmark, Library and Dashboard links, email, sign out) wrapped around page content."
+    },
+    {
+      "path": "frontend/src/components/ui/Button.css",
+      "language": "css",
+      "lines": 86,
+      "size_bytes": 1470,
+      "role": "component",
+      "purpose": "Button styles: primary, secondary and danger variants and the loading sweep; uses transition: all."
+    },
+    {
+      "path": "frontend/src/components/ui/Button.jsx",
+      "language": "jsx",
+      "lines": 22,
+      "size_bytes": 463,
+      "role": "component",
+      "purpose": "Button with variant and loading props."
+    },
+    {
+      "path": "frontend/src/components/ui/Card.css",
+      "language": "css",
+      "lines": 11,
+      "size_bytes": 240,
+      "role": "component",
+      "purpose": "Card surface and hover styles."
+    },
+    {
+      "path": "frontend/src/components/ui/Card.jsx",
+      "language": "jsx",
+      "lines": 18,
+      "size_bytes": 277,
+      "role": "component",
+      "purpose": "Card container with an optional hover state; not used by any page."
+    },
+    {
+      "path": "frontend/src/components/ui/Modal.css",
+      "language": "css",
+      "lines": 28,
+      "size_bytes": 614,
+      "role": "component",
+      "purpose": "Modal backdrop (blurred) and panel styles."
+    },
+    {
+      "path": "frontend/src/components/ui/Modal.jsx",
+      "language": "jsx",
+      "lines": 40,
+      "size_bytes": 942,
+      "role": "component",
+      "purpose": "Portal modal: closes on Escape and backdrop click, focuses the panel on open, does not trap focus."
+    },
+    {
+      "path": "frontend/src/components/ui/ScoreBadge.css",
+      "language": "css",
+      "lines": 17,
+      "size_bytes": 239,
+      "role": "component",
+      "purpose": "Score badge dot and text styles."
+    },
+    {
+      "path": "frontend/src/components/ui/ScoreBadge.jsx",
+      "language": "jsx",
+      "lines": 26,
+      "size_bytes": 573,
+      "role": "component",
+      "purpose": "Coloured percentage badge (green from 75, amber from 50, red below); imported by Library but not rendered."
+    },
+    {
+      "path": "frontend/src/components/ui/Skeleton.css",
+      "language": "css",
+      "lines": 15,
+      "size_bytes": 333,
+      "role": "component",
+      "purpose": "Shimmer animation for loading placeholders."
+    },
+    {
+      "path": "frontend/src/components/ui/Skeleton.jsx",
+      "language": "jsx",
+      "lines": 12,
+      "size_bytes": 247,
+      "role": "component",
+      "purpose": "Loading placeholder block with width and height props."
+    },
+    {
+      "path": "frontend/src/hooks/useAuth.jsx",
+      "language": "jsx",
+      "lines": 43,
+      "size_bytes": 1220,
+      "role": "hook",
+      "purpose": "AuthProvider and useAuth: Supabase session state plus signIn, signUp and signOut."
+    },
+    {
+      "path": "frontend/src/hooks/usePageTransition.js",
+      "language": "javascript",
+      "lines": 33,
+      "size_bytes": 790,
+      "role": "hook",
+      "purpose": "Adds the .visible class on mount and returns navigateTo, which fades the page out before routing."
+    },
+    {
+      "path": "frontend/src/index.css",
+      "language": "css",
+      "lines": 70,
+      "size_bytes": 1180,
+      "role": "asset",
+      "purpose": "Design tokens (ink, paper and amber colours, four font families, 8 px grid), reset, focus ring, and the .page fade."
+    },
+    {
+      "path": "frontend/src/lib/api.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 1044,
+      "role": "lib",
+      "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response."
+    },
+    {
+      "path": "frontend/src/lib/supabase.js",
+      "language": "javascript",
+      "lines": 6,
+      "size_bytes": 341,
+      "role": "lib",
+      "purpose": "Creates the browser Supabase client; falls back to a hard-coded project URL and publishable key when the env vars are unset."
+    },
+    {
+      "path": "frontend/src/main.jsx",
+      "language": "jsx",
+      "lines": 10,
+      "size_bytes": 229,
+      "role": "entry",
+      "purpose": "React entry: renders App in StrictMode and loads index.css."
+    },
+    {
+      "path": "frontend/src/pages/ComprehensionTest.css",
+      "language": "css",
+      "lines": 300,
+      "size_bytes": 5611,
+      "role": "page",
+      "purpose": "Styles for the test page: dark timer strip, question dots, slide animations, answer textarea, submitting overlay."
+    },
+    {
+      "path": "frontend/src/pages/ComprehensionTest.jsx",
+      "language": "jsx",
+      "lines": 261,
+      "size_bytes": 9242,
+      "role": "page",
+      "purpose": "Five-question timed test (5 minutes): grades each answer in the background on navigation, auto-submits at zero, routes to Results."
+    },
+    {
+      "path": "frontend/src/pages/Dashboard.css",
+      "language": "css",
+      "lines": 265,
+      "size_bytes": 6018,
+      "role": "page",
+      "purpose": "Styles for the dashboard: header, stat row, chart frame, book progress cards, feedback quotes, empty states."
+    },
+    {
+      "path": "frontend/src/pages/Dashboard.jsx",
+      "language": "jsx",
+      "lines": 245,
+      "size_bytes": 8590,
+      "role": "page",
+      "purpose": "Progress page: streak, words this week, a Recharts score line per book, book progress cards, recent feedback."
+    },
+    {
+      "path": "frontend/src/pages/Library.css",
+      "language": "css",
+      "lines": 227,
+      "size_bytes": 4008,
+      "role": "page",
+      "purpose": "Styles for the library: upload zone, book rows, processing sweep, empty state; uses transition: all."
+    },
+    {
+      "path": "frontend/src/pages/Library.jsx",
+      "language": "jsx",
+      "lines": 275,
+      "size_bytes": 10923,
+      "role": "page",
+      "purpose": "Library page: drag-and-drop upload with a title and author modal, 3-second status polling, book list, delete."
+    },
+    {
+      "path": "frontend/src/pages/Login.css",
+      "language": "css",
+      "lines": 172,
+      "size_bytes": 3004,
+      "role": "page",
+      "purpose": "Styles for the split login page: quote panel, tabs, form fields; single column below 768 px."
+    },
+    {
+      "path": "frontend/src/pages/Login.jsx",
+      "language": "jsx",
+      "lines": 145,
+      "size_bytes": 4913,
+      "role": "page",
+      "purpose": "Sign in and sign up form with a quote panel; collects a display name that is never sent."
+    },
+    {
+      "path": "frontend/src/pages/ReadingSession.css",
+      "language": "css",
+      "lines": 297,
+      "size_bytes": 5461,
+      "role": "page",
+      "purpose": "Styles for the reading page: chrome bar, sticky timer strip, reason strip, distraction-free mode, reading column with drop cap."
+    },
+    {
+      "path": "frontend/src/pages/ReadingSession.jsx",
+      "language": "jsx",
+      "lines": 269,
+      "size_bytes": 9682,
+      "role": "page",
+      "purpose": "Reading page: checks calibration, starts a session, shows the timer and pacing bar, distraction-free mode, finish and abandon (abandon does not call the API)."
+    },
+    {
+      "path": "frontend/src/pages/Results.css",
+      "language": "css",
+      "lines": 239,
+      "size_bytes": 4370,
+      "role": "page",
+      "purpose": "Styles for the results page: large score, verdict colours, per-question breakdown, next-session and re-read panels."
+    },
+    {
+      "path": "frontend/src/pages/Results.jsx",
+      "language": "jsx",
+      "lines": 186,
+      "size_bytes": 7040,
+      "role": "page",
+      "purpose": "Results page: animated score, verdict, per-question feedback, next-session or re-read panel; rebuilds from the API after a refresh."
+    },
+    {
+      "path": "frontend/vercel.json",
+      "language": "json",
+      "lines": 10,
+      "size_bytes": 160,
+      "role": "config",
+      "purpose": "Vercel config: build command, dist output, and a rewrite of every path to index.html."
+    },
+    {
+      "path": "frontend/vite.config.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 566,
+      "role": "config",
+      "purpose": "Vite config: React plugin, an /api dev proxy to port 8000, and a single vendor chunk."
+    },
+    {
+      "path": "package.json",
+      "language": "json",
+      "lines": 5,
+      "size_bytes": 57,
+      "role": "config",
+      "purpose": "Root package with one dev dependency, the Supabase CLI."
+    },
+    {
+      "path": "progress.md",
+      "language": "markdown",
+      "lines": 65,
+      "size_bytes": 6002,
+      "role": "doc",
+      "purpose": "Pre-2.0 progress tracker, kept for history only."
+    },
+    {
+      "path": "pyrightconfig.json",
+      "language": "json",
+      "lines": 5,
+      "size_bytes": 68,
+      "role": "config",
+      "purpose": "Pyright config pointing at .venv with pythonVersion 3.14."
+    },
+    {
+      "path": "render.yaml",
+      "language": "yaml",
+      "lines": 23,
+      "size_bytes": 533,
+      "role": "config",
+      "purpose": "Render blueprint for the Docker backend; declares Supabase, Groq, Cerebras, Google AI Studio and SambaNova keys."
+    },
+    {
+      "path": "requirements.txt",
+      "language": "text",
+      "lines": 18,
+      "size_bytes": 222,
+      "role": "config",
+      "purpose": "Backend dependencies used by the Dockerfile and CI, unpinned; includes groq, langchain-groq and langchain-google-genai."
+    },
+    {
+      "path": "scripts/dev/create_test_users.py",
+      "language": "python",
+      "lines": 117,
+      "size_bytes": 3514,
+      "role": "script",
+      "purpose": "Creates or resets two confirmed dev test users and writes .env.test; refuses to run unless ENV=development."
+    },
+    {
+      "path": "supabase/.gitignore",
+      "language": "gitignore",
+      "lines": 8,
+      "size_bytes": 72,
+      "role": "config",
+      "purpose": "Ignores Supabase CLI branch and temp folders and local env key files."
+    },
+    {
+      "path": "supabase/config.toml",
+      "language": "toml",
+      "lines": 408,
+      "size_bytes": 15020,
+      "role": "config",
+      "purpose": "Supabase CLI local-development config (ports, auth, storage), close to the generated defaults."
+    },
+    {
+      "path": "supabase/migrations/001_initial.sql",
+      "language": "sql",
+      "lines": 165,
+      "size_bytes": 5965,
+      "role": "migration",
+      "purpose": "Initial schema: pgvector, six tables, the new-user profile trigger, RLS policies, the books bucket, and match_chunks."
+    },
+    {
+      "path": "supabase/migrations/002_add_pace.sql",
+      "language": "sql",
+      "lines": 1,
+      "size_bytes": 88,
+      "role": "migration",
+      "purpose": "Adds reading_progress.pace_recommendation (jsonb)."
+    },
+    {
+      "path": "supabase/migrations/003_session_questions.sql",
+      "language": "sql",
+      "lines": 1,
+      "size_bytes": 75,
+      "role": "migration",
+      "purpose": "Adds sessions.test_questions (jsonb)."
+    },
+    {
+      "path": "supabase/migrations/004_add_is_calibrated.sql",
+      "language": "sql",
+      "lines": 1,
+      "size_bytes": 90,
+      "role": "migration",
+      "purpose": "Adds profiles.is_calibrated (boolean, default false)."
+    },
+    {
+      "path": "test_evaluator.py",
+      "language": "python",
+      "lines": 57,
+      "size_bytes": 2250,
+      "role": "test",
+      "purpose": "Manual script: generates a test then grades canned answers against hard-coded user and book ids. Not a pytest test."
+    },
+    {
+      "path": "test_generator.py",
+      "language": "python",
+      "lines": 25,
+      "size_bytes": 820,
+      "role": "test",
+      "purpose": "Manual script: generates questions for a hard-coded book id and prints them. Not a pytest test."
+    },
+    {
+      "path": "test_graph.py",
+      "language": "python",
+      "lines": 25,
+      "size_bytes": 820,
+      "role": "test",
+      "purpose": "Manual script: invokes the workflow with an event_type key that the graph no longer reads. Not a pytest test."
+    },
+    {
+      "path": "test_ingest.py",
+      "language": "python",
+      "lines": 48,
+      "size_bytes": 1473,
+      "role": "test",
+      "purpose": "Manual script that runs at import: creates a user and book, then calls ingest_book on sample.pdf without awaiting it."
+    },
+    {
+      "path": "test_optimizer.py",
+      "language": "python",
+      "lines": 46,
+      "size_bytes": 1612,
+      "role": "test",
+      "purpose": "Manual script: runs optimize_pace with a 7/50 score against hard-coded ids. Not a pytest test."
+    },
+    {
+      "path": "test_orchestrator.py",
+      "language": "python",
+      "lines": 38,
+      "size_bytes": 1383,
+      "role": "test",
+      "purpose": "Manual script: imports orchestrator_node from backend.agents.graph, which does not exist, so it fails at import."
+    },
+    {
+      "path": "test_planner.py",
+      "language": "python",
+      "lines": 25,
+      "size_bytes": 795,
+      "role": "test",
+      "purpose": "Manual script: runs plan_session against hard-coded ids and prints the plan. Not a pytest test."
+    },
+    {
+      "path": "test_sessions_api.py",
+      "language": "python",
+      "lines": 64,
+      "size_bytes": 2989,
+      "role": "test",
+      "purpose": "Manual end-to-end script: start, finish-reading and submit-answers through TestClient, authenticating with the raw-UUID bypass."
+    },
+    {
+      "path": "tools/__init__.py",
+      "language": "python",
+      "lines": 0,
+      "size_bytes": 0,
+      "role": "script",
+      "purpose": "Package marker for tools."
+    },
+    {
+      "path": "tools/repo_graph/__init__.py",
+      "language": "python",
+      "lines": 0,
+      "size_bytes": 0,
+      "role": "script",
+      "purpose": "Package marker for tools.repo_graph."
+    },
+    {
+      "path": "tools/repo_graph/inventory.py",
+      "language": "python",
+      "lines": 191,
+      "size_bytes": 5946,
+      "role": "script",
+      "purpose": "Builds docs/repo-graph/inventory.json: path, language, lines, size, role and purpose for every tracked file, plus the exclusions."
+    },
+    {
+      "path": "tools/repo_graph/purposes.json",
+      "language": "json",
+      "lines": 110,
+      "size_bytes": 14293,
+      "role": "script",
+      "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
+    },
+    {
+      "path": "tools/repo_graph/tests/__init__.py",
+      "language": "python",
+      "lines": 0,
+      "size_bytes": 0,
+      "role": "test",
+      "purpose": "Package marker for tools.repo_graph.tests."
+    },
+    {
+      "path": "tools/repo_graph/tests/test_inventory.py",
+      "language": "python",
+      "lines": 85,
+      "size_bytes": 3064,
+      "role": "test",
+      "purpose": "Pytest: role, language and exclusion rules, CRLF-safe measuring, purpose checks, and completeness of the real inventory."
+    }
+  ],
+  "excluded": [
+    {
+      "path": "docs/repo-graph/inventory.json",
+      "reason": "generated"
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "reason": "lockfile"
+    },
+    {
+      "path": "frontend/public/favicon.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/public/icons.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/assets/hero.png",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/assets/react.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/assets/vite.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "package-lock.json",
+      "reason": "lockfile"
+    },
+    {
+      "path": "sample.pdf",
+      "reason": "binary"
+    }
+  ]
+}

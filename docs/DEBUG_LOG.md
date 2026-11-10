@@ -56,6 +56,101 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C5.5 — committed repo graph is stale by one file size
+
+**Status:** fixed
+
+### Symptom
+At the C5 close, `make graph` on a clean tree at `d20ddc7` changed a
+generated file, so the CI `graph` job (`git diff --exit-code
+docs/repo-graph/`) would fail:
+
+    make graph
+    git diff docs/repo-graph/inventory.json
+    -      "size_bytes": 109080,
+    +      "size_bytes": 109096,
+
+Expected: no diff.
+
+### Repro
+    git stash list            # empty; tree clean apart from untracked skills
+    make graph && git diff --exit-code docs/repo-graph/
+
+### Hypotheses
+1. A tracked file was edited after `make graph` and before the commit, so
+   the inventory holds its old size. Evidence: one `size_bytes` differs, by
+   16 bytes, and in C5.5 the row in `docs/PROGRESS.md` was corrected with
+   `sed` ("About 480 ..." to "About 570 ..., tests included", 16 bytes
+   longer) after the graph and the checks had run. Ruled out if: the entry
+   belongs to another file. Result: confirmed, the entry is
+   `docs/PROGRESS.md`.
+
+### Root cause
+Order of work in C5.5, not the tooling: the tracker was edited after the
+graph was regenerated, and `make graph` was not run again before staging.
+`inventory.json` records the byte size of every tracked file, including
+`docs/PROGRESS.md`.
+
+### Fix
+`make graph` re-run and `docs/repo-graph/inventory.json` committed. From
+here on the graph is regenerated last, after the tracker and the debug log
+are written, and `git diff --exit-code docs/repo-graph/` is checked after
+staging.
+
+### Regression test
+No new automated test: the CI `graph` job is the check, and it is the
+command in the repro. Failed before: yes (the diff above). Passes after:
+yes, `make graph` twice with no diff after the commit.
+
+### Commit
+`8c4a9fa` fix(graph): regenerate repo graph after the C5.5 tracker edit
+
+## 2026-11-10 C5.1 — graph tooling test fails after a seventh table is added
+
+**Status:** fixed
+
+### Symptom
+After adding `supabase/migrations/007_question_bank.sql` and running
+`make graph`, the tooling suite went from 61 passed to 1 failed, 60 passed:
+
+    pytest tools/repo_graph/tests -q
+    ________________ test_real_graph_has_the_schema_and_the_agents ________________
+        def test_real_graph_has_the_schema_and_the_agents():
+            graph = build.build_repo()
+            tables = {"profiles", "books", "chunks", "sessions", "test_results", "reading_progress"}
+    >       assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
+    E       AssertionError: assert {'table:books...essions', ...} == {'table:books...test_results'}
+    E         Extra items in the left set:
+    E         'table:question_bank'
+    tools\repo_graph\tests\test_build.py:230: AssertionError
+
+### Repro
+    pytest tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents -q
+
+### Hypotheses
+1. The test pins the exact set of tables the migrations define, and 007
+   defines a new one on purpose. Evidence: the only extra item is
+   `table:question_bank`, and `query.py question_bank` shows it defined in
+   007 and nowhere else. Ruled out if: any other table is extra or missing.
+   Result: confirmed.
+
+### Root cause
+Not a defect in the graph: the expectation at
+`tools/repo_graph/tests/test_build.py:228` lists the tables by name (added
+in C2.2b to catch bogus tables), so every new table has to be added to it.
+
+### Fix
+Added `question_bank` to the expected set. The assertion stays exact, so a
+bogus table would still fail it.
+
+### Regression test
+The same test. Failed before the change: yes (output above). Passes after:
+yes, 61 passed.
+
+### Commit
+feat(db): add question_bank table with RLS (C5.1); found before the commit,
+so there is no separate fix commit.
+
 ## 2026-11-10 C4.3 — ruff count committed one above the baseline
 
 **Status:** fixed

@@ -25,6 +25,7 @@ def ingest(fake_supabase, monkeypatch):
 
     monkeypatch.setattr(embedder, "embed", fake_embed)
     monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data: ["unused"])
+    monkeypatch.setattr(book_ingestor.question_agent, "run", lambda book_id, chunk_ids: None)
 
     def run(count):
         chunks = [f"chunk number {i} " + "word " * i for i in range(count)]
@@ -90,3 +91,57 @@ def test_ingestion_does_not_import_the_google_embedding_client():
     source = inspect.getsource(book_ingestor)
     assert "services.embeddings" not in source
     assert "generate_embedding" not in source
+
+
+@pytest.fixture
+def ingest_with_questions(ingest, fake_supabase, monkeypatch):
+    """Like `ingest`, but inserts return chunk ids and the question agent is a recording stub."""
+    events = []
+    table = fake_supabase.table.return_value
+
+    def insert(rows):
+        events.append("insert")
+        result = type("Result", (), {"data": [{"id": f"chunk-{row['chunk_index']}"} for row in rows]})
+        return type("Query", (), {"execute": lambda self: result})()
+
+    def update(values):
+        events.append(f"update:{values['status']}")
+        return table.update.return_value
+
+    table.insert.side_effect = insert
+    table.update.side_effect = update
+    yield ingest, events
+    table.insert.side_effect = table.update.side_effect = None
+
+
+def test_questions_are_generated_for_each_batch_after_it_is_stored(ingest_with_questions, monkeypatch):
+    ingest, events = ingest_with_questions
+    ingest(0)  # installs the fakes; a book with no chunks asks for no questions
+    events.clear()
+    monkeypatch.setattr(
+        book_ingestor.question_agent, "run",
+        lambda book_id, chunk_ids: events.append(("questions", book_id, list(chunk_ids))),
+    )
+    result, _, _, _ = ingest(7)
+    assert result["status"] == "ready"
+    assert events == [
+        "insert", "update:ready",  # the book unlocks before any question work
+        ("questions", "book-1", [f"chunk-{i}" for i in range(5)]),
+        "insert",
+        ("questions", "book-1", ["chunk-5", "chunk-6"]),
+    ]
+
+
+def test_a_failing_question_agent_does_not_fail_the_book(ingest_with_questions, monkeypatch):
+    ingest, events = ingest_with_questions
+    ingest(0)
+    events.clear()
+
+    def broken(book_id, chunk_ids):
+        raise RuntimeError("question bank unavailable")
+
+    monkeypatch.setattr(book_ingestor.question_agent, "run", broken)
+    result, inserts, _, _ = ingest(7)
+    assert result["status"] == "ready" and "error" not in result
+    assert [len(batch) for batch in inserts] == [5, 2]  # every chunk is still stored
+    assert events == ["insert", "update:ready", "insert"]

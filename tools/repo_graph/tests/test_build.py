@@ -226,7 +226,7 @@ def test_real_graph_covers_routers_and_pages():
 
 def test_real_graph_has_the_schema_and_the_agents():
     graph = build.build_repo()
-    tables = {"profiles", "books", "chunks", "sessions", "test_results", "reading_progress"}
+    tables = {"profiles", "books", "chunks", "sessions", "test_results", "reading_progress", "question_bank"}
     assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
     # The tooling and its fixtures must not leak into the graph.
     assert {n["id"] for n in graph["nodes"] if n["type"] == "table"} == {

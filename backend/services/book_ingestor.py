@@ -8,8 +8,11 @@ import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
 
+from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
 from backend.services.supabase_client import supabase
+
+question_agent = QuestionGenerationAgent()
 
 # Chunks embedded and inserted together. The first batch is smaller so the
 # book unlocks for reading as soon as five chunks are stored.
@@ -122,6 +125,20 @@ def chunk_text(pages: list[str], target_words: int = 600) -> list[str]:
 
     return chunks
 
+async def generate_questions(book_id: str, stored_chunks) -> None:
+    """Fill the question bank for chunks that were just stored, off the event loop.
+
+    A failure here is logged and nothing more: the chunks are stored and the
+    book stays readable; its questions can be generated again later.
+    """
+    try:
+        chunk_ids = [row["id"] for row in stored_chunks or []]
+        if chunk_ids:
+            await asyncio.to_thread(question_agent.run, book_id, chunk_ids)
+    except Exception as e:  # noqa: BLE001 - whatever goes wrong here must not fail the ingestion
+        print(f"Question generation failed for book {book_id}: {e}")
+
+
 async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: str, target_words: int = 600) -> dict:
     """
     Coordinates extraction, chunking, embedding generation, and database inserts.
@@ -152,7 +169,7 @@ async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: 
             vectors = await asyncio.to_thread(embedder.embed, batch)
 
             # 2) insert the batch into the chunks table in one call
-            supabase.table("chunks").insert([
+            stored = supabase.table("chunks").insert([
                 {
                     "book_id": book_id,
                     "user_id": user_id,
@@ -172,6 +189,9 @@ async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: 
                     "total_words": total_words_estimated,
                     "status": "ready"
                 }).eq("id", book_id).execute()
+
+            # 4) build the batch's questions; the book is already readable
+            await generate_questions(book_id, stored.data)
             start += len(batch)
 
         # A book with no text at all is still marked ready, as before

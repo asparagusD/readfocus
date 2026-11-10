@@ -437,7 +437,7 @@ Each use is the file and line of the first import of that service.
 | `CLAUDE.md` | 182 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
 | `README.md` | 135 | Product overview and architecture; still describes the pre-2.0 Groq and Google AI Studio setup and an orchestrator node that no longer exists. |
 | `docs/BENCHMARKS.md` | 307 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
-| `docs/DEBUG_LOG.md` | 340 | Debug log rules, entry template, and one entry per failure. |
+| `docs/DEBUG_LOG.md` | 389 | Debug log rules, entry template, and one entry per failure. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
 | `docs/PROGRESS.md` | 675 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |

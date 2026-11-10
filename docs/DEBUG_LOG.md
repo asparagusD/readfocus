@@ -56,6 +56,55 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-10 C5.5 — committed repo graph is stale by one file size
+
+**Status:** fixed
+
+### Symptom
+At the C5 close, `make graph` on a clean tree at `d20ddc7` changed a
+generated file, so the CI `graph` job (`git diff --exit-code
+docs/repo-graph/`) would fail:
+
+    make graph
+    git diff docs/repo-graph/inventory.json
+    -      "size_bytes": 109080,
+    +      "size_bytes": 109096,
+
+Expected: no diff.
+
+### Repro
+    git stash list            # empty; tree clean apart from untracked skills
+    make graph && git diff --exit-code docs/repo-graph/
+
+### Hypotheses
+1. A tracked file was edited after `make graph` and before the commit, so
+   the inventory holds its old size. Evidence: one `size_bytes` differs, by
+   16 bytes, and in C5.5 the row in `docs/PROGRESS.md` was corrected with
+   `sed` ("About 480 ..." to "About 570 ..., tests included", 16 bytes
+   longer) after the graph and the checks had run. Ruled out if: the entry
+   belongs to another file. Result: confirmed, the entry is
+   `docs/PROGRESS.md`.
+
+### Root cause
+Order of work in C5.5, not the tooling: the tracker was edited after the
+graph was regenerated, and `make graph` was not run again before staging.
+`inventory.json` records the byte size of every tracked file, including
+`docs/PROGRESS.md`.
+
+### Fix
+`make graph` re-run and `docs/repo-graph/inventory.json` committed. From
+here on the graph is regenerated last, after the tracker and the debug log
+are written, and `git diff --exit-code docs/repo-graph/` is checked after
+staging.
+
+### Regression test
+No new automated test: the CI `graph` job is the check, and it is the
+command in the repro. Failed before: yes (the diff above). Passes after:
+yes, `make graph` twice with no diff after the commit.
+
+### Commit
+fix(graph): regenerate repo graph after the C5.5 tracker edit
+
 ## 2026-11-10 C5.1 — graph tooling test fails after a seventh table is added
 
 **Status:** fixed

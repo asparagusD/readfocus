@@ -380,7 +380,7 @@ Each use is the file and line of the first import of that service.
 | `README.md` | 135 | Product overview and architecture; still describes the pre-2.0 Groq and Google AI Studio setup and an orchestrator node that no longer exists. |
 | `docs/DEBUG_LOG.md` | 150 | Debug log rules, entry template, and one entry per failure. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 251 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 254 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 

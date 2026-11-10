@@ -55,6 +55,23 @@ QUALITY_ANSWER_TOKENS = (25, 60)
 # This many key terms earn the full key-term part.
 QUALITY_KEY_TERMS_FULL = 3
 
+# Boilerplate: a sentence of at least this many words is a table row when
+# this share of its tokens are numbers, and a title or list of names when
+# this share of its words start with a capital.
+BOILERPLATE_MIN_WORDS = 6
+BOILERPLATE_DIGIT_SHARE = 0.4
+BOILERPLATE_CAPITALISED_SHARE = 0.6
+
+# Most questions kept per chunk for each strategy, best quality first.
+QUESTION_CAPS = {
+    "cloze": 5,
+    "multiple_choice": 3,
+    "definition": 3,
+    "why_how": 3,
+    "main_idea": 1,
+}
+QUESTION_CAP_DEFAULT = 3  # a strategy not listed above
+
 # Most key terms stored with one question.
 KEY_TERMS_MAX = 6
 

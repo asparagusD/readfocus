@@ -103,3 +103,68 @@ def test_filter_edge_cases():
     # A zero vector (nothing to compare) never counts as a duplicate.
     result = quality.filter_questions([question(prompt="A"), question(prompt="B")], np.zeros((2, 2)))
     assert len(result.accepted) == 2
+
+
+@pytest.mark.parametrize("sentence, reason", [
+    # Front matter: labelled metadata, licence lines, title and author runs.
+    ("Academic Editor: Hristos T. Anastassiu Received: 28 May 2025 Revised: 18 June 2025", "front_matter"),
+    ("Keywords: microstrip antenna; convolutional neural network (CNN); inverse design", "front_matter"),
+    ("Copyright: © 2025 by the authors, licensee of this open access article in Basel.", "front_matter"),
+    ("Please send all correspondence about this article to the author at reader@example.org today.", "front_matter"),
+    ("Article Inverse Design of Microstrip Antennas Based on Deep Learning Shiyang Chen and Kaixu Wang",
+     "front_matter"),
+    # Reference entries.
+    ("Kingma, D.P.; Ba, J. Adam: A method for stochastic optimization. arXiv 2014, arXiv:1412.6980.",
+     "reference_entry"),
+    ("Balanis, C.A. Antenna Theory: Analysis and Design, 4th ed.; John Wiley and Sons: Hoboken, 2016.",
+     "reference_entry"),
+    ("The full data set for this study is available at https://example.org/data for other groups.",
+     "reference_entry"),
+    # Page furniture: running headers, captions, rows of numbers.
+    ("Electronics 2025, 14, 2510 6 of 13 subsequent 5000 epochs adopt a learning rate of 0.001.",
+     "page_furniture"),
+    ("Figure 5. Convergence of the surrogate model for the four batch sizes that were tried.", "page_furniture"),
+    ("Table 2: Comparison of the predicted and simulated values at the two resonant frequencies.",
+     "page_furniture"),
+    ("512 0.35 0.28 0.94 1024 0.41 0.33 0.91 loss", "page_furniture"),
+    # Ordinary sentences, including ones with names, years, numbers and a citation.
+    (GOOD_EVIDENCE, None),
+    ("Marie Curie won 2 Nobel prizes for research on radioactivity.", None),
+    ("In 1905 Einstein published four papers that changed physics.", None),
+    ("Smith et al. [17] showed that a larger batch size is needed to keep training stable.", None),
+    ("As illustrated in Figure 5, we compared the impact of different batch sizes on the model.", None),
+    ("J. K. Rowling wrote the first book in 1997, long before the films were made.", None),
+    ("We selected a batch size of 512 and a learning rate of 0.0005 for the final 5000 epochs.", None),
+])
+def test_boilerplate_reason(sentence, reason):
+    assert quality.boilerplate_reason(sentence) == reason
+
+
+def test_boilerplate_evidence_rejects_the_question():
+    caption = "Figure 5. Convergence of the surrogate model for the four batch sizes that were tried."
+    assert quality.reject_reason(question(evidence=[caption])) == "page_furniture"
+    # Any one piece is enough, and line breaks in the raw span do not hide it.
+    wrapped = "Kingma, D.P.; Ba, J. Adam: A method for\nstochastic optimization. arXiv 2014."
+    assert quality.reject_reason(question(evidence=[GOOD_EVIDENCE, wrapped])) == "reference_entry"
+    assert quality.reject_reason(question(answer="It", evidence=[caption])) == "answer_is_stopword"
+
+
+def test_filter_caps_each_strategy_keeping_the_best():
+    terms = [[], ["a", "b", "c"], ["a"], ["a", "b", "c"], ["a", "b"], [], ["a", "b", "c"]]
+    questions = [question(prompt=str(i), key_terms=t) for i, t in enumerate(terms)]
+    vectors = np.array([at(30 * i) for i in range(len(questions))])
+    assert policy.QUESTION_CAPS["cloze"] == 5
+    result = quality.filter_questions(questions, vectors)
+    assert [q.prompt for q in result.accepted] == ["1", "2", "3", "4", "6"]
+    assert [(r.question.prompt, r.reason) for r in result.rejected] == [("0", "over_cap"), ("5", "over_cap")]
+
+
+def test_caps_are_per_strategy():
+    ideas = [question(strategy="main_idea", type="summary", prompt=f"idea {i}") for i in range(2)]
+    odd = [question(strategy="something_new", prompt=f"new {i}") for i in range(policy.QUESTION_CAP_DEFAULT + 1)]
+    questions = [question(prompt="cloze"), *ideas, *odd]
+    vectors = np.array([at(30 * i) for i in range(len(questions))])
+    result = quality.filter_questions(questions, vectors)
+    kept = [q.prompt for q in result.accepted]
+    assert kept == ["cloze", "idea 0", *[f"new {i}" for i in range(policy.QUESTION_CAP_DEFAULT)]]
+    assert result.counts() == {"over_cap": 2}

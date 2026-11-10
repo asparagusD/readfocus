@@ -267,9 +267,9 @@ Each use is the file and line of the first import of that service.
 | `backend/agents/graph.py` | 59 | Builds the LangGraph workflow: routes from __start__ by state status to planner, test_generator, evaluator or optimizer, each ending at END. |
 | `backend/agents/optimizer_agent.py` | 120 | Optimizer node: score thresholds set the chunk multiplier and re-read queue; the Groq LLM picks the next focus duration; saves pace_recommendation. |
 | `backend/agents/planner_agent.py` | 189 | Planner node: serves the re-read queue first, otherwise asks the Groq LLM how many of the next three chunks to assign; falls back to one chunk for 20 minutes. |
-| `backend/agents/policy.py` | 68 | Policy constants for the agents: every threshold, weight and limit in one place; so far the question generation ones. |
+| `backend/agents/policy.py` | 85 | Policy constants for the agents: every threshold, weight and limit in one place; so far the question generation ones. |
 | `backend/agents/question_generation/__init__.py` | 1 | Package marker for backend.agents.question_generation, questions built from a chunk's own sentences with no LLM. |
-| `backend/agents/question_generation/quality.py` | 116 | Pure quality filter for generated questions: rejects stopword answers, short evidence and prompts that contain the answer, scores the rest 0..1, and drops the weaker of two near-duplicate prompts. |
+| `backend/agents/question_generation/quality.py` | 160 | Pure quality filter for generated questions: rejects stopword answers, short evidence and prompts that contain the answer, scores the rest 0..1, and drops the weaker of two near-duplicate prompts. |
 | `backend/agents/question_generation/strategies.py` | 288 | Pure extractive question strategies over one chunk's sentences and concepts; every question carries evidence that appears verbatim in the chunk. |
 | `backend/agents/state.py` | 17 | AgentState TypedDict shared by all agent nodes. |
 | `backend/agents/test_generator_agent.py` | 124 | Test generator node: returns cached questions or asks the Groq LLM for five (3 factual, 1 inference, 1 summary) with RAG context; falls back to generic questions. |
@@ -391,7 +391,7 @@ Each use is the file and line of the first import of that service.
 | `backend/tests/test_ingestor.py` | 86 | Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation. |
 | `backend/tests/test_migrations.py` | 145 | Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, and 006 adds the full-text index and search_chunks_text. |
 | `backend/tests/test_offline.py` | 62 | Pytest: the suite uses the dummy environment and the fakes, outbound connections are blocked, loopback works, and a protected endpoint answers 401. |
-| `backend/tests/test_question_quality.py` | 105 | Pytest on hand-made questions and vectors: each reject reason and its boundary, the quality score's range and ranking, near-duplicate handling and the filter's edge cases. |
+| `backend/tests/test_question_quality.py` | 170 | Pytest on hand-made questions and vectors: each reject reason and its boundary, the quality score's range and ranking, near-duplicate handling and the filter's edge cases. |
 | `backend/tests/test_question_strategies.py` | 251 | Pytest on fixed text: verbatim sentence spans and each question strategy's prompt, answer and evidence, with no model or database. |
 | `backend/tests/test_requirements.py` | 60 | Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file. |
 | `backend/tests/test_retriever.py` | 134 | Pytest on a mocked database: reciprocal rank fusion, the OR text query, both searches called and fused, one search or the embedder failing, and the unchanged get_similar_chunks signature. |
@@ -417,7 +417,7 @@ Each use is the file and line of the first import of that service.
 | `docs/BENCHMARKS.md` | 262 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
 | `docs/DEBUG_LOG.md` | 340 | Debug log rules, entry template, and one entry per failure. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 671 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 672 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 

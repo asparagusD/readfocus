@@ -163,7 +163,7 @@
       "language": "python",
       "lines": 124,
       "size_bytes": 5815,
-      "role": "test",
+      "role": "agent",
       "purpose": "Test generator node: returns cached questions or asks the Groq LLM for five (3 factual, 1 inference, 1 summary) with RAG context; falls back to generic questions."
     },
     {
@@ -321,16 +321,16 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 103,
-      "size_bytes": 3596,
+      "lines": 150,
+      "size_bytes": 5522,
       "role": "doc",
       "purpose": "Debug log rules and entry template; no entries yet."
     },
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 243,
-      "size_bytes": 18635,
+      "lines": 244,
+      "size_bytes": 19098,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -849,8 +849,8 @@
     {
       "path": "tools/repo_graph/inventory.py",
       "language": "python",
-      "lines": 191,
-      "size_bytes": 5946,
+      "lines": 194,
+      "size_bytes": 6166,
       "role": "script",
       "purpose": "Builds docs/repo-graph/inventory.json: path, language, lines, size, role and purpose for every tracked file, plus the exclusions."
     },
@@ -881,8 +881,8 @@
     {
       "path": "tools/repo_graph/tests/test_inventory.py",
       "language": "python",
-      "lines": 85,
-      "size_bytes": 3064,
+      "lines": 87,
+      "size_bytes": 3168,
       "role": "test",
       "purpose": "Pytest: role, language and exclusion rules, CRLF-safe measuring, purpose checks, and completeness of the real inventory."
     }

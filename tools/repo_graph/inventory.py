@@ -103,8 +103,11 @@ def role(path: str) -> str:
     pure = PurePosixPath(path)
     if path in ENTRY_FILES:
         return "entry"
+    # A test is a file in a tests/ directory, or a test_*.py at the repo root.
+    # The name alone is not enough: backend/agents/test_generator_agent.py is
+    # the agent that generates tests.
     if "tests" in pure.parts[:-1] or (
-        pure.name.startswith("test_") and pure.suffix == ".py"
+        len(pure.parts) == 1 and pure.name.startswith("test_") and pure.suffix == ".py"
     ):
         return "test"
     for prefix, name in ROLE_BY_PREFIX:

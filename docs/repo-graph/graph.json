@@ -310,7 +310,7 @@
     {
       "id": "file:backend/agents/test_generator_agent.py",
       "type": "file",
-      "role": "test",
+      "role": "agent",
       "language": "python"
     },
     {

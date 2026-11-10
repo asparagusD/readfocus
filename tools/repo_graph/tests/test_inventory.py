@@ -10,6 +10,8 @@ from tools.repo_graph import inventory as inv
     ("frontend/src/App.jsx", "entry"),
     ("backend/routers/books.py", "router"),
     ("backend/agents/graph.py", "agent"),
+    ("backend/agents/test_generator_agent.py", "agent"),
+    ("frontend/src/lib/test_utils.py", "lib"),
     ("backend/services/llm.py", "service"),
     ("backend/dependencies.py", "lib"),
     ("supabase/migrations/001_initial.sql", "migration"),

@@ -306,6 +306,24 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/policy.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/question_generation/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/question_generation/strategies.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/agents/state.py",
       "type": "file",
       "role": "agent",
@@ -499,6 +517,12 @@
     },
     {
       "id": "file:backend/tests/test_offline.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_question_strategies.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1700,6 +1724,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/agents/question_generation/strategies.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/strategies.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/strategies.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/agents/test_generator_agent.py",
       "to": "file:backend/agents/graph.py"
     },
@@ -1932,6 +1971,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_offline.py",
       "to": "file:backend/tests/conftest.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_strategies.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_strategies.py",
+      "to": "file:backend/agents/question_generation/strategies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_strategies.py",
+      "to": "file:backend/nlp/concepts.py"
     },
     {
       "type": "imports",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 153,
-    "inventoried": 142,
+    "tracked": 157,
+    "inventoried": 146,
     "excluded": 11
   },
   "files": [
@@ -149,6 +149,30 @@
       "size_bytes": 8084,
       "role": "agent",
       "purpose": "Planner node: serves the re-read queue first, otherwise asks the Groq LLM how many of the next three chunks to assign; falls back to one chunk for 20 minutes."
+    },
+    {
+      "path": "backend/agents/policy.py",
+      "language": "python",
+      "lines": 19,
+      "size_bytes": 600,
+      "role": "agent",
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far the question generation ones."
+    },
+    {
+      "path": "backend/agents/question_generation/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 81,
+      "role": "agent",
+      "purpose": "Package marker for backend.agents.question_generation, questions built from a chunk's own sentences with no LLM."
+    },
+    {
+      "path": "backend/agents/question_generation/strategies.py",
+      "language": "python",
+      "lines": 113,
+      "size_bytes": 4146,
+      "role": "agent",
+      "purpose": "Pure extractive question strategies over one chunk's sentences and concepts; every question carries evidence that appears verbatim in the chunk."
     },
     {
       "path": "backend/agents/state.py",
@@ -413,6 +437,14 @@
       "size_bytes": 1884,
       "role": "test",
       "purpose": "Pytest: the suite uses the dummy environment and the fakes, outbound connections are blocked, loopback works, and a protected endpoint answers 401."
+    },
+    {
+      "path": "backend/tests/test_question_strategies.py",
+      "language": "python",
+      "lines": 90,
+      "size_bytes": 4047,
+      "role": "test",
+      "purpose": "Pytest on fixed text: verbatim sentence spans and each question strategy's prompt, answer and evidence, with no model or database."
     },
     {
       "path": "backend/tests/test_requirements.py",
@@ -1081,8 +1113,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 144,
-      "size_bytes": 21889,
+      "lines": 148,
+      "size_bytes": 22591,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

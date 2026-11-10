@@ -42,7 +42,7 @@
   "backend/services/__init__.py": "Package marker for backend.services.",
   "backend/services/book_ingestor.py": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks, then has the question generation agent fill the question bank for each batch.",
   "backend/services/retriever.py": "Hybrid retrieval over one book's chunks: local-embedding vector search (match_chunks_local) and Postgres full-text search (search_chunks_text) merged with reciprocal rank fusion; get_similar_chunks keeps its signature.",
-  "backend/services/supabase_client.py": "Creates the shared service-role Supabase client; raises at import if the URL or key is missing.",
+  "backend/services/supabase_client.py": "Creates the shared service-role Supabase client with its own HTTP/1.1 httpx pool (thread-safe; the default single HTTP/2 connection broke under threads, issue 29); raises at import if the URL or key is missing.",
   "backend/tests/__init__.py": "Package marker for backend.tests.",
   "backend/tests/conftest.py": "Offline test setup: dummy environment, a fake Supabase client, and a guard that blocks non-loopback connections.",
   "backend/tests/test_backfill.py": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development.",
@@ -181,5 +181,6 @@
   "scripts/export_agent_graph.py": "Writes docs/repo-graph/AGENT_GRAPH.md from the compiled LangGraph workflow: an event table from graph.ENTRY and workflow.get_graph().draw_mermaid(); needs .env, so it is the agent-graph Makefile target, not part of graph.",
   "backend/tests/test_graph_doc.py": "Pytest: the committed docs/repo-graph/AGENT_GRAPH.md equals what scripts/export_agent_graph.py renders now, and the diagram has every node and edge of the compiled workflow.",
   "backend/tests/test_no_paid_ai.py": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone.",
-  "tools/no_paid_ai.py": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
+  "tools/no_paid_ai.py": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider.",
+  "backend/tests/test_supabase_client.py": "Pytest: the shared Supabase client is built with an httpx client that has HTTP/2 off and postgrest's 120 s timeout."
 }

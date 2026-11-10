@@ -58,7 +58,7 @@ after: <yes/no, output>.
 
 ## 2026-11-10 C7.4 — finish-reading returns 500 once: "Server disconnected" from Supabase
 
-**Status:** open (outside C7.4; logged, not fixed)
+**Status:** fixed after C8.G, see "2026-11-11 C8 follow-up — issue 29" below
 
 ### Symptom
 In the second of three runs of the C7.4 check against the local backend on
@@ -871,3 +871,64 @@ passes after.
 
 ### Commit
 fix(api): move the paid-AI deny-list out of backend/
+
+## 2026-11-11 C8 follow-up — issue 29: the shared HTTP/2 connection breaks under threads
+
+**Status:** fixed
+
+### Symptom
+"httpx.RemoteProtocolError: Server disconnected" from the shared Supabase
+client, failing `sessions/start`, `finish-reading` and background test
+assembly and concept storage while a book is still ingesting (C7.4 entry
+above, seen again at `a01d635` in C8.6).
+
+### Repro
+A scratchpad script (not committed) against the dev project: one shared
+client, N threads, each looping a select (GET), an update that matches no
+row (PATCH) and an insert the CHECK constraint refuses (POST); nothing is
+written.
+
+    python repro_issue29.py http2 8 25   # the app's client as it was
+
+Two runs: 29 and 5 errors out of 600 calls, all on that client:
+`RemoteProtocolError: <ConnectionTerminated error_code:1, last_stream_id:309, ...>`,
+`RemoteProtocolError: Server disconnected`, `LocalProtocolError` and
+`KeyError` raised from inside `h2`. Fails every run with 8 threads.
+
+### Hypotheses
+1. One HTTP/2 connection is shared by several threads (request threadpool,
+   ingestion's background thread, background tasks) and httpcore's sync
+   HTTP/2 connection is not safe for that; one broken stream ends the
+   connection for every request on it. Evidence: `postgrest/_sync/client.py`
+   builds its `httpx.Client` with `http2=True`; the `KeyError` and
+   `LocalProtocolError` are protocol-state corruption, not a server
+   decision. Ruled out if one thread also fails. Result: confirmed; one
+   thread, 150 calls, 0 errors; 8 threads fail every run.
+2. Supabase closes idle connections (GOAWAY) and only GET is retried.
+   Evidence: `send_with_retry` retries GET/HEAD only. Ruled out if the
+   errors stop without changing retries. Result: contributes (the POST and
+   PATCH failures are never retried) but is not the cause: with HTTP/1.1
+   and the same retries, 0 errors.
+
+### Root cause
+`backend/services/supabase_client.py` used supabase-py's default transport,
+one multiplexed HTTP/2 connection (`http2=True` in postgrest's client),
+from many threads at once.
+
+### Fix
+The shared client gets its own `httpx.Client(http2=False)` through
+`ClientOptions(httpx_client=...)`: HTTP/1.1 with httpx's thread-safe
+connection pool, one connection per concurrent request; the timeout stays
+postgrest's 120 s. Auth, PostgREST and Storage all use it.
+
+    python repro_issue29.py http1 8 25   # 0 errors, 6.9 s (HTTP/2: 10.0 s)
+    python repro_issue29.py ours 8 25    # the app's new client: see below
+
+### Regression test
+`backend/tests/test_supabase_client.py`: the client is built with an
+`httpx` client that has HTTP/2 off. Failed before (no `make_client`), passes
+after. The network behaviour itself is the repro above, not an offline
+test.
+
+### Commit
+fix(backend): give the shared Supabase client an HTTP/1.1 pool

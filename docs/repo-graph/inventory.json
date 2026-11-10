@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 195,
-    "inventoried": 183,
+    "tracked": 196,
+    "inventoried": 184,
     "excluded": 12
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7816,
+      "size_bytes": 7871,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -457,10 +457,10 @@
     {
       "path": "backend/services/supabase_client.py",
       "language": "python",
-      "lines": 14,
-      "size_bytes": 490,
+      "lines": 32,
+      "size_bytes": 1097,
       "role": "service",
-      "purpose": "Creates the shared service-role Supabase client; raises at import if the URL or key is missing."
+      "purpose": "Creates the shared service-role Supabase client with its own HTTP/1.1 httpx pool (thread-safe; the default single HTTP/2 connection broke under threads, issue 29); raises at import if the URL or key is missing."
     },
     {
       "path": "backend/tests/__init__.py",
@@ -735,6 +735,14 @@
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
     },
     {
+      "path": "backend/tests/test_supabase_client.py",
+      "language": "python",
+      "lines": 20,
+      "size_bytes": 767,
+      "role": "test",
+      "purpose": "Pytest: the shared Supabase client is built with an httpx client that has HTTP/2 off and postgrest's 120 s timeout."
+    },
+    {
       "path": "backend/tests/test_text.py",
       "language": "python",
       "lines": 110,
@@ -753,8 +761,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 873,
-      "size_bytes": 37280,
+      "lines": 934,
+      "size_bytes": 40128,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -769,8 +777,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1361,
-      "size_bytes": 236057,
+      "lines": 1363,
+      "size_bytes": 238757,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1409,8 +1417,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 185,
-      "size_bytes": 37919,
+      "lines": 186,
+      "size_bytes": 38196,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

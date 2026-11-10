@@ -119,8 +119,8 @@ Baseline when this file was written (C1.1; the last row was added in C2.4):
 
 | Check | Result |
 |---|---|
-| `ruff check backend/` | fails: 32 errors in existing code (36 until C8.8, 40 until C8.5, 84 until C3.4, 83 until C4.5, 82 until C5.5, 81 until C6.4, 64 until C8.3, 63 until C8.4a, 48 until C8.4b) |
-| `pytest backend/tests -q` | passes: 542 tests, offline (541 until the C8.G fix, 538 until C8.8, 527 until C8.7, 525 until the C8.5 fix of issue 32, 524 until the C8.5 fix of issue 31, 516 until C8.6, 495 until C8.5, 485 until C8.4b, 472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
+| `ruff check backend/` | fails: 31 errors in existing code (32 until the issue 29 fix, 36 until C8.8, 40 until C8.5, 84 until C3.4, 83 until C4.5, 82 until C5.5, 81 until C6.4, 64 until C8.3, 63 until C8.4a, 48 until C8.4b) |
+| `pytest backend/tests -q` | passes: 543 tests, offline (542 until the issue 29 fix, 541 until the C8.G fix, 538 until C8.8, 527 until C8.7, 525 until the C8.5 fix of issue 32, 524 until the C8.5 fix of issue 31, 516 until C8.6, 495 until C8.5, 485 until C8.4b, 472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
 | `npm --prefix frontend run lint` | fails: 22 errors, 2 warnings in existing code |
 | `npm --prefix frontend run build` | passes |
 | `python -c "import backend.main"` | passes |

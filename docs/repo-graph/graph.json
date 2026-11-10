@@ -720,6 +720,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_supabase_client.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_text.py",
       "type": "file",
       "role": "test",
@@ -1474,7 +1480,7 @@
       "type": "calls_external",
       "from": "file:backend/services/supabase_client.py",
       "to": "external:supabase",
-      "line": 3
+      "line": 15
     },
     {
       "type": "calls_external",
@@ -2677,6 +2683,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_startup.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_supabase_client.py",
+      "to": "file:backend/services/supabase_client.py"
     },
     {
       "type": "imports",

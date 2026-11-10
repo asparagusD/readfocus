@@ -130,13 +130,13 @@ def test_the_plan_after_submit_is_a_preview_and_start_takes_the_re_read(db, monk
     grades_with(monkeypatch, "low", "low")  # skip the optimizer, which would change the queue
     final = asyncio.run(workflow.run_submit("s1", USER, BOOK, [3], QUESTIONS, ["a", "b"], 120))
     assert final["plan"]["mode"] == "re_read" and db.tables["reading_progress"][0]["re_read_queue"] == [2]
-    plan = asyncio.run(workflow.run_start(USER, BOOK))
+    plan, _ = asyncio.run(workflow.run_start(USER, BOOK))
     assert plan.chunk_indices == [2] and db.tables["reading_progress"][0]["re_read_queue"] == []
 
 
 def test_start_runs_only_the_planner(db):
-    plan = asyncio.run(workflow.run_start(USER, BOOK))
-    assert plan.chunk_indices == [0, 1]
+    plan, run = asyncio.run(workflow.run_start(USER, BOOK))
+    assert plan.chunk_indices == [0, 1] and agents(run) == ["planner"]
 
 
 def test_start_returns_none_when_the_planner_fails(db, monkeypatch):
@@ -144,19 +144,22 @@ def test_start_returns_none_when_the_planner_fails(db, monkeypatch):
         raise RuntimeError("database down")
 
     monkeypatch.setattr(planner_agent, "load_progress", broken)
-    assert asyncio.run(workflow.run_start(USER, BOOK)) is None
+    assert asyncio.run(workflow.run_start(USER, BOOK)) == (None, {})
 
 
 def test_finish_reading_runs_only_the_test_generator(db):
-    questions = workflow.run_finish("s1", USER, BOOK, [0], None)
-    assert len(questions) == 5 and db.tables["sessions"][0]["test_questions"] == questions
+    run = workflow.run_finish("s1", USER, BOOK, [0], None)
+    questions = run["test_questions"]
+    assert agents(run) == ["test_generator"] and len(questions) == 5 and db.tables["sessions"][0]["test_questions"] == questions
 
 
 def test_abandon_runs_only_the_optimizer_and_counts_the_session(db):
     db.tables["sessions"][0]["status"] = "abandoned"
     db.tables["sessions"].append({"id": "s0", "user_id": USER, "book_id": BOOK, "status": "abandoned",
                                   "started_at": "2026-11-10T09:00:00+00:00"})
-    pace = asyncio.run(workflow.run_abandon("s1", USER, BOOK, [0]))
+    run = asyncio.run(workflow.run_abandon("s1", USER, BOOK, [0]))
+    assert agents(run) == ["optimizer"]
+    pace = run["pace_recommendation"]
     assert pace["band"] == "none" and "abandonment" in pace["rules"]
     assert pace["re_read_queue"] == [] and pace["recent_percentages"] == []  # no test, no score
 

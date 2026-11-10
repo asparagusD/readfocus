@@ -220,3 +220,51 @@ def test_005_leaves_the_old_column_and_function_alone():
     sql = migration_005()
     assert not re.search(r"\bmatch_chunks\s*\(", sql)
     assert not re.search(r"\bembedding\b(?!_local)", sql.replace("query_embedding", ""))
+
+
+# --- 009: agent_decisions, the audit trail of each workflow run (C8.6) ----------------------
+
+def migration_009() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "009_agent_decisions.sql"))
+
+
+AGENT_DECISIONS = {
+    "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+    "user_id": OWNER,
+    "book_id": BOOK,
+    "session_id": "uuid REFERENCES public.sessions(id) ON DELETE CASCADE",
+    "run_id": "uuid NOT NULL",
+    "event": "text NOT NULL CHECK (event IN ('start_session', 'finish_reading', 'submit_answers', 'abandon'))",
+    "step": "integer NOT NULL CHECK (step >= 1)",
+    "agent": "text NOT NULL",
+    "inputs_summary": "jsonb NOT NULL DEFAULT '{}'",
+    "output_summary": "jsonb NOT NULL DEFAULT '{}'",
+    "reason": "text NOT NULL DEFAULT ''",
+    "duration_ms": "real",
+    "created_at": "timestamptz NOT NULL DEFAULT now()",
+    "UNIQUE": "(run_id, step)",
+}
+
+
+def test_009_creates_agent_decisions_with_the_agreed_columns():
+    definition = table_definition(migration_009(), "agent_decisions")
+    assert list(definition) == list(AGENT_DECISIONS)
+    for name, expected in AGENT_DECISIONS.items():
+        assert definition[name] == expected, f"agent_decisions.{name}: {definition[name]}"
+
+
+def test_009_readers_see_only_their_own_decisions_and_cannot_write():
+    sql = migration_009()
+    assert "ALTER TABLE public.agent_decisions ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(r"CREATE POLICY \"[^\"]+\" ON public\.agent_decisions FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert policies == ["SELECT"]  # only the backend's service role writes
+    assert "SECURITY DEFINER" not in sql
+
+
+def test_009_has_the_lookup_indexes_and_touches_no_existing_table():
+    sql = migration_009()
+    for columns in ("session_id, created_at", "user_id, book_id, created_at"):
+        assert re.search(rf"CREATE INDEX IF NOT EXISTS \w+ ON public\.agent_decisions \({columns}\)", sql), columns
+    assert set(re.findall(r"ALTER TABLE public\.(\w+)", sql)) == {"agent_decisions"}
+    assert re.findall(r"CREATE TABLE IF NOT EXISTS public\.(\w+)", sql) == ["agent_decisions"]
+    assert not re.search(r"\b(INSERT|UPDATE)\b", sql)

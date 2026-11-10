@@ -71,6 +71,41 @@ and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
 
+### C8.6: session lifecycle through the LangGraph workflow (2026-11-11)
+
+Backend on this machine (`uvicorn backend.main:app --port 8000`, from
+`.claude/launch.json`) against the dev project, as test user A. No LLM and
+no embedding API anywhere in the path.
+
+Before C8.6, at `a01d635` (C8.5): `python scripts/bench.py --runs 3
+--flow-runs 5`, which starts a session as soon as the book is ready.
+
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /sessions/start` | 4 | 1.04 s | 1.09 s | at least one 500: "Server disconnected" during ingestion (issue 29) |
+| `POST /sessions/{id}/finish-reading` | 3 | 1.77 s | 2.55 s | at least one 500, same cause |
+| `POST /sessions/{id}/submit-answers` | 3 | 2.13 s | 2.19 s | evaluator, knowledge state, optimizer, planner |
+
+After C8.6: a one-off script (scratchpad, not committed), five flows, each
+uploading `sample.pdf`, waiting 15 s after `ready` so background ingestion
+is finished (keeping issue 29 out of the numbers), then start, a 3 s pause,
+finish-reading, submit, a second start and abandon. Every book was deleted
+afterwards. No failure in the 25 requests.
+
+| Step | n | p50 | max | Notes |
+|---|---|---|---|---|
+| `POST /sessions/start` | 10 | 1,039 ms | 1,149 ms | planner run; decisions saved after the response |
+| `POST /sessions/{id}/finish-reading` | 5 | 199 ms | 219 ms | test already assembled in the background |
+| `POST /sessions/{id}/submit-answers` | 5 | 1,893 ms | 2,338 ms | **target under 500 ms: missed; about 2.2 times C7.4** |
+| `POST /sessions/{id}/abandon` | 5 | 203 ms | 207 ms | the abandon flow runs after the response |
+
+Where the time goes, from the `duration_ms` the nodes store (first flow):
+planner 723 ms at start; on submit, evaluator 537 ms, knowledge state
+206 ms, optimizer 386 ms and planner 891 ms. The planner makes up to seven
+Supabase round trips at about 100 ms each and now runs on the submit path
+too (C8.5), which is most of the rise from about 0.9 to 1.0 s in C7.4.
+Saving decisions moved no number: it is one insert after the response.
+
 ### C6.4: answers graded inline (2026-11-10)
 
 Backend on this machine against the dev project, `sample.pdf` uploaded as

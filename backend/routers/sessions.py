@@ -7,7 +7,13 @@ from pydantic import BaseModel
 
 from backend.agents.evaluator_agent import evaluate_single_answer, load_passage, warm_up
 from backend.agents.question_generation.assembler import public_question
-from backend.agents.workflow import run_finish, run_start, run_submit
+from backend.agents.workflow import (
+    run_abandon,
+    run_finish,
+    run_start,
+    run_submit,
+    save_decisions,
+)
 from backend.dependencies import get_current_user
 from backend.services.supabase_client import supabase
 
@@ -16,10 +22,18 @@ router = APIRouter()
 def assemble_test_background(session_id: str, user_id: str, book_id: str, chunk_indices: list[int], mix: list | None = None):
     """Runs the finish_reading flow while the reader reads: questions from the bank, in the planner's mix."""
     try:
-        run_finish(session_id, user_id, book_id, chunk_indices, mix)
+        save_decisions(run_finish(session_id, user_id, book_id, chunk_indices, mix))
     except Exception as e:
         print(f"Background test assembly failed: {e}")
     warm_up()  # load the grading model while the reader reads, not when they answer
+
+
+async def abandon_background(session_id: str, user_id: str, book_id: str, chunk_indices: list[int]):
+    """Runs the abandon flow after the response: the optimizer counts the stopped session."""
+    try:
+        save_decisions(await run_abandon(session_id, user_id, book_id, chunk_indices))
+    except Exception as e:  # noqa: BLE001 - the session is already marked abandoned
+        print(f"Abandon flow failed for session {session_id}: {e}")
 
 
 class StartSessionRequest(BaseModel):
@@ -39,7 +53,7 @@ class EvaluateSingleRequest(BaseModel):
 @router.post("/start")
 async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     # 1. Run the start_session flow: the planner
-    plan = await run_start(user_id, req.book_id)
+    plan, run = await run_start(user_id, req.book_id)
     if not plan:
         raise HTTPException(status_code=500, detail="Planner failed to generate a session plan.")
         
@@ -68,7 +82,8 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         
     session_id = cast(dict[str, Any], session_resp.data[0])["id"]
     
-    # 4. Assemble the test from the question bank in the background
+    # 4. After the response: store the planner's decisions, and assemble the test from the question bank
+    background_tasks.add_task(save_decisions, run, session_id)
     background_tasks.add_task(
         assemble_test_background, session_id, user_id, req.book_id, chunk_indices, getattr(plan, "question_mix", None)
     )
@@ -82,7 +97,9 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
     }
 
 @router.post("/{session_id}/finish-reading")
-async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: str = Depends(get_current_user)):
+async def finish_reading(
+    session_id: str, req: FinishReadingRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)
+):
     # 1. Mark the session as testing; the update returns the row, so this is the only round trip
     sess_resp = supabase.table("sessions").update({
         "status": "testing",
@@ -97,7 +114,9 @@ async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: st
     # 2. The test is normally assembled in the background at start; if it is not there yet, do it now
     if not test_questions:
         chunk_indices = list(range(sess["chunk_start_index"], sess["chunk_end_index"] + 1))
-        test_questions = await run_in_threadpool(run_finish, session_id, user_id, sess["book_id"], chunk_indices, None)
+        run = await run_in_threadpool(run_finish, session_id, user_id, sess["book_id"], chunk_indices, None)
+        test_questions = run.get("test_questions") or []
+        background_tasks.add_task(save_decisions, run)
 
     # 3. Only the public part of each question leaves the server: no answers, evidence or hints
     return {
@@ -128,7 +147,9 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
     return {"status": "graded"}
 
 @router.post("/{session_id}/submit-answers")
-async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: str = Depends(get_current_user)):
+async def submit_answers(
+    session_id: str, req: SubmitAnswersRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)
+):
     # 1. Fetch session and questions
     sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
     if not sess_resp.data:
@@ -153,6 +174,7 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: st
         print(f"Evaluate Answers Error: {final.get('error')}")
         raise HTTPException(status_code=500, detail="Failed to evaluate answers.")
     next_plan = final.get("plan") or {}
+    background_tasks.add_task(save_decisions, final)
     
     # 4. Update session
     supabase.table("sessions").update({
@@ -172,7 +194,7 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: st
     }
 
 @router.post("/{session_id}/abandon")
-async def abandon_session(session_id: str, user_id: str = Depends(get_current_user)):
+async def abandon_session(session_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     resp = supabase.table("sessions").update({
         "status": "abandoned",
         "completed_at": datetime.utcnow().isoformat()
@@ -180,6 +202,9 @@ async def abandon_session(session_id: str, user_id: str = Depends(get_current_us
     
     if not resp.data:
         raise HTTPException(status_code=404, detail="Session not found.")
+    sess = cast(dict[str, Any], resp.data[0])
+    chunk_indices = list(range(sess["chunk_start_index"], sess["chunk_end_index"] + 1))
+    background_tasks.add_task(abandon_background, session_id, user_id, sess["book_id"], chunk_indices)
     return {"status": "abandoned"}
 
 @router.get("/{session_id}")

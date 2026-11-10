@@ -114,6 +114,44 @@ None.
 ### Commit
 None.
 
+### Seen again, 2026-11-11 C8.6 (still open, still outside the subchunk)
+Before any C8.6 change, at `a01d635`, with the backend started from
+`.claude/launch.json` (`uvicorn backend.main:app --port 8000`) on the dev
+project:
+
+    python scripts/bench.py --runs 3 --flow-runs 5
+
+Five flows (upload `sample.pdf`, wait for ready, start, finish-reading,
+submit). The table reports `POST /sessions/start` "HTTP 500: Planner failed
+to generate a session plan." and `finish-reading` "HTTP 500: Internal
+Server Error" for at least one run each (the script keeps only the last
+failure's note). Server log, every failure line:
+
+    Background test assembly failed: Server disconnected
+    Storing concepts failed for book 3542cd1c-38d5-4a11-aa32-d227368bead4: Server disconnected
+    Planner failed for book 3542cd1c-38d5-4a11-aa32-d227368bead4: Server disconnected
+    INFO:     127.0.0.1:53151 - "POST /sessions/start HTTP/1.1" 500 Internal Server Error
+
+and one traceback, ending in the same place as above but from a new caller:
+
+      File "I:\readfocus\backend\routers\sessions.py", line 90, in finish_reading
+        }).eq("id", session_id).eq("user_id", user_id).execute()
+      File "I:\readfocus\.venv\Lib\site-packages\postgrest\_sync\request_builder.py", line 103, in execute
+        r = send_with_retry(self.request)
+      ... (httpx and httpcore HTTP/2 frames as above) ...
+      File "I:\readfocus\.venv\Lib\site-packages\httpcore\_sync\http2.py", line 443, in _read_incoming_data
+        raise RemoteProtocolError("Server disconnected")
+    httpx.RemoteProtocolError: Server disconnected
+
+New evidence for hypothesis 2: "Storing concepts failed" comes from
+ingestion's background batches and "Planner failed" from a request, both
+for the same book at the same moment; the bench starts a session as soon
+as the book is ready, while ingestion is still running on the one shared
+client. The planner makes up to 7 round trips since C8.4a, which widens the
+overlap. Not fixed here: it is the shared client in
+`backend/services/supabase_client.py`, older than C8, and every caller is
+affected. Proposed as its own fix subchunk.
+
 ## 2026-11-10 C7.4 — GET /mastery returns 500 for an offset past the last row
 
 **Status:** fixed

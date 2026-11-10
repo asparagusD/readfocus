@@ -15,12 +15,13 @@ stored before C5.5) is graded against the passage and always marked low.
 """
 
 import asyncio
+import time
 from typing import Any, cast
 
 from backend.agents import policy
 from backend.agents.evaluation import feedback, grader
 from backend.agents.evaluation.grader import GradeInput
-from backend.agents.state import AgentState
+from backend.agents.state import AgentState, decision
 from backend.nlp import embedder, text
 from backend.services.supabase_client import supabase
 
@@ -85,6 +86,7 @@ def warm_up() -> None:
 
 
 async def evaluator_node(state: AgentState) -> dict:
+    started = time.perf_counter()
     user_id, book_id, session_id = state.get("user_id"), state.get("book_id"), state.get("session_id")
     chunk_indices = state.get("chunk_indices", [])
     questions = state.get("test_questions", [])
@@ -155,14 +157,16 @@ async def evaluator_node(state: AgentState) -> dict:
             "per_question": per_question,
             "low_confidence_count": sum(result["confidence"] == "low" for result in results),
         },
-        "decisions": [{  # appended by the state's reducer
-            "agent": "evaluator",
-            "input": {"questions": [question.get("id") for question in questions], "regraded": todo},
-            "output": [
+        "grades": results,
+        "decisions": [decision(  # appended by the state's reducer
+            "evaluator", started,
+            {"questions": [question.get("id") for question in questions], "regraded": todo},
+            {"total_score": total_score, "max_score": max_score, "grades": [
                 {key: result.get(key) for key in ("score", "confidence", "method", "reasons", "components")}
                 for result in results
-            ],
-        }],
+            ]},
+            f"Graded {len(results)} answers locally: {total_score} of {max_score}.",
+        )],
     }
 
 

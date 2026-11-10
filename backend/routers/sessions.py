@@ -8,6 +8,7 @@ from backend.dependencies import get_current_user
 from backend.services.supabase_client import supabase
 from backend.services.question_bank import assemble_session_test
 from backend.agents.planner_agent import plan_session
+from backend.agents.test_generator_agent import prepare_test
 from backend.agents.question_generation.assembler import public_question
 from backend.agents.evaluator_agent import (
     evaluate_answers, evaluate_single_answer, load_passage, warm_up,
@@ -17,10 +18,10 @@ from backend.agents.knowledge_state.agent import apply_test
 
 router = APIRouter()
 
-def assemble_test_background(session_id: str, user_id: str, book_id: str, chunk_indices: List[int]):
-    """Picks the session's questions from the question bank while the reader reads."""
+def assemble_test_background(session_id: str, user_id: str, book_id: str, chunk_indices: List[int], mix: list | None = None):
+    """Runs the test generator node while the reader reads: questions from the bank, in the planner's mix."""
     try:
-        assemble_session_test(session_id, user_id, book_id, chunk_indices)
+        prepare_test(session_id, user_id, book_id, chunk_indices, mix)
     except Exception as e:
         print(f"Background test assembly failed: {e}")
     warm_up()  # load the grading model while the reader reads, not when they answer
@@ -73,7 +74,9 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
     session_id = cast(dict[str, Any], session_resp.data[0])["id"]
     
     # 4. Assemble the test from the question bank in the background
-    background_tasks.add_task(assemble_test_background, session_id, user_id, req.book_id, chunk_indices)
+    background_tasks.add_task(
+        assemble_test_background, session_id, user_id, req.book_id, chunk_indices, getattr(plan, "question_mix", None)
+    )
     
     return {
         "session_id": session_id,

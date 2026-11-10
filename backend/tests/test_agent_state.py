@@ -9,7 +9,7 @@ from pathlib import Path
 from langgraph.graph import END, StateGraph
 
 from backend.agents import evaluator_agent
-from backend.agents.state import AgentState, Decision
+from backend.agents.state import AgentState, decision
 
 AGENTS = Path(__file__).resolve().parents[1] / "agents"
 NEW_KEYS = {
@@ -43,10 +43,10 @@ def test_event_takes_only_the_two_flows():
 
 def test_a_compiled_graph_keeps_every_node_s_decisions_in_order():
     def first(state):
-        return {"decisions": [Decision(agent="first", input={}, output={"n": 1})]}
+        return {"decisions": [decision("first", 0.0, {}, {"n": 1}, "first")]}
 
     def second(state):
-        return {"decisions": [Decision(agent="second", input={}, output={"n": 2})], "errors": ["minor"]}
+        return {"decisions": [decision("second", 0.0, {}, {"n": 2}, "second")], "errors": ["minor"]}
 
     def silent(state):
         return {"plan": {"chunk_indices": [0]}}
@@ -86,7 +86,7 @@ def test_the_evaluator_returns_only_its_own_decision(monkeypatch, fake_supabase)
          "matched_concepts": [], "missing_concepts": [], "method": "test", "reasons": [], "components": {}}
         for a in answers
     ])
-    earlier = Decision(agent="planner", input={}, output={})
+    earlier = decision("planner", 0.0, {}, {}, "earlier")
     state = {"user_id": "u", "book_id": "b", "session_id": "s", "chunk_indices": [0],
              "test_questions": [{"id": "q1", "evidence": "e"}], "user_answers": ["a"], "decisions": [earlier]}
     result = asyncio.run(evaluator_agent.evaluator_node(state))

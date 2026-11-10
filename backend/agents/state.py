@@ -12,17 +12,27 @@ the current nodes and routers use (`status`, `session_plan`,
 """
 
 import operator
+import time
 from typing import Annotated, Any, Literal, TypedDict
 
 Event = Literal["start", "submit"]
 
 
-class Decision(TypedDict, total=False):
-    """One audit entry: which agent ran, what it was given, what it decided, by which rule."""
+class Decision(TypedDict):
+    """One audit entry: which agent ran, a summary of what it was given and decided, why, and how long it took."""
     agent: str
-    input: Any
-    output: Any
-    rule: str
+    inputs_summary: dict[str, Any]
+    output_summary: dict[str, Any]
+    reason: str
+    duration_ms: float
+
+
+def decision(agent: str, started: float, inputs_summary: dict, output_summary: dict, reason: str) -> Decision:
+    """The node's one decisions entry; `started` is time.perf_counter() when the node began."""
+    return Decision(
+        agent=agent, inputs_summary=inputs_summary, output_summary=output_summary, reason=reason,
+        duration_ms=round((time.perf_counter() - started) * 1000, 1),
+    )
 
 
 class AgentState(TypedDict, total=False):

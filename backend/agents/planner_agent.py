@@ -1,189 +1,106 @@
-import json
-import uuid
-from typing import List, Optional, cast
-from pydantic import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import PydanticOutputParser
+"""Planner node: the I/O around planner.strategy.decide. No LLM.
 
+Reads the reader's progress (creating the row on a first session, with
+nothing read yet), the profile speed, the candidate sections and their
+concepts, the reader's mastery and each section's question difficulty;
+calls the pure decide; pops a re-read from the queue; and returns the plan
+with one decisions entry. The optimizer's last pace_recommendation supplies
+the multiplier, the reading speed it assumed and the recent score.
+"""
+
+import time
+from datetime import UTC, datetime
+from typing import cast
+
+from backend.agents import policy
+from backend.agents.planner.strategy import (
+    ChunkInfo,
+    ConceptState,
+    PaceHint,
+    PlannerInput,
+    SessionPlan,
+    decide,
+)
+from backend.agents.state import AgentState, decision
 from backend.services.supabase_client import supabase
-from backend.services.llm import planner_llm
-from backend.agents.state import AgentState
 
-class SessionPlan(BaseModel):
-    chunk_indices: List[int] = Field(description="List of chunk indices assigned for this session")
-    assigned_words: int = Field(description="Total word count assigned")
-    focus_duration_minutes: int = Field(description="Recommended focus duration in minutes (15-60)")
-    reason: str = Field(description="Brief reason for this plan based on user history")
 
-parser = PydanticOutputParser(pydantic_object=SessionPlan)
+def _rows(query) -> list[dict]:
+    return cast(list[dict], query.execute().data or [])
 
-system_prompt = """You are a reading session planner. Given the user's reading history, comprehension scores, and their calibrated reading speed ({wpm} words per minute), decide how many chunks to assign for this session and how many minutes to allocate. Output only JSON: {format_instructions}.
-Rules: new users start at 1 chunk. Increase chunks if avg score > 80%. Reduce if avg score < 50%. Max 3 chunks per session.
-Crucially, calculate the exact `focus_duration_minutes` required to read the assigned_words based on the user's {wpm} WPM speed. You may add a 10% buffer if their past scores were poor. Minimum 10 minutes, maximum 120 minutes."""
 
-prompt_template = ChatPromptTemplate.from_messages([
-    ("system", system_prompt),
-    ("user", "Reading History: {history}\n\nLast Chunk Index: {last_chunk_index}\nAvailable Next Chunk Word Counts: {next_chunks_words}\nPlan the next session.")
-])
+def load_progress(user_id: str, book_id: str) -> dict:
+    """The reader's progress row for the book, created on the first session (-1: nothing read)."""
+    rows = _rows(supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id))
+    if rows:
+        return rows[0]
+    row = {"user_id": user_id, "book_id": book_id, "last_chunk_index": -1, "chunks_completed": 0, "re_read_queue": []}
+    return (_rows(supabase.table("reading_progress").insert(row)) or [row])[0]
+
+
+def build_input(user_id: str, book_id: str, progress: dict, now: datetime) -> PlannerInput:
+    pace = progress.get("pace_recommendation") or {}
+    last = progress.get("last_chunk_index")
+    last = -1 if last is None else last
+    chunks = _rows(supabase.table("chunks").select("chunk_index, word_count").eq("book_id", book_id).lte(
+        "chunk_index", last + policy.PLANNER_MAX_CHUNKS).order("chunk_index"))
+    indices = [chunk["chunk_index"] for chunk in chunks]
+    concepts = _rows(supabase.table("concepts").select("concept_key, label, chunk_indices").eq(
+        "user_id", user_id).eq("book_id", book_id))
+    mastery = _rows(supabase.table("user_concept_mastery").select(
+        "concept_key, mastery, attempts, correct, next_review").eq("user_id", user_id).eq("book_id", book_id))
+    bank = _rows(supabase.table("question_bank").select("chunk_index, difficulty").eq("user_id", user_id).eq(
+        "book_id", book_id).in_("chunk_index", indices)) if indices else []
+    wpm = pace.get("reading_wpm")
+    if not wpm:
+        profile = _rows(supabase.table("profiles").select("reading_goal_wpm").eq("user_id", user_id))
+        wpm = profile[0]["reading_goal_wpm"] if profile else None
+
+    def difficulty(index: int) -> float | None:
+        values = [row["difficulty"] for row in bank if row["chunk_index"] == index and row.get("difficulty") is not None]
+        return sum(values) / len(values) if values else None
+
+    labels = {row["concept_key"]: row.get("label") or "" for row in concepts}
+    return PlannerInput(
+        now=now, last_chunk_index=last, re_read_queue=progress.get("re_read_queue") or [], wpm=int(wpm) if wpm else None,
+        recent_percentages=[pace["rolling_percentage"]] if pace.get("rolling_percentage") is not None else [],
+        pace=PaceHint(next_chunk_multiplier=pace.get("next_chunk_multiplier") or 1.0,
+                      focus_duration_minutes=pace.get("focus_duration_minutes")) if pace else None,
+        chunks=[ChunkInfo(index=chunk["chunk_index"], word_count=chunk["word_count"] or 0, difficulty=difficulty(
+            chunk["chunk_index"]), concept_keys=[row["concept_key"] for row in concepts if chunk["chunk_index"] in (
+                row.get("chunk_indices") or [])]) for chunk in chunks],
+        concepts=[ConceptState(**row, label=labels.get(row["concept_key"], "")) for row in mastery],
+    )
+
 
 async def planner_node(state: AgentState) -> dict:
-    user_id = state.get("user_id")
-    book_id = state.get("book_id")
-    
-    # 1. Fetch user profile for WPM
-    profile_resp = supabase.table("profiles").select("reading_goal_wpm").eq("user_id", user_id).execute()
-    profile_data = cast(list[dict], profile_resp.data or [])
-    wpm = profile_data[0]["reading_goal_wpm"] if profile_data else 200
-    
-    # 2. Fetch reading_progress
-    progress_resp = supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id).execute()
-    progress_data = cast(list[dict], progress_resp.data or [])
-    if progress_data:
-        progress = progress_data[0]
-    else:
-        # Defaults for new progress
-        progress = {
-            "last_chunk_index": -1,
-            "chunks_completed": 0,
-            "average_score": 0.0,
-            "re_read_queue": []
-        }
-        
-    re_read_queue = cast(list[int], progress.get("re_read_queue") or [])
-    
-    # 2. Re-read mode
-    if re_read_queue:
-        chunk_idx = re_read_queue.pop(0)
-        # Update queue if progress row exists
-        if "id" in progress:
-            supabase.table("reading_progress").update({"re_read_queue": re_read_queue}).eq("id", progress["id"]).execute()
-        
-        # Fetch chunk details
-        chunk_resp = supabase.table("chunks").select("word_count, content").eq("book_id", book_id).eq("chunk_index", chunk_idx).execute()
-        chunk_data = cast(list[dict], chunk_resp.data or [])
-        if not chunk_data:
-            return {"error": "Chunk not found in re-read queue"}
-            
-        chunk_info = chunk_data[0]
-        
-        plan = SessionPlan(
-            chunk_indices=[chunk_idx],
-            assigned_words=chunk_info["word_count"],
-            focus_duration_minutes=20, # Default for re-read
-            reason="Re-reading chunk based on previous poor comprehension performance."
-        )
-        
-        return {
-            "session_plan": plan.dict(),
-            "chunk_indices": [chunk_idx],
-            "chunk_texts": [chunk_info["content"]]
-        }
-
-    # 3. Fetch next chunks info (up to 3 chunks max)
-    last_chunk_index = cast(int, progress.get("last_chunk_index", -1))
-    
-    next_chunks_resp = supabase.table("chunks").select("chunk_index, word_count, content").eq("book_id", book_id).gte("chunk_index", last_chunk_index + 1).order("chunk_index").limit(3).execute()
-    next_chunks_data = cast(list[dict], next_chunks_resp.data or [])
-    
-    if not next_chunks_data:
-        return {"error": "No more chunks available. Book finished!"}
-        
-    next_chunks = next_chunks_data
-    next_chunks_words = {str(c["chunk_index"]): c["word_count"] for c in next_chunks}
-    
-    # Fetch recent session context for the planner
-    recent_sessions = (
-        supabase
-        .table("sessions")
-        .select("chunk_start_index, chunk_end_index, focus_duration_minutes, actual_duration_minutes")
-        .eq("user_id", user_id)
-        .eq("book_id", book_id)
-        .eq("status", "completed")
-        .order("completed_at", desc=True)
-        .limit(5)
-        .execute()
-        .data
-    )
-
-    recent_scores = (
-        supabase
-        .table("test_results")
-        .select("total_score, max_score, chunk_index, created_at")
-        .eq("user_id", user_id)
-        .order("created_at", desc=True)
-        .limit(5)
-        .execute()
-        .data
-    )
-    
-    history_string = f"## Recent reading history\nSessions: {json.dumps(recent_sessions)}\nScores: {json.dumps(recent_scores)}"
-    
-    # 5. Invoke Planner LLM
-    chain = prompt_template | planner_llm | parser
-    
-    plan: SessionPlan = await chain.ainvoke({
-        "format_instructions": parser.get_format_instructions(),
-        "wpm": wpm,
-        "history": history_string,
-        "last_chunk_index": last_chunk_index,
-        "next_chunks_words": json.dumps(next_chunks_words)
-    })
-    
-    # Ensure chunk_indices are valid and available
-    valid_indices = [idx for idx in plan.chunk_indices if str(idx) in next_chunks_words]
-    if not valid_indices:
-        valid_indices = [next_chunks[0]["chunk_index"]]
-        
-    chunk_texts = [c["content"] for c in next_chunks if c["chunk_index"] in valid_indices]
-    
-    # Update assigned_words to match actual
-    actual_assigned_words = sum(next_chunks_words[str(idx)] for idx in valid_indices)
-    plan.assigned_words = actual_assigned_words
-    plan.chunk_indices = valid_indices
-    
+    started = time.perf_counter()
+    user_id, book_id = state.get("user_id") or "", state.get("book_id") or ""
+    progress = load_progress(user_id, book_id)
+    data = build_input(user_id, book_id, progress, datetime.now(UTC))
+    plan = decide(data)
+    if plan.mode == "re_read" and progress.get("id"):
+        queue = [index for index in data.re_read_queue if index != plan.chunk_indices[0]]
+        supabase.table("reading_progress").update({"re_read_queue": queue}).eq("id", progress["id"]).execute()
     return {
-        "session_plan": plan.model_dump() if hasattr(plan, 'model_dump') else plan.dict(),
-        "chunk_indices": valid_indices,
-        "chunk_texts": chunk_texts,
-        "status": "reading"
+        "plan": plan.model_dump(),
+        "session_plan": plan.model_dump(include={"chunk_indices", "assigned_words", "focus_duration_minutes", "reason"}),
+        "chunk_indices": plan.chunk_indices,
+        "decisions": [decision("planner", started, {
+            "last_chunk_index": data.last_chunk_index, "re_read_queue": data.re_read_queue, "wpm": data.wpm,
+            "candidates": [chunk.index for chunk in data.chunks], "concept_states": len(data.concepts),
+        }, plan.model_dump(include={"mode", "rule", "chunk_indices", "assigned_words", "focus_duration_minutes"}),
+            plan.reason)],
     }
 
-async def plan_session(user_id: str, book_id: str) -> Optional[SessionPlan]:
+
+async def plan_session(user_id: str, book_id: str) -> SessionPlan | None:
+    """Run the workflow's planner node. None if it failed; a plan with no sections if the book is done."""
     from backend.agents.graph import workflow
-    
-    initial_state = cast(AgentState, {
-        "user_id": user_id,
-        "book_id": book_id,
-        "session_id": str(uuid.uuid4()),
-        "status": "reading"
-    })
-    
+
     try:
-        result = await workflow.ainvoke(initial_state)
-        
-        plan_dict = result.get("session_plan")
-        return SessionPlan(**plan_dict) if plan_dict else None
-    except Exception as e:
-        print(f"LLM/Orchestrator failed: {e}. Falling back to mock session.")
-        
-        # Fallback to mock session
-        progress_resp = supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id).execute()
-        progress_data = cast(list[dict], progress_resp.data or [])
-        progress = progress_data[0] if progress_data else {}
-        last_chunk_index = cast(int, progress.get("last_chunk_index", -1))
-        
-        next_chunks_resp = supabase.table("chunks").select("chunk_index, word_count").eq("book_id", book_id).gte("chunk_index", last_chunk_index + 1).order("chunk_index").limit(1).execute()
-        next_chunks_data = cast(list[dict], next_chunks_resp.data or [])
-        
-        if not next_chunks_data:
-            return None # Book finished
-            
-        chunk = next_chunks_data[0]
-        
-        mock_plan = SessionPlan(
-            chunk_indices=[chunk["chunk_index"]],
-            assigned_words=chunk["word_count"],
-            focus_duration_minutes=20,
-            reason="MOCK LLM: LLM rate limit exceeded. Generating default 20-minute session."
-        )
-        return mock_plan
+        result = await workflow.ainvoke(cast(AgentState, {"user_id": user_id, "book_id": book_id, "status": "reading"}))
+        return SessionPlan(**result["plan"])
+    except Exception as error:  # noqa: BLE001 - the router answers 500
+        print(f"Planner failed for book {book_id}: {error}")
+        return None

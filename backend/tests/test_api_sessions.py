@@ -63,6 +63,10 @@ class Query:
         self.filters.append(lambda r: r.get(column) in values)
         return self
 
+    def lte(self, column, value):
+        self.filters.append(lambda r: r.get(column) is not None and r[column] <= value)
+        return self
+
     def overlaps(self, column, values):
         self.filters.append(lambda r: bool(set(r.get(column) or []) & set(values)))
         return self
@@ -290,8 +294,10 @@ def test_finish_reading_of_an_unknown_session_is_404(api):
 
 
 def test_the_session_router_no_longer_uses_the_llm_test_generator():
-    source = inspect.getsource(sessions)
-    assert "test_generator_agent" not in source and "generate_test" not in source
+    from backend.agents import test_generator_agent
+
+    assert "generate_test" not in inspect.getsource(sessions)
+    assert "services.llm" not in inspect.getsource(test_generator_agent)  # the node is the question bank (C8.4)
 
 
 # --- grading (C6.4): inline, local, with a confidence ------------------------

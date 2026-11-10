@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 188,
-    "inventoried": 177,
+    "tracked": 189,
+    "inventoried": 178,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7489,
+      "size_bytes": 7522,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -145,10 +145,10 @@
     {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
-      "lines": 184,
-      "size_bytes": 9181,
+      "lines": 188,
+      "size_bytes": 9402,
       "role": "agent",
-      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and appends to decisions; a question with no evidence is graded against the passage at low confidence."
+      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; a question with no evidence is graded against the passage at low confidence."
     },
     {
       "path": "backend/agents/graph.py",
@@ -225,10 +225,10 @@
     {
       "path": "backend/agents/planner_agent.py",
       "language": "python",
-      "lines": 189,
-      "size_bytes": 8084,
+      "lines": 106,
+      "size_bytes": 5565,
       "role": "agent",
-      "purpose": "Planner node: serves the re-read queue first, otherwise asks the Groq LLM how many of the next three chunks to assign; falls back to one chunk for 20 minutes."
+      "purpose": "Planner node, no LLM: reads progress (creating it on a first session with nothing read), candidate sections, their concepts, the reader's mastery, question difficulty per section and the optimizer's last pace; calls planner.strategy.decide; pops a re-read from the queue; returns plan, session_plan and one decisions entry. plan_session runs it through the workflow."
     },
     {
       "path": "backend/agents/policy.py",
@@ -281,18 +281,18 @@
     {
       "path": "backend/agents/state.py",
       "language": "python",
-      "lines": 57,
-      "size_bytes": 2047,
+      "lines": 67,
+      "size_bytes": 2534,
       "role": "agent",
-      "purpose": "AgentState TypedDict shared by all agent nodes: identity, the event (start or submit), one output key per agent (plan, grades, mastery_updates, policy_adjustments), the append-only decisions audit trail and errors (operator.add reducers), and the older keys the current nodes and routers still use."
+      "purpose": "AgentState TypedDict shared by all agent nodes: identity, the event (start or submit), one output key per agent (plan, grades, mastery_updates, policy_adjustments), the append-only decisions audit trail (agent, inputs_summary, output_summary, reason, duration_ms, built by decision()) and errors (operator.add reducers), and the older keys the current nodes and routers still use."
     },
     {
       "path": "backend/agents/test_generator_agent.py",
       "language": "python",
-      "lines": 124,
-      "size_bytes": 5815,
+      "lines": 40,
+      "size_bytes": 2103,
       "role": "agent",
-      "purpose": "Old test generator node: asks the Groq LLM for five questions with RAG context and falls back to generic ones. Still wired into the LangGraph workflow, but no longer called by the session router since C5.5."
+      "purpose": "Test generator node, no LLM: assembles the session's test from the question bank (question_bank.assemble_session_test) in the planner's question mix and returns it with one decisions entry; prepare_test runs it through the workflow from the start flow's background task."
     },
     {
       "path": "backend/dependencies.py",
@@ -401,10 +401,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 226,
-      "size_bytes": 10000,
+      "lines": 229,
+      "size_bytes": 10156,
       "role": "router",
-      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question, and moves the reader's concept mastery in a background task), abandon, get; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints: start (planner, then the test generator node assembles the test from the question bank in the planner's mix and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question, and moves the reader's concept mastery in a background task), abandon, get; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -495,10 +495,18 @@
       "purpose": "Labelled answers for calibrating the grader: 34 cases over five questions, each with question, type, evidence, key terms, an answer, a category (correct, paraphrase, partial, wrong, off-topic, empty, copy of the question) and a hand-given human_score from 0 to 1."
     },
     {
+      "path": "backend/tests/test_agent_nodes.py",
+      "language": "python",
+      "lines": 151,
+      "size_bytes": 7167,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: the planner node creates the progress row once, continues after the last section, uses the optimizer's pace and speed, pops a re-read, brings a weak concept's section back, reads difficulty from the bank; plan_session through the workflow; the test generator node stores a test in the plan's mix, also through the workflow; one decisions entry each; no LLM."
+    },
+    {
       "path": "backend/tests/test_agent_state.py",
       "language": "python",
       "lines": 93,
-      "size_bytes": 3838,
+      "size_bytes": 3826,
       "role": "test",
       "purpose": "Pytest: AgentState declares the pipeline keys and keeps the old ones, decisions and errors are append-only through a compiled graph, event takes only start or submit, every key a node returns is declared, and the evaluator returns only its own decision."
     },
@@ -521,8 +529,8 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 450,
-      "size_bytes": 21404,
+      "lines": 456,
+      "size_bytes": 21652,
       "role": "test",
       "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once."
     },
@@ -745,8 +753,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1354,
-      "size_bytes": 209306,
+      "lines": 1355,
+      "size_bytes": 212592,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1361,8 +1369,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 179,
-      "size_bytes": 33430,
+      "lines": 180,
+      "size_bytes": 34278,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1409,8 +1417,8 @@
     {
       "path": "tools/repo_graph/tests/test_query.py",
       "language": "python",
-      "lines": 83,
-      "size_bytes": 3401,
+      "lines": 80,
+      "size_bytes": 3370,
       "role": "test",
       "purpose": "Pytest: file, endpoint and table queries, path forms, unknown targets, and the importers of llm.py in the real graph."
     },

@@ -571,6 +571,12 @@
       "language": "json"
     },
     {
+      "id": "file:backend/tests/test_agent_nodes.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_agent_state.py",
       "type": "file",
       "role": "test",
@@ -1463,18 +1469,6 @@
     },
     {
       "type": "calls_external",
-      "from": "file:backend/agents/planner_agent.py",
-      "to": "external:langchain",
-      "line": 5
-    },
-    {
-      "type": "calls_external",
-      "from": "file:backend/agents/test_generator_agent.py",
-      "to": "external:langchain",
-      "line": 3
-    },
-    {
-      "type": "calls_external",
       "from": "file:backend/mcp_server.py",
       "to": "external:mcp",
       "line": 28
@@ -2028,12 +2022,17 @@
     {
       "type": "imports",
       "from": "file:backend/agents/planner_agent.py",
-      "to": "file:backend/agents/state.py"
+      "to": "file:backend/agents/planner/strategy.py"
     },
     {
       "type": "imports",
       "from": "file:backend/agents/planner_agent.py",
-      "to": "file:backend/services/llm.py"
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "file:backend/agents/state.py"
     },
     {
       "type": "imports",
@@ -2118,17 +2117,7 @@
     {
       "type": "imports",
       "from": "file:backend/agents/test_generator_agent.py",
-      "to": "file:backend/services/llm.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/agents/test_generator_agent.py",
-      "to": "file:backend/services/retriever.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/agents/test_generator_agent.py",
-      "to": "file:backend/services/supabase_client.py"
+      "to": "file:backend/services/question_bank.py"
     },
     {
       "type": "imports",
@@ -2248,6 +2237,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/sessions.py",
+      "to": "file:backend/agents/test_generator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/sessions.py",
       "to": "file:backend/dependencies.py"
     },
     {
@@ -2322,6 +2316,36 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/planner/strategy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/test_generator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_agent_state.py",
       "to": "file:backend/agents/evaluator_agent.py"
     },
@@ -2369,6 +2393,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/test_generator_agent.py"
     },
     {
       "type": "imports",
@@ -3068,7 +3097,17 @@
     {
       "type": "reads_table",
       "from": "file:backend/agents/planner_agent.py",
+      "to": "table:concepts"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
       "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:question_bank"
     },
     {
       "type": "reads_table",
@@ -3078,27 +3117,12 @@
     {
       "type": "reads_table",
       "from": "file:backend/agents/planner_agent.py",
-      "to": "table:sessions"
-    },
-    {
-      "type": "reads_table",
-      "from": "file:backend/agents/planner_agent.py",
-      "to": "table:test_results"
+      "to": "table:user_concept_mastery"
     },
     {
       "type": "reads_table",
       "from": "file:backend/agents/question_generation/agent.py",
       "to": "table:chunks"
-    },
-    {
-      "type": "reads_table",
-      "from": "file:backend/agents/test_generator_agent.py",
-      "to": "table:chunks"
-    },
-    {
-      "type": "reads_table",
-      "from": "file:backend/agents/test_generator_agent.py",
-      "to": "table:test_results"
     },
     {
       "type": "reads_table",

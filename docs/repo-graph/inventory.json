@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 187,
-    "inventoried": 176,
+    "tracked": 188,
+    "inventoried": 177,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7458,
+      "size_bytes": 7489,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -146,7 +146,7 @@
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
       "lines": 184,
-      "size_bytes": 9175,
+      "size_bytes": 9181,
       "role": "agent",
       "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and appends to decisions; a question with no evidence is graded against the passage at low confidence."
     },
@@ -281,10 +281,10 @@
     {
       "path": "backend/agents/state.py",
       "language": "python",
-      "lines": 18,
-      "size_bytes": 557,
+      "lines": 57,
+      "size_bytes": 2047,
       "role": "agent",
-      "purpose": "AgentState TypedDict shared by all agent nodes, including the decisions audit trail."
+      "purpose": "AgentState TypedDict shared by all agent nodes: identity, the event (start or submit), one output key per agent (plan, grades, mastery_updates, policy_adjustments), the append-only decisions audit trail and errors (operator.add reducers), and the older keys the current nodes and routers still use."
     },
     {
       "path": "backend/agents/test_generator_agent.py",
@@ -493,6 +493,14 @@
       "size_bytes": 16853,
       "role": "test",
       "purpose": "Labelled answers for calibrating the grader: 34 cases over five questions, each with question, type, evidence, key terms, an answer, a category (correct, paraphrase, partial, wrong, off-topic, empty, copy of the question) and a hand-given human_score from 0 to 1."
+    },
+    {
+      "path": "backend/tests/test_agent_state.py",
+      "language": "python",
+      "lines": 93,
+      "size_bytes": 3838,
+      "role": "test",
+      "purpose": "Pytest: AgentState declares the pipeline keys and keeps the old ones, decisions and errors are append-only through a compiled graph, event takes only start or submit, every key a node returns is declared, and the evaluator returns only its own decision."
     },
     {
       "path": "backend/tests/test_answer_fixtures.py",
@@ -738,7 +746,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1354,
-      "size_bytes": 207174,
+      "size_bytes": 209306,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1353,8 +1361,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 178,
-      "size_bytes": 32920,
+      "lines": 179,
+      "size_bytes": 33430,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

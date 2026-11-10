@@ -155,7 +155,7 @@ async def evaluator_node(state: AgentState) -> dict:
             "per_question": per_question,
             "low_confidence_count": sum(result["confidence"] == "low" for result in results),
         },
-        "decisions": [*state.get("decisions", []), {
+        "decisions": [{  # appended by the state's reducer
             "agent": "evaluator",
             "input": {"questions": [question.get("id") for question in questions], "regraded": todo},
             "output": [

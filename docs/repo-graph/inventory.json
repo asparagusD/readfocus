@@ -321,16 +321,16 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 59,
-      "size_bytes": 1672,
+      "lines": 103,
+      "size_bytes": 3596,
       "role": "doc",
       "purpose": "Debug log rules and entry template; no entries yet."
     },
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 242,
-      "size_bytes": 17831,
+      "lines": 243,
+      "size_bytes": 18635,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -841,8 +841,8 @@
     {
       "path": "tools/repo_graph/build.py",
       "language": "python",
-      "lines": 246,
-      "size_bytes": 9491,
+      "lines": 376,
+      "size_bytes": 16352,
       "role": "script",
       "purpose": "Builds docs/repo-graph/graph.json: typed nodes and edges for files, endpoints, tables, functions, env vars, external services and LangGraph nodes."
     },
@@ -873,8 +873,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 129,
-      "size_bytes": 4744,
+      "lines": 237,
+      "size_bytes": 9501,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

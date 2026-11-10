@@ -4,11 +4,24 @@ Usage, from the repo root:
 
     python tools/repo_graph/build.py
 
-Nodes are files (from the inventory) and API endpoints. Edges:
+Node types: file (from the inventory), endpoint, table, function, env,
+external, graph_node. Edges:
 
-    imports           file -> file      Python via ast, JS/JSX via regex
-    defines_endpoint  file -> endpoint  FastAPI decorators + include_router prefixes
-    calls_endpoint    file -> endpoint  frontend fetchApi('/...') calls
+    imports           file -> file        Python via ast, JS/JSX via regex
+    defines_endpoint  file -> endpoint    FastAPI decorators + include_router prefixes
+    calls_endpoint    file -> endpoint    frontend fetchApi('/...') calls
+    reads_table       file -> table       .table("x").select(...), table_name="x"
+    writes_table      file -> table       .table("x").insert/update/upsert/delete
+    calls_function    file -> function    .rpc("fn"), query_name="fn"
+    defines_table     file -> table       CREATE TABLE in a migration
+    alters_table      file -> table       ALTER TABLE ... ADD COLUMN in a migration
+    defines_function  file -> function    CREATE FUNCTION in a migration
+    uses_env          file -> env         os.getenv, os.environ, import.meta.env
+    declares_env      file -> env         KEY= in .env.example, "- key:" in YAML
+    calls_external    file -> external    imports of third-party services; `banned`
+                                          marks providers ruled out by CLAUDE.md
+    graph_node        file -> graph_node  LangGraph add_node
+    graph_edge        graph_node -> graph_node  add_edge, add_conditional_edges
 
 Anything that looks like an edge but has no target (a relative import that
 resolves to no file, a fetchApi call with no matching route) is listed under
@@ -33,8 +46,55 @@ from tools.repo_graph import inventory
 
 OUT_FILE = ROOT / "docs" / "repo-graph" / "graph.json"
 
-NODE_TYPES = ("file", "endpoint")
-EDGE_TYPES = ("imports", "defines_endpoint", "calls_endpoint")
+NODE_TYPES = ("file", "endpoint", "table", "function", "env", "external", "graph_node")
+EDGE_TYPES = (
+    "imports", "defines_endpoint", "calls_endpoint", "reads_table", "writes_table",
+    "calls_function", "defines_table", "alters_table", "defines_function",
+    "uses_env", "declares_env", "calls_external", "graph_node", "graph_edge",
+)
+
+# Import name (Python top-level module or JS package) -> external service.
+EXTERNALS = {
+    "groq": "groq", "langchain_groq": "groq",
+    "langchain_google_genai": "google_ai_studio", "google": "google_ai_studio",
+    "openai": "openai", "langchain_openai": "openai",
+    "anthropic": "anthropic", "langchain_anthropic": "anthropic",
+    "langchain": "langchain", "langchain_core": "langchain",
+    "langchain_community": "langchain", "langgraph": "langgraph",
+    "mcp": "mcp", "langchain_mcp_adapters": "mcp",
+    "supabase": "supabase", "@supabase/supabase-js": "supabase",
+    "fonts.googleapis.com": "google_fonts",
+}
+BANNED_SERVICES = {"groq", "google_ai_studio", "openai", "anthropic"}
+# The graph tooling quotes the patterns it searches for, so it is only scanned
+# for imports, not for tables, env vars or services.
+SELF_PREFIX = "tools/repo_graph/"
+WRITE_METHODS = {"insert", "update", "upsert", "delete"}
+PY_TABLE = re.compile(r"""\.table\(\s*["'](\w+)["']\s*\)\s*\.(\w+)""")
+SQL = re.IGNORECASE
+# language -> (regex with one group, edge type, node type)
+TEXT_PATTERNS = {
+    "python": (
+        (re.compile(r"""table_name\s*=\s*["'](\w+)["']"""), "reads_table", "table"),
+        (re.compile(r"""\.rpc\(\s*["'](\w+)["']"""), "calls_function", "function"),
+        (re.compile(r"""query_name\s*=\s*["'](\w+)["']"""), "calls_function", "function"),
+        (re.compile(r"""os\.(?:getenv\(|environ\.get\(|environ\[)\s*["'](\w+)["']"""),
+         "uses_env", "env"),
+    ),
+    "sql": (
+        (re.compile(r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public\.)?(\w+)", SQL),
+         "defines_table", "table"),
+        (re.compile(r"ALTER\s+TABLE\s+(?:public\.)?(\w+)\s+ADD\s+COLUMN", SQL),
+         "alters_table", "table"),
+        (re.compile(r"CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(?:public\.)?(\w+)", SQL),
+         "defines_function", "function"),
+    ),
+    "dotenv": ((re.compile(r"^([A-Z][A-Z0-9_]*)=", re.MULTILINE), "declares_env", "env"),),
+    "yaml": ((re.compile(r"^\s*-\s*key:\s*(\w+)", re.MULTILINE), "declares_env", "env"),),
+}
+JS_ENV = ((re.compile(r"import\.meta\.env\.([A-Z][A-Z0-9_]*)"), "uses_env", "env"),)
+TEXT_PATTERNS["javascript"] = TEXT_PATTERNS["jsx"] = JS_ENV
+TEXT_PATTERNS["html"] = ()
 
 HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
 JS_IMPORT = re.compile(r"""^\s*import\s+(?:[^'"]*?\sfrom\s+)?['"]([^'"]+)['"]""", re.MULTILINE)
@@ -67,6 +127,9 @@ class Graph:
         self.unresolved.append({"from": source, "type": edge_type, "target": target})
 
     def to_dict(self) -> dict:
+        for node in self.nodes.values():
+            if node["type"] not in NODE_TYPES:
+                raise GraphError(f"unknown node type: {node['type']}")
         for (edge_type, source, target) in self.edges:
             if edge_type not in EDGE_TYPES:
                 raise GraphError(f"unknown edge type: {edge_type}")
@@ -157,6 +220,67 @@ def py_endpoints(graph: Graph, path: str, tree: ast.AST, prefix: str) -> None:
             graph.edge("defines_endpoint", f"file:{path}", endpoint)
 
 
+def external(graph: Graph, source: str, name: str) -> None:
+    service = EXTERNALS.get(name)
+    if service:
+        node = graph.node("external", service, banned=service in BANNED_SERVICES)
+        graph.edge("calls_external", source, node)
+
+
+def graph_name(node: ast.AST) -> str | None:
+    """Name of a LangGraph node given as a string or as START / END."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Name) and node.id in ("START", "END"):
+        return f"__{node.id.lower()}__"
+    return None
+
+
+def py_edges(graph: Graph, path: str, text: str, tree: ast.AST, bound: dict) -> None:
+    """Table access, third-party services and LangGraph wiring in a Python file."""
+    source = f"file:{path}"
+    for table, method in PY_TABLE.findall(text):
+        kind = "writes_table" if method in WRITE_METHODS else "reads_table"
+        graph.edge(kind, source, graph.node("table", table))
+    calls = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                external(graph, source, alias.name.split(".")[0])
+        elif isinstance(node, ast.ImportFrom) and not node.level:
+            external(graph, source, (node.module or "").split(".")[0])
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            calls.append((node.func.attr, node.args, [graph_name(a) for a in node.args]))
+    for attr, args, names in calls:  # nodes first, so each keeps its handler
+        if attr == "add_node" and names and names[0]:
+            attrs = {}
+            if len(args) > 1 and isinstance(args[1], ast.Name):
+                attrs["handler"] = args[1].id
+                if args[1].id in bound:
+                    attrs["handler_file"] = bound[args[1].id]
+            graph.edge("graph_node", source, graph.node("graph_node", names[0], **attrs))
+    for attr, args, names in calls:
+        if attr == "add_edge" and len(names) > 1 and names[0] and names[1]:
+            graph.edge("graph_edge", graph.node("graph_node", names[0]),
+                       graph.node("graph_node", names[1]))
+        elif (attr == "add_conditional_edges" and names and names[0]
+              and len(args) > 2 and isinstance(args[2], ast.Dict)):
+            for target in filter(None, map(graph_name, args[2].values)):
+                graph.edge("graph_edge", graph.node("graph_node", names[0]),
+                           graph.node("graph_node", target), conditional=True)
+
+
+def text_edges(graph: Graph, path: str, lang: str, text: str) -> None:
+    """Edges found by one-group regexes: env vars, SQL objects, RPC calls."""
+    source = f"file:{path}"
+    for regex, edge_type, node_type in TEXT_PATTERNS[lang]:
+        for name in regex.findall(text):
+            graph.edge(edge_type, source, graph.node(node_type, name))
+    if lang == "html":
+        for host in (h for h in EXTERNALS if "." in h and h in text):
+            external(graph, source, host)
+
+
 def route_key(method: str, path: str) -> str:
     """Compare routes with every path parameter reduced to `{}`."""
     return f"{method} " + re.sub(r"\$?\{[^}]*\}", "{}", path)
@@ -166,6 +290,7 @@ def js_edges(graph: Graph, path: str, text: str, paths: set[str], routes: dict) 
     source = f"file:{path}"
     for spec in JS_IMPORT.findall(text):
         if not spec.startswith("."):
+            external(graph, source, spec)
             continue
         base = posixpath.normpath(posixpath.join(posixpath.dirname(path), spec))
         target = next((base + s for s in JS_SUFFIXES if base + s in paths), None)
@@ -192,12 +317,15 @@ def build_graph(files: list[dict], read) -> dict:
     texts = {}
     for record in files:
         graph.node("file", record["path"], role=record["role"], language=record["language"])
-        if record["language"] in ("python", "javascript", "jsx"):
+        if record["language"] in TEXT_PATTERNS:
             raw = read(record["path"]).decode("utf-8", "replace")
             texts[record["path"]] = (record["language"], raw.replace("\r\n", "\n"))
 
     trees, prefixes = {}, {}
     for path, (lang, text) in sorted(texts.items()):
+        scan = not path.startswith(SELF_PREFIX)
+        if scan:
+            text_edges(graph, path, lang, text)
         if lang != "python":
             continue
         trees[path] = ast.parse(text, filename=path)
@@ -205,6 +333,8 @@ def build_graph(files: list[dict], read) -> dict:
         for target in sorted(set(bound.values()) - {path}):
             graph.edge("imports", f"file:{path}", f"file:{target}")
         prefixes.update(router_prefixes(trees[path], bound))
+        if scan:
+            py_edges(graph, path, text, trees[path], bound)
     for path, tree in trees.items():
         py_endpoints(graph, path, tree, prefixes.get(path, ""))
 
@@ -213,7 +343,7 @@ def build_graph(files: list[dict], read) -> dict:
         for n in graph.nodes.values() if n["type"] == "endpoint"
     }
     for path, (lang, text) in sorted(texts.items()):
-        if lang != "python":
+        if lang in ("javascript", "jsx"):
             js_edges(graph, path, text, paths, routes)
     return graph.to_dict()
 

@@ -107,6 +107,93 @@
       "handler": "submit_answers"
     },
     {
+      "id": "env:CEREBRAS_API_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:ENV",
+      "type": "env"
+    },
+    {
+      "id": "env:FASTEMBED_CACHE",
+      "type": "env"
+    },
+    {
+      "id": "env:FRONTEND_URL",
+      "type": "env"
+    },
+    {
+      "id": "env:GOOGLE_AI_STUDIO_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:GROQ_API_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:SAMBANOVA_API_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:SUPABASE_ANON_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:SUPABASE_SERVICE_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:SUPABASE_URL",
+      "type": "env"
+    },
+    {
+      "id": "env:VITE_API_URL",
+      "type": "env"
+    },
+    {
+      "id": "env:VITE_SUPABASE_ANON_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:VITE_SUPABASE_URL",
+      "type": "env"
+    },
+    {
+      "id": "external:google_ai_studio",
+      "type": "external",
+      "banned": true
+    },
+    {
+      "id": "external:google_fonts",
+      "type": "external",
+      "banned": false
+    },
+    {
+      "id": "external:groq",
+      "type": "external",
+      "banned": true
+    },
+    {
+      "id": "external:langchain",
+      "type": "external",
+      "banned": false
+    },
+    {
+      "id": "external:langgraph",
+      "type": "external",
+      "banned": false
+    },
+    {
+      "id": "external:mcp",
+      "type": "external",
+      "banned": false
+    },
+    {
+      "id": "external:supabase",
+      "type": "external",
+      "banned": false
+    },
+    {
       "id": "file:.claude/skills/atomic-commit/SKILL.md",
       "type": "file",
       "role": "doc",
@@ -765,9 +852,88 @@
       "type": "file",
       "role": "test",
       "language": "python"
+    },
+    {
+      "id": "function:handle_new_user",
+      "type": "function"
+    },
+    {
+      "id": "function:match_chunks",
+      "type": "function"
+    },
+    {
+      "id": "graph_node:__end__",
+      "type": "graph_node"
+    },
+    {
+      "id": "graph_node:__start__",
+      "type": "graph_node"
+    },
+    {
+      "id": "graph_node:evaluator",
+      "type": "graph_node",
+      "handler": "evaluator_node",
+      "handler_file": "backend/agents/evaluator_agent.py"
+    },
+    {
+      "id": "graph_node:optimizer",
+      "type": "graph_node",
+      "handler": "optimizer_node",
+      "handler_file": "backend/agents/optimizer_agent.py"
+    },
+    {
+      "id": "graph_node:planner",
+      "type": "graph_node",
+      "handler": "planner_node",
+      "handler_file": "backend/agents/planner_agent.py"
+    },
+    {
+      "id": "graph_node:test_generator",
+      "type": "graph_node",
+      "handler": "test_generator_node",
+      "handler_file": "backend/agents/test_generator_agent.py"
+    },
+    {
+      "id": "table:books",
+      "type": "table"
+    },
+    {
+      "id": "table:chunks",
+      "type": "table"
+    },
+    {
+      "id": "table:profiles",
+      "type": "table"
+    },
+    {
+      "id": "table:reading_progress",
+      "type": "table"
+    },
+    {
+      "id": "table:sessions",
+      "type": "table"
+    },
+    {
+      "id": "table:test_results",
+      "type": "table"
     }
   ],
   "edges": [
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/002_add_pace.sql",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/003_session_questions.sql",
+      "to": "table:sessions"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/004_add_is_calibrated.sql",
+      "to": "table:profiles"
+    },
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
@@ -832,6 +998,176 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "external:langchain"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/agents/graph.py",
+      "to": "external:langgraph"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "external:langchain"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "external:langchain"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/agents/test_generator_agent.py",
+      "to": "external:langchain"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/mcp_server.py",
+      "to": "external:mcp"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/mcp_server.py",
+      "to": "external:supabase"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/services/embeddings.py",
+      "to": "external:google_ai_studio"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/services/llm.py",
+      "to": "external:groq"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/services/retriever.py",
+      "to": "external:langchain"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/services/supabase_client.py",
+      "to": "external:supabase"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:frontend/index.html",
+      "to": "external:google_fonts"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:frontend/src/lib/supabase.js",
+      "to": "external:supabase"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:scripts/dev/create_test_users.py",
+      "to": "external:supabase"
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/services/retriever.py",
+      "to": "function:match_chunks"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:ENV"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:FASTEMBED_CACHE"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:FRONTEND_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:GOOGLE_AI_STUDIO_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:GROQ_API_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:frontend/.env.example",
+      "to": "env:VITE_API_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:frontend/.env.example",
+      "to": "env:VITE_SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:frontend/.env.example",
+      "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:CEREBRAS_API_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:FRONTEND_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:GOOGLE_AI_STUDIO_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:GROQ_API_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:SAMBANOVA_API_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:SUPABASE_URL"
     },
     {
       "type": "defines_endpoint",
@@ -907,6 +1243,116 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:POST /sessions/{session_id}/submit-answers"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "function:handle_new_user"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "function:match_chunks"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:books"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:chunks"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:profiles"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:sessions"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:test_results"
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:__end__",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:evaluator",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:optimizer",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:planner",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:test_generator",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:evaluator",
+      "to": "graph_node:__end__"
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:optimizer",
+      "to": "graph_node:__end__"
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:planner",
+      "to": "graph_node:__end__"
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:test_generator",
+      "to": "graph_node:__end__"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:evaluator"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:optimizer"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:planner"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:test_generator"
     },
     {
       "type": "imports",
@@ -1452,6 +1898,251 @@
       "type": "imports",
       "from": "file:tools/repo_graph/tests/test_inventory.py",
       "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/test_generator_agent.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/test_generator_agent.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/mcp_server.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/mcp_server.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/auth.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/retriever.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/main.py",
+      "to": "env:FRONTEND_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/mcp_server.py",
+      "to": "env:SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/mcp_server.py",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/mcp_server.py",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/embeddings.py",
+      "to": "env:GOOGLE_AI_STUDIO_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/llm.py",
+      "to": "env:GROQ_API_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/supabase_client.py",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/supabase_client.py",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/lib/api.js",
+      "to": "env:VITE_API_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/lib/supabase.js",
+      "to": "env:VITE_SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/lib/supabase.js",
+      "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/dev/create_test_users.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/dev/create_test_users.py",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/dev/create_test_users.py",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/auth.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:test_ingest.py",
+      "to": "table:books"
     }
   ],
   "unresolved": []

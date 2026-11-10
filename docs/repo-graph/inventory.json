@@ -545,8 +545,8 @@
     {
       "path": "backend/tests/test_bench.py",
       "language": "python",
-      "lines": 40,
-      "size_bytes": 1555,
+      "lines": 61,
+      "size_bytes": 2451,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
     },
@@ -753,8 +753,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 447,
-      "size_bytes": 23736,
+      "lines": 527,
+      "size_bytes": 27782,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -777,8 +777,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1410,
-      "size_bytes": 245866,
+      "lines": 1551,
+      "size_bytes": 261358,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1169,8 +1169,8 @@
     {
       "path": "scripts/bench.py",
       "language": "python",
-      "lines": 195,
-      "size_bytes": 7574,
+      "lines": 365,
+      "size_bytes": 16001,
       "role": "script",
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
     },

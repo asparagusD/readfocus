@@ -288,6 +288,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/evaluation/feedback.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/agents/evaluation/grader.py",
       "type": "file",
       "role": "agent",
@@ -541,6 +547,12 @@
     },
     {
       "id": "file:backend/tests/test_embedder.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_feedback.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1717,6 +1729,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/agents/evaluation/feedback.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluation/feedback.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/agents/evaluation/grader.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -2104,6 +2126,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_embedder.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_feedback.py",
+      "to": "file:backend/agents/evaluation/feedback.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_feedback.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_feedback.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",

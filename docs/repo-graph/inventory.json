@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 170,
-    "inventoried": 159,
+    "tracked": 172,
+    "inventoried": 161,
     "excluded": 11
   },
   "files": [
@@ -127,6 +127,14 @@
       "purpose": "Package marker for backend.agents.evaluation, answer grading with no LLM."
     },
     {
+      "path": "backend/agents/evaluation/feedback.py",
+      "language": "python",
+      "lines": 105,
+      "size_bytes": 4638,
+      "role": "agent",
+      "purpose": "Feedback for a graded answer, pure: render(grade, evidence) builds one or two sentences from fixed templates, the question's key terms and a verbatim evidence snippet; low confidence gives no verdict, closed questions name the expected answer, free text says what was captured and missed and never 'correct'."
+    },
+    {
       "path": "backend/agents/evaluation/grader.py",
       "language": "python",
       "lines": 205,
@@ -169,10 +177,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 162,
-      "size_bytes": 5870,
+      "lines": 175,
+      "size_bytes": 6319,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly and grading."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading and feedback."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -471,6 +479,14 @@
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
+      "path": "backend/tests/test_feedback.py",
+      "language": "python",
+      "lines": 141,
+      "size_bytes": 7198,
+      "role": "test",
+      "purpose": "Pytest: each feedback template and its conditions, term lists, the evidence snippet, and over the labelled fixtures that feedback holds only template words, key terms and verbatim evidence."
+    },
+    {
       "path": "backend/tests/test_grader.py",
       "language": "python",
       "lines": 234,
@@ -609,8 +625,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 905,
-      "size_bytes": 137314,
+      "lines": 906,
+      "size_bytes": 139697,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1217,8 +1233,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 161,
-      "size_bytes": 26305,
+      "lines": 163,
+      "size_bytes": 26899,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

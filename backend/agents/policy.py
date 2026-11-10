@@ -160,3 +160,16 @@ GRADE_COPY_RATIO = 90.0
 # with the human one within the tolerance; the share that must agree.
 GRADE_AGREEMENT_TOLERANCE = 0.25
 GRADE_AGREEMENT_TARGET = 0.75
+
+# --- Feedback (backend/agents/evaluation/feedback.py) -----------------------
+
+# Longest evidence quotation in a feedback message, in characters; a longer
+# sentence is cut at a word and ends with an ellipsis.
+FEEDBACK_SNIPPET_CHARS = 160
+
+# Most key terms named as captured, and as missed.
+FEEDBACK_MAX_TERMS = 3
+
+# A free-text answer to a question with no key terms is "close to the
+# passage" at or above this score.
+FEEDBACK_CLOSE_SCORE = 0.6

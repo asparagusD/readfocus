@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 117,
-    "inventoried": 108,
-    "excluded": 9
+    "tracked": 120,
+    "inventoried": 110,
+    "excluded": 10
   },
   "files": [
     {
@@ -329,8 +329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 243,
-      "size_bytes": 17654,
+      "lines": 242,
+      "size_bytes": 17831,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -839,6 +839,14 @@
       "purpose": "Package marker for tools.repo_graph."
     },
     {
+      "path": "tools/repo_graph/build.py",
+      "language": "python",
+      "lines": 246,
+      "size_bytes": 9491,
+      "role": "script",
+      "purpose": "Builds docs/repo-graph/graph.json: typed nodes and edges for files, endpoints, tables, functions, env vars, external services and LangGraph nodes."
+    },
+    {
       "path": "tools/repo_graph/inventory.py",
       "language": "python",
       "lines": 191,
@@ -849,8 +857,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 110,
-      "size_bytes": 14293,
+      "lines": 112,
+      "size_bytes": 14626,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -863,6 +871,14 @@
       "purpose": "Package marker for tools.repo_graph.tests."
     },
     {
+      "path": "tools/repo_graph/tests/test_build.py",
+      "language": "python",
+      "lines": 129,
+      "size_bytes": 4744,
+      "role": "test",
+      "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
+    },
+    {
       "path": "tools/repo_graph/tests/test_inventory.py",
       "language": "python",
       "lines": 85,
@@ -872,6 +888,10 @@
     }
   ],
   "excluded": [
+    {
+      "path": "docs/repo-graph/graph.json",
+      "reason": "generated"
+    },
     {
       "path": "docs/repo-graph/inventory.json",
       "reason": "generated"

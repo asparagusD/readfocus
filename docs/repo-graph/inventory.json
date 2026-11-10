@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 184,
-    "inventoried": 173,
+    "tracked": 187,
+    "inventoried": 176,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7442,
+      "size_bytes": 7458,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -183,6 +183,22 @@
       "purpose": "Mastery update, pure: decide(current_rows, grades, event_id) moves each concept a graded question names (correct closes 30% of the gap to 1, wrong takes 25% away, partial interpolates by score, low confidence at half weight), clamps to 0..1, sets the review interval by mastery band, counts attempts and correct, and skips rows already updated by the same event."
     },
     {
+      "path": "backend/agents/optimizer/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 112,
+      "role": "agent",
+      "purpose": "Package marker for backend.agents.optimizer, the bounded learning optimizer with no LLM."
+    },
+    {
+      "path": "backend/agents/optimizer/pace.py",
+      "language": "python",
+      "lines": 166,
+      "size_bytes": 7189,
+      "role": "agent",
+      "purpose": "Learning optimizer, pure: decide(OptimizerInput) sets the next pace multiplier from the rolling score band (80/50/20%, the old optimizer's thresholds), never grows after a low test or recent abandonment, keeps it in the planner's range; queues or prioritises the session's sections for re-reading by this test's band; derives focus minutes from a bounded measured reading speed; and moves one question place to the worst failing type. Keeps the keys Results.jsx reads."
+    },
+    {
       "path": "backend/agents/optimizer_agent.py",
       "language": "python",
       "lines": 120,
@@ -217,10 +233,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 254,
-      "size_bytes": 9730,
+      "lines": 284,
+      "size_bytes": 10996,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update and the reading strategy planner."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -615,6 +631,14 @@
       "purpose": "Pytest: the suite uses the dummy environment and the fakes, outbound connections are blocked, loopback works, and a protected endpoint answers 401."
     },
     {
+      "path": "backend/tests/test_optimizer_pace.py",
+      "language": "python",
+      "lines": 208,
+      "size_bytes": 8911,
+      "role": "test",
+      "purpose": "Pytest on hand-made scores, sessions and answers: every score band at its boundaries, the re-read queue rules and bound, rolling damping, no growth after a low test, compounding within bounds, abandonment and its window, focus minutes and speed bounds, question-mix moves and their bounds, reason wording, the Results keys, and that decide is pure."
+    },
+    {
       "path": "backend/tests/test_planner_strategy.py",
       "language": "python",
       "lines": 220,
@@ -713,8 +737,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1344,
-      "size_bytes": 203923,
+      "lines": 1354,
+      "size_bytes": 207174,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1329,8 +1353,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 175,
-      "size_bytes": 31858,
+      "lines": 178,
+      "size_bytes": 32920,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

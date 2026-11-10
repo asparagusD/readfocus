@@ -252,3 +252,33 @@ PLANNER_QUESTION_MIX = {
     "re_read": [(["cloze"], 2), (["multiple_choice"], 1), (["definition", "why_how"], 1), (["main_idea"], 1)],
     "review": [(["cloze"], 2), (["definition"], 1), (["multiple_choice"], 1), (["why_how", "main_idea"], 1)],
 }
+
+# --- Learning optimizer (backend/agents/optimizer/pace.py) ------------------
+
+# Score bands on a 0..100 percentage: (from, band, multiplier factor), first
+# match wins. The old optimizer's 40 / 25 / 10 of 50 points. The band of the
+# rolling mean sets the factor; the band of this test alone decides re-reading.
+OPT_BANDS = [(80.0, "grow", 1.15), (50.0, "hold", 1.0), (20.0, "reduce", 0.80), (0.0, "fail", 0.50)]
+
+# The rolling mean covers this test and the ones before it, this many in all.
+OPT_ROLLING_TESTS = 3
+
+# Abandoned sessions among the last few: at the limit, the factor is at most
+# this, so sessions shrink instead of growing.
+OPT_ABANDON_WINDOW = 5
+OPT_ABANDON_LIMIT = 2
+OPT_ABANDON_FACTOR = 0.80
+
+# The measured reading speed (words over actual minutes) is used within
+# these multiples of the profile speed.
+OPT_SPEED_RANGE = (0.5, 1.5)
+
+# Most sections waiting in the re-read queue; the oldest fall off the end.
+OPT_REREAD_QUEUE_MAX = 5
+
+# A question type fails when its mean score (0..1) over at least this many
+# recent answers is below the bound; it gets one place more next test, from
+# the passing group with most places. Every group keeps its places in range.
+OPT_TYPE_FAIL_BELOW = 0.5
+OPT_TYPE_MIN_SAMPLES = 2
+OPT_MIX_PLACES_RANGE = (1, 3)

@@ -337,6 +337,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/optimizer/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/optimizer/pace.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/agents/optimizer_agent.py",
       "type": "file",
       "role": "agent",
@@ -656,6 +668,12 @@
     },
     {
       "id": "file:backend/tests/test_offline.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_optimizer_pace.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1930,6 +1948,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/agents/optimizer/pace.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/agents/optimizer_agent.py",
       "to": "file:backend/agents/graph.py"
     },
@@ -2452,6 +2475,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_offline.py",
       "to": "file:backend/tests/conftest.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_optimizer_pace.py",
+      "to": "file:backend/agents/optimizer/pace.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_optimizer_pace.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",

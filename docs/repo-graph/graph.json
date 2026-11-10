@@ -410,6 +410,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/conftest.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_auth.py",
       "type": "file",
       "role": "test",
@@ -423,6 +429,12 @@
     },
     {
       "id": "file:backend/tests/test_ingestor.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_offline.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -716,6 +728,12 @@
       "language": "json"
     },
     {
+      "id": "file:pytest.ini",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:render.yaml",
       "type": "file",
       "role": "config",
@@ -729,6 +747,60 @@
     },
     {
       "id": "file:scripts/dev/create_test_users.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/README.md",
+      "type": "file",
+      "role": "script",
+      "language": "markdown"
+    },
+    {
+      "id": "file:scripts/manual/test_evaluator.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_generator.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_graph.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_ingest.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_optimizer.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_orchestrator.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_planner.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_sessions_api.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -768,54 +840,6 @@
       "type": "file",
       "role": "migration",
       "language": "sql"
-    },
-    {
-      "id": "file:test_evaluator.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:test_generator.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:test_graph.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:test_ingest.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:test_optimizer.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:test_orchestrator.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:test_planner.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:test_sessions_api.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
     },
     {
       "id": "file:tools/__init__.py",
@@ -1100,6 +1124,24 @@
       "from": "file:backend/services/supabase_client.py",
       "to": "external:supabase",
       "line": 3
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/tests/conftest.py",
+      "to": "external:google_ai_studio",
+      "line": 20
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/tests/conftest.py",
+      "to": "external:groq",
+      "line": 21
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/tests/conftest.py",
+      "to": "external:supabase",
+      "line": 24
     },
     {
       "type": "calls_external",
@@ -1646,6 +1688,31 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_offline.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_offline.py",
+      "to": "file:backend/services/embeddings.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_offline.py",
+      "to": "file:backend/services/llm.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_offline.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_offline.py",
+      "to": "file:backend/tests/conftest.py"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/components/Layout.jsx"
     },
@@ -1886,52 +1953,52 @@
     },
     {
       "type": "imports",
-      "from": "file:test_evaluator.py",
+      "from": "file:scripts/manual/test_evaluator.py",
       "to": "file:backend/agents/evaluator_agent.py"
     },
     {
       "type": "imports",
-      "from": "file:test_evaluator.py",
+      "from": "file:scripts/manual/test_evaluator.py",
       "to": "file:backend/agents/test_generator_agent.py"
     },
     {
       "type": "imports",
-      "from": "file:test_generator.py",
+      "from": "file:scripts/manual/test_generator.py",
       "to": "file:backend/agents/test_generator_agent.py"
     },
     {
       "type": "imports",
-      "from": "file:test_graph.py",
+      "from": "file:scripts/manual/test_graph.py",
       "to": "file:backend/agents/graph.py"
     },
     {
       "type": "imports",
-      "from": "file:test_ingest.py",
+      "from": "file:scripts/manual/test_ingest.py",
       "to": "file:backend/services/book_ingestor.py"
     },
     {
       "type": "imports",
-      "from": "file:test_ingest.py",
+      "from": "file:scripts/manual/test_ingest.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
       "type": "imports",
-      "from": "file:test_optimizer.py",
+      "from": "file:scripts/manual/test_optimizer.py",
       "to": "file:backend/agents/optimizer_agent.py"
     },
     {
       "type": "imports",
-      "from": "file:test_orchestrator.py",
+      "from": "file:scripts/manual/test_orchestrator.py",
       "to": "file:backend/agents/graph.py"
     },
     {
       "type": "imports",
-      "from": "file:test_planner.py",
+      "from": "file:scripts/manual/test_planner.py",
       "to": "file:backend/agents/planner_agent.py"
     },
     {
       "type": "imports",
-      "from": "file:test_sessions_api.py",
+      "from": "file:scripts/manual/test_sessions_api.py",
       "to": "file:backend/main.py"
     },
     {
@@ -2251,7 +2318,7 @@
     },
     {
       "type": "writes_table",
-      "from": "file:test_ingest.py",
+      "from": "file:scripts/manual/test_ingest.py",
       "to": "table:books"
     }
   ],

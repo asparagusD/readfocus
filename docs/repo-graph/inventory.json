@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 134,
-    "inventoried": 123,
+    "tracked": 136,
+    "inventoried": 125,
     "excluded": 11
   },
   "files": [
@@ -311,6 +311,14 @@
       "purpose": "Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked)."
     },
     {
+      "path": "backend/tests/test_bench.py",
+      "language": "python",
+      "lines": 40,
+      "size_bytes": 1555,
+      "role": "test",
+      "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+    },
+    {
       "path": "backend/tests/test_health.py",
       "language": "python",
       "lines": 19,
@@ -353,10 +361,10 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 56,
-      "size_bytes": 1881,
+      "lines": 124,
+      "size_bytes": 5607,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each; starts with backend idle memory before and after C3.4."
+      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
@@ -377,8 +385,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 337,
-      "size_bytes": 37586,
+      "lines": 339,
+      "size_bytes": 39761,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -759,6 +767,14 @@
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned; still includes the Groq and Google AI Studio packages until C8."
     },
     {
+      "path": "scripts/bench.py",
+      "language": "python",
+      "lines": 196,
+      "size_bytes": 7681,
+      "role": "script",
+      "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
+    },
+    {
       "path": "scripts/dev/create_test_users.py",
       "language": "python",
       "lines": 117,
@@ -929,8 +945,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 125,
-      "size_bytes": 17117,
+      "lines": 127,
+      "size_bytes": 17549,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

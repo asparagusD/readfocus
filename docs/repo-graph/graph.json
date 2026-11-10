@@ -422,6 +422,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_health.py",
       "type": "file",
       "role": "test",
@@ -756,6 +762,12 @@
       "type": "file",
       "role": "config",
       "language": "text"
+    },
+    {
+      "id": "file:scripts/bench.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
     },
     {
       "id": "file:scripts/dev/create_test_users.py",
@@ -1693,6 +1705,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_auth.py",
       "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_bench.py",
+      "to": "file:scripts/bench.py"
     },
     {
       "type": "imports",

@@ -51,6 +51,13 @@
       "handler": "health_check"
     },
     {
+      "id": "endpoint:GET /mastery",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/mastery",
+      "handler": "get_mastery"
+    },
+    {
       "id": "endpoint:GET /sessions/{session_id}",
       "type": "endpoint",
       "method": "GET",
@@ -318,6 +325,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/knowledge_state/agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/agents/knowledge_state/mastery.py",
       "type": "file",
       "role": "agent",
@@ -456,6 +469,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/mastery.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/sessions.py",
       "type": "file",
       "role": "router",
@@ -529,6 +548,12 @@
     },
     {
       "id": "file:backend/tests/test_answer_fixtures.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_mastery.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1612,6 +1637,11 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/mastery.py",
+      "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:GET /sessions/{session_id}"
     },
@@ -1867,6 +1897,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/agents/knowledge_state/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/agents/knowledge_state/mastery.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -2028,6 +2068,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/sessions.py"
     },
     {
@@ -2077,8 +2122,23 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/routers/mastery.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/mastery.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/sessions.py",
       "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/sessions.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
     },
     {
       "type": "imports",
@@ -2172,6 +2232,31 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/routers/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/agents/evaluation/feedback.py"
     },
@@ -2179,6 +2264,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
     },
     {
       "type": "imports",
@@ -2837,6 +2927,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/agents/optimizer_agent.py",
       "to": "table:reading_progress"
     },
@@ -2929,6 +3024,16 @@
       "type": "reads_table",
       "from": "file:backend/routers/dashboard.py",
       "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/mastery.py",
+      "to": "table:concepts"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/mastery.py",
+      "to": "table:user_concept_mastery"
     },
     {
       "type": "reads_table",
@@ -3069,6 +3174,11 @@
       "type": "writes_table",
       "from": "file:backend/agents/evaluator_agent.py",
       "to": "table:test_results"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "table:user_concept_mastery"
     },
     {
       "type": "writes_table",

@@ -13,6 +13,7 @@ from backend.agents.evaluator_agent import (
     evaluate_answers, evaluate_single_answer, load_passage, warm_up,
 )
 from backend.agents.optimizer_agent import optimize_pace
+from backend.agents.knowledge_state.agent import apply_test
 
 router = APIRouter()
 
@@ -131,7 +132,7 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
     return {"status": "graded"}
 
 @router.post("/{session_id}/submit-answers")
-async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: str = Depends(get_current_user)):
+async def submit_answers(session_id: str, req: SubmitAnswersRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     # 1. Fetch session and questions
     sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
     if not sess_resp.data:
@@ -159,7 +160,12 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: st
     )
     if not eval_result:
         raise HTTPException(status_code=500, detail="Failed to evaluate answers.")
-        
+
+    # 2b. Move the reader's concept mastery, after the response is sent (direct call until C8)
+    background_tasks.add_task(
+        apply_test, user_id, book_id, session_id, test_questions, eval_result.get("per_question") or []
+    )
+
     # 3. Call optimizer
     pace_rec = await optimize_pace(
         session_id=session_id,

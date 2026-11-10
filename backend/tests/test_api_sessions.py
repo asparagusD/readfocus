@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 
 from backend.agents import evaluator_agent
 from backend.agents.evaluation.feedback import LOW_CONFIDENCE
+from backend.agents.knowledge_state import agent as knowledge_agent
 from backend.dependencies import get_current_user
 from backend.main import app
 from backend.nlp import embedder
@@ -24,11 +25,26 @@ USER, BOOK = "user-1", "book-1"
 SECRETS = ("answer", "evidence", "key_terms", "guidance", "distractors", "cached_eval", "concept_keys")
 
 
+class RangeError(Exception):
+    """What postgrest's APIError looks like for a page that starts past the last row."""
+
+    code = "PGRST103"
+
+
 class Query:
     def __init__(self, db, name):
         self.db, self.name, self.filters, self.action = db, name, [], ("select", None)
+        self.orders, self.window = [], None
 
-    def select(self, columns="*"):
+    def select(self, columns="*", count=None):
+        return self
+
+    def upsert(self, values, on_conflict=""):
+        self.action = ("upsert", (values, on_conflict.split(",")))
+        return self
+
+    def range(self, start, end):
+        self.window = (start, end)
         return self
 
     def insert(self, values):
@@ -51,7 +67,8 @@ class Query:
         self.filters.append(lambda r: bool(set(r.get(column) or []) & set(values)))
         return self
 
-    def order(self, *args, **kwargs):
+    def order(self, column, desc=False):
+        self.orders.append((column, desc))
         return self
 
     def limit(self, count):
@@ -66,11 +83,25 @@ class Query:
                    for i, v in enumerate(values if isinstance(values, list) else [values])]
             rows.extend(new)
             return SimpleNamespace(data=json.loads(json.dumps(new)))
+        if kind == "upsert":
+            new, keys = json.loads(json.dumps(values[0])), values[1]
+            for value in new:
+                same = [r for r in rows if all(r.get(k) == value[k] for k in keys)]
+                same[0].update(value) if same else rows.append(value)
+            return SimpleNamespace(data=new)
         matched = [r for r in rows if all(f(r) for f in self.filters)]
         if kind == "update":
             for r in matched:
                 r.update(json.loads(json.dumps(values)))
-        return SimpleNamespace(data=json.loads(json.dumps(matched)))
+        for column, desc in reversed(self.orders):
+            if all(column in r for r in matched):  # rows made by these tests have no created_at
+                matched.sort(key=lambda r: r[column], reverse=desc)
+        total = len(matched)
+        if self.window and 0 < self.window[0] >= total:  # PostgREST does not return an empty page here
+            raise RangeError("Requested range not satisfiable")
+        if self.window:
+            matched = matched[self.window[0]:self.window[1] + 1]
+        return SimpleNamespace(data=json.loads(json.dumps(matched)), count=total)
 
 
 class FakeDb:
@@ -118,7 +149,7 @@ def api(monkeypatch):
          "chunk_indices": indices, "weight": weight}
         for key, indices, weight in (("gravel", [0, 2], 0.5), ("deep-foundation", [0], 0.9), ("gravel-road", [1], 1.0))
     ]
-    for module in (sessions, question_bank, evaluator_agent, concept_store):
+    for module in (sessions, question_bank, evaluator_agent, concept_store, knowledge_agent):
         monkeypatch.setattr(module, "supabase", db)
     embeds = []
 
@@ -293,6 +324,44 @@ def test_submit_answers_grades_inline_and_returns_confidence_and_feedback(api):
     assert body["low_confidence_count"] == 0
     assert body["pace_recommendation"]["total_score_seen"] == body["total_score"]
     assert api.db.tables["sessions"][0]["status"] == "completed"
+
+
+# --- knowledge state (C7.4): a graded test moves the mastery of its concepts --
+
+def mastery_rows(api):
+    return {row["concept_key"]: row for row in api.db.tables.get("user_concept_mastery", [])}
+
+
+def test_a_submitted_test_moves_the_mastery_of_the_concepts_its_questions_name(api):
+    session_id, _ = start_and_finish(api)
+    body = submit(api, session_id).json()
+    rows = mastery_rows(api)  # only the why question names concepts: deep-foundation and gravel
+    assert sorted(rows) == ["deep-foundation", "gravel"]
+    for row in rows.values():
+        assert (row["user_id"], row["book_id"], row["last_event_id"]) == (USER, BOOK, session_id)
+        assert row["mastery"] == pytest.approx(0.3 + 0.30 * 0.7)  # a correct answer, up from the prior
+        assert (row["attempts"], row["correct"]) == (1, 1) and row["last_seen"] < row["next_review"]
+    assert "mastery" not in json.dumps(body)  # the response is unchanged
+
+    # The same session submitted again counts once; a wrong answer in a new session lowers it.
+    submit(api, session_id)
+    assert mastery_rows(api)["gravel"]["attempts"] == 1
+    second, _ = start_and_finish(api)
+    submit(api, second, answers=["", "", "", "", ""])
+    after = mastery_rows(api)["gravel"]
+    assert after["mastery"] == pytest.approx(0.51 * 0.75) and (after["attempts"], after["correct"]) == (2, 1)
+    assert after["last_event_id"] == second
+
+
+def test_a_failing_mastery_update_does_not_change_the_result(api, monkeypatch):
+    def broken(*args, **kwargs):
+        raise RuntimeError("mastery table is down")
+
+    monkeypatch.setattr(knowledge_agent, "record_test", broken)
+    session_id, _ = start_and_finish(api)
+    response = submit(api, session_id)
+    assert response.status_code == 200 and response.json()["max_score"] == 50
+    assert mastery_rows(api) == {}
 
 
 def test_test_results_row_keeps_the_shape_the_results_page_and_dashboard_read(api):

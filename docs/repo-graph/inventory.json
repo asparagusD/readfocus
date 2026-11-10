@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 178,
-    "inventoried": 167,
+    "tracked": 181,
+    "inventoried": 170,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7410,
+      "size_bytes": 7426,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -165,6 +165,14 @@
       "size_bytes": 108,
       "role": "agent",
       "purpose": "Package marker for backend.agents.knowledge_state, per-concept mastery from graded answers with no LLM."
+    },
+    {
+      "path": "backend/agents/knowledge_state/agent.py",
+      "language": "python",
+      "lines": 63,
+      "size_bytes": 3107,
+      "role": "agent",
+      "purpose": "The I/O around mastery.decide: record_test reads the reader's mastery rows for the concepts a graded test's questions name, moves them and upserts them with last_seen and next_review, once per session id; apply_test is the submit flow's call, which logs a failure instead of raising."
     },
     {
       "path": "backend/agents/knowledge_state/mastery.py",
@@ -265,10 +273,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 48,
-      "size_bytes": 1256,
+      "lines": 49,
+      "size_bytes": 1337,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the five routers and /health. Starts no other process."
+      "purpose": "FastAPI app: CORS, the six routers and /health. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -351,12 +359,20 @@
       "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback."
     },
     {
+      "path": "backend/routers/mastery.py",
+      "language": "python",
+      "lines": 49,
+      "size_bytes": 2316,
+      "role": "router",
+      "purpose": "GET /mastery?book_id=&limit=&offset=: the caller's concept mastery rows with their labels, weakest first, one page per call with the total; a page past the last row is empty."
+    },
+    {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 220,
-      "size_bytes": 9676,
+      "lines": 226,
+      "size_bytes": 10000,
       "role": "router",
-      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question), abandon, get; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question, and moves the reader's concept mastery in a background task), abandon, get; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -455,12 +471,20 @@
       "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
     },
     {
+      "path": "backend/tests/test_api_mastery.py",
+      "language": "python",
+      "lines": 125,
+      "size_bytes": 6345,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: record_test writes one row per concept with review dates, weighs low confidence, applies an event once and makes no round trip without concepts; GET /mastery needs a token and returns only the caller's rows, weakest first, with labels, paginated, empty past the end."
+    },
+    {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 381,
-      "size_bytes": 18184,
+      "lines": 450,
+      "size_bytes": 21404,
       "role": "test",
-      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, and test_results keeps the shape the results page and dashboard read."
+      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -649,8 +673,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 489,
-      "size_bytes": 19648,
+      "lines": 608,
+      "size_bytes": 25210,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -665,8 +689,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1120,
-      "size_bytes": 174612,
+      "lines": 1123,
+      "size_bytes": 178989,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1281,8 +1305,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 169,
-      "size_bytes": 29802,
+      "lines": 172,
+      "size_bytes": 30851,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

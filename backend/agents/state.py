@@ -15,3 +15,4 @@ class AgentState(TypedDict, total=False):
     pace_recommendation: dict
     enriched_context: dict
     error: str
+    decisions: list[dict]  # audit trail: each node appends what it was given and what it decided

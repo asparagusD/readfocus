@@ -1328,12 +1328,6 @@
     },
     {
       "type": "calls_external",
-      "from": "file:backend/agents/evaluator_agent.py",
-      "to": "external:langchain",
-      "line": 3
-    },
-    {
-      "type": "calls_external",
       "from": "file:backend/agents/graph.py",
       "to": "external:langgraph",
       "line": 1
@@ -1755,7 +1749,22 @@
     {
       "type": "imports",
       "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/agents/evaluation/feedback.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
       "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",
@@ -1765,7 +1774,12 @@
     {
       "type": "imports",
       "from": "file:backend/agents/evaluator_agent.py",
-      "to": "file:backend/services/llm.py"
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/nlp/text.py"
     },
     {
       "type": "imports",
@@ -2080,12 +2094,27 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/evaluation/feedback.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/dependencies.py"
     },
     {
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",

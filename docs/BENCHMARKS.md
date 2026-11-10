@@ -71,6 +71,31 @@ and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
 
+### C6.4: answers graded inline (2026-11-10)
+
+Backend on this machine against the dev project, `sample.pdf` uploaded as
+test user A, five sessions in a row (one-off script, not committed; the
+book was deleted afterwards). The Groq client was pointed at a local stub
+that answers 404 at once (`GROQ_API_BASE`), which is what the dev key gets
+from Groq (issue 22), so no request left for a banned provider.
+
+| Step | p50 | max | Notes |
+|---|---|---|---|
+| `POST /sessions/{id}/submit-answers` | 840 ms | 854 ms | **target under 500 ms: missed** |
+| `POST /sessions/{id}/evaluate-single` | 502 ms | 514 ms | one free-text answer; inline, was a background task |
+| Grading five answers, in process, model warm | 96 ms | 96 ms | `evaluator_agent.grade_answers` |
+| One Supabase query from this machine | 101 ms | 105 ms | |
+
+Where `submit-answers` spends its 840 ms: about eight Supabase round trips
+in sequence (the auth check, the session read, the `test_results` insert,
+two reads for the rolling average, two reads by the optimizer, the session
+update) at about 100 ms each, plus the grading. The grader is roughly a
+tenth of it. With the Groq client pointed at a closed port instead of the
+stub, the optimizer's retries alone took 7.7 s and the endpoint 8.3 s.
+
+No new dependency. The grading model is the one ingestion loads; it is now
+also loaded when a session starts (`warm_up`), in the web process.
+
 ### C6.2: answer grader (2026-11-10)
 
 No new dependency. `backend/agents/evaluation/grader.py` imports

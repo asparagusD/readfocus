@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7347,
+      "size_bytes": 7362,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -145,10 +145,10 @@
     {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
-      "lines": 216,
-      "size_bytes": 9752,
+      "lines": 184,
+      "size_bytes": 9175,
       "role": "agent",
-      "purpose": "Evaluator node: grades each answer 0-10 with the Groq LLM (full marks on LLM error), inserts test_results, updates the rolling average in reading_progress."
+      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and appends to decisions; a question with no evidence is graded against the passage at low confidence."
     },
     {
       "path": "backend/agents/graph.py",
@@ -177,8 +177,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 175,
-      "size_bytes": 6319,
+      "lines": 184,
+      "size_bytes": 6668,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading and feedback."
     },
@@ -225,10 +225,10 @@
     {
       "path": "backend/agents/state.py",
       "language": "python",
-      "lines": 17,
-      "size_bytes": 459,
+      "lines": 18,
+      "size_bytes": 557,
       "role": "agent",
-      "purpose": "AgentState TypedDict shared by all agent nodes."
+      "purpose": "AgentState TypedDict shared by all agent nodes, including the decisions audit trail."
     },
     {
       "path": "backend/agents/test_generator_agent.py",
@@ -337,10 +337,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 241,
-      "size_bytes": 10222,
+      "lines": 220,
+      "size_bytes": 9676,
       "role": "router",
-      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank in the background), finish-reading (returns the public part of the test), evaluate-single (background grade), submit-answers (evaluator and optimizer), abandon, get; no answer or evidence is sent to the client."
+      "purpose": "Session lifecycle endpoints: start (planner, then the test is assembled from the question bank and the grading model warmed in the background), finish-reading (returns the public part of the test), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (grades inline with the local evaluator, then the optimizer; returns score, feedback and confidence per question), abandon, get; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -433,10 +433,10 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 202,
-      "size_bytes": 8926,
+      "lines": 357,
+      "size_bytes": 17009,
       "role": "test",
-      "purpose": "Pytest on an in-memory database through TestClient: finish-reading returns five bank questions in one round trip, nothing secret reaches the client, times_used goes up, and chunks without bank rows are generated on demand."
+      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, and test_results keeps the shape the results page and dashboard read."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -601,8 +601,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 346,
-      "size_bytes": 17514,
+      "lines": 371,
+      "size_bytes": 18920,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -625,8 +625,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 906,
-      "size_bytes": 139697,
+      "lines": 907,
+      "size_bytes": 144147,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1234,7 +1234,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 163,
-      "size_bytes": 26899,
+      "size_bytes": 27604,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1282,7 +1282,7 @@
       "path": "tools/repo_graph/tests/test_query.py",
       "language": "python",
       "lines": 83,
-      "size_bytes": 3414,
+      "size_bytes": 3401,
       "role": "test",
       "purpose": "Pytest: file, endpoint and table queries, path forms, unknown targets, and the importers of llm.py in the real graph."
     },

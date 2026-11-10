@@ -173,3 +173,12 @@ FEEDBACK_MAX_TERMS = 3
 # A free-text answer to a question with no key terms is "close to the
 # passage" at or above this score.
 FEEDBACK_CLOSE_SCORE = 0.6
+
+# --- Evaluator (backend/agents/evaluator_agent.py) --------------------------
+
+# Points per question in a stored result: the grader's 0..1 score times this.
+GRADE_POINTS = 10
+
+# A question with no evidence of its own is graded against this many of the
+# passage's most informative sentences, always at low confidence.
+GRADE_FALLBACK_SENTENCES = 3

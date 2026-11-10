@@ -1200,6 +1200,12 @@
       "language": "python"
     },
     {
+      "id": "file:tools/no_paid_ai.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:tools/repo_graph/__init__.py",
       "type": "file",
       "role": "script",
@@ -2561,6 +2567,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_migrations.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_no_paid_ai.py",
+      "to": "file:tools/no_paid_ai.py"
     },
     {
       "type": "imports",

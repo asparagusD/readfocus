@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 194,
-    "inventoried": 182,
+    "tracked": 195,
+    "inventoried": 183,
     "excluded": 12
   },
   "files": [
@@ -33,8 +33,8 @@
     {
       "path": ".claude/skills/free-intelligence/SKILL.md",
       "language": "markdown",
-      "lines": 208,
-      "size_bytes": 8368,
+      "lines": 209,
+      "size_bytes": 8413,
       "role": "doc",
       "purpose": "Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern."
     },
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7792,
+      "size_bytes": 7816,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -649,10 +649,10 @@
     {
       "path": "backend/tests/test_no_paid_ai.py",
       "language": "python",
-      "lines": 75,
-      "size_bytes": 2872,
+      "lines": 77,
+      "size_bytes": 2515,
       "role": "test",
-      "purpose": "Pytest, hard constraint 1: no backend file imports a banned LLM or embedding SDK or the LangChain chat-model stack (AST scan) or reads a provider key, requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
+      "purpose": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
     },
     {
       "path": "backend/tests/test_offline.py",
@@ -753,8 +753,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 824,
-      "size_bytes": 35062,
+      "lines": 873,
+      "size_bytes": 37280,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -769,8 +769,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1360,
-      "size_bytes": 232518,
+      "lines": 1361,
+      "size_bytes": 233619,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1375,6 +1375,14 @@
       "purpose": "Package marker for tools."
     },
     {
+      "path": "tools/no_paid_ai.py",
+      "language": "python",
+      "lines": 31,
+      "size_bytes": 1495,
+      "role": "script",
+      "purpose": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
+    },
+    {
       "path": "tools/repo_graph/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1401,8 +1409,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 184,
-      "size_bytes": 37641,
+      "lines": 185,
+      "size_bytes": 37919,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

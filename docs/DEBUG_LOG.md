@@ -822,3 +822,52 @@ and `backend/tests/test_optimizer_pace.py::test_an_abandoned_re_read_is_queued_f
 
 ### Commit
 fix(agents): put an abandoned re-read back at the front of the queue
+
+## 2026-11-11 C8.G — Gate G3 check 1: the provider grep matches the C8.8 guard test
+
+**Status:** fixed
+
+### Symptom
+The first Gate G3 check, at `cc3a051`, expects no matches:
+
+    grep -rniE "groq|ChatGroq|google_genai|GoogleGenerativeAI|openai|cerebras|sambanova|openrouter" backend/ requirements.txt render.yaml
+
+and printed (exit 0):
+
+    backend/tests/test_no_paid_ai.py:17:    "groq", "langchain_groq", "openai", "langchain_openai", "anthropic", "langchain_anthropic",
+    backend/tests/test_no_paid_ai.py:18:    "langchain_google_genai", "google_genai", "cerebras", "sambanova", "openrouter",
+    backend/tests/test_no_paid_ai.py:23:    "groq", "langchain-groq", "openai", "langchain-openai", "anthropic", "langchain-anthropic",
+    backend/tests/test_no_paid_ai.py:25:    "cerebras-cloud-sdk", "sambanova", "openrouter",
+    backend/tests/test_no_paid_ai.py:27:BANNED_KEYS = re.compile(r"GROQ|GOOGLE_AI_STUDIO|GEMINI|OPENAI|ANTHROPIC|CEREBRAS|SAMBANOVA|OPENROUTER")
+
+No application file, dependency or config line matched: only the guard
+test's own deny-list.
+
+### Repro
+The command above.
+
+### Hypotheses
+1. The deny-list lives under `backend/`, which the gate greps. Evidence:
+   every match is in `backend/tests/test_no_paid_ai.py` lines 17-27.
+   Ruled out if another file matches. Result: confirmed.
+
+### Root cause
+C8.8 put the list of banned providers inside the test that enforces it,
+under `backend/tests/`, so a text search for providers over `backend/`
+finds the list itself (`backend/tests/test_no_paid_ai.py:17-27`).
+
+### Fix
+The deny-list moves to `tools/no_paid_ai.py` (tooling, outside the
+application and outside the gate's paths), next to the repo graph's own
+list of banned services; the test imports it and checks the same things.
+`backend/` then names no provider anywhere. Not a loosened check: the test
+enforces the same modules, packages and keys, and gains a test that
+`backend/` contains none of the names at all, which is the gate's grep.
+
+### Regression test
+`backend/tests/test_no_paid_ai.py::test_backend_names_no_provider`: the
+gate's grep in Python. Fails before (the deny-list is in `backend/`),
+passes after.
+
+### Commit
+fix(api): move the paid-AI deny-list out of backend/

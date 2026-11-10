@@ -36,15 +36,16 @@ algorithmic or local-model alternative instead of adding it.
 
 None since C8.8: the Groq and Google AI Studio clients, their packages and
 their keys are gone. `backend/tests/test_no_paid_ai.py` fails if a banned
-SDK is imported under `backend/`, a provider key is read or declared, or a
-banned package is added to `requirements.txt`. Check by hand with:
+SDK is imported under `backend/`, a provider is named anywhere in
+`backend/`, a provider key is read or declared, or a banned package is
+added to `requirements.txt`. The deny-list itself is `tools/no_paid_ai.py`,
+outside `backend/`. Check by hand with:
 
 ```bash
 grep -rnilE "groq|openai|anthropic|generativeai|genai|cerebras|sambanova|openrouter" backend --include=*.py
 ```
 
-It prints only `backend/tests/test_no_paid_ai.py`, which names the
-providers on purpose. Any other file is a violation.
+It prints nothing. Any file it prints is a violation.
 
 ## Approved local libraries
 

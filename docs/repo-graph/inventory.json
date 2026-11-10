@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 140,
-    "inventoried": 129,
+    "tracked": 142,
+    "inventoried": 131,
     "excluded": 11
   },
   "files": [
@@ -359,6 +359,14 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_migrations.py",
+      "language": "python",
+      "lines": 69,
+      "size_bytes": 2218,
+      "role": "test",
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local."
+    },
+    {
       "path": "backend/tests/test_offline.py",
       "language": "python",
       "lines": 62,
@@ -410,7 +418,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 486,
-      "size_bytes": 57845,
+      "size_bytes": 59779,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -943,6 +951,14 @@
       "purpose": "Adds profiles.is_calibrated (boolean, default false)."
     },
     {
+      "path": "supabase/migrations/005_local_embeddings.sql",
+      "language": "sql",
+      "lines": 46,
+      "size_bytes": 1642,
+      "role": "migration",
+      "purpose": "Adds chunks.embedding_local vector(384) with an HNSW cosine index and match_chunks_local, which runs as the caller so RLS applies; the 1536 column and match_chunks are untouched."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -977,8 +993,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 131,
-      "size_bytes": 18464,
+      "lines": 133,
+      "size_bytes": 18896,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

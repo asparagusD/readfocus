@@ -664,12 +664,179 @@ Close review (2026-11-10 15:20):
 - **Time.** About 1 hour of wall-clock, from the C4 merge at 14:17 to
   this review at 15:20, against 2.0 h budgeted.
 
-## C6
+## C6 — evaluation
 
-Title to be filled from the promptbook.
+Branch `chunk/C6-evaluation`, created from `readfocus-2.0` at `fb52444`.
+Goal: replace LLM grading with explainable, fast semantic grading that says
+how sure it is. A low-confidence grade is never presented as certain: it is
+worded as an estimate, flagged in the data, and a grade that could not be
+computed is "not graded", never 10/10 (issue 18). Planning and pacing are
+not in this chunk: the planner and the optimizer keep their current code.
+
+### Plan (written at chunk start, before any code)
+
+What the grader has to work with (read from the code, C5.5): each question
+stored in `sessions.test_questions` carries `strategy` (`multiple_choice`,
+`cloze`, `definition`, `why_how`, `main_idea`, `fallback`), `answer`,
+`evidence` (verbatim sentences, joined by a blank line), `key_terms` and,
+for multiple choice, `options`. The reader types every answer into a
+textarea. `Results.jsx` shows `score` out of 10 and `feedback` per question
+and reads nothing else.
+
+Design decisions that apply to every subchunk:
+
+- **A grade is a score plus the reasons for it.** `Grade` has `score`
+  (integer 0 to 10, so `test_results.total_score` stays an integer),
+  `verdict` (`correct`, `partial`, `incorrect`, `not_graded`), `confidence`
+  (0 to 1), `confidence_band` (`high`, `medium`, `low`), and `signals`: the
+  named numbers the score came from and the rule that fired. Anyone can
+  read why an answer got its mark, and replay it.
+- **Method by question kind.**
+  - `multiple_choice`: the answer is matched to an option by letter ("b",
+    "(b)") or by text (rapidfuzz). Right option 10, wrong option 0, both
+    high confidence; no option or two options matched is 0 at low
+    confidence.
+  - `cloze`: lemma-equal or a near spelling (rapidfuzz) is 10 at high
+    confidence; otherwise the cosine between the answer and the reference
+    term decides: a close synonym gets partial credit at low confidence,
+    an unrelated word 0.
+  - Open answers (`definition`, `why_how`, `main_idea`, `fallback`): three
+    signals: **semantic** (cosine of the answer to the reference answer and
+    to each evidence sentence, best one taken), **key terms** (share of
+    `key_terms` found by lemma or fuzzy match), and **guards** (blank, too
+    few content words, the answer only repeats the question, negation in
+    the answer but not in the reference or the reverse). The score is a
+    weighted blend mapped to 0 to 10 through thresholds in `policy.py`.
+- **Confidence is computed, not assumed.** It drops when the semantic and
+  key-term signals disagree, when the blend sits near a band boundary, when
+  the answer is very short or much longer than the reference, when the
+  negation guard fires (embeddings do not see "not"), and when the question
+  has no reference (`fallback`, and questions stored before C5.5, which are
+  graded against the passage's top sentences and concepts and capped at
+  low).
+- **No new dependency and no migration.** `fastembed`, `numpy` and
+  `rapidfuzz` are installed and measured (C4.1, C4.4). The extra fields go
+  into the existing `test_results.answers` jsonb. What is measured instead
+  (constraint 5): grading time per answer, `submit-answers` latency, and
+  server RSS after a graded test.
+- **Pure core.** `signals.py`, `grader.py` and `feedback.py` take vectors
+  and text as arguments and do no I/O; every number is in
+  `backend/agents/policy.py`. The node embeds (one batch per test, in a
+  worker thread), calls `decide`, persists, and appends to `decisions`.
+- **Unit tests never load the real model**: hand-made vectors, as in C5.
+  Accuracy on the labelled set needs the real model, so that test is
+  skipped where the model is not cached (CI) and its numbers are recorded
+  in `docs/BENCHMARKS.md` from a local run.
+- New package `backend/agents/evaluation/`, next to
+  `backend/agents/question_generation/`. Every new tracked file gets a line
+  in `tools/repo_graph/purposes.json`; new files are `git add`-ed before
+  `make graph` (issue 21).
+- Estimated lines are hand-written lines, tests included; fixture data and
+  `docs/repo-graph/` are counted separately.
+
+| Step | Files | Est. lines | Tests | Est. time |
+|---|---|---|---|---|
+| C6.1 labelled answer fixtures | `backend/tests/fixtures/grading/passages.json` (new: three short passages written for this purpose, one expository science, one history, one narrative, each with five to six questions in the stored session form, made by running the C5 strategies on the passage once and freezing the output, so they look like real bank questions), `backend/tests/fixtures/grading/answers.jsonl` (new: about 90 answers, one per line: `question_id`, `answer`, `label` (`correct`, `partial`, `incorrect`, `ambiguous`), `kind`, `split` (`tune` for two passages, `holdout` for the third), `note`), `backend/tests/grading_fixtures.py` (new: loader and the expected score band per label: correct 8 to 10, partial 4 to 7, incorrect 0 to 3), `backend/tests/test_grading_fixtures.py` (new), `tools/repo_graph/purposes.json` | 75 code and tests, about 160 lines of data | 5: every answer points at a question that exists; labels, kinds and splits are from the allowed sets; every strategy has all three labels; each `kind` appears at least three times (exact, paraphrase, typo, partial, on-topic but wrong, off-topic, blank, gibberish, repeats the question, negated, letter and option text for multiple choice, long rambling); every evidence piece is verbatim in its passage | 35 min |
+| C6.2a grading signals and closed questions | `backend/agents/evaluation/__init__.py`, `backend/agents/evaluation/signals.py` (new, pure: `match_option`, `term_match` (lemma, then rapidfuzz), `key_term_coverage`, `best_cosine`, `echoes_prompt`, `negation_mismatch`, `content_length`), `backend/agents/policy.py` (grading section), `backend/tests/test_grading_signals.py` (new), `tools/repo_graph/purposes.json` | 195 (90 code, 15 policy, 85 tests, 5 other) | About 14, table-driven: letter forms and option text resolve to the option, two matches resolve to none; "plants" matches "plant", "photosynthsis" matches by spelling at the threshold and not one point below; coverage is 0, a fraction and 1; best cosine picks the nearest evidence row and is 0 for an empty answer; an answer that is the question's own words is an echo, one that adds content is not; "does not" against an affirmative reference is a mismatch, a double match is not | 30 min |
+| C6.2b `decide`: score, verdict and confidence | `backend/agents/evaluation/grader.py` (new: Pydantic `GradeInput` (stored question, answer, answer vector, reference vectors, prompt vector), `Grade`; pure `decide` with one branch per question kind as described above; `confidence_band`), `backend/agents/policy.py` (weights, score thresholds, confidence penalties and band edges), `backend/tests/test_grader.py` (new) | 200 (100 code, 20 policy, 80 tests) | About 14 on hand-made vectors: right and wrong option; unmatched option is 0 at low confidence; exact cloze 10 high, synonym partial low, unrelated 0; open answer at each side of each score threshold; blank is 0 `incorrect` at high confidence; an echo scores 0; signals that disagree lower the confidence and never raise the score; a negation mismatch lowers confidence only; `fallback` is never above low; `signals` names the rule that fired; same input, same output; the module imports no LangChain, `llm.py` or Supabase client | 40 min |
+| C6.2c calibrate on the labelled set, 🚦 acceptance check | `scripts/dev/eval_grader.py` (new: embeds the fixture texts with the real model, runs `decide`, prints agreement by label, kind and confidence band, every miss, and ms per answer; `--split`), `backend/tests/test_grader_accuracy.py` (new, skipped when the model is not cached), `backend/agents/policy.py` (thresholds tuned on the `tune` split only), `docs/BENCHMARKS.md` (the table, per-answer time, RSS), `tools/repo_graph/purposes.json` | 160 (75 script, 35 tests, 40 doc, 10 other) | 2 on the script's pure helpers; 1 real-model test asserting the acceptance lines below on the `holdout` split. **Stop and present the numbers and the misses before C6.3** | 35 min + user |
+| C6.3 feedback templates | `backend/agents/evaluation/feedback.py` (new, pure: `render(question, grade) -> str`, one or two sentences from templates keyed by question kind, verdict and confidence band; names the key terms found and missing; quotes the evidence sentence, shortened, once the answer is in; the wording variant is picked by a hash of the question id, so it is stable; low-confidence templates open with a hedge ("This looks partly right, but I could not grade it with confidence") and call the score an estimate; `not_graded` says so and gives no number), `backend/agents/policy.py` (quote length, terms named), `backend/tests/test_feedback.py` (new), `tools/repo_graph/purposes.json` | 185 (85 code, 90 tests, 10 other) | About 12: a template exists for every kind, verdict and band; no unfilled placeholder in any output over the whole fixture set; every low-confidence and `not_graded` message contains a hedge and none of "correct", "wrong" or "exactly" unhedged; high-confidence wrong multiple choice names the right option; missing terms are named, at most three; the quote is verbatim from the evidence and within the length limit; blank answer; at most two sentences and 300 characters; same input, same output | 30 min |
+| C6.4a evaluator on the local grader | `backend/agents/evaluator_agent.py` (rewritten in place: the prompts, parsers, `evaluator_llm` import and the 10/10 fallback go; the node loads the passage, embeds answers and references in one batch in a worker thread, calls `decide` and `render` per question, stores `score`, `feedback`, `verdict`, `confidence`, `confidence_band` and `signals` with each answer in `test_results.answers`, and returns them in `evaluation_result` with `low_confidence_count`; a question whose grading raises is `not_graded` and left out of both `total_score` and `max_score`; `evaluate_answers` and `evaluate_single_answer` keep their signatures, so the background pre-grade on `evaluate-single` and its `cached_eval` keep working), `backend/agents/state.py` (`decisions`), `backend/routers/sessions.py` (pass the request's `time_taken_seconds`, today a fixed 180; return the new fields in `per_question`), `backend/tests/test_evaluator.py` (new), `backend/tests/test_api_sessions.py`, `tools/repo_graph/tests/test_query.py` (it lists the importers of `llm.py`, which drop by one), `tools/repo_graph/purposes.json` | 200 new (95 code, 100 tests, 5 other), about 150 deleted | About 9 on the fake database and a fake embedder: `submit-answers` grades five answers with no chat-model object built; a blank answer is 0, not 10; an embedder that raises gives `not_graded` for that question and a total over the rest; every stored answer has a confidence and signals; a `cached_eval` for the same answer text is reused, for a changed answer it is not; `test_results` gets one row with integer totals; the response keeps `total_score`, `max_score`, `percentage` and `per_question[].score` and `.feedback`; no answer, evidence or signal leaks through `GET /sessions/{id}` before submission; the module no longer imports `llm.py` or LangChain. By hand on dev as test user A: a full session with one good, one partial, one wrong, one blank and one vague answer; server log has no Groq request from the evaluator; `submit-answers` and grading time over 5 runs; server RSS after | 45 min |
+| C6.4b show uncertainty on the results page (**needs the user's yes and the `design-review` skill, which this chunk's prompt does not list**) | `frontend/src/pages/Results.jsx`, `frontend/src/pages/Results.css` (a low-confidence score reads "about 6 / 10" with an "estimate" marker; `not_graded` shows no number), nothing else | 60 | none automated (no frontend test runner); lint and build at baseline; looked at in the browser at 375 px and 1440 px with a session from C6.4a | 25 min |
+
+Total: about 1,075 hand-written lines plus about 160 lines of fixture data,
+in 7 commits, about 4 hours with the wait at C6.2c. No budget for C6 is
+recorded in this file.
+
+#### 🚦 Acceptance check (end of C6.2c, real model, `holdout` split)
+
+Proposed lines, to be confirmed by the user:
+
+| Measure | Target | Why |
+|---|---|---|
+| Confident and wrong: high confidence with the score in the opposite band (a `correct` answer at 3 or less, an `incorrect` one at 8 or more) | 0 | The chunk's goal |
+| `ambiguous` answers graded at high confidence | 0 | Same |
+| High-confidence grades inside the labelled band | at least 90% | A confident grade has to be right |
+| All grades inside the labelled band | at least 75% | Honest about what embeddings can do |
+| Open answers graded at low confidence | at most 35% | Above this the grader hedges too much to be useful |
+| Multiple choice, and cloze answers that are exact or misspelt | 100% | These are string matches |
+| Grading one answer, model warm, this machine | p95 at most 60 ms | A five-question test must feel instant |
+
+If a line fails after tuning on the `tune` split: report the misses and
+stop; thresholds are not tuned on `holdout`.
+
+Exit criteria for the chunk:
+
+- `submit-answers` and `evaluate-single` make no LLM call;
+  `backend/agents/evaluator_agent.py` leaves the banned-provider grep list.
+- No path gives full marks, or any confident mark, to an answer that was
+  not graded.
+- Every stored grade has a confidence and the signals behind it, and every
+  low-confidence grade reaches the reader worded as an estimate.
+
+Safe to cut, in this order: C6.4b (the hedge is already in the feedback
+text, which the page shows); the narrative passage in C6.1; the negation
+and echo guards in C6.2a; wording variants in C6.3 (one template per
+case). Not safe to cut: the confidence bands, `not_graded`, and the
+C6.2c check.
+
+Risks and open questions:
+
+- **One labeller.** The fixture answers and their labels are written by
+  Claude, not collected from readers, and the three passages are short and
+  clean. The user should read `answers.jsonl` at C6.1, in particular the
+  `partial` and `ambiguous` lines; the accuracy numbers mean no more than
+  those labels do.
+- **Sentence embeddings are weak exactly where grading is hard**: a fluent
+  wrong answer on the right topic scores close to a right one, and negation
+  is invisible. The plan answers with the key-term signal, the guards and
+  low confidence, not with a claim of accuracy. If the `holdout` numbers
+  miss, the fallback is a stricter grader that leaves more answers at low
+  confidence.
+- **The page shows a bare "6 / 10" today.** Without C6.4b the only place
+  the uncertainty reaches the reader is the feedback sentence under the
+  score, and a `not_graded` question would render as " / 10". C6.4b is two
+  files and needs the design gate; if it is cut, `not_graded` questions
+  are returned with `score: 0` and the feedback carries the explanation,
+  which is weaker.
+- **Weak references make weak grades.** Issue 25 stands: a cloze whose
+  answer is "design", or a main idea "about licensee mdpi", is graded
+  against that. The grader lowers confidence for one-word generic
+  references but cannot repair the question.
+- **Low-confidence scores still count in the total**, at face value, and
+  the optimizer reads only `total_score`. `evaluation_result` carries
+  `low_confidence_count` so the optimizer chunk can use it; not acted on
+  here.
+- **Feedback quotes the evidence sentence** after an answer is graded. The
+  assembler prefers unused questions, so a reader rarely meets the same
+  question again, but nothing forbids it.
+- **First grade after a cold start loads the model** in the web process:
+  0.67 s here, 4.8 s in the throttled container (C4.1), and on Render a
+  download as well, since the `Dockerfile` does not bake the model in.
+  Pre-grading on `evaluate-single` usually absorbs this before submit.
+  Memory: the model is the same one ingestion already loads (347 MB peak,
+  issue 24); grading adds short texts only. Measured in C6.4a, on Windows.
+- **`submit-answers` still calls the optimizer**, which calls Groq and
+  falls back (issue 22), so the endpoint's total time is not the grader's.
+  Grading time is reported on its own.
+- **`evaluate_single_background` rewrites the whole `test_questions`
+  array** (read, change, write), so two quick pre-grades can lose one
+  cache entry. The submit path then grades that answer itself; correctness
+  is not affected. Not fixed here.
+- **Sessions stored before C5.5** hold LLM-era questions with `guidance`
+  only. They are graded as `fallback`, at low confidence.
+- **Not in this chunk:** the optimizer and planner rewrites, a
+  multiple-choice UI (issue 26), blank auto-submit at zero and the test
+  timer (issue 18, other than the recorded time and the 10/10 fallback),
+  `reading_progress` population (issue 16), and removal of `llm.py` (C8).
+- The three `docs/repo-graph/` files show as modified at chunk start with
+  an empty `git diff --stat`: line endings only, as in C3 and C5.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C6.1 labelled answer fixtures | this commit | Added `backend/tests/fixtures/answers.json` (the file and fields the C6.1 prompt gives; the plan had `fixtures/grading/passages.json` and `answers.jsonl` with labels and a tune and holdout split): 34 cases over five hand-written questions (a definition, two why questions, a cloze, a main idea; 13 factual, 13 inference, 8 summary), each with `question`, `type`, `evidence`, `key_terms`, `answer` and `human_score` from 0 to 1, plus an `id` and a `category`: 5 correct, 5 paraphrase, 5 partial, 5 wrong, 5 off-topic, 4 empty, 5 copy of the question. Added `backend/tests/test_answer_fixtures.py`. The plan above is also part of this commit. | `pytest backend/tests/test_answer_fixtures.py -q`: 5 passed. Standard checks: ruff 81 errors (baseline), `pytest backend/tests -q` 268 passed (263 before), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 15:23 | **The answers and the scores are written by Claude, one labeller, not collected from readers**; the user should read the partial and wrong lines. The wrong answers are deliberately on-topic and reuse the evidence's words (two are negations of it), which is where embeddings are weakest. No multiple-choice case and no reference `answer` field: the prompt's schema has none, so the grader is calibrated against `evidence` and `key_terms`. No holdout split: with 34 cases, thresholds tuned on them are also measured on them. The evidence was not produced by the C5 strategies |
 
 ## C7
 

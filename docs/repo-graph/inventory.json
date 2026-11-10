@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 165,
-    "inventoried": 154,
+    "tracked": 167,
+    "inventoried": 156,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7315,
+      "size_bytes": 7331,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -391,6 +391,22 @@
       "purpose": "Offline test setup: dummy environment, a fake Supabase client, Groq and Google embedding classes that raise when called, and a guard that blocks non-loopback connections."
     },
     {
+      "path": "backend/tests/fixtures/answers.json",
+      "language": "json",
+      "lines": 40,
+      "size_bytes": 16853,
+      "role": "test",
+      "purpose": "Labelled answers for calibrating the grader: 34 cases over five questions, each with question, type, evidence, key terms, an answer, a category (correct, paraphrase, partial, wrong, off-topic, empty, copy of the question) and a hand-given human_score from 0 to 1."
+    },
+    {
+      "path": "backend/tests/test_answer_fixtures.py",
+      "language": "python",
+      "lines": 61,
+      "size_bytes": 2523,
+      "role": "test",
+      "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
+    },
+    {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
       "lines": 202,
@@ -569,8 +585,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 736,
-      "size_bytes": 114061,
+      "lines": 903,
+      "size_bytes": 132705,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1177,8 +1193,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 156,
-      "size_bytes": 24863,
+      "lines": 158,
+      "size_bytes": 25417,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -486,6 +486,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/fixtures/answers.json",
+      "type": "file",
+      "role": "test",
+      "language": "json"
+    },
+    {
+      "id": "file:backend/tests/test_answer_fixtures.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_sessions.py",
       "type": "file",
       "role": "test",

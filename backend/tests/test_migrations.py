@@ -63,6 +63,15 @@ def test_005_match_function_respects_row_level_security():
     assert re.search(r"SET search_path\s*=", sql)
 
 
+def test_006_adds_full_text_search_that_respects_row_level_security():
+    sql = re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "006_chunk_text_search.sql"))
+    assert "CREATE INDEX IF NOT EXISTS idx_chunks_content_fts ON public.chunks USING gin (to_tsvector(" in sql
+    assert "FUNCTION public.search_chunks_text( query_text text, match_count integer, p_book_id uuid )" in sql
+    assert "websearch_to_tsquery('english', query_text)" in sql
+    assert "SECURITY INVOKER" in sql and "SECURITY DEFINER" not in sql
+    assert "auth.uid()" in sql and "c.book_id = p_book_id" in sql
+
+
 def test_005_leaves_the_old_column_and_function_alone():
     sql = migration_005()
     assert not re.search(r"\bmatch_chunks\s*\(", sql)

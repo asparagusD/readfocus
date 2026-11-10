@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 146,
-    "inventoried": 135,
+    "tracked": 149,
+    "inventoried": 138,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7269,
+      "size_bytes": 7284,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -305,10 +305,10 @@
     {
       "path": "backend/services/retriever.py",
       "language": "python",
-      "lines": 39,
-      "size_bytes": 1476,
+      "lines": 92,
+      "size_bytes": 3592,
       "role": "service",
-      "purpose": "Similar-chunk lookup through the match_chunks RPC, plus an unused LangChain SupabaseVectorStore retriever."
+      "purpose": "Hybrid retrieval over one book's chunks: local-embedding vector search (match_chunks_local) and Postgres full-text search (search_chunks_text) merged with reciprocal rank fusion; get_similar_chunks keeps its signature."
     },
     {
       "path": "backend/services/supabase_client.py",
@@ -385,10 +385,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 69,
-      "size_bytes": 2218,
+      "lines": 78,
+      "size_bytes": 2808,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, and 006 adds the full-text index and search_chunks_text."
     },
     {
       "path": "backend/tests/test_offline.py",
@@ -405,6 +405,14 @@
       "size_bytes": 2162,
       "role": "test",
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
+    },
+    {
+      "path": "backend/tests/test_retriever.py",
+      "language": "python",
+      "lines": 134,
+      "size_bytes": 5640,
+      "role": "test",
+      "purpose": "Pytest on a mocked database: reciprocal rank fusion, the OR text query, both searches called and fused, one search or the embedder failing, and the unchanged get_similar_chunks signature."
     },
     {
       "path": "backend/tests/test_startup.py",
@@ -449,8 +457,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 487,
-      "size_bytes": 64092,
+      "lines": 486,
+      "size_bytes": 66700,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -839,6 +847,14 @@
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
     },
     {
+      "path": "scripts/dev/check_retriever.py",
+      "language": "python",
+      "lines": 91,
+      "size_bytes": 4214,
+      "role": "script",
+      "purpose": "Integration check of the hybrid retriever on the dev database: inserts sample.pdf's chunks with local embeddings as a fixture book for test user A, runs searches with expected chunks, deletes the fixture; refuses to run unless ENV=development."
+    },
+    {
       "path": "scripts/dev/create_test_users.py",
       "language": "python",
       "lines": 117,
@@ -991,6 +1007,14 @@
       "purpose": "Adds chunks.embedding_local vector(384) with an HNSW cosine index and match_chunks_local, which runs as the caller so RLS applies; the 1536 column and match_chunks are untouched."
     },
     {
+      "path": "supabase/migrations/006_chunk_text_search.sql",
+      "language": "sql",
+      "lines": 42,
+      "size_bytes": 1439,
+      "role": "migration",
+      "purpose": "Adds a GIN full-text index on chunks.content and search_chunks_text (websearch_to_tsquery, ranked), which runs as the caller so RLS applies."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1025,8 +1049,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 137,
-      "size_bytes": 19890,
+      "lines": 140,
+      "size_bytes": 20765,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1058,7 +1082,7 @@
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
       "lines": 241,
-      "size_bytes": 9735,
+      "size_bytes": 9741,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

@@ -498,6 +498,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_retriever.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_startup.py",
       "type": "file",
       "role": "test",
@@ -822,6 +828,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/check_retriever.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/create_test_users.py",
       "type": "file",
       "role": "script",
@@ -936,6 +948,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/006_chunk_text_search.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -1017,6 +1035,10 @@
     },
     {
       "id": "function:match_chunks_local",
+      "type": "function"
+    },
+    {
+      "id": "function:search_chunks_text",
       "type": "function"
     },
     {
@@ -1218,12 +1240,6 @@
     },
     {
       "type": "calls_external",
-      "from": "file:backend/services/retriever.py",
-      "to": "external:langchain",
-      "line": 1
-    },
-    {
-      "type": "calls_external",
       "from": "file:backend/services/supabase_client.py",
       "to": "external:supabase",
       "line": 3
@@ -1267,7 +1283,12 @@
     {
       "type": "calls_function",
       "from": "file:backend/services/retriever.py",
-      "to": "function:match_chunks"
+      "to": "function:match_chunks_local"
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/services/retriever.py",
+      "to": "function:search_chunks_text"
     },
     {
       "type": "declares_env",
@@ -1453,6 +1474,11 @@
       "type": "defines_function",
       "from": "file:supabase/migrations/005_local_embeddings.sql",
       "to": "function:match_chunks_local"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/006_chunk_text_search.sql",
+      "to": "function:search_chunks_text"
     },
     {
       "type": "defines_table",
@@ -1782,7 +1808,12 @@
     {
       "type": "imports",
       "from": "file:backend/services/retriever.py",
-      "to": "file:backend/services/embeddings.py"
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/retriever.py",
+      "to": "file:backend/nlp/text.py"
     },
     {
       "type": "imports",
@@ -1848,6 +1879,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_offline.py",
       "to": "file:backend/tests/conftest.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_retriever.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_retriever.py",
+      "to": "file:backend/services/retriever.py"
     },
     {
       "type": "imports",
@@ -2101,6 +2142,31 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/retriever.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/dev/measure_embedder.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -2351,7 +2417,7 @@
     },
     {
       "type": "reads_table",
-      "from": "file:backend/services/retriever.py",
+      "from": "file:scripts/dev/check_retriever.py",
       "to": "table:chunks"
     },
     {
@@ -2421,6 +2487,11 @@
     },
     {
       "type": "uses_env",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
       "from": "file:scripts/dev/create_test_users.py",
       "to": "env:ENV"
     },
@@ -2477,6 +2548,16 @@
     {
       "type": "writes_table",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/dev/check_retriever.py",
       "to": "table:chunks"
     },
     {

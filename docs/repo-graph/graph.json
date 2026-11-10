@@ -282,6 +282,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/evaluation/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/evaluation/grader.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/agents/evaluator_agent.py",
       "type": "file",
       "role": "agent",
@@ -529,6 +541,12 @@
     },
     {
       "id": "file:backend/tests/test_embedder.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_grader.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1699,6 +1717,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/agents/evaluation/grader.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluation/grader.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluation/grader.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/agents/evaluator_agent.py",
       "to": "file:backend/agents/graph.py"
     },
@@ -2070,6 +2103,21 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_embedder.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_grader.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_grader.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_grader.py",
       "to": "file:backend/nlp/embedder.py"
     },
     {

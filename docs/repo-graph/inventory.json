@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 167,
-    "inventoried": 156,
+    "tracked": 170,
+    "inventoried": 159,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7331,
+      "size_bytes": 7347,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -119,6 +119,22 @@
       "purpose": "Package marker for backend.agents."
     },
     {
+      "path": "backend/agents/evaluation/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 83,
+      "role": "agent",
+      "purpose": "Package marker for backend.agents.evaluation, answer grading with no LLM."
+    },
+    {
+      "path": "backend/agents/evaluation/grader.py",
+      "language": "python",
+      "lines": 203,
+      "size_bytes": 9151,
+      "role": "agent",
+      "purpose": "Answer grader: pure decide(GradeInput) gives a 0..1 score, a high, medium or low confidence, matched and missing key terms, the rule used and its components; cloze and multiple choice by exact or rapidfuzz match, free text by a weighted sum of evidence cosine, key-term coverage and a relevance check; grade_all embeds a test's free-text answers in one call with the embedder it is given."
+    },
+    {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
       "lines": 216,
@@ -153,10 +169,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 106,
-      "size_bytes": 3528,
+      "lines": 157,
+      "size_bytes": 5655,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far the question generation ones."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly and grading."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -455,6 +471,14 @@
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
+      "path": "backend/tests/test_grader.py",
+      "language": "python",
+      "lines": 229,
+      "size_bytes": 10466,
+      "role": "test",
+      "purpose": "Pytest: closed-question matching, the free-text formula and its components, every confidence rule and its boundary, grade_all's single embedding call and its failure path, on hand-made numbers; plus agreement with the labelled answer fixtures on the real model when it is cached."
+    },
+    {
       "path": "backend/tests/test_health.py",
       "language": "python",
       "lines": 19,
@@ -561,8 +585,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 307,
-      "size_bytes": 15558,
+      "lines": 343,
+      "size_bytes": 17300,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -585,8 +609,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 903,
-      "size_bytes": 132705,
+      "lines": 904,
+      "size_bytes": 135859,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1193,8 +1217,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 158,
-      "size_bytes": 25417,
+      "lines": 161,
+      "size_bytes": 26305,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

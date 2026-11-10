@@ -71,6 +71,42 @@ and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
 
+### C6.2: answer grader (2026-11-10)
+
+No new dependency. `backend/agents/evaluation/grader.py` imports
+`rapidfuzz`, `numpy` and `backend/nlp/concepts.py` (which imports `yake`):
+RSS in a fresh process 18.9 MB before the import, 59.5 MB after, all of it
+packages the backend already loads. The embedding model is the one
+ingestion uses and is not loaded by the import.
+
+Agreement with the 34 labelled answers in
+`backend/tests/fixtures/answers.json`, real model, Windows, one-off script
+(not committed); a grade agrees when it is within 0.25 of `human_score`:
+
+| Constants | Agree | Share |
+|---|---|---|
+| As first written (`GRADE_COSINE_FLOOR` 0.2, `GRADE_COSINE_FULL` 0.75) | 25 of 34 | 73.5% |
+| Committed (floor 0.1, tuned on these same cases) | 26 of 34 | 76.5% |
+| Range over floors 0.0 to 0.3 and full values 0.65 to 0.85 | 24 to 27 | 70.6% to 79.4% |
+
+Target 75%. The committed figure passes it by one case, on the cases it was
+tuned on, with scores given by one labeller: read it as "about three in
+four", not as a pass.
+
+| Category | Agree | Notes |
+|---|---|---|
+| correct | 5 of 5 | |
+| paraphrase | 1 of 5 | scored 0.44 to 0.79 against 0.90 to 0.95: literal key-term coverage is 0 to 0.4 for a paraphrase; the misspelt cloze ("gutenburg", ratio 88.9) gets 0.5 at low confidence |
+| partial | 5 of 5 | |
+| wrong | 1 of 5 | the four on-topic wrong answers score 0.53 to 0.91; two are at **high** confidence (0.86 and 0.91): they reverse the evidence in its own words |
+| off-topic | 5 of 5 | 0.00 to 0.04 |
+| empty | 4 of 4 | |
+| copy of the question | 5 of 5 | |
+
+Confidence over the 34: 19 high, 10 medium, 5 low. Time: 213 ms to grade
+all 34 with the model warm (about 6 ms per answer; 33 distinct texts
+embedded in one call).
+
 ### C5.5: session tests from the question bank (2026-11-10)
 
 Windows, backend started with `uvicorn backend.main:app` against the dev

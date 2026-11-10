@@ -104,3 +104,54 @@ DIFFICULTY = {
     "main_idea": 0.7,
     "multiple_choice": 0.2,
 }
+
+# --- Grading (backend/agents/evaluation/grader.py) --------------------------
+
+# Cloze and multiple choice: a rapidfuzz ratio (0..100) at or above this is
+# the expected answer, misspelt or not.
+GRADE_FUZZY_RATIO = 90.0
+
+# Below the threshold but at or above this, the answer may be a worse
+# misspelling of the right word: half marks, always at low confidence.
+GRADE_NEAR_MISS_RATIO = 80.0
+GRADE_NEAR_MISS_SCORE = 0.5
+
+# Free text: score = sum of weight * component, each component 0..1.
+GRADE_WEIGHTS = {
+    "cosine": 0.55,     # meaning: cosine(answer, evidence), rescaled
+    "coverage": 0.35,   # share of the question's key terms in the answer
+    "relevance": 0.10,  # sanity check: the answer is about the passage
+}
+
+# Raw cosine (all-MiniLM-L6-v2) to the 0..1 cosine component: nothing at or
+# below the floor, full at or above the value a faithful paraphrase reaches.
+# Tuned on backend/tests/fixtures/answers.json (C6.2): the floor started at
+# 0.2 (25 of 34 cases agree); 0.1 gives 26. Over floors 0.0 to 0.3 and full
+# values 0.65 to 0.85 the count stays between 24 and 27.
+GRADE_COSINE_FLOOR = 0.1
+GRADE_COSINE_FULL = 0.75
+
+# Relevance uses the larger of cosine(answer, evidence) and cosine(answer,
+# question): none at the floor (unrelated text), full once clearly on topic.
+GRADE_RELEVANCE_FLOOR = 0.15
+GRADE_RELEVANCE_FULL = 0.35
+
+# A raw cosine in this band can be a loose right answer or a fluent wrong
+# one: low confidence. Within the margin of the band: medium.
+GRADE_AMBIGUOUS_COSINE = (0.45, 0.60)
+GRADE_AMBIGUOUS_MARGIN = 0.05
+
+# A free-text answer with fewer word tokens than this is low confidence.
+GRADE_MIN_TOKENS = 4
+
+# Cosine and coverage components this far apart are a disagreement: medium.
+GRADE_DISAGREEMENT = 0.6
+
+# An answer this close to the question (rapidfuzz ratio), or made only of
+# the question's words, is a copy of it: no credit, low confidence.
+GRADE_COPY_RATIO = 90.0
+
+# Calibration against backend/tests/fixtures/answers.json: a grade agrees
+# with the human one within the tolerance; the share that must agree.
+GRADE_AGREEMENT_TOLERANCE = 0.25
+GRADE_AGREEMENT_TARGET = 0.75

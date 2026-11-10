@@ -342,6 +342,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/nlp/concepts.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/nlp/embedder.py",
       "type": "file",
       "role": "lib",
@@ -445,6 +451,12 @@
     },
     {
       "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_concepts.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1684,6 +1696,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/nlp/concepts.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/nlp/concepts.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/auth.py",
       "to": "file:backend/dependencies.py"
     },
@@ -1776,6 +1798,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concepts.py",
+      "to": "file:backend/nlp/concepts.py"
     },
     {
       "type": "imports",

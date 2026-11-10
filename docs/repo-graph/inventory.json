@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 144,
-    "inventoried": 133,
+    "tracked": 146,
+    "inventoried": 135,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7268,
+      "size_bytes": 7269,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -197,6 +197,14 @@
       "size_bytes": 64,
       "role": "lib",
       "purpose": "Package marker for backend.nlp, the local NLP building blocks (no API calls)."
+    },
+    {
+      "path": "backend/nlp/concepts.py",
+      "language": "python",
+      "lines": 129,
+      "size_bytes": 5356,
+      "role": "lib",
+      "purpose": "Concepts of a chunk: YAKE key phrases, normalised (lower case, stopwords stripped, plurals reduced), near-duplicates merged by rapidfuzz, embedding cosine or shared words, each with a stable concept key slug and a 0..1 weight."
     },
     {
       "path": "backend/nlp/embedder.py",
@@ -343,6 +351,14 @@
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
     },
     {
+      "path": "backend/tests/test_concepts.py",
+      "language": "python",
+      "lines": 124,
+      "size_bytes": 5271,
+      "role": "test",
+      "purpose": "Pytest: plural reduction, phrase normalisation, concept key slugs, merging of identical, fuzzy, overlapping and embedding-close phrases, and extract_concepts on a fixed passage without the real model."
+    },
+    {
       "path": "backend/tests/test_embedder.py",
       "language": "python",
       "lines": 126,
@@ -409,10 +425,10 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 232,
-      "size_bytes": 11309,
+      "lines": 239,
+      "size_bytes": 12120,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, and the C3.5 API baseline with its caveats."
+      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
@@ -434,7 +450,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 487,
-      "size_bytes": 62292,
+      "size_bytes": 64092,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -809,10 +825,10 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 40,
-      "size_bytes": 997,
+      "lines": 42,
+      "size_bytes": 1027,
       "role": "config",
-      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed and numpy for backend/nlp/; still includes the Groq and Google AI Studio packages until C8."
+      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/; still includes the Groq and Google AI Studio packages until C8."
     },
     {
       "path": "scripts/bench.py",
@@ -1009,8 +1025,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 135,
-      "size_bytes": 19338,
+      "lines": 137,
+      "size_bytes": 19890,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

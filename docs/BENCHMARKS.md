@@ -63,6 +63,13 @@ One row per model or heavy dependency (the memory rule in the
 | Date | Subchunk | What was added | RSS before | RSS after | Delta | Backend RSS after startup |
 |---|---|---|---|---|---|---|
 | 2026-11-10 | C4.1 | `fastembed` 0.9.1 with `sentence-transformers/all-MiniLM-L6-v2` (ONNX, 384 dimensions, 86 MB on disk), loaded | 19 MB (Windows), 15 MB (Linux container) | 180 MB (Windows), 213 MB (Linux container, 0.1 CPU) | 161 MB, 198 MB | Windows: 135 MB with `backend.main` imported, 264 MB once the model is loaded. Unchanged at startup, because the model loads on first use. Not measured on Linux |
+| 2026-11-10 | C4.4 | `yake` 0.7.3 (brings `networkx`, `jellyfish`, `segtok`, `regex`, `tabulate`, `click`), imported | 16.7 MB (Windows) | 47.9 MB; 48.6 MB after one 600-word extraction | 31 MB, of which `numpy` is already paid for by the embedder | Unchanged: nothing the app imports at startup uses `backend/nlp/concepts.py` yet. A process with `backend.nlp.concepts` and `book_ingestor` imported is 137 MB, and 279 MB after the first extraction with embeddings (model loaded) |
+| 2026-11-10 | C4.4 | `rapidfuzz` 3.14.6, imported | 16.9 MB (Windows) | 19.0 MB | 2 MB | as above |
+
+Concept extraction time per chunk, Windows, `sample.pdf` chunks of 507, 740
+and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
+merge; 24, 30 and 37 ms without it. Not measured in the throttled
+container.
 
 ### C4.1: embedding model, Gate G2 (2026-11-10)
 

@@ -7,13 +7,11 @@ the event id, so a test submitted twice counts once.
 
 knowledge_state_node is the LangGraph node around it; a failure becomes an
 `errors` entry, never an exception, since the reader's result is already
-stored. apply_test is what the submit flow's background task calls: it runs
-the node through the workflow and logs any error.
+stored. The submit flow runs it after the evaluator (backend/agents/graph.py).
 """
 
 import time
 from datetime import UTC, datetime, timedelta
-from typing import cast
 
 from backend.agents.knowledge_state.mastery import ConceptGrade, MasteryRow, decide
 from backend.agents.state import AgentState, decision
@@ -39,12 +37,12 @@ def record_test(
 ) -> dict:
     """Move the reader's mastery of the concepts a graded test was about. Returns what it did."""
     grades = to_grades(questions, per_question)
-    if not grades:
-        return {"questions": 0, "concepts": 0}
-    keys = sorted({key for grade in grades for key in grade.concept_keys})
-    query = supabase.table("user_concept_mastery").select("*").eq("user_id", user_id).eq("book_id", book_id)
-    current = [MasteryRow(**row) for row in query.in_("concept_key", keys).execute().data or []]
-    updates = decide(current, grades, event_id)
+    updates = []
+    if grades:  # no question names a concept: no round trip
+        keys = sorted({key for grade in grades for key in grade.concept_keys})
+        query = supabase.table("user_concept_mastery").select("*").eq("user_id", user_id).eq("book_id", book_id)
+        current = [MasteryRow(**row) for row in query.in_("concept_key", keys).execute().data or []]
+        updates = decide(current, grades, event_id)
     if updates:
         now = now or datetime.now(UTC)
         supabase.table("user_concept_mastery").upsert([
@@ -74,19 +72,3 @@ def knowledge_state_node(state: AgentState) -> dict:
     updates = report.pop("updates")
     reason = f"Moved the mastery of {report['concepts']} concepts named by {report['questions']} graded questions."
     return {"mastery_updates": updates, "decisions": [decision("knowledge_state", started, inputs, report, reason)]}
-
-
-def apply_test(user_id: str, book_id: str, event_id: str, questions: list[dict], per_question: list[dict]) -> None:
-    """Run the workflow's knowledge state node for one graded test; errors are logged, never raised."""
-    from backend.agents.graph import workflow
-
-    try:
-        result = workflow.invoke(cast(AgentState, {
-            "user_id": user_id, "book_id": book_id, "session_id": event_id, "test_questions": questions,
-            "evaluation_result": {"per_question": per_question}, "status": "updating_mastery",
-        }))
-        errors = result.get("errors") or []
-    except Exception as error:  # noqa: BLE001
-        errors = [str(error)]
-    for error in errors:
-        print(f"Mastery update failed for session {event_id}: {error}")

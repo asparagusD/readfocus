@@ -26,6 +26,7 @@ async def optimizer_node(state: AgentState) -> dict:
     user_id, book_id, session_id = state.get("user_id") or "", state.get("book_id") or "", state.get("session_id")
     indices = list(state.get("chunk_indices") or [])
     result = state.get("evaluation_result") or {}
+    abandoned = state.get("event") == "abandon"  # no test: the stopped session counts, no score does
 
     progress = (_rows(supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id))
                 or [{}])[0]
@@ -43,10 +44,10 @@ async def optimizer_node(state: AgentState) -> dict:
     ]
     outcomes = (new_outcomes + list(pace.get("recent_outcomes") or []))[:policy.OPT_OUTCOME_HISTORY]
     data = OptimizerInput(
-        percentage=result.get("percentage") or 0, chunk_indices=indices,
+        percentage=None if abandoned else result.get("percentage") or 0, chunk_indices=indices,
         recent_percentages=pace.get("recent_percentages") or [], re_read_queue=progress.get("re_read_queue") or [],
         previous_multiplier=pace.get("next_chunk_multiplier") or 1.0,
-        recent_abandoned=[row.get("status") == "abandoned" for row in earlier],
+        recent_abandoned=[True] * abandoned + [row.get("status") == "abandoned" for row in earlier],
         wpm=profile[0]["reading_goal_wpm"] if profile else None, session_words=this.get("assigned_words") or 0,
         actual_minutes=this.get("actual_duration_minutes"), outcomes=[QuestionOutcome(**o) for o in outcomes],
         previous_mix=pace.get("question_mix"),
@@ -54,7 +55,8 @@ async def optimizer_node(state: AgentState) -> dict:
     recommendation = decide(data)
     stored = {
         **recommendation.model_dump(mode="json"), "recent_outcomes": outcomes,
-        "recent_percentages": [data.percentage, *data.recent_percentages][:policy.OPT_ROLLING_TESTS],
+        "recent_percentages": ([] if data.percentage is None else [data.percentage]
+                               + data.recent_percentages)[:policy.OPT_ROLLING_TESTS],
     }
 
     values = {"re_read_queue": recommendation.re_read_queue, "pace_recommendation": stored}
@@ -77,17 +79,3 @@ async def optimizer_node(state: AgentState) -> dict:
             "band", "next_chunk_multiplier", "focus_duration_minutes", "re_read_mode", "re_read_queue", "rules")},
             recommendation.reason)],
     }
-
-
-async def optimize_pace(
-    session_id: str, user_id: str, book_id: str, chunk_indices: list[int], evaluation_result: dict,
-    test_questions: list[dict] | None = None,
-) -> dict | None:
-    """Run the workflow's optimizer node for one graded test."""
-    from backend.agents.graph import workflow
-
-    result = await workflow.ainvoke(cast(AgentState, {
-        "session_id": session_id, "user_id": user_id, "book_id": book_id, "chunk_indices": chunk_indices,
-        "evaluation_result": evaluation_result, "test_questions": test_questions or [], "status": "completed",
-    }))
-    return result.get("pace_recommendation")

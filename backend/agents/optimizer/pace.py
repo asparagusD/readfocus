@@ -13,6 +13,8 @@ Rules, every bound in backend/agents/policy.py:
    from this session within bounds of the profile speed.
 6. Question mix: the worst failing question type gets one place, taken from
    the passing group with most places; one move per test, places in range.
+7. No test (an abandoned session, percentage None): band "none", the queue
+   is left alone, and the factor comes from the earlier tests' mean alone.
 
 The output keeps the keys Results.jsx reads (next_chunk_multiplier,
 focus_duration_minutes, re_read_mode, reason).
@@ -32,7 +34,7 @@ STRATEGY_NAMES = {
 }
 OPENERS = {
     "grow": "Strong result", "hold": "Solid result",
-    "reduce": "Some of this did not stick", "fail": "This one was hard",
+    "reduce": "Some of this did not stick", "fail": "This one was hard", "none": "No test this time",
 }
 QUEUE_NOTES = {"reduce": "this section is on your re-read list", "fail": "you will re-read this section first"}
 
@@ -43,7 +45,7 @@ class QuestionOutcome(BaseModel):
 
 
 class OptimizerInput(BaseModel):
-    percentage: float  # this test, 0..100
+    percentage: float | None  # this test, 0..100; None when the session ended without one
     chunk_indices: list[int]  # the sections this session covered
     recent_percentages: list[float] = []  # earlier tests on this book, newest first
     re_read_queue: list[int] = []
@@ -65,7 +67,7 @@ class PaceRecommendation(BaseModel):
     question_mix: Mix
     reading_wpm: float  # the speed the minutes assume; the planner should use the same
     band: str
-    rolling_percentage: float
+    rolling_percentage: float | None
     rules: list[str]
 
 
@@ -82,7 +84,7 @@ def _queue(data: OptimizerInput, band: str) -> list[int]:
         queue = list(data.chunk_indices) + [index for index in queue if index not in data.chunk_indices]
     elif band == "reduce":
         queue += [index for index in data.chunk_indices if index not in queue]
-    else:
+    elif band != "none":
         queue = [index for index in queue if index not in data.chunk_indices]
     return queue[:policy.OPT_REREAD_QUEUE_MAX]
 
@@ -124,10 +126,13 @@ def _type_mean(data: OptimizerInput, strategy: str) -> float:
 
 def decide(data: OptimizerInput) -> PaceRecommendation:
     rules: list[str] = []
-    band, _ = _band(data.percentage)
-    window = [data.percentage, *data.recent_percentages[:policy.OPT_ROLLING_TESTS - 1]]
-    rolling = sum(window) / len(window)
-    rolling_band, factor = _band(rolling)
+    if data.percentage is None:
+        band, window = "none", data.recent_percentages[:policy.OPT_ROLLING_TESTS]
+    else:
+        band = _band(data.percentage)[0]
+        window = [data.percentage, *data.recent_percentages[:policy.OPT_ROLLING_TESTS - 1]]
+    rolling = sum(window) / len(window) if window else None
+    rolling_band, factor = _band(rolling) if rolling is not None else ("none", 1.0)
     rules.append(f"rolling_{rolling_band}")
 
     if band in ("reduce", "fail") and factor > 1.0:

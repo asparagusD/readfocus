@@ -168,21 +168,3 @@ async def evaluator_node(state: AgentState) -> dict:
             f"Graded {len(results)} answers locally: {total_score} of {max_score}.",
         )],
     }
-
-
-async def evaluate_answers(
-    session_id: str, user_id: str, book_id: str, chunk_indices: list[int], test_questions: list[dict],
-    user_answers: list[str], time_taken_seconds: int = 300,
-) -> dict | None:
-    """Run the workflow's evaluator node for one submitted test."""
-    from backend.agents.graph import workflow
-
-    result = await workflow.ainvoke(cast(AgentState, {
-        "session_id": session_id, "user_id": user_id, "book_id": book_id, "chunk_indices": chunk_indices,
-        "test_questions": test_questions, "user_answers": user_answers,
-        "time_taken_seconds": time_taken_seconds, "status": "evaluating",
-    }))
-    if result.get("error"):
-        print(f"Evaluate Answers Error: {result['error']}")
-        return None
-    return result.get("evaluation_result", {})

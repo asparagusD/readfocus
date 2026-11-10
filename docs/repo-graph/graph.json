@@ -416,6 +416,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/workflow.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/dependencies.py",
       "type": "file",
       "role": "lib",
@@ -639,6 +645,12 @@
     },
     {
       "id": "file:backend/tests/test_grader.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_graph.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1298,10 +1310,6 @@
       "handler_file": "backend/agents/evaluator_agent.py"
     },
     {
-      "id": "graph_node:first",
-      "type": "graph_node"
-    },
-    {
       "id": "graph_node:knowledge_state",
       "type": "graph_node",
       "handler": "knowledge_state_node",
@@ -1318,14 +1326,6 @@
       "type": "graph_node",
       "handler": "planner_node",
       "handler_file": "backend/agents/planner_agent.py"
-    },
-    {
-      "id": "graph_node:second",
-      "type": "graph_node"
-    },
-    {
-      "id": "graph_node:silent",
-      "type": "graph_node"
     },
     {
       "id": "graph_node:test_generator",
@@ -1460,7 +1460,7 @@
       "type": "calls_external",
       "from": "file:backend/agents/graph.py",
       "to": "external:langgraph",
-      "line": 1
+      "line": 14
     },
     {
       "type": "calls_external",
@@ -1515,6 +1515,12 @@
       "from": "file:backend/tests/test_agent_state.py",
       "to": "external:langgraph",
       "line": 9
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "external:langgraph",
+      "line": 6
     },
     {
       "type": "calls_external",
@@ -1799,17 +1805,6 @@
     {
       "type": "graph_edge",
       "from": "graph_node:__start__",
-      "to": "graph_node:first"
-    },
-    {
-      "type": "graph_edge",
-      "from": "graph_node:__start__",
-      "to": "graph_node:knowledge_state",
-      "conditional": true
-    },
-    {
-      "type": "graph_edge",
-      "from": "graph_node:__start__",
       "to": "graph_node:optimizer",
       "conditional": true
     },
@@ -1828,37 +1823,43 @@
     {
       "type": "graph_edge",
       "from": "graph_node:evaluator",
-      "to": "graph_node:__end__"
+      "to": "graph_node:__end__",
+      "conditional": true
     },
     {
       "type": "graph_edge",
-      "from": "graph_node:first",
-      "to": "graph_node:silent"
+      "from": "graph_node:evaluator",
+      "to": "graph_node:knowledge_state",
+      "conditional": true
     },
     {
       "type": "graph_edge",
       "from": "graph_node:knowledge_state",
-      "to": "graph_node:__end__"
+      "to": "graph_node:optimizer",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:knowledge_state",
+      "to": "graph_node:planner",
+      "conditional": true
     },
     {
       "type": "graph_edge",
       "from": "graph_node:optimizer",
-      "to": "graph_node:__end__"
+      "to": "graph_node:__end__",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:optimizer",
+      "to": "graph_node:planner",
+      "conditional": true
     },
     {
       "type": "graph_edge",
       "from": "graph_node:planner",
       "to": "graph_node:__end__"
-    },
-    {
-      "type": "graph_edge",
-      "from": "graph_node:second",
-      "to": "graph_node:__end__"
-    },
-    {
-      "type": "graph_edge",
-      "from": "graph_node:silent",
-      "to": "graph_node:second"
     },
     {
       "type": "graph_edge",
@@ -1928,11 +1929,6 @@
     {
       "type": "imports",
       "from": "file:backend/agents/evaluator_agent.py",
-      "to": "file:backend/agents/graph.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/agents/evaluator_agent.py",
       "to": "file:backend/agents/policy.py"
     },
     {
@@ -1988,11 +1984,6 @@
     {
       "type": "imports",
       "from": "file:backend/agents/knowledge_state/agent.py",
-      "to": "file:backend/agents/graph.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/agents/knowledge_state/agent.py",
       "to": "file:backend/agents/knowledge_state/mastery.py"
     },
     {
@@ -2018,11 +2009,6 @@
     {
       "type": "imports",
       "from": "file:backend/agents/optimizer_agent.py",
-      "to": "file:backend/agents/graph.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/agents/optimizer_agent.py",
       "to": "file:backend/agents/optimizer/pace.py"
     },
     {
@@ -2044,11 +2030,6 @@
       "type": "imports",
       "from": "file:backend/agents/planner/strategy.py",
       "to": "file:backend/agents/policy.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/agents/planner_agent.py",
-      "to": "file:backend/agents/graph.py"
     },
     {
       "type": "imports",
@@ -2138,17 +2119,27 @@
     {
       "type": "imports",
       "from": "file:backend/agents/test_generator_agent.py",
-      "to": "file:backend/agents/graph.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/agents/test_generator_agent.py",
       "to": "file:backend/agents/state.py"
     },
     {
       "type": "imports",
       "from": "file:backend/agents/test_generator_agent.py",
       "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/workflow.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/workflow.py",
+      "to": "file:backend/agents/planner/strategy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/workflow.py",
+      "to": "file:backend/agents/state.py"
     },
     {
       "type": "imports",
@@ -2248,37 +2239,17 @@
     {
       "type": "imports",
       "from": "file:backend/routers/sessions.py",
-      "to": "file:backend/agents/knowledge_state/agent.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/routers/sessions.py",
-      "to": "file:backend/agents/optimizer_agent.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/routers/sessions.py",
-      "to": "file:backend/agents/planner_agent.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/routers/sessions.py",
       "to": "file:backend/agents/question_generation/assembler.py"
     },
     {
       "type": "imports",
       "from": "file:backend/routers/sessions.py",
-      "to": "file:backend/agents/test_generator_agent.py"
+      "to": "file:backend/agents/workflow.py"
     },
     {
       "type": "imports",
       "from": "file:backend/routers/sessions.py",
       "to": "file:backend/dependencies.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/routers/sessions.py",
-      "to": "file:backend/services/question_bank.py"
     },
     {
       "type": "imports",
@@ -2354,11 +2325,6 @@
       "type": "imports",
       "from": "file:backend/tests/test_agent_nodes.py",
       "to": "file:backend/agents/optimizer_agent.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_agent_nodes.py",
-      "to": "file:backend/agents/planner/strategy.py"
     },
     {
       "type": "imports",
@@ -2439,6 +2405,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/planner_agent.py"
     },
     {
       "type": "imports",
@@ -2544,6 +2520,51 @@
       "type": "imports",
       "from": "file:backend/tests/test_grader.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/workflow.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/tests/test_api_sessions.py"
     },
     {
       "type": "imports",

@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.agents import evaluator_agent
+from backend.agents import evaluator_agent, optimizer_agent, planner_agent
 from backend.agents.evaluation.feedback import LOW_CONFIDENCE
 from backend.agents.knowledge_state import agent as knowledge_agent
 from backend.dependencies import get_current_user
@@ -153,7 +153,7 @@ def api(monkeypatch):
          "chunk_indices": indices, "weight": weight}
         for key, indices, weight in (("gravel", [0, 2], 0.5), ("deep-foundation", [0], 0.9), ("gravel-road", [1], 1.0))
     ]
-    for module in (sessions, question_bank, evaluator_agent, concept_store, knowledge_agent):
+    for module in (sessions, question_bank, evaluator_agent, concept_store, knowledge_agent, planner_agent, optimizer_agent):
         monkeypatch.setattr(module, "supabase", db)
     embeds = []
 
@@ -168,16 +168,12 @@ def api(monkeypatch):
     monkeypatch.setattr(embedder, "embed", fake_embed)
     monkeypatch.setattr(embedder, "get_model", lambda: None)
 
-    async def fake_pace(**kwargs):
-        return {"next_chunk_multiplier": 1.0, "total_score_seen": kwargs["evaluation_result"]["total_score"]}
-
-    monkeypatch.setattr(sessions, "optimize_pace", fake_pace)
     plan = SimpleNamespace(chunk_indices=[0], assigned_words=600, focus_duration_minutes=20, reason="test")
 
     async def fake_plan(user_id, book_id):
         return plan
 
-    monkeypatch.setattr(sessions, "plan_session", fake_plan)
+    monkeypatch.setattr(sessions, "run_start", fake_plan)
     generated = []
     monkeypatch.setattr(question_bank.question_agent, "run", lambda book_id, ids: generated.append(list(ids)))
     app.dependency_overrides[get_current_user] = lambda: USER
@@ -328,7 +324,8 @@ def test_submit_answers_grades_inline_and_returns_confidence_and_feedback(api):
     assert body["max_score"] == 50 and body["total_score"] == sum(q["score"] for q in per_question)
     assert body["percentage"] == pytest.approx(body["total_score"] / 50 * 100)
     assert body["low_confidence_count"] == 0
-    assert body["pace_recommendation"]["total_score_seen"] == body["total_score"]
+    assert body["pace_recommendation"]["band"] == "hold"  # 30 of 50, from the optimizer node (C8.5)
+    assert body["next_session"]["chunk_indices"] == [1, 2]  # planned after the test, before the results show
     assert api.db.tables["sessions"][0]["status"] == "completed"
 
 

@@ -7,7 +7,6 @@ a background task.
 """
 
 import time
-from typing import cast
 
 from backend.agents.state import AgentState, decision
 from backend.services import question_bank
@@ -27,14 +26,3 @@ def test_generator_node(state: AgentState) -> dict:
     reason = f"Picked {len(questions)} questions from the question bank for sections {indices[0] + 1}–{indices[-1] + 1}."
     return {"test_questions": questions, "decisions": [decision(
         "test_generator", started, inputs, {"questions": len(questions), "strategies": strategies}, reason)]}
-
-
-def prepare_test(session_id: str, user_id: str, book_id: str, chunk_indices: list[int], mix: list | None) -> list[dict]:
-    """Run the workflow's test generator node for one session; returns the stored questions."""
-    from backend.agents.graph import workflow
-
-    result = workflow.invoke(cast(AgentState, {
-        "session_id": session_id, "user_id": user_id, "book_id": book_id, "chunk_indices": chunk_indices,
-        "plan": {"question_mix": mix}, "status": "testing",
-    }))
-    return result.get("test_questions") or []

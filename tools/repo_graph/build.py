@@ -242,8 +242,8 @@ def graph_name(node: ast.AST) -> str | None:
     return None
 
 
-def py_edges(graph: Graph, path: str, text: str, tree: ast.AST, bound: dict) -> None:
-    """Table access, third-party services and LangGraph wiring in a Python file."""
+def py_edges(graph: Graph, path: str, text: str, tree: ast.AST, bound: dict, wiring: bool = True) -> None:
+    """Table access, third-party services and LangGraph wiring in a Python file (wiring off for tests)."""
     source = f"file:{path}"
     for table, method in PY_TABLE.findall(text):
         kind = "writes_table" if method in WRITE_METHODS else "reads_table"
@@ -255,7 +255,7 @@ def py_edges(graph: Graph, path: str, text: str, tree: ast.AST, bound: dict) -> 
                 external(graph, source, alias.name.split(".")[0], node.lineno)
         elif isinstance(node, ast.ImportFrom) and not node.level:
             external(graph, source, (node.module or "").split(".")[0], node.lineno)
-        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+        elif wiring and isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             calls.append((node.func.attr, node.args, [graph_name(a) for a in node.args]))
     for attr, args, names in calls:  # nodes first, so each keeps its handler
         if attr == "add_node" and names and names[0]:
@@ -329,6 +329,7 @@ def build_graph(files: list[dict], read) -> dict:
             texts[record["path"]] = (record["language"], raw.replace("\r\n", "\n"))
 
     trees, prefixes = {}, {}
+    roles = {record["path"]: record["role"] for record in files}
     for path, (lang, text) in sorted(texts.items()):
         scan = not path.startswith(SELF_PREFIX)
         if scan:
@@ -341,7 +342,7 @@ def build_graph(files: list[dict], read) -> dict:
             graph.edge("imports", f"file:{path}", f"file:{target}")
         prefixes.update(router_prefixes(trees[path], bound))
         if scan:
-            py_edges(graph, path, text, trees[path], bound)
+            py_edges(graph, path, text, trees[path], bound, wiring=roles[path] != "test")
     for path, tree in trees.items():
         py_endpoints(graph, path, tree, prefixes.get(path, ""))
 

@@ -606,3 +606,97 @@ not run in isolation against the unfixed code. Passes after: yes, 48 passed.
 ### Commit
 feat(graph): add table, env, external service and LangGraph edges (C2.2b);
 the bug never reached a commit, so there is no separate fix commit.
+
+## 2026-11-11 C8.5 — submit returns 500 when no question names a concept
+
+**Status:** fixed
+
+### Symptom
+After chaining the submit flow (evaluator -> knowledge_state -> ...), one
+existing session test failed with a server error instead of a 200:
+
+    pytest backend/tests/test_api_sessions.py::test_a_question_with_no_evidence_is_graded_against_the_passage_at_low_confidence -q
+
+    backend\agents\knowledge_state\agent.py:72: in knowledge_state_node
+        updates = report.pop("updates")
+    E   KeyError: 'updates'
+    E   During task with name 'knowledge_state' and id 'cb7db64f-e2ef-1cf7-eee0-31181a00f195'
+    1 failed in 1.63s
+
+Expected: the test's only question (the fallback question) names no concept,
+so the knowledge state moves nothing and the run goes on to the planner.
+
+### Repro
+The command above fails every time.
+
+### Hypotheses
+1. `record_test` returns early when no question names a concept and that
+   return ignores `with_updates`, so the report has no `updates` key.
+   Evidence: `agent.py:44`, `if not grades: return {"questions": 0,
+   "concepts": 0}`. Ruled out if the early return is not taken for this
+   test. Result: confirmed; the fallback question has no `concept_keys`.
+2. The node's `except` misses the error because it is raised after the
+   `try`. Evidence: line 72 is after the `try` block. Result: true, but a
+   consequence of 1, not a cause.
+
+### Root cause
+`record_test`'s early return (`backend/agents/knowledge_state/agent.py:44`)
+did not honour `with_updates`, added in C8.4b. In C8.4b the node only ran
+inside `apply_test`, whose catch-all logged the `KeyError` in the background,
+so no test saw it; chained into the submit flow, it fails the request.
+
+### Fix
+The early return goes through the same report-building line as the normal
+return, so `with_updates=True` always gives an `updates` list. No change to
+the `except`: catching everything around the pop would hide the next bug.
+
+### Regression test
+`backend/tests/test_agent_nodes.py::test_a_test_that_names_no_concept_moves_nothing`.
+Failed before the fix (`KeyError: 'updates'`); passes after.
+
+### Commit
+C8.5 commit, feat(agents): chain evaluator, knowledge state, optimizer and planner in LangGraph
+
+## 2026-11-11 C8.5 — the LangGraph diagram shows nodes from a test file
+
+**Status:** fixed
+
+### Symptom
+After `make graph` in C8.5, the "LangGraph wiring" diagram in
+`docs/repo-graph/REPO_MAP.md` had three nodes the app does not have:
+
+    graph_node___start__ --> graph_node_first
+    graph_node_first --> graph_node_silent
+    graph_node_silent --> graph_node_second
+    graph_node_second --> graph_node___end__
+
+Expected: only the five agent nodes and their edges from `backend/agents/graph.py`.
+
+### Repro
+    python tools/repo_graph/query.py first
+
+lists `backend/tests/test_agent_state.py` as registering the node. The toy
+graph there was added in C8.3, so the committed map has been wrong since
+`8e8f5ca`; no tooling test looked at the real diagram's node set.
+
+### Hypotheses
+1. `py_edges` reads `add_node` / `add_edge` calls in every scanned Python
+   file, tests included. Evidence: `tools/repo_graph/build.py:260-276`
+   has no role check. Ruled out if the test file is excluded elsewhere.
+   Result: confirmed; only `tools/repo_graph/` is excluded (`SELF_PREFIX`).
+
+### Root cause
+`build_graph` passes every Python file outside the tooling to `py_edges`,
+which treats any `add_node` call as app wiring
+(`tools/repo_graph/build.py:344`).
+
+### Fix
+LangGraph wiring is read only from files whose inventory role is not
+`test`; tables, services and imports of test files are still scanned as before.
+
+### Regression test
+`tools/repo_graph/tests/test_build.py::test_a_graph_built_in_a_test_file_is_not_wiring`.
+Failed before the fix (the toy node was in the graph); passes after.
+
+### Commit
+C8.5 commit, feat(agents): chain evaluator, knowledge state, optimizer and planner in LangGraph

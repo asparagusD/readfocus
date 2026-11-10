@@ -242,3 +242,15 @@ def test_real_graph_has_the_schema_and_the_agents():
         f"graph_node:{n}" for n in ("planner", "test_generator", "evaluator", "knowledge_state", "optimizer")
     }
     assert {n["type"] for n in graph["nodes"]} == set(build.NODE_TYPES)
+
+
+def test_a_graph_built_in_a_test_file_is_not_wiring():
+    toy = (
+        "from langgraph.graph import StateGraph\n"
+        "g = StateGraph(dict)\n"
+        'g.add_node("toy", step)\n'
+        'g.add_edge("__start__", "toy")\n'
+    )
+    graph = build_fixture({**FIXTURE, "backend/tests/test_toy.py": toy})
+    assert "graph_node:toy" not in {n["id"] for n in graph["nodes"]}
+    assert edges(graph, "graph_node") == {("file:backend/agents/graph.py", "graph_node:planner")}

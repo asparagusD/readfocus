@@ -8,7 +8,6 @@ import pytest
 
 from backend.agents import optimizer_agent, planner_agent, policy, test_generator_agent
 from backend.agents.knowledge_state import agent as knowledge_agent
-from backend.agents.planner.strategy import SessionPlan
 from backend.services import concept_store, question_bank
 from backend.tests.test_api_sessions import BOOK, USER, FakeDb, bank_rows
 
@@ -29,7 +28,8 @@ def db(monkeypatch):
 
 
 def run_planner(**state):
-    return asyncio.run(planner_agent.planner_node({"user_id": USER, "book_id": BOOK, **state}))
+    state = {"user_id": USER, "book_id": BOOK, "event": "start_session", **state}
+    return asyncio.run(planner_agent.planner_node(state))
 
 
 def assert_one_decision(result, agent):
@@ -76,6 +76,8 @@ def test_a_re_read_pops_the_queue(db):
     result = run_planner()
     assert result["plan"]["mode"] == "re_read" and result["chunk_indices"] == [2]
     assert db.tables["reading_progress"][0]["re_read_queue"] == [0]
+    run_planner(event="submit_answers")  # a preview after a test leaves the queue alone
+    assert db.tables["reading_progress"][0]["re_read_queue"] == [0]
 
 
 def test_a_weak_concept_brings_its_section_back(db):
@@ -98,21 +100,6 @@ def test_chunk_difficulty_comes_from_the_question_bank(db):
     assert scores[0]["components"]["difficulty_fit"] == pytest.approx(0.8)  # target 0.4 with no history
 
 
-def test_plan_session_returns_the_plan_and_an_empty_one_when_the_book_is_done(db, monkeypatch):
-    plan = asyncio.run(planner_agent.plan_session(USER, BOOK))
-    assert isinstance(plan, SessionPlan) and plan.chunk_indices == [0, 1]
-    db.tables["reading_progress"][0]["last_chunk_index"] = 4
-    assert asyncio.run(planner_agent.plan_session(USER, BOOK)).chunk_indices == []
-
-
-def test_plan_session_returns_none_when_the_planner_fails(db, monkeypatch):
-    def broken(*args, **kwargs):
-        raise RuntimeError("database down")
-
-    monkeypatch.setattr(planner_agent, "load_progress", broken)
-    assert asyncio.run(planner_agent.plan_session(USER, BOOK)) is None
-
-
 # --- test generator -------------------------------------------------------------------------
 
 
@@ -128,13 +115,6 @@ def test_the_test_generator_stores_a_test_with_the_plan_s_mix(db):
     assert db.tables["sessions"][0]["test_questions"] == result["test_questions"]
     entry = assert_one_decision(result, "test_generator")
     assert entry["output_summary"]["questions"] == 5
-
-
-def test_prepare_test_runs_the_node_through_the_workflow(db):
-    db.tables["question_bank"] = bank_rows(0, "chunk-0")
-    db.tables["sessions"] = [{"id": "s1", "user_id": USER, "book_id": BOOK}]
-    questions = test_generator_agent.prepare_test("s1", USER, BOOK, [0], None)
-    assert len(questions) == 5 and db.tables["sessions"][0]["test_questions"] == questions
 
 
 def test_the_test_generator_reports_missing_input():
@@ -180,7 +160,14 @@ def test_the_knowledge_state_node_moves_mastery_and_reports_the_rows(kdb):
     assert entry["output_summary"] == {"questions": 2, "concepts": 2}
 
 
-def test_a_failing_mastery_update_is_an_error_entry_not_an_exception(kdb, monkeypatch, capsys):
+def test_a_test_that_names_no_concept_moves_nothing(kdb):
+    state = submit_state(test_questions=[{"id": "q1", "strategy": "cloze"}, {"id": "q2", "strategy": "cloze"}])
+    result = knowledge_agent.knowledge_state_node(state)
+    assert result["mastery_updates"] == [] and "errors" not in result
+    assert assert_one_decision(result, "knowledge_state")["output_summary"] == {"questions": 0, "concepts": 0}
+
+
+def test_a_failing_mastery_update_is_an_error_entry_not_an_exception(kdb, monkeypatch):
     def broken(*args, **kwargs):
         raise RuntimeError("mastery table is down")
 
@@ -188,14 +175,6 @@ def test_a_failing_mastery_update_is_an_error_entry_not_an_exception(kdb, monkey
     result = knowledge_agent.knowledge_state_node(submit_state())
     assert result["errors"] == ["knowledge_state: mastery table is down"]
     assert_one_decision(result, "knowledge_state")
-    knowledge_agent.apply_test(USER, BOOK, "s2", QUESTIONS, GRADED["per_question"])  # logs, does not raise
-    # The prefix comes from the node's errors entry: apply_test went through the workflow.
-    assert "Mastery update failed for session s2: knowledge_state: mastery table is down" in capsys.readouterr().out
-
-
-def test_apply_test_runs_the_node_through_the_workflow(kdb):
-    knowledge_agent.apply_test(USER, BOOK, "s2", QUESTIONS, GRADED["per_question"])
-    assert {r["last_event_id"] for r in kdb.tables["user_concept_mastery"]} == {"s2"}
 
 
 # --- optimizer (C8.4b) -------------------------------------------------------------------------
@@ -253,15 +232,6 @@ def test_question_outcomes_build_up_across_tests_and_move_the_mix(kdb):
     stored = run_optimizer(60)["policy_adjustments"]
     assert len(stored["recent_outcomes"]) == policy.OPT_OUTCOME_HISTORY
     assert "question_mix" in stored["rules"]
-
-
-def test_optimize_pace_returns_what_the_results_page_reads(kdb):
-    kdb.tables["sessions"] = sessions_rows()
-    pace = asyncio.run(optimizer_agent.optimize_pace(
-        session_id="s2", user_id=USER, book_id=BOOK, chunk_indices=[3],
-        evaluation_result={**GRADED, "percentage": 50}, test_questions=QUESTIONS,
-    ))
-    assert {"next_chunk_multiplier", "focus_duration_minutes", "re_read_mode", "reason"} <= set(pace)
 
 
 @pytest.mark.parametrize("module", [optimizer_agent, knowledge_agent])

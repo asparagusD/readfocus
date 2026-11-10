@@ -206,3 +206,19 @@ def test_the_module_does_no_io():
     source = inspect.getsource(pace_module)
     for banned in ("supabase", "embedder", "llm", "langchain", "random", "datetime", "time.time", "open("):
         assert banned not in source
+
+
+# --- no test: an abandoned session (C8.5) --------------------------------------------------------
+
+
+def test_no_test_leaves_the_queue_and_holds_without_history():
+    result = run(None, chunk_indices=[4], re_read_queue=[4, 1])
+    assert result.band == "none" and result.re_read_queue == [4, 1] and result.re_read_mode is False
+    assert result.rolling_percentage is None and result.next_chunk_multiplier == 1.0
+    assert result.reason == "No test this time — the next session stays the same length."
+
+
+def test_no_test_follows_the_earlier_tests_and_abandonment():
+    assert run(None, recent_percentages=[90, 85]).next_chunk_multiplier == pytest.approx(1.15)
+    stopped = run(None, recent_percentages=[90], recent_abandoned=[True] * policy.OPT_ABANDON_LIMIT)
+    assert stopped.next_chunk_multiplier == pytest.approx(policy.OPT_ABANDON_FACTOR)

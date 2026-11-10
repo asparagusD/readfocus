@@ -37,8 +37,8 @@ def test_decisions_and_errors_are_append_only():
         assert operator.add in annotation.__metadata__
 
 
-def test_event_takes_only_the_two_flows():
-    assert set(typing.get_args(hints()["event"])) == {"start", "submit"}
+def test_event_takes_only_the_four_flows():
+    assert set(typing.get_args(hints()["event"])) == {"start_session", "finish_reading", "submit_answers", "abandon"}
 
 
 def test_a_compiled_graph_keeps_every_node_s_decisions_in_order():

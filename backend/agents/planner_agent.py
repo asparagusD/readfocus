@@ -3,8 +3,9 @@
 Reads the reader's progress (creating the row on a first session, with
 nothing read yet), the profile speed, the candidate sections and their
 concepts, the reader's mastery and each section's question difficulty;
-calls the pure decide; pops a re-read from the queue; and returns the plan
-with one decisions entry. The optimizer's last pace_recommendation supplies
+calls the pure decide; pops a re-read from the queue when a session starts
+with it (a plan made after a submit is a preview); and returns the plan with
+one decisions entry. The optimizer's last pace_recommendation supplies
 the multiplier, the reading speed it assumed and the recent score.
 """
 
@@ -18,7 +19,6 @@ from backend.agents.planner.strategy import (
     ConceptState,
     PaceHint,
     PlannerInput,
-    SessionPlan,
     decide,
 )
 from backend.agents.state import AgentState, decision
@@ -79,7 +79,7 @@ async def planner_node(state: AgentState) -> dict:
     progress = load_progress(user_id, book_id)
     data = build_input(user_id, book_id, progress, datetime.now(UTC))
     plan = decide(data)
-    if plan.mode == "re_read" and progress.get("id"):
+    if plan.mode == "re_read" and progress.get("id") and state.get("event") == "start_session":
         queue = [index for index in data.re_read_queue if index != plan.chunk_indices[0]]
         supabase.table("reading_progress").update({"re_read_queue": queue}).eq("id", progress["id"]).execute()
     return {
@@ -92,15 +92,3 @@ async def planner_node(state: AgentState) -> dict:
         }, plan.model_dump(include={"mode", "rule", "chunk_indices", "assigned_words", "focus_duration_minutes"}),
             plan.reason)],
     }
-
-
-async def plan_session(user_id: str, book_id: str) -> SessionPlan | None:
-    """Run the workflow's planner node. None if it failed; a plan with no sections if the book is done."""
-    from backend.agents.graph import workflow
-
-    try:
-        result = await workflow.ainvoke(cast(AgentState, {"user_id": user_id, "book_id": book_id, "status": "reading"}))
-        return SessionPlan(**result["plan"])
-    except Exception as error:  # noqa: BLE001 - the router answers 500
-        print(f"Planner failed for book {book_id}: {error}")
-        return None

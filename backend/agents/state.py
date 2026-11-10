@@ -15,7 +15,7 @@ import operator
 import time
 from typing import Annotated, Any, Literal, TypedDict
 
-Event = Literal["start", "submit"]
+Event = Literal["start_session", "finish_reading", "submit_answers", "abandon"]
 
 
 class Decision(TypedDict):
@@ -40,7 +40,7 @@ class AgentState(TypedDict, total=False):
     user_id: str
     book_id: str
     session_id: str
-    event: Event  # which flow: start a session, or submit its test
+    event: Event  # which flow runs: see backend/agents/graph.py
     chunk_indices: list[int]
     chunk_texts: list[str]
     test_questions: list[dict]
@@ -58,7 +58,7 @@ class AgentState(TypedDict, total=False):
     errors: Annotated[list[str], operator.add]
 
     # Kept for the current nodes and routers
-    status: str  # 'reading', 'testing', 'evaluating', 'completed': routes the graph until C8.5
+    status: str  # no longer routes the graph (C8.5)
     session_plan: dict
     user_answers: list[str]
     evaluation_result: dict

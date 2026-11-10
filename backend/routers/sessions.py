@@ -1,27 +1,22 @@
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from datetime import datetime
+from typing import Any, cast
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
-from typing import Any, List, cast
-from datetime import datetime
 
+from backend.agents.evaluator_agent import evaluate_single_answer, load_passage, warm_up
+from backend.agents.question_generation.assembler import public_question
+from backend.agents.workflow import run_finish, run_start, run_submit
 from backend.dependencies import get_current_user
 from backend.services.supabase_client import supabase
-from backend.services.question_bank import assemble_session_test
-from backend.agents.planner_agent import plan_session
-from backend.agents.test_generator_agent import prepare_test
-from backend.agents.question_generation.assembler import public_question
-from backend.agents.evaluator_agent import (
-    evaluate_answers, evaluate_single_answer, load_passage, warm_up,
-)
-from backend.agents.optimizer_agent import optimize_pace
-from backend.agents.knowledge_state.agent import apply_test
 
 router = APIRouter()
 
-def assemble_test_background(session_id: str, user_id: str, book_id: str, chunk_indices: List[int], mix: list | None = None):
-    """Runs the test generator node while the reader reads: questions from the bank, in the planner's mix."""
+def assemble_test_background(session_id: str, user_id: str, book_id: str, chunk_indices: list[int], mix: list | None = None):
+    """Runs the finish_reading flow while the reader reads: questions from the bank, in the planner's mix."""
     try:
-        prepare_test(session_id, user_id, book_id, chunk_indices, mix)
+        run_finish(session_id, user_id, book_id, chunk_indices, mix)
     except Exception as e:
         print(f"Background test assembly failed: {e}")
     warm_up()  # load the grading model while the reader reads, not when they answer
@@ -34,7 +29,7 @@ class FinishReadingRequest(BaseModel):
     actual_duration_minutes: int
 
 class SubmitAnswersRequest(BaseModel):
-    answers: List[str]
+    answers: list[str]
     time_taken_seconds: int
 
 class EvaluateSingleRequest(BaseModel):
@@ -43,8 +38,8 @@ class EvaluateSingleRequest(BaseModel):
 
 @router.post("/start")
 async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
-    # 1. Run planner agent
-    plan = await plan_session(user_id, req.book_id)
+    # 1. Run the start_session flow: the planner
+    plan = await run_start(user_id, req.book_id)
     if not plan:
         raise HTTPException(status_code=500, detail="Planner failed to generate a session plan.")
         
@@ -102,9 +97,7 @@ async def finish_reading(session_id: str, req: FinishReadingRequest, user_id: st
     # 2. The test is normally assembled in the background at start; if it is not there yet, do it now
     if not test_questions:
         chunk_indices = list(range(sess["chunk_start_index"], sess["chunk_end_index"] + 1))
-        test_questions = await run_in_threadpool(
-            assemble_session_test, session_id, user_id, sess["book_id"], chunk_indices
-        )
+        test_questions = await run_in_threadpool(run_finish, session_id, user_id, sess["book_id"], chunk_indices, None)
 
     # 3. Only the public part of each question leaves the server: no answers, evidence or hints
     return {
@@ -135,7 +128,7 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
     return {"status": "graded"}
 
 @router.post("/{session_id}/submit-answers")
-async def submit_answers(session_id: str, req: SubmitAnswersRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+async def submit_answers(session_id: str, req: SubmitAnswersRequest, user_id: str = Depends(get_current_user)):
     # 1. Fetch session and questions
     sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
     if not sess_resp.data:
@@ -151,33 +144,15 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, background_
     if not test_questions:
         raise HTTPException(status_code=400, detail="No test questions found. Did you call finish-reading?")
         
-    # 2. Call evaluator
-    eval_result = await evaluate_answers(
-        session_id=session_id,
-        user_id=user_id,
-        book_id=book_id,
-        chunk_indices=chunk_indices,
-        test_questions=test_questions,
-        user_answers=req.answers,
-        time_taken_seconds=req.time_taken_seconds
+    # 2. Run the submit_answers flow: evaluator -> knowledge state -> optimizer -> planner
+    final = await run_submit(
+        session_id, user_id, book_id, chunk_indices, test_questions, req.answers, req.time_taken_seconds
     )
-    if not eval_result:
+    eval_result = final.get("evaluation_result")
+    if final.get("error") or not eval_result:
+        print(f"Evaluate Answers Error: {final.get('error')}")
         raise HTTPException(status_code=500, detail="Failed to evaluate answers.")
-
-    # 2b. Move the reader's concept mastery after the response is sent: the knowledge state node
-    background_tasks.add_task(
-        apply_test, user_id, book_id, session_id, test_questions, eval_result.get("per_question") or []
-    )
-
-    # 3. Call optimizer
-    pace_rec = await optimize_pace(
-        session_id=session_id,
-        user_id=user_id,
-        book_id=book_id,
-        chunk_indices=chunk_indices,
-        evaluation_result=eval_result,
-        test_questions=test_questions,
-    )
+    next_plan = final.get("plan") or {}
     
     # 4. Update session
     supabase.table("sessions").update({
@@ -191,7 +166,9 @@ async def submit_answers(session_id: str, req: SubmitAnswersRequest, background_
         "percentage": eval_result.get("percentage"),
         "per_question": eval_result.get("per_question"),
         "low_confidence_count": eval_result.get("low_confidence_count", 0),
-        "pace_recommendation": pace_rec
+        "pace_recommendation": final.get("pace_recommendation"),  # none when every grade was low-confidence
+        "next_session": {key: next_plan.get(key) for key in ("mode", "chunk_indices", "focus_duration_minutes", "reason")}
+        if next_plan else None,
     }
 
 @router.post("/{session_id}/abandon")

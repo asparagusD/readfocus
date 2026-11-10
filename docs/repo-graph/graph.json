@@ -434,6 +434,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:docs/MIGRATION_AUDIT.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/PROGRESS.md",
       "type": "file",
       "role": "doc",

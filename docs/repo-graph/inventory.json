@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 125,
-    "inventoried": 114,
+    "tracked": 126,
+    "inventoried": 115,
     "excluded": 11
   },
   "files": [
@@ -324,13 +324,21 @@
       "lines": 150,
       "size_bytes": 5522,
       "role": "doc",
-      "purpose": "Debug log rules and entry template; no entries yet."
+      "purpose": "Debug log rules, entry template, and one entry per failure."
+    },
+    {
+      "path": "docs/MIGRATION_AUDIT.md",
+      "language": "markdown",
+      "lines": 364,
+      "size_bytes": 28423,
+      "role": "doc",
+      "purpose": "Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change."
     },
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 244,
-      "size_bytes": 20255,
+      "lines": 249,
+      "size_bytes": 21448,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -857,8 +865,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 116,
-      "size_bytes": 15336,
+      "lines": 117,
+      "size_bytes": 15551,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

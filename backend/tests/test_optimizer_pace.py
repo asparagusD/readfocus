@@ -218,7 +218,14 @@ def test_no_test_leaves_the_queue_and_holds_without_history():
     assert result.reason == "No test this time — the next session stays the same length."
 
 
-def test_no_test_follows_the_earlier_tests_and_abandonment():
-    assert run(None, recent_percentages=[90, 85]).next_chunk_multiplier == pytest.approx(1.15)
+def test_a_run_with_no_test_holds_the_multiplier():
+    # The earlier tests moved the multiplier when they were submitted; a run without a test must not
+    # apply them again (issue 31).
+    for recent in ([10], [90, 85], [30, 60, 95]):
+        result = run(None, recent_percentages=recent, previous_multiplier=1.3)
+        assert result.next_chunk_multiplier == pytest.approx(1.3) and "no_test_hold" in result.rules
+
+
+def test_no_test_follows_abandonment_only():
     stopped = run(None, recent_percentages=[90], recent_abandoned=[True] * policy.OPT_ABANDON_LIMIT)
     assert stopped.next_chunk_multiplier == pytest.approx(policy.OPT_ABANDON_FACTOR)

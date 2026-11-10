@@ -738,3 +738,44 @@ Failed before the fix (the toy node was in the graph); passes after.
 
 ### Commit
 C8.5 commit, feat(agents): chain evaluator, knowledge state, optimizer and planner in LangGraph
+
+## 2026-11-11 C8.5 — abandoning a session halves the pace again after one bad test (issue 31)
+
+**Status:** fixed
+
+### Symptom
+In the C8.6 check on the dev project (scratchpad script, test user A): a
+first test scored 1/50, so the submit run's optimizer moved the multiplier
+1.0 -> 0.5 (band `fail`). Abandoning the next session then stored a pace
+recommendation with band `none` and rules `['rolling_fail']`: the abandon
+run applied the earlier tests' band again. Expected: a run with no test
+holds the multiplier, and only the abandonment rule can lower it.
+
+### Repro
+    pytest "backend/tests/test_optimizer_pace.py::test_a_run_with_no_test_holds_the_multiplier" -q
+
+### Hypotheses
+1. Rule 7 of `backend/agents/optimizer/pace.py` (my C8.5 change) takes the
+   factor from the earlier tests' rolling band when `percentage` is None,
+   but those tests already moved the multiplier when they were submitted.
+   Evidence: `pace.py:129-135` builds the window from `recent_percentages`
+   alone and reads the factor from its band. Ruled out if the abandon run
+   got a different `previous_multiplier`. Result: confirmed; the stored
+   rules name `rolling_fail` and the window is the submitted test's 2%.
+
+### Root cause
+`decide` (`backend/agents/optimizer/pace.py:135`) applied a factor to the
+same scores twice: once when each test was submitted, again on any later
+run without a test. The C8.5 test `test_no_test_follows_the_earlier_tests_
+and_abandonment` asserted that behaviour (1.15 after earlier 90 and 85).
+
+### Fix
+With no test the factor is 1.0 (rule `no_test_hold`); the rolling mean is
+still reported, and the abandonment cap still applies. The C8.5 test that
+asserted the double application now asserts the hold.
+
+### Regression test
+`backend/tests/test_optimizer_pace.py::test_a_run_with_no_test_holds_the_multiplier`.
+
+### Commit
+fix(agents): hold the pace on a run with no test

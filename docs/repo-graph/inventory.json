@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7618,
+      "size_bytes": 7654,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -193,8 +193,8 @@
     {
       "path": "backend/agents/optimizer/pace.py",
       "language": "python",
-      "lines": 171,
-      "size_bytes": 7632,
+      "lines": 175,
+      "size_bytes": 7846,
       "role": "agent",
       "purpose": "Learning optimizer, pure: decide(OptimizerInput) sets the next pace multiplier from the rolling score band (80/50/20%, the old optimizer's thresholds), never grows after a low test or recent abandonment, keeps it in the planner's range; queues or prioritises the session's sections for re-reading by this test's band; derives focus minutes from a bounded measured reading speed; and moves one question place to the worst failing type. Keeps the keys Results.jsx reads."
     },
@@ -665,8 +665,8 @@
     {
       "path": "backend/tests/test_optimizer_pace.py",
       "language": "python",
-      "lines": 224,
-      "size_bytes": 9765,
+      "lines": 231,
+      "size_bytes": 10073,
       "role": "test",
       "purpose": "Pytest on hand-made scores, sessions and answers: every score band at its boundaries, the re-read queue rules and bound, rolling damping, no growth after a low test, compounding within bounds, abandonment and its window, focus minutes and speed bounds, question-mix moves and their bounds, reason wording, the Results keys, and that decide is pure."
     },
@@ -753,8 +753,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 740,
-      "size_bytes": 31246,
+      "lines": 781,
+      "size_bytes": 33140,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -769,8 +769,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1357,
-      "size_bytes": 223915,
+      "lines": 1358,
+      "size_bytes": 224932,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

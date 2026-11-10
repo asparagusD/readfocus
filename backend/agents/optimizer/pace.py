@@ -14,7 +14,8 @@ Rules, every bound in backend/agents/policy.py:
 6. Question mix: the worst failing question type gets one place, taken from
    the passing group with most places; one move per test, places in range.
 7. No test (an abandoned session, percentage None): band "none", the queue
-   is left alone, and the factor comes from the earlier tests' mean alone.
+   is left alone, and the multiplier holds: the earlier tests already moved
+   it when they were submitted. Only the abandonment cap can lower it.
 
 The output keeps the keys Results.jsx reads (next_chunk_multiplier,
 focus_duration_minutes, re_read_mode, reason).
@@ -134,6 +135,9 @@ def decide(data: OptimizerInput) -> PaceRecommendation:
     rolling = sum(window) / len(window) if window else None
     rolling_band, factor = _band(rolling) if rolling is not None else ("none", 1.0)
     rules.append(f"rolling_{rolling_band}")
+    if band == "none":  # those tests moved the multiplier when they were submitted
+        factor = 1.0
+        rules.append("no_test_hold")
 
     if band in ("reduce", "fail") and factor > 1.0:
         factor = 1.0

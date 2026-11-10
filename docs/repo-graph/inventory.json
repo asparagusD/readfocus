@@ -554,7 +554,7 @@
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
       "lines": 389,
-      "size_bytes": 15082,
+      "size_bytes": 15092,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -569,8 +569,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 675,
-      "size_bytes": 109096,
+      "lines": 736,
+      "size_bytes": 114061,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

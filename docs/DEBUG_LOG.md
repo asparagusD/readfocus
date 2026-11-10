@@ -103,7 +103,7 @@ command in the repro. Failed before: yes (the diff above). Passes after:
 yes, `make graph` twice with no diff after the commit.
 
 ### Commit
-fix(graph): regenerate repo graph after the C5.5 tracker edit
+`8c4a9fa` fix(graph): regenerate repo graph after the C5.5 tracker edit
 
 ## 2026-11-10 C5.1 — graph tooling test fails after a seventh table is added
 

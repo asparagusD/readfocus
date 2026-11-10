@@ -153,8 +153,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 19,
-      "size_bytes": 600,
+      "lines": 33,
+      "size_bytes": 1065,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far the question generation ones."
     },
@@ -169,8 +169,8 @@
     {
       "path": "backend/agents/question_generation/strategies.py",
       "language": "python",
-      "lines": 113,
-      "size_bytes": 4146,
+      "lines": 216,
+      "size_bytes": 9173,
       "role": "agent",
       "purpose": "Pure extractive question strategies over one chunk's sentences and concepts; every question carries evidence that appears verbatim in the chunk."
     },
@@ -441,8 +441,8 @@
     {
       "path": "backend/tests/test_question_strategies.py",
       "language": "python",
-      "lines": 90,
-      "size_bytes": 4047,
+      "lines": 172,
+      "size_bytes": 8612,
       "role": "test",
       "purpose": "Pytest on fixed text: verbatim sentence spans and each question strategy's prompt, answer and evidence, with no model or database."
     },
@@ -505,8 +505,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 668,
-      "size_bytes": 91091,
+      "lines": 669,
+      "size_bytes": 92811,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

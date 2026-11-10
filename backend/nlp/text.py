@@ -12,6 +12,7 @@ English only. Every function is pure: same input, same output.
 import re
 import unicodedata
 
+
 def _words(block: str) -> frozenset[str]:
     return frozenset(block.split())
 

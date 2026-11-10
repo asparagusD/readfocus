@@ -325,7 +325,7 @@ Each use is the file and line of the first import of that service.
 | `backend/dependencies.py` | 20 | get_current_user FastAPI dependency: resolves a Supabase JWT to a user id through supabase.auth.get_user; anything else is a 401. |
 | `backend/nlp/__init__.py` | 1 | Package marker for backend.nlp, the local NLP building blocks (no API calls). |
 | `backend/nlp/embedder.py` | 74 | Local embeddings: one lazily loaded, thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE); embed and embed_one return unit-length float32 vectors. |
-| `backend/nlp/text.py` | 133 | Pure text utilities, standard library only: normalize (PDF hyphenation, line breaks, quotes), split_sentences with an abbreviation guard, tokenize, STOPWORDS, content_words, and informativeness, a 0..1 sentence score. |
+| `backend/nlp/text.py` | 134 | Pure text utilities, standard library only: normalize (PDF hyphenation, line breaks, quotes), split_sentences with an abbreviation guard, tokenize, STOPWORDS, content_words, and informativeness, a 0..1 sentence score. |
 | `frontend/src/lib/api.js` | 40 | fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response. |
 | `frontend/src/lib/supabase.js` | 6 | Creates the browser Supabase client; falls back to a hard-coded project URL and publishable key when the env vars are unset. |
 
@@ -386,9 +386,9 @@ Each use is the file and line of the first import of that service.
 | `CLAUDE.md` | 182 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
 | `README.md` | 135 | Product overview and architecture; still describes the pre-2.0 Groq and Google AI Studio setup and an orchestrator node that no longer exists. |
 | `docs/BENCHMARKS.md` | 232 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, and the C3.5 API baseline with its caveats. |
-| `docs/DEBUG_LOG.md` | 245 | Debug log rules, entry template, and one entry per failure. |
+| `docs/DEBUG_LOG.md` | 294 | Debug log rules, entry template, and one entry per failure. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 486 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 487 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 

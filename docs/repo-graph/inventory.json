@@ -209,8 +209,8 @@
     {
       "path": "backend/nlp/text.py",
       "language": "python",
-      "lines": 133,
-      "size_bytes": 5441,
+      "lines": 134,
+      "size_bytes": 5442,
       "role": "lib",
       "purpose": "Pure text utilities, standard library only: normalize (PDF hyphenation, line breaks, quotes), split_sentences with an abbreviation guard, tokenize, STOPWORDS, content_words, and informativeness, a 0..1 sentence score."
     },
@@ -417,8 +417,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 245,
-      "size_bytes": 9493,
+      "lines": 294,
+      "size_bytes": 11348,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -433,8 +433,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 486,
-      "size_bytes": 61520,
+      "lines": 487,
+      "size_bytes": 62292,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

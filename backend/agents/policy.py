@@ -32,6 +32,29 @@ DISTRACTOR_COUNT = 3
 DISTRACTOR_MIN_COSINE = 0.40
 DISTRACTOR_MAX_COSINE = 0.75
 
+# --- Question quality (backend/agents/question_generation/quality.py) ------
+
+# Evidence with fewer word tokens than this is a heading or a fragment, not
+# a sentence to ask about.
+QUALITY_MIN_EVIDENCE_TOKENS = 8
+
+# Two prompts whose embeddings have a cosine above this are the same
+# question; the one with the higher quality stays.
+QUALITY_DUPLICATE_COSINE = 0.9
+
+# Quality is a weighted sum of three parts, each 0..1; the weights sum to 1.
+QUALITY_WEIGHTS = {
+    "evidence": 0.6,   # informativeness of the evidence sentences
+    "answer": 0.2,     # answer short enough to grade
+    "key_terms": 0.2,  # key terms to grade it by
+}
+
+# Answer length in word tokens: full marks up to the first, none at the second.
+QUALITY_ANSWER_TOKENS = (25, 60)
+
+# This many key terms earn the full key-term part.
+QUALITY_KEY_TERMS_FULL = 3
+
 # Most key terms stored with one question.
 KEY_TERMS_MAX = 6
 

@@ -41,6 +41,7 @@ class Question(BaseModel):
     distractors: list[str] = []
     difficulty: float
     concept: str | None = None  # label of the concept the question is about
+    quality: float | None = None  # 0..1, set by quality.filter_questions
 
 
 CLOZE_LEAD = "Fill in the blank: "

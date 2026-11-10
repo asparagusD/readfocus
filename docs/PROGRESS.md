@@ -1314,7 +1314,51 @@ recommended minutes and the planner's word cap agree.
 | [x] C8 follow-up: issue 29, an HTTP/1.1 pool for the shared Supabase client | `196191a` | `backend/services/supabase_client.py` builds the client through `make_client`, which passes `ClientOptions(httpx_client=httpx.Client(http2=False, timeout=120))`; Auth, PostgREST and Storage all use that pool. New `backend/tests/test_supabase_client.py`. | Debug protocol, `docs/DEBUG_LOG.md` entry (the C7.4 entry now points to it). Repro on dev, scratchpad script, one shared client, threads each looping a GET, a PATCH that matches no row and a POST the CHECK constraint refuses (nothing written): default client, 8 threads x 25 loops, 29 and 5 errors in 600 calls (`ConnectionTerminated`, `Server disconnected`, `LocalProtocolError`, `KeyError` inside `h2`); 1 thread, 0 errors; HTTP/1.1, 8 threads, 0 errors in 6.9 s against 10.0 s. The new client: 3 runs at 8 threads and 1 at 16, 3,000 calls, 0 errors. Regression test: failed before (no `make_client`), passes after. `python scripts/bench.py --runs 3 --flow-runs 5` (start right after ready, while ingestion runs; the C8.6 case that failed) then two more runs with `--keep` (5 and 2 flows, the second on a restarted server): all 12 flows 200 everywhere, upload and status included (Storage and Auth on the new pool). Standard checks: ruff 31 errors (32 before; the old file's unsorted import, I001, went with the rewrite; new baseline 31), `pytest backend/tests -q` 543 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 04:31 | One submit in the first run took 11.6 s (p95) with no error or retry in the log; not seen again in 7 flows, node durations steady (evaluator about 490 ms, knowledge state 185, optimizer 360, planner 455); recorded, not explained. New issue 34 found from the same durations |
 | [x] C8 follow-up: issue 33, grade a session once | `dd20a8a` | `submit-answers` claims the session with a conditional update (`status` not `completed` -> `completed`) before the submit run; a session already completed, or a claim lost to a concurrent submit, gets `stored_result`: the response rebuilt from its `test_results` row and the current pace recommendation, same keys, `next_session` null, nothing re-run (409 if no result is stored). A failed grading releases the claim. The page is unchanged. | Debug protocol, `docs/DEBUG_LOG.md` entry. Three tests in `test_api_sessions.py`: with the fix stashed 2 failed and 1 passed (the release test guards the new claim; the old code had none), restored 3 passed. `test_a_cached_grade_is_reused...` resubmitted on purpose and now resets the session to `testing` first. Standard checks: ruff 31 errors (baseline), `pytest backend/tests -q` 546 passed (543 before), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 04:33 | The stored replay has no `next_session` (the plan preview is not stored); Results does not read it |
 | [x] C8 follow-up: issue 34, store a session's test once | `23468a2` | `assemble_session_test` stores the test with an update conditional on `test_questions is null`; the run that finds one stored returns it and counts no use. finish-reading therefore shows the test that is graded. | Debug protocol, `docs/DEBUG_LOG.md` entry. `test_a_second_assembly_returns_the_stored_test_and_counts_nothing`: with the fix stashed 1 failed, restored passed; `test_finish_reading_shows_the_test_that_is_graded` passes either way (the fake runs the two in order). On dev, scratchpad script, start then finish-reading at once, 3 sessions each: with the fix 3 of 3 show the stored test; with the old code also 3 of 3 (the inline run stored last there), so the mismatch was not reproduced on dev, only the double run and count. Standard checks: ruff 31 errors (baseline), `pytest backend/tests -q` 548 passed (546 before), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 04:37 | Both runs still happen (the inline one is wasted work, about 1 s); avoiding it needs finish-reading to wait for the background run |
-| [x] C8 follow-up: issue 28, fewer round trips on submit and start | this commit | New `fetch_all` in `backend/services/supabase_client.py` runs independent queries at once on worker threads (safe on the HTTP/1.1 pool from issue 29). The planner reads progress, then chunks, concepts, mastery, bank difficulty (now by chunk range) and profile in one parallel round trip; the optimizer reads progress, sessions and profile at once; the evaluator stores `test_results` while reading history and progress, and computes the rolling average from this test plus the latest earlier ones (`ROLLING_AVERAGE_TESTS = 10`, the old limit, now in `policy.py`); `submit-answers` claims the session first with an update that returns its row, selecting only when the claim fails. Behaviour unchanged. | `pytest backend/tests -q` 548 passed, unchanged tests (one failure on the way: a loop variable shadowed the optimizer's evaluation result, 24 tests failed until renamed). Dev, `scripts/bench.py --runs 3 --flow-runs 5 --keep`, books deleted: start p50 921 -> 594 ms, submit p50 1.88 -> 1.12 s (p95 1.27 s); submit nodes about 320, 200, 190, 200 ms (`docs/BENCHMARKS.md`). Standard checks: ruff 31 errors (baseline; 32 on the first run, an unused import left in the optimizer, removed), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 04:41 | Issue 28 stays open: about 10 round trips remain in sequence on submit; under 500 ms needs a structural change (see the commit notes). Upload measured 3.28 s in this run against 1.23 s before, on an unchanged path |
+| [x] C8 follow-up: issue 28, fewer round trips on submit and start | `ebbaac9` | New `fetch_all` in `backend/services/supabase_client.py` runs independent queries at once on worker threads (safe on the HTTP/1.1 pool from issue 29). The planner reads progress, then chunks, concepts, mastery, bank difficulty (now by chunk range) and profile in one parallel round trip; the optimizer reads progress, sessions and profile at once; the evaluator stores `test_results` while reading history and progress, and computes the rolling average from this test plus the latest earlier ones (`ROLLING_AVERAGE_TESTS = 10`, the old limit, now in `policy.py`); `submit-answers` claims the session first with an update that returns its row, selecting only when the claim fails. Behaviour unchanged. | `pytest backend/tests -q` 548 passed, unchanged tests (one failure on the way: a loop variable shadowed the optimizer's evaluation result, 24 tests failed until renamed). Dev, `scripts/bench.py --runs 3 --flow-runs 5 --keep`, books deleted: start p50 921 -> 594 ms, submit p50 1.88 -> 1.12 s (p95 1.27 s); submit nodes about 320, 200, 190, 200 ms (`docs/BENCHMARKS.md`). Standard checks: ruff 31 errors (baseline; 32 on the first run, an unused import left in the optimizer, removed), lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 04:41 | Issue 28 stays open: about 10 round trips remain in sequence on submit; under 500 ms needs a structural change (see the commit notes). Upload measured 3.28 s in this run against 1.23 s before, on an unchanged path |
+
+Close review (2026-11-11 04:45):
+
+- **Checks.** ruff 31 errors and ESLint 22 errors, 2 warnings (baseline,
+  not zero); `pytest backend/tests -q` 548 passed; frontend build passes;
+  `import backend.main` exit 0; tooling 62 passed; `make graph` and
+  `make agent-graph` leave `docs/repo-graph/` unchanged.
+- **Steps.** C8.1 to C8.8 ticked (C8.4 as C8.4a and C8.4b), two C8.5 fixes
+  (issues 31, 32), one C8.G fix; **G3: PASS** on the second run. Four
+  follow-ups at the user's request: issues 29, 33 and 34 fixed, 28
+  improved and left open by the user's choice.
+- **Graph.** Node visit order per event, from `astream(stream_mode="updates")`
+  in `backend/tests/test_graph.py`: `start_session` planner;
+  `finish_reading` test_generator; `submit_answers` evaluator,
+  knowledge_state, optimizer, planner (evaluator, knowledge_state, planner
+  when every grade is low-confidence; evaluator alone on an evaluator
+  error); `abandon` optimizer; any other event nothing.
+- **RSS.** 132 MB with `backend.main` and the workflow, 327 MB with the
+  embedder loaded and used (one process, unchanged by C8.8); server
+  335 to 336 MB after a full journey; idle server 134 MB.
+- **Removed packages.** `langchain`, `langchain-community`,
+  `langchain-groq`, `groq`, `langchain-google-genai`, `tenacity` (still
+  installed through `langchain-core`); fresh install 123 -> 106 packages,
+  363 -> 296 MB. `langgraph` 1.2.20 and `langchain-core` 1.7.6 kept.
+- **Diff.** `git diff readfocus-2.0...HEAD`: 53 files, 4,109 insertions,
+  1,224 deletions; `git diff --check` clean; no secret-like strings;
+  nothing under `frontend/`; one migration (009, dev only, additive).
+- **Blocking findings.** None. The new reads and writes are scoped to the
+  user from the token (claim, stored result, decisions, progress,
+  mastery); `agent_decisions` is readable only by its owner.
+- **Non-blocking.**
+  - Issue 17 (open since C2.5): `POST /sessions/start` does not check that
+    the book belongs to the caller; since C8.4a the planner also writes a
+    progress row and decisions for that pair. No new data is exposed
+    beyond issue 17's.
+  - If the optimizer or planner raises after the evaluator stored the
+    result, submit releases the claim, and a retry stores a second
+    `test_results` row.
+  - Two first `start` calls at the same moment can race on inserting the
+    progress row; the loser answers 500.
+  - Issue 28 open: submit p50 1.12 s, start 0.59 s.
+  - The journeys used the API endpoints, not the pages in a browser.
+- **Time.** 1 h 50 min of wall-clock, from the plan at 02:55 to this review
+  at 04:45, against 2.0 h budgeted.
 
 ## C9
 

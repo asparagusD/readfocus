@@ -111,6 +111,10 @@
       "type": "env"
     },
     {
+      "id": "env:EMBED_THREADS",
+      "type": "env"
+    },
+    {
       "id": "env:ENV",
       "type": "env"
     },
@@ -332,6 +336,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/nlp/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/nlp/embedder.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/__init__.py",
       "type": "file",
       "role": "router",
@@ -423,6 +439,12 @@
     },
     {
       "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_embedder.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -771,6 +793,12 @@
     },
     {
       "id": "file:scripts/dev/create_test_users.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/measure_embedder.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -1713,6 +1741,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_embedder.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_health.py",
       "to": "file:backend/main.py"
     },
@@ -1993,6 +2026,11 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/dev/measure_embedder.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/manual/test_evaluator.py",
       "to": "file:backend/agents/evaluator_agent.py"
     },
@@ -2260,6 +2298,16 @@
       "type": "uses_env",
       "from": "file:backend/mcp_server.py",
       "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/nlp/embedder.py",
+      "to": "env:EMBED_THREADS"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/nlp/embedder.py",
+      "to": "env:FASTEMBED_CACHE"
     },
     {
       "type": "uses_env",

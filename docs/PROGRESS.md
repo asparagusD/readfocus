@@ -282,12 +282,130 @@ Close review (2026-11-10 12:18):
   Wall-clock from branch creation is 3 h 52 min because of the pause between
   the plan and C3.1.
 
-## C4
+## C4 — free intelligence
 
-Title to be filled from the promptbook.
+Branch `chunk/C4-free-intelligence`, created from `readfocus-2.0` at
+`4478a99`. Goal: the tested local-NLP building blocks every agent will use:
+local embeddings, a 384-dimension vector column, text utilities, concept
+extraction and a hybrid retriever, with ingestion moved onto the local
+model. No agent logic: nothing under `backend/agents/` is edited, and the
+Groq code stays as it is until its own chunk (issue 6).
+
+### Plan (written at chunk start, before any code)
+
+Design decisions that apply to every subchunk:
+
+- **Model.** `BAAI/bge-small-en-v1.5` through `fastembed` (ONNX, 384
+  dimensions), cached under `FASTEMBED_CACHE`. Fallback if it misses the G2
+  budget: `sentence-transformers/all-MiniLM-L6-v2`, also 384 dimensions, so
+  the C4.2 migration is the same either way. English only. **Outcome
+  (C4.1): the fallback was chosen at G2; see the log.**
+- **New dependencies: `fastembed` (C4.1) and `yake` (C4.4), nothing else.**
+  Both are on the approved list. No `scikit-learn` in this chunk: lexical
+  ranking is done by Postgres full-text search and cosine by `numpy`, which
+  is already installed (2.4.6). `rapidfuzz` waits for the evaluator chunk.
+  Each is pinned to the version pip installs on 3.11 and measured with
+  psutil in a fresh process before its commit (constraint 5).
+- **New modules go in `backend/services/`**, next to the code they replace,
+  so the repo graph gives them the `service` role. The old Google client
+  `backend/services/embeddings.py` is not edited or extended; it loses its
+  importers in C4.5 and C4.6 and is deleted in C8.
+- **Tests never load the real model or touch the network.** The offline
+  guard in `backend/tests/conftest.py` stays; unit tests use a small
+  deterministic fake embedder. One test per model runs only when the model
+  is already in the local cache and is skipped otherwise (CI has no cache).
+- **Database: dev project only, additive only** (constraint 2). The
+  `vector(1536)` column, its index and `match_chunks` are left untouched.
+- Every new tracked file gets a line in `tools/repo_graph/purposes.json`;
+  new files are `git add`-ed before `make graph` (issue 21), and
+  `docs/repo-graph/` is committed with the change.
+- Estimated lines are hand-written lines, tests included; migrations and
+  `docs/repo-graph/` do not count.
+
+| Step | Files | Est. lines | Tests | Est. time |
+|---|---|---|---|---|
+| C4.1a embedding service | `requirements.txt` (add `fastembed`, pinned), `backend/services/local_embeddings.py` (new: `MODEL_NAME`, `EMBEDDING_DIM = 384`; one lazily loaded model behind a lock, never per request; `embed_texts(texts) -> float32 array (n, 384)`, L2-normalised, batched; `embed_query(text)`; a chunk longer than the model's 512-token window is split into word windows, embedded and mean-pooled, so the end of a 600-word chunk is not silently dropped; onnxruntime thread count capped), `backend/tests/test_local_embeddings.py` (new), `backend/tests/conftest.py` (a `fake_embedder` fixture for this and later subchunks), `tools/repo_graph/purposes.json` | 190 (85 service, 80 tests, 20 conftest, 5 other) | 7 with the fake model: shape and dtype; rows are unit length; empty list and empty string; long text is windowed and pooled; the model is constructed once across calls; `FASTEMBED_CACHE` is honoured; batching keeps input order. 1 with the real model, skipped when it is not cached: 384 values, and a paraphrase scores closer than an unrelated sentence | 35 min |
+| C4.1b memory and latency measurement, 🚦 Gate G2 | `scripts/dev/measure_model.py` (new: in a fresh process, RSS before import, after import, after model load and after 50 embeds; cold load time; p50 / p95 for one query and for one 600-word chunk; chunks per second in batches of 8), `backend/tests/test_measure_model.py` (new), `docs/BENCHMARKS.md` (the memory-rule table with its first row, plus the latency table), `tools/repo_graph/purposes.json`. Then `scripts/dev/measure_rss.py` for the whole backend with the model loaded. **Stop and present the numbers; C4.2 starts only after the user passes G2** | 150 (80 script, 30 tests, 40 doc) | 2 on the script's pure helpers (percentiles, row formatting). The measurement itself is run by hand, 3 runs | 30 min + user |
+| C4.2 additive 384-dim vector migration (dev only) | `supabase/migrations/005_local_embeddings.sql` (new: `ALTER TABLE chunks ADD COLUMN IF NOT EXISTS embedding_384 vector(384)`; an HNSW cosine index on it, which needs no row count to tune, or ivfflat if the dev project's pgvector is older than 0.5; `match_chunks_384(query_embedding vector(384), match_book_id, match_count)` returning the same four columns as `match_chunks` and skipping rows whose new embedding is null), `backend/tests/test_migrations.py` (new) | 60 (25 SQL, 35 tests) | 3 static checks over `supabase/migrations/`: no `DROP` and no `ALTER ... DROP/TYPE` in any file; 005 declares `vector(384)`, equal to `EMBEDDING_DIM`; 001 to 004 are byte-identical to `readfocus-2.0`. By hand on the dev project, read-only after applying: the column and function exist, `match_chunks_384` answers for a zero vector, `match_chunks` still answers, chunk count unchanged | 25 min |
+| C4.3 text utilities | `backend/services/text_utils.py` (new, standard library only: `normalize` for Unicode, whitespace, curly quotes and words hyphenated across a line break; `split_sentences` with an abbreviation guard; `tokenize`; a built-in `STOPWORDS` set; `content_tokens`; `word_windows`; `token_overlap`), `backend/tests/test_text_utils.py` (new), `backend/services/local_embeddings.py` (use `word_windows` instead of its private copy), `tools/repo_graph/purposes.json` | 200 (105 code, 90 tests, 5 other) | About 12, table-driven: "Dr. Smith", "e.g.", decimals, quotes and ellipses do not split a sentence; `?` and `!` do; PDF hyphenation is rejoined; normalising twice changes nothing; tokens are lower-case with no punctuation; stopwords are removed; overlap is 1 for identical and 0 for disjoint text; windows cover every word exactly once | 30 min |
+| C4.4 concept extraction | `requirements.txt` (add `yake`, pinned), `backend/services/concepts.py` (new: Pydantic `Concept` with `term`, `score`, `kind` (`keyphrase` or `name`) and `sentence_indexes`; `extract_concepts(text, top_k)` combines YAKE key phrases of 1 to 3 words with capitalised multi-word names, drops stopword-only and near-duplicate terms, and maps each to the sentences that contain it; deterministic, no I/O), `backend/tests/test_concepts.py` (new), `docs/BENCHMARKS.md` (memory row for `yake`, time per 600-word chunk), `tools/repo_graph/purposes.json` | 195 (100 code, 80 tests, 15 other) | 8 on fixed passages: the expected key terms are in the top 5; a person's name comes back as `name`; "reader" and "readers" merge; no stopword-only term; every `sentence_indexes` entry really contains the term; `top_k` is respected; empty and very short text return an empty list; same input gives the same output | 35 min |
+| C4.5a hybrid search in the database (dev only) | `supabase/migrations/006_hybrid_search.sql` (new: a generated `content_tsv tsvector` column on `chunks` with a GIN index; `hybrid_match_chunks(query_text, query_embedding vector(384), match_book_id, candidate_count)` returning each candidate's id, chunk_index, content, vector rank and text rank in one round trip), `backend/tests/test_migrations.py` (006 covered by the additive check) | 60 (40 SQL, 20 tests) | 1 added static check. By hand on the dev project: a distinctive phrase from a stored chunk returns that chunk by text rank while `embedding_384` is still null everywhere | 20 min |
+| C4.5b hybrid retriever | `backend/services/retriever.py` (rewritten in place: pure `rrf_fuse(rows, k, weights)` using reciprocal rank fusion; `search(query, book_id, top_k) -> list[RetrievedChunk]` embeds the query locally in a worker thread, calls `hybrid_match_chunks` once and fuses; `get_similar_chunks(query_text, book_id, k)` keeps its signature and now delegates to `search`, so the test generator needs no edit; the unused LangChain `get_user_retriever` and the import of `embeddings.py` go), `backend/tests/test_retriever.py` (new), `tools/repo_graph/purposes.json` | 190 (90 code, 95 tests, 5 other) | 8: a chunk ranked by both lists beats one ranked by a single list; text-only and vector-only candidates both survive; ties break by `chunk_index`; `top_k` and an empty result; weights change the order; `search` sends a 384-value vector and the book id to the RPC (fake Supabase, fake embedder); `get_similar_chunks` returns content strings as before; the module imports neither LangChain nor `embeddings.py` | 35 min |
+| C4.6a local embeddings in ingestion | `backend/services/book_ingestor.py` (embed in batches with `embed_texts` in a worker thread and insert each batch in one call, writing `embedding_384` and leaving `embedding` null; the first batch is five chunks so "ready after five" is unchanged; `chunk_text` and the extractors are not touched), `backend/tests/test_ingestor.py` (add ingestion tests), `tools/repo_graph/purposes.json` | 140 (40 code, 95 tests, 5 other) | 5 on the fake client and fake embedder: every chunk is inserted once, in order, with a 384-value `embedding_384`; the book turns `ready` after the first five and again correctly for a book of three; a failing embed marks the book `error`; no row sets the 1536 column; the module no longer imports `embeddings.py`. By hand: upload `sample.pdf` against the running backend, time upload to ready (baseline 5.07 s) and to fully ingested, and RSS during ingestion | 35 min |
+| C4.6b re-embed existing dev chunks | `scripts/dev/reembed_chunks.py` (new: refuses to run unless `ENV=development`; pages through chunks where `embedding_384` is null, embeds and updates in batches, resumable, `--limit` and `--dry-run`), `backend/tests/test_reembed.py` (new), `docs/BENCHMARKS.md` (chunks per second, final counts), `tools/repo_graph/purposes.json` | 130 (75 script, 40 tests, 15 other) | 3: refuses outside development; only null rows are selected and each is updated once; `--dry-run` writes nothing. By hand: run on the dev project (642 chunks at the audit), then a read-only count of rows still null, and one `search` that returns a vector rank | 25 min |
+
+Total: about 1,300 hand-written lines in 9 commits, about 4.5 hours plus
+the G2 wait.
+
+#### 🚦 Gate G2: memory and latency budget (end of C4.1b)
+
+Proposed pass criteria, to be confirmed by the user before C4.1 starts:
+
+| Measure | Budget | Why |
+|---|---|---|
+| Backend RSS after startup with the model loaded and 50 embeds done, Windows, `measure_rss.py` | at most 330 MB (today 138 MB server process) | Leaves room under Render Free's limit for ingestion and `yake`. The limit is believed to be 512 MB and is checked against Render's current docs in C4.1b, not assumed |
+| Model load, cold process, model already on disk | at most 5 s | Paid once per spin-up |
+| One query embed (about 30 words), warm | p95 at most 30 ms on this machine | The retriever runs inside a request |
+| 600-word chunks, batches of 8 | at least 5 chunks per second on this machine | Ingestion; Render's shared CPU will be several times slower |
+
+If a line fails: try the fallback model, then truncation instead of
+windowing, then stop and report. The gate result goes in this file as
+`G2: PASS` or `G2: FAIL` with the numbers.
+
+Safe to cut, in this order: the capitalised-name detection in C4.4 (keep
+YAKE key phrases); C4.6b as a script (re-upload the dev books instead);
+windowed pooling in C4.1a (truncate at 512 tokens); C4.5a and the text half
+of the retriever (vector-only through `match_chunks_384`).
+
+Risks and open questions:
+
+- **Applying migrations 005 and 006 to the dev project needs the user.**
+  The repo does not show how 001 to 004 were applied (Supabase CLI link or
+  the SQL editor), and the service-role key cannot run DDL. Nothing is
+  applied without a go-ahead; the read-only checks follow.
+- **Numbers from this machine are not Render's.** G2 is measured on Windows
+  with 32 GB RAM. If Docker is available, the same script can run in
+  `python:3.11-slim` with `--memory=512m` for a closer figure; not planned
+  unless asked for.
+- **Model download.** The first load fetches the model (tens of MB) from
+  Hugging Face, with no key. On Render the disk is not kept between
+  deploys, so the model has to be baked into the Docker image or it is
+  downloaded on every cold start. That is a `Dockerfile` change for the
+  deploy chunk, not C4; logged here so it is not lost.
+- **Books ingested between C4.6a and C4.6b**, and all 642 existing chunks
+  until C4.6b runs, have no `embedding_384`. The hybrid function still
+  finds them by text rank, which is the reason C4.5 comes before C4.6.
+- **New chunks have a null 1536 `embedding`.** Nothing reads that column
+  once C4.5b lands (`match_chunks` loses its only caller), but it and its
+  ivfflat index stay in the schema (constraint 2).
+- **`retriever.py` changes behaviour for the test generator**: its context
+  lookup stops calling Google AI Studio and starts returning hybrid
+  results. The agent file is not edited. `get_similar_chunks` still filters
+  on `book_id` only (same as today; issue 17 covers the caller).
+- **`backend/tests/test_offline.py` imports `embeddings.py`** to prove the
+  Google class is faked. It keeps passing in C4 and is revisited in C8.
+- **`fastembed` and `numpy`.** `numpy` is installed but not pinned in
+  `requirements.txt`; if `fastembed` or `yake` forces a different version
+  on 3.11, that is a debug-protocol entry and a pin, not a silent change.
+- **Concepts are computed on demand, not stored.** Storing them per chunk
+  at ingestion would need another column; decided when the test generator
+  is rewritten, with the per-chunk time from C4.4 as evidence.
+- **Not in this chunk:** agent rewrites, `policy.py`, the dictionary and
+  Wikipedia lookups, resumable ingestion and the upload size limit (audit
+  sections 6 and 8), and removal of the provider packages and keys (C8).
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C4.1 embedding service and 🚦 Gate G2 (planned as C4.1a and C4.1b; one commit, and `backend/nlp/embedder.py` instead of `backend/services/local_embeddings.py`, as the C4.1 prompt asks) | this commit | Added `backend/nlp/embedder.py`: one lazily loaded, thread-safe `fastembed` model (`sentence-transformers/all-MiniLM-L6-v2`, 384 dimensions, cache from `FASTEMBED_CACHE`), `embed(texts)` and `embed_one(text)` returning unit-length float32 vectors. Defaults set from the measurements: one ONNX Runtime thread (`EMBED_THREADS` overrides) and four texts per model call. Added `backend/tests/test_embedder.py`, `scripts/dev/measure_embedder.py`, `fastembed==0.9.1` and `numpy==2.4.6` in `requirements.txt`. No long-text windowing: the model truncates at 256 tokens. | Tests written first: collection error (`No module named 'backend.nlp'`), then 9 passed, the real-model test included. Measured (`docs/BENCHMARKS.md`): load 0.67 s and 180 MB RSS on Windows, 4.80 s and 213 MB in a `--cpus=0.1 --memory=512m` container; throttled batch of 32 short texts 1.80 s; throttled batch of 32 chunk-sized texts 18.3 s and 267 MB; whole backend with the model loaded 264 MB on Windows. Standard checks: ruff 83 errors (baseline), `pytest backend/tests -q` 39 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 61 passed. `make graph` twice, no diff after the second. | 2026-11-10 13:35 | **G2: stopped on `BAAI/bge-small-en-v1.5` (throttled batch of 32 chunk-sized texts 98.1 s against 5 s); the user chose the smaller model, `all-MiniLM-L6-v2`.** With it the gate passes on memory and on short texts; a throttled chunk-sized batch is still 18.3 s, so ingestion (C4.6) embeds in the background. A chunk is represented by its first 256 tokens. The real-model test is skipped where the model is not cached (CI). Whole-backend RSS not measured on Linux; retrieval quality of the two models not compared |
+| [ ] C4.2 additive 384-dim vector migration (dev only) | | | | | |
+| [ ] C4.3 text utilities | | | | | |
+| [ ] C4.4 concept extraction | | | | | |
+| [ ] C4.5a hybrid search in the database (dev only) | | | | | |
+| [ ] C4.5b hybrid retriever | | | | | |
+| [ ] C4.6a local embeddings in ingestion | | | | | |
+| [ ] C4.6b re-embed existing dev chunks | | | | | |
 
 ## C5
 

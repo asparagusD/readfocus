@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 136,
-    "inventoried": 125,
+    "tracked": 140,
+    "inventoried": 129,
     "excluded": 11
   },
   "files": [
@@ -49,10 +49,10 @@
     {
       "path": ".env.example",
       "language": "dotenv",
-      "lines": 23,
-      "size_bytes": 683,
+      "lines": 26,
+      "size_bytes": 842,
       "role": "config",
-      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE, and the two provider keys due for removal in C8."
+      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE, the optional EMBED_THREADS, and the two provider keys due for removal in C8."
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7267,
+      "size_bytes": 7268,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -189,6 +189,22 @@
       "size_bytes": 4285,
       "role": "entry",
       "purpose": "Standalone FastMCP server with three Supabase tools (reading history, comprehension trend, chunk context); not started by the app since C3.4 and not called by any agent; kept for manual use."
+    },
+    {
+      "path": "backend/nlp/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 64,
+      "role": "lib",
+      "purpose": "Package marker for backend.nlp, the local NLP building blocks (no API calls)."
+    },
+    {
+      "path": "backend/nlp/embedder.py",
+      "language": "python",
+      "lines": 74,
+      "size_bytes": 2600,
+      "role": "lib",
+      "purpose": "Local embeddings: one lazily loaded, thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE); embed and embed_one return unit-length float32 vectors."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -319,6 +335,14 @@
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
     },
     {
+      "path": "backend/tests/test_embedder.py",
+      "language": "python",
+      "lines": 126,
+      "size_bytes": 4186,
+      "role": "test",
+      "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; similar sentences beat unrelated ones on the real model when it is cached."
+    },
+    {
       "path": "backend/tests/test_health.py",
       "language": "python",
       "lines": 19,
@@ -361,10 +385,10 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 124,
-      "size_bytes": 5607,
+      "lines": 232,
+      "size_bytes": 11309,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, and the C3.5 API baseline with its caveats."
+      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
@@ -385,8 +409,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 368,
-      "size_bytes": 41526,
+      "lines": 486,
+      "size_bytes": 57845,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -761,10 +785,10 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 36,
-      "size_bytes": 924,
+      "lines": 40,
+      "size_bytes": 997,
       "role": "config",
-      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned; still includes the Groq and Google AI Studio packages until C8."
+      "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed and numpy for backend/nlp/; still includes the Groq and Google AI Studio packages until C8."
     },
     {
       "path": "scripts/bench.py",
@@ -781,6 +805,14 @@
       "size_bytes": 3514,
       "role": "script",
       "purpose": "Creates or resets two confirmed dev test users and writes .env.test; refuses to run unless ENV=development."
+    },
+    {
+      "path": "scripts/dev/measure_embedder.py",
+      "language": "python",
+      "lines": 86,
+      "size_bytes": 3047,
+      "role": "script",
+      "purpose": "Measures the embedding model in a fresh process: psutil RSS before and after import, load and batches, model load time, and the latency of a batch of short and of chunk-sized texts."
     },
     {
       "path": "scripts/dev/measure_rss.py",
@@ -945,8 +977,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 127,
-      "size_bytes": 17549,
+      "lines": 131,
+      "size_bytes": 18464,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

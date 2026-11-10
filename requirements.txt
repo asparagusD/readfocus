@@ -20,6 +20,10 @@ pypdf==7.0.0
 ebooklib==0.21
 beautifulsoup4==4.15.0
 
+# Local NLP (backend/nlp/). No API calls.
+fastembed==0.9.1
+numpy==2.4.6
+
 # Agents. LangGraph stays.
 langgraph==1.2.20
 

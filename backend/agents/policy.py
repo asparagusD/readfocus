@@ -286,3 +286,9 @@ OPT_MIX_PLACES_RANGE = (1, 3)
 # Recent question outcomes (strategy, 0..1 score) kept with the pace
 # recommendation, newest first, for the per-type failure rule.
 OPT_OUTCOME_HISTORY = 15
+
+# --- Evaluator (backend/agents/evaluator_agent.py) --------------------------
+
+# reading_progress.average_score is the mean of this many latest tests (this
+# one included); the value the evaluator used before C8 follow-up.
+ROLLING_AVERAGE_TESTS = 10

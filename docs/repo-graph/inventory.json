@@ -145,8 +145,8 @@
     {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
-      "lines": 170,
-      "size_bytes": 8606,
+      "lines": 175,
+      "size_bytes": 9127,
       "role": "agent",
       "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence."
     },
@@ -201,8 +201,8 @@
     {
       "path": "backend/agents/optimizer_agent.py",
       "language": "python",
-      "lines": 83,
-      "size_bytes": 4577,
+      "lines": 84,
+      "size_bytes": 4682,
       "role": "agent",
       "purpose": "Optimizer node, no LLM: reads progress and the stored pace recommendation (previous multiplier, recent percentages, recent question outcomes, question mix), the book's recent sessions (this one's words and minutes, earlier abandonments) and the profile speed; calls optimizer.pace.decide; stores the recommendation with its history and the re-read queue (creating the progress row for older books); returns it with one decisions entry. On abandon there is no test: the stopped session counts as abandoned and no score is recorded."
     },
@@ -225,16 +225,16 @@
     {
       "path": "backend/agents/planner_agent.py",
       "language": "python",
-      "lines": 94,
-      "size_bytes": 5104,
+      "lines": 98,
+      "size_bytes": 5231,
       "role": "agent",
       "purpose": "Planner node, no LLM: reads progress (creating it on a first session with nothing read), candidate sections, their concepts, the reader's mastery, question difficulty per section and the optimizer's last pace; calls planner.strategy.decide; pops a re-read from the queue only when a session starts with it (after a submit the plan is a preview); returns plan, session_plan and one decisions entry."
     },
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 288,
-      "size_bytes": 11154,
+      "lines": 294,
+      "size_bytes": 11406,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer."
     },
@@ -409,8 +409,8 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 267,
-      "size_bytes": 12807,
+      "lines": 264,
+      "size_bytes": 12734,
       "role": "router",
       "purpose": "Session lifecycle endpoints, through backend/agents/workflow.py: start (the start_session flow plans; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
@@ -457,10 +457,10 @@
     {
       "path": "backend/services/supabase_client.py",
       "language": "python",
-      "lines": 32,
-      "size_bytes": 1097,
+      "lines": 45,
+      "size_bytes": 1578,
       "role": "service",
-      "purpose": "Creates the shared service-role Supabase client with its own HTTP/1.1 httpx pool (thread-safe; the default single HTTP/2 connection broke under threads, issue 29); raises at import if the URL or key is missing."
+      "purpose": "Creates the shared service-role Supabase client with its own HTTP/1.1 httpx pool (thread-safe; the default single HTTP/2 connection broke under threads, issue 29); fetch_all runs independent queries at once on worker threads; raises at import if the URL or key is missing."
     },
     {
       "path": "backend/tests/__init__.py",
@@ -753,8 +753,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 422,
-      "size_bytes": 22407,
+      "lines": 447,
+      "size_bytes": 23736,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -777,8 +777,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1365,
-      "size_bytes": 241391,
+      "lines": 1366,
+      "size_bytes": 243243,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1418,7 +1418,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 186,
-      "size_bytes": 38571,
+      "size_bytes": 38633,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

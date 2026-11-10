@@ -9,16 +9,11 @@ re-read queue; returns it with one decisions entry.
 """
 
 import time
-from typing import cast
 
 from backend.agents import policy
 from backend.agents.optimizer.pace import OptimizerInput, QuestionOutcome, decide
 from backend.agents.state import AgentState, decision
-from backend.services.supabase_client import supabase
-
-
-def _rows(query) -> list[dict]:
-    return cast(list[dict], query.execute().data or [])
+from backend.services.supabase_client import fetch_all, supabase
 
 
 async def optimizer_node(state: AgentState) -> dict:
@@ -28,14 +23,20 @@ async def optimizer_node(state: AgentState) -> dict:
     result = state.get("evaluation_result") or {}
     abandoned = state.get("event") == "abandon"  # no test: the stopped session counts, no score does
 
-    progress = (_rows(supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id))
-                or [{}])[0]
+    results = await fetch_all(  # independent reads, one round trip (issue 28)
+        supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id),
+        supabase.table("sessions").select("id, status, assigned_words, actual_duration_minutes").eq(
+            "user_id", user_id).eq("book_id", book_id).order("started_at", desc=True).limit(policy.OPT_ABANDON_WINDOW + 1),
+        supabase.table("profiles").select("reading_goal_wpm").eq("user_id", user_id),
+    )
+    for fetched in results:
+        if isinstance(fetched, Exception):
+            raise fetched
+    progress_rows, sessions, profile = results
+    progress = (progress_rows or [{}])[0]
     pace = progress.get("pace_recommendation") or {}
-    sessions = _rows(supabase.table("sessions").select("id, status, assigned_words, actual_duration_minutes").eq(
-        "user_id", user_id).eq("book_id", book_id).order("started_at", desc=True).limit(policy.OPT_ABANDON_WINDOW + 1))
     this = next((row for row in sessions if row["id"] == session_id), {})
     earlier = [row for row in sessions if row["id"] != session_id][:policy.OPT_ABANDON_WINDOW]
-    profile = _rows(supabase.table("profiles").select("reading_goal_wpm").eq("user_id", user_id))
 
     new_outcomes = [
         {"strategy": question.get("strategy"), "score": graded["score"] / graded["max_score"]}

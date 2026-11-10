@@ -22,7 +22,7 @@ from backend.agents.planner.strategy import (
     decide,
 )
 from backend.agents.state import AgentState, decision
-from backend.services.supabase_client import supabase
+from backend.services.supabase_client import fetch_all, supabase
 
 
 def _rows(query) -> list[dict]:
@@ -38,23 +38,27 @@ def load_progress(user_id: str, book_id: str) -> dict:
     return (_rows(supabase.table("reading_progress").insert(row)) or [row])[0]
 
 
-def build_input(user_id: str, book_id: str, progress: dict, now: datetime) -> PlannerInput:
+async def build_input(user_id: str, book_id: str, progress: dict, now: datetime) -> PlannerInput:
     pace = progress.get("pace_recommendation") or {}
     last = progress.get("last_chunk_index")
     last = -1 if last is None else last
-    chunks = _rows(supabase.table("chunks").select("chunk_index, word_count").eq("book_id", book_id).lte(
-        "chunk_index", last + policy.PLANNER_MAX_CHUNKS).order("chunk_index"))
-    indices = [chunk["chunk_index"] for chunk in chunks]
-    concepts = _rows(supabase.table("concepts").select("concept_key, label, chunk_indices").eq(
-        "user_id", user_id).eq("book_id", book_id))
-    mastery = _rows(supabase.table("user_concept_mastery").select(
-        "concept_key, mastery, attempts, correct, next_review").eq("user_id", user_id).eq("book_id", book_id))
-    bank = _rows(supabase.table("question_bank").select("chunk_index, difficulty").eq("user_id", user_id).eq(
-        "book_id", book_id).in_("chunk_index", indices)) if indices else []
-    wpm = pace.get("reading_wpm")
-    if not wpm:
-        profile = _rows(supabase.table("profiles").select("reading_goal_wpm").eq("user_id", user_id))
-        wpm = profile[0]["reading_goal_wpm"] if profile else None
+    upto = last + policy.PLANNER_MAX_CHUNKS
+    results = await fetch_all(  # independent reads, one round trip (issue 28)
+        supabase.table("chunks").select("chunk_index, word_count").eq("book_id", book_id).lte(
+            "chunk_index", upto).order("chunk_index"),
+        supabase.table("concepts").select("concept_key, label, chunk_indices").eq("user_id", user_id).eq(
+            "book_id", book_id),
+        supabase.table("user_concept_mastery").select("concept_key, mastery, attempts, correct, next_review").eq(
+            "user_id", user_id).eq("book_id", book_id),
+        supabase.table("question_bank").select("chunk_index, difficulty").eq("user_id", user_id).eq(
+            "book_id", book_id).lte("chunk_index", upto),
+        supabase.table("profiles").select("reading_goal_wpm").eq("user_id", user_id),
+    )
+    for fetched in results:
+        if isinstance(fetched, Exception):
+            raise fetched
+    chunks, concepts, mastery, bank, profile = results
+    wpm = pace.get("reading_wpm") or (profile[0]["reading_goal_wpm"] if profile else None)
 
     def difficulty(index: int) -> float | None:
         values = [row["difficulty"] for row in bank if row["chunk_index"] == index and row.get("difficulty") is not None]
@@ -77,7 +81,7 @@ async def planner_node(state: AgentState) -> dict:
     started = time.perf_counter()
     user_id, book_id = state.get("user_id") or "", state.get("book_id") or ""
     progress = load_progress(user_id, book_id)
-    data = build_input(user_id, book_id, progress, datetime.now(UTC))
+    data = await build_input(user_id, book_id, progress, datetime.now(UTC))
     plan = decide(data)
     if plan.mode == "re_read" and progress.get("id") and state.get("event") == "start_session":
         queue = [index for index in data.re_read_queue if index != plan.chunk_indices[0]]

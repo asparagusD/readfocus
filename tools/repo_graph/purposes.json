@@ -42,7 +42,7 @@
   "backend/services/__init__.py": "Package marker for backend.services.",
   "backend/services/book_ingestor.py": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks, then has the question generation agent fill the question bank for each batch.",
   "backend/services/retriever.py": "Hybrid retrieval over one book's chunks: local-embedding vector search (match_chunks_local) and Postgres full-text search (search_chunks_text) merged with reciprocal rank fusion; get_similar_chunks keeps its signature.",
-  "backend/services/supabase_client.py": "Creates the shared service-role Supabase client with its own HTTP/1.1 httpx pool (thread-safe; the default single HTTP/2 connection broke under threads, issue 29); raises at import if the URL or key is missing.",
+  "backend/services/supabase_client.py": "Creates the shared service-role Supabase client with its own HTTP/1.1 httpx pool (thread-safe; the default single HTTP/2 connection broke under threads, issue 29); fetch_all runs independent queries at once on worker threads; raises at import if the URL or key is missing.",
   "backend/tests/__init__.py": "Package marker for backend.tests.",
   "backend/tests/conftest.py": "Offline test setup: dummy environment, a fake Supabase client, and a guard that blocks non-loopback connections.",
   "backend/tests/test_backfill.py": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development.",

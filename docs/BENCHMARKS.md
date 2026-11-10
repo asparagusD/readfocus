@@ -122,6 +122,31 @@ Supabase round trips at about 100 ms each and now runs on the submit path
 too (C8.5), which is most of the rise from about 0.9 to 1.0 s in C7.4.
 Saving decisions moved no number: it is one insert after the response.
 
+### C8 follow-up: fewer round trips on submit and start (issue 28, 2026-11-11)
+
+`python scripts/bench.py --runs 3 --flow-runs 5 --keep` against the dev
+project (start right after ready), per-node times from `agent_decisions`
+of the kept sessions, books deleted afterwards. Before: the same runs at
+`196191a` (issue 29 fixed, reads still one by one).
+
+| Step | Before p50 | After p50 | After p95 |
+|---|---|---|---|
+| `POST /sessions/start` | 921 ms | 594 ms | 654 ms |
+| `POST /sessions/{id}/submit-answers` | 1.88 s | 1.12 s | 1.27 s |
+| submit nodes: evaluator, knowledge state, optimizer, planner | about 490, 185, 360, 455 ms | about 320, 200, 190, 200 ms | |
+
+What changed: the planner reads progress, then chunks, concepts, mastery,
+bank difficulty and profile in one parallel round trip; the optimizer reads
+progress, sessions and profile at once; the evaluator stores the result
+and reads history and progress at once; `submit-answers` claims the session
+with an update that returns its row, so it no longer selects it first.
+About 10 round trips remain in sequence on submit (auth, claim, evaluator
+2, knowledge state 2, optimizer 2, planner 2) at about 100 ms each: the
+500 ms target is still missed.
+
+Upload measured 3.28 s p50 in this run against 1.23 s at `196191a`; the
+upload path did not change between the two.
+
 ### C6.4: answers graded inline (2026-11-10)
 
 Backend on this machine against the dev project, `sample.pdf` uploaded as

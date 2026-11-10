@@ -1480,7 +1480,7 @@
       "type": "calls_external",
       "from": "file:backend/services/supabase_client.py",
       "to": "external:supabase",
-      "line": 15
+      "line": 16
     },
     {
       "type": "calls_external",

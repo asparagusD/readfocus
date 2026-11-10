@@ -7,6 +7,7 @@ transport is one multiplexed HTTP/2 connection, which breaks under that
 pool instead: thread-safe, one connection per concurrent request.
 """
 
+import asyncio
 import os
 
 import httpx
@@ -30,3 +31,15 @@ def make_client(url: str, key: str) -> Client:
 
 
 supabase: Client = make_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+
+async def fetch_all(*queries) -> list:
+    """Run independent queries at once, each on a worker thread (the pool above is thread-safe).
+
+    Returns each query's rows, in order; a query that raised gives its exception
+    instead, so the caller decides which failures matter.
+    """
+    def run(query):
+        return query.execute().data or []
+
+    return list(await asyncio.gather(*(asyncio.to_thread(run, query) for query in queries), return_exceptions=True))

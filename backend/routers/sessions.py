@@ -173,33 +173,30 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
 async def submit_answers(
     session_id: str, req: SubmitAnswersRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)
 ):
-    # 1. Fetch session and questions
-    sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions, status").eq("id", session_id).eq("user_id", user_id).execute()
-    if not sess_resp.data:
-        raise HTTPException(status_code=404, detail="Session not found.")
-        
-    sess = cast(dict[str, Any], sess_resp.data[0])
-    book_id = sess["book_id"]
-    if sess.get("status") == "completed":  # graded already: the same answer again, nothing re-run (issue 33)
-        return stored_result(session_id, user_id, book_id)
-    start_idx = sess["chunk_start_index"]
-    end_idx = sess["chunk_end_index"]
-    chunk_indices = list(range(start_idx, end_idx + 1))
-    test_questions = sess.get("test_questions", [])
-    
-    if not test_questions:
-        raise HTTPException(status_code=400, detail="No test questions found. Did you call finish-reading?")
-        
-    # 2. Claim the session, so two submits at once cannot both grade it (issue 33)
+    # 1. Claim the session: two submits at once cannot both grade it (issue 33), and the update returns
+    #    the session row, so on the happy path this is the only round trip before grading (issue 28).
     claimed = supabase.table("sessions").update({
         "status": "completed", "completed_at": datetime.utcnow().isoformat()
     }).eq("id", session_id).eq("user_id", user_id).neq("status", "completed").execute()
     if not claimed.data:
-        return stored_result(session_id, user_id, book_id)
+        found = supabase.table("sessions").select("book_id").eq("id", session_id).eq("user_id", user_id).execute()
+        if not found.data:
+            raise HTTPException(status_code=404, detail="Session not found.")
+        # graded already, or being graded by a concurrent submit: the stored result, nothing re-run
+        return stored_result(session_id, user_id, cast(dict[str, Any], found.data[0])["book_id"])
+
+    sess = cast(dict[str, Any], claimed.data[0])
+    book_id = sess["book_id"]
+    chunk_indices = list(range(sess["chunk_start_index"], sess["chunk_end_index"] + 1))
+    test_questions = sess.get("test_questions") or []
 
     def release():
-        supabase.table("sessions").update({"status": sess.get("status") or "testing", "completed_at": None}).eq(
+        supabase.table("sessions").update({"status": "testing", "completed_at": None}).eq(
             "id", session_id).eq("user_id", user_id).execute()
+
+    if not test_questions:
+        release()
+        raise HTTPException(status_code=400, detail="No test questions found. Did you call finish-reading?")
 
     # 3. Run the submit_answers flow: evaluator -> knowledge state -> optimizer -> planner
     try:

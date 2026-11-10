@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 159,
-    "inventoried": 148,
+    "tracked": 161,
+    "inventoried": 150,
     "excluded": 11
   },
   "files": [
@@ -153,8 +153,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 85,
-      "size_bytes": 2871,
+      "lines": 88,
+      "size_bytes": 2961,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far the question generation ones."
     },
@@ -167,10 +167,18 @@
       "purpose": "Package marker for backend.agents.question_generation, questions built from a chunk's own sentences with no LLM."
     },
     {
+      "path": "backend/agents/question_generation/agent.py",
+      "language": "python",
+      "lines": 133,
+      "size_bytes": 6405,
+      "role": "agent",
+      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); returns a GenerationReport."
+    },
+    {
       "path": "backend/agents/question_generation/quality.py",
       "language": "python",
-      "lines": 160,
-      "size_bytes": 7087,
+      "lines": 163,
+      "size_bytes": 7170,
       "role": "agent",
       "purpose": "Pure quality filter for generated questions: rejects stopword answers, short evidence and prompts that contain the answer, scores the rest 0..1, and drops the weaker of two near-duplicate prompts."
     },
@@ -313,10 +321,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 196,
-      "size_bytes": 7286,
+      "lines": 216,
+      "size_bytes": 8196,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks, then has the question generation agent fill the question bank for each batch."
     },
     {
       "path": "backend/services/embeddings.py",
@@ -417,8 +425,8 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 92,
-      "size_bytes": 3917,
+      "lines": 147,
+      "size_bytes": 6080,
       "role": "test",
       "purpose": "Pytest on the fake database: ingest_book stores every chunk once with a 384-value embedding_local, in batches, unlocks the book after the first five, marks it error if embedding fails, and does not use the Google client."
     },
@@ -445,6 +453,14 @@
       "size_bytes": 1884,
       "role": "test",
       "purpose": "Pytest: the suite uses the dummy environment and the fakes, outbound connections are blocked, loopback works, and a protected endpoint answers 401."
+    },
+    {
+      "path": "backend/tests/test_question_generation_agent.py",
+      "language": "python",
+      "lines": 181,
+      "size_bytes": 8140,
+      "role": "test",
+      "purpose": "Pytest on an in-memory database and a fake embedder: stored rows are grounded in their chunk, the report matches them, a second run adds nothing, questions per chunk are capped, and no LLM is used."
     },
     {
       "path": "backend/tests/test_question_quality.py",
@@ -497,8 +513,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 262,
-      "size_bytes": 13176,
+      "lines": 285,
+      "size_bytes": 14399,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -521,8 +537,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 672,
-      "size_bytes": 99570,
+      "lines": 673,
+      "size_bytes": 102158,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1129,8 +1145,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 150,
-      "size_bytes": 23061,
+      "lines": 152,
+      "size_bytes": 23661,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

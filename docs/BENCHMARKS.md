@@ -71,6 +71,29 @@ and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
 
+### C5.4: question bank generated during ingestion (2026-11-10)
+
+No new dependency; `yake` and `rapidfuzz` are now imported at startup
+through `book_ingestor`. Windows, backend started with
+`uvicorn backend.main:app`, one upload of `sample.pdf` (7 chunks) as dev
+test user A through `POST /books/upload`, three runs:
+
+| Measure | C4.6 (embeddings only) | C5.4 (embeddings and questions) |
+|---|---|---|
+| upload -> status ready | 3.81 s | 3.45, 2.93, 3.65 s |
+| upload -> all 7 chunks stored | 3.92 s | about 6 to 7 s (polled) |
+| upload -> question bank complete | n/a | 7.68, 7.05, 7.79 s |
+| Server RSS | 120 MB before, 306 MB peak | 143 MB idle, 346 to 347 MB peak during ingestion |
+
+Question generation for the 7 chunks, run again in the same process with
+the model loaded: 4.2 s, about 0.6 s per chunk, nearly all of it embedding
+(sentences, concept labels, prompts). Result: 55 rows, 6 to 11 per body
+chunk; 43 factual, 6 inference, 6 summary; average quality 0.83.
+
+The peak is 47 MB over the 300 MB line set at Gate G2, on Windows. Not
+measured: Linux or Render, where C4.1 puts a short text at about 0.06 s, so
+a chunk's 70 or so sentences and prompts come to roughly 4 s; a long book.
+
 ### C4.6: ingestion on local embeddings (2026-11-10)
 
 Windows, backend started with `uvicorn backend.main:app` and

@@ -149,7 +149,10 @@ def filter_questions(questions: list[Question], prompt_vectors: np.ndarray) -> F
         strategy = questions[index].strategy
         if duplicate:
             reasons[index] = "near_duplicate"
-        elif used[strategy] >= policy.QUESTION_CAPS.get(strategy, policy.QUESTION_CAP_DEFAULT):
+        elif (
+            len(kept) >= policy.MAX_QUESTIONS_PER_CHUNK
+            or used[strategy] >= policy.QUESTION_CAPS.get(strategy, policy.QUESTION_CAP_DEFAULT)
+        ):
             reasons[index] = "over_cap"
         else:
             used[strategy] += 1

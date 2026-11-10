@@ -318,6 +318,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/agents/question_generation/agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
       "id": "file:backend/agents/question_generation/quality.py",
       "type": "file",
       "role": "agent",
@@ -523,6 +529,12 @@
     },
     {
       "id": "file:backend/tests/test_offline.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_question_generation_agent.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1736,6 +1748,31 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/agents/question_generation/quality.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/agents/question_generation/strategies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/agents/question_generation/quality.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -1897,6 +1934,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/nlp/embedder.py"
     },
     {
@@ -1998,6 +2040,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_offline.py",
       "to": "file:backend/tests/conftest.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_generation_agent.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_generation_agent.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_generation_agent.py",
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",
@@ -2506,6 +2563,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/agents/test_generator_agent.py",
       "to": "table:chunks"
     },
@@ -2693,6 +2755,11 @@
       "type": "writes_table",
       "from": "file:backend/agents/planner_agent.py",
       "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "table:question_bank"
     },
     {
       "type": "writes_table",

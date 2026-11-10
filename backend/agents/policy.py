@@ -72,6 +72,9 @@ QUESTION_CAPS = {
 }
 QUESTION_CAP_DEFAULT = 3  # a strategy not listed above
 
+# Most questions stored for one chunk, over all strategies.
+MAX_QUESTIONS_PER_CHUNK = 12
+
 # Most key terms stored with one question.
 KEY_TERMS_MAX = 6
 

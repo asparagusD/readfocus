@@ -34,6 +34,7 @@ git diff --stat
   npm --prefix frontend run lint
   npm --prefix frontend run build
   python -c "import backend.main"
+  pytest tools/repo_graph/tests -q
   ```
 
   Never commit failing checks. `CLAUDE.md` holds a baseline table for checks
@@ -41,8 +42,7 @@ git diff --stat
   every other check must pass. If a check gets worse, stop and load
   `debug-protocol`.
 - [ ] Repo graph regenerated with `make graph` if files were added, removed
-  or rewired, and `docs/repo-graph/` is part of this commit. (Available from
-  C2.)
+  or rewired, and `docs/repo-graph/` is part of this commit.
 - [ ] The subchunk's row in `docs/PROGRESS.md` is ticked. (Available from
   C1.7.)
 - [ ] No secrets in the diff: no `.env` files, keys or tokens.

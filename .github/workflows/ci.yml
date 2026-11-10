@@ -60,6 +60,33 @@ jobs:
       - name: Build
         run: npm run build
 
+  # ── Repo graph is up to date ──────────────────────────────────
+  # The graph tooling uses only the standard library, so nothing is installed
+  # before `make graph`.
+  graph:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Regenerate the repo graph
+        run: make graph
+
+      - name: Fail if docs/repo-graph/ is stale
+        run: |
+          git diff --exit-code docs/repo-graph/ || {
+            echo "::error::docs/repo-graph/ is stale. Run 'make graph' and commit the result."
+            exit 1
+          }
+
+      - name: Test the graph tooling
+        run: |
+          pip install pytest
+          pytest tools/repo_graph/tests -q
+
   # ── Deploy to Render (main only) ──────────────────────────────
   deploy-render:
     if: github.ref == 'refs/heads/main'

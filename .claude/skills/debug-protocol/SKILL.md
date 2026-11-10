@@ -47,8 +47,9 @@ graph:
 python tools/repo_graph/query.py <file>
 ```
 
-Until C2 adds this tool, find the neighbours by hand: search for the module's
-imports and for where it is imported.
+The query reads the committed graph; run `make graph` first if the code has
+changed since. It does not see columns, subprocesses or Storage use (see the
+`repo-graph` skill), so search by hand for those.
 
 Read the code along the path of the failure before forming an opinion. Check
 what changed recently:
@@ -103,6 +104,7 @@ pytest backend/tests -q
 npm --prefix frontend run lint
 npm --prefix frontend run build
 python -c "import backend.main"
+pytest tools/repo_graph/tests -q
 ```
 
 Compare against the baseline table in `CLAUDE.md`. Nothing may be worse than

@@ -39,7 +39,7 @@ your score.
 - **Repo graph.** Before editing a file, run
   `python tools/repo_graph/query.py <file>`. After adding, removing or
   rewiring files, run `make graph` and include `docs/repo-graph/` in the same
-  commit. *Neither command exists yet; both arrive in C2.*
+  commit.
 - **Standard checks** before every commit (see [below](#standard-checks)).
 - **Debug protocol** on any failure:
   1. Log the exact command, error and stack trace in `docs/DEBUG_LOG.md`.
@@ -113,9 +113,10 @@ pytest backend/tests -q
 npm --prefix frontend run lint
 npm --prefix frontend run build
 python -c "import backend.main"
+pytest tools/repo_graph/tests -q
 ```
 
-Baseline when this file was written (C1.1):
+Baseline when this file was written (C1.1; the last row was added in C2.4):
 
 | Check | Result |
 |---|---|
@@ -124,9 +125,10 @@ Baseline when this file was written (C1.1):
 | `npm --prefix frontend run lint` | fails: 22 errors, 2 warnings in existing code |
 | `npm --prefix frontend run build` | passes |
 | `python -c "import backend.main"` | passes |
+| `pytest tools/repo_graph/tests -q` | passes: 61 tests |
 
 Until a chunk brings ruff and ESLint to zero, "never commit failing checks"
-means: the three passing checks stay green and the two error counts never go
+means: the four passing checks stay green and the two error counts never go
 up. Update this table when a baseline changes.
 
 ## Commit format

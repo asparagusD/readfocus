@@ -144,6 +144,11 @@ GRADE_AMBIGUOUS_MARGIN = 0.05
 # A free-text answer with fewer word tokens than this is low confidence.
 GRADE_MIN_TOKENS = 4
 
+# The most a free-text grade may claim. Measured in C6.2: answers that
+# reverse the evidence in its own words scored 0.86 and 0.91, so a
+# semantic grade is never "high".
+GRADE_FREE_TEXT_MAX_CONFIDENCE = "medium"
+
 # Cosine and coverage components this far apart are a disagreement: medium.
 GRADE_DISAGREEMENT = 0.6
 

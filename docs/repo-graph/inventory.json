@@ -129,8 +129,8 @@
     {
       "path": "backend/agents/evaluation/grader.py",
       "language": "python",
-      "lines": 203,
-      "size_bytes": 9151,
+      "lines": 205,
+      "size_bytes": 9426,
       "role": "agent",
       "purpose": "Answer grader: pure decide(GradeInput) gives a 0..1 score, a high, medium or low confidence, matched and missing key terms, the rule used and its components; cloze and multiple choice by exact or rapidfuzz match, free text by a weighted sum of evidence cosine, key-term coverage and a relevance check; grade_all embeds a test's free-text answers in one call with the embedder it is given."
     },
@@ -169,8 +169,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 157,
-      "size_bytes": 5655,
+      "lines": 162,
+      "size_bytes": 5870,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly and grading."
     },
@@ -473,8 +473,8 @@
     {
       "path": "backend/tests/test_grader.py",
       "language": "python",
-      "lines": 229,
-      "size_bytes": 10466,
+      "lines": 234,
+      "size_bytes": 10746,
       "role": "test",
       "purpose": "Pytest: closed-question matching, the free-text formula and its components, every confidence rule and its boundary, grade_all's single embedding call and its failure path, on hand-made numbers; plus agreement with the labelled answer fixtures on the real model when it is cached."
     },
@@ -585,8 +585,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 343,
-      "size_bytes": 17300,
+      "lines": 346,
+      "size_bytes": 17514,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -609,8 +609,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 904,
-      "size_bytes": 135859,
+      "lines": 905,
+      "size_bytes": 137314,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

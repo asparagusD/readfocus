@@ -103,7 +103,10 @@ four", not as a pass.
 | empty | 4 of 4 | |
 | copy of the question | 5 of 5 | |
 
-Confidence over the 34: 19 high, 10 medium, 5 low. Time: 213 ms to grade
+Confidence over the 34: 19 high, 10 medium, 5 low. Since C6.2b free text
+is capped at medium: 8 high (closed questions and empty answers), 21
+medium, 5 low, and no high-confidence grade disagrees with its human
+score. Scores and agreement are unchanged (26 of 34). Time: 213 ms to grade
 all 34 with the model warm (about 6 ms per answer; 33 distinct texts
 embedded in one call).
 

@@ -102,7 +102,15 @@ def test_free_text_score_is_the_weighted_sum_of_its_three_components():
 def test_weights_sum_to_one_and_a_complete_answer_scores_one():
     assert sum(policy.GRADE_WEIGHTS.values()) == pytest.approx(1.0)
     grade = free(FULL)
-    assert grade.score == pytest.approx(1.0) and grade.confidence == "high"
+    assert grade.score == pytest.approx(1.0)
+
+
+def test_free_text_is_never_high_confidence_even_when_every_signal_is_perfect():
+    # A fluent answer that reverses the evidence in its own words looks the same to the grader.
+    grade = free(FULL, cosine=0.99)
+    assert grade.score == pytest.approx(1.0)
+    assert grade.confidence == policy.GRADE_FREE_TEXT_MAX_CONFIDENCE == "medium"
+    assert grade.reasons == ["free_text_cap"]
 
 
 def test_cosine_is_rescaled_between_the_floor_and_full_and_clamped():
@@ -121,7 +129,7 @@ def test_key_terms_match_plurals_and_misspellings_and_need_every_word():
 def test_an_off_topic_answer_scores_near_zero():
     grade = free("I had pasta for dinner and then watched a film.", cosine=0.02, question_cosine=0.01)
     assert grade.score == 0.0 and grade.components["relevance"] == 0.0
-    assert grade.confidence == "high"
+    assert grade.confidence == "medium"
 
 
 def test_fewer_than_four_tokens_is_low_confidence():
@@ -143,9 +151,10 @@ def test_cosine_in_the_ambiguous_band_is_low_and_next_to_it_medium():
     assert free(FULL, cosine=LOW).confidence == "low"
     assert free(FULL, cosine=(LOW + HIGH) / 2).confidence == "low"
     assert free(FULL, cosine=HIGH).confidence == "low"
-    assert free(FULL, cosine=HIGH + margin / 2).confidence == "medium"
-    assert free(FULL, cosine=LOW - margin / 2).confidence == "medium"
-    assert free(FULL, cosine=HIGH + margin + 0.01).confidence == "high"
+    for cosine in (HIGH + margin / 2, LOW - margin / 2):
+        grade = free(FULL, cosine=cosine)
+        assert grade.confidence == "medium" and "near_ambiguous_cosine" in grade.reasons
+    assert "near_ambiguous_cosine" not in free(FULL, cosine=HIGH + margin + 0.01).reasons
 
 
 def test_meaning_and_key_terms_that_disagree_are_medium_confidence():
@@ -220,10 +229,6 @@ def test_agreement_with_human_labels_on_the_fixture(monkeypatch):
     agree = [abs(grade.score - case["human_score"]) <= policy.GRADE_AGREEMENT_TOLERANCE
              for grade, case in zip(grades, cases)]
     assert sum(agree) / len(cases) >= policy.GRADE_AGREEMENT_TARGET
-    # Known limit (docs/PROGRESS.md, C6.2): a fluent answer that reverses the evidence in the
-    # evidence's own words looks right to the embedding. Nothing else may be certain and far off.
-    confident_and_far = {
-        case["category"] for grade, case in zip(grades, cases)
-        if grade.confidence == "high" and abs(grade.score - case["human_score"]) > 0.5
-    }
-    assert confident_and_far <= {"wrong"}
+    # No grade is both certain and off: every high-confidence grade agrees with the human one.
+    assert all(ok for ok, grade in zip(agree, grades) if grade.confidence == "high")
+    assert all(grade.confidence != "high" for grade in grades if grade.method == "semantic")

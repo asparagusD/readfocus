@@ -284,12 +284,12 @@ Each use is the file and line of the first import of that service.
 |---|---|---|
 | `backend/agents/__init__.py` | 1 | Package marker for backend.agents. |
 | `backend/agents/evaluation/__init__.py` | 1 | Package marker for backend.agents.evaluation, answer grading with no LLM. |
-| `backend/agents/evaluation/grader.py` | 203 | Answer grader: pure decide(GradeInput) gives a 0..1 score, a high, medium or low confidence, matched and missing key terms, the rule used and its components; cloze and multiple choice by exact or rapidfuzz match, free text by a weighted sum of evidence cosine, key-term coverage and a relevance check; grade_all embeds a test's free-text answers in one call with the embedder it is given. |
+| `backend/agents/evaluation/grader.py` | 205 | Answer grader: pure decide(GradeInput) gives a 0..1 score, a high, medium or low confidence, matched and missing key terms, the rule used and its components; cloze and multiple choice by exact or rapidfuzz match, free text by a weighted sum of evidence cosine, key-term coverage and a relevance check; grade_all embeds a test's free-text answers in one call with the embedder it is given. |
 | `backend/agents/evaluator_agent.py` | 216 | Evaluator node: grades each answer 0-10 with the Groq LLM (full marks on LLM error), inserts test_results, updates the rolling average in reading_progress. |
 | `backend/agents/graph.py` | 59 | Builds the LangGraph workflow: routes from __start__ by state status to planner, test_generator, evaluator or optimizer, each ending at END. |
 | `backend/agents/optimizer_agent.py` | 120 | Optimizer node: score thresholds set the chunk multiplier and re-read queue; the Groq LLM picks the next focus duration; saves pace_recommendation. |
 | `backend/agents/planner_agent.py` | 189 | Planner node: serves the re-read queue first, otherwise asks the Groq LLM how many of the next three chunks to assign; falls back to one chunk for 20 minutes. |
-| `backend/agents/policy.py` | 157 | Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly and grading. |
+| `backend/agents/policy.py` | 162 | Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly and grading. |
 | `backend/agents/question_generation/__init__.py` | 1 | Package marker for backend.agents.question_generation, questions built from a chunk's own sentences with no LLM. |
 | `backend/agents/question_generation/agent.py` | 133 | QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); returns a GenerationReport. |
 | `backend/agents/question_generation/assembler.py` | 138 | Pure test assembly: picks a session's questions from bank rows by a mix of strategies, preferring unused, difficulty-matched questions; builds the stored form (with answers) and the public form (question, type, options only). |
@@ -414,7 +414,7 @@ Each use is the file and line of the first import of that service.
 | `backend/tests/test_bench.py` | 40 | Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py. |
 | `backend/tests/test_concepts.py` | 124 | Pytest: plural reduction, phrase normalisation, concept key slugs, merging of identical, fuzzy, overlapping and embedding-close phrases, and extract_concepts on a fixed passage without the real model. |
 | `backend/tests/test_embedder.py` | 126 | Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; similar sentences beat unrelated ones on the real model when it is cached. |
-| `backend/tests/test_grader.py` | 229 | Pytest: closed-question matching, the free-text formula and its components, every confidence rule and its boundary, grade_all's single embedding call and its failure path, on hand-made numbers; plus agreement with the labelled answer fixtures on the real model when it is cached. |
+| `backend/tests/test_grader.py` | 234 | Pytest: closed-question matching, the free-text formula and its components, every confidence rule and its boundary, grade_all's single embedding call and its failure path, on hand-made numbers; plus agreement with the labelled answer fixtures on the real model when it is cached. |
 | `backend/tests/test_health.py` | 19 | Pytest: /health returns 200 with status ok and a timestamp. |
 | `backend/tests/test_ingest_embeddings.py` | 147 | Pytest on the fake database: ingest_book stores every chunk once with a 384-value embedding_local, in batches, unlocks the book after the first five, marks it error if embedding fails, and does not use the Google client. |
 | `backend/tests/test_ingestor.py` | 86 | Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation. |
@@ -445,10 +445,10 @@ Each use is the file and line of the first import of that service.
 | `.claude/skills/repo-graph/SKILL.md` | 122 | Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see. |
 | `CLAUDE.md` | 182 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
 | `README.md` | 135 | Product overview and architecture; still describes the pre-2.0 Groq and Google AI Studio setup and an orchestrator node that no longer exists. |
-| `docs/BENCHMARKS.md` | 343 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
+| `docs/BENCHMARKS.md` | 346 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
 | `docs/DEBUG_LOG.md` | 389 | Debug log rules, entry template, and one entry per failure. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 904 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 905 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 

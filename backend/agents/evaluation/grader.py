@@ -12,8 +12,9 @@ Free text is a weighted sum of three parts, each 0..1:
 Confidence is low when the grade should not be read as certain: an answer of
 fewer than four tokens, a copy of the question, a cosine inside the
 ambiguous band, a near-miss spelling, or no embedding. It is medium next to
-the band or when meaning and key terms disagree. An empty answer is the one
-certain zero.
+the band or when meaning and key terms disagree, and free text is never
+above medium: an answer that reverses the evidence in its own words scores
+like a right one. High is for string matches and for an empty answer.
 
 grade_all() is the only function that embeds; the embedder is passed in.
 """
@@ -161,8 +162,9 @@ def _grade_free(data: GradeInput) -> Grade:
             reasons.append("near_ambiguous_cosine")
         if data.key_terms and abs(components["cosine"] - components["coverage"]) >= policy.GRADE_DISAGREEMENT:
             reasons.append("signals_disagree")
-        if reasons:
-            confidence = "medium"
+        if not reasons:  # meaning cannot be checked for a reversal, so free text is never certain
+            reasons.append("free_text_cap")
+        confidence = policy.GRADE_FREE_TEXT_MAX_CONFIDENCE
     return Grade(
         score=round(min(1.0, max(0.0, score)), 4), confidence=confidence, method="semantic",
         matched_concepts=matched, missing_concepts=missing, components=components, reasons=reasons,

@@ -5,6 +5,12 @@ question generation agent fill in chunks that have none (books ingested
 before the bank existed), picks the questions, stores them with the session
 and counts their use. It is synchronous: run it as a background task or in
 a worker thread.
+
+A session's test is stored once: the background run at start and the
+inline run in finish-reading can overlap, and the test the reader is shown
+must be the one that is graded (issue 34). The store is conditional on the
+session having no test yet; the run that loses returns the stored test and
+counts nothing.
 """
 
 from collections import defaultdict
@@ -63,7 +69,11 @@ def assemble_session_test(
     picked = assembler.decide(AssemblyInput(questions=[BankQuestion(**row) for row in rows], mix=mix)).questions
     questions = [assembler.session_question(question) for question in picked] or [assembler.fallback_question()]
     _link_concepts(questions, user_id, book_id, chunk_indices)
-    supabase.table("sessions").update({"test_questions": questions}).eq("id", session_id).eq("user_id", user_id).execute()
+    stored = supabase.table("sessions").update({"test_questions": questions}).eq("id", session_id).eq(
+        "user_id", user_id).is_("test_questions", "null").execute().data
+    if not stored:  # another run stored this session's test first: that one is shown and graded
+        rows = supabase.table("sessions").select("test_questions").eq("id", session_id).eq("user_id", user_id).execute().data
+        return (rows[0].get("test_questions") if rows else None) or questions
 
     by_use = defaultdict(list)
     for question in picked:

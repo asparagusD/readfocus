@@ -1,120 +1,84 @@
-import json
-from typing import List, Optional, cast
-from pydantic import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import PydanticOutputParser
+"""Optimizer node: the I/O around optimizer.pace.decide. No LLM.
 
-from backend.services.supabase_client import supabase
-from backend.services.llm import optimizer_llm
-from backend.agents.state import AgentState
+Reads the reader's progress and the pace recommendation stored with it
+(the previous multiplier, recent percentages, recent question outcomes and
+question mix), the book's recent sessions (this one's words and minutes,
+and which earlier ones were abandoned) and the profile speed; calls the
+pure decide; stores the recommendation with the updated history and the
+re-read queue; returns it with one decisions entry.
+"""
 
-class PaceRecommendation(BaseModel):
-    focus_duration_minutes: int = Field(description="Recommended focus duration in minutes (15-60)")
-    reason: str = Field(description="Reason for the recommendation")
+import time
 
-parser = PydanticOutputParser(pydantic_object=PaceRecommendation)
+from backend.agents import policy
+from backend.agents.optimizer.pace import OptimizerInput, QuestionOutcome, decide
+from backend.agents.state import AgentState, decision
+from backend.services.supabase_client import fetch_all, supabase
 
-system_prompt = """You are a reading pace optimizer. Given this user's recent reading scores and the chunk multiplier, recommend the focus duration for the next session in minutes (15-60 range). Output ONLY JSON: {format_instructions}.
-Be encouraging in your reason."""
-
-prompt_template = ChatPromptTemplate.from_messages([
-    ("system", system_prompt),
-    ("user", "Recent Test Results:\n{history}\n\nDetermined Chunk Multiplier: {multiplier}\n\nRecommend next focus duration.")
-])
 
 async def optimizer_node(state: AgentState) -> dict:
-    user_id = state.get("user_id")
-    book_id = state.get("book_id")
-    chunk_indices = state.get("chunk_indices", [])
-    evaluation_result = state.get("evaluation_result", {})
-    
-    # 1. Fetch last 5 test_results
-    history_resp = supabase.table("test_results").select("total_score, max_score, created_at").eq("user_id", user_id).order("created_at", desc=True).limit(5).execute()
-    history = history_resp.data or []
-    
-    # 2. Deterministic rules
-    total_score = evaluation_result.get("total_score", 0)
-    
-    next_chunk_multiplier = 1.0
-    re_read_mode = False
-    
-    prog_resp = supabase.table("reading_progress").select("id, re_read_queue").eq("user_id", user_id).eq("book_id", book_id).execute()
-    prog_data = cast(list[dict], prog_resp.data or [])
-    re_read_queue = prog_data[0]["re_read_queue"] or [] if prog_data else []
-    
-    if total_score >= 40:
-        next_chunk_multiplier = 1.15 # grow
-    elif 25 <= total_score <= 39:
-        next_chunk_multiplier = 1.0  # stable
-    elif 10 <= total_score <= 24:
-        next_chunk_multiplier = 0.80 # reduce and re-read
-        for idx in chunk_indices:
-            if idx not in re_read_queue:
-                re_read_queue.append(idx)
-    else: # < 10
-        next_chunk_multiplier = 0.50 # dramatically reduce and force priority re-read
-        for idx in reversed(chunk_indices):
-            if idx in re_read_queue:
-                re_read_queue.remove(idx)
-            # Insert at front of queue to prioritize immediately
-            re_read_queue.insert(0, idx)
-        re_read_mode = True
-        
-    # 3. Call Optimizer LLM
-    chain = prompt_template | optimizer_llm | parser
-    
-    try:
-        rec: PaceRecommendation = await chain.ainvoke({
-            "format_instructions": parser.get_format_instructions(),
-            "history": json.dumps(history),
-            "multiplier": next_chunk_multiplier
-        })
-        focus_duration = rec.focus_duration_minutes
-        reason = rec.reason
-    except Exception as e:
-        print(f"Optimizer LLM error: {e}")
-        focus_duration = 20
-        reason = "Fallback duration."
-        
-    pace_recommendation_json = {
-        "next_chunk_multiplier": next_chunk_multiplier,
-        "focus_duration_minutes": focus_duration,
-        "reason": reason,
-        "re_read_mode": re_read_mode
-    }
-        
-    # 4 & 5. Update reading_progress
-    if prog_data:
-        prog_id = prog_data[0]["id"]
-        
-        try:
-            supabase.table("reading_progress").update({
-                "re_read_queue": re_read_queue,
-                "pace_recommendation": pace_recommendation_json
-            }).eq("id", prog_id).execute()
-        except Exception as db_err:
-            print(f"Could not save pace_recommendation. Did you apply the migration? Error: {db_err}")
-        
-    return {
-        "pace_recommendation": pace_recommendation_json
+    started = time.perf_counter()
+    user_id, book_id, session_id = state.get("user_id") or "", state.get("book_id") or "", state.get("session_id")
+    indices = list(state.get("chunk_indices") or [])
+    result = state.get("evaluation_result") or {}
+    abandoned = state.get("event") == "abandon"  # no test: the stopped session counts, no score does
+
+    results = await fetch_all(  # independent reads, one round trip (issue 28)
+        supabase.table("reading_progress").select("*").eq("user_id", user_id).eq("book_id", book_id),
+        supabase.table("sessions").select("id, status, assigned_words, actual_duration_minutes").eq(
+            "user_id", user_id).eq("book_id", book_id).order("started_at", desc=True).limit(policy.OPT_ABANDON_WINDOW + 1),
+        supabase.table("profiles").select("reading_goal_wpm").eq("user_id", user_id),
+    )
+    for fetched in results:
+        if isinstance(fetched, Exception):
+            raise fetched
+    progress_rows, sessions, profile = results
+    progress = (progress_rows or [{}])[0]
+    pace = progress.get("pace_recommendation") or {}
+    this = next((row for row in sessions if row["id"] == session_id), {})
+    earlier = [row for row in sessions if row["id"] != session_id][:policy.OPT_ABANDON_WINDOW]
+
+    new_outcomes = [
+        {"strategy": question.get("strategy"), "score": graded["score"] / graded["max_score"]}
+        for question, graded in zip(state.get("test_questions") or [], result.get("per_question") or [])
+        if graded.get("max_score")
+    ]
+    outcomes = (new_outcomes + list(pace.get("recent_outcomes") or []))[:policy.OPT_OUTCOME_HISTORY]
+    data = OptimizerInput(
+        percentage=None if abandoned else result.get("percentage") or 0, chunk_indices=indices,
+        recent_percentages=pace.get("recent_percentages") or [], re_read_queue=progress.get("re_read_queue") or [],
+        previous_multiplier=pace.get("next_chunk_multiplier") or 1.0,
+        recent_abandoned=[True] * abandoned + [row.get("status") == "abandoned" for row in earlier],
+        wpm=profile[0]["reading_goal_wpm"] if profile else None, session_words=this.get("assigned_words") or 0,
+        actual_minutes=this.get("actual_duration_minutes"), outcomes=[QuestionOutcome(**o) for o in outcomes],
+        previous_mix=pace.get("question_mix"),
+        already_read=bool(indices) and max(indices) <= (progress.get("last_chunk_index") if progress.get(
+            "last_chunk_index") is not None else -1),
+    )
+    recommendation = decide(data)
+    stored = {
+        **recommendation.model_dump(mode="json"), "recent_outcomes": outcomes,
+        "recent_percentages": ([] if data.percentage is None else [data.percentage]
+                               + data.recent_percentages)[:policy.OPT_ROLLING_TESTS],
     }
 
-async def optimize_pace(session_id: str, user_id: str, book_id: str, chunk_indices: List[int], evaluation_result: dict) -> Optional[dict]:
-    from backend.agents.graph import workflow
-    
-    initial_state = {
-        "session_id": session_id,
-        "user_id": user_id,
-        "book_id": book_id,
-        "chunk_indices": chunk_indices,
-        "evaluation_result": evaluation_result,
-        "status": "completed"
+    values = {"re_read_queue": recommendation.re_read_queue, "pace_recommendation": stored}
+    if progress.get("id"):
+        supabase.table("reading_progress").update(values).eq("id", progress["id"]).execute()
+    else:  # a book read before C8.4 has no progress row: start one at this session's sections
+        supabase.table("reading_progress").insert({
+            "user_id": user_id, "book_id": book_id, "last_chunk_index": indices[-1] if indices else -1,
+            "chunks_completed": len(indices), **values,
+        }).execute()
+
+    return {
+        "pace_recommendation": stored,
+        "policy_adjustments": stored,
+        "decisions": [decision("optimizer", started, {
+            "percentage": data.percentage, "recent_percentages": data.recent_percentages,
+            "previous_multiplier": data.previous_multiplier, "abandoned": sum(data.recent_abandoned),
+            "outcomes": len(outcomes),
+        }, {key: stored[key] for key in (
+            "band", "next_chunk_multiplier", "focus_duration_minutes", "re_read_mode", "re_read_queue", "rules")},
+            recommendation.reason)],
     }
-    
-    result = await workflow.ainvoke(initial_state)
-    
-    if "error" in result and result["error"]:
-        print(f"Optimizer Error: {result['error']}")
-        return None
-        
-    return result.get("pace_recommendation")

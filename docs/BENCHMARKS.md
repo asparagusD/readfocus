@@ -65,11 +65,87 @@ One row per model or heavy dependency (the memory rule in the
 | 2026-11-10 | C4.1 | `fastembed` 0.9.1 with `sentence-transformers/all-MiniLM-L6-v2` (ONNX, 384 dimensions, 86 MB on disk), loaded | 19 MB (Windows), 15 MB (Linux container) | 180 MB (Windows), 213 MB (Linux container, 0.1 CPU) | 161 MB, 198 MB | Windows: 135 MB with `backend.main` imported, 264 MB once the model is loaded. Unchanged at startup, because the model loads on first use. Not measured on Linux |
 | 2026-11-10 | C4.4 | `yake` 0.7.3 (brings `networkx`, `jellyfish`, `segtok`, `regex`, `tabulate`, `click`), imported | 16.7 MB (Windows) | 47.9 MB; 48.6 MB after one 600-word extraction | 31 MB, of which `numpy` is already paid for by the embedder | Unchanged: nothing the app imports at startup uses `backend/nlp/concepts.py` yet. A process with `backend.nlp.concepts` and `book_ingestor` imported is 137 MB, and 279 MB after the first extraction with embeddings (model loaded) |
 | 2026-11-10 | C4.4 | `rapidfuzz` 3.14.6, imported | 16.9 MB (Windows) | 19.0 MB | 2 MB | as above |
+| 2026-11-11 | C8.8 | **Removed**: `langchain`, `langchain-community`, `langchain-groq`, `groq`, `langchain-google-genai`, `tenacity` from `requirements.txt` (`langgraph` 1.2.20 and its `langchain-core` 1.7.6 kept) | 132.4 MB with `backend.main` and the LangGraph workflow imported; 327.0 MB with the embedding model loaded and 8 chunks embedded (Windows, median of 3) | 132.0 MB; 327.0 MB (same stages, the removed packages made unimportable) | 0 MB at run time: no app code had imported them since C8.4b | 134.0 MB idle, 2 processes, before and after (`scripts/dev/measure_rss.py`, 3 runs each) |
+
+Gate G3 (C8.G), 2026-11-11: after one full journey on the dev project
+(upload, start, finish-reading, submit, results, dashboard) with no AI
+provider key in the server's environment, the uvicorn server process held
+336.4 MB RSS with the embedding model loaded (plus 4.4 MB for the Windows
+venv launcher process that started it). Same order as the 327 MB measured
+in one process above, with the web server, LangGraph runs and Supabase
+client on top.
+
+C8.8 install size, fresh Python 3.11.9 venvs on Windows (`pip install -r
+requirements.txt`): 123 packages and 363.3 MB of site-packages with the
+C8.7 requirements, 106 packages and 296.4 MB with C8.8's: 17 packages and
+67 MB fewer to install and ship in the Docker image. `pip check` is clean
+and `import backend.main` works with no provider key set. Not measured in
+the Linux container.
 
 Concept extraction time per chunk, Windows, `sample.pdf` chunks of 507, 740
 and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
+
+### C8.6: session lifecycle through the LangGraph workflow (2026-11-11)
+
+Backend on this machine (`uvicorn backend.main:app --port 8000`, from
+`.claude/launch.json`) against the dev project, as test user A. No LLM and
+no embedding API anywhere in the path.
+
+Before C8.6, at `a01d635` (C8.5): `python scripts/bench.py --runs 3
+--flow-runs 5`, which starts a session as soon as the book is ready.
+
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /sessions/start` | 4 | 1.04 s | 1.09 s | at least one 500: "Server disconnected" during ingestion (issue 29) |
+| `POST /sessions/{id}/finish-reading` | 3 | 1.77 s | 2.55 s | at least one 500, same cause |
+| `POST /sessions/{id}/submit-answers` | 3 | 2.13 s | 2.19 s | evaluator, knowledge state, optimizer, planner |
+
+After C8.6: a one-off script (scratchpad, not committed), five flows, each
+uploading `sample.pdf`, waiting 15 s after `ready` so background ingestion
+is finished (keeping issue 29 out of the numbers), then start, a 3 s pause,
+finish-reading, submit, a second start and abandon. Every book was deleted
+afterwards. No failure in the 25 requests.
+
+| Step | n | p50 | max | Notes |
+|---|---|---|---|---|
+| `POST /sessions/start` | 10 | 1,039 ms | 1,149 ms | planner run; decisions saved after the response |
+| `POST /sessions/{id}/finish-reading` | 5 | 199 ms | 219 ms | test already assembled in the background |
+| `POST /sessions/{id}/submit-answers` | 5 | 1,893 ms | 2,338 ms | **target under 500 ms: missed; about 2.2 times C7.4** |
+| `POST /sessions/{id}/abandon` | 5 | 203 ms | 207 ms | the abandon flow runs after the response |
+
+Where the time goes, from the `duration_ms` the nodes store (first flow):
+planner 723 ms at start; on submit, evaluator 537 ms, knowledge state
+206 ms, optimizer 386 ms and planner 891 ms. The planner makes up to seven
+Supabase round trips at about 100 ms each and now runs on the submit path
+too (C8.5), which is most of the rise from about 0.9 to 1.0 s in C7.4.
+Saving decisions moved no number: it is one insert after the response.
+
+### C8 follow-up: fewer round trips on submit and start (issue 28, 2026-11-11)
+
+`python scripts/bench.py --runs 3 --flow-runs 5 --keep` against the dev
+project (start right after ready), per-node times from `agent_decisions`
+of the kept sessions, books deleted afterwards. Before: the same runs at
+`196191a` (issue 29 fixed, reads still one by one).
+
+| Step | Before p50 | After p50 | After p95 |
+|---|---|---|---|
+| `POST /sessions/start` | 921 ms | 594 ms | 654 ms |
+| `POST /sessions/{id}/submit-answers` | 1.88 s | 1.12 s | 1.27 s |
+| submit nodes: evaluator, knowledge state, optimizer, planner | about 490, 185, 360, 455 ms | about 320, 200, 190, 200 ms | |
+
+What changed: the planner reads progress, then chunks, concepts, mastery,
+bank difficulty and profile in one parallel round trip; the optimizer reads
+progress, sessions and profile at once; the evaluator stores the result
+and reads history and progress at once; `submit-answers` claims the session
+with an update that returns its row, so it no longer selects it first.
+About 10 round trips remain in sequence on submit (auth, claim, evaluator
+2, knowledge state 2, optimizer 2, planner 2) at about 100 ms each: the
+500 ms target is still missed.
+
+Upload measured 3.28 s p50 in this run against 1.23 s at `196191a`; the
+upload path did not change between the two.
 
 ### C6.4: answers graded inline (2026-11-10)
 

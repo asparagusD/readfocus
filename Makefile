@@ -1,4 +1,4 @@
-.PHONY: dev-backend dev-frontend dev graph
+.PHONY: dev-backend dev-frontend dev graph agent-graph
 
 # Run the FastAPI backend with hot reloading
 dev-backend:
@@ -17,3 +17,8 @@ graph:
 	python tools/repo_graph/inventory.py
 	python tools/repo_graph/build.py
 	python tools/repo_graph/render.py
+
+# Regenerate docs/repo-graph/AGENT_GRAPH.md from the compiled LangGraph workflow.
+# Needs the virtualenv and .env (it imports the backend), so it is not part of `graph`.
+agent-graph:
+	python scripts/export_agent_graph.py

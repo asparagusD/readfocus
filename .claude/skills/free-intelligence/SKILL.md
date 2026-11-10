@@ -34,19 +34,18 @@ algorithmic or local-model alternative instead of adding it.
 
 ### Existing violations
 
-Pre-2.0 code still uses banned providers. It is being removed, not extended:
-
-- `backend/services/llm.py` and `backend/services/embeddings.py`
-- `groq`, `langchain-groq`, `langchain-google-genai` in `requirements.txt`
-- `GROQ_API_KEY`, `GOOGLE_AI_STUDIO_KEY` in `.env.example`
-
-Do not add new imports of these modules. Check for banned providers with:
+None since C8.8: the Groq and Google AI Studio clients, their packages and
+their keys are gone. `backend/tests/test_no_paid_ai.py` fails if a banned
+SDK is imported under `backend/`, a provider is named anywhere in
+`backend/`, a provider key is read or declared, or a banned package is
+added to `requirements.txt`. The deny-list itself is `tools/no_paid_ai.py`,
+outside `backend/`. Check by hand with:
 
 ```bash
 grep -rnilE "groq|openai|anthropic|generativeai|genai|cerebras|sambanova|openrouter" backend --include=*.py
 ```
 
-The list of files it prints must only ever get shorter.
+It prints nothing. Any file it prints is a violation.
 
 ## Approved local libraries
 

@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.agents import evaluator_agent
+from backend.agents import evaluator_agent, optimizer_agent, planner_agent, workflow
 from backend.agents.evaluation.feedback import LOW_CONFIDENCE
 from backend.agents.knowledge_state import agent as knowledge_agent
 from backend.dependencies import get_current_user
@@ -63,6 +63,19 @@ class Query:
         self.filters.append(lambda r: r.get(column) in values)
         return self
 
+    def is_(self, column, value):
+        assert value == "null"
+        self.filters.append(lambda r: r.get(column) is None)
+        return self
+
+    def neq(self, column, value):
+        self.filters.append(lambda r: r.get(column) != value)
+        return self
+
+    def lte(self, column, value):
+        self.filters.append(lambda r: r.get(column) is not None and r[column] <= value)
+        return self
+
     def overlaps(self, column, values):
         self.filters.append(lambda r: bool(set(r.get(column) or []) & set(values)))
         return self
@@ -76,6 +89,8 @@ class Query:
 
     def execute(self):
         self.db.calls.append((self.name, self.action[0]))
+        if self.name in self.db.broken:
+            raise RuntimeError(f"{self.name} is down")
         rows = self.db.tables.setdefault(self.name, [])
         kind, values = self.action
         if kind == "insert":
@@ -106,7 +121,7 @@ class Query:
 
 class FakeDb:
     def __init__(self):
-        self.tables, self.calls = {}, []
+        self.tables, self.calls, self.broken = {}, [], set()
 
     def table(self, name):
         return Query(self, name)
@@ -149,7 +164,8 @@ def api(monkeypatch):
          "chunk_indices": indices, "weight": weight}
         for key, indices, weight in (("gravel", [0, 2], 0.5), ("deep-foundation", [0], 0.9), ("gravel-road", [1], 1.0))
     ]
-    for module in (sessions, question_bank, evaluator_agent, concept_store, knowledge_agent):
+    for module in (sessions, question_bank, evaluator_agent, concept_store, knowledge_agent, planner_agent, optimizer_agent,
+                   workflow):
         monkeypatch.setattr(module, "supabase", db)
     embeds = []
 
@@ -164,16 +180,14 @@ def api(monkeypatch):
     monkeypatch.setattr(embedder, "embed", fake_embed)
     monkeypatch.setattr(embedder, "get_model", lambda: None)
 
-    async def fake_pace(**kwargs):
-        return {"next_chunk_multiplier": 1.0, "total_score_seen": kwargs["evaluation_result"]["total_score"]}
-
-    monkeypatch.setattr(sessions, "optimize_pace", fake_pace)
     plan = SimpleNamespace(chunk_indices=[0], assigned_words=600, focus_duration_minutes=20, reason="test")
 
-    async def fake_plan(user_id, book_id):
-        return plan
+    async def fake_plan(user_id, book_id):  # the planner node itself is tested in test_graph.py
+        planned = {"agent": "planner", "inputs_summary": {}, "output_summary": {"chunk_indices": plan.chunk_indices},
+                   "reason": plan.reason, "duration_ms": 1.0}
+        return plan, {"event": "start_session", "user_id": user_id, "book_id": book_id, "decisions": [planned]}
 
-    monkeypatch.setattr(sessions, "plan_session", fake_plan)
+    monkeypatch.setattr(sessions, "run_start", fake_plan)
     generated = []
     monkeypatch.setattr(question_bank.question_agent, "run", lambda book_id, ids: generated.append(list(ids)))
     app.dependency_overrides[get_current_user] = lambda: USER
@@ -290,8 +304,10 @@ def test_finish_reading_of_an_unknown_session_is_404(api):
 
 
 def test_the_session_router_no_longer_uses_the_llm_test_generator():
-    source = inspect.getsource(sessions)
-    assert "test_generator_agent" not in source and "generate_test" not in source
+    from backend.agents import test_generator_agent
+
+    assert "generate_test" not in inspect.getsource(sessions)
+    assert "services.llm" not in inspect.getsource(test_generator_agent)  # the node is the question bank (C8.4)
 
 
 # --- grading (C6.4): inline, local, with a confidence ------------------------
@@ -322,7 +338,8 @@ def test_submit_answers_grades_inline_and_returns_confidence_and_feedback(api):
     assert body["max_score"] == 50 and body["total_score"] == sum(q["score"] for q in per_question)
     assert body["percentage"] == pytest.approx(body["total_score"] / 50 * 100)
     assert body["low_confidence_count"] == 0
-    assert body["pace_recommendation"]["total_score_seen"] == body["total_score"]
+    assert body["pace_recommendation"]["band"] == "hold"  # 30 of 50, from the optimizer node (C8.5)
+    assert body["next_session"]["chunk_indices"] == [1, 2]  # planned after the test, before the results show
     assert api.db.tables["sessions"][0]["status"] == "completed"
 
 
@@ -399,6 +416,7 @@ def test_a_cached_grade_is_reused_for_the_same_answer_and_not_for_a_changed_one(
     submit(api, session_id)
     assert api.embeds == []  # the only free-text answer was already graded; closed and empty ones need no model
     api.db.tables["test_results"].clear()
+    api.db.tables["sessions"][0]["status"] = "testing"  # a resubmit is now replayed (issue 33): submit afresh
     changed = [*ANSWERS[:3], "They were made of gravel on deep foundations, engineers said.", ""]
     submit(api, session_id, changed)
     assert len(api.embeds) == 1 and changed[3] in api.embeds[0]
@@ -448,3 +466,108 @@ def test_the_evaluator_uses_no_llm():
     source = inspect.getsource(evaluator_agent)
     for banned in ("services.llm", "langchain", "ChatPromptTemplate", "evaluator_llm", "MOCK"):
         assert banned not in source
+
+
+# --- the workflow's decisions, stored per run (C8.6) -------------------------------------------
+
+def decisions(api, event=None):
+    rows = api.db.tables.get("agent_decisions", [])
+    return [row for row in rows if event is None or row["event"] == event]
+
+
+def test_each_run_stores_its_decisions_in_order_under_one_run_id(api):
+    session_id, _ = start_and_finish(api)
+    submit(api, session_id)
+    for event, agents in (("start_session", ["planner"]), ("finish_reading", ["test_generator"]),
+                          ("submit_answers", ["evaluator", "knowledge_state", "optimizer", "planner"])):
+        rows = decisions(api, event)
+        assert [row["agent"] for row in rows] == agents, event
+        assert [row["step"] for row in rows] == list(range(1, len(agents) + 1))
+        assert len({row["run_id"] for row in rows}) == 1
+        assert all((row["user_id"], row["book_id"], row["session_id"]) == (USER, BOOK, session_id) for row in rows)
+        assert all(row["reason"] and row["duration_ms"] is not None for row in rows)
+    assert len({row["run_id"] for row in decisions(api)}) == 3
+
+
+def test_a_failing_decisions_insert_changes_no_response(api):
+    api.db.broken.add("agent_decisions")
+    session_id, _ = start_and_finish(api)
+    response = submit(api, session_id)
+    assert response.status_code == 200 and response.json()["max_score"] == 50
+
+
+def test_the_responses_keep_the_keys_the_pages_read(api):
+    start = api.client.post("/sessions/start", json={"book_id": BOOK}).json()
+    assert set(start) == {"session_id", "chunk_indices", "focus_duration_minutes", "reason", "chunks"}
+    finished = api.client.post(f"/sessions/{start['session_id']}/finish-reading", json={"actual_duration_minutes": 3})
+    assert set(finished.json()) == {"test_id", "questions"}
+    body = submit(api, start["session_id"]).json()
+    assert {"total_score", "max_score", "percentage", "per_question", "low_confidence_count",
+            "pace_recommendation"} <= set(body)
+
+
+def test_abandon_runs_the_optimizer_and_keeps_its_response(api):
+    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    response = api.client.post(f"/sessions/{session_id}/abandon")
+    assert response.status_code == 200 and response.json() == {"status": "abandoned"}
+    (row,) = decisions(api, "abandon")
+    assert row["agent"] == "optimizer" and row["session_id"] == session_id
+    (progress,) = api.db.tables["reading_progress"]
+    assert progress["pace_recommendation"]["band"] == "none"
+
+
+# --- a session is graded once (issue 33) ----------------------------------------------------------
+
+def test_a_resubmitted_session_returns_the_stored_result_and_runs_nothing_again(api):
+    session_id, _ = start_and_finish(api)
+    first = submit(api, session_id).json()
+    progress = json.dumps(api.db.tables["reading_progress"])
+    again = submit(api, session_id, answers=["", "", "", "", ""])
+    assert again.status_code == 200
+    body = again.json()
+    for key in ("total_score", "max_score", "percentage", "per_question", "low_confidence_count"):
+        assert body[key] == first[key], key
+    assert body["pace_recommendation"]["band"] == first["pace_recommendation"]["band"]
+    assert len(api.db.tables["test_results"]) == 1
+    assert len({row["run_id"] for row in decisions(api, "submit_answers")}) == 1  # one graph run
+    assert json.dumps(api.db.tables["reading_progress"]) == progress  # pace and queue untouched
+
+
+def test_a_failed_grading_releases_the_session_for_another_try(api, monkeypatch):
+    session_id, _ = start_and_finish(api)
+    real, broken = sessions.run_submit, {"on": True}
+
+    async def sometimes_failing(*args, **kwargs):
+        return {"error": "Missing questions in state."} if broken["on"] else await real(*args, **kwargs)
+
+    monkeypatch.setattr(sessions, "run_submit", sometimes_failing)
+    assert submit(api, session_id).status_code == 500
+    assert api.db.tables["sessions"][0]["status"] == "testing"
+    broken["on"] = False
+    assert submit(api, session_id).status_code == 200
+
+
+def test_a_completed_session_with_no_stored_result_is_a_conflict(api):
+    session_id, _ = start_and_finish(api)
+    api.db.tables["sessions"][0]["status"] = "completed"
+    response = submit(api, session_id)
+    assert response.status_code == 409 and "already" in response.json()["detail"]
+
+
+# --- a session's test is assembled once (issue 34) ------------------------------------------------
+
+def test_a_second_assembly_returns_the_stored_test_and_counts_nothing(api):
+    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    stored = api.db.tables["sessions"][0]["test_questions"]  # the background run at start
+    uses = {row["id"]: row["times_used"] for row in api.db.tables["question_bank"]}
+    again = question_bank.assemble_session_test(session_id, USER, BOOK, [0], [(["cloze"], 5)])  # a different mix
+    assert again == stored and api.db.tables["sessions"][0]["test_questions"] == stored
+    assert {row["id"]: row["times_used"] for row in api.db.tables["question_bank"]} == uses
+
+
+def test_finish_reading_shows_the_test_that_is_graded(api):
+    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    api.db.tables["sessions"][0]["test_questions"] = None  # as if the background run had not stored yet
+    shown = api.client.post(f"/sessions/{session_id}/finish-reading", json={"actual_duration_minutes": 3}).json()
+    stored = api.db.tables["sessions"][0]["test_questions"]
+    assert [q["question"] for q in shown["questions"]] == [q["question"] for q in stored]

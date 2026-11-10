@@ -15,14 +15,15 @@ stored before C5.5) is graded against the passage and always marked low.
 """
 
 import asyncio
+import time
 from typing import Any, cast
 
 from backend.agents import policy
 from backend.agents.evaluation import feedback, grader
 from backend.agents.evaluation.grader import GradeInput
-from backend.agents.state import AgentState
+from backend.agents.state import AgentState, decision
 from backend.nlp import embedder, text
-from backend.services.supabase_client import supabase
+from backend.services.supabase_client import fetch_all, supabase
 
 
 def reference_from_passage(passage: str) -> str:
@@ -85,6 +86,7 @@ def warm_up() -> None:
 
 
 async def evaluator_node(state: AgentState) -> dict:
+    started = time.perf_counter()
     user_id, book_id, session_id = state.get("user_id"), state.get("book_id"), state.get("session_id")
     chunk_indices = state.get("chunk_indices", [])
     questions = state.get("test_questions", [])
@@ -112,8 +114,9 @@ async def evaluator_node(state: AgentState) -> dict:
     public = ("score", "max_score", "feedback", "confidence", "matched_concepts", "missing_concepts")
     per_question = [{key: result.get(key) for key in public} for result in results]
 
-    # 2. Store the result; the answers keep the keys Results.jsx and the dashboard read.
-    try:
+    # 2. Store the result (the answers keep the keys Results.jsx and the dashboard read) and, at the same
+    #    time, read what the rolling average needs: one round trip instead of three (issue 28).
+    inserted, history, progress = await fetch_all(
         supabase.table("test_results").insert({
             "session_id": session_id, "user_id": user_id,
             "chunk_index": chunk_indices[0] if chunk_indices else -1,
@@ -124,21 +127,25 @@ async def evaluator_node(state: AgentState) -> dict:
             ],
             "total_score": total_score, "max_score": max_score,
             "time_taken_seconds": state.get("time_taken_seconds", 300),
-        }).execute()
-    except Exception as e:  # noqa: BLE001 - the reader still gets their result
-        print(f"Failed to insert test_results: {e}")
-
-    # 3. Update the rolling average in reading_progress.
-    try:
-        history = supabase.table("test_results").select("total_score, max_score").eq("user_id", user_id).order(
+        }),
+        supabase.table("test_results").select("session_id, total_score, max_score").eq("user_id", user_id).order(
             "created_at", desc=True
-        ).limit(10).execute()
-        recent = cast(list[dict], history.data or [])
-        max_sum = sum(r["max_score"] for r in recent)
-        progress = supabase.table("reading_progress").select("id, chunks_completed, re_read_queue").eq(
+        ).limit(policy.ROLLING_AVERAGE_TESTS),
+        supabase.table("reading_progress").select("id, chunks_completed, re_read_queue").eq(
             "user_id", user_id
-        ).eq("book_id", book_id).execute()
-        rows = cast(list[dict], progress.data or [])
+        ).eq("book_id", book_id),
+    )
+    if isinstance(inserted, Exception):  # the reader still gets their result
+        print(f"Failed to insert test_results: {inserted}")
+
+    # 3. Update the rolling average in reading_progress: this test, then the latest earlier ones.
+    try:
+        if isinstance(history, Exception) or isinstance(progress, Exception):
+            raise history if isinstance(history, Exception) else progress
+        earlier = [r for r in history if r.get("session_id") != session_id]  # the insert may or may not be seen
+        recent = [{"total_score": total_score, "max_score": max_score}, *earlier][:policy.ROLLING_AVERAGE_TESTS]
+        max_sum = sum(r["max_score"] for r in recent)
+        rows = cast(list[dict], progress)
         if recent and rows:
             supabase.table("reading_progress").update({
                 "average_score": sum(r["total_score"] for r in recent) / max_sum * 100 if max_sum else 0,
@@ -155,30 +162,14 @@ async def evaluator_node(state: AgentState) -> dict:
             "per_question": per_question,
             "low_confidence_count": sum(result["confidence"] == "low" for result in results),
         },
-        "decisions": [*state.get("decisions", []), {
-            "agent": "evaluator",
-            "input": {"questions": [question.get("id") for question in questions], "regraded": todo},
-            "output": [
+        "grades": results,
+        "decisions": [decision(  # appended by the state's reducer
+            "evaluator", started,
+            {"questions": [question.get("id") for question in questions], "regraded": todo},
+            {"total_score": total_score, "max_score": max_score, "grades": [
                 {key: result.get(key) for key in ("score", "confidence", "method", "reasons", "components")}
                 for result in results
-            ],
-        }],
+            ]},
+            f"Graded {len(results)} answers locally: {total_score} of {max_score}.",
+        )],
     }
-
-
-async def evaluate_answers(
-    session_id: str, user_id: str, book_id: str, chunk_indices: list[int], test_questions: list[dict],
-    user_answers: list[str], time_taken_seconds: int = 300,
-) -> dict | None:
-    """Run the workflow's evaluator node for one submitted test."""
-    from backend.agents.graph import workflow
-
-    result = await workflow.ainvoke(cast(AgentState, {
-        "session_id": session_id, "user_id": user_id, "book_id": book_id, "chunk_indices": chunk_indices,
-        "test_questions": test_questions, "user_answers": user_answers,
-        "time_taken_seconds": time_taken_seconds, "status": "evaluating",
-    }))
-    if result.get("error"):
-        print(f"Evaluate Answers Error: {result['error']}")
-        return None
-    return result.get("evaluation_result", {})

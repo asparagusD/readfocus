@@ -58,7 +58,7 @@ after: <yes/no, output>.
 
 ## 2026-11-10 C7.4 — finish-reading returns 500 once: "Server disconnected" from Supabase
 
-**Status:** open (outside C7.4; logged, not fixed)
+**Status:** fixed after C8.G, see "2026-11-11 C8 follow-up — issue 29" below
 
 ### Symptom
 In the second of three runs of the C7.4 check against the local backend on
@@ -113,6 +113,44 @@ None.
 
 ### Commit
 None.
+
+### Seen again, 2026-11-11 C8.6 (still open, still outside the subchunk)
+Before any C8.6 change, at `a01d635`, with the backend started from
+`.claude/launch.json` (`uvicorn backend.main:app --port 8000`) on the dev
+project:
+
+    python scripts/bench.py --runs 3 --flow-runs 5
+
+Five flows (upload `sample.pdf`, wait for ready, start, finish-reading,
+submit). The table reports `POST /sessions/start` "HTTP 500: Planner failed
+to generate a session plan." and `finish-reading` "HTTP 500: Internal
+Server Error" for at least one run each (the script keeps only the last
+failure's note). Server log, every failure line:
+
+    Background test assembly failed: Server disconnected
+    Storing concepts failed for book 3542cd1c-38d5-4a11-aa32-d227368bead4: Server disconnected
+    Planner failed for book 3542cd1c-38d5-4a11-aa32-d227368bead4: Server disconnected
+    INFO:     127.0.0.1:53151 - "POST /sessions/start HTTP/1.1" 500 Internal Server Error
+
+and one traceback, ending in the same place as above but from a new caller:
+
+      File "I:\readfocus\backend\routers\sessions.py", line 90, in finish_reading
+        }).eq("id", session_id).eq("user_id", user_id).execute()
+      File "I:\readfocus\.venv\Lib\site-packages\postgrest\_sync\request_builder.py", line 103, in execute
+        r = send_with_retry(self.request)
+      ... (httpx and httpcore HTTP/2 frames as above) ...
+      File "I:\readfocus\.venv\Lib\site-packages\httpcore\_sync\http2.py", line 443, in _read_incoming_data
+        raise RemoteProtocolError("Server disconnected")
+    httpx.RemoteProtocolError: Server disconnected
+
+New evidence for hypothesis 2: "Storing concepts failed" comes from
+ingestion's background batches and "Planner failed" from a request, both
+for the same book at the same moment; the bench starts a session as soon
+as the book is ready, while ingestion is still running on the one shared
+client. The planner makes up to 7 round trips since C8.4a, which widens the
+overlap. Not fixed here: it is the shared client in
+`backend/services/supabase_client.py`, older than C8, and every caller is
+affected. Proposed as its own fix subchunk.
 
 ## 2026-11-10 C7.4 — GET /mastery returns 500 for an offset past the last row
 
@@ -606,3 +644,385 @@ not run in isolation against the unfixed code. Passes after: yes, 48 passed.
 ### Commit
 feat(graph): add table, env, external service and LangGraph edges (C2.2b);
 the bug never reached a commit, so there is no separate fix commit.
+
+## 2026-11-11 C8.5 — submit returns 500 when no question names a concept
+
+**Status:** fixed
+
+### Symptom
+After chaining the submit flow (evaluator -> knowledge_state -> ...), one
+existing session test failed with a server error instead of a 200:
+
+    pytest backend/tests/test_api_sessions.py::test_a_question_with_no_evidence_is_graded_against_the_passage_at_low_confidence -q
+
+    backend\agents\knowledge_state\agent.py:72: in knowledge_state_node
+        updates = report.pop("updates")
+    E   KeyError: 'updates'
+    E   During task with name 'knowledge_state' and id 'cb7db64f-e2ef-1cf7-eee0-31181a00f195'
+    1 failed in 1.63s
+
+Expected: the test's only question (the fallback question) names no concept,
+so the knowledge state moves nothing and the run goes on to the planner.
+
+### Repro
+The command above fails every time.
+
+### Hypotheses
+1. `record_test` returns early when no question names a concept and that
+   return ignores `with_updates`, so the report has no `updates` key.
+   Evidence: `agent.py:44`, `if not grades: return {"questions": 0,
+   "concepts": 0}`. Ruled out if the early return is not taken for this
+   test. Result: confirmed; the fallback question has no `concept_keys`.
+2. The node's `except` misses the error because it is raised after the
+   `try`. Evidence: line 72 is after the `try` block. Result: true, but a
+   consequence of 1, not a cause.
+
+### Root cause
+`record_test`'s early return (`backend/agents/knowledge_state/agent.py:44`)
+did not honour `with_updates`, added in C8.4b. In C8.4b the node only ran
+inside `apply_test`, whose catch-all logged the `KeyError` in the background,
+so no test saw it; chained into the submit flow, it fails the request.
+
+### Fix
+The early return goes through the same report-building line as the normal
+return, so `with_updates=True` always gives an `updates` list. No change to
+the `except`: catching everything around the pop would hide the next bug.
+
+### Regression test
+`backend/tests/test_agent_nodes.py::test_a_test_that_names_no_concept_moves_nothing`.
+Failed before the fix (`KeyError: 'updates'`); passes after.
+
+### Commit
+C8.5 commit, feat(agents): chain evaluator, knowledge state, optimizer and planner in LangGraph
+
+## 2026-11-11 C8.5 — the LangGraph diagram shows nodes from a test file
+
+**Status:** fixed
+
+### Symptom
+After `make graph` in C8.5, the "LangGraph wiring" diagram in
+`docs/repo-graph/REPO_MAP.md` had three nodes the app does not have:
+
+    graph_node___start__ --> graph_node_first
+    graph_node_first --> graph_node_silent
+    graph_node_silent --> graph_node_second
+    graph_node_second --> graph_node___end__
+
+Expected: only the five agent nodes and their edges from `backend/agents/graph.py`.
+
+### Repro
+    python tools/repo_graph/query.py first
+
+lists `backend/tests/test_agent_state.py` as registering the node. The toy
+graph there was added in C8.3, so the committed map has been wrong since
+`8e8f5ca`; no tooling test looked at the real diagram's node set.
+
+### Hypotheses
+1. `py_edges` reads `add_node` / `add_edge` calls in every scanned Python
+   file, tests included. Evidence: `tools/repo_graph/build.py:260-276`
+   has no role check. Ruled out if the test file is excluded elsewhere.
+   Result: confirmed; only `tools/repo_graph/` is excluded (`SELF_PREFIX`).
+
+### Root cause
+`build_graph` passes every Python file outside the tooling to `py_edges`,
+which treats any `add_node` call as app wiring
+(`tools/repo_graph/build.py:344`).
+
+### Fix
+LangGraph wiring is read only from files whose inventory role is not
+`test`; tables, services and imports of test files are still scanned as before.
+
+### Regression test
+`tools/repo_graph/tests/test_build.py::test_a_graph_built_in_a_test_file_is_not_wiring`.
+Failed before the fix (the toy node was in the graph); passes after.
+
+### Commit
+C8.5 commit, feat(agents): chain evaluator, knowledge state, optimizer and planner in LangGraph
+
+## 2026-11-11 C8.5 — abandoning a session halves the pace again after one bad test (issue 31)
+
+**Status:** fixed
+
+### Symptom
+In the C8.6 check on the dev project (scratchpad script, test user A): a
+first test scored 1/50, so the submit run's optimizer moved the multiplier
+1.0 -> 0.5 (band `fail`). Abandoning the next session then stored a pace
+recommendation with band `none` and rules `['rolling_fail']`: the abandon
+run applied the earlier tests' band again. Expected: a run with no test
+holds the multiplier, and only the abandonment rule can lower it.
+
+### Repro
+    pytest "backend/tests/test_optimizer_pace.py::test_a_run_with_no_test_holds_the_multiplier" -q
+
+### Hypotheses
+1. Rule 7 of `backend/agents/optimizer/pace.py` (my C8.5 change) takes the
+   factor from the earlier tests' rolling band when `percentage` is None,
+   but those tests already moved the multiplier when they were submitted.
+   Evidence: `pace.py:129-135` builds the window from `recent_percentages`
+   alone and reads the factor from its band. Ruled out if the abandon run
+   got a different `previous_multiplier`. Result: confirmed; the stored
+   rules name `rolling_fail` and the window is the submitted test's 2%.
+
+### Root cause
+`decide` (`backend/agents/optimizer/pace.py:135`) applied a factor to the
+same scores twice: once when each test was submitted, again on any later
+run without a test. The C8.5 test `test_no_test_follows_the_earlier_tests_
+and_abandonment` asserted that behaviour (1.15 after earlier 90 and 85).
+
+### Fix
+With no test the factor is 1.0 (rule `no_test_hold`); the rolling mean is
+still reported, and the abandonment cap still applies. The C8.5 test that
+asserted the double application now asserts the hold.
+
+### Regression test
+`backend/tests/test_optimizer_pace.py::test_a_run_with_no_test_holds_the_multiplier`.
+
+### Commit
+fix(agents): hold the pace on a run with no test
+
+## 2026-11-11 C8.5 — abandoning a re-read loses the section from the queue (issue 32)
+
+**Status:** fixed
+
+### Symptom
+In the C8.6 check on the dev project: after a 1/50 test the next session
+was a re-read of section 1 (the planner took index 0 off the queue at
+start). That session was abandoned; the stored progress then had
+`re_read_queue: []`, so the following start would plan new reading and
+the section the reader failed is never re-read. Expected: an abandoned
+re-read goes back to the front of the queue.
+
+### Repro
+    pytest "backend/tests/test_graph.py::test_an_abandoned_re_read_goes_back_to_the_front_of_the_queue" -q
+
+### Hypotheses
+1. The planner pops the queue on `start_session` (C8.5) and the abandon
+   flow leaves the queue as it is (`pace.py` `_queue`, band `none`), so
+   nothing puts the section back. Evidence: `planner_agent.py` pop and
+   `pace.py` `elif band != "none"`. Ruled out if the queue was empty
+   before the start. Result: confirmed; the queue was `[0]` before the
+   second start and `[]` after the abandon.
+
+### Root cause
+Two C8.5 choices that are each right alone: popping at start (so the plan
+after a submit is only a preview) and leaving the queue alone on a run
+with no test. Together they drop an abandoned re-read
+(`backend/agents/optimizer/pace.py`, `_queue`).
+
+### Fix
+`OptimizerInput.already_read`: the optimizer node sets it when every
+section of the session is at or before the reader's last section read,
+which is what a re-read (or a review) is. With no test and
+`already_read`, `_queue` puts the session's sections back at the front.
+An abandoned new-reading session is not queued.
+
+### Regression test
+`backend/tests/test_graph.py::test_an_abandoned_re_read_goes_back_to_the_front_of_the_queue`
+and `backend/tests/test_optimizer_pace.py::test_an_abandoned_re_read_is_queued_first`.
+
+### Commit
+fix(agents): put an abandoned re-read back at the front of the queue
+
+## 2026-11-11 C8.G — Gate G3 check 1: the provider grep matches the C8.8 guard test
+
+**Status:** fixed
+
+### Symptom
+The first Gate G3 check, at `cc3a051`, expects no matches:
+
+    grep -rniE "groq|ChatGroq|google_genai|GoogleGenerativeAI|openai|cerebras|sambanova|openrouter" backend/ requirements.txt render.yaml
+
+and printed (exit 0):
+
+    backend/tests/test_no_paid_ai.py:17:    "groq", "langchain_groq", "openai", "langchain_openai", "anthropic", "langchain_anthropic",
+    backend/tests/test_no_paid_ai.py:18:    "langchain_google_genai", "google_genai", "cerebras", "sambanova", "openrouter",
+    backend/tests/test_no_paid_ai.py:23:    "groq", "langchain-groq", "openai", "langchain-openai", "anthropic", "langchain-anthropic",
+    backend/tests/test_no_paid_ai.py:25:    "cerebras-cloud-sdk", "sambanova", "openrouter",
+    backend/tests/test_no_paid_ai.py:27:BANNED_KEYS = re.compile(r"GROQ|GOOGLE_AI_STUDIO|GEMINI|OPENAI|ANTHROPIC|CEREBRAS|SAMBANOVA|OPENROUTER")
+
+No application file, dependency or config line matched: only the guard
+test's own deny-list.
+
+### Repro
+The command above.
+
+### Hypotheses
+1. The deny-list lives under `backend/`, which the gate greps. Evidence:
+   every match is in `backend/tests/test_no_paid_ai.py` lines 17-27.
+   Ruled out if another file matches. Result: confirmed.
+
+### Root cause
+C8.8 put the list of banned providers inside the test that enforces it,
+under `backend/tests/`, so a text search for providers over `backend/`
+finds the list itself (`backend/tests/test_no_paid_ai.py:17-27`).
+
+### Fix
+The deny-list moves to `tools/no_paid_ai.py` (tooling, outside the
+application and outside the gate's paths), next to the repo graph's own
+list of banned services; the test imports it and checks the same things.
+`backend/` then names no provider anywhere. Not a loosened check: the test
+enforces the same modules, packages and keys, and gains a test that
+`backend/` contains none of the names at all, which is the gate's grep.
+
+### Regression test
+`backend/tests/test_no_paid_ai.py::test_backend_names_no_provider`: the
+gate's grep in Python. Fails before (the deny-list is in `backend/`),
+passes after.
+
+### Commit
+fix(api): move the paid-AI deny-list out of backend/
+
+## 2026-11-11 C8 follow-up — issue 29: the shared HTTP/2 connection breaks under threads
+
+**Status:** fixed
+
+### Symptom
+"httpx.RemoteProtocolError: Server disconnected" from the shared Supabase
+client, failing `sessions/start`, `finish-reading` and background test
+assembly and concept storage while a book is still ingesting (C7.4 entry
+above, seen again at `a01d635` in C8.6).
+
+### Repro
+A scratchpad script (not committed) against the dev project: one shared
+client, N threads, each looping a select (GET), an update that matches no
+row (PATCH) and an insert the CHECK constraint refuses (POST); nothing is
+written.
+
+    python repro_issue29.py http2 8 25   # the app's client as it was
+
+Two runs: 29 and 5 errors out of 600 calls, all on that client:
+`RemoteProtocolError: <ConnectionTerminated error_code:1, last_stream_id:309, ...>`,
+`RemoteProtocolError: Server disconnected`, `LocalProtocolError` and
+`KeyError` raised from inside `h2`. Fails every run with 8 threads.
+
+### Hypotheses
+1. One HTTP/2 connection is shared by several threads (request threadpool,
+   ingestion's background thread, background tasks) and httpcore's sync
+   HTTP/2 connection is not safe for that; one broken stream ends the
+   connection for every request on it. Evidence: `postgrest/_sync/client.py`
+   builds its `httpx.Client` with `http2=True`; the `KeyError` and
+   `LocalProtocolError` are protocol-state corruption, not a server
+   decision. Ruled out if one thread also fails. Result: confirmed; one
+   thread, 150 calls, 0 errors; 8 threads fail every run.
+2. Supabase closes idle connections (GOAWAY) and only GET is retried.
+   Evidence: `send_with_retry` retries GET/HEAD only. Ruled out if the
+   errors stop without changing retries. Result: contributes (the POST and
+   PATCH failures are never retried) but is not the cause: with HTTP/1.1
+   and the same retries, 0 errors.
+
+### Root cause
+`backend/services/supabase_client.py` used supabase-py's default transport,
+one multiplexed HTTP/2 connection (`http2=True` in postgrest's client),
+from many threads at once.
+
+### Fix
+The shared client gets its own `httpx.Client(http2=False)` through
+`ClientOptions(httpx_client=...)`: HTTP/1.1 with httpx's thread-safe
+connection pool, one connection per concurrent request; the timeout stays
+postgrest's 120 s. Auth, PostgREST and Storage all use it.
+
+    python repro_issue29.py http1 8 25   # 0 errors, 6.9 s (HTTP/2: 10.0 s)
+    python repro_issue29.py ours 8 25    # the app's new client: see below
+
+### Regression test
+`backend/tests/test_supabase_client.py`: the client is built with an
+`httpx` client that has HTTP/2 off. Failed before (no `make_client`), passes
+after. The network behaviour itself is the repro above, not an offline
+test.
+
+### Commit
+fix(backend): give the shared Supabase client an HTTP/1.1 pool
+
+## 2026-11-11 C8 follow-up — issue 33: a resubmitted session is graded and paced again
+
+**Status:** fixed
+
+### Symptom
+From the code (C8.7): `submit-answers` for a session that is already
+`completed` runs the whole submit flow again. Mastery moves once (the
+`last_event_id` guard), but the evaluator inserts a second `test_results`
+row and the optimizer moves the pace and re-read queue a second time.
+
+### Repro
+    pytest "backend/tests/test_api_sessions.py::test_a_resubmitted_session_returns_the_stored_result_and_runs_nothing_again" -q
+
+Fails before the fix: two `test_results` rows, two submit runs.
+
+### Hypotheses
+1. `submit_answers` never looks at the session's status and marks it
+   `completed` only after the run, so neither a later resubmit nor a
+   concurrent one is stopped. Evidence: `backend/routers/sessions.py`,
+   the select and the final update. Result: confirmed.
+
+### Root cause
+No guard and no claim on the session in `submit_answers`
+(`backend/routers/sessions.py`).
+
+### Fix
+The session is claimed before the run with a conditional update
+(`status` not `completed` -> `completed`); a session already completed,
+or a claim lost to a concurrent submit, gets the stored result rebuilt
+from `test_results` and the current pace recommendation, in the same
+response shape, with nothing re-run (409 if no result is stored yet). If
+grading fails, the claim is released so the reader can submit again. The
+page is unchanged: a resubmit now gets a 200 with the same score instead
+of a second grading.
+
+### Regression test
+`test_a_resubmitted_session_returns_the_stored_result_and_runs_nothing_again`,
+`test_a_failed_grading_releases_the_session_for_another_try`,
+`test_a_completed_session_with_no_stored_result_is_a_conflict`
+(`backend/tests/test_api_sessions.py`). With the fix stashed 2 failed and
+1 passed (the release test: the old code never claimed the session, so it
+guards the new claim rather than reproducing the bug); restored 3 passed. `test_a_cached_grade_is_reused...` resubmitted on
+purpose; it now puts the session back to `testing` first.
+
+### Commit
+fix(api): grade a session once and replay its result on resubmit
+
+## 2026-11-11 C8 follow-up — issue 34: a session's test is assembled and stored twice
+
+**Status:** fixed
+
+### Symptom
+The stored node durations of every benchmark session showed two
+`finish_reading` runs: `finish-reading` called right after `start` runs the
+test generator inline while the background run from `start` is still going.
+Both store a test with an unconditional update, so the later one overwrites
+the earlier, and `question_bank.times_used` goes up twice. If the
+background run stores last, the test graded is not the one the reader was
+shown.
+
+### Repro
+    pytest "backend/tests/test_api_sessions.py::test_a_second_assembly_returns_the_stored_test_and_counts_nothing" -q
+
+Fails before the fix: the second assembly overwrites the stored test and
+counts its questions again. On dev (scratchpad script, start then
+finish-reading at once, 3 sessions) the old code showed the stored test
+in all 3: there the inline run stored last, so the mismatch itself was not
+reproduced; the double run and double count were.
+
+### Hypotheses
+1. `assemble_session_test` stores with an unconditional update and counts
+   use even when another run already stored a test. Evidence:
+   `backend/services/question_bank.py`, the `sessions` update and the
+   `times_used` loop. Result: confirmed by the test.
+
+### Root cause
+The store in `assemble_session_test` (`backend/services/question_bank.py`)
+was not conditional, so overlapping runs both wrote.
+
+### Fix
+The store is conditional on `test_questions is null`; the run that finds a
+test already stored returns that test and counts nothing. finish-reading
+therefore always shows the test that is graded.
+
+### Regression test
+`test_a_second_assembly_returns_the_stored_test_and_counts_nothing`
+(fails before, passes after) and
+`test_finish_reading_shows_the_test_that_is_graded` (passes before too:
+the fake runs the two in order; it guards the response). On dev with the
+fix: 3 of 3 sessions show the stored test.
+
+### Commit
+fix(api): store a session's test once

@@ -207,3 +207,88 @@ MASTERY_CONFIDENCE_WEIGHT = {"high": 1.0, "medium": 1.0, "low": 0.5}
 # at or above the last bound, the maximum.
 MASTERY_REVIEW_DAYS = [(0.4, 1), (0.6, 3), (0.8, 7)]
 MASTERY_REVIEW_DAYS_MAX = 14
+
+# --- Reading strategy (backend/agents/planner/strategy.py) ------------------
+
+# A candidate chunk's score: the weighted sum of four 0..1 components.
+PLANNER_WEIGHTS = {
+    "weak_concept_coverage": 0.35,  # share of its concepts the reader is weak on
+    "unread": 0.25,                 # 1 for the next unread section, 0 for one already read
+    "difficulty_fit": 0.20,         # how close its difficulty is to the reader's target
+    "due_for_review": 0.20,         # share of its concepts whose next review has come
+}
+
+# A concept the reader has been tested on is weak below this mastery; an
+# untested one is never weak, whatever its prior.
+PLANNER_WEAK_BELOW = 0.5
+
+# Target difficulty from the mean of the last few test percentages: below
+# the low score, at or above the high score, or in between (and with no
+# history). A chunk's fit falls linearly to 0 at this distance from the target.
+PLANNER_RECENT_TESTS = 3
+PLANNER_LOW_SCORE = 0.5
+PLANNER_HIGH_SCORE = 0.8
+PLANNER_TARGET_DIFFICULTY = {"low": 0.3, "mid": TEST_TARGET_DIFFICULTY, "high": 0.6}
+PLANNER_DIFFICULTY_SPAN = 0.5
+PLANNER_UNKNOWN_DIFFICULTY_FIT = 0.5  # a chunk with no difficulty estimate
+
+# Words in a new-reading session before the optimizer's multiplier, the
+# bounds on that multiplier, and the most sections in one session. A
+# section longer than the target is still read whole, alone.
+PLANNER_BASE_WORDS = 600
+PLANNER_MULTIPLIER_RANGE = (0.5, 2.0)
+PLANNER_MAX_CHUNKS = 3
+
+# Reading speed when the profile has none, extra time for re-reading,
+# review or low recent scores, and the bounds on a session's minutes.
+PLANNER_DEFAULT_WPM = 200
+PLANNER_SLOW_BUFFER = 0.10
+PLANNER_MINUTES_RANGE = (10, 120)
+
+# Test mix per session mode, in the assembler's TEST_MIX form. Re-reading
+# and review lean on recall (cloze, definitions) of what was missed.
+PLANNER_QUESTION_MIX = {
+    "new": TEST_MIX,
+    "re_read": [(["cloze"], 2), (["multiple_choice"], 1), (["definition", "why_how"], 1), (["main_idea"], 1)],
+    "review": [(["cloze"], 2), (["definition"], 1), (["multiple_choice"], 1), (["why_how", "main_idea"], 1)],
+}
+
+# --- Learning optimizer (backend/agents/optimizer/pace.py) ------------------
+
+# Score bands on a 0..100 percentage: (from, band, multiplier factor), first
+# match wins. The old optimizer's 40 / 25 / 10 of 50 points. The band of the
+# rolling mean sets the factor; the band of this test alone decides re-reading.
+OPT_BANDS = [(80.0, "grow", 1.15), (50.0, "hold", 1.0), (20.0, "reduce", 0.80), (0.0, "fail", 0.50)]
+
+# The rolling mean covers this test and the ones before it, this many in all.
+OPT_ROLLING_TESTS = 3
+
+# Abandoned sessions among the last few: at the limit, the factor is at most
+# this, so sessions shrink instead of growing.
+OPT_ABANDON_WINDOW = 5
+OPT_ABANDON_LIMIT = 2
+OPT_ABANDON_FACTOR = 0.80
+
+# The measured reading speed (words over actual minutes) is used within
+# these multiples of the profile speed.
+OPT_SPEED_RANGE = (0.5, 1.5)
+
+# Most sections waiting in the re-read queue; the oldest fall off the end.
+OPT_REREAD_QUEUE_MAX = 5
+
+# A question type fails when its mean score (0..1) over at least this many
+# recent answers is below the bound; it gets one place more next test, from
+# the passing group with most places. Every group keeps its places in range.
+OPT_TYPE_FAIL_BELOW = 0.5
+OPT_TYPE_MIN_SAMPLES = 2
+OPT_MIX_PLACES_RANGE = (1, 3)
+
+# Recent question outcomes (strategy, 0..1 score) kept with the pace
+# recommendation, newest first, for the per-type failure rule.
+OPT_OUTCOME_HISTORY = 15
+
+# --- Evaluator (backend/agents/evaluator_agent.py) --------------------------
+
+# reading_progress.average_score is the mean of this many latest tests (this
+# one included); the value the evaluator used before C8 follow-up.
+ROLLING_AVERAGE_TESTS = 10

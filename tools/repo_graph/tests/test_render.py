@@ -67,5 +67,6 @@ def test_real_map_has_two_diagrams_and_is_deterministic():
 
     first = real()
     assert first.count("```mermaid") == 2
-    assert "graph_node_planner" in first and "external_groq" in first
+    assert "graph_node_planner" in first and "external_langgraph" in first
+    assert ":::banned" not in first.split("classDef banned")[0]  # no banned provider since C8.8
     assert first == real()

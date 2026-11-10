@@ -228,7 +228,7 @@ def test_real_graph_has_the_schema_and_the_agents():
     graph = build.build_repo()
     tables = {
         "profiles", "books", "chunks", "sessions", "test_results", "reading_progress", "question_bank",
-        "concepts", "user_concept_mastery",
+        "concepts", "user_concept_mastery", "agent_decisions",
     }
     assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
     # The tooling and its fixtures must not leak into the graph.
@@ -239,6 +239,18 @@ def test_real_graph_has_the_schema_and_the_agents():
         "file:backend/services/retriever.py", "function:match_chunks_local",
     ) in edges(graph, "calls_function")
     assert {to for _, to in edges(graph, "graph_node")} == {
-        f"graph_node:{n}" for n in ("planner", "test_generator", "evaluator", "optimizer")
+        f"graph_node:{n}" for n in ("planner", "test_generator", "evaluator", "knowledge_state", "optimizer")
     }
     assert {n["type"] for n in graph["nodes"]} == set(build.NODE_TYPES)
+
+
+def test_a_graph_built_in_a_test_file_is_not_wiring():
+    toy = (
+        "from langgraph.graph import StateGraph\n"
+        "g = StateGraph(dict)\n"
+        'g.add_node("toy", step)\n'
+        'g.add_edge("__start__", "toy")\n'
+    )
+    graph = build_fixture({**FIXTURE, "backend/tests/test_toy.py": toy})
+    assert "graph_node:toy" not in {n["id"] for n in graph["nodes"]}
+    assert edges(graph, "graph_node") == {("file:backend/agents/graph.py", "graph_node:planner")}

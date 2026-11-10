@@ -51,6 +51,8 @@ async def optimizer_node(state: AgentState) -> dict:
         wpm=profile[0]["reading_goal_wpm"] if profile else None, session_words=this.get("assigned_words") or 0,
         actual_minutes=this.get("actual_duration_minutes"), outcomes=[QuestionOutcome(**o) for o in outcomes],
         previous_mix=pace.get("question_mix"),
+        already_read=bool(indices) and max(indices) <= (progress.get("last_chunk_index") if progress.get(
+            "last_chunk_index") is not None else -1),
     )
     recommendation = decide(data)
     stored = {

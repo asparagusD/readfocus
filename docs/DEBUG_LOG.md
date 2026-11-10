@@ -779,3 +779,46 @@ asserted the double application now asserts the hold.
 
 ### Commit
 fix(agents): hold the pace on a run with no test
+
+## 2026-11-11 C8.5 — abandoning a re-read loses the section from the queue (issue 32)
+
+**Status:** fixed
+
+### Symptom
+In the C8.6 check on the dev project: after a 1/50 test the next session
+was a re-read of section 1 (the planner took index 0 off the queue at
+start). That session was abandoned; the stored progress then had
+`re_read_queue: []`, so the following start would plan new reading and
+the section the reader failed is never re-read. Expected: an abandoned
+re-read goes back to the front of the queue.
+
+### Repro
+    pytest "backend/tests/test_graph.py::test_an_abandoned_re_read_goes_back_to_the_front_of_the_queue" -q
+
+### Hypotheses
+1. The planner pops the queue on `start_session` (C8.5) and the abandon
+   flow leaves the queue as it is (`pace.py` `_queue`, band `none`), so
+   nothing puts the section back. Evidence: `planner_agent.py` pop and
+   `pace.py` `elif band != "none"`. Ruled out if the queue was empty
+   before the start. Result: confirmed; the queue was `[0]` before the
+   second start and `[]` after the abandon.
+
+### Root cause
+Two C8.5 choices that are each right alone: popping at start (so the plan
+after a submit is only a preview) and leaving the queue alone on a run
+with no test. Together they drop an abandoned re-read
+(`backend/agents/optimizer/pace.py`, `_queue`).
+
+### Fix
+`OptimizerInput.already_read`: the optimizer node sets it when every
+section of the session is at or before the reader's last section read,
+which is what a re-read (or a review) is. With no test and
+`already_read`, `_queue` puts the session's sections back at the front.
+An abandoned new-reading session is not queued.
+
+### Regression test
+`backend/tests/test_graph.py::test_an_abandoned_re_read_goes_back_to_the_front_of_the_queue`
+and `backend/tests/test_optimizer_pace.py::test_an_abandoned_re_read_is_queued_first`.
+
+### Commit
+fix(agents): put an abandoned re-read back at the front of the queue

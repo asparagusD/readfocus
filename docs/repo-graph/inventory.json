@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7654,
+      "size_bytes": 7690,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -193,16 +193,16 @@
     {
       "path": "backend/agents/optimizer/pace.py",
       "language": "python",
-      "lines": 175,
-      "size_bytes": 7846,
+      "lines": 181,
+      "size_bytes": 8312,
       "role": "agent",
       "purpose": "Learning optimizer, pure: decide(OptimizerInput) sets the next pace multiplier from the rolling score band (80/50/20%, the old optimizer's thresholds), never grows after a low test or recent abandonment, keeps it in the planner's range; queues or prioritises the session's sections for re-reading by this test's band; derives focus minutes from a bounded measured reading speed; and moves one question place to the worst failing type. Keeps the keys Results.jsx reads."
     },
     {
       "path": "backend/agents/optimizer_agent.py",
       "language": "python",
-      "lines": 81,
-      "size_bytes": 4417,
+      "lines": 83,
+      "size_bytes": 4577,
       "role": "agent",
       "purpose": "Optimizer node, no LLM: reads progress and the stored pace recommendation (previous multiplier, recent percentages, recent question outcomes, question mix), the book's recent sessions (this one's words and minutes, earlier abandonments) and the profile speed; calls optimizer.pace.decide; stores the recommendation with its history and the re-read queue (creating the progress row for older books); returns it with one decisions entry. On abandon there is no test: the stopped session counts as abandoned and no score is recorded."
     },
@@ -609,8 +609,8 @@
     {
       "path": "backend/tests/test_graph.py",
       "language": "python",
-      "lines": 169,
-      "size_bytes": 7654,
+      "lines": 179,
+      "size_bytes": 8225,
       "role": "test",
       "purpose": "Pytest: each router function of the graph, the exact set of compiled edges, the recursion limit, and on the in-memory database the submit chain in order, the low-confidence skip of the optimizer, an evaluator error ending the run, the plan after submit as a preview that does not pop the re-read queue, and the start, finish-reading, abandon and unknown-event flows."
     },
@@ -665,8 +665,8 @@
     {
       "path": "backend/tests/test_optimizer_pace.py",
       "language": "python",
-      "lines": 231,
-      "size_bytes": 10073,
+      "lines": 238,
+      "size_bytes": 10471,
       "role": "test",
       "purpose": "Pytest on hand-made scores, sessions and answers: every score band at its boundaries, the re-read queue rules and bound, rolling damping, no growth after a low test, compounding within bounds, abandonment and its window, focus minutes and speed bounds, question-mix moves and their bounds, reason wording, the Results keys, and that decide is pure."
     },
@@ -753,8 +753,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 781,
-      "size_bytes": 33140,
+      "lines": 824,
+      "size_bytes": 35062,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -769,8 +769,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1358,
-      "size_bytes": 224932,
+      "lines": 1359,
+      "size_bytes": 226425,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

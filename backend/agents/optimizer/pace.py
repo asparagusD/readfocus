@@ -15,7 +15,9 @@ Rules, every bound in backend/agents/policy.py:
    the passing group with most places; one move per test, places in range.
 7. No test (an abandoned session, percentage None): band "none", the queue
    is left alone, and the multiplier holds: the earlier tests already moved
-   it when they were submitted. Only the abandonment cap can lower it.
+   it when they were submitted. Only the abandonment cap can lower it. A
+   stopped re-read (sections already read) goes back to the front of the
+   queue, since the planner took it off when the session started.
 
 The output keeps the keys Results.jsx reads (next_chunk_multiplier,
 focus_duration_minutes, re_read_mode, reason).
@@ -57,6 +59,7 @@ class OptimizerInput(BaseModel):
     actual_minutes: float | None = None
     outcomes: list[QuestionOutcome] = []  # this test's and recent tests' answers
     previous_mix: Mix | None = None
+    already_read: bool = False  # every section was read before this session (a re-read); used with no test
 
 
 class PaceRecommendation(BaseModel):
@@ -85,7 +88,10 @@ def _queue(data: OptimizerInput, band: str) -> list[int]:
         queue = list(data.chunk_indices) + [index for index in queue if index not in data.chunk_indices]
     elif band == "reduce":
         queue += [index for index in data.chunk_indices if index not in queue]
-    elif band != "none":
+    elif band == "none":
+        if data.already_read:  # an abandoned re-read: the planner took it off the queue at start
+            queue = list(data.chunk_indices) + [index for index in queue if index not in data.chunk_indices]
+    else:
         queue = [index for index in queue if index not in data.chunk_indices]
     return queue[:policy.OPT_REREAD_QUEUE_MAX]
 

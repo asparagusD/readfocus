@@ -229,3 +229,10 @@ def test_a_run_with_no_test_holds_the_multiplier():
 def test_no_test_follows_abandonment_only():
     stopped = run(None, recent_percentages=[90], recent_abandoned=[True] * policy.OPT_ABANDON_LIMIT)
     assert stopped.next_chunk_multiplier == pytest.approx(policy.OPT_ABANDON_FACTOR)
+
+
+def test_an_abandoned_re_read_is_queued_first():
+    # Issue 32: the planner took the section off the queue when the session started.
+    result = run(None, chunk_indices=[2], re_read_queue=[5], already_read=True)
+    assert result.re_read_queue == [2, 5] and result.re_read_mode is False
+    assert run(None, chunk_indices=[2], re_read_queue=[5]).re_read_queue == [5]  # new reading: not queued

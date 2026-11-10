@@ -167,3 +167,13 @@ def test_abandon_runs_only_the_optimizer_and_counts_the_session(db):
 def test_an_unknown_event_runs_nothing():
     final = asyncio.run(graph.workflow.ainvoke({"event": "nope"}, config=workflow.RUN_CONFIG))
     assert agents(final) == []
+
+
+def test_an_abandoned_re_read_goes_back_to_the_front_of_the_queue(db):
+    db.tables["reading_progress"][0].update(last_chunk_index=3, re_read_queue=[2, 1])
+    plan, _ = asyncio.run(workflow.run_start(USER, BOOK))
+    assert plan.mode == "re_read" and plan.chunk_indices == [2]
+    assert db.tables["reading_progress"][0]["re_read_queue"] == [1]
+    db.tables["sessions"][0]["status"] = "abandoned"
+    asyncio.run(workflow.run_abandon("s1", USER, BOOK, plan.chunk_indices))
+    assert db.tables["reading_progress"][0]["re_read_queue"] == [2, 1]  # issue 32: not lost

@@ -182,3 +182,28 @@ GRADE_POINTS = 10
 # A question with no evidence of its own is graded against this many of the
 # passage's most informative sentences, always at low confidence.
 GRADE_FALLBACK_SENTENCES = 3
+
+# --- Knowledge state (backend/agents/knowledge_state/mastery.py) ------------
+
+# Mastery (0..1) of a concept the reader has not been tested on yet; the
+# default of user_concept_mastery.mastery in migration 008.
+MASTERY_PRIOR = 0.3
+
+# A graded question's 0..1 score is correct at or above the first, wrong
+# below the second, and partial in between.
+MASTERY_CORRECT_FROM = 0.7
+MASTERY_WRONG_BELOW = 0.4
+
+# A correct answer closes this share of the gap to 1; a wrong one takes this
+# share of the mastery away. Partial credit lands between the two results,
+# in proportion to the score.
+MASTERY_GAIN = 0.30
+MASTERY_LOSS = 0.25
+
+# How much of that move a grade makes, by the grader's confidence.
+MASTERY_CONFIDENCE_WEIGHT = {"high": 1.0, "medium": 1.0, "low": 0.5}
+
+# Days until the next review: (mastery below this, days), first match wins;
+# at or above the last bound, the maximum.
+MASTERY_REVIEW_DAYS = [(0.4, 1), (0.6, 3), (0.8, 7)]
+MASTERY_REVIEW_DAYS_MAX = 14

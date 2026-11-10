@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 175,
-    "inventoried": 164,
+    "tracked": 178,
+    "inventoried": 167,
     "excluded": 11
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7394,
+      "size_bytes": 7410,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -159,6 +159,22 @@
       "purpose": "Builds the LangGraph workflow: routes from __start__ by state status to planner, test_generator, evaluator or optimizer, each ending at END."
     },
     {
+      "path": "backend/agents/knowledge_state/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 108,
+      "role": "agent",
+      "purpose": "Package marker for backend.agents.knowledge_state, per-concept mastery from graded answers with no LLM."
+    },
+    {
+      "path": "backend/agents/knowledge_state/mastery.py",
+      "language": "python",
+      "lines": 104,
+      "size_bytes": 3832,
+      "role": "agent",
+      "purpose": "Mastery update, pure: decide(current_rows, grades, event_id) moves each concept a graded question names (correct closes 30% of the gap to 1, wrong takes 25% away, partial interpolates by score, low confidence at half weight), clamps to 0..1, sets the review interval by mastery band, counts attempts and correct, and skips rows already updated by the same event."
+    },
+    {
       "path": "backend/agents/optimizer_agent.py",
       "language": "python",
       "lines": 120,
@@ -177,10 +193,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 184,
-      "size_bytes": 6668,
+      "lines": 209,
+      "size_bytes": 7635,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading and feedback."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback and the knowledge state's mastery update."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -535,6 +551,14 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_mastery.py",
+      "language": "python",
+      "lines": 151,
+      "size_bytes": 6547,
+      "role": "test",
+      "purpose": "Pytest on hand-made rows and grades: the correct, wrong and partial rules and their boundaries, bounds and monotonicity, low-confidence half weight, the prior for untested concepts, counters, review intervals by band, idempotency per event, and that decide is pure."
+    },
+    {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
       "lines": 222,
@@ -641,8 +665,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1119,
-      "size_bytes": 172077,
+      "lines": 1120,
+      "size_bytes": 174612,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1257,8 +1281,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 166,
-      "size_bytes": 28892,
+      "lines": 169,
+      "size_bytes": 29802,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

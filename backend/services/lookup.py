@@ -6,6 +6,8 @@ found" included, is kept in the shared `term_lookups` table (90 days found,
 gets one attempt: a timeout or error skips it (no retries, no base forms)
 and the other source is still asked, so a lookup waits at most two slow
 calls. An answer found after a skipped source is returned but not cached.
+A source that answers busy (429 or 5xx gateway) is left alone for its
+Retry-After (60 s by default, at most 5 minutes).
 """
 
 import logging
@@ -32,12 +34,15 @@ MAX_BASE_FORMS = 3
 MAX_MEANINGS, MAX_DEFINITIONS, MAX_SENTENCES = 3, 2, 2
 MEMORY_ENTRIES = 2000
 RATE_LIMIT, RATE_WINDOW_SECONDS = 60, 60
+BUSY_STATUSES = {429, 502, 503, 504}
+BUSY_SECONDS, MAX_BUSY_SECONDS = 60, 300  # skip a busy source this long (Retry-After, capped)
 UNAVAILABLE = "We couldn't look this up right now. Please try again in a moment."
 
 log = logging.getLogger(__name__)
 _http = httpx.Client(timeout=TIMEOUT_SECONDS, headers={"User-Agent": USER_AGENT}, follow_redirects=True)
 _memory: OrderedDict = OrderedDict()
 _calls: dict[str, deque] = {}
+_busy_until: dict[str, datetime] = {}  # host -> when to ask it again
 _lock = threading.Lock()
 
 
@@ -59,6 +64,7 @@ def reset() -> None:
     with _lock:
         _memory.clear()
         _calls.clear()
+        _busy_until.clear()
 
 
 def normalize(raw: str) -> Term | None:
@@ -106,14 +112,32 @@ def allow(user_id: str) -> int:
         return 0
 
 
+def busy_for(retry_after: str | None) -> int:
+    """Seconds to leave a busy source alone: Retry-After in seconds, capped; an HTTP date or nothing gives the default."""
+    value = (retry_after or "").strip()
+    return min(int(value), MAX_BUSY_SECONDS) if value.isdigit() else BUSY_SECONDS
+
+
 def _get(url: str) -> dict | list | None:
-    """The JSON at url, None on 404; raises Unavailable on a timeout, network error or other status."""
+    """The JSON at url, None on 404; raises Unavailable on a timeout, network error or other status.
+
+    A busy answer (429, 502, 503, 504) also makes later calls to that host
+    fail at once, without a request, until its Retry-After has passed.
+    """
+    host = httpx.URL(url).host
+    with _lock:
+        until = _busy_until.get(host)
+    if until and _now() < until:
+        raise Unavailable(f"{host} is busy")
     try:
         response = _http.get(url)
     except httpx.HTTPError as error:
         raise Unavailable(str(error)) from error
     if response.status_code == 404:
         return None
+    if response.status_code in BUSY_STATUSES:
+        with _lock:
+            _busy_until[host] = _now() + timedelta(seconds=busy_for(response.headers.get("Retry-After")))
     if response.status_code != 200:
         raise Unavailable(f"status {response.status_code}")
     try:

@@ -782,6 +782,11 @@ Wikipedia 404. A word cannot be called "not found" while the dictionary
 has not answered, so these stay unavailable and uncached. Real terms were
 unaffected: `serendipity` (dictionary) and `Walden Pond` (Wikipedia, 298 ms).
 
+Second follow-up (busy sources are skipped): 12 more made-up words. The
+second one met a dictionary 502 with `Retry-After: 60`; the ten after it
+went to Wikipedia only (500–1,720 ms, one request each) until the minute
+was up, instead of each waiting on the dictionary first.
+
 Memory: importing `backend/services/lookup.py` in a fresh process with
 httpx and the Supabase client already loaded: 55.8 → 57.1 MB RSS (+1.3
 MB). No new dependency (httpx was already pinned). The in-process LRU

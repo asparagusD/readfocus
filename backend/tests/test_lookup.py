@@ -55,6 +55,8 @@ class Upstream:
             return httpx.Response(404, json={"title": "No Definitions Found"})
         if isinstance(answer, Exception):
             raise answer
+        if isinstance(answer, httpx.Response):
+            return answer
         return httpx.Response(200, json=answer)
 
     @property
@@ -260,3 +262,45 @@ def test_a_term_that_is_not_a_word_is_422(env):
 
 def test_lookup_needs_a_signed_in_user():
     assert TestClient(app).get("/lookup", params={"term": "run"}).status_code in (401, 403)
+
+
+def busy(retry_after=None):
+    return httpx.Response(502, text="<html>Bad gateway</html>",
+                          headers={"Retry-After": retry_after} if retry_after else {})
+
+
+def test_a_502_with_retry_after_skips_the_dictionary_for_that_long(env):
+    env.upstream.routes[DICT + "zzxq"] = busy("60")
+    env.upstream.routes[WIKI + "Thoreauvian"] = dict(THOREAU, title="Thoreauvian")
+    assert get(env, "zzxq").json()["unavailable"] is True
+    env.upstream.requests.clear()
+    env.clock.now += timedelta(seconds=59)
+    assert get(env, "thoreauvian").json()["source"] == "wikipedia"
+    assert env.upstream.urls == [WIKI + "Thoreauvian"]  # the dictionary is not asked while it is busy
+    env.upstream.routes[DICT + "run"] = RUN
+    env.clock.now += timedelta(seconds=2)
+    assert get(env, "run").json()["source"] == "dictionary"
+
+
+@pytest.mark.parametrize("status", [429, 503])
+def test_other_busy_answers_skip_the_source_for_the_default_minute(env, status):
+    env.upstream.routes[WIKI + "Walden_Pond"] = httpx.Response(status)
+    get(env, "Walden Pond")
+    env.upstream.requests.clear()
+    env.clock.now += timedelta(seconds=lookup.BUSY_SECONDS - 1)
+    assert get(env, "Walden Pond").json()["unavailable"] is True and env.upstream.requests == []
+    env.clock.now += timedelta(seconds=2)
+    get(env, "Walden Pond")
+    assert len(env.upstream.requests) == 1
+
+
+@pytest.mark.parametrize("header, seconds", [("120", 120), ("100000", 300), ("Wed, 21 Oct 2015 07:28:00 GMT", 60)])
+def test_retry_after_is_read_in_seconds_and_capped(header, seconds):
+    assert lookup.busy_for(header) == seconds
+
+
+def test_a_timeout_does_not_skip_the_source_next_time(env):
+    env.upstream.routes[DICT + "slow"] = httpx.ReadTimeout("slow")
+    get(env, "slow")
+    env.upstream.routes[DICT + "run"] = RUN
+    assert get(env, "run").json()["source"] == "dictionary"

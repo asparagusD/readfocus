@@ -79,3 +79,28 @@
   gap: var(--space-5);
   max-width: 480px;
 }
+
+.gallery-covers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-5) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gallery-covers li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gallery-cover-label {
+  font: 400 var(--text-label)/var(--text-label--line-height) var(--font-ui);
+  color: var(--ink-2);
+}
+
+.gallery-cover-sizes {
+  align-items: flex-end;
+  margin-block-start: var(--space-6);
+}

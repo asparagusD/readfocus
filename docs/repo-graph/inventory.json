@@ -1,24 +1,24 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 283,
-    "inventoried": 227,
-    "excluded": 56
+    "tracked": 314,
+    "inventoried": 251,
+    "excluded": 63
   },
   "files": [
     {
       "path": ".claude/skills/atomic-commit/SKILL.md",
       "language": "markdown",
-      "lines": 187,
-      "size_bytes": 5964,
+      "lines": 188,
+      "size_bytes": 6005,
       "role": "doc",
       "purpose": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes."
     },
     {
       "path": ".claude/skills/debug-protocol/SKILL.md",
       "language": "markdown",
-      "lines": 201,
-      "size_bytes": 6310,
+      "lines": 202,
+      "size_bytes": 6349,
       "role": "doc",
       "purpose": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template."
     },
@@ -73,8 +73,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 184,
-      "size_bytes": 8310,
+      "lines": 186,
+      "size_bytes": 8546,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -425,10 +425,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 211,
-      "size_bytes": 8723,
+      "lines": 252,
+      "size_bytes": 10920,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -437,6 +437,14 @@
       "size_bytes": 3686,
       "role": "service",
       "purpose": "The concepts of a book in the concepts table: save upserts one row per (user, book, concept key) for a batch of chunks, keeping the first label, growing chunk_indices and taking the highest weight; concepts_for_chunks reads the concepts some chunks mention; link_key_terms (pure) ties a question's key terms to concept keys."
+    },
+    {
+      "path": "backend/services/covers.py",
+      "language": "python",
+      "lines": 147,
+      "size_bytes": 6385,
+      "role": "service",
+      "purpose": "Book covers from Open Library (C11.2), backend only: title search (first author, no edition notes) for a cover ID, the image by ID through archive.org redirects (https, Open Library and archive.org hosts only), copied unchanged (at most 150 KB, the C11.5 image budget) into the public covers bucket once per cover ID; the outcome (cover_url, cover_source openlibrary/none/error) saved on the book; 3 s timeout, one attempt, descriptive User-Agent; never raises."
     },
     {
       "path": "backend/services/ingestion_worker.py",
@@ -505,10 +513,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 137,
-      "size_bytes": 4799,
+      "lines": 140,
+      "size_bytes": 4963,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload and download), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -575,6 +583,14 @@
       "purpose": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development."
     },
     {
+      "path": "backend/tests/test_backfill_covers.py",
+      "language": "python",
+      "lines": 84,
+      "size_bytes": 3430,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, the dev-only guard, a failing book not stopping the run, and a book without a readable file looked up by its typed title."
+    },
+    {
       "path": "backend/tests/test_bench.py",
       "language": "python",
       "lines": 108,
@@ -597,6 +613,14 @@
       "size_bytes": 5271,
       "role": "test",
       "purpose": "Pytest: plural reduction, phrase normalisation, concept key slugs, merging of identical, fuzzy, overlapping and embedding-close phrases, and extract_concepts on a fixed passage without the real model."
+    },
+    {
+      "path": "backend/tests/test_covers.py",
+      "language": "python",
+      "lines": 230,
+      "size_bytes": 10374,
+      "role": "test",
+      "purpose": "Pytest with httpx.MockTransport and the in-memory database: cover hit stored in the bucket with its URL, misses, missing or non-image covers, timeouts and network, server and storage errors stored as null, archive.org redirects followed and others refused, the client's 3 s timeout and User-Agent, lookup terms, and title/author metadata from PDF info and EPUB OPF."
     },
     {
       "path": "backend/tests/test_embedder.py",
@@ -649,10 +673,10 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 197,
-      "size_bytes": 8135,
+      "lines": 235,
+      "size_bytes": 9699,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent."
+      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails)."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
@@ -681,10 +705,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 339,
-      "size_bytes": 13666,
+      "lines": 348,
+      "size_bytes": 14157,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket."
     },
     {
       "path": "backend/tests/test_model_ready.py",
@@ -855,18 +879,26 @@
       "purpose": "Claude Design export, kept unchanged: React production build used by the dc-runtime viewer; not used by the app."
     },
     {
+      "path": "docs/ASSETS.md",
+      "language": "markdown",
+      "lines": 40,
+      "size_bytes": 3648,
+      "role": "doc",
+      "purpose": "Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License)."
+    },
+    {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 768,
-      "size_bytes": 42037,
+      "lines": 821,
+      "size_bytes": 45216,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1313,
-      "size_bytes": 57266,
+      "lines": 1515,
+      "size_bytes": 65139,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -889,8 +921,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1762,
-      "size_bytes": 317823,
+      "lines": 1937,
+      "size_bytes": 347020,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -945,10 +977,10 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 38,
-      "size_bytes": 1029,
+      "lines": 39,
+      "size_bytes": 1082,
       "role": "config",
-      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -959,12 +991,36 @@
       "purpose": "WCAG contrast check of every text, boundary and cover pair in styles/tokens.css for the four theme x accent combinations; exit 1 on a failure (npm run check:contrast)."
     },
     {
+      "path": "frontend/scripts/check-images.mjs",
+      "language": "text",
+      "lines": 97,
+      "size_bytes": 4533,
+      "role": "config",
+      "purpose": "Image budgets (npm run check:images, a standard check since C11.5): each raster under src/ and public/ at most 150 KB, all together at most 400 KB, illustration SVGs at most 8 KB, every <img> with width, height, decoding and loading (lazy, or eager with fetchPriority high for the LCP image), and the backend cover cap within budget; optional root argument for scratch trees; exit 1 on any failure."
+    },
+    {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 83,
-      "size_bytes": 3023,
+      "lines": 94,
+      "size_bytes": 3544,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); a dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery."
+    },
+    {
+      "path": "frontend/src/components/BookCover.css",
+      "language": "css",
+      "lines": 115,
+      "size_bytes": 3534,
+      "role": "component",
+      "purpose": "BookCover styles: 2:3 box in container units, the five cover tokens by data-color, frame, title and author, image cross-fade over --dur-3, spine band and its 1.6 s processing shimmer (stopped under reduced motion), author hidden below 80 px."
+    },
+    {
+      "path": "frontend/src/components/BookCover.jsx",
+      "language": "jsx",
+      "lines": 74,
+      "size_bytes": 3093,
+      "role": "component",
+      "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative."
     },
     {
       "path": "frontend/src/components/CalibrationFlow.jsx",
@@ -1177,18 +1233,34 @@
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 179,
-      "size_bytes": 7149,
+      "lines": 211,
+      "size_bytes": 8978,
       "role": "asset",
-      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks."
+      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes)."
+    },
+    {
+      "path": "frontend/src/gallery/IllustrationGallery.css",
+      "language": "css",
+      "lines": 80,
+      "size_bytes": 1758,
+      "role": "asset",
+      "purpose": "Layout styles for the dev-only illustration gallery."
+    },
+    {
+      "path": "frontend/src/gallery/IllustrationGallery.jsx",
+      "language": "jsx",
+      "lines": 82,
+      "size_bytes": 2834,
+      "role": "asset",
+      "purpose": "Dev-only /__illustrations page: the illustration set in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
     },
     {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
-      "lines": 81,
-      "size_bytes": 1355,
+      "lines": 106,
+      "size_bytes": 1847,
       "role": "asset",
-      "purpose": "Layout styles for the dev-only component gallery."
+      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid."
     },
     {
       "path": "frontend/src/gallery/main.jsx",
@@ -1215,12 +1287,108 @@
       "purpose": "Adds the .visible class on mount and returns navigateTo, which fades the page out before routing."
     },
     {
+      "path": "frontend/src/illustrations/BookStack.jsx",
+      "language": "jsx",
+      "lines": 7,
+      "size_bytes": 216,
+      "role": "asset",
+      "purpose": "Illustration component: the stack of four books, from svg/BookStack.svg through Illustration."
+    },
+    {
+      "path": "frontend/src/illustrations/CrescentMoon.jsx",
+      "language": "jsx",
+      "lines": 7,
+      "size_bytes": 256,
+      "role": "asset",
+      "purpose": "Illustration component: the crescent moon with three stars (part stars), from svg/CrescentMoon.svg through Illustration."
+    },
+    {
+      "path": "frontend/src/illustrations/DuskWindow.jsx",
+      "language": "jsx",
+      "lines": 7,
+      "size_bytes": 259,
+      "role": "asset",
+      "purpose": "Illustration component: the arched window at dusk with a low sun over a hill (parts sun, hill), from svg/DuskWindow.svg through Illustration."
+    },
+    {
+      "path": "frontend/src/illustrations/EmptyShelf.jsx",
+      "language": "jsx",
+      "lines": 7,
+      "size_bytes": 249,
+      "role": "asset",
+      "purpose": "Illustration component: the empty bookcase with a bookend and one leaning book, from svg/EmptyShelf.svg through Illustration."
+    },
+    {
+      "path": "frontend/src/illustrations/Illustration.jsx",
+      "language": "jsx",
+      "lines": 30,
+      "size_bytes": 1274,
+      "role": "asset",
+      "purpose": "Shared wrapper for the original illustrations: inlines an svgo-optimised SVG (imported ?raw), decorative (aria-hidden) unless titled (role img), size prop, opt-in ambient loops; other props such as ref reach the outer span for Motion."
+    },
+    {
+      "path": "frontend/src/illustrations/OpenBook.jsx",
+      "language": "jsx",
+      "lines": 7,
+      "size_bytes": 248,
+      "role": "asset",
+      "purpose": "Illustration component: the open book with a ribbon bookmark (part ribbon), from svg/OpenBook.svg through Illustration."
+    },
+    {
+      "path": "frontend/src/illustrations/ReadingLamp.jsx",
+      "language": "jsx",
+      "lines": 7,
+      "size_bytes": 276,
+      "role": "asset",
+      "purpose": "Illustration component: the reading lamp with glow disc and light cone (parts glow, cone, bulb), from svg/ReadingLamp.svg through Illustration."
+    },
+    {
+      "path": "frontend/src/illustrations/TeaCup.jsx",
+      "language": "jsx",
+      "lines": 8,
+      "size_bytes": 371,
+      "role": "asset",
+      "purpose": "Illustration component: tea cup on a saucer line with three steam wisps; steam={false} gives the cooled cup of the error screen."
+    },
+    {
+      "path": "frontend/src/illustrations/illustrations.css",
+      "language": "css",
+      "lines": 80,
+      "size_bytes": 2564,
+      "role": "asset",
+      "purpose": "Illustration styles: 1.6 px non-scaling line in --ink-2, fills from theme tokens (surface, accent-soft, accent), Lamplight glow strength, steam off, steam and glow loops by transform and opacity."
+    },
+    {
+      "path": "frontend/src/illustrations/index.js",
+      "language": "javascript",
+      "lines": 9,
+      "size_bytes": 373,
+      "role": "asset",
+      "purpose": "Barrel export of the illustration components and PARTS."
+    },
+    {
+      "path": "frontend/src/illustrations/parts.js",
+      "language": "javascript",
+      "lines": 15,
+      "size_bytes": 770,
+      "role": "asset",
+      "purpose": "PARTS: data-part selectors for the animatable parts of the illustrations (glow, cone, bulb, steam, sun, hill, ribbon, stars), for Motion."
+    },
+    {
+      "path": "frontend/src/illustrations/svgo.config.mjs",
+      "language": "text",
+      "lines": 10,
+      "size_bytes": 332,
+      "role": "asset",
+      "purpose": "svgo settings for the illustration sources: multipass, preset-default keeping the viewBox, dimensions removed; classes and data-part hooks kept."
+    },
+    {
       "path": "frontend/src/index.css",
       "language": "css",
-      "lines": 43,
-      "size_bytes": 1119,
+      "lines": 40,
+      "size_bytes": 1401,
       "role": "asset",
-      "purpose": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; the reset (base layer) and the .page fade."
+      "purpose": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; and the reset (base layer); the pre-2.0 .page fade was removed in C11.5 (it hid every page's first contentful paint)."
     },
     {
       "path": "frontend/src/lib/api.js",
@@ -1229,6 +1397,14 @@
       "size_bytes": 1044,
       "role": "lib",
       "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response."
+    },
+    {
+      "path": "frontend/src/lib/coverColor.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 760,
+      "role": "lib",
+      "purpose": "coverColor(title, author): D5's deterministic cover colour, FNV-1a 32-bit of the trimmed, lower-cased title and author joined by U+001F, modulo 5, into moss, oxblood, ink, ochre, slate."
     },
     {
       "path": "frontend/src/lib/supabase.js",
@@ -1487,6 +1663,14 @@
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
     {
+      "path": "scripts/backfill_covers.py",
+      "language": "python",
+      "lines": 113,
+      "size_bytes": 4689,
+      "role": "script",
+      "purpose": "Backfill: looks up Open Library covers for ready books never looked up or whose lookup failed, one at a time 1.5 s apart, with file metadata and the typed title as fallback (also when the file is missing or unreadable); a failing book is reported as error and the run goes on; --dry-run, --limit, --book-id; refuses unless ENV=development."
+    },
+    {
       "path": "scripts/backfill_local_embeddings.py",
       "language": "python",
       "lines": 104,
@@ -1719,6 +1903,14 @@
       "purpose": "Adds indexes for the per-user reads: sessions (user_id, status, completed_at) and (user_id, book_id), test_results (session_id) and (user_id, created_at), books (user_id, status). Indexes only."
     },
     {
+      "path": "supabase/migrations/012_book_covers.sql",
+      "language": "sql",
+      "lines": 20,
+      "size_bytes": 1044,
+      "role": "migration",
+      "purpose": "Adds books.cover_url and books.cover_source (text, nullable) and the public covers Storage bucket (service role writes). Additive."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1745,8 +1937,8 @@
     {
       "path": "tools/repo_graph/build.py",
       "language": "python",
-      "lines": 384,
-      "size_bytes": 16930,
+      "lines": 386,
+      "size_bytes": 17120,
       "role": "script",
       "purpose": "Builds docs/repo-graph/graph.json: typed nodes and edges for files, endpoints, tables, functions, env vars, external services and LangGraph nodes; LangGraph wiring is read from non-test files only."
     },
@@ -1761,8 +1953,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 229,
-      "size_bytes": 51724,
+      "lines": 253,
+      "size_bytes": 58468,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1793,8 +1985,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 256,
-      "size_bytes": 10352,
+      "lines": 260,
+      "size_bytes": 10625,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },
@@ -2038,6 +2230,34 @@
     },
     {
       "path": "frontend/src/assets/vite.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/BookStack.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/CrescentMoon.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/DuskWindow.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/EmptyShelf.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/OpenBook.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/ReadingLamp.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/TeaCup.svg",
       "reason": "binary"
     },
     {

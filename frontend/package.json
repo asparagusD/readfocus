@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "check:contrast": "node scripts/check-contrast.mjs",
+    "check:images": "node scripts/check-images.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -121,6 +121,10 @@
       "handler": "submit_answers"
     },
     {
+      "id": "env:DEV",
+      "type": "env"
+    },
+    {
       "id": "env:EMBED_PRELOAD",
       "type": "env"
     },
@@ -521,6 +525,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/covers.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/ingestion_worker.py",
       "type": "file",
       "role": "service",
@@ -623,6 +633,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_covers.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_bench.py",
       "type": "file",
       "role": "test",
@@ -636,6 +652,12 @@
     },
     {
       "id": "file:backend/tests/test_concepts.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_covers.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -833,6 +855,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:docs/ASSETS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/BENCHMARKS.md",
       "type": "file",
       "role": "doc",
@@ -911,9 +939,27 @@
       "language": "text"
     },
     {
+      "id": "file:frontend/scripts/check-images.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:frontend/src/App.jsx",
       "type": "file",
       "role": "entry",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/BookCover.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/BookCover.jsx",
+      "type": "file",
+      "role": "component",
       "language": "jsx"
     },
     {
@@ -1079,6 +1125,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/gallery/IllustrationGallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/gallery/gallery.css",
       "type": "file",
       "role": "asset",
@@ -1103,6 +1161,78 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/illustrations/BookStack.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/CrescentMoon.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/DuskWindow.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/EmptyShelf.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/Illustration.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/OpenBook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/ReadingLamp.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/TeaCup.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/illustrations.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/illustrations/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/illustrations/parts.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/illustrations/svgo.config.mjs",
+      "type": "file",
+      "role": "asset",
+      "language": "text"
+    },
+    {
       "id": "file:frontend/src/index.css",
       "type": "file",
       "role": "asset",
@@ -1110,6 +1240,12 @@
     },
     {
       "id": "file:frontend/src/lib/api.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/coverColor.js",
       "type": "file",
       "role": "lib",
       "language": "javascript"
@@ -1307,6 +1443,12 @@
       "language": "text"
     },
     {
+      "id": "file:scripts/backfill_covers.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/backfill_local_embeddings.py",
       "type": "file",
       "role": "script",
@@ -1476,6 +1618,12 @@
     },
     {
       "id": "file:supabase/migrations/011_query_indexes.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/012_book_covers.sql",
       "type": "file",
       "role": "migration",
       "language": "sql"
@@ -1677,6 +1825,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/005_local_embeddings.sql",
       "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/012_book_covers.sql",
+      "to": "table:books"
     },
     {
       "type": "calls_endpoint",
@@ -2542,6 +2695,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/processing_jobs.py"
     },
     {
@@ -2557,6 +2715,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/covers.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -2796,6 +2959,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_backfill_covers.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_covers.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_covers.py",
+      "to": "file:scripts/backfill_covers.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
     },
@@ -2813,6 +2991,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_concepts.py",
       "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -2923,6 +3116,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/covers.py"
     },
     {
       "type": "imports",
@@ -3206,6 +3404,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/BookCover.jsx",
+      "to": "file:frontend/src/components/BookCover.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BookCover.jsx",
+      "to": "file:frontend/src/lib/coverColor.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -3322,6 +3530,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/BookCover.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
     {
@@ -3371,6 +3584,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "file:frontend/src/gallery/IllustrationGallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gallery/main.jsx",
       "to": "file:frontend/src/components/ui/Toast.jsx"
     },
@@ -3398,6 +3621,46 @@
       "type": "imports",
       "from": "file:frontend/src/hooks/useAuth.jsx",
       "to": "file:frontend/src/lib/supabase.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/BookStack.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/CrescentMoon.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/DuskWindow.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/EmptyShelf.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/Illustration.jsx",
+      "to": "file:frontend/src/illustrations/illustrations.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/OpenBook.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/ReadingLamp.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/TeaCup.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
     },
     {
       "type": "imports",
@@ -3563,6 +3826,21 @@
       "type": "imports",
       "from": "file:frontend/src/theme/ThemeProvider.jsx",
       "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/supabase_client.py"
     },
     {
       "type": "imports",
@@ -3906,6 +4184,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_local_embeddings.py",
       "to": "table:chunks"
     },
@@ -3976,6 +4259,21 @@
     },
     {
       "type": "uses_env",
+      "from": "file:frontend/src/App.jsx",
+      "to": "env:DEV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "env:DEV"
+    },
+    {
+      "type": "uses_env",
       "from": "file:frontend/src/lib/api.js",
       "to": "env:VITE_API_URL"
     },
@@ -3988,6 +4286,11 @@
       "type": "uses_env",
       "from": "file:frontend/src/lib/supabase.js",
       "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "env:ENV"
     },
     {
       "type": "uses_env",
@@ -4078,6 +4381,11 @@
       "type": "writes_table",
       "from": "file:backend/services/concept_store.py",
       "to": "table:concepts"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/covers.py",
+      "to": "table:books"
     },
     {
       "type": "writes_table",

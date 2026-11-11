@@ -1311,3 +1311,205 @@ container padding 0 24px.
 
 ### Commit
 fix(ui): fit the dashboard stat row on 375 px screens
+
+## 2026-11-11 C11.1 — repo graph lists Vite asset imports as unresolved
+
+**Status:** fixed
+
+### Symptom
+`make graph` after staging C11.1 printed `300 nodes, 500 edges, 7
+unresolved` (0 before). The seven entries were the illustration
+components' `import svg from './svg/<Name>.svg?raw'`. The files exist; no
+check failed, but `unresolved` is meant for broken references only.
+
+### Repro
+`pytest tools/repo_graph/tests -q` with the fixture page importing
+`'../illustrations/svg/Shelf.svg?raw'`: `test_js_imports` fails, the
+import is in `graph["unresolved"]`.
+
+### Hypotheses
+1. The resolver joins the specifier with its `?raw` query, so no path can
+   match. Evidence: `js_edges` normalises `spec` as is. Result:
+   **contributes**; stripping the query alone still misses.
+2. SVG files are not inventoried (`inventory.BINARY_EXTENSIONS`), so even
+   the bare path is not in `paths`. Result: **confirmed**.
+
+### Root cause
+`tools/repo_graph/build.py` `js_edges`: imports resolve only against
+inventoried text files, and the specifier's query was kept.
+
+### Fix
+Strip `?query` before resolving; an import of a binary-extension file that
+does not resolve is skipped (an asset, not a code edge). A missing `.js`
+or `.jsx` import is still listed as unresolved.
+
+### Regression test
+`tools/repo_graph/tests/test_build.py::test_js_imports`: the fixture page
+imports `Shelf.svg?raw` and the test asserts it is not unresolved. Failed
+before (1 failed, 61 passed), passes after (62 passed).
+
+### Commit
+Part of feat(design): add original SVG illustration set (C11.1), since the
+graph regeneration in that commit needs it.
+
+## 2026-11-11 C11.2 — a book with a cover on Open Library stored "none" (search terms)
+
+**Status:** fixed
+
+### Symptom
+`python scripts/backfill_covers.py --book-id 58a7d7e4-…` on dev saved
+`cover_source = 'none'` for *Digital Design and Computer Architecture*,
+which Open Library has. No error; a wrong result.
+
+### Repro
+The lookup terms for that book: metadata title `Digital Design and
+Computer Architecture (4th Edition)`, author `David Harris, Sarah Harris`.
+`search.json` with those returns no docs; with `Digital Design and
+Computer Architecture` and `David Harris` it returns cover 10140705.
+
+### Hypotheses
+1. The edition note in brackets makes the title search miss. Result:
+   **confirmed** (together with 2).
+2. A list of authors in one string matches no single author. Result:
+   **confirmed**.
+
+### Root cause
+`backend/services/covers.py` `lookup_terms` passed the metadata strings
+unchanged.
+
+### Fix
+Drop bracketed notes and a subtitle after ':' from the title; keep the
+first author (split on `,`, `;`, `&`, `and`).
+
+### Regression test
+`test_covers.py::test_lookup_terms_drop_editions_subtitles_and_extra_authors`:
+4 failed before, passes after.
+
+### Commit
+Part of feat(ingest): fetch book covers from Open Library with safe
+fallback (C11.2).
+
+## 2026-11-11 C11.2 — a found cover was not stored (image redirect)
+
+**Status:** fixed
+
+### Symptom
+After the fix above the same book still saved `cover_source = 'none'`.
+
+### Repro
+`GET https://covers.openlibrary.org/b/id/10140705-M.jpg?default=false`
+answers `302` to `archive.org/download/…`, which redirects again to an
+`ia8xxxxx.us.archive.org` node that returns the JPEG (12,355 bytes).
+
+### Hypotheses
+1. The client does not follow redirects (`follow_redirects=False`), so
+   the 302 is read as "no image". Result: **confirmed**.
+
+### Root cause
+`backend/services/covers.py` `fetch_image` treated any non-200 as a miss,
+and Open Library serves every cover through archive.org redirects.
+
+### Fix
+`fetch_image` follows up to three redirects itself, and only to https
+`covers.openlibrary.org`, `archive.org` or `*.archive.org`; any other
+target is refused before it is requested. The search request still does
+not follow redirects.
+
+### Regression test
+`test_covers.py::test_the_image_follows_open_library_redirects_to_archive_org`
+failed before (1 failed, 30 passed) and passes after;
+`test_an_image_redirect_off_archive_org_is_refused` covers the limit. On
+dev the book then stored `covers/ol/10140705-M.jpg` (200, image/jpeg,
+12,355 bytes, `max-age=31536000`).
+
+### Commit
+Part of feat(ingest): fetch book covers from Open Library with safe
+fallback (C11.2).
+
+## 2026-11-11 C11.2 — the cover backfill stopped on a book with no stored file
+
+**Status:** fixed
+
+### Symptom
+`python scripts/backfill_covers.py` on dev looked up five books, then
+stopped with `TypeError: argument of type 'NoneType' is not iterable`
+from `storage3 ... relative_path_to_parts` inside
+`book_ingestor.download`. The sixth book (`f450cf54…`, an old test row)
+has `storage_path` null.
+
+### Repro
+`test_backfill_covers.py::test_a_failing_book_is_reported_and_the_run_goes_on`
+and `::test_a_book_without_a_readable_file_is_looked_up_by_its_typed_title`:
+2 failed before the fix.
+
+### Hypotheses
+1. A book with no file reaches `download(None)`. Result: **confirmed**
+   (the row's `storage_path` is null).
+2. Any exception in one lookup ends the run, since `run` does not catch
+   it. Result: **confirmed**.
+
+### Root cause
+`scripts/backfill_covers.py`: the lookup always downloaded the file for
+its metadata, and `run` let one book's exception stop the loop.
+
+### Fix
+`look_up` (now a module function) skips the file when there is no path
+or it cannot be read, and uses the typed title and author; `run` reports
+a failing book as `error` and goes on.
+
+### Regression test
+The two tests above pass after the fix (6 passed). On dev the rerun
+looked up the last book (`none`); a dry run then lists 0 books.
+
+### Commit
+fix(ingest): keep the cover backfill going past a book with no file
+
+## 2026-11-11 C11.5 — Lighthouse NO_FCP: no page reported a contentful paint
+
+**Status:** fixed
+
+### Symptom
+`npx lighthouse@12.8.2 http://localhost:4173/login --only-categories=performance`
+(production preview; Edge via `CHROME_PATH`, headless and windowed):
+`Runtime error encountered: The page did not paint any content ...
+(NO_FCP)`, every run. The page is on screen (screenshot taken), but
+`performance.getEntriesByType('paint')` holds only `first-paint`: no
+`first-contentful-paint`, no `largest-contentful-paint` entries.
+
+### Repro
+Scratchpad `fcp_bisect.mjs` (headless Edge, fresh profile per load,
+paint entries read after 3 s): `/login` on the preview 0/6 loads with
+FCP; the component gallery (`/gallery.html`, same libraries, no app
+shell) 4/4; the backend's `/docs` 4/4.
+
+### Hypotheses
+1. Something on `/login` starts invisible: Motion's route wrapper
+   (`m.div`) or the pre-2.0 `.page` fade (`opacity: 0` until
+   `usePageTransition` adds `.visible`). Evidence: the gallery has
+   neither. Test: route wrapper as a plain `div`: 1/4 (not it); Login
+   without the `page` class: 4/4. Result: **confirmed** for `.page`.
+2. A View Transition on load. Evidence against: theme.js skips it under
+   reduced motion, which failed as well. Result: rejected.
+3. Headless only, or the page counted as hidden. Evidence against:
+   windowed Lighthouse also NO_FCP; `visibilityState` "visible" in failing
+   loads. Result: rejected.
+
+### Root cause
+`frontend/src/index.css` `.page { opacity: 0 }` with a transition to 1 on
+`.visible`. Chrome does not count text painted under opacity 0, and the
+reveal is a composited opacity transition that paints nothing new, so the
+first contentful paint is never reported. Every page carries `.page`.
+Since C10.4 the route transition in `App.jsx` does the fade; this one is
+redundant.
+
+### Fix
+Remove the two `.page` rules; the class names stay on the pages until
+their rebuilds (C12–C13).
+
+### Regression test
+No frontend test runner. `fcp_bisect.mjs`: `/login` 6/6 loads with FCP on
+dev and on the rebuilt preview (0/6 before). Lighthouse on `/login`
+then completes (score 88, docs/BENCHMARKS.md, C11.5).
+
+### Commit
+fix(ui): let pages report their first contentful paint

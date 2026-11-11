@@ -32,12 +32,9 @@
   }
 }
 
-/* Page Transition Classes */
-.page {
-  opacity: 0;
-  transition: opacity var(--dur-1) var(--ease-settle);
-}
-
-.page.visible {
-  opacity: 1;
-}
+/* The pre-2.0 `.page` fade (opacity 0 until usePageTransition added
+   `.visible`) is gone: Chrome ignores text painted at opacity 0 and does
+   not report it again when a composited fade reveals it, so no page had a
+   first or largest contentful paint (C11.5, docs/DEBUG_LOG.md). The
+   route transition in App.jsx fades pages in. `.page` and `.visible` stay
+   on the pages as plain class names until their rebuilds. */

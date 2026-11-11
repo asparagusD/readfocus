@@ -1,0 +1,9 @@
+export { Illustration } from './Illustration';
+export { ReadingLamp } from './ReadingLamp';
+export { BookStack } from './BookStack';
+export { TeaCup } from './TeaCup';
+export { DuskWindow } from './DuskWindow';
+export { EmptyShelf } from './EmptyShelf';
+export { OpenBook } from './OpenBook';
+export { CrescentMoon } from './CrescentMoon';
+export { PARTS } from './parts';

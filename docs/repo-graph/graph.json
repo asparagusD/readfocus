@@ -1494,6 +1494,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/WordCard.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/WordCard.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/reader/anchor.js",
       "type": "file",
       "role": "asset",
@@ -1531,6 +1543,18 @@
     },
     {
       "id": "file:frontend/src/reader/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/lookup.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/lookup.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -1579,6 +1603,12 @@
     },
     {
       "id": "file:frontend/src/reader/useWordAtPoint.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useWordCard.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4041,7 +4071,17 @@
     {
       "type": "imports",
       "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
       "to": "file:frontend/src/reader/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
     },
     {
       "type": "imports",
@@ -4331,6 +4371,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/WordCard.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
       "to": "file:frontend/src/reader/anchor.js"
     },
     {
@@ -4341,12 +4386,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
       "to": "file:frontend/src/reader/reader.css"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/reader/BookReader.jsx",
       "to": "file:frontend/src/reader/useWordAtPoint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/useWordCard.js"
     },
     {
       "type": "imports",
@@ -4385,6 +4440,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/WordCard.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/anchor.js",
       "to": "file:frontend/src/reader/geometry.js"
     },
@@ -4397,6 +4462,16 @@
       "type": "imports",
       "from": "file:frontend/src/reader/geometry.test.js",
       "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/lookup.js",
+      "to": "file:frontend/src/reader/wordAt.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/lookup.test.js",
+      "to": "file:frontend/src/reader/lookup.js"
     },
     {
       "type": "imports",

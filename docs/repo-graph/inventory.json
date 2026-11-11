@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 355,
-    "inventoried": 292,
+    "tracked": 360,
+    "inventoried": 297,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 188,
-      "size_bytes": 9028,
+      "size_bytes": 9044,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -474,9 +474,9 @@
       "path": "backend/services/lookup.py",
       "language": "python",
       "lines": 268,
-      "size_bytes": 10699,
+      "size_bytes": 10739,
       "role": "service",
-      "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
+      "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract and Wikipedia's short description; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
     },
     {
       "path": "backend/services/processing_jobs.py",
@@ -761,8 +761,8 @@
     {
       "path": "backend/tests/test_lookup.py",
       "language": "python",
-      "lines": 306,
-      "size_bytes": 12795,
+      "lines": 307,
+      "size_bytes": 12929,
       "role": "test",
       "purpose": "Pytest with httpx.MockTransport and the in-memory database through TestClient: normalisation and base forms, dictionary hit payload and User-Agent, base-form retry, dictionary miss to Wikipedia, proper noun and phrase to Wikipedia, disambiguation, timeout answered gracefully and not cached, cache hit with no request, 90-day and 7-day expiry, a broken cache table, the per-user 429, 422 for non-terms, 401 without a user."
     },
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2109,
-      "size_bytes": 400856,
+      "lines": 2110,
+      "size_bytes": 403877,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1049,8 +1049,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 40,
-      "size_bytes": 1135,
+      "lines": 41,
+      "size_bytes": 1172,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -1337,10 +1337,10 @@
     {
       "path": "frontend/src/gallery/ReaderGallery.jsx",
       "language": "jsx",
-      "lines": 66,
-      "size_bytes": 2699,
+      "lines": 70,
+      "size_bytes": 2937,
       "role": "asset",
-      "purpose": "Dev-only /__reader page: the paginated reader on the Walden fixture with text size, length (1x or 4x) and theme controls, the current anchor and page count, and what a hover or selection would look up (C12.7); not in the production build."
+      "purpose": "Dev-only /__reader page: the paginated reader on the Walden fixture with text size, length (1x or 4x) and theme controls, the current anchor and page count, and what a hover or selection would look up (C12.7), with the word card over the real /lookup (C12.8); not in the production build."
     },
     {
       "path": "frontend/src/gallery/gallery.css",
@@ -1657,10 +1657,10 @@
     {
       "path": "frontend/src/reader/BookReader.jsx",
       "language": "jsx",
-      "lines": 304,
-      "size_bytes": 14592,
+      "lines": 326,
+      "size_bytes": 15891,
       "role": "asset",
-      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text)."
+      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text); the word card when the caller passes a lookupClient (C12.8: opened on hover intent or a settled selection, Enter or ? on a selection opens it with focus, closed on a turn, page change or Esc, a polite live region announces each answer; hoverLookup turns hover off)."
     },
     {
       "path": "frontend/src/reader/ContentsDrawer.css",
@@ -1701,6 +1701,22 @@
       "size_bytes": 2468,
       "role": "asset",
       "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens."
+    },
+    {
+      "path": "frontend/src/reader/WordCard.css",
+      "language": "css",
+      "lines": 136,
+      "size_bytes": 4762,
+      "role": "asset",
+      "purpose": "Styles of the word card: page surface, hairline, --shadow-lift, Playfair headword, Lora text, accent-caps part of speech, 44 px close and link targets, a 150 ms rise (fade only under reduced motion, set inside @layer base to outrank base.css), --z-popover."
+    },
+    {
+      "path": "frontend/src/reader/WordCard.jsx",
+      "language": "jsx",
+      "lines": 118,
+      "size_bytes": 4385,
+      "role": "asset",
+      "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard."
     },
     {
       "path": "frontend/src/reader/anchor.js",
@@ -1757,6 +1773,22 @@
       "size_bytes": 176,
       "role": "asset",
       "purpose": "Barrel export of the reader: BookReader, anchor helpers and page geometry."
+    },
+    {
+      "path": "frontend/src/reader/lookup.js",
+      "language": "javascript",
+      "lines": 102,
+      "size_bytes": 4180,
+      "role": "asset",
+      "purpose": "In-place lookup, client side (C12.8): createLookupClient over GET /lookup (LRU of 300 recent answers per visit, one request per term, a newer term aborts the older request with AbortController, errors and 'unavailable' answers not kept), the per-user hover setting in localStorage (on by default, storage failures tolerated), and cardContent, which turns an answer into what the card shows (definition, summary, ambiguous, none, unavailable, loading) with a sentence to announce."
+    },
+    {
+      "path": "frontend/src/reader/lookup.test.js",
+      "language": "javascript",
+      "lines": 135,
+      "size_bytes": 7383,
+      "role": "asset",
+      "purpose": "node --test: one request per term, names and words cached apart, stale requests aborted, shared in-flight requests, failures not cached, LRU eviction, the per-user hover setting, and cardContent for every state."
     },
     {
       "path": "frontend/src/reader/readAhead.js",
@@ -1817,10 +1849,18 @@
     {
       "path": "frontend/src/reader/useWordAtPoint.js",
       "language": "javascript",
-      "lines": 129,
-      "size_bytes": 5604,
+      "lines": 167,
+      "size_bytes": 7554,
       "role": "asset",
-      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM: caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside the word's rects; 350 ms on the same word looks it up once; a 2-5 word selection (mouse or touch) looks up a phrase; marks the target via highlight.js; paused while a leaf turns; returns clear()."
+      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM: caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside the word's rects; 350 ms on the same word looks it up once; a 2-5 word selection (mouse or touch) looks up a phrase; marks the target via highlight.js; paused while a leaf turns; returns clear(); C12.8: hover can be turned off (selection still works), lookUpSelection() for Enter or ? on a selected word or phrase, clearMark() removes the mark without cancelling a hover under way."
+    },
+    {
+      "path": "frontend/src/reader/useWordCard.js",
+      "language": "javascript",
+      "lines": 72,
+      "size_bytes": 3093,
+      "role": "asset",
+      "purpose": "The word card's state and closing rules (C12.8): open() shows a loading card and fetches through the lookup client; a hover-opened card closes 200 ms after the pointer leaves both word and card; any card closes on Esc, a press elsewhere or close(); closing from inside the card returns focus to the book."
     },
     {
       "path": "frontend/src/reader/wordAt.js",
@@ -2281,8 +2321,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 294,
-      "size_bytes": 75368,
+      "lines": 299,
+      "size_bytes": 77864,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

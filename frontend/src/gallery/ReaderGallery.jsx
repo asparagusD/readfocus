@@ -1,10 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { BookReader } from '../reader';
+import { createLookupClient } from '../reader/lookup';
+import { fetchApi } from '../lib/api';
 import { WALDEN_BLOCKS } from './readerFixture';
 import './ReaderGallery.css';
 
 const SIZES = [16.5, 18, 19.5];
+const lookupClient = createLookupClient(fetchApi); // C12.8: the real /lookup (sign in first, or mock it)
 
 /** The fixture repeated `copies` times, each copy in later chunks, so pagination can be timed on a longer text. */
 function repeated(copies) {
@@ -59,6 +62,7 @@ export default function ReaderGallery() {
           onPlaceChange={onPlaceChange}
           onPagesChange={setPages}
           onLookup={onLookup}
+          lookupClient={lookupClient}
         />
       </div>
     </div>

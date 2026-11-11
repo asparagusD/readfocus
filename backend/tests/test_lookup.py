@@ -33,7 +33,7 @@ RUN = [{
     ],
 }]
 THOREAU = {
-    "type": "standard", "title": "Henry David Thoreau",
+    "type": "standard", "title": "Henry David Thoreau", "description": "American naturalist and writer (1817–1862)",
     "extract": "Henry David Thoreau was an American naturalist. He wrote Walden. He died in 1862.",
     "content_urls": {"desktop": {"page": "https://en.wikipedia.org/wiki/Henry_David_Thoreau"}},
     "thumbnail": {"source": "https://upload.test/thoreau.jpg"},
@@ -144,6 +144,7 @@ def test_a_proper_noun_goes_to_wikipedia_first(env):
     assert env.upstream.urls == [WIKI + "Henry_David_Thoreau"]
     assert body["wiki"] == {
         "title": "Henry David Thoreau",
+        "description": "American naturalist and writer (1817–1862)",
         "extract": "Henry David Thoreau was an American naturalist. He wrote Walden.",
         "url": "https://en.wikipedia.org/wiki/Henry_David_Thoreau",
         "thumbnail_url": "https://upload.test/thoreau.jpg",

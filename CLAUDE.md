@@ -130,7 +130,7 @@ Baseline when this file was written (C1.1; the last three rows were added in C10
 | `pytest tools/repo_graph/tests -q` | passes: 62 tests (61 until C8.5) |
 | `npm --prefix frontend run check:contrast` | passes: 204 pairs across 4 theme x accent combinations, 0 failing (200 until C10.3) |
 | `npm --prefix frontend run check:images` | passes: 1 raster (13.1 KB), 7 illustrations, 1 `<img>`, 0 failing |
-| `npm --prefix frontend run test:unit` | passes: 27 tests, 18 until C12.7, 15 until C12.5a, 12 until C12.4 (Node's built-in runner over `frontend/src/**/*.test.js`; needs Node 22 or later) |
+| `npm --prefix frontend run test:unit` | passes: 37 tests, 27 until C12.8a, 18 until C12.7, 15 until C12.5a, 12 until C12.4 (Node's built-in runner over `frontend/src/**/*.test.js`; needs Node 22 or later) |
 
 Until a chunk brings ruff and ESLint to zero, "never commit failing checks"
 means: the seven passing checks stay green and the two error counts never go

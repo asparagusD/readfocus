@@ -174,7 +174,7 @@ def _from_wikipedia(term: str, page: dict) -> dict:
     if page.get("type") == "disambiguation":
         return dict(out, ambiguous=True)
     sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9\"“(])", (page.get("extract") or "").strip())
-    out["wiki"] = {"title": page.get("title"), "extract": " ".join(sentences[:MAX_SENTENCES]), "url": url,
+    out["wiki"] = {"title": page.get("title"), "description": page.get("description"), "extract": " ".join(sentences[:MAX_SENTENCES]), "url": url,
                    "thumbnail_url": (page.get("thumbnail") or {}).get("source")}
     return out
 

@@ -7,6 +7,9 @@ import { PageTurn } from './PageTurn';
 import { anchorForPage, pageForAnchor, pageOfElement } from './anchor';
 import { clampPage, pageCount, pageGeometry } from './geometry';
 import { useWordAtPoint } from './useWordAtPoint';
+import { WordCard } from './WordCard';
+import { useWordCard } from './useWordCard';
+import { cardContent } from './lookup';
 import './reader.css';
 
 /** The frame's size, rounded, updated by a ResizeObserver. */
@@ -54,7 +57,7 @@ const px = (n) => `${n}px`;
  */
 export function BookReader({
   blocks, bookTitle, chapterBefore = '', fontSize = 18, initialAnchor = null, lang = 'en',
-  onPlaceChange, onPagesChange, onNearEnd, label, lead = null, endPage = null, pacing = false, onBookmark, statusNote, onLookup, ref,
+  onPlaceChange, onPagesChange, onNearEnd, label, lead = null, endPage = null, pacing = false, onBookmark, statusNote, onLookup, lookupClient, hoverLookup = true, ref,
 }) {
   const frameRef = useRef(null);
   const flowRef = useRef(null);
@@ -114,8 +117,24 @@ export function BookReader({
 
   const onTurnDone = useCallback(() => setTurn(null), []);
   // In-place lookup (C12.7): only when the page asks for it; off until the flow is laid out and while a leaf turns.
-  const { clear: clearLookup } = useWordAtPoint(flowRef, markRef, { onLookup, lang, paused: !g || Boolean(turn) });
-  useEffect(() => clearLookup(), [page, g, clearLookup]); // the marked word has moved or left the page
+  // The word card (C12.8) when the page passes a lookup client; closing it removes the mark.
+  const clearMark = useRef(() => {});
+  const { card, open: openCard, close: closeCard, cardRef } = useWordCard({
+    client: lookupClient, returnFocusTo: bookRef, onClosed: () => clearMark.current(),
+  });
+  const onTarget = useCallback((target) => {
+    onLookup?.(target);
+    if (lookupClient) openCard(target, target.by);
+  }, [onLookup, lookupClient, openCard]);
+  const { clear: clearLookup, clearMark: clearLookupMark, lookUpSelection } = useWordAtPoint(flowRef, markRef, {
+    onLookup: onLookup || lookupClient ? onTarget : undefined, lang, paused: !g || Boolean(turn), hover: hoverLookup,
+  });
+  useEffect(() => { clearMark.current = clearLookupMark; }, [clearLookupMark]);
+  useEffect(() => { // the marked word has moved or left the page
+    clearLookup();
+    closeCard(false);
+  }, [page, g, clearLookup, closeCard]);
+  const announce = card ? cardContent(card.state, card.target).announce : '';
   // For the contents drawer (C12.5b): open the page holding a place.
   useImperativeHandle(ref, () => ({
     goToPlace(place) {
@@ -172,7 +191,8 @@ export function BookReader({
     else if ((event.key === 'b' || event.key === 'B') && onBookmark) bookmark();
     else if (event.key === 'Home') goTo(0);
     else if (event.key === 'End') goTo(layout.count - 1);
-    else if (event.key === 'Escape' && onLookup) clearLookup();
+    else if (event.key === 'Escape' && (onLookup || lookupClient)) clearLookup();
+    else if ((event.key === 'Enter' || event.key === '?') && lookupClient && lookUpSelection()) { /* the card opens with focus */ }
     else return;
     event.preventDefault();
   };
@@ -247,7 +267,7 @@ export function BookReader({
                 </div>
               );
             })}
-            {onLookup && <div className="rf-mark-layer" ref={markRef} aria-hidden="true" />}
+            {(onLookup || lookupClient) && <div className="rf-mark-layer" ref={markRef} aria-hidden="true" />}
             <div className="rf-viewport">
               <div className="rf-flow" lang={lang} ref={flowRef} style={{ transform: `translateX(${-page * g.stride}px)` }}>
                 <BookFlow blocks={blocks} lead={lead} />
@@ -297,6 +317,8 @@ export function BookReader({
             </button>
           </div>
           <p className="rf-live" aria-live="polite" aria-atomic="true">{spoken}</p>
+          {lookupClient && <p className="rf-live" aria-live="polite" aria-atomic="true">{announce}</p>}
+          {card && <WordCard card={card} cardRef={cardRef} onClose={closeCard} />}
         </>
       )}
     </section>

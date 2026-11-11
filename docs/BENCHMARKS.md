@@ -794,6 +794,24 @@ holds at most 2,000 compact answers.
 
 ## Frontend: Lighthouse and image budgets
 
+### C12.8: @floating-ui/react for the word card (2026-11-11)
+
+`npm --prefix frontend run build` (Vite) before and after adding
+`@floating-ui/react@0.27.20` (MIT; its dependencies `@floating-ui/react-dom`,
+`@floating-ui/dom`, `@floating-ui/core`, `@floating-ui/utils` and `tabbable`
+are MIT too; 934 KB unpacked on npm). Only `useFloating`, `inline`, `offset`,
+`flip`, `shift`, `autoUpdate` and `FloatingPortal` are imported.
+
+| Asset | Before | After | Delta (raw / gzip) |
+|---|---|---|---|
+| `vendor-*.js` | 781.91 kB / 227.13 kB gzip | 813.56 kB / 238.65 kB gzip | +31.65 kB / +11.52 kB |
+| `index-*.js` (app code: card, client, hooks) | 114.40 kB / 37.86 kB gzip | 123.07 kB / 40.65 kB gzip | +8.67 kB / +2.79 kB |
+| `index-*.css` | 59.12 kB / 11.95 kB gzip | 63.68 kB / 12.69 kB gzip | +4.56 kB / +0.74 kB |
+
+About 15 kB gzip in all. `@floating-ui/react-dom` alone (with React's own
+`createPortal`) would have been lighter; the C12.8 prompt named
+`@floating-ui/react`. Not measured: time to first page.
+
 ### C11.5: image budgets and Lighthouse (2026-11-11)
 
 Budgets, enforced by `npm --prefix frontend run check:images` (a standard

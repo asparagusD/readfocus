@@ -346,3 +346,10 @@ def test_012_adds_cover_columns_and_a_public_covers_bucket():
     assert re.search(r"INSERT\s+INTO\s+storage\.buckets.*'covers',\s*'covers',\s*true", sql, re.DOTALL)
     assert "ON CONFLICT DO NOTHING" in sql
     assert "CREATE TABLE" not in sql.upper()
+
+
+def test_013_adds_blocks_and_toc_as_nullable_jsonb():
+    sql = sql_without_comments(MIGRATIONS / "013_structured_content.sql")
+    assert re.search(r"ALTER\s+TABLE\s+public\.chunks\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+blocks\s+jsonb;", sql)
+    assert re.search(r"ALTER\s+TABLE\s+public\.books\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+toc\s+jsonb;", sql)
+    assert "NOT NULL" not in sql.upper() and "CREATE TABLE" not in sql.upper()

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 314,
-    "inventoried": 251,
+    "tracked": 317,
+    "inventoried": 254,
     "excluded": 63
   },
   "files": [
@@ -431,6 +431,14 @@
       "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job."
     },
     {
+      "path": "backend/services/book_structure.py",
+      "language": "python",
+      "lines": 120,
+      "size_bytes": 5140,
+      "role": "service",
+      "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure: rebuilds each chunk's text into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, a paragraph cut by a page or chunk break continued), guesses chapter headings from short lines ('Chapter N', roman numerals, ALL CAPS, followed by text) and a title line after them; blocks are {id, type, text, marks}; the toc lists chapter blocks; build never raises. chunks.content is untouched."
+    },
+    {
       "path": "backend/services/concept_store.py",
       "language": "python",
       "lines": 76,
@@ -599,6 +607,14 @@
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
     },
     {
+      "path": "backend/tests/test_book_structure.py",
+      "language": "python",
+      "lines": 98,
+      "size_bytes": 4816,
+      "role": "test",
+      "purpose": "Pytest on text snippets and sample.pdf: line joining, hyphenation, page numbers, paragraph breaks, chapter detection and its false positives, title lines, continuation across chunks, the stored block shape and toc, and build never raising."
+    },
+    {
       "path": "backend/tests/test_concept_store.py",
       "language": "python",
       "lines": 150,
@@ -705,10 +721,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 348,
-      "size_bytes": 14157,
+      "lines": 355,
+      "size_bytes": 14590,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb."
     },
     {
       "path": "backend/tests/test_model_ready.py",
@@ -921,8 +937,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1937,
-      "size_bytes": 347020,
+      "lines": 2092,
+      "size_bytes": 370801,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1911,6 +1927,14 @@
       "purpose": "Adds books.cover_url and books.cover_source (text, nullable) and the public covers Storage bucket (service role writes). Additive."
     },
     {
+      "path": "supabase/migrations/013_structured_content.sql",
+      "language": "sql",
+      "lines": 17,
+      "size_bytes": 989,
+      "role": "migration",
+      "purpose": "Adds chunks.blocks and books.toc (jsonb, nullable) for the book reader. Additive."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1953,8 +1977,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 253,
-      "size_bytes": 58468,
+      "lines": 256,
+      "size_bytes": 59475,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -2240,6 +2240,7 @@ Estimated time: about 9.0 h (C13.1a 0.5, C13.1b 0.6, C13.2a 0.6, C13.2b
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C13.1a form components, part 1: text fields | this commit (`feat(ui): add labelled text input and text area components`) | Split from C13.1a to stay near the budget (part 2: segmented tabs). `components/ui/TextInput.jsx/.css` (new): `Field` (visible label, optional hint, the control, an always-mounted polite error line with an alert icon; hint and error tied by `aria-describedby`, `aria-invalid` on error) and `TextInput`; `--line-field` border (A1), radius 8, 44 px, warn border on error, read-only and disabled on `--paper-2` (H15). `TextArea.jsx` (new): the same frame, Lora, resizes vertically. Gallery: Form fields section. Before/after: before, no shared input existed (pages styled their own, labels without `htmlFor`, U6); after, one labelled field in every state, used by no page yet. | Browser pane, `/gallery.html`, all four theme x accent combinations: every input named by its label, the error and hint read through `aria-describedby`, inputs 44 px; field border 3.69/3.50:1 (Paper, on surface/paper), 3.25/3.52:1 (Lamplight); error text 5.49 (Paper), 9.41:1 (Lamplight); hint 7.04 and 8.94:1. 375 px: no sideways scroll. `impeccable detect --json` on the new files: `[]`. Standard checks: see commit. | 2026-11-11 | No page uses the fields yet (C13.1b) |
 | [ ] C13.1a form components | | | | | |
 | [ ] C13.1b sign in | | | | | |
 | [ ] C13.2a app shell | | | | | |

@@ -1182,6 +1182,24 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/ui/TextArea.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/TextInput.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/TextInput.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/ui/Toast.css",
       "type": "file",
       "role": "component",
@@ -4011,6 +4029,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/ui/TextArea.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/TextInput.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.css"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/ui/Toast.jsx",
       "to": "file:frontend/src/components/ui/Toast.css"
     },
@@ -4078,6 +4106,16 @@
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/TextArea.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
     },
     {
       "type": "imports",

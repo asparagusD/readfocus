@@ -11,6 +11,8 @@ import { useToast } from '../components/ui/toastContext';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Tooltip } from '../components/ui/Tooltip';
 import { BookCover } from '../components/BookCover';
+import { TextInput } from '../components/ui/TextInput';
+import { TextArea } from '../components/ui/TextArea';
 
 // One cover in each D5 colour, then the states. The real cover is the one
 // the C11.2 backfill stored in the dev project's public covers bucket.
@@ -34,6 +36,20 @@ function ToastDemo() {
       <Button variant="secondary" onClick={() => toast({ kind: 'success', message: 'Meditations is ready on your shelf.', action: { label: 'Plan sessions' } })}>Success toast</Button>
       <Button variant="secondary" onClick={() => toast({ kind: 'neutral', message: 'Place saved at page 15.' })}>Neutral toast</Button>
       <Button variant="secondary" onClick={() => toast({ kind: 'warning', message: 'This PDF is scanned images, so we can’t read its words yet.', action: { label: 'Try another' } })}>Warning toast</Button>
+    </div>
+  );
+}
+
+function FormDemo() {
+  return (
+    <div className="gallery-grid gallery-form">
+      <div className="gallery-grid">
+        <TextInput label="Email" type="email" placeholder="you@example.com" />
+        <TextInput label="Password" type="password" defaultValue="wrongpass" error="That password doesn't match this email." />
+        <TextInput label="Display name" hint="Shown on your shelf." defaultValue="Read only" readOnly />
+        <TextInput label="Disabled" disabled defaultValue="Not editable" />
+        <TextArea label="Your answer" placeholder="Two or three sentences in your own words…" />
+      </div>
     </div>
   );
 }
@@ -196,6 +212,10 @@ export function Gallery() {
           <BookCover width={88} title="Walden" author="Henry David Thoreau" />
           <BookCover width={200} title="Walden" author="Henry David Thoreau" />
         </div>
+      </Section>
+
+      <Section title="Form fields">
+        <FormDemo />
       </Section>
 
       <Section title="Skeleton">

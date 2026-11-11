@@ -104,3 +104,7 @@
   align-items: flex-end;
   margin-block-start: var(--space-6);
 }
+
+.gallery-form {
+  max-width: 420px;
+}

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 366,
-    "inventoried": 303,
+    "tracked": 369,
+    "inventoried": 306,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9366,
+      "size_bytes": 9401,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2116,
-      "size_bytes": 417415,
+      "lines": 2274,
+      "size_bytes": 434523,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1287,6 +1287,30 @@
       "purpose": "Skeleton placeholder, aria-hidden: a block sized by props or className, or `lines` of text with a shorter last line."
     },
     {
+      "path": "frontend/src/components/ui/TextArea.jsx",
+      "language": "jsx",
+      "lines": 13,
+      "size_bytes": 561,
+      "role": "component",
+      "purpose": "TextArea: the Field frame around a resizable textarea for written answers."
+    },
+    {
+      "path": "frontend/src/components/ui/TextInput.css",
+      "language": "css",
+      "lines": 90,
+      "size_bytes": 2009,
+      "role": "component",
+      "purpose": "Field and input styles: label above, --line-field border (A1), radius 8, 44 px, warn border and error line, read-only and disabled on paper-2, the text area in Lora resizing vertically."
+    },
+    {
+      "path": "frontend/src/components/ui/TextInput.jsx",
+      "language": "jsx",
+      "lines": 41,
+      "size_bytes": 1711,
+      "role": "component",
+      "purpose": "Field (visible label, optional hint, the control, an always-mounted polite error line with an alert icon; hint and error wired by aria-describedby, aria-invalid on error) and TextInput on it."
+    },
+    {
       "path": "frontend/src/components/ui/Toast.css",
       "language": "css",
       "lines": 83,
@@ -1329,10 +1353,10 @@
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 211,
-      "size_bytes": 8978,
+      "lines": 231,
+      "size_bytes": 9800,
       "role": "asset",
-      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes)."
+      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes); a Form fields section (inputs in default, error, hint, read-only and disabled states, a text area)."
     },
     {
       "path": "frontend/src/gallery/IllustrationGallery.css",
@@ -1369,10 +1393,10 @@
     {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
-      "lines": 106,
-      "size_bytes": 1847,
+      "lines": 110,
+      "size_bytes": 1886,
       "role": "asset",
-      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid."
+      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid, and the form field column."
     },
     {
       "path": "frontend/src/gallery/main.jsx",
@@ -2369,8 +2393,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 305,
-      "size_bytes": 80475,
+      "lines": 308,
+      "size_bytes": 81201,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

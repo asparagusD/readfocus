@@ -1556,6 +1556,13 @@ Close review (2026-11-11 08:42):
   applied during the chunk; most of the overrun is benchmark runs (cold
   starts, the 0.1-CPU container, the 204-chunk book) and two
   investigations (the C9.5 bench stamping and this review's fix).
+
+## CD — Claude Design handoff
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] CD.2 receive the Claude Design handoff | this commit (`docs(design): add Claude Design handoff bundle and summary`) | `design/handoff/foundations-style-guide/`: the bundle `Foundations — style guide-html.zip` unpacked unchanged (`Main.dc.html`, `README.md`, `support.js`, `vendor/react.js`, `vendor/react-dom.js`). `design/screens/foundations-paper-1440.png`: full artboard render, 1440 x 6538. `design/HANDOFF_SUMMARY.md`: tokens (both themes, both accents, covers, type, spacing, radii, surfaces, motion), component inventory, per-screen notes, frontend mapping, gaps and questions. No application code changed. | SHA-256 of all five copied files equal to the unpacked archive; artboard served on `127.0.0.1` and rendered with headless Edge; page height measured in the browser pane (`scrollHeight` 6538, the `$preview` 3700 cuts off sections 04 and 05); largest file 685,076 B, none over 5 MB. Standard checks not run: no code changed. | 2026-11-11 09:10 | The bundle has the foundations style guide only: no screen artboards, prototype, illustrations or word card. C10–C13 need the screen export; gaps and seven questions in `design/HANDOFF_SUMMARY.md` |
+
 ## C10
 
 Title to be filled from the promptbook.

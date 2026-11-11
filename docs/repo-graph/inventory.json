@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 184,
-      "size_bytes": 8310,
+      "size_bytes": 8361,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -585,10 +585,10 @@
     {
       "path": "backend/tests/test_backfill_covers.py",
       "language": "python",
-      "lines": 50,
-      "size_bytes": 2041,
+      "lines": 84,
+      "size_bytes": 3430,
       "role": "test",
-      "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, and the dev-only guard."
+      "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, the dev-only guard, a failing book not stopping the run, and a book without a readable file looked up by its typed title."
     },
     {
       "path": "backend/tests/test_bench.py",
@@ -897,8 +897,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1427,
-      "size_bytes": 61520,
+      "lines": 1465,
+      "size_bytes": 62920,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -921,8 +921,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1881,
-      "size_bytes": 336881,
+      "lines": 1882,
+      "size_bytes": 337879,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1633,10 +1633,10 @@
     {
       "path": "scripts/backfill_covers.py",
       "language": "python",
-      "lines": 102,
-      "size_bytes": 4062,
+      "lines": 113,
+      "size_bytes": 4689,
       "role": "script",
-      "purpose": "Backfill: looks up Open Library covers for ready books never looked up or whose lookup failed, one at a time 1.5 s apart, with file metadata and the typed title as fallback; --dry-run, --limit, --book-id; refuses unless ENV=development."
+      "purpose": "Backfill: looks up Open Library covers for ready books never looked up or whose lookup failed, one at a time 1.5 s apart, with file metadata and the typed title as fallback (also when the file is missing or unreadable); a failing book is reported as error and the run goes on; --dry-run, --limit, --book-id; refuses unless ENV=development."
     },
     {
       "path": "scripts/backfill_local_embeddings.py",
@@ -1922,7 +1922,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 249,
-      "size_bytes": 56562,
+      "size_bytes": 56763,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

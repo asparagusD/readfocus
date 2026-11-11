@@ -1425,3 +1425,41 @@ dev the book then stored `covers/ol/10140705-M.jpg` (200, image/jpeg,
 ### Commit
 Part of feat(ingest): fetch book covers from Open Library with safe
 fallback (C11.2).
+
+## 2026-11-11 C11.2 — the cover backfill stopped on a book with no stored file
+
+**Status:** fixed
+
+### Symptom
+`python scripts/backfill_covers.py` on dev looked up five books, then
+stopped with `TypeError: argument of type 'NoneType' is not iterable`
+from `storage3 ... relative_path_to_parts` inside
+`book_ingestor.download`. The sixth book (`f450cf54…`, an old test row)
+has `storage_path` null.
+
+### Repro
+`test_backfill_covers.py::test_a_failing_book_is_reported_and_the_run_goes_on`
+and `::test_a_book_without_a_readable_file_is_looked_up_by_its_typed_title`:
+2 failed before the fix.
+
+### Hypotheses
+1. A book with no file reaches `download(None)`. Result: **confirmed**
+   (the row's `storage_path` is null).
+2. Any exception in one lookup ends the run, since `run` does not catch
+   it. Result: **confirmed**.
+
+### Root cause
+`scripts/backfill_covers.py`: the lookup always downloaded the file for
+its metadata, and `run` let one book's exception stop the loop.
+
+### Fix
+`look_up` (now a module function) skips the file when there is no path
+or it cannot be read, and uses the typed title and author; `run` reports
+a failing book as `error` and goes on.
+
+### Regression test
+The two tests above pass after the fix (6 passed). On dev the rerun
+looked up the last book (`none`); a dry run then lists 0 books.
+
+### Commit
+fix(ingest): keep the cover backfill going past a book with no file

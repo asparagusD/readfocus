@@ -50,10 +50,25 @@ def run(rows, look_up, dry_run=False, pause=time.sleep, report=None) -> int:
         if not dry_run:
             if index:
                 pause(PAUSE_SECONDS)
-            outcome = look_up(row)
+            try:
+                outcome = look_up(row)
+            except Exception as e:  # noqa: BLE001 - one bad book must not stop the run
+                print(f"  {row['id']}: lookup failed: {e}", flush=True)
+                outcome = {"cover_url": None, "cover_source": "error"}
         if report:
             report(row, outcome)
     return len(rows)
+
+
+def look_up(row, book_ingestor, covers) -> dict:
+    """Same terms as ingestion; a book whose file cannot be read falls back to its typed title."""
+    meta = (None, None)
+    if row.get("storage_path"):
+        try:
+            meta = book_ingestor.extract_metadata(row["file_type"], book_ingestor.download(row["storage_path"]))
+        except Exception as e:  # noqa: BLE001
+            print(f"  {row['id']}: file not read ({e}); using the typed title", flush=True)
+    return covers.ensure_cover(row["id"], *covers.lookup_terms(*meta, row["title"], row["author"]))
 
 
 def pending_rows(supabase, limit=None, book_id=None) -> list[dict]:
@@ -83,17 +98,13 @@ def main() -> int:
     from backend.services import book_ingestor, covers
     from backend.services.supabase_client import supabase
 
-    def look_up(row):
-        meta = book_ingestor.extract_metadata(row["file_type"], book_ingestor.download(row["storage_path"]))
-        return covers.ensure_cover(row["id"], *covers.lookup_terms(*meta, row["title"], row["author"]))
-
     def report(row, outcome):
         result = "would look up" if outcome is None else outcome["cover_source"]
         print(f"  {row['id']}  {row['title']!r}: {result}", flush=True)
 
     rows = pending_rows(supabase, args.limit, args.book_id)
     print(f"ENV={os.getenv('ENV')}; books to look up: {len(rows)}")
-    done = run(rows, look_up, args.dry_run, report=report)
+    done = run(rows, lambda row: look_up(row, book_ingestor, covers), args.dry_run, report=report)
     print(f"{'would look up' if args.dry_run else 'looked up'} {done} books")
     return 0
 

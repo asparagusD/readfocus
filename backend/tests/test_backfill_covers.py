@@ -1,7 +1,10 @@
 """scripts/backfill_covers.py on a fake database. No network."""
 
+from types import SimpleNamespace
+
 import pytest
 
+from backend.services import covers
 from backend.tests.memory_db import MemoryDb
 from scripts import backfill_covers as backfill
 
@@ -48,3 +51,34 @@ def test_refuses_a_non_dev_environment(monkeypatch):
     with pytest.raises(SystemExit):
         backfill.check_environment(allow_non_dev=False)
     backfill.check_environment(allow_non_dev=True)
+
+
+# Found on dev (C11.2 backfill): a book with no stored file stopped the run.
+
+def test_a_failing_book_is_reported_and_the_run_goes_on():
+    seen = []
+
+    def look_up(row):
+        if row["id"] == "bad":
+            raise TypeError("argument of type 'NoneType' is not iterable")
+        return {"cover_source": "none"}
+
+    done = backfill.run([{"id": "bad"}, {"id": "b2"}], look_up, pause=lambda s: None,
+                        report=lambda row, outcome: seen.append((row["id"], outcome["cover_source"])))
+    assert done == 2
+    assert seen == [("bad", "error"), ("b2", "none")]
+
+
+def test_a_book_without_a_readable_file_is_looked_up_by_its_typed_title():
+    calls = []
+
+    def broken_download(path):
+        raise RuntimeError("not found")
+
+    ingestor = SimpleNamespace(download=broken_download, extract_metadata=lambda kind, data: ("Meta", "M"))
+    lookups = SimpleNamespace(lookup_terms=covers.lookup_terms,
+                              ensure_cover=lambda book_id, title, author: calls.append((book_id, title, author)))
+    for path in (None, "user/b.pdf"):
+        backfill.look_up({"id": "b", "file_type": "pdf", "storage_path": path, "title": "Walden",
+                          "author": "Thoreau"}, ingestor, lookups)
+    assert calls == [("b", "Walden", "Thoreau"), ("b", "Walden", "Thoreau")]

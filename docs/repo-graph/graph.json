@@ -645,6 +645,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_structure.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_bench.py",
       "type": "file",
       "role": "test",
@@ -1462,6 +1468,12 @@
     },
     {
       "id": "file:scripts/backfill_local_embeddings.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/backfill_structure.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -2723,6 +2735,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/covers.py"
     },
     {
@@ -2999,6 +3016,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_backfill_covers.py",
       "to": "file:scripts/backfill_covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:scripts/backfill_structure.py"
     },
     {
       "type": "imports",
@@ -3892,6 +3929,21 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/dev/check_retriever.py",
       "to": "file:backend/nlp/concepts.py"
     },
@@ -4232,6 +4284,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/dev/check_retriever.py",
       "to": "table:chunks"
     },
@@ -4333,6 +4395,11 @@
     {
       "type": "uses_env",
       "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_structure.py",
       "to": "env:ENV"
     },
     {
@@ -4448,6 +4515,16 @@
     {
       "type": "writes_table",
       "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_structure.py",
       "to": "table:chunks"
     },
     {

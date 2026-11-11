@@ -100,11 +100,11 @@ def test_the_book_is_ready_once_the_first_batch_and_its_questions_are_stored(env
     original = book_ingestor.mark_ready
     seen = {}
 
-    def spy(book_id, total, words):
+    def spy(book_id, total, words, toc=None):
         events.append("ready")
         seen["chunks"] = chunk_indices(db)
         seen["questions"] = sorted(q["chunk_index"] for q in db.tables.get("question_bank", []))
-        original(book_id, total, words)
+        original(book_id, total, words, toc)
 
     monkeypatch.setattr(book_ingestor, "mark_ready", spy)
     run(env["book"](7), b"%PDF")
@@ -233,3 +233,42 @@ def test_no_cover_lookup_when_ingestion_fails(env):
     env["crash_on_embed"] = 1
     run(env["book"](3), b"%PDF")
     assert env["covers"] == []
+
+
+# --- C12.1: structured blocks and table of contents ---------------------
+
+def test_every_chunk_is_stored_with_its_blocks_and_the_book_with_its_toc(env, monkeypatch):
+    job = env["book"](2)
+    chunks = ["CHAPTER 1\nIt was a long night and the rain fell on the road.", "More of the night passed slowly."]
+    monkeypatch.setattr(book_ingestor, "chunk_text", lambda pages, target_words=600: chunks)
+    run(job, b"%PDF")
+    db = env["db"]
+    stored = sorted(db.tables["chunks"], key=lambda c: c["chunk_index"])
+    assert [c["content"] for c in stored] == chunks  # the agents' text is unchanged
+    assert [(b["id"], b["type"]) for b in stored[0]["blocks"]] == [("0.0", "chapter"), ("0.1", "paragraph")]
+    assert stored[1]["blocks"] == [{"id": "1.0", "type": "paragraph", "text": chunks[1], "marks": []}]
+    assert db.tables["books"][0]["toc"] == [{"title": "CHAPTER 1", "chunk_index": 0, "block_id": "0.0"}]
+    assert db.tables["books"][0]["status"] == "ready" and jobs.get(BOOK)["status"] == "done"
+
+
+def test_a_book_without_chapters_gets_an_empty_toc(env):
+    run(env["book"](3), b"%PDF")
+    assert env["db"].tables["books"][0]["toc"] == []
+    assert all(c["blocks"] for c in env["db"].tables["chunks"])
+
+
+def test_no_structure_never_fails_the_job(env, monkeypatch):
+    monkeypatch.setattr(book_ingestor.book_structure, "build", lambda *args: (None, None))
+    assert run(env["book"](3), b"%PDF")["status"] == "ready"
+    assert all(c["blocks"] is None for c in env["db"].tables["chunks"])
+    assert env["db"].tables["books"][0].get("toc") is None and jobs.get(BOOK)["status"] == "done"
+
+
+def test_a_resumed_job_stores_blocks_for_every_chunk(env):
+    env["crash_on_embed"] = 3
+    run(env["book"](40), b"%PDF")
+    env["crash_on_embed"] = None
+    run(jobs.claim(jobs.get(BOOK), manual=True))
+    stored = sorted(env["db"].tables["chunks"], key=lambda c: c["chunk_index"])
+    assert [c["blocks"][0]["id"] for c in stored] == [f"{i}.0" for i in range(40)]
+    assert env["db"].tables["books"][0]["toc"] == []

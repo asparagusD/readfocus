@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
-from backend.services import covers, processing_jobs
+from backend.services import book_structure, covers, processing_jobs
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
@@ -197,9 +197,11 @@ def extract(file_type: str, file_bytes: bytes) -> list[str]:
     raise ValueError("Unsupported file type. Must be 'pdf' or 'epub'.")
 
 
-def mark_ready(book_id: str, total: int, words: int) -> None:
-    supabase.table("books").update({"total_chunks": total, "total_words": words, "status": "ready"}).eq(
-        "id", book_id).execute()
+def mark_ready(book_id: str, total: int, words: int, toc: list | None = None) -> None:
+    values = {"total_chunks": total, "total_words": words, "status": "ready"}
+    if toc is not None:  # the contents are known before the first batch, so the reader has them at once
+        values["toc"] = toc
+    supabase.table("books").update(values).eq("id", book_id).execute()
 
 
 def download(storage_path: str) -> bytes:
@@ -224,22 +226,27 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
             file_bytes = await asyncio.to_thread(download, book["storage_path"])
         chunks = chunk_text(extract(book["file_type"], file_bytes), TARGET_WORDS)
         total, words = len(chunks), sum(len(c.split()) for c in chunks)
+        # Reader structure beside the unchanged content (C12.1); (None, None) if it cannot be built.
+        blocks, toc = await asyncio.to_thread(book_structure.build, book["file_type"], file_bytes, chunks)
         for start, end in batches(total, job["cursor"]):
             batch = chunks[start:end]
             vectors = await asyncio.to_thread(embedder.embed, batch)
             stored = supabase.table("chunks").upsert([
                 {"book_id": book_id, "user_id": user_id, "chunk_index": start + offset,
                  "word_count": len(chunk.split()), "content": chunk,
+                 "blocks": blocks[start + offset] if blocks else None,
                  "embedding_local": [float(value) for value in vectors[offset]]}
                 for offset, chunk in enumerate(batch)
             ], on_conflict="book_id,chunk_index").execute()
             await generate_questions(book_id, stored.data)  # questions and concepts of the batch
             if not ready:  # the first batch is stored with its questions: the first session can start
-                mark_ready(book_id, total, words)
+                mark_ready(book_id, total, words, toc)
                 ready = True
             processing_jobs.advance(job["id"], end, total)
         if not ready:  # a book with no text at all is still ready, as before
-            mark_ready(book_id, total, words)
+            mark_ready(book_id, total, words, toc)
+        elif toc is not None and book.get("status") == "ready":  # resumed after the book was ready
+            supabase.table("books").update({"toc": toc}).eq("id", book_id).execute()
         processing_jobs.finish(job["id"], total)
         # The book is readable and its job done; the cover (at most two 3 s requests) comes last.
         await asyncio.to_thread(look_up_cover, book, file_bytes)

@@ -1513,3 +1513,83 @@ then completes (score 88, docs/BENCHMARKS.md, C11.5).
 
 ### Commit
 fix(ui): let pages report their first contentful paint
+
+## 2026-11-11 C12.1c — structure backfill reports every dev book as a mismatch
+
+**Status:** fixed
+
+### Symptom
+The new structure backfill re-extracts and re-chunks each ready book's
+file and writes blocks only when the result equals the stored chunks. On
+the dev project it found no book it could fill: six of seven ready books
+are `mismatch` and the seventh has no file. Expected: books ingested by
+the current code re-chunk to exactly what is stored. No exception or
+stack trace; the outcome is the script's own report.
+
+    python scripts/backfill_structure.py --dry-run 2>/dev/null | grep -E "^ENV|^  [0-9a-f]{8}-|^checked"
+    ENV=development; books without a toc: 7
+      2f85c3de-…  'Sample': mismatch
+      3e3040a3-…  'Dagano 14 Chapter Operational Amplifiers.Pdf': mismatch
+      4cc38181-…  'My API Upload Test': mismatch
+      51fd1ff0-…  'Main': mismatch
+      58a7d7e4-…  'David Harris Sarah Harris Digital Design And Computer Architecture EN': mismatch
+      5c7fdf10-…  'David Harris Sarah Harris Digital Design And Computer Architecture EN': mismatch
+      f450cf54-…  'Sample PDF Test': no file
+    checked 7 books
+
+(Without the grep, pypdf also prints "fontTools is required…" warnings
+for the Harris book; they are not errors.)
+
+### Repro
+    python scripts/backfill_structure.py --dry-run --book-id 2f85c3de-cd9f-421a-bfbf-f5ca4fa16c66
+
+### Hypotheses
+1. The PDF text extracted today differs from what was extracted when
+   these books were ingested, in whitespace only. Evidence: on `Sample`
+   chunks 2, 3 and 6 differ, first at character 3029, stored
+   `'L = 1\nP\nP\n∑\ni=1\n\nSi'` against today's `'L = 1 P P ∑ i=1  Si'`,
+   same lengths; on the Harris book 280 of 302 chunks differ
+   (`'Patterson\nUniversity'` against `'Patterson University'`) and today's
+   text chunks into 307, not 302, because paragraph splits follow blank
+   lines. `pypdf` was unpinned when these books were ingested (May 2026)
+   and pinned to 7.0.0 in `e302ab8` (2026-11-10). Ruled out if: the texts
+   also differ outside whitespace. Result: **confirmed**: for both books
+   the text with all whitespace removed is identical.
+2. `stored_contents` reads a truncated or misordered list. Evidence
+   against: 7 of 7 and 302 of 302 chunks read, equal lengths per chunk.
+   Result: ruled out.
+3. `chunk_text` changed since ingestion. Evidence against: `git log -L`
+   shows no change since `3ce0ffb` (May). Result: ruled out.
+
+### Root cause
+The backfill's design, not ingestion: `scripts/backfill_structure.py`
+`backfill_book` re-extracted and re-chunked each file and required the
+result to equal the stored chunks exactly. Reader blocks for a PDF need
+only the stored chunk text, and the EPUB alignment already ignores
+whitespace, so the comparison was both unnecessary and impossible for any
+book ingested before pypdf was pinned.
+
+### Fix
+`backfill_book` builds blocks from the stored chunks
+(`stored_contents`); the file is downloaded only for an EPUB, whose tags
+`book_structure.assign` aligns to the stored text ignoring whitespace,
+falling back to text blocks. `chunks.content` is still never written.
+The `mismatch` and `no file` outcomes are gone (a PDF needs no file).
+One attempt.
+
+### Regression test
+`backend/tests/test_backfill_structure.py::test_blocks_come_from_the_stored_text_even_when_the_file_now_extracts_differently`
+and `::test_a_pdf_needs_no_file_and_is_not_downloaded`. With the old
+`backfill_book` put back: 2 failed, 5 passed. With the fix: 7 passed.
+Repro re-run on dev: all 7 books "would store" (7, 70, 7, 35, 302, 212
+and 7 chunks), none mismatch.
+
+Found while re-running it: chapter counts of 44 to 178 on technical PDFs
+(running headers and formula lines taken for chapters). That is a
+different fault in `book_structure.py`, logged in the next entry; nothing
+was written to dev before it is fixed.
+
+### Commit
+Folded into `feat(ingest): store structured blocks and table of contents`
+(C12.1c): the backfill had never been committed, so there is no earlier
+version to fix in a separate commit.

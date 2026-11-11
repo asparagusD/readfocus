@@ -699,6 +699,30 @@ texts, one process per model:
 Not measured: Render itself; the whole backend in a Linux container;
 retrieval quality of either model; concurrent requests during a batch.
 
+### C12.1c: reader structure during ingestion (2026-11-11)
+
+`book_structure.build` now runs once per ingestion job, on a worker
+thread, before the first batch. No new dependency: BeautifulSoup, ebooklib
+and pypdf were already imported by ingestion. Measured in one Python 3.11
+process on this machine (an inline script: extract, `chunk_text`, then
+`build`, timed with `perf_counter`, RSS from `psutil`):
+
+| Book | Chunks | `build` | For comparison |
+|---|---|---|---|
+| `sample.pdf` (13-page journal paper) | 7 | 1 ms | |
+| Synthetic EPUB: 60 chapters, 80,760 words, an `<em>` in every sentence | 134 | 303 ms | extract + chunk of the same file: 167 ms |
+
+- Process RSS 97.9 MB before loading the books and building, 118.2 MB
+  after (the EPUB, its text and blocks held in memory together).
+- Stored size for the EPUB: blocks as JSON 652 KB against 389 KB of chunk
+  text (the marks on every sentence inflate it); a book without emphasis
+  stores about the text size again.
+- Against an ingestion of minutes (embedding and questions per batch),
+  0.3 s is small; it is paid once per job, also on a resume.
+
+Not measured: a real published EPUB or novel PDF, Render, memory of a
+book over 100,000 words.
+
 ## Frontend: Lighthouse and image budgets
 
 ### C11.5: image budgets and Lighthouse (2026-11-11)

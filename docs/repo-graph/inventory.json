@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 317,
-    "inventoried": 254,
+    "tracked": 319,
+    "inventoried": 256,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 186,
-      "size_bytes": 8564,
+      "size_bytes": 8582,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -425,10 +425,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 252,
-      "size_bytes": 10920,
+      "lines": 259,
+      "size_bytes": 11579,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job."
     },
     {
       "path": "backend/services/book_structure.py",
@@ -599,6 +599,14 @@
       "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, the dev-only guard, a failing book not stopping the run, and a book without a readable file looked up by its typed title."
     },
     {
+      "path": "backend/tests/test_backfill_structure.py",
+      "language": "python",
+      "lines": 95,
+      "size_bytes": 4637,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_structure.py on the in-memory database: pending books (ready, no toc) in id order, blocks and toc stored and the book then done, dry run writes nothing, blocks from the stored text when the file now extracts differently, a PDF needs no file, a failing book does not stop the run, the dev-only guard."
+    },
+    {
       "path": "backend/tests/test_bench.py",
       "language": "python",
       "lines": 108,
@@ -689,10 +697,10 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 235,
-      "size_bytes": 9699,
+      "lines": 274,
+      "size_bytes": 11743,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails)."
+      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
@@ -905,16 +913,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 821,
-      "size_bytes": 45216,
+      "lines": 845,
+      "size_bytes": 46419,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1515,
-      "size_bytes": 65139,
+      "lines": 1595,
+      "size_bytes": 69192,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1695,6 +1703,14 @@
       "purpose": "Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development."
     },
     {
+      "path": "scripts/backfill_structure.py",
+      "language": "python",
+      "lines": 110,
+      "size_bytes": 4758,
+      "role": "script",
+      "purpose": "Backfill: reader blocks and toc for ready books with no toc, built from each book's stored chunks (never a fresh extraction; the file is read only for an EPUB's tags), chunks.content never written, the toc written last so a stopped run redoes the book; --dry-run, --limit, --book-id; refuses unless ENV=development."
+    },
+    {
       "path": "scripts/bench.py",
       "language": "python",
       "lines": 368,
@@ -1977,8 +1993,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 256,
-      "size_bytes": 59956,
+      "lines": 258,
+      "size_bytes": 61018,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

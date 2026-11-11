@@ -1817,3 +1817,51 @@ tooling tests); `query.py "GET /books/{book_id}/pages"` now lists
 ### Commit
 fix(graph): match frontend calls to routes without their query string
 (corrects the "62 passed" line of `a87eafc`, which was false)
+
+## 2026-11-11 C12.6 — a proper=1 lookup can replace everyone's plain lookup of the same word
+
+**Status:** fixed
+
+### Symptom
+Found in the C12 close review (an independent read of
+`git diff readfocus-2.0...chunk/C12-book-reader`), not by a failing check.
+`GET /lookup?term=bank&proper=1` asks Wikipedia first and stores the answer
+in the shared `term_lookups` cache under `("bank", "en")`, the same key a
+plain `GET /lookup?term=bank` uses. For 90 days every reader's plain "bank"
+then shows the Wikipedia summary instead of the definition. `proper` comes
+from the client, so any signed-in user could do this.
+
+### Reproduce
+`backend/tests/test_lookup.py::test_a_proper_lookup_never_answers_a_plain_lookup_of_the_same_word`:
+`run` with `proper=1` (Wikipedia mocked), the in-process copy dropped, then
+plain `run`: the plain lookup returned the Wikipedia answer. 1 failed, 37
+passed.
+
+### Upstream and downstream (repo graph)
+`backend/services/lookup.py` is called by `backend/routers/lookup.py` only;
+it reads and writes `term_lookups` (migration 015). The frontend client
+(`frontend/src/reader/lookup.js`) already keeps names and words apart in its
+own LRU (`P:` and `w:` keys), so only the shared cache was affected.
+
+### Hypotheses
+1. The cache key is the display text for Wikipedia-first lookups, and the
+   display of a lower-case word equals its plain key. Ruled out if: the two
+   keys differ for `run`. Result: **confirmed** (both `run`).
+
+### Root cause
+`look_up` set `key = term.display if wiki_first else term.key`. For a
+capitalised name the two keys differed only by case, which hid the clash;
+for a lower-case word sent with `proper=1` they were the same string.
+
+### Fix
+Wikipedia-first lookups (names and phrases) are keyed `P:<original
+casing>`, plain words keep their lower-case key. Entries cached before the
+fix under bare names on dev are simply not found again and are fetched
+once more. One attempt.
+
+### Regression test
+The test above asserts the plain lookup goes to the dictionary and the
+table holds `P:run` and `run` apart. Before: failed; after: 38 passed.
+
+### Commit
+fix(lookup): keep Wikipedia-first answers apart in the shared cache

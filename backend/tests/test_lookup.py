@@ -305,3 +305,14 @@ def test_a_timeout_does_not_skip_the_source_next_time(env):
     get(env, "slow")
     env.upstream.routes[DICT + "run"] = RUN
     assert get(env, "run").json()["source"] == "dictionary"
+
+
+def test_a_proper_lookup_never_answers_a_plain_lookup_of_the_same_word(env):
+    """Regression (C12 close review): proper=1 on a lower-case word shared the plain word's cache key."""
+    env.upstream.routes[WIKI + "Run"] = dict(THOREAU, title="Run (river)")
+    env.upstream.routes[DICT + "run"] = RUN
+    assert get(env, "run", proper=1).json()["source"] == "wikipedia"
+    lookup.reset()  # the shared table, not the process copy, must keep them apart
+    plain = get(env, "run").json()
+    assert plain["source"] == "dictionary" and plain["meanings"][0]["part_of_speech"] == "verb"
+    assert sorted(row["term"] for row in env.db.tables["term_lookups"]) == ["P:run", "run"]

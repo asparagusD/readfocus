@@ -242,7 +242,9 @@ def _store(key: str, lang: str, payload: dict) -> None:
 def look_up(term: Term, lang: str = "en", proper: bool = False) -> dict:
     """The compact answer for a normalised term; {unavailable: true, message} if a source failed."""
     wiki_first = proper or term.words > 1
-    key = term.display if wiki_first else term.key
+    # Wikipedia-first answers (names, phrases) get their own keys: a proper=1 lookup of "bank" must
+    # never become everyone's plain "bank" (C12 close review).
+    key = f"P:{term.display}" if wiki_first else term.key
     cached = _cached(key, lang)
     if cached is not None:
         return cached

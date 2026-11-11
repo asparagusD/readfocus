@@ -1664,7 +1664,7 @@ Answered by the user (2026-11-11, at plan time):
 2. `motion` (MIT) is added in C10.4 through `LazyMotion` +
    `domAnimation`, with the bundle size recorded before and after.
 
-Estimated time: about 4 h (C10.1 0.3, C10.2 0.7, C10.3 0.5, C10.4 0.5,
+Estimated time: about 3.9 h (C10.1 0.3, C10.2 0.7, C10.3 0.5, C10.4 0.5,
 C10.5 1.6, C10.6 0.4).
 
 ### Log
@@ -1726,9 +1726,126 @@ Close review (2026-11-11 11:22):
 - **Time.** About 2 h 05 min from the plan (09:21) to this review,
   against 1.5 h budgeted: about 40% over, under the 50% stop rule.
 
-## C11
+## C11 — imagery
 
-Title to be filled from the promptbook.
+Branch `chunk/C11-imagery`, created from `readfocus-2.0` at `db6c42a`.
+Goal: every picture the handoff calls for, at $0 and without slowing the
+app: an original SVG illustration set, real book covers from Open Library
+with the D5 typographic fallback, a `BookCover` component, an optional
+image pipeline, and an enforced image budget. Source of truth:
+`design/HANDOFF_SUMMARY.md` (D5, "Illustrations and book covers",
+component inventory "Book cover").
+
+Note: the agreed C10–C13 split had C11 as the sign-in, warming-up,
+library and error screens. This chunk is imagery instead (promptbook,
+2026-11-11); those screens move to a later chunk and use what C11 builds.
+
+### Plan (written at chunk start, 2026-11-11, before any code)
+
+What there is to build on (read from the code):
+
+- No illustrations exist. `frontend/src/assets/` holds the Vite template's
+  `hero.png` (13 kB), `react.svg` and `vite.svg`; `public/icons.svg` is
+  also template. None is referenced anywhere. `public/favicon.svg` is the
+  Vite logo, linked from `index.html`.
+- `EmptyState` (C10.5d) has an illustration slot that nothing fills.
+- Cover tokens exist: `--cover-moss|oxblood|ink|ochre|slate|title` and
+  `--radius-cover` in `styles/tokens.css`, checked by `check:contrast`.
+- `books` has `title`, `author`, no ISBN, cover or colour column.
+  `book_ingestor.py` reads EPUBs with `ebooklib` and PDFs with `pypdf`
+  and keeps no metadata. The only Storage bucket is the private `books`.
+- `httpx` 0.28.1 is pinned; Pillow 13.0.0 is installed only as a
+  `fastembed` dependency (not in `requirements.txt`). The backend suite is
+  offline (`test_offline.py`), so every network call is faked with
+  `httpx.MockTransport`.
+- Routes are not code-split (`App.jsx` imports every page), so whatever a
+  page imports lands in the initial JS bundle.
+- `Library.jsx` lists books as rows with no cover.
+
+Decisions that apply to every subchunk:
+
+- **Licences.** Only original work (drawn in this repo), CC0, or the
+  Unsplash License. Every file not drawn here gets a row in a new
+  `docs/ASSETS.md` register (file, source URL, author, licence, date,
+  changes made); original files get a row too, marked "original". Open
+  Library covers are third-party images served per book: the register
+  records the service, its terms and the attribution shown in the UI
+  ("Cover image · Open Library", as the handoff draws it). No AI-generated
+  images, stock subscriptions or paid services.
+- **Illustrations are inline SVG React components**, not image files: no
+  request, and fills use theme tokens (`currentColor` for the 1.6 px line,
+  `var(--accent-soft)`, `var(--paper-2)`, `var(--accent)`), so Paper and
+  Lamplight need no second set. Decorative (`aria-hidden`) unless a caller
+  passes a `title`. Animated parts (steam, flame, lamp glow) move by
+  transform and opacity on the C10.4 loops and stop under reduced motion.
+- **Covers are looked up by the backend only** (free-intelligence rule:
+  the frontend never calls an external API). This answers handoff
+  question 2. Lookup runs after upload as a background step, never blocks
+  ingestion, and its result (including "not found") is stored on the book,
+  so each book is looked up once. ISBN first, then title + author search;
+  images are fetched by Open Library cover ID (`/b/id/{id}-M.jpg`), which
+  is not rate-limited, rather than by ISBN, which is (limits to be
+  re-checked against Open Library's docs when C11.2b starts). Requests
+  carry `User-Agent: ReadFocus/2.0 (<project URL>)`, a 4 s timeout, and
+  fail to "no cover".
+- **Covers are re-encoded and stored by us** (question 1, answered
+  2026-11-11: public bucket): the backend downloads the cover once,
+  resizes it to 160 and 320 px wide WebP with Pillow (metadata stripped,
+  size-capped), and stores it in a new public `covers` bucket keyed by
+  Open Library cover ID, so two readers with the same book share one
+  file. The browser loads it from Supabase's CDN, not from Open Library.
+- **The typographic colour is computed and saved by the backend** (D5:
+  FNV-1a of title + author, modulo 5), returned with every book, and
+  computed on the fly for rows that lack it, so the frontend never hashes.
+- **No layout shift.** Every cover sits in a 2:3 box; every `<img>` has
+  `width`, `height`, `loading="lazy"` and `decoding="async"`, except a cover
+  above the fold, which gets `fetchpriority="high"`.
+- **Verification per commit:** the seven standard checks (ESLint stays at
+  20 errors and 2 warnings, ruff at 28), the gallery at 1440 and 375 px in
+  Paper/Lamplight x terracotta/sage with reduced motion emulated, the
+  in-page AA check, `make graph` with `purposes.json` entries, tooling
+  tests run after staging. Backend subchunks: the free-intelligence
+  checklist and an RSS measurement in `docs/BENCHMARKS.md`. Migrations
+  applied to the dev database only.
+
+Subchunks (lines are estimates, excluding `package-lock.json`,
+migrations and `docs/repo-graph/`):
+
+| Step | Files | Est. lines | Tests | Done when |
+|---|---|---|---|---|
+| C11.1a illustration set, part 1 | `frontend/src/illustrations/` (new): `Illustration.jsx` (shared `<svg>` wrapper: viewBox, 1.6 px stroke, `role`/`title` handling, size prop), `ReadingLamp.jsx` (glow disc, light cone), `TeaCup.jsx` (`steam` prop; without it the error screen's empty cup), `BookStack.jsx`, `DuskWindow.jsx`, `index.js`; `styles/illustrations.css` (steam, flame and glow loops on tokens); `docs/ASSETS.md` (new register, rows for these files); gallery section in both themes; delete the unused template files `assets/hero.png`, `assets/react.svg`, `assets/vite.svg`, `public/icons.svg` | ~200 | No frontend test runner: gallery check script (scratchpad, headless Edge as in C10): each illustration renders, has no hard-coded colour (`grep` for `#` in `src/illustrations/`), is `aria-hidden` without a title and named with one; loops at `0.01ms x1` under reduced motion | The five drawings match the components sheet's style in both themes; build passes with the template files gone |
+| C11.1b illustration set, part 2 | `EmptyShelf.jsx`, `OpenBookRibbon.jsx`, `MoonStars.jsx`, `Candle.jsx` (flicker loop), `ReadingRoom.jsx` (sign-in scene composed from window, books, tea and lamp); `public/favicon.svg` replaced by an original open-book mark; `EmptyState` example in the gallery with `EmptyShelf`; `docs/ASSETS.md` rows | ~190 | Same gallery script; the in-page AA check for any text beside them; total gzip size of `src/illustrations/` recorded | All nine drawings plus the scene in the gallery at 375 and 1440 with no sideways overflow; favicon shows in the tab |
+| C11.2a covers: schema and pure parts | `supabase/migrations/012_book_covers.sql` (additive: `books.isbn`, `cover_color`, `cover_ol_id`, `cover_path`, `cover_source`, `cover_checked_at`; public `covers` bucket, read-only to everyone, written by the service role); `backend/services/covers/metadata.py` (ISBN from EPUB `DC:identifier` and from the first pages of PDF text, ISBN-10/13 checksum, normalised to 13); `covers/colour.py` (FNV-1a 32-bit of `title + "\x1f" + author`, mod 5, into the five D5 names); `covers/match.py` (pure `pick(candidates, title, author)`: rapidfuzz title and author similarity, thresholds as named constants, prefers a candidate with a cover ID); `requirements.txt` pins `Pillow==13.0.0` (imported directly from C11.2b on) | ~200 | `test_cover_metadata.py` (valid and bad checksums, hyphens and `urn:isbn:`, EPUB fixture, PDF fixture with and without an ISBN), `test_cover_colour.py` (known FNV-1a vectors, all five colours reachable, same input same colour), `test_cover_match.py` (exact, near, wrong author, no cover ID, empty list, threshold edges), `test_migrations.py` (012 is additive and creates the bucket and columns); `test_requirements.py` stays green | Pure functions tested with no network; migration applied to dev and the columns read back |
+| C11.2b covers: Open Library lookup and storage | `backend/services/covers/open_library.py` (httpx client: ISBN lookup, then `search.json` with `fields=key,title,author_name,cover_i,isbn&limit=5`; descriptive User-Agent, 4 s timeout, any failure gives `None`); `covers/store.py` (download `-L` by cover ID, Pillow resize to 160 and 320 px WebP, cap 40 kB, strip metadata, upload once to `covers/ol/{id}-w{160,320}.webp`); `covers/service.py` (`ensure_cover(book)`: skip when `cover_checked_at` is set, save the outcome either way); `book_ingestor.py` (read ISBN while extracting; schedule `ensure_cover` after the first batch, failure logged, never fails the job); `routers/books.py` (`GET /books` and `GET /books/{id}` return `cover_color`, `cover_url_160`, `cover_url_320` or nulls); `docs/BENCHMARKS.md` (Pillow import and one encode, RSS before and after, backend RSS after startup) | ~200 | `test_covers_service.py` with `httpx.MockTransport` and the fake Supabase: ISBN hit, search hit, `?default=false` 404 → no cover, timeout → no cover and `cover_checked_at` set, second call makes no request, User-Agent sent, encoded files under the cap and 2:3 cropped, upload path; `test_api_books` cover fields present and null-safe; `test_no_paid_ai.py` green; `test_offline.py` green | One real upload on dev (test user A) shows a stored WebP pair and the fields, or a saved "not found"; ingestion time unchanged within noise |
+| C11.2c cover backfill for existing books | `scripts/backfill_covers.py` (dev only by default, `--dry-run` default, one book at a time with a pause between Open Library calls, skips books already checked); `docs/repo-graph` purpose | ~90 | `test_backfill_covers.py` on the fake Supabase: dry run writes nothing, a run skips checked books, refuses a non-dev `ENV` without `--yes-production` | Dry run on dev lists the books it would look up; a real run on dev fills them |
+| C11.3 BookCover component | `components/ui/BookCover.jsx/.css` (new): 2:3 box, typographic layer always rendered (Playfair italic title top-left, spaced-caps author over a short rule, inner hairline frame, `--radius-cover` 3/6/6/3, cover shadow token); real image on top with `srcset` 160w/320w and `sizes`, opacity 0 → 1 over `--dur-3` on load, instant under reduced motion, removed on error; `processing` state (spine shimmer, "Reading the pages… 64%", `aria-live` progress); sizes `sm`/`md`/`lg`; one accessible name ("Walden by Henry David Thoreau, cover") with the inner text `aria-hidden`; caption "Cover image · Open Library" when the image shows (attribution). Gallery section with all five colours, a long title, a missing author, a broken image URL and processing. `Library.jsx`: a `sm` cover beside each book row (minimal adoption; the shelf layout is a later screen chunk) | ~200 | Gallery check script: 0 AA failures for every cover colour in both themes, box height = 1.5 x width before and after the image loads (no shift), broken URL leaves the typographic cover, 0 transform frames under reduced motion, no sideways overflow at 375; Library in the browser with test user A | Library shows covers with no layout shift; real covers cross-fade in; failures stay typographic |
+| ~~C11.4 photos, textures and image pipeline~~ | **Cut** (question 2, 2026-11-11): no photos or textures; the handoff uses illustrations and flat paper only, and C10.3 decided against paper grain. Cover encoding stays in C11.2b. A later chunk that needs a raster image adds the pipeline then | 0 | none | Not built |
+| C11.5 image performance budget | `frontend/scripts/check-images.mjs` + `npm run check:images`: fails when a raster under `src/` or `public/` exceeds 60 kB or an SVG 8 kB, when the gzipped illustration set exceeds 12 kB, when an `<img>` in JSX lacks `width`/`height` or `loading`, or when an image file has no `docs/ASSETS.md` row (or a licence outside original, CC0, Unsplash License); `docs/BENCHMARKS.md` rows; `CLAUDE.md` (`npm --prefix frontend run check:images` in the standard checks, a baseline row, "six passing checks"), `.claude/skills/atomic-commit/SKILL.md` and `.claude/skills/debug-protocol/SKILL.md` check lists (question 3) | ~170 | The script passes on the tree and fails on a deliberately oversized file, an unlogged file and an `<img>` without dimensions; headless Edge on Library with 10 books before and after C11: LCP, CLS, image bytes, initial JS gzip | CLS 0 on Library; initial JS grows by at most the illustration budget; cover bytes per shelf of 10 under 200 kB at 1x |
+
+Safe to cut, in this order (C11.4 already cut): C11.2c (books uploaded before
+C11 keep typographic covers); the `ReadingRoom` scene and favicon in
+C11.1b (the sign-in chunk can add them); the processing state of
+`BookCover` (the library chunk can add it); the ISBN-from-PDF-text scan
+(search by title and author only).
+
+Left to later chunks on purpose: the shelf layout, sign-in, warming-up,
+error and empty library screens that place these pictures; a "wrong
+cover?" control to re-run or clear a match; code-splitting routes.
+
+Questions for the user (asked at plan time, all answered 2026-11-11):
+
+1. Cover storage: **answered 2026-11-11**: re-encode and keep covers in a
+   public `covers` bucket (a backend proxy was considered and dropped).
+2. Cut C11.4: **answered 2026-11-11**: yes, cut.
+3. `check:images` as a standard check: **answered 2026-11-11**: yes. C11.5
+   adds it to `CLAUDE.md` (check list and baseline row) and to the check
+   lists in the `atomic-commit` and `debug-protocol` skills, as C10.2 did
+   for `check:contrast`.
+
+Estimated time: about 3.9 h (C11.1a 0.6, C11.1b 0.6, C11.2a 0.5, C11.2b
+0.8, C11.2c 0.3, C11.3 0.7, C11.5 0.4; C11.4 cut).
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|

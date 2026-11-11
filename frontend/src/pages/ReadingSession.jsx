@@ -240,7 +240,7 @@ export function ReadingSession() {
               <span>Today's reading</span>
             </button>
           )}
-          <div className="rf-toolbar-group" role="group" aria-label="Session">
+          <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Session">
             <span className="rf-session-time" aria-label={`Time left ${formatTime(timeLeft)}`}>{formatTime(timeLeft)}</span>
             <button type="button" className="rf-tool" onClick={() => setTimerStatus(running ? 'paused' : 'running')}
               aria-label={running ? 'Pause the timer' : timerStatus === 'idle' ? 'Start the timer' : 'Resume the timer'}>

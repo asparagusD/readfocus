@@ -156,6 +156,26 @@ test.describe('word lookup', () => {
   });
 });
 
+test.describe('the toolbar at 375', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  // C13.9: the tools on one row (handoff 375 frame), the session's controls on one row under them.
+  test('two rows, not three: tools above, the session below', async ({ page }) => {
+    await openReader(page);
+    const box = (locator) => locator.boundingBox();
+    const toolbar = page.getByRole('toolbar', { name: 'Reading controls' });
+    const back = await box(toolbar.getByRole('button', { name: 'Back to the library' }));
+    const theme = await box(toolbar.getByRole('radiogroup', { name: 'Theme' }));
+    const done = await box(toolbar.getByRole('button', { name: 'Done reading' }));
+    const abandon = await box(toolbar.getByRole('button', { name: 'Abandon session' }));
+    expect(Math.abs(theme.y - back.y)).toBeLessThan(4); // the theme toggle shares the tools' row
+    expect(done.y).toBeGreaterThan(back.y + back.height - 1); // the session row is under it
+    expect(Math.abs(abandon.y - done.y)).toBeLessThan(4);
+    expect((await box(toolbar)).height).toBeLessThanOrEqual(100);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
+  });
+});
+
 test('page-turn frame rate and lookup timings (recorded in docs/BENCHMARKS.md)', async ({ page }, info) => {
   await openReader(page);
   await page.locator('.rf-book').focus();

@@ -71,14 +71,32 @@
 .rf-size--small { font-size: 13px; }
 .rf-size--large { font-size: 20px; }
 
-/* Narrow screens: icons only, the title goes (the running head names the chapter). */
+/* Narrow screens: icons only, the title goes (the running head names the
+   chapter). C13.9: the tools sit on one row as in the handoff's 375 frame
+   (back, text size, Contents, Look up, theme: 44 px targets, no gaps), and
+   the session's own controls take one row under them, instead of the pill
+   wrapping into three rows over the page. */
 @media (width < 640px) {
   .rf-tool-label,
   .rf-toolbar-title,
-  .rf-toolbar-rule { display: none; } /* the pill wraps; dividers would end up at row ends */
+  .rf-toolbar-rule { display: none; }
 
-  .rf-toolbar { padding-inline: var(--space-2); }
+  .rf-toolbar {
+    column-gap: 0;
+    max-width: calc(100% - 2 * var(--space-2));
+    padding: 0 var(--space-1);
+  }
+
+  .rf-switch { padding-inline: 6px; }
+
+  .rf-toolbar-session {
+    flex-basis: 100%;
+    justify-content: center;
+    gap: var(--space-2);
+    border-top: var(--border-hair) solid var(--line);
+  }
 }
+
 
 /* "Look up" switch (C12.8, handoff): hover lookup on or off for this reader on this device. */
 .rf-switch-track {

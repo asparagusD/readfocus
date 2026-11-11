@@ -168,6 +168,104 @@ What this says for C9, read from these numbers only:
 Not measured: Render itself; the long book in the container; requests
 from a reader during ingestion; a restart mid-ingestion (C9.1b and C9.5).
 
+### C9.5: After C9, and Before/After (2026-11-11)
+
+#### After
+
+Everything rerun at `3294058` (C9.1 to C9.4), same commands, books and
+settings as the C9 "before" runs. Ingestion: three cold runs per book on
+Windows and three of `sample.pdf` in the 0.1-CPU, 512 MB container
+(image rebuilt as `readfocus-c9-5`). API:
+`python scripts/bench.py --runs 20 --flow-runs 5` against the backend
+from `.claude/launch.json`. Idle memory: `python scripts/dev/measure_rss.py`
+three times. Every benchmark book was deleted by the script; no container
+was left.
+
+<!-- bench:c9-after-windows:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /books/upload (sample.pdf)` | 3 | 2.01 s | 2.29 s | |
+| `upload -> ready (sample.pdf)` | 3 | 4.81 s | 4.90 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 4.81 s | 4.90 s | |
+| `upload -> done (sample.pdf)` | 3 | 4.81 s | 4.90 s | |
+| `POST /books/upload (pride-and-prejudice.epub)` | 3 | 1.35 s | 1.39 s | |
+| `upload -> ready (pride-and-prejudice.epub)` | 3 | 4.86 s | 4.86 s | |
+| `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 3 | 2.39 s | 2.42 s | |
+| `upload -> done (pride-and-prejudice.epub)` | 3 | 132.68 s | 141.53 s | |
+<!-- bench:c9-after-windows:end -->
+
+Windows: process start -> `/health` 2.59 to 3.10 s; peak RSS 322 MB and
+349 to 351 MB; idle RSS 266.6 to 266.9 MB (2 processes).
+
+<!-- bench:c9-after-container:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /books/upload (sample.pdf)` | 3 | 2.15 s | 5.98 s | |
+| `upload -> ready (sample.pdf)` | 3 | 53.29 s | 59.55 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 51.49 s | 59.37 s | |
+| `upload -> done (sample.pdf)` | 3 | 57.87 s | 64.75 s | |
+<!-- bench:c9-after-container:end -->
+
+Container: process start -> `/health` 13.21 to 16.14 s; peak memory 330,
+332 and 391 MB (`docker stats`).
+
+<!-- bench:c9-after-api:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `GET /health` | 20 | 0.8 ms | 2 ms | |
+| `GET /books` | 20 | 185 ms | 232 ms | |
+| `POST /books/upload` | 5 | 1.70 s | 2.32 s | sample.pdf, 3.6 MB |
+| `upload -> status ready` | 5 | 4.23 s | 4.35 s | polled every 0.5 s |
+| `POST /sessions/start` | 5 | 625 ms | 815 ms | planner |
+| `POST /sessions/{id}/finish-reading` | 5 | 679 ms | 709 ms | called right after start |
+| `POST /sessions/{id}/submit-answers` | 5 | 1.08 s | 1.09 s | 5 grades, then the optimizer |
+| `GET /dashboard` | 20 | 193 ms | 211 ms | |
+<!-- bench:c9-after-api:end -->
+
+One reading in the long-book run is not explained: the bench saw chunk
+0's questions 2.4 s after upload and `ready` 2.5 s later, although since
+C9.2 the code marks the book ready right after the first batch's
+questions are stored (`sample.pdf` shows both at the same moment, and in
+C9.2 the long book did too). Not investigated.
+
+#### Before/After
+
+"Before" for ingestion and cold start is C9.0 (`5e5fcfb`, the start of
+the chunk); for the API it is the C9.4 "before" (`83b4f1f`), since C9.0
+did not time the API, and C9.1 to C9.3 did not change those endpoints'
+reads. p50 unless stated. The verdict says what the numbers support, not
+what the code was meant to do.
+
+| Measure | Before | After | Verdict |
+|---|---|---|---|
+| `GET /dashboard` | 455 ms (p95 490) | 193 ms (p95 211) | **Faster**: measured twice (194 ms in C9.4, 193 ms here), outside the before spread |
+| `POST /sessions/start` | 590 ms | 625 ms | No clear change: 503 ms in C9.4, not reproduced here |
+| `GET /books` | 189 ms | 185 ms | No change |
+| `POST /sessions/{id}/finish-reading` | 750 ms | 679 ms | No change claimed: code not changed, noise |
+| `POST /sessions/{id}/submit-answers` | 1.07 s | 1.08 s | No change |
+| Windows `upload -> ready`, `sample.pdf` | 2.33 s | 4.81 s | **Slower** (C9.2: ready now waits for the first batch's questions) |
+| Windows `upload -> chunk 0 questions`, `sample.pdf` | 4.67 s | 4.81 s | No change |
+| Windows `upload -> ready`, 204-chunk EPUB | 2.36 s | 4.86 s | **Slower** (C9.2) |
+| Windows `upload -> chunk 0 questions`, EPUB | 4.70 s | 2.39 s | Lower, but inconsistent with `ready` (above); not claimed |
+| Windows `upload -> done`, EPUB | 138.34 s (p95 148.44) | 132.68 s (p95 141.53) | No clear change |
+| Container `upload -> ready` | 26.29 s | 53.29 s | **Slower** (C9.2) |
+| Container `upload -> chunk 0 questions` | 53.64 s (p95 55.08) | 51.49 s (p95 59.37) | No clear change |
+| Container `upload -> done` | 61.70 s (p95 63.39) | 57.87 s (p95 64.75) | No clear change |
+| Container process start -> `/health` | 12.4 to 14.4 s | 13.2 to 16.1 s | No change |
+| Container process start -> model ready | first use | 29.2 to 29.9 s (C9.3) | New: the load happens at boot, not in a request |
+| Idle RSS, Windows | 136 MB (C9.3 before; 134 MB in C8.8) | 266.6 to 266.9 MB | **Heavier**: about +130 MB, the preloaded model (C9.3) |
+| Idle memory, container | 110 to 126 MB | 272 to 275 MB (C9.3) | **Heavier**: about +150 MB |
+| Peak memory during ingestion, Windows | 321 MB; 349 to 352 MB | 322 MB; 349 to 351 MB | No change |
+| Peak memory during ingestion, container | 319 to 326 MB | 330, 332, 391 MB | Higher in one run of three; not separated from noise |
+| Ingestion after a hard kill mid-book | book stuck in `processing`, no retry (issue 20) | resumed from cursor 53 of 204 by the sweep, 0 duplicate chunks or questions, counts equal to an uninterrupted run (C9.1b) | **Durable** (measured once on dev) |
+
+Measured improvements from C9: the dashboard (about 260 ms faster), and
+ingestion that survives a restart. Everything else is unchanged within
+noise, slower by choice (`ready` waits for the first questions), or
+heavier (the preloaded model). Not measured: Render itself, a cold start
+followed by a grade, the indexes on tables larger than dev's, more than
+three runs per ingestion measure.
+
 ### C9.4: fewer and lighter reads, and indexes (2026-11-11)
 
 `python scripts/bench.py --runs 20 --flow-runs 5` against the backend on

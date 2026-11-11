@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 400,
-    "inventoried": 336,
+    "tracked": 403,
+    "inventoried": 339,
     "excluded": 64
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9935,
+      "size_bytes": 9952,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2286,
-      "size_bytes": 473328,
+      "size_bytes": 474978,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1722,9 +1722,25 @@
       "path": "frontend/src/lib/api.js",
       "language": "javascript",
       "lines": 40,
-      "size_bytes": 1044,
+      "size_bytes": 1051,
       "role": "lib",
-      "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response."
+      "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response; exports API_BASE_URL for the /health poll."
+    },
+    {
+      "path": "frontend/src/lib/backendReady.js",
+      "language": "javascript",
+      "lines": 49,
+      "size_bytes": 2197,
+      "role": "lib",
+      "purpose": "Backend readiness state machine, pure: checking (first 1.5 s), warming (the warm-up screen), ready (/health model_ready, or answering but still loading after 90 s), down (no answer in 90 s); the error line."
+    },
+    {
+      "path": "frontend/src/lib/backendReady.test.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 2164,
+      "role": "lib",
+      "purpose": "Node test (npm run test:unit): warm start, warm-up then ready, down after 90 s with its error line, reachable but loading after 90 s, Try again starts warm."
     },
     {
       "path": "frontend/src/lib/coverColor.js",
@@ -1789,6 +1805,14 @@
       "size_bytes": 341,
       "role": "lib",
       "purpose": "Creates the browser Supabase client; falls back to a hard-coded project URL and publishable key when the env vars are unset."
+    },
+    {
+      "path": "frontend/src/lib/useBackendReady.js",
+      "language": "javascript",
+      "lines": 64,
+      "size_bytes": 2208,
+      "role": "lib",
+      "purpose": "Hook: polls GET /health every 2 s (10 s timeout) from app start through lib/backendReady.js; returns the phase and retry."
     },
     {
       "path": "frontend/src/lib/useDocumentTitle.js",
@@ -2633,8 +2657,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 338,
-      "size_bytes": 95746,
+      "lines": 341,
+      "size_bytes": 96406,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

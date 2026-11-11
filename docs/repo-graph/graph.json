@@ -1512,6 +1512,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/lib/backendReady.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/backendReady.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/lib/coverColor.js",
       "type": "file",
       "role": "lib",
@@ -1555,6 +1567,12 @@
     },
     {
       "id": "file:frontend/src/lib/supabase.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/useBackendReady.js",
       "type": "file",
       "role": "lib",
       "language": "javascript"
@@ -4634,6 +4652,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/lib/backendReady.test.js",
+      "to": "file:frontend/src/lib/backendReady.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/lib/dashboard.test.js",
       "to": "file:frontend/src/lib/dashboard.js"
     },
@@ -4646,6 +4669,16 @@
       "type": "imports",
       "from": "file:frontend/src/lib/results.test.js",
       "to": "file:frontend/src/lib/results.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/useBackendReady.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/useBackendReady.js",
+      "to": "file:frontend/src/lib/backendReady.js"
     },
     {
       "type": "imports",

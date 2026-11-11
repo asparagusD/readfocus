@@ -3135,6 +3135,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/ui/Modal.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/ui/ScoreBadge.jsx",
       "to": "file:frontend/src/components/ui/ScoreBadge.css"
     },
@@ -3152,6 +3157,16 @@
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/Card.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
     },
     {
       "type": "imports",

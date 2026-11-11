@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 184,
-      "size_bytes": 8276,
+      "size_bytes": 8294,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -890,7 +890,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1719,
-      "size_bytes": 307721,
+      "size_bytes": 309557,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1025,18 +1025,18 @@
     {
       "path": "frontend/src/components/ui/Modal.css",
       "language": "css",
-      "lines": 28,
-      "size_bytes": 614,
+      "lines": 35,
+      "size_bytes": 887,
       "role": "component",
-      "purpose": "Modal backdrop (blurred) and panel styles."
+      "purpose": "Modal scrim and raised panel on tokens, width capped to the screen."
     },
     {
       "path": "frontend/src/components/ui/Modal.jsx",
       "language": "jsx",
-      "lines": 40,
-      "size_bytes": 942,
+      "lines": 88,
+      "size_bytes": 3430,
       "role": "component",
-      "purpose": "Portal modal: closes on Escape and backdrop click, focuses the panel on open, does not trap focus."
+      "purpose": "Modal dialog: role dialog, aria-modal, named by title, label or its first heading; focus moves in and Tab is trapped, Esc and the scrim close, page scroll locked, focus returns on close; pop animation, opacity only under reduced motion."
     },
     {
       "path": "frontend/src/components/ui/ScoreBadge.css",
@@ -1057,32 +1057,32 @@
     {
       "path": "frontend/src/components/ui/Skeleton.css",
       "language": "css",
-      "lines": 15,
-      "size_bytes": 333,
+      "lines": 30,
+      "size_bytes": 720,
       "role": "component",
-      "purpose": "Shimmer animation for loading placeholders."
+      "purpose": "Skeleton on paper-2, radius 6, 1.6 s shimmer moved by transform."
     },
     {
       "path": "frontend/src/components/ui/Skeleton.jsx",
       "language": "jsx",
-      "lines": 12,
-      "size_bytes": 247,
+      "lines": 21,
+      "size_bytes": 890,
       "role": "component",
-      "purpose": "Loading placeholder block with width and height props."
+      "purpose": "Skeleton placeholder, aria-hidden: a block sized by props or className, or `lines` of text with a shorter last line."
     },
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 82,
-      "size_bytes": 3013,
+      "lines": 114,
+      "size_bytes": 4281,
       "role": "asset",
       "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks."
     },
     {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
-      "lines": 62,
-      "size_bytes": 1092,
+      "lines": 77,
+      "size_bytes": 1311,
       "role": "asset",
       "purpose": "Layout styles for the dev-only component gallery."
     },
@@ -1161,8 +1161,8 @@
     {
       "path": "frontend/src/motion/presets.js",
       "language": "javascript",
-      "lines": 103,
-      "size_bytes": 3799,
+      "lines": 110,
+      "size_bytes": 4154,
       "role": "asset",
       "purpose": "Motion variants that read --dur-* and --ease-* from the CSS tokens when an animation starts: fadeIn, rise, routeTransition, routeFade, stagger(), shelfArrive, pageTurn, chipPop, drawIn; seconds(), easing() and prefersReducedMotion() helpers."
     },
@@ -1218,7 +1218,7 @@
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
       "lines": 275,
-      "size_bytes": 10923,
+      "size_bytes": 10926,
       "role": "page",
       "purpose": "Library page: drag-and-drop upload with a title and author modal, 3-second status polling, book list, delete."
     },
@@ -1250,7 +1250,7 @@
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
       "lines": 269,
-      "size_bytes": 9682,
+      "size_bytes": 9715,
       "role": "page",
       "purpose": "Reading page: checks calibration, starts a session, shows the timer and pacing bar, distraction-free mode, finish and abandon (abandon does not call the API)."
     },
@@ -1289,8 +1289,8 @@
     {
       "path": "frontend/src/styles/tokens.css",
       "language": "css",
-      "lines": 246,
-      "size_bytes": 8137,
+      "lines": 248,
+      "size_bytes": 8223,
       "role": "asset",
       "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
     },
@@ -1634,7 +1634,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 213,
-      "size_bytes": 48369,
+      "size_bytes": 48615,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

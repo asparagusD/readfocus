@@ -192,6 +192,7 @@
   --elevation-page: 0 24px 48px -32px rgba(40, 25, 10, 0.35);
   --elevation-lift: 0 12px 32px -16px rgba(40, 25, 10, 0.28);
   --elevation-accent: none;
+  --scrim: rgba(42, 36, 32, 0.4); /* behind a modal */
 }
 
 /* ── Colour: Paper, sage ────────────────────────────────────────────── */
@@ -232,6 +233,7 @@
   --elevation-page: 0 0 60px -24px var(--glow);
   --elevation-lift: 0 12px 32px -12px rgba(0, 0, 0, 0.55);
   --elevation-accent: 0 0 24px var(--glow);
+  --scrim: rgba(8, 6, 4, 0.6);
 }
 
 /* ── Colour: Lamplight, sage ────────────────────────────────────────── */

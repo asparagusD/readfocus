@@ -57,6 +57,13 @@ export const routeTransition = {
   exit: { opacity: 0, get transition() { return timing('--dur-1', '--ease-settle'); } },
 };
 
+/** A dialog or toast arriving: small rise and settle in 250 ms, fade out in 150 ms. */
+export const pop = {
+  hidden: { opacity: 0, y: 8, scale: 0.98 },
+  visible: { opacity: 1, y: 0, scale: 1, get transition() { return timing('--dur-3', '--ease-settle'); } },
+  exit: { opacity: 0, get transition() { return timing('--dur-1', '--ease-settle'); } },
+};
+
 /** Route change under reduced motion: opacity only. Without it the
     incoming page shows its `hidden` 8 px offset for one frame. */
 export const routeFade = fadeIn;

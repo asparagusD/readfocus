@@ -60,3 +60,18 @@
 .gallery-cards p {
   color: var(--ink-2);
 }
+
+.gallery-modal-body {
+  color: var(--ink-2);
+}
+
+.gallery-modal-actions {
+  justify-content: flex-end;
+  margin-top: var(--space-5);
+}
+
+.gallery-skeletons {
+  display: grid;
+  gap: var(--space-5);
+  max-width: 480px;
+}

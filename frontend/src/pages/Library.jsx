@@ -240,7 +240,7 @@ export function Library() {
       </div>
 
       <Modal isOpen={uploadModalOpen} onClose={() => !isUploading && setUploadModalOpen(false)}>
-        <div style={{ padding: '24px', width: '440px', boxSizing: 'border-box' }}>
+        <div style={{ padding: '24px', maxWidth: '440px', boxSizing: 'border-box' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '22px', color: 'var(--ink)', marginBottom: '24px' }}>
             Add to your library
           </h2>

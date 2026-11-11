@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { Modal } from '../components/ui/Modal';
+import { Skeleton } from '../components/ui/Skeleton';
 
 // Dev-only gallery: every component in every state, in both themes and
 // both accents, for the design-review checks at 375 and 1440 px.
@@ -40,6 +42,22 @@ const VARIANTS = [
   ['danger', 'Leave test', 'Leaving…'],
 ];
 
+function ModalDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="secondary" onClick={() => setOpen(true)}>Open “Leave this test?”</Button>
+      <Modal isOpen={open} onClose={() => setOpen(false)} title="Leave this test?">
+        <p className="gallery-modal-body">Your answers so far are kept. You can come back and finish it any time today.</p>
+        <div className="gallery-row gallery-modal-actions">
+          <Button variant="secondary" onClick={() => setOpen(false)}>Keep going</Button>
+          <Button onClick={() => setOpen(false)}>Leave test</Button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
 export function Gallery() {
   return (
     <main className="gallery">
@@ -75,6 +93,20 @@ export function Gallery() {
             <h3>Interactive</h3>
             <p>A link card: the hairline darkens on hover.</p>
           </Card>
+        </div>
+      </Section>
+
+      <Section title="Modal">
+        <ModalDemo />
+        <p className="gallery-note">Tab stays inside; Esc or the scrim closes; focus returns to the button.</p>
+      </Section>
+
+      <Section title="Skeleton">
+        <div className="gallery-skeletons" aria-busy="true" aria-label="Loading example">
+          <Skeleton lines={3} />
+          <div className="gallery-row">
+            {[0, 1, 2].map((i) => <Skeleton key={i} width={96} height={144} />)}
+          </div>
         </div>
       </Section>
     </main>

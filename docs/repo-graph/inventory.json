@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 377,
-    "inventoried": 314,
+    "tracked": 379,
+    "inventoried": 316,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9435,
+      "size_bytes": 9452,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2278,
-      "size_bytes": 442176,
+      "lines": 2279,
+      "size_bytes": 442871,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1049,10 +1049,10 @@
     {
       "path": "frontend/e2e/shell.spec.js",
       "language": "javascript",
-      "lines": 10,
-      "size_bytes": 414,
+      "lines": 90,
+      "size_bytes": 4971,
       "role": "config",
-      "purpose": "Playwright e2e for the app shell (C13.2a): every page has its own document title."
+      "purpose": "Playwright e2e for the app shell (C13.2a): the current page marked and every page titled, the skip link first and leading to main, the account panel (initials, text size and accent saved, Esc returning focus, a press outside), sign out to /login, and at 375 px the links in the bar, no sideways scroll, 44 px targets and the theme inside the panel."
     },
     {
       "path": "frontend/eslint.config.js",
@@ -1119,6 +1119,22 @@
       "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader."
     },
     {
+      "path": "frontend/src/components/AccountMenu.css",
+      "language": "css",
+      "lines": 202,
+      "size_bytes": 4213,
+      "role": "component",
+      "purpose": "Account button and panel styles: 44 px round initials with a field border, a raised surface panel with a lift shadow (full width under 640 px), segmented radio rows on paper-2 with the checked one raised, accent swatches, the theme row only under 640 px, Sign out."
+    },
+    {
+      "path": "frontend/src/components/AccountMenu.jsx",
+      "language": "jsx",
+      "lines": 118,
+      "size_bytes": 4289,
+      "role": "component",
+      "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes."
+    },
+    {
       "path": "frontend/src/components/BookCover.css",
       "language": "css",
       "lines": 115,
@@ -1145,18 +1161,18 @@
     {
       "path": "frontend/src/components/Layout.css",
       "language": "css",
-      "lines": 151,
-      "size_bytes": 2566,
+      "lines": 135,
+      "size_bytes": 2611,
       "role": "component",
-      "purpose": "Nav and main column styles; on phones the nav wraps to two rows and keeps the Library and Dashboard links."
+      "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the pre-2.0 main column."
     },
     {
       "path": "frontend/src/components/Layout.jsx",
       "language": "jsx",
-      "lines": 55,
-      "size_bytes": 1596,
+      "lines": 44,
+      "size_bytes": 1646,
       "role": "component",
-      "purpose": "Global nav (wordmark, Library and Dashboard links, theme toggle, email, sign out) wrapped around page content."
+      "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target."
     },
     {
       "path": "frontend/src/components/ThemeToggle.css",
@@ -2041,10 +2057,10 @@
     {
       "path": "frontend/src/styles/tokens.css",
       "language": "css",
-      "lines": 248,
-      "size_bytes": 8223,
+      "lines": 252,
+      "size_bytes": 8393,
       "role": "asset",
-      "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
+      "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (and a swatch of each accent for the accent setting) (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
     },
     {
       "path": "frontend/src/theme/ThemeProvider.jsx",
@@ -2457,8 +2473,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 316,
-      "size_bytes": 83508,
+      "lines": 318,
+      "size_bytes": 84815,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

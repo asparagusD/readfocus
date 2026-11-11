@@ -1056,6 +1056,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/AccountMenu.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/AccountMenu.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/BookCover.css",
       "type": "file",
       "role": "component",
@@ -3987,6 +3999,36 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/components/AccountMenu.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/lib/initials.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/BookCover.jsx",
       "to": "file:frontend/src/components/BookCover.css"
     },
@@ -4004,6 +4046,11 @@
       "type": "imports",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/components/AccountMenu.jsx"
     },
     {
       "type": "imports",

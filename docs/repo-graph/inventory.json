@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 373,
-    "inventoried": 310,
+    "tracked": 375,
+    "inventoried": 312,
     "excluded": 63
   },
   "files": [
@@ -994,7 +994,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2277,
-      "size_bytes": 439869,
+      "size_bytes": 441320,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1025,10 +1025,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 160,
-      "size_bytes": 8461,
+      "lines": 161,
+      "size_bytes": 8616,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
+      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
     },
     {
       "path": "frontend/e2e/login.spec.js",
@@ -1045,6 +1045,14 @@
       "size_bytes": 9711,
       "role": "config",
       "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+    },
+    {
+      "path": "frontend/e2e/shell.spec.js",
+      "language": "javascript",
+      "lines": 10,
+      "size_bytes": 414,
+      "role": "config",
+      "purpose": "Playwright e2e for the app shell (C13.2a): every page has its own document title."
     },
     {
       "path": "frontend/eslint.config.js",
@@ -1591,6 +1599,14 @@
       "purpose": "Creates the browser Supabase client; falls back to a hard-coded project URL and publishable key when the env vars are unset."
     },
     {
+      "path": "frontend/src/lib/useDocumentTitle.js",
+      "language": "javascript",
+      "lines": 8,
+      "size_bytes": 272,
+      "role": "lib",
+      "purpose": "useDocumentTitle(title): the tab title '<title> · ReadFocus' while a page is shown (audit U11); used by every routed page."
+    },
+    {
       "path": "frontend/src/main.jsx",
       "language": "jsx",
       "lines": 10,
@@ -1641,8 +1657,8 @@
     {
       "path": "frontend/src/pages/ComprehensionTest.jsx",
       "language": "jsx",
-      "lines": 261,
-      "size_bytes": 9242,
+      "lines": 263,
+      "size_bytes": 9330,
       "role": "page",
       "purpose": "Five-question timed test (5 minutes): grades each answer in the background on navigation, auto-submits at zero, routes to Results."
     },
@@ -1657,8 +1673,8 @@
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 245,
-      "size_bytes": 8590,
+      "lines": 247,
+      "size_bytes": 8683,
       "role": "page",
       "purpose": "Progress page: streak, words this week, a Recharts score line per book, book progress cards, recent feedback."
     },
@@ -1673,8 +1689,8 @@
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 275,
-      "size_bytes": 10926,
+      "lines": 277,
+      "size_bytes": 11020,
       "role": "page",
       "purpose": "Library page: drag-and-drop upload with a title and author modal, 3-second status polling, book list, delete."
     },
@@ -1689,8 +1705,8 @@
     {
       "path": "frontend/src/pages/Login.jsx",
       "language": "jsx",
-      "lines": 155,
-      "size_bytes": 7179,
+      "lines": 156,
+      "size_bytes": 7190,
       "role": "page",
       "purpose": "Sign in and create account (handoff screen 01): scene with the tagline, segmented tabs over one tabpanel, labelled fields validated before sending (errors inline, focus to the first), Supabase errors mapped to the field or a form alert, loading label on submit, inbox message after sign-up; the display name is collected and never sent, as before. The drawings fade in and the form rises 12 px without fading (text paints at once); a nested AnimatePresence lets them play on a first load; under reduced motion the form does not move."
     },
@@ -1705,8 +1721,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 315,
-      "size_bytes": 13668,
+      "lines": 317,
+      "size_bytes": 13827,
       "role": "page",
       "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8)."
     },
@@ -1721,8 +1737,8 @@
     {
       "path": "frontend/src/pages/Results.jsx",
       "language": "jsx",
-      "lines": 186,
-      "size_bytes": 7040,
+      "lines": 188,
+      "size_bytes": 7131,
       "role": "page",
       "purpose": "Results page: animated score, verdict, per-question feedback, next-session or re-read panel; rebuilds from the API after a refresh."
     },
@@ -2425,8 +2441,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 312,
-      "size_bytes": 82786,
+      "lines": 314,
+      "size_bytes": 83086,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

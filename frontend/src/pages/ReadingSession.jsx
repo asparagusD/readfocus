@@ -18,6 +18,7 @@ import { readSize, stepSize, storeSize } from '../reader/textSize';
 import { createLookupClient, readLookupOn, storeLookupOn } from '../reader/lookup';
 import { useAuth } from '../hooks/useAuth';
 import './ReadingSession.css';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 // One read-ahead cache for the app: the chunk after today's reading, fetched before the last page (C12.4).
 const readAhead = createReadAhead(fetchApi);
@@ -47,6 +48,7 @@ export function ReadingSession() {
   const [isCalibrated, setIsCalibrated] = useState(true);
   const [loading, setLoading] = useState(true);
   const [sessionData, setSessionData] = useState(null);
+  useDocumentTitle(sessionData?.book?.title ? `${sessionData.book.title} · Reading` : 'Reading');
 
   // Timer state, as before
   const [timeLeft, setTimeLeft] = useState(0); // in seconds

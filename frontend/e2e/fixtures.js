@@ -43,6 +43,7 @@ async function mockBackend(page, api) {
     const path = url.pathname;
     if (path === '/auth/profile') return json(route, { id: 'e2e-reader', is_calibrated: true, wpm: 240 });
     if (path === '/books' && request.method() === 'GET') return json(route, []);
+    if (path === '/dashboard') return json(route, { book_progress: [], score_over_time: [], reading_streak: 0, words_this_week: 0, recent_feedback: [] });
     if (path === '/sessions/start') {
       api.starts += 1;
       return json(route, {

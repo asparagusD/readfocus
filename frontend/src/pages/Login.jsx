@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { BookOpen } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { Button } from '../components/ui/Button';
 import { TextInput } from '../components/ui/TextInput';
 import { SegmentedTabs } from '../components/ui/SegmentedTabs';
@@ -55,7 +56,7 @@ export function Login() {
   const copy = COPY[tab];
   const reduced = useReducedMotion();
 
-  useEffect(() => { document.title = 'Sign in · ReadFocus'; }, []);
+  useDocumentTitle('Sign in');
 
   const field = (key) => ({
     value: values[key],

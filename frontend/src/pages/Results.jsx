@@ -3,8 +3,10 @@ import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { fetchApi } from '../lib/api';
 import { usePageTransition } from '../hooks/usePageTransition';
 import './Results.css';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export function Results() {
+  useDocumentTitle('Results');
   const { sessionId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();

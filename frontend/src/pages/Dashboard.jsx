@@ -6,6 +6,7 @@ import {
 import { fetchApi } from '../lib/api';
 import { usePageTransition } from '../hooks/usePageTransition';
 import './Dashboard.css';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 // Warm palette for multi-book lines on the chart
 const LINE_COLORS = ['#c8832a', '#2d7a4f', '#4a6fa5', '#8e5ca6', '#a05040'];
@@ -127,6 +128,7 @@ function FeedbackQuote({ item }) {
 }
 
 export function Dashboard() {
+  useDocumentTitle('Dashboard');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

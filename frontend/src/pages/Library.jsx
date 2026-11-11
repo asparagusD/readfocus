@@ -8,8 +8,10 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { ScoreBadge } from '../components/ui/ScoreBadge';
 import { usePageTransition } from '../hooks/usePageTransition';
 import './Library.css';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export function Library() {
+  useDocumentTitle('Your shelf');
   usePageTransition();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);

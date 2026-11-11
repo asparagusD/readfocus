@@ -5,8 +5,10 @@ import { fetchApi } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { usePageTransition } from '../hooks/usePageTransition';
 import './ComprehensionTest.css';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export function ComprehensionTest() {
+  useDocumentTitle('Test');
   const { sessionId } = useParams();
   const navigateTo = usePageTransition();
   const navigate = useNavigate();

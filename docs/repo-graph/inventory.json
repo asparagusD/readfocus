@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 412,
-    "inventoried": 348,
+    "tracked": 413,
+    "inventoried": 349,
     "excluded": 64
   },
   "files": [
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2289,
-      "size_bytes": 479821,
+      "size_bytes": 481078,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1029,6 +1029,14 @@
       "size_bytes": 1027,
       "role": "doc",
       "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
+    },
+    {
+      "path": "frontend/e2e/calibration.spec.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 3394,
+      "role": "config",
+      "purpose": "E2E: an uncalibrated reader gets the pace check (intro, passage, one POST with a clamped wpm, then today's reading); a failed save shows a toast and no native dialog; 375 without sideways scroll."
     },
     {
       "path": "frontend/e2e/dashboard.spec.js",
@@ -1231,12 +1239,20 @@
       "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative."
     },
     {
+      "path": "frontend/src/components/CalibrationFlow.css",
+      "language": "css",
+      "lines": 44,
+      "size_bytes": 962,
+      "role": "component",
+      "purpose": "Reading pace layout on tokens: one column, the passage at the reading size and measure."
+    },
+    {
       "path": "frontend/src/components/CalibrationFlow.jsx",
       "language": "jsx",
-      "lines": 87,
-      "size_bytes": 4329,
+      "lines": 60,
+      "size_bytes": 3779,
       "role": "component",
-      "purpose": "First-session reading speed test: times a 200-word passage and posts the WPM to /auth/profile/calibrate."
+      "purpose": "First-session reading pace: an intro, then a 200-word passage timed to words per minute (clamped 50-1000) and posted to /auth/profile/calibrate; a failed save is a warning toast and the session goes on at 200."
     },
     {
       "path": "frontend/src/components/ErrorScreen.css",
@@ -1663,14 +1679,6 @@
       "purpose": "AuthProvider and useAuth: Supabase session state plus signIn, signUp and signOut."
     },
     {
-      "path": "frontend/src/hooks/usePageTransition.js",
-      "language": "javascript",
-      "lines": 33,
-      "size_bytes": 790,
-      "role": "hook",
-      "purpose": "Adds the .visible class on mount and returns navigateTo, which fades the page out before routing."
-    },
-    {
       "path": "frontend/src/illustrations/BookStack.jsx",
       "language": "jsx",
       "lines": 7,
@@ -1777,8 +1785,8 @@
     {
       "path": "frontend/src/index.css",
       "language": "css",
-      "lines": 40,
-      "size_bytes": 1401,
+      "lines": 24,
+      "size_bytes": 793,
       "role": "asset",
       "purpose": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; and the reset (base layer); the pre-2.0 .page fade was removed in C11.5 (it hid every page's first contentful paint)."
     },
@@ -2009,8 +2017,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 314,
-      "size_bytes": 13659,
+      "lines": 315,
+      "size_bytes": 13775,
       "role": "page",
       "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8); C13.4: the first-page note carries a small ReadingLamp, the closing page a larger one whose glow pulses once, failures are toasts, and leaving asks in a Modal (Leave / Keep reading)."
     },
@@ -2729,8 +2737,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 350,
-      "size_bytes": 98381,
+      "lines": 351,
+      "size_bytes": 98717,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

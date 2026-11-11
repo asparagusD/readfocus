@@ -10,20 +10,6 @@
 @import "./styles/fonts.css";
 @import "./styles/base.css" layer(base);
 
-/* A4: pre-2.0 names still used by the page CSS, now aliases of the tokens,
-   so every page meets AA and follows the theme. Remove after C13. */
-:root {
-  --ink-light: var(--ink-2);
-  --ink-faint: var(--ink-3);
-  --paper-dark: var(--paper-2);
-  --paper-mid: var(--line-2);
-  --amber: var(--accent);
-  --amber-pale: var(--accent-soft);
-  --red-soft: var(--warn);
-  --red-mid: var(--warn); /* used by Library.jsx, never defined before */
-  --green-soft: var(--accent-text);
-}
-
 @layer base {
   * {
     box-sizing: border-box;
@@ -32,9 +18,7 @@
   }
 }
 
-/* The pre-2.0 `.page` fade (opacity 0 until usePageTransition added
-   `.visible`) is gone: Chrome ignores text painted at opacity 0 and does
-   not report it again when a composited fade reveals it, so no page had a
-   first or largest contentful paint (C11.5, docs/DEBUG_LOG.md). The
-   route transition in App.jsx fades pages in. `.page` and `.visible` stay
-   on the pages as plain class names until their rebuilds. */
+/* The pre-2.0 `.page` fade and usePageTransition are gone (C11.5, removed
+   in C13.8b): Chrome ignores text painted at opacity 0, so no page had a
+   first contentful paint (docs/DEBUG_LOG.md). The route transition in
+   App.jsx fades pages in. The A4 colour aliases went in C13.8b too. */

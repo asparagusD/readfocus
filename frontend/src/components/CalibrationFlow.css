@@ -1,0 +1,44 @@
+/* First-session reading pace (C13.8b): one quiet column on the paper,
+   the passage at the reader's measure and size. */
+.rf-calibrate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  max-width: 64ch;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5);
+}
+
+.rf-calibrate--intro {
+  justify-content: center;
+  min-height: 100dvh;
+  max-width: 560px;
+}
+
+.rf-calibrate__title {
+  margin: 0;
+  font-size: var(--text-section);
+  line-height: var(--text-section--line-height);
+}
+
+.rf-calibrate__title--small {
+  font-size: 28px;
+}
+
+.rf-calibrate__lead {
+  margin: 0 0 var(--space-3);
+  color: var(--ink-2);
+}
+
+.rf-calibrate__passage {
+  margin: var(--space-3) 0 var(--space-5);
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+@media (max-width: 639px) {
+  .rf-calibrate { padding: var(--space-6) var(--space-4); }
+}

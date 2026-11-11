@@ -990,6 +990,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:frontend/e2e/calibration.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/dashboard.spec.js",
       "type": "file",
       "role": "config",
@@ -1138,6 +1144,12 @@
       "type": "file",
       "role": "component",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/CalibrationFlow.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
     },
     {
       "id": "file:frontend/src/components/CalibrationFlow.jsx",
@@ -1462,12 +1474,6 @@
       "type": "file",
       "role": "hook",
       "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/hooks/usePageTransition.js",
-      "type": "file",
-      "role": "hook",
-      "language": "javascript"
     },
     {
       "id": "file:frontend/src/illustrations/BookStack.jsx",
@@ -4141,6 +4147,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/calibration.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/dashboard.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -4352,12 +4363,27 @@
     {
       "type": "imports",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "file:frontend/src/components/CalibrationFlow.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
     },
     {
       "type": "imports",

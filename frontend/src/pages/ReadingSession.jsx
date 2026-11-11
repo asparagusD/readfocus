@@ -201,17 +201,18 @@ export function ReadingSession() {
     </>
   );
 
-  if (!profileChecked) return <div className="rf-reading-loading" />;
+  // One quiet loading state while the profile and then the session load (C13.8b: the profile check showed nothing).
+  const preparing = (
+    <div className="rf-reading-loading" role="status">
+      <span className="rf-reading-loading-text">Preparing your session…</span>
+    </div>
+  );
+
+  if (!profileChecked) return preparing;
 
   if (!isCalibrated) return <CalibrationFlow onComplete={() => setIsCalibrated(true)} />;
 
-  if (loading) {
-    return (
-      <div className="rf-reading-loading">
-        <span className="rf-reading-loading-text">Preparing your session…</span>
-      </div>
-    );
-  }
+  if (loading) return preparing;
 
   const running = timerStatus === 'running';
   const bookTitle = sessionData.book?.title || 'Your book';

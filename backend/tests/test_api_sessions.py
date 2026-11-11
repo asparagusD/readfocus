@@ -498,7 +498,8 @@ def test_a_failing_decisions_insert_changes_no_response(api):
 
 def test_the_responses_keep_the_keys_the_pages_read(api):
     start = api.client.post("/sessions/start", json={"book_id": BOOK}).json()
-    assert set(start) == {"session_id", "chunk_indices", "focus_duration_minutes", "reason", "chunks", "position"}
+    assert set(start) == {"session_id", "chunk_indices", "focus_duration_minutes", "reason", "chunks", "position", "book",
+                          "chapter_before"}
     finished = api.client.post(f"/sessions/{start['session_id']}/finish-reading", json={"actual_duration_minutes": 3})
     assert set(finished.json()) == {"test_id", "questions"}
     body = submit(api, start["session_id"]).json()

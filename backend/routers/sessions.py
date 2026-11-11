@@ -89,6 +89,25 @@ class PositionRequest(BaseModel):
         return self
 
 
+def read_book(user_id: str, book_id: str, first_chunk: int):
+    """The book's title and author, and the chapter in effect before the session's first chunk (C12.3b).
+
+    A chapter that starts inside the session is found by the reader in the blocks themselves; this is
+    the chapter the first pages belong to when they open mid-chapter. A failed read gives (None, None).
+    """
+    try:
+        rows = supabase.table("books").select("title, author, toc").eq("id", book_id).eq(
+            "user_id", user_id).execute().data
+        if not rows:
+            return None, None
+        row = cast(dict[str, Any], rows[0])
+        earlier = [entry for entry in row.get("toc") or [] if entry.get("chunk_index", 0) < first_chunk]
+        return {"title": row.get("title"), "author": row.get("author")}, (earlier[-1]["title"] if earlier else None)
+    except Exception as e:  # noqa: BLE001 - the running head shows less, the session still starts
+        print(f"Book details not read: {e}")
+        return None, None
+
+
 def read_position(user_id: str, book_id: str):
     """The saved place for /start; a failed read is no place, never a failed start."""
     try:
@@ -111,7 +130,7 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         raise HTTPException(status_code=400, detail="No more chunks available to read.")
         
     # 2-3. Fetch the chunk content and create the session row; neither needs the other, so they run at once
-    chunk_query = supabase.table("chunks").select("chunk_index, content, word_count").eq(
+    chunk_query = supabase.table("chunks").select("chunk_index, content, word_count, blocks").eq(
         "book_id", req.book_id).in_("chunk_index", chunk_indices)
     session_query = supabase.table("sessions").insert({
         "user_id": user_id,
@@ -123,9 +142,10 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         "status": "reading",
         "started_at": datetime.utcnow().isoformat()
     })
-    resp, session_resp, position = await asyncio.gather(
+    resp, session_resp, position, (book, chapter_before) = await asyncio.gather(
         run_in_threadpool(chunk_query.execute), run_in_threadpool(session_query.execute),
-        run_in_threadpool(read_position, user_id, req.book_id))
+        run_in_threadpool(read_position, user_id, req.book_id),
+        run_in_threadpool(read_book, user_id, req.book_id, chunk_indices[0]))
     chunks_data: list[dict[str, Any]] = sorted(cast(list[dict[str, Any]], resp.data or []), key=lambda x: x["chunk_index"])
 
     if not session_resp.data:
@@ -146,6 +166,8 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         "reason": getattr(plan, "reason", ""),
         "chunks": chunks_data,
         "position": position,  # the last saved place in this book, or None; the reader decides whether to resume
+        "book": book,  # {title, author} for the running head, or None
+        "chapter_before": chapter_before,  # the chapter the first page belongs to when it opens mid-chapter
     }
 
 

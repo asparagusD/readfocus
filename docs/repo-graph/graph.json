@@ -640,6 +640,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_start_reader.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_auth.py",
       "type": "file",
       "role": "test",
@@ -1426,6 +1432,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/blocks.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/blocks.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/geometry.js",
       "type": "file",
       "role": "asset",
@@ -1448,6 +1466,12 @@
       "type": "file",
       "role": "asset",
       "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/usePlaceSaver.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/styles/base.css",
@@ -2025,6 +2049,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/reader/usePlaceSaver.js",
+      "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
       "type": "calls_external",
@@ -3099,6 +3128,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_api_start_reader.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_auth.py",
       "to": "file:backend/dependencies.py"
     },
@@ -4009,6 +4043,21 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/usePlaceSaver.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/hooks/usePageTransition.js"
     },
@@ -4049,8 +4098,18 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/blocks.test.js",
+      "to": "file:frontend/src/reader/blocks.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/geometry.test.js",
       "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/usePlaceSaver.js",
+      "to": "file:frontend/src/lib/api.js"
     },
     {
       "type": "imports",
@@ -4386,6 +4445,11 @@
       "type": "reads_table",
       "from": "file:backend/routers/mastery.py",
       "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:books"
     },
     {
       "type": "reads_table",

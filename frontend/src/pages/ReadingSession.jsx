@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Maximize, Minimize } from 'lucide-react';
 import { fetchApi } from '../lib/api';
@@ -6,6 +6,9 @@ import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { usePageTransition } from '../hooks/usePageTransition';
 import { CalibrationFlow } from '../components/CalibrationFlow';
+import { BookReader } from '../reader';
+import { blocksForChunks, placeInChunks } from '../reader/blocks';
+import { usePlaceSaver } from '../reader/usePlaceSaver';
 import './ReadingSession.css';
 
 export function ReadingSession() {
@@ -29,6 +32,11 @@ export function ReadingSession() {
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
+  // The book (C12.3b): today's blocks, the saved place if it is in today's chunks, saved again as pages turn.
+  const blocks = useMemo(() => blocksForChunks(sessionData?.chunks), [sessionData]);
+  const resumeAt = useMemo(() => placeInChunks(sessionData?.position, sessionData?.chunks), [sessionData]);
+  const savePlace = usePlaceSaver(sessionData?.session_id);
 
   // 1. Check Profile Calibration
   useEffect(() => {
@@ -153,14 +161,6 @@ export function ReadingSession() {
     );
   }
 
-  // Split text into paragraphs for rendering
-  const paragraphs = sessionData.chunks
-    .map(c => c.content)
-    .join('\n\n')
-    .split(/\n\s*\n/)
-    .map(p => p.replace(/\n/g, ' ').trim())
-    .filter(p => p.length > 0);
-
   return (
     <div className={`rf-reading-page page ${isVisible ? 'visible' : ''} ${isDistractionFree ? 'rf-distraction-free' : ''}`}>
       
@@ -177,6 +177,10 @@ export function ReadingSession() {
         </div>
         <div className="rf-chrome-right">
           Session {sessionData.session_id.substring(0,6)} · {sessionData.assigned_words || '?'} words
+          <span className="rf-ctrl-sep" aria-hidden="true"> · </span>
+          <button className="rf-abandon-link" onClick={() => setShowAbandonModal(true)}>
+            Abandon session
+          </button>
         </div>
       </header>
 
@@ -228,19 +232,16 @@ export function ReadingSession() {
         Based on your previous performance, {sessionData.reason || "I've tailored this session for your optimal focus."}
       </div>
 
-      {/* Reading Text Area */}
+      {/* Today's reading as a paginated book (C12.3) */}
       <main className="rf-reading-area">
-        <div className="rf-reading-text">
-          {paragraphs.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
-        </div>
-
-        <div className="rf-abandon-container">
-          <button className="rf-abandon-link" onClick={() => setShowAbandonModal(true)}>
-            Abandon session
-          </button>
-        </div>
+        <BookReader
+          blocks={blocks}
+          bookTitle={sessionData.book?.title || 'Your book'}
+          chapterBefore={sessionData.chapter_before || ''}
+          initialAnchor={resumeAt}
+          onPlaceChange={savePlace}
+          label={`Today's reading${sessionData.book?.title ? ` from ${sessionData.book.title}` : ''}`}
+        />
       </main>
 
       {/* Distraction Free Toggle */}

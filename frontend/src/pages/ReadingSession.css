@@ -1,7 +1,8 @@
-/* Overall Layout */
+/* Overall Layout: a fixed-height column; the book fills what the bars leave (C12.3b). */
 .rf-reading-page {
   width: 100%;
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background-color: var(--paper);
   display: flex;
   flex-direction: column;
@@ -199,8 +200,7 @@
 
 .rf-distraction-free .rf-chrome-bar,
 .rf-distraction-free .rf-timer-strip,
-.rf-distraction-free .rf-reason-strip,
-.rf-distraction-free .rf-abandon-container {
+.rf-distraction-free .rf-reason-strip {
   opacity: 0;
   pointer-events: none;
 }
@@ -247,38 +247,11 @@
   background-color: var(--paper-dark);
 }
 
-/* Reading Text Area */
+/* Book Area: the paginated reader takes the remaining height. */
 .rf-reading-area {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 48px 24px 80px 24px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.rf-reading-text p {
-  font-family: var(--font-reading);
-  font-size: 19px;
-  line-height: 1.85;
-  letter-spacing: 0.01em;
-  color: var(--ink);
-  margin-top: 0;
-  margin-bottom: 1.4em;
-}
-
-/* The Drop Cap Magic */
-.rf-reading-text p:first-of-type::first-letter {
-  font-family: var(--font-display);
-  font-size: 3.6em;
-  float: left;
-  line-height: 0.85;
-  margin-right: 8px;
-  color: var(--ink);
-}
-
-.rf-abandon-container {
-  margin-top: 64px;
-  text-align: center;
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-4) 0 var(--space-2);
 }
 
 .rf-abandon-link {

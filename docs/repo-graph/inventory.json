@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 332,
-    "inventoried": 269,
+    "tracked": 336,
+    "inventoried": 273,
     "excluded": 63
   },
   "files": [
@@ -409,10 +409,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 314,
-      "size_bytes": 15559,
+      "lines": 336,
+      "size_bytes": 16865,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; it also sends each chunk's reader blocks, the book's title and author and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -577,10 +577,18 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 600,
-      "size_bytes": 29253,
+      "lines": 601,
+      "size_bytes": 29305,
       "role": "test",
       "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time."
+    },
+    {
+      "path": "backend/tests/test_api_start_reader.py",
+      "language": "python",
+      "lines": 56,
+      "size_bytes": 2454,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: /sessions/start sends each chunk's blocks, the book's title and author, the chapter in effect before the first chunk (from books.toc), copes with a book without toc or blocks, and still starts when the book read fails."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -953,8 +961,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2099,
-      "size_bytes": 381287,
+      "lines": 2100,
+      "size_bytes": 383609,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1577,18 +1585,18 @@
     {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
-      "lines": 297,
-      "size_bytes": 5461,
+      "lines": 270,
+      "size_bytes": 5038,
       "role": "page",
-      "purpose": "Styles for the reading page: chrome bar, sticky timer strip, reason strip, distraction-free mode, reading column with drop cap."
+      "purpose": "Styles for the reading page: a fixed-height column (100dvh) of chrome bar, sticky timer strip, reason strip and the book area the paginated reader fills; distraction-free mode; abandon link in the chrome bar."
     },
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 269,
-      "size_bytes": 9715,
+      "lines": 270,
+      "size_bytes": 10262,
       "role": "page",
-      "purpose": "Reading page: checks calibration, starts a session, shows the timer and pacing bar, distraction-free mode, finish and abandon (abandon does not call the API)."
+      "purpose": "Reading page: checks calibration, starts a session, shows today's text as the paginated book (BookReader) resuming the saved place when it is in today's chunks and saving places as pages turn; timer, pacing bar, reason strip, distraction-free mode, finish (to the test) and abandon (does not call the API) unchanged."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -1631,6 +1639,22 @@
       "purpose": "DOM helpers for reader places {block_id, char_offset}: the first visible place on a page (binary search over character rects), the page showing an anchor, the page an element starts on, and an anchor's chunk; x measured from the flow, so the page translate does not matter."
     },
     {
+      "path": "frontend/src/reader/blocks.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 1025,
+      "role": "asset",
+      "purpose": "blocksForChunks: the reader's blocks from /sessions/start chunks in chunk order, stored blocks as they are and paragraphs cut from the text (same '<chunk>.<n>' ids) for chunks without blocks; placeInChunks: the saved position as an anchor only when it is in today's chunks."
+    },
+    {
+      "path": "frontend/src/reader/blocks.test.js",
+      "language": "javascript",
+      "lines": 33,
+      "size_bytes": 1688,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): stored blocks in chunk order, the text fallback and its ids, empty input, and resuming a saved place only inside today's chunks."
+    },
+    {
       "path": "frontend/src/reader/geometry.js",
       "language": "javascript",
       "lines": 65,
@@ -1661,6 +1685,14 @@
       "size_bytes": 6110,
       "role": "asset",
       "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status."
+    },
+    {
+      "path": "frontend/src/reader/usePlaceSaver.js",
+      "language": "javascript",
+      "lines": 49,
+      "size_bytes": 1751,
+      "role": "asset",
+      "purpose": "usePlaceSaver(sessionId): saves the reader's place with PUT /sessions/{id}/position at most once a second while pages turn, and the last place with keepalive when the page is hidden, closed or left; failures are dropped."
     },
     {
       "path": "frontend/src/styles/base.css",
@@ -2097,8 +2129,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 271,
-      "size_bytes": 65705,
+      "lines": 275,
+      "size_bytes": 67161,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -115,3 +115,7 @@
   gap: var(--space-5);
   margin-top: var(--space-5);
 }
+
+.gallery-test {
+  max-width: 672px;
+}

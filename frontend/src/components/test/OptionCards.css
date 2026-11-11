@@ -1,0 +1,77 @@
+/* Option cards (C13.5a): radius 12, field border, Lora answer text, a
+   lettered badge; selected: accent border, accent wash, filled letter. */
+.rf-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rf-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 60px;
+  padding: var(--space-3) var(--space-5);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-card);
+  background-color: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1) var(--ease-settle),
+    background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-option:hover {
+  border-color: var(--ink-2);
+}
+
+.rf-option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.rf-option:has(input:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.rf-option:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.rf-option__letter {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 600;
+}
+
+.rf-option__text {
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: 1.5;
+}
+
+.rf-option[data-checked] {
+  border-color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.rf-option[data-checked] .rf-option__letter {
+  border-color: var(--accent);
+  background-color: var(--accent);
+  color: var(--accent-ink);
+}

@@ -1128,6 +1128,30 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/test/OptionCards.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/test/OptionCards.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/test/TimerPill.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/test/TimerPill.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/ui/Button.css",
       "type": "file",
       "role": "component",
@@ -4149,6 +4173,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/test/OptionCards.jsx",
+      "to": "file:frontend/src/components/test/OptionCards.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/test/TimerPill.jsx",
+      "to": "file:frontend/src/components/test/TimerPill.css"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/ui/Button.jsx",
       "to": "file:frontend/src/components/ui/Button.css"
     },
@@ -4256,6 +4290,16 @@
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/BookCover.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/test/OptionCards.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/test/TimerPill.jsx"
     },
     {
       "type": "imports",

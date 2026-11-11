@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 384,
-    "inventoried": 321,
+    "tracked": 388,
+    "inventoried": 325,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9607,
+      "size_bytes": 9623,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2282,
-      "size_bytes": 455235,
+      "size_bytes": 457717,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1213,6 +1213,38 @@
       "size_bytes": 1890,
       "role": "component",
       "purpose": "Theme control: Paper, Lamplight or Match system as a radio group in the handoff's pill style; arrow keys move and choose."
+    },
+    {
+      "path": "frontend/src/components/test/OptionCards.css",
+      "language": "css",
+      "lines": 77,
+      "size_bytes": 1708,
+      "role": "component",
+      "purpose": "Option card styles: 60 px cards with a field border and radius 12, a lettered badge, Lora answer text; checked: accent border, accent-soft wash, letter filled with --accent and --accent-ink; the focus ring on the card."
+    },
+    {
+      "path": "frontend/src/components/test/OptionCards.jsx",
+      "language": "jsx",
+      "lines": 34,
+      "size_bytes": 1205,
+      "role": "component",
+      "purpose": "OptionCards (handoff option card): native radios in a radiogroup named by the question, each a card with letter A-H and the option text; LETTERS."
+    },
+    {
+      "path": "frontend/src/components/test/TimerPill.css",
+      "language": "css",
+      "lines": 35,
+      "size_bytes": 965,
+      "role": "component",
+      "purpose": "Timer pill styles: a 44 px surface pill with a field border, --warn on --warn-soft in the last 30 s, tabular figures; the hidden notice line."
+    },
+    {
+      "path": "frontend/src/components/test/TimerPill.jsx",
+      "language": "jsx",
+      "lines": 33,
+      "size_bytes": 1281,
+      "role": "component",
+      "purpose": "TimerPill: role=timer with a spoken label, m:ss face, warn styling at 30 s or less, and a polite line that speaks only at one minute, 30 seconds and zero."
     },
     {
       "path": "frontend/src/components/ui/Button.css",
@@ -1449,10 +1481,10 @@
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 245,
-      "size_bytes": 10575,
+      "lines": 272,
+      "size_bytes": 11507,
       "role": "asset",
-      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes); a Form fields section (segmented tabs, inputs in default, error, hint, read-only and disabled states, a text area); mastery bars at 0, 34, 62 and 100%."
+      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes); a Form fields section (segmented tabs, inputs in default, error, hint, read-only and disabled states, a text area); mastery bars at 0, 34, 62 and 100%; the test's option cards and a calm and a warning timer."
     },
     {
       "path": "frontend/src/gallery/IllustrationGallery.css",
@@ -1489,10 +1521,10 @@
     {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
-      "lines": 117,
-      "size_bytes": 2026,
+      "lines": 121,
+      "size_bytes": 2065,
       "role": "asset",
-      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid, and the form field column, and the mastery bar row."
+      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid, and the form field column, and the mastery bar row, and the test column."
     },
     {
       "path": "frontend/src/gallery/main.jsx",
@@ -2513,8 +2545,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 323,
-      "size_bytes": 88416,
+      "lines": 327,
+      "size_bytes": 89363,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

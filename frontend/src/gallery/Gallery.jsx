@@ -12,6 +12,8 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { Tooltip } from '../components/ui/Tooltip';
 import { BookCover } from '../components/BookCover';
 import { MasteryBar } from '../components/ui/MasteryBar';
+import { OptionCards } from '../components/test/OptionCards';
+import { TimerPill } from '../components/test/TimerPill';
 import { TextInput } from '../components/ui/TextInput';
 import { TextArea } from '../components/ui/TextArea';
 import { SegmentedTabs } from '../components/ui/SegmentedTabs';
@@ -39,6 +41,27 @@ function ToastDemo() {
       <Button variant="secondary" onClick={() => toast({ kind: 'success', message: 'Meditations is ready on your shelf.', action: { label: 'Plan sessions' } })}>Success toast</Button>
       <Button variant="secondary" onClick={() => toast({ kind: 'neutral', message: 'Place saved at page 15.' })}>Neutral toast</Button>
       <Button variant="secondary" onClick={() => toast({ kind: 'warning', message: 'This PDF is scanned images, so we can’t read its words yet.', action: { label: 'Try another' } })}>Warning toast</Button>
+    </div>
+  );
+}
+
+const TEST_OPTIONS = [
+  'In the money paid for it at the time of purchase',
+  'In the amount of life exchanged for it, now or later',
+  'In the labour of others needed to make it',
+  'In what it would fetch if sold again',
+];
+
+function TestDemo() {
+  const [picked, setPicked] = useState(TEST_OPTIONS[1]);
+  return (
+    <div className="gallery-grid gallery-test">
+      <p id="g-test-q" className="gallery-note">How does Thoreau measure the cost of a thing?</p>
+      <OptionCards name="g-test" labelledBy="g-test-q" options={TEST_OPTIONS} value={picked} onChange={setPicked} />
+      <div className="gallery-row">
+        <TimerPill seconds={462} />
+        <TimerPill seconds={24} />
+      </div>
     </div>
   );
 }
@@ -230,6 +253,10 @@ export function Gallery() {
 
       <Section title="Form fields">
         <FormDemo />
+      </Section>
+
+      <Section title="Test: option cards and timer">
+        <TestDemo />
       </Section>
 
       <Section title="Skeleton">

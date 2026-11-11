@@ -1,0 +1,35 @@
+/* Timer pill (C13.5a): surface pill with a field border; in the last 30 s,
+   --warn text on --warn-soft with a warn border (5.5:1 and up). */
+.rf-timer__face {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-pill);
+  background-color: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--dur-3) var(--ease-settle),
+    border-color var(--dur-3) var(--ease-settle),
+    color var(--dur-3) var(--ease-settle);
+}
+
+.rf-timer[data-warn] .rf-timer__face {
+  border-color: var(--warn);
+  background-color: var(--warn-soft);
+  color: var(--warn);
+}
+
+.rf-timer__notice {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

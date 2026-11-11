@@ -1,4 +1,5 @@
 
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -13,6 +14,13 @@ import { MotionRoot } from './motion/MotionRoot';
 import { ToastProvider } from './components/ui/Toast';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { routeFade, routeTransition } from './motion/presets';
+
+// Dev-only review page for the illustrations (C11.1). In a production
+// build import.meta.env.DEV is false, so the import and the route are
+// dropped and no chunk is emitted.
+const IllustrationGallery = import.meta.env.DEV
+  ? lazy(() => import('./gallery/IllustrationGallery.jsx'))
+  : null;
 
 function AuthGuard({ children }) {
   const { user, loading } = useAuth();
@@ -60,6 +68,9 @@ function App() {
             <BrowserRouter>
               <AnimatedRoutes scope={screenOf}>
                 <Route path="/login" element={<Login />} />
+                {IllustrationGallery && (
+                  <Route path="/__illustrations" element={<Suspense fallback={null}><IllustrationGallery /></Suspense>} />
+                )}
                 <Route path="/read/:bookId" element={<AuthGuard><ReadingSession /></AuthGuard>} />
                 <Route path="/test/:sessionId" element={<AuthGuard><ComprehensionTest /></AuthGuard>} />
                 <Route path="/*" element={

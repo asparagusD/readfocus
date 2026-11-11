@@ -121,6 +121,10 @@
       "handler": "submit_answers"
     },
     {
+      "id": "env:DEV",
+      "type": "env"
+    },
+    {
       "id": "env:EMBED_PRELOAD",
       "type": "env"
     },
@@ -833,6 +837,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:docs/ASSETS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/BENCHMARKS.md",
       "type": "file",
       "role": "doc",
@@ -1079,6 +1089,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/gallery/IllustrationGallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/gallery/gallery.css",
       "type": "file",
       "role": "asset",
@@ -1101,6 +1123,78 @@
       "type": "file",
       "role": "hook",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/illustrations/BookStack.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/CrescentMoon.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/DuskWindow.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/EmptyShelf.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/Illustration.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/OpenBook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/ReadingLamp.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/TeaCup.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/illustrations.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/illustrations/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/illustrations/parts.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/illustrations/svgo.config.mjs",
+      "type": "file",
+      "role": "asset",
+      "language": "text"
     },
     {
       "id": "file:frontend/src/index.css",
@@ -3371,6 +3465,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "file:frontend/src/gallery/IllustrationGallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gallery/main.jsx",
       "to": "file:frontend/src/components/ui/Toast.jsx"
     },
@@ -3398,6 +3502,46 @@
       "type": "imports",
       "from": "file:frontend/src/hooks/useAuth.jsx",
       "to": "file:frontend/src/lib/supabase.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/BookStack.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/CrescentMoon.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/DuskWindow.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/EmptyShelf.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/Illustration.jsx",
+      "to": "file:frontend/src/illustrations/illustrations.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/OpenBook.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/ReadingLamp.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/TeaCup.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
     },
     {
       "type": "imports",
@@ -3973,6 +4117,16 @@
       "type": "uses_env",
       "from": "file:backend/services/supabase_client.py",
       "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/App.jsx",
+      "to": "env:DEV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "env:DEV"
     },
     {
       "type": "uses_env",

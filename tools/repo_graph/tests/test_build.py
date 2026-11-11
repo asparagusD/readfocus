@@ -75,6 +75,7 @@ FIXTURE = {
         "import { fetchApi } from '../lib/api';\n"
         "import { Gone } from './Gone';\n"
         "import './Library.css';\n"
+        "import shelf from '../illustrations/svg/Shelf.svg?raw';\n"
         "const a = await fetchApi('/books');\n"
         "await fetchApi(`/books/${id}/open`, {\n  method: 'POST',\n});\n"
         "fetchApi('/nope').catch(console.error);\n"
@@ -121,6 +122,9 @@ def test_js_imports(graph):
         "file:frontend/src/pages/Library.css",
     }
     assert {"from": page, "type": "imports", "target": "./Gone"} in graph["unresolved"]
+    # A Vite asset import (binary file, not inventoried, optional ?query) is
+    # not a code edge and not a broken reference.
+    assert not [u for u in graph["unresolved"] if "Shelf.svg" in u["target"]]
 
 
 def test_defines_endpoint_joins_router_prefix(graph):

@@ -1311,3 +1311,43 @@ container padding 0 24px.
 
 ### Commit
 fix(ui): fit the dashboard stat row on 375 px screens
+
+## 2026-11-11 C11.1 — repo graph lists Vite asset imports as unresolved
+
+**Status:** fixed
+
+### Symptom
+`make graph` after staging C11.1 printed `300 nodes, 500 edges, 7
+unresolved` (0 before). The seven entries were the illustration
+components' `import svg from './svg/<Name>.svg?raw'`. The files exist; no
+check failed, but `unresolved` is meant for broken references only.
+
+### Repro
+`pytest tools/repo_graph/tests -q` with the fixture page importing
+`'../illustrations/svg/Shelf.svg?raw'`: `test_js_imports` fails, the
+import is in `graph["unresolved"]`.
+
+### Hypotheses
+1. The resolver joins the specifier with its `?raw` query, so no path can
+   match. Evidence: `js_edges` normalises `spec` as is. Result:
+   **contributes**; stripping the query alone still misses.
+2. SVG files are not inventoried (`inventory.BINARY_EXTENSIONS`), so even
+   the bare path is not in `paths`. Result: **confirmed**.
+
+### Root cause
+`tools/repo_graph/build.py` `js_edges`: imports resolve only against
+inventoried text files, and the specifier's query was kept.
+
+### Fix
+Strip `?query` before resolving; an import of a binary-extension file that
+does not resolve is skipped (an asset, not a code edge). A missing `.js`
+or `.jsx` import is still listed as unresolved.
+
+### Regression test
+`tools/repo_graph/tests/test_build.py::test_js_imports`: the fixture page
+imports `Shelf.svg?raw` and the test asserts it is not unresolved. Failed
+before (1 failed, 61 passed), passes after (62 passed).
+
+### Commit
+Part of feat(design): add original SVG illustration set (C11.1), since the
+graph regeneration in that commit needs it.

@@ -299,8 +299,10 @@ def js_edges(graph: Graph, path: str, text: str, paths: set[str], routes: dict) 
         if not spec.startswith("."):
             external(graph, source, spec, line_of(text, found.start(1)))
             continue
-        base = posixpath.normpath(posixpath.join(posixpath.dirname(path), spec))
+        base = posixpath.normpath(posixpath.join(posixpath.dirname(path), spec.split("?")[0]))
         target = next((base + s for s in JS_SUFFIXES if base + s in paths), None)
+        if not target and posixpath.splitext(base)[1] in inventory.BINARY_EXTENSIONS:
+            continue  # a Vite asset import (`./x.svg?raw`): binaries are not inventoried
         if target:
             graph.edge("imports", source, f"file:{target}")
         else:

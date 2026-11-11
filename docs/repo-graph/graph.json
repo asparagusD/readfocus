@@ -971,6 +971,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/ui/EmptyState.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/EmptyState.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/ui/Modal.css",
       "type": "file",
       "role": "component",
@@ -1017,6 +1029,36 @@
       "type": "file",
       "role": "component",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Toast.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Toast.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Tooltip.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Tooltip.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/toastContext.js",
+      "type": "file",
+      "role": "component",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/gallery/Gallery.jsx",
@@ -3080,6 +3122,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/ui/Toast.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
     },
     {
@@ -3164,6 +3211,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/ui/EmptyState.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.css"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/ui/Modal.jsx",
       "to": "file:frontend/src/components/ui/Modal.css"
     },
@@ -3194,6 +3246,31 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/components/ui/Toast.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Tooltip.jsx",
+      "to": "file:frontend/src/components/ui/Tooltip.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Tooltip.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -3206,6 +3283,11 @@
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/ConceptChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.jsx"
     },
     {
       "type": "imports",
@@ -3226,6 +3308,21 @@
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Tooltip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/components/ui/Toast.jsx"
     },
     {
       "type": "imports",

@@ -10,6 +10,7 @@ import { ComprehensionTest } from './pages/ComprehensionTest';
 import { Results } from './pages/Results';
 import { Login } from './pages/Login';
 import { MotionRoot } from './motion/MotionRoot';
+import { ToastProvider } from './components/ui/Toast';
 import { routeFade, routeTransition } from './motion/presets';
 
 function AuthGuard({ children }) {
@@ -53,22 +54,24 @@ function App() {
   return (
     <AuthProvider>
       <MotionRoot>
-        <BrowserRouter>
-          <AnimatedRoutes scope={screenOf}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/read/:bookId" element={<AuthGuard><ReadingSession /></AuthGuard>} />
-            <Route path="/test/:sessionId" element={<AuthGuard><ComprehensionTest /></AuthGuard>} />
-            <Route path="/*" element={
-              <Layout>
-                <AnimatedRoutes scope={pageOf}>
-                  <Route path="/" element={<AuthGuard><Library /></AuthGuard>} />
-                  <Route path="dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
-                  <Route path="results/:sessionId" element={<AuthGuard><Results /></AuthGuard>} />
-                </AnimatedRoutes>
-              </Layout>
-            } />
-          </AnimatedRoutes>
-        </BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>
+            <AnimatedRoutes scope={screenOf}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/read/:bookId" element={<AuthGuard><ReadingSession /></AuthGuard>} />
+              <Route path="/test/:sessionId" element={<AuthGuard><ComprehensionTest /></AuthGuard>} />
+              <Route path="/*" element={
+                <Layout>
+                  <AnimatedRoutes scope={pageOf}>
+                    <Route path="/" element={<AuthGuard><Library /></AuthGuard>} />
+                    <Route path="dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+                    <Route path="results/:sessionId" element={<AuthGuard><Results /></AuthGuard>} />
+                  </AnimatedRoutes>
+                </Layout>
+              } />
+            </AnimatedRoutes>
+          </BrowserRouter>
+        </ToastProvider>
       </MotionRoot>
     </AuthProvider>
   );

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 271,
-    "inventoried": 215,
+    "tracked": 278,
+    "inventoried": 222,
     "excluded": 56
   },
   "files": [
@@ -890,7 +890,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1719,
-      "size_bytes": 310918,
+      "size_bytes": 313053,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -961,10 +961,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 77,
-      "size_bytes": 2747,
+      "lines": 80,
+      "size_bytes": 2883,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; MotionRoot around the router and AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put)."
     },
     {
       "path": "frontend/src/components/CalibrationFlow.jsx",
@@ -1039,6 +1039,22 @@
       "purpose": "ConceptChip (strengthened or revisit, told apart by fill, border, icon and words) and ConceptChipGroup, a labelled list that pops chips in 60 ms apart (fade only under reduced motion)."
     },
     {
+      "path": "frontend/src/components/ui/EmptyState.css",
+      "language": "css",
+      "lines": 40,
+      "size_bytes": 706,
+      "role": "component",
+      "purpose": "Empty state styles: raised card, illustration beside the text, stacks on narrow screens."
+    },
+    {
+      "path": "frontend/src/components/ui/EmptyState.jsx",
+      "language": "jsx",
+      "lines": 20,
+      "size_bytes": 827,
+      "role": "component",
+      "purpose": "Empty state: illustration slot, Playfair title (heading level configurable), one line of copy, one action."
+    },
+    {
       "path": "frontend/src/components/ui/Modal.css",
       "language": "css",
       "lines": 35,
@@ -1103,10 +1119,50 @@
       "purpose": "Skeleton placeholder, aria-hidden: a block sized by props or className, or `lines` of text with a shorter last line."
     },
     {
+      "path": "frontend/src/components/ui/Toast.css",
+      "language": "css",
+      "lines": 83,
+      "size_bytes": 1794,
+      "role": "component",
+      "purpose": "Toast styles: bottom-left stack; success and neutral on an ink fill, warning on warn-soft with a warn border; action and dismiss buttons."
+    },
+    {
+      "path": "frontend/src/components/ui/Toast.jsx",
+      "language": "jsx",
+      "lines": 82,
+      "size_bytes": 3128,
+      "role": "component",
+      "purpose": "ToastProvider: bottom-left toasts (success, neutral, warning) in an always-mounted polite live region, 5 s each with the timer paused on hover or focus, action and dismiss buttons, pop animation (fade only under reduced motion)."
+    },
+    {
+      "path": "frontend/src/components/ui/Tooltip.css",
+      "language": "css",
+      "lines": 41,
+      "size_bytes": 906,
+      "role": "component",
+      "purpose": "Tooltip styles: inverted pill above the trigger with a pointer; visually-hidden helper."
+    },
+    {
+      "path": "frontend/src/components/ui/Tooltip.jsx",
+      "language": "jsx",
+      "lines": 53,
+      "size_bytes": 1990,
+      "role": "component",
+      "purpose": "Tooltip: opens on hover after 200 ms and on focus, closes on Esc, blur or leaving, stays open while hovered; the trigger is described by a persistent hidden copy, the visible bubble is aria-hidden."
+    },
+    {
+      "path": "frontend/src/components/ui/toastContext.js",
+      "language": "javascript",
+      "lines": 14,
+      "size_bytes": 463,
+      "role": "component",
+      "purpose": "ToastContext and useToast(), which returns { toast, dismiss } and throws without a ToastProvider."
+    },
+    {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 143,
-      "size_bytes": 5618,
+      "lines": 179,
+      "size_bytes": 7149,
       "role": "asset",
       "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks."
     },
@@ -1121,10 +1177,10 @@
     {
       "path": "frontend/src/gallery/main.jsx",
       "language": "jsx",
-      "lines": 14,
-      "size_bytes": 359,
+      "lines": 17,
+      "size_bytes": 462,
       "role": "asset",
-      "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, Gallery."
+      "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
@@ -1665,8 +1721,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 217,
-      "size_bytes": 49455,
+      "lines": 224,
+      "size_bytes": 50767,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1,0 +1,83 @@
+/* Toasts (C10.5d): bottom left, newest at the bottom. */
+.rf-toasts {
+  position: fixed;
+  left: var(--space-5);
+  bottom: var(--space-5);
+  z-index: var(--z-toast);
+  display: grid;
+  gap: var(--space-3);
+  max-width: min(560px, calc(100vw - 2 * var(--space-5)));
+  pointer-events: none;
+}
+
+.rf-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border: var(--border-hair) solid transparent;
+  border-radius: var(--radius-card);
+  box-shadow: var(--elevation-lift);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  pointer-events: auto;
+}
+
+/* Inverted: --paper on --ink is 14:1 in both themes. */
+.rf-toast--success,
+.rf-toast--neutral {
+  background-color: var(--ink);
+  color: var(--paper);
+}
+
+.rf-toast--warning {
+  background-color: var(--warn-soft);
+  border-color: var(--warn);
+  color: var(--ink);
+}
+
+.rf-toast__icon {
+  flex: none;
+}
+
+.rf-toast--warning .rf-toast__icon {
+  color: var(--warn);
+}
+
+.rf-toast__message {
+  flex: 1;
+}
+
+.rf-toast__action,
+.rf-toast__close {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-input);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rf-toast__action {
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.rf-toast__close:hover,
+.rf-toast__action:hover {
+  background-color: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* The global ring is --accent, too dark on the inverted fill. */
+.rf-toast--success :focus-visible,
+.rf-toast--neutral :focus-visible {
+  outline-color: var(--accent-inverse);
+}

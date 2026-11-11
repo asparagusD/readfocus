@@ -6,6 +6,21 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { ScoreBadge } from '../components/ui/ScoreBadge';
 import { ProgressRing } from '../components/ui/ProgressRing';
 import { ConceptChip, ConceptChipGroup } from '../components/ui/ConceptChip';
+import { LibraryBig } from 'lucide-react';
+import { useToast } from '../components/ui/toastContext';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Tooltip } from '../components/ui/Tooltip';
+
+function ToastDemo() {
+  const { toast } = useToast();
+  return (
+    <div className="gallery-row">
+      <Button variant="secondary" onClick={() => toast({ kind: 'success', message: 'Meditations is ready on your shelf.', action: { label: 'Plan sessions' } })}>Success toast</Button>
+      <Button variant="secondary" onClick={() => toast({ kind: 'neutral', message: 'Place saved at page 15.' })}>Neutral toast</Button>
+      <Button variant="secondary" onClick={() => toast({ kind: 'warning', message: 'This PDF is scanned images, so we can’t read its words yet.', action: { label: 'Try another' } })}>Warning toast</Button>
+    </div>
+  );
+}
 
 // Dev-only gallery: every component in every state, in both themes and
 // both accents, for the design-review checks at 375 and 1440 px.
@@ -128,6 +143,27 @@ export function Gallery() {
 
       <Section title="Chips, badges, progress">
         <ChipsDemo />
+      </Section>
+
+      <Section title="Toasts">
+        <ToastDemo />
+        <p className="gallery-note">Bottom left, 5 s each; hover or focus pauses the timer.</p>
+      </Section>
+
+      <Section title="Tooltip">
+        <Tooltip content="4 pages left in today’s reading">
+          <Button variant="secondary">Pages left</Button>
+        </Tooltip>
+      </Section>
+
+      <Section title="Empty state">
+        <EmptyState
+          illustration={<LibraryBig size={96} strokeWidth={1.25} />}
+          title="Your shelf is waiting"
+          action={<Button>Add a PDF or EPUB</Button>}
+        >
+          Add a book you mean to read properly.
+        </EmptyState>
       </Section>
 
       <Section title="Skeleton">

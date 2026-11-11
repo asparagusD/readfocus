@@ -1,0 +1,40 @@
+/* Empty state (C10.5d). */
+.rf-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-6) var(--space-7);
+  padding: var(--space-6) var(--space-7);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background-color: var(--surface);
+}
+
+.rf-empty__art {
+  flex: 0 0 auto;
+  color: var(--ink-2);
+}
+
+.rf-empty__text {
+  flex: 1 1 260px;
+}
+
+.rf-empty__title {
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-empty__body {
+  margin-top: var(--space-2);
+  color: var(--ink-2);
+}
+
+.rf-empty__action {
+  margin-top: var(--space-5);
+}
+
+@media (max-width: 639px) {
+  .rf-empty {
+    padding: var(--space-5);
+  }
+}

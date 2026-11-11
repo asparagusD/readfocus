@@ -1170,6 +1170,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/ui/SegmentedTabs.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/SegmentedTabs.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/ui/Skeleton.css",
       "type": "file",
       "role": "component",
@@ -1222,6 +1234,12 @@
       "type": "file",
       "role": "component",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/tabIds.js",
+      "type": "file",
+      "role": "component",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/components/ui/toastContext.js",
@@ -4024,6 +4042,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/ui/SegmentedTabs.jsx",
+      "to": "file:frontend/src/components/ui/SegmentedTabs.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/SegmentedTabs.jsx",
+      "to": "file:frontend/src/components/ui/tabIds.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/ui/Skeleton.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.css"
     },
@@ -4105,6 +4133,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/SegmentedTabs.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.jsx"
     },
     {
@@ -4121,6 +4154,11 @@
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/Tooltip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/tabIds.js"
     },
     {
       "type": "imports",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 369,
-    "inventoried": 306,
+    "tracked": 372,
+    "inventoried": 309,
     "excluded": 63
   },
   "files": [
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2274,
-      "size_bytes": 434523,
+      "lines": 2275,
+      "size_bytes": 435801,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1271,6 +1271,22 @@
       "purpose": "Score pill: Playfair percentage and a DM Sans label, filled (accent wash) or outlined; meaning from the number, not colour. Imported by Library but not rendered."
     },
     {
+      "path": "frontend/src/components/ui/SegmentedTabs.css",
+      "language": "css",
+      "lines": 38,
+      "size_bytes": 1027,
+      "role": "component",
+      "purpose": "Segmented tabs styles: a paper-2 pill track, the selected tab a raised surface pill with a field border, 44 px tabs."
+    },
+    {
+      "path": "frontend/src/components/ui/SegmentedTabs.jsx",
+      "language": "jsx",
+      "lines": 48,
+      "size_bytes": 1686,
+      "role": "component",
+      "purpose": "SegmentedTabs: a tablist with roving tabindex (Left/Right, Home, End select), the caller's panel named by the selected tab."
+    },
+    {
       "path": "frontend/src/components/ui/Skeleton.css",
       "language": "css",
       "lines": 30,
@@ -1343,6 +1359,14 @@
       "purpose": "Tooltip: opens on hover after 200 ms and on focus, closes on Esc, blur or leaving, stays open while hovered; the trigger is described by a persistent hidden copy, the visible bubble is aria-hidden."
     },
     {
+      "path": "frontend/src/components/ui/tabIds.js",
+      "language": "javascript",
+      "lines": 4,
+      "size_bytes": 238,
+      "role": "component",
+      "purpose": "tabId(idBase, value) and panelId(idBase): the ids that tie SegmentedTabs to the caller's panel."
+    },
+    {
       "path": "frontend/src/components/ui/toastContext.js",
       "language": "javascript",
       "lines": 14,
@@ -1353,10 +1377,10 @@
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 231,
-      "size_bytes": 9800,
+      "lines": 236,
+      "size_bytes": 10268,
       "role": "asset",
-      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes); a Form fields section (inputs in default, error, hint, read-only and disabled states, a text area)."
+      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes); a Form fields section (segmented tabs, inputs in default, error, hint, read-only and disabled states, a text area)."
     },
     {
       "path": "frontend/src/gallery/IllustrationGallery.css",
@@ -2393,8 +2417,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 308,
-      "size_bytes": 81201,
+      "lines": 311,
+      "size_bytes": 81705,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

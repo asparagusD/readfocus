@@ -1,0 +1,38 @@
+/* Segmented tabs (C13.1a): a sunken track, the selected tab a raised
+   surface pill with a field border, so selection shows without colour. */
+.rf-segmented {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background-color: var(--paper-2);
+}
+
+.rf-segmented__tab {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: var(--border-hair) solid transparent;
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-2) var(--ease-settle),
+    border-color var(--dur-2) var(--ease-settle),
+    color var(--dur-2) var(--ease-settle);
+}
+
+.rf-segmented__tab:hover:not([aria-selected='true']) {
+  color: var(--ink);
+}
+
+.rf-segmented__tab[aria-selected='true'] {
+  background-color: var(--surface);
+  border-color: var(--line-field);
+  color: var(--ink);
+}

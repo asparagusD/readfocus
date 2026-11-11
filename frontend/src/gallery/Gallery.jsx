@@ -13,6 +13,8 @@ import { Tooltip } from '../components/ui/Tooltip';
 import { BookCover } from '../components/BookCover';
 import { TextInput } from '../components/ui/TextInput';
 import { TextArea } from '../components/ui/TextArea';
+import { SegmentedTabs } from '../components/ui/SegmentedTabs';
+import { tabId, panelId } from '../components/ui/tabIds';
 
 // One cover in each D5 colour, then the states. The real cover is the one
 // the C11.2 backfill stored in the dev project's public covers bucket.
@@ -41,9 +43,12 @@ function ToastDemo() {
 }
 
 function FormDemo() {
+  const [tab, setTab] = useState('signin');
+  const tabs = [{ value: 'signin', label: 'Sign in' }, { value: 'signup', label: 'Create account' }];
   return (
     <div className="gallery-grid gallery-form">
-      <div className="gallery-grid">
+      <SegmentedTabs idBase="g-auth" label="Sign in or create an account" options={tabs} value={tab} onChange={setTab} />
+      <div role="tabpanel" id={panelId('g-auth')} aria-labelledby={tabId('g-auth', tab)} className="gallery-grid">
         <TextInput label="Email" type="email" placeholder="you@example.com" />
         <TextInput label="Password" type="password" defaultValue="wrongpass" error="That password doesn't match this email." />
         <TextInput label="Display name" hint="Shown on your shelf." defaultValue="Read only" readOnly />

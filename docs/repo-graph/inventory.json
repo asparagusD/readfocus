@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 433,
-    "inventoried": 368,
+    "tracked": 435,
+    "inventoried": 370,
     "excluded": 65
   },
   "files": [
@@ -1018,17 +1018,17 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2515,
-      "size_bytes": 508123,
+      "size_bytes": 509406,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "frontend/.env.example",
       "language": "dotenv",
-      "lines": 10,
-      "size_bytes": 398,
+      "lines": 25,
+      "size_bytes": 1560,
       "role": "config",
-      "purpose": "Frontend environment template: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL."
+      "purpose": "Frontend environment template: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL, VITE_SITE_URL; C14.2: the production variables for Vercel (required and optional, format rules), the Vercel build check, Root Directory and the rewrite."
     },
     {
       "path": "frontend/.gitignore",
@@ -1653,6 +1653,22 @@
       "size_bytes": 463,
       "role": "component",
       "purpose": "ToastContext and useToast(), which returns { toast, dismiss } and throws without a ToastProvider."
+    },
+    {
+      "path": "frontend/src/deploy/deployEnv.js",
+      "language": "javascript",
+      "lines": 54,
+      "size_bytes": 2418,
+      "role": "asset",
+      "purpose": "Build-time check of a deploy's VITE_ variables (C14.2): the three required ones set, API and Supabase URLs https, not local, no trailing slash, the browser key not a secret or service-role key; a missing VITE_SITE_URL is a warning; isVercelBuild reads VERCEL=1."
+    },
+    {
+      "path": "frontend/src/deploy/deployEnv.test.js",
+      "language": "javascript",
+      "lines": 65,
+      "size_bytes": 3303,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): a complete env passes, missing and malformed variables are named, a secret or service-role key is refused, VITE_SITE_URL only warns, only Vercel builds are checked; vercel.json builds into dist and rewrites app routes but not /assets/ to index.html."
     },
     {
       "path": "frontend/src/gallery/Gallery.jsx",
@@ -2505,18 +2521,18 @@
     {
       "path": "frontend/vercel.json",
       "language": "json",
-      "lines": 10,
-      "size_bytes": 160,
+      "lines": 11,
+      "size_bytes": 225,
       "role": "config",
-      "purpose": "Vercel config: build command, dist output, and a rewrite of every path to index.html."
+      "purpose": "Vercel config: npm run build into dist, and a rewrite of every path except /assets/ to index.html (C14.2: a missing hashed chunk 404s instead of returning HTML)."
     },
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 80,
-      "size_bytes": 3019,
+      "lines": 97,
+      "size_bytes": 3821,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings."
     },
     {
       "path": "package.json",
@@ -2889,8 +2905,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 370,
-      "size_bytes": 105393,
+      "lines": 372,
+      "size_bytes": 106397,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1,288 +1,247 @@
-/* ── Dashboard page ─────────────────────────────────────────────────── */
-.rf-dash-page {
-  width: 100%;
-  min-height: 100vh;
-  background-color: var(--paper);
-  padding-bottom: 80px;
-}
-
-.rf-dash-container {
-  max-width: 840px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-/* Loading */
-.rf-dash-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-}
-
-.rf-dash-loading-text {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 15px;
-  color: var(--ink-faint);
-}
-
-/* Page header */
-.rf-dash-header {
-  padding: 56px 0 32px;
-  border-bottom: 1px solid var(--paper-mid);
-  margin-bottom: 40px;
-}
-
-.rf-dash-title {
-  font-family: var(--font-display);
-  font-size: 36px;
-  color: var(--ink);
-  font-weight: normal;
-  margin-bottom: 6px;
-}
-
-.rf-dash-subtitle {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 15px;
-  color: var(--ink-faint);
-}
-
-/* ── Stat pills row ─────────────────────────────────────────────────── */
-.rf-dash-stats-row {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  margin-bottom: 48px;
-  padding: 24px 32px;
-  background-color: var(--paper-dark);
-  border-radius: 6px;
-  border: 1px solid var(--paper-mid);
-}
-
-.rf-dash-stat {
-  text-align: center;
-}
-
-.rf-dash-stat-value {
-  font-family: var(--font-mono);
-  font-size: 32px;
-  color: var(--ink);
-  letter-spacing: 0.02em;
-  font-variant-numeric: tabular-nums;
-}
-
-.rf-dash-stat-label {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 12px;
-  color: var(--ink-faint);
-  margin-top: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.rf-dash-stat-divider {
-  width: 1px;
-  height: 40px;
-  background-color: var(--paper-mid);
-}
-
-/* ── Sections ───────────────────────────────────────────────────────── */
-.rf-dash-section {
-  margin-bottom: 56px;
-}
-
-.rf-dash-section-title {
-  font-family: var(--font-ui);
-  font-weight: 400;
-  font-size: 11px;
-  color: var(--ink-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-bottom: 20px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--paper-mid);
-}
-
-/* ── Chart ──────────────────────────────────────────────────────────── */
-.rf-dash-chart-wrap {
-  background-color: var(--paper-dark);
-  border: 1px solid var(--paper-mid);
-  border-radius: 6px;
-  padding: 24px 16px 16px;
-}
-
-/* ── Book progress cards ────────────────────────────────────────────── */
-.rf-dash-book-list {
+/* Dashboard (C13.7a, handoff screen 09): greeting and streak, a row of four
+   figures, then the trend at left and cards at right; one column under
+   1024 px, figures 2 x 2 under 640 px. */
+.rf-dash {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-6);
 }
 
-.rf-dash-book-card {
-  padding: 20px 24px;
-  border: 1px solid var(--paper-mid);
-  border-radius: 6px;
-  background-color: var(--paper-dark);
-  transition: border-color 150ms ease-out;
-}
-
-.rf-dash-book-card:hover {
-  border-color: var(--amber);
-}
-
-.rf-dash-book-header {
+.rf-dash__header {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  gap: var(--space-4);
 }
 
-.rf-dash-book-title {
-  font-family: var(--font-display);
-  font-size: 18px;
-  color: var(--ink);
-  margin-bottom: 2px;
+.rf-dash__header .eyebrow,
+.rf-dash > .eyebrow {
+  margin: 0 0 var(--space-2);
 }
 
-.rf-dash-book-author {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 13px;
-  color: var(--ink-faint);
+.rf-dash__title {
+  margin: 0;
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
 }
 
-.rf-dash-book-score {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  color: var(--amber);
-  letter-spacing: 0.02em;
-}
-
-.rf-dash-progress-track {
-  height: 3px;
-  background-color: var(--paper-mid);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-
-.rf-dash-progress-fill {
-  height: 100%;
-  background-color: var(--amber);
-  border-radius: 2px;
-  transition: width 600ms ease-out;
-}
-
-.rf-dash-progress-label {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 12px;
-  color: var(--ink-faint);
-  margin-bottom: 10px;
-}
-
-.rf-dash-book-meta {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 12px;
-  color: var(--ink-light);
+.rf-dash__streak {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-1) var(--space-5) var(--space-1) var(--space-2);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-pill);
+  background-color: var(--surface);
+  color: var(--ink);
 }
 
-.rf-dash-meta-sep {
-  color: var(--paper-mid);
+.rf-dash__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  border-block: var(--border-hair) solid var(--line);
 }
 
-/* ── Feedback quotes ────────────────────────────────────────────────── */
-.rf-dash-feedback-list {
+.rf-dash__stat {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  padding: var(--space-5) var(--space-5) var(--space-5) 0;
+}
+
+.rf-dash__stat + .rf-dash__stat {
+  padding-left: var(--space-5);
+  border-left: var(--border-hair) solid var(--line);
+}
+
+.rf-dash__figure {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1.1;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--ink);
+}
+
+.rf-dash__label {
+  color: var(--ink-2);
+  font-size: var(--text-label);
+}
+
+.rf-dash__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: var(--space-7);
+  align-items: start;
+}
+
+.rf-dash__main,
+.rf-dash__side {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-6);
+  min-width: 0;
 }
 
-.rf-dash-feedback-card {
-  padding: 20px 24px;
-  border-left: 3px solid var(--paper-mid);
-  background-color: var(--paper-dark);
-}
-
-.rf-dash-feedback-text {
-  font-family: var(--font-reading);
-  font-style: italic;
-  font-size: 16px;
-  line-height: 1.65;
-  color: var(--ink);
-  margin-bottom: 12px;
-}
-
-.rf-dash-feedback-meta {
+.rf-dash__section-head {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.rf-dash__h2 {
+  margin: 0;
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-dash__muted {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+/* The trend, drawn by Recharts with token colours set here. */
+.rf-trend .rf-trend__grid line {
+  stroke: var(--line);
+}
+
+.rf-trend .rf-trend__axis text {
+  fill: var(--ink-2);
   font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 12px;
-  color: var(--ink-faint);
-  align-items: center;
-}
-
-.rf-dash-feedback-book {
-  color: var(--ink-light);
-}
-
-.rf-dash-feedback-score {
-  font-family: var(--font-mono);
   font-size: 12px;
 }
 
-.rf-dash-feedback-score.good { color: var(--green-soft); }
-.rf-dash-feedback-score.mid  { color: var(--amber); }
-.rf-dash-feedback-score.low  { color: var(--red-soft); }
-
-/* ── Empty states ───────────────────────────────────────────────────── */
-.rf-dash-empty {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 14px;
-  color: var(--ink-faint);
-  padding: 32px;
-  text-align: center;
-  background-color: var(--paper-dark);
-  border-radius: 6px;
-  border: 1px dashed var(--paper-mid);
+.rf-trend .rf-trend__line .recharts-area-area {
+  fill: var(--accent-soft);
+  fill-opacity: 1;
 }
 
-.rf-dash-empty-link {
-  color: var(--amber);
-  cursor: pointer;
+.rf-trend .rf-trend__line .recharts-area-curve {
+  stroke: var(--accent);
+  stroke-width: 2;
 }
 
-.rf-dash-empty-link:hover {
-  text-decoration: underline;
+.rf-trend .rf-trend__dot {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 2;
 }
 
-/* ── Narrow screens ─────────────────────────────────────────────────── */
-/* The layout already gives a 24px gutter; the container's own padding and
-   the stat row's 32px gaps left no room for three stats at 375px. */
+.rf-trend .rf-trend__dot--last {
+  fill: var(--accent);
+}
+
+.rf-dash__card {
+  padding: var(--space-5);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background-color: var(--surface);
+}
+
+.rf-dash__card > .eyebrow {
+  margin: 0 0 var(--space-4);
+}
+
+.rf-dash__message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 560px;
+}
+
+.rf-dash__books,
+.rf-dash__feedback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rf-dash__book-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.rf-dash__book-bar {
+  margin: var(--space-2) 0;
+}
+
+.rf-dash__feedback p {
+  margin: 0 0 var(--space-2);
+}
+
+/* A quoted passage on paper-2, no side rule (U20). */
+.rf-dash__quote {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  background-color: var(--paper-2);
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-quote);
+  font-style: italic;
+  line-height: var(--text-quote--line-height);
+}
+
+.rf-dash__empty .rf-empty__body {
+  max-width: 56ch;
+}
+
+.rf-dash__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.rf-dash__skel-title {
+  margin-top: calc(var(--space-4) * -1);
+}
+
+.rf-dash__skel-stats {
+  border-radius: var(--radius-card);
+}
+
+@media (max-width: 1023px) {
+  .rf-dash__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 639px) {
-  .rf-dash-container {
-    padding: 0;
+  .rf-dash__title {
+    font-size: var(--text-section);
+    line-height: var(--text-section--line-height);
   }
 
-  .rf-dash-stats-row {
-    gap: 12px;
-    padding: 16px;
+  .rf-dash__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .rf-dash-stat {
-    flex: 1 1 0;
-    min-width: 0;
+  .rf-dash__stat:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
   }
 
-  .rf-dash-stat-value {
-    font-size: 24px;
+  .rf-dash__stat:nth-child(n + 3) {
+    border-top: var(--border-hair) solid var(--line);
+  }
+
+  .rf-dash__figure {
+    font-size: 32px;
   }
 }

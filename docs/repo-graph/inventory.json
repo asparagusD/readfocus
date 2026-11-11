@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 395,
-    "inventoried": 331,
+    "tracked": 398,
+    "inventoried": 334,
     "excluded": 64
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9834,
+      "size_bytes": 9851,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2285,
-      "size_bytes": 468455,
+      "lines": 2286,
+      "size_bytes": 469229,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1029,6 +1029,14 @@
       "size_bytes": 1027,
       "role": "doc",
       "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
+    },
+    {
+      "path": "frontend/e2e/dashboard.spec.js",
+      "language": "javascript",
+      "lines": 82,
+      "size_bytes": 5074,
+      "role": "config",
+      "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375."
     },
     {
       "path": "frontend/e2e/fixtures.js",
@@ -1711,6 +1719,22 @@
       "purpose": "coverColor(title, author): D5's deterministic cover colour, FNV-1a 32-bit of the trimmed, lower-cased title and author joined by U+001F, modulo 5, into moss, oxblood, ink, ochre, slate."
     },
     {
+      "path": "frontend/src/lib/dashboard.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2017,
+      "role": "lib",
+      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday."
+    },
+    {
+      "path": "frontend/src/lib/dashboard.test.js",
+      "language": "javascript",
+      "lines": 37,
+      "size_bytes": 1875,
+      "role": "lib",
+      "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday."
+    },
+    {
       "path": "frontend/src/lib/initials.js",
       "language": "javascript",
       "lines": 20,
@@ -1817,18 +1841,18 @@
     {
       "path": "frontend/src/pages/Dashboard.css",
       "language": "css",
-      "lines": 288,
-      "size_bytes": 6589,
+      "lines": 247,
+      "size_bytes": 4811,
       "role": "page",
-      "purpose": "Styles for the dashboard: header, stat row, chart frame, book progress cards, feedback quotes, empty states."
+      "purpose": "Dashboard styles: header with the streak pill, the four-figure row with hairlines (2 x 2 under 640 px), two columns (one under 1024 px), the trend's token colours for Recharts' grid, axis, area, line and dots, cards, book rows, the feedback quote on paper-2, the hidden table, skeleton shapes."
     },
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 247,
-      "size_bytes": 8683,
+      "lines": 220,
+      "size_bytes": 8458,
       "role": "page",
-      "purpose": "Progress page: streak, words this week, a Recharts score line per book, book progress cards, recent feedback."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, the books in progress with read progress, recent feedback with its quoted passage; skeleton, a new reader's empty state and a failed load with Try again."
     },
     {
       "path": "frontend/src/pages/Library.css",
@@ -2593,8 +2617,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 333,
-      "size_bytes": 93062,
+      "lines": 336,
+      "size_bytes": 94278,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

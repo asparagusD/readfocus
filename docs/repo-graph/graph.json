@@ -990,6 +990,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:frontend/e2e/dashboard.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/fixtures.js",
       "type": "file",
       "role": "config",
@@ -1495,6 +1501,18 @@
     },
     {
       "id": "file:frontend/src/lib/coverColor.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/dashboard.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/dashboard.test.js",
       "type": "file",
       "role": "lib",
       "language": "javascript"
@@ -4034,6 +4052,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/dashboard.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/fixtures.js",
       "to": "file:frontend/src/gallery/readerFixture.js"
     },
@@ -4554,6 +4577,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/lib/dashboard.test.js",
+      "to": "file:frontend/src/lib/dashboard.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/lib/initials.test.js",
       "to": "file:frontend/src/lib/initials.js"
     },
@@ -4630,12 +4658,42 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Dashboard.jsx",
-      "to": "file:frontend/src/hooks/usePageTransition.js"
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/ui/MasteryBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Dashboard.jsx",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/lib/dashboard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/lib/results.js"
     },
     {
       "type": "imports",

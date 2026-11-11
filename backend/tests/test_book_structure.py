@@ -204,3 +204,77 @@ def test_sample_pdf_gives_blocks_for_every_chunk():
 def test_build_never_raises(monkeypatch):
     monkeypatch.setattr(book_structure, "text_blocks", lambda *a, **k: 1 / 0)
     assert build("pdf", b"", ["Text."]) == (None, None)
+
+
+# --- Regression: running heads, formulas and print slugs (DEBUG_LOG 2026-11-11 C12.1) -----------
+
+PROSE = "The circuit settles quickly and the output follows the inputs after a short delay."
+
+
+def page(head, body=PROSE, foot=None):
+    return "\n".join([head, body] + ([foot] if foot else []))
+
+
+def toc_titles(chunks):
+    return [entry["title"] for entry in build("pdf", b"", chunks)[1]]
+
+
+def test_a_repeated_running_head_is_one_chapter_and_is_dropped_from_the_text():
+    chunks = ["\n\n".join(page("CHAPTER ONE From Zero to One") for _ in range(3)),
+              "\n\n".join(page("CHAPTER TWO Combinational Logic Design") for _ in range(3))]
+    blocks, toc = build("pdf", b"", chunks)
+    assert [t["title"] for t in toc] == ["CHAPTER ONE From Zero to One", "CHAPTER TWO Combinational Logic Design"]
+    texts_ = [b["text"] for chunk in blocks for b in chunk]
+    assert texts_.count("CHAPTER ONE From Zero to One") == 1 and texts_.count("CHAPTER TWO Combinational Logic Design") == 1
+
+
+def test_an_opener_wins_over_later_running_heads_with_glued_page_numbers():
+    chunks = ["Chapter 1\nIntroduction to Machine Learning\n" + PROSE,
+              "\n\n".join(page(f"CHAPTER 1. INTRODUCTION TO MACHINE LEARNING{n}") for n in (7, 8, 9)),
+              "Chapter 2\nLinear Regression\n" + PROSE]
+    blocks, toc = build("pdf", b"", chunks)
+    assert [t["title"] for t in toc] == ["Chapter 1: Introduction to Machine Learning", "Chapter 2: Linear Regression"]
+    assert not any("INTRODUCTION TO MACHINE LEARNING" in b["text"] for b in blocks[1])
+
+
+def test_print_slugs_and_page_footers_are_not_chapters():
+    chunks = ["\n\n".join(page(f"Chapter 01.qxd  1/27/07  10:20 AM  Page {n}", foot=f"CONTENTS {n}") for n in (2, 3, 4))]
+    assert toc_titles(chunks) == []
+    assert all("qxd" not in b["text"] and "CONTENTS" not in b["text"] for b in build("pdf", b"", chunks)[0][0])
+
+
+@pytest.mark.parametrize("line", ["+VCC", "VCC = +15V", "IC I IC1", "\U0001d43c\U0001d436\U0001d435", "CL CL", "QQQ",
+                                  "Chapter 5, as before", "VDD", "VCC", "CL", "MIX"])
+def test_formulas_and_prose_starting_with_chapter_are_not_chapters(line):
+    assert toc_titles([f"{PROSE}\n\n{line}\n{PROSE}"]) == []
+
+
+def test_a_chapter_number_is_listed_once():
+    assert toc_titles(["Chapter 2\n" + PROSE, PROSE + "\n\nChapter 2\n" + PROSE]) == ["Chapter 2"]
+
+
+def test_a_repeated_line_inside_a_page_is_kept():
+    refrain = "Nevermore, quoth the Raven"
+    chunk = f"{PROSE}\n{refrain}\n" * 3 + PROSE
+    assert sum(refrain in b["text"] for b in build("pdf", b"", [chunk])[0][0]) == 1  # one paragraph, refrain kept
+    assert build("pdf", b"", [chunk])[0][0][0]["text"].count(refrain) == 3
+
+
+def test_an_opener_after_a_page_that_ends_mid_line_is_still_a_chapter():
+    chunk = "Chapter Summary . . . . . . . . 5\n\n6\nChapter 1\nIntroduction to Machine Learning\n" + PROSE
+    assert toc_titles([chunk]) == ["Chapter 1: Introduction to Machine Learning"]
+
+
+def test_a_chapter_taken_from_a_running_head_loses_its_glued_page_number():
+    chunks = ["\n\n".join(page(f"CHAPTER 6. ADVICE FOR APPLYING MACHINE LEARNING{n}") for n in (50, 51, 52))]
+    assert toc_titles(chunks) == ["CHAPTER 6. ADVICE FOR APPLYING MACHINE LEARNING"]
+
+
+@pytest.mark.parametrize("numeral", ["IV", "XIV", "XLII", "IX."])
+def test_canonical_roman_numerals_are_chapters(numeral):
+    assert toc_titles([f"{numeral}\n{PROSE}"]) == [numeral]
+
+
+def test_a_single_letter_variable_is_not_a_roman_chapter():
+    assert toc_titles([f"{PROSE}\n\nX\nA\n{PROSE}", f"{PROSE}\n\nV\nC\n{PROSE}"]) == []
+    assert toc_titles([f"X\nThe Return\n{PROSE}"]) == ["X: The Return"]

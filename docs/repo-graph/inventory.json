@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 186,
-      "size_bytes": 8582,
+      "size_bytes": 8600,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -433,10 +433,10 @@
     {
       "path": "backend/services/book_structure.py",
       "language": "python",
-      "lines": 276,
-      "size_bytes": 11915,
+      "lines": 363,
+      "size_bytes": 16307,
       "role": "service",
-      "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure apart from parsing the file: EPUB documents (in ingestion's order) walked into chapter, heading, paragraph, quote and list_item blocks with em and strong marks, plain text only, the top repeated heading level as chapters, then cut at the chunk boundaries by counting non-space characters (a text mismatch falls back to text blocks); PDF and fallback text rebuilt into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, page and chunk breaks continued) with chapter headings guessed from short lines; blocks are {id, type, text, marks[, continued]}; the toc lists chapter blocks; build never raises. chunks.content is untouched."
+      "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure apart from parsing the file: EPUB documents (in ingestion's order) walked into chapter, heading, paragraph, quote and list_item blocks with em and strong marks, plain text only, the top repeated heading level as chapters, then cut at the chunk boundaries by counting non-space characters (a text mismatch falls back to text blocks); PDF and fallback text rebuilt into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, page and chunk breaks continued) with chapter headings guessed from short lines (\"Chapter N\", standard Roman numerals under 100, Latin ALL CAPS followed by prose), running heads found across the book dropped from the text (the first one naming an unseen chapter becomes it), each chapter listed once; blocks are {id, type, text, marks[, continued]}; the toc lists chapter blocks; build never raises. chunks.content is untouched."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -617,10 +617,10 @@
     {
       "path": "backend/tests/test_book_structure.py",
       "language": "python",
-      "lines": 206,
-      "size_bytes": 10773,
+      "lines": 280,
+      "size_bytes": 14422,
       "role": "test",
-      "purpose": "Pytest on EPUBs built in memory, text snippets and sample.pdf: EPUB tags to typed blocks and marks with scripts and styles skipped, blocks cut at chunk boundaries covering each chunk exactly with marks kept, the chapter level, fallbacks for a mismatched or unreadable EPUB; PDF line joining, hyphenation, page numbers, paragraph breaks, chapter detection and its false positives, title lines, continuation across chunks, the stored block shape and toc, build never raising."
+      "purpose": "Pytest on EPUBs built in memory, text snippets and sample.pdf: EPUB tags to typed blocks and marks with scripts and styles skipped, blocks cut at chunk boundaries covering each chunk exactly with marks kept, the chapter level, fallbacks for a mismatched or unreadable EPUB; PDF line joining, hyphenation, page numbers, paragraph breaks, chapter detection and its false positives, title lines, continuation across chunks, the stored block shape and toc, build never raising; regressions for running heads, print slugs, formulas, maths letters, Roman-looking variables, repeated chapter numbers and an opener after a page ending mid-sentence."
     },
     {
       "path": "backend/tests/test_concept_store.py",
@@ -921,8 +921,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1595,
-      "size_bytes": 69192,
+      "lines": 1699,
+      "size_bytes": 74945,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -945,8 +945,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2094,
-      "size_bytes": 374259,
+      "lines": 2095,
+      "size_bytes": 375989,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1994,7 +1994,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 258,
-      "size_bytes": 61018,
+      "size_bytes": 61407,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

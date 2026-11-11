@@ -1593,3 +1593,107 @@ was written to dev before it is fixed.
 Folded into `feat(ingest): store structured blocks and table of contents`
 (C12.1c): the backfill had never been committed, so there is no earlier
 version to fix in a separate commit.
+
+## 2026-11-11 C12.1 — PDF chapter detection takes running headers and formulas for chapters
+
+**Status:** fixed
+
+### Symptom
+The structure backfill's dry run on dev (previous entry) reports far
+more chapters than the books have: 178 for the Harris and Harris
+textbook (about 9 chapters), 69 for `Main` (a lecture-notes PDF), 44 for
+`Dagano 14 Chapter Operational Amplifiers` (one chapter). Expected: about
+one toc entry per real chapter, and none from page furniture or maths.
+No exception. Titles detected (first entries, `ascii()`):
+
+    python scripts/backfill_structure.py --dry-run   # chapter counts above
+    58a7d7e4 178 {'caps': 96, 'chapter-word': 78, 'roman': 4}
+      'ONLINE SUPPLEMENTS', 'PCSPIM', 'LABS', 'BUGS', 'ACKNOWLEDGMENTS',
+      'CHAPTER ONE From Zero to One: Captain Meriwether ...',
+      'Chapter 01.qxd  1/27/07  10:20 AM  Page 8', 'DEAFDAD8: least',
+      'Chapter 01.qxd  1/27/07  10:20 AM  Page 16', 'CL CL', ...
+    51fd1ff0 69 {'caps': 6, 'chapter-word': 63}
+      'CONTENTS 2', 'CONTENTS 3', 'CHAPTER 1. INTRODUCTION TO MACHINE LEARNING8',
+      'CHAPTER 1. INTRODUCTION TO MACHINE LEARNING9', ...
+      'Chapter 2: Linear Regression with Multiple Vari-', 'Chapter 3: Classification', ...
+    3e3040a3 44 {'caps': 42, 'roman': 2}
+      '+VCC', 'IC I IC1: Icopy2', 'VBE2: IC2', '\U0001d43c\U0001d436\U0001d435: R8',
+      'VCC = +15V: Vid', ...
+
+### Repro
+    python -c "<build('pdf', b'', stored_contents(supabase, '<id>')) for the three books; print len(toc)>"
+    (script in the scratchpad; same numbers every run)
+
+### Hypotheses
+1. Running heads and footers are taken for chapters: they sit at the top
+   or bottom of every page, are short, often ALL CAPS or start with
+   "Chapter N", and are followed by text. Evidence: of the chapters found,
+   140 of 178 (Harris), 67 of 69 (`Main`) and 18 of 44 (`Dagano`) are
+   lines that occur 3 or more times in the book (digits ignored). Ruled
+   out if: the false chapters are one-off lines. Result: **confirmed**.
+2. The ALL CAPS test accepts lines that are not words: `line ==
+   line.upper()` is true for formulas (`+VCC`, `VCC = +15V`) and for
+   mathematical italic letters (U+1D43C and others are alphabetic and
+   have no case). Evidence: 60 (Harris), 6 (`Main`) and 41 (`Dagano`)
+   chapters contain digits, symbols or non-Latin letters. Result:
+   **confirmed**.
+3. The "Chapter N" pattern is too loose: `\b` after the number accepts
+   `Chapter 01.qxd 1/27/07 10:20 AM Page 2` (a print-job slug, 220 and 292
+   times) and `Chapter 5, you will see…`. Evidence: distinct
+   chapter-pattern lines listed for both books. Result: **confirmed**; the
+   same chapter number then appears many times.
+
+Also seen: in Harris the only chapter marker in the text is the running
+head (`CHAPTER ONE From Zero to One`, 23 times); in `Main` the opener is a
+one-off `Chapter 1` + title line and the heads repeat with the page number
+glued on (`…MACHINE LEARNING7`). So a repeated head cannot simply be
+dropped: its first occurrence is the only chapter marker some books have.
+
+### Root cause
+`backend/services/book_structure.py`, `text_blocks` and
+`_is_heading_line` (C12.1a): each chunk was read alone, so a line printed
+on every page could not be told from a heading; the ALL CAPS test was
+`line == line.upper()`, true for formulas and caseless maths letters;
+`CHAPTER_RE` ended in ``, which accepts `01.qxd` and `5,`; nothing kept
+a chapter number from being listed again. While fixing it, two more
+causes showed on `Main`: an opener right after a page that ends mid-line
+was joined into the previous paragraph (the page-break continuation rule
+skipped heading detection), and `ROMAN_RE` accepted `VDD`, `VCC`, `CL`
+and single-letter variables.
+
+### Fix
+- `running_heads(chunks)`: lines that start or end a page (a blank-line
+  segment) at least 3 times in the book, compared without case, spacing
+  or a page number at either end (a bare "Chapter N" keeps its number).
+  They are dropped from the text; the first one carrying an unseen
+  chapter becomes that chapter, without its glued page number (books
+  like Harris mark chapters only in the running head).
+- Chapters found are remembered across chunks (`book["seen"]`), so a
+  number or an ALL CAPS title is listed once.
+- `CHAPTER_RE`: the number must end the line or be followed by a space,
+  ". ", ": " or a dash. ALL CAPS: Latin capitals only, a word of 4 or
+  more letters, followed by prose (4 words with lower case). Roman
+  numerals: standard form, under 100, followed by a line with lower case.
+- A page break inside an open sentence still lets the next line start a
+  chapter. A title line is taken only after a bare "Chapter N" or numeral.
+Three rounds, each adding tests first; no attempt failed.
+
+### Regression test
+`backend/tests/test_book_structure.py`: the running-head, opener,
+print-slug, formula, chapter-once, refrain, opener-after-open-page,
+glued-number, canonical-numeral and single-letter tests (19 cases). With
+the C12.1b module put back (`git stash push -- backend/services/book_structure.py`):
+18 failed, 29 passed (the refrain test passes on both, as intended: it
+guards against dropping repeated lines inside a page). With the fix: 47
+passed.
+
+Repro re-run (chapters found, before → after): Harris 178 → 21 (front
+matter, the eight chapters, EXERCISES, EPILOGUE, plus PCSPIM, LABS,
+BUGS, VHDL, "YOU WILL GET A MILLION" and one variable "X" before a
+figure caption); its truncated copy (5c7fdf10) 140 → 19; `Main` 69 → 10 (its
+ten chapters with titles); `Dagano` 44 → 0; the three short test PDFs 0.
+Text kept in blocks: 97.1–99.9% of the chunk text (the rest is running
+heads and page numbers).
+
+### Commit
+fix(ingest): stop taking running heads and formulas for chapters

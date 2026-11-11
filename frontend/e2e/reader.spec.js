@@ -176,6 +176,23 @@ test.describe('the toolbar at 375', () => {
   });
 });
 
+// C13.9: a stopped session clock says so in words, at 1440 and at 375.
+for (const width of [1440, 375]) {
+  test(`the session clock reads Start, then Resume, at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+    await openReader(page);
+    const session = page.getByRole('group', { name: 'Session' });
+    await expect(session.getByRole('timer')).toHaveAccessibleName('Time left 20:00');
+    const start = session.getByRole('button', { name: 'Start the timer' });
+    await expect(start).toHaveText('Start');
+    await expect(start.getByText('Start')).toBeVisible();
+    await start.click();
+    await expect(session.getByRole('button', { name: 'Pause the timer' })).toHaveText('');
+    await session.getByRole('button', { name: 'Pause the timer' }).click();
+    await expect(session.getByRole('button', { name: 'Resume the timer' })).toHaveText('Resume');
+  });
+}
+
 test('page-turn frame rate and lookup timings (recorded in docs/BENCHMARKS.md)', async ({ page }, info) => {
   await openReader(page);
   await page.locator('.rf-book').focus();

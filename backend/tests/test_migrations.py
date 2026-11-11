@@ -337,3 +337,12 @@ def test_011_only_adds_indexes():
     statements = [s.strip() for s in sql.split(";") if s.strip()]
     assert len(statements) == 5
     assert all(s.startswith("CREATE INDEX IF NOT EXISTS") for s in statements)
+
+
+def test_012_adds_cover_columns_and_a_public_covers_bucket():
+    sql = sql_without_comments(MIGRATIONS / "012_book_covers.sql")
+    for column in ("cover_url", "cover_source"):
+        assert re.search(rf"ALTER\s+TABLE\s+public\.books\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+{column}\s+text;", sql)
+    assert re.search(r"INSERT\s+INTO\s+storage\.buckets.*'covers',\s*'covers',\s*true", sql, re.DOTALL)
+    assert "ON CONFLICT DO NOTHING" in sql
+    assert "CREATE TABLE" not in sql.upper()

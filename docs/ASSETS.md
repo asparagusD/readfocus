@@ -19,6 +19,12 @@ original file says "original".
 | `frontend/src/illustrations/svg/OpenBook.svg` | Open book with ribbon bookmark | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
 | `frontend/src/illustrations/svg/CrescentMoon.svg` | Crescent moon with three stars | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
 
+## Book covers (per book, not in the repo)
+
+| Files | What | Source | Licence | Added | Changes |
+|---|---|---|---|---|---|
+| Supabase Storage, public bucket `covers`, `ol/<cover_id>-M.jpg` | One cover per Open Library cover ID, for books readers upload | Open Library Covers API (`covers.openlibrary.org/b/id/<id>-M.jpg`, served from archive.org), found by `backend/services/covers.py` | **Not CC0.** Cover art belongs to its publishers; Open Library offers the covers for free use in book listings. Used under handoff decision D5 (user-approved), only as the cover of a book the reader uploaded, credited "Cover image · Open Library" where shown (C11.3) | 2026-11-11, C11.2 | None: copied unchanged (re-encoding planned for C11.5) |
+
 Not yet logged: the Vite template files `frontend/src/assets/hero.png`,
 `react.svg`, `vite.svg`, `frontend/public/icons.svg` (unused, to be
 deleted) and `frontend/public/favicon.svg` (the Vite logo, MIT, to be

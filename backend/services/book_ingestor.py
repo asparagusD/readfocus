@@ -3,6 +3,8 @@ import io
 import os
 import re
 import tempfile
+import zipfile
+from xml.etree import ElementTree
 from pypdf import PdfReader
 import ebooklib
 from ebooklib import epub
@@ -10,7 +12,7 @@ from bs4 import BeautifulSoup
 
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
-from backend.services import processing_jobs
+from backend.services import covers, processing_jobs
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
@@ -151,6 +153,42 @@ def batches(total: int, cursor: int = 0):
         start = end
 
 
+def _epub_metadata(file_bytes: bytes) -> tuple[str | None, str | None]:
+    """dc:title and the first dc:creator from the EPUB's OPF package file."""
+    with zipfile.ZipFile(io.BytesIO(file_bytes)) as archive:
+        container = ElementTree.fromstring(archive.read("META-INF/container.xml"))
+        rootfile = container.find(".//{*}rootfile")
+        package = ElementTree.fromstring(archive.read(rootfile.get("full-path")))
+    title = package.find(".//{http://purl.org/dc/elements/1.1/}title")
+    creator = package.find(".//{http://purl.org/dc/elements/1.1/}creator")
+    return (title.text if title is not None else None), (creator.text if creator is not None else None)
+
+
+def extract_metadata(file_type: str, file_bytes: bytes) -> tuple[str | None, str | None]:
+    """The title and author the file itself carries (PDF info, EPUB OPF), or None; never raises."""
+    try:
+        if file_type.lower() == "pdf":
+            info = PdfReader(io.BytesIO(file_bytes)).metadata
+            return (info.title or None, info.author or None) if info else (None, None)
+        if file_type.lower() == "epub":
+            return _epub_metadata(file_bytes)
+    except Exception as e:  # noqa: BLE001 - metadata only feeds the optional cover lookup
+        print(f"No metadata read from the {file_type} file: {e}")
+    return None, None
+
+
+def look_up_cover(book: dict, file_bytes: bytes) -> None:
+    """Find the book's cover once it is ingested (C11.2); a failure never touches the job."""
+    if book.get("cover_source"):  # already looked up (a resumed job, or the backfill)
+        return
+    try:
+        title, author = covers.lookup_terms(*extract_metadata(book["file_type"], file_bytes),
+                                            book.get("title"), book.get("author"))
+        covers.ensure_cover(book["id"], title, author)
+    except Exception as e:  # noqa: BLE001
+        print(f"Cover lookup for book {book['id']} failed: {e}")
+
+
 def extract(file_type: str, file_bytes: bytes) -> list[str]:
     if file_type.lower() == "pdf":
         return extract_text_from_pdf(file_bytes)
@@ -178,7 +216,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
     so the chunk at an index is the same on every run.
     """
     book_id, user_id = job["book_id"], job["user_id"]
-    book = supabase.table("books").select("id, file_type, storage_path, status").eq("id", book_id).execute().data[0]
+    book = supabase.table("books").select(
+        "id, file_type, storage_path, status, title, author, cover_source").eq("id", book_id).execute().data[0]
     ready = book.get("status") == "ready"
     try:
         if file_bytes is None:
@@ -202,6 +241,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         if not ready:  # a book with no text at all is still ready, as before
             mark_ready(book_id, total, words)
         processing_jobs.finish(job["id"], total)
+        # The book is readable and its job done; the cover (at most two 3 s requests) comes last.
+        await asyncio.to_thread(look_up_cover, book, file_bytes)
         return {"total_chunks": total, "total_words": words, "status": "ready"}
     except Exception as e:  # noqa: BLE001 - recorded on the job, which can be resumed
         print(f"Ingestion of book {book_id} stopped: {e}")

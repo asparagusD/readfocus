@@ -2,7 +2,7 @@
 
 It understands the calls the ingestion code makes: select, insert, update,
 upsert (with on_conflict and ignore_duplicates), eq, in_, lt, is_, order,
-limit, range and execute, plus Storage upload and download. It records
+limit, range and execute, plus Storage upload, download and get_public_url. It records
 each select's columns and window, and can add a delay to every call. Rows are copied through JSON on
 the way in and out, as they would be over HTTP.
 """
@@ -110,12 +110,15 @@ class Query:
 
 
 class Bucket:
-    def __init__(self, db):
-        self.db = db
+    def __init__(self, db, name="books"):
+        self.db, self.name = db, name
 
     def upload(self, file, path, file_options=None):
         self.db.calls.append(("storage", "upload"))
         self.db.files[path] = file
+
+    def get_public_url(self, path, options=None):
+        return f"https://storage.test/{self.name}/{path}"
 
     def download(self, path):
         self.db.calls.append(("storage", "download"))
@@ -127,7 +130,7 @@ class MemoryDb:
         self.tables, self.calls, self.broken, self.files = {}, [], set(), {}
         self.selects, self.delay = [], 0.0  # (table, columns, window or limit) per select; seconds per call
         self._ids = 0
-        self.storage = SimpleNamespace(from_=lambda bucket: Bucket(self))
+        self.storage = SimpleNamespace(from_=lambda bucket: Bucket(self, bucket))
 
     def new_id(self, table):
         self._ids += 1

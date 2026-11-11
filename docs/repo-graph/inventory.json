@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 305,
-    "inventoried": 242,
+    "tracked": 310,
+    "inventoried": 247,
     "excluded": 63
   },
   "files": [
@@ -425,10 +425,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 211,
-      "size_bytes": 8723,
+      "lines": 252,
+      "size_bytes": 10920,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -437,6 +437,14 @@
       "size_bytes": 3686,
       "role": "service",
       "purpose": "The concepts of a book in the concepts table: save upserts one row per (user, book, concept key) for a batch of chunks, keeping the first label, growing chunk_indices and taking the highest weight; concepts_for_chunks reads the concepts some chunks mention; link_key_terms (pure) ties a question's key terms to concept keys."
+    },
+    {
+      "path": "backend/services/covers.py",
+      "language": "python",
+      "lines": 147,
+      "size_bytes": 6319,
+      "role": "service",
+      "purpose": "Book covers from Open Library (C11.2), backend only: title search (first author, no edition notes) for a cover ID, the image by ID through archive.org redirects (https, Open Library and archive.org hosts only), copied unchanged into the public covers bucket once per cover ID; the outcome (cover_url, cover_source openlibrary/none/error) saved on the book; 3 s timeout, one attempt, descriptive User-Agent; never raises."
     },
     {
       "path": "backend/services/ingestion_worker.py",
@@ -505,10 +513,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 137,
-      "size_bytes": 4799,
+      "lines": 140,
+      "size_bytes": 4963,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload and download), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -575,6 +583,14 @@
       "purpose": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development."
     },
     {
+      "path": "backend/tests/test_backfill_covers.py",
+      "language": "python",
+      "lines": 50,
+      "size_bytes": 2041,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, and the dev-only guard."
+    },
+    {
       "path": "backend/tests/test_bench.py",
       "language": "python",
       "lines": 108,
@@ -597,6 +613,14 @@
       "size_bytes": 5271,
       "role": "test",
       "purpose": "Pytest: plural reduction, phrase normalisation, concept key slugs, merging of identical, fuzzy, overlapping and embedding-close phrases, and extract_concepts on a fixed passage without the real model."
+    },
+    {
+      "path": "backend/tests/test_covers.py",
+      "language": "python",
+      "lines": 230,
+      "size_bytes": 10374,
+      "role": "test",
+      "purpose": "Pytest with httpx.MockTransport and the in-memory database: cover hit stored in the bucket with its URL, misses, missing or non-image covers, timeouts and network, server and storage errors stored as null, archive.org redirects followed and others refused, the client's 3 s timeout and User-Agent, lookup terms, and title/author metadata from PDF info and EPUB OPF."
     },
     {
       "path": "backend/tests/test_embedder.py",
@@ -649,10 +673,10 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 197,
-      "size_bytes": 8135,
+      "lines": 235,
+      "size_bytes": 9699,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent."
+      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails)."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
@@ -681,10 +705,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 339,
-      "size_bytes": 13666,
+      "lines": 348,
+      "size_bytes": 14157,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket."
     },
     {
       "path": "backend/tests/test_model_ready.py",
@@ -857,8 +881,8 @@
     {
       "path": "docs/ASSETS.md",
       "language": "markdown",
-      "lines": 25,
-      "size_bytes": 1971,
+      "lines": 31,
+      "size_bytes": 2708,
       "role": "doc",
       "purpose": "Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License)."
     },
@@ -873,8 +897,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1353,
-      "size_bytes": 58881,
+      "lines": 1427,
+      "size_bytes": 61520,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -897,8 +921,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1880,
-      "size_bytes": 334189,
+      "lines": 1881,
+      "size_bytes": 336881,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1607,6 +1631,14 @@
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
     {
+      "path": "scripts/backfill_covers.py",
+      "language": "python",
+      "lines": 102,
+      "size_bytes": 4062,
+      "role": "script",
+      "purpose": "Backfill: looks up Open Library covers for ready books never looked up or whose lookup failed, one at a time 1.5 s apart, with file metadata and the typed title as fallback; --dry-run, --limit, --book-id; refuses unless ENV=development."
+    },
+    {
       "path": "scripts/backfill_local_embeddings.py",
       "language": "python",
       "lines": 104,
@@ -1839,6 +1871,14 @@
       "purpose": "Adds indexes for the per-user reads: sessions (user_id, status, completed_at) and (user_id, book_id), test_results (session_id) and (user_id, created_at), books (user_id, status). Indexes only."
     },
     {
+      "path": "supabase/migrations/012_book_covers.sql",
+      "language": "sql",
+      "lines": 20,
+      "size_bytes": 1044,
+      "role": "migration",
+      "purpose": "Adds books.cover_url and books.cover_source (text, nullable) and the public covers Storage bucket (service role writes). Additive."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1881,8 +1921,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 244,
-      "size_bytes": 54551,
+      "lines": 249,
+      "size_bytes": 56562,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

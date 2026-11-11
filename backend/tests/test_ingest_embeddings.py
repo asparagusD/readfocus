@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from backend.nlp import embedder
-from backend.services import book_ingestor, ingestion_worker
+from backend.services import book_ingestor, covers, ingestion_worker
 from backend.services import processing_jobs as jobs
 from backend.tests.memory_db import MemoryDb
 
@@ -46,12 +46,15 @@ def env(monkeypatch):
     monkeypatch.setattr(embedder, "embed", fake_embed)
     monkeypatch.setattr(book_ingestor.question_agent, "run", fake_questions)
     monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data: ["unused"])
+    state["covers"] = []  # (book_id, title, author) per cover lookup; no network in these tests
+    monkeypatch.setattr(covers, "ensure_cover", lambda *args: state["covers"].append(args))
 
     def book(count):
         chunks = [f"chunk number {i} " + "word " * i for i in range(count)]
         monkeypatch.setattr(book_ingestor, "chunk_text", lambda pages, target_words=600: chunks)
         db.tables["books"] = [{"id": BOOK, "user_id": USER, "file_type": "pdf", "status": "processing",
-                               "storage_path": f"{USER}/{BOOK}.pdf"}]
+                               "storage_path": f"{USER}/{BOOK}.pdf", "title": "Walden", "author": "Thoreau",
+                               "cover_source": None}]
         db.files[f"{USER}/{BOOK}.pdf"] = b"%PDF"
         return jobs.claim(jobs.create(BOOK, USER))
 
@@ -195,3 +198,38 @@ def test_a_failing_question_agent_does_not_fail_the_job(env, monkeypatch):
 def test_ingestion_does_not_import_a_remote_embedding_client():
     source = inspect.getsource(book_ingestor)
     assert "services.embeddings" not in source and "generate_embedding" not in source
+
+
+# C11.2: the cover lookup runs once the book is ingested and never fails the job.
+
+def test_the_cover_is_looked_up_after_ingestion_with_the_typed_title_as_fallback(env):
+    run(env["book"](7), b"%PDF")
+    assert env["covers"] == [(BOOK, "Walden", "Thoreau")]
+    assert jobs.get(BOOK)["status"] == "done"
+
+
+def test_the_file_metadata_is_preferred_for_the_lookup(env, monkeypatch):
+    monkeypatch.setattr(book_ingestor, "extract_metadata", lambda kind, data: ("Walden; or, Life in the Woods", None))
+    run(env["book"](2), b"%PDF")
+    assert env["covers"] == [(BOOK, "Walden; or, Life in the Woods", "Thoreau")]
+
+
+def test_a_book_already_checked_is_not_looked_up_again(env):
+    job = env["book"](2)
+    env["db"].tables["books"][0]["cover_source"] = "none"
+    run(job, b"%PDF")
+    assert env["covers"] == []
+
+
+def test_a_failing_cover_lookup_does_not_fail_the_job(env, monkeypatch):
+    def broken(*args):
+        raise RuntimeError("open library down")
+    monkeypatch.setattr(covers, "ensure_cover", broken)
+    assert run(env["book"](3), b"%PDF")["status"] == "ready"
+    assert jobs.get(BOOK)["status"] == "done"
+
+
+def test_no_cover_lookup_when_ingestion_fails(env):
+    env["crash_on_embed"] = 1
+    run(env["book"](3), b"%PDF")
+    assert env["covers"] == []

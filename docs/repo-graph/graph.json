@@ -525,6 +525,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/covers.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/ingestion_worker.py",
       "type": "file",
       "role": "service",
@@ -627,6 +633,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_covers.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_bench.py",
       "type": "file",
       "role": "test",
@@ -640,6 +652,12 @@
     },
     {
       "id": "file:backend/tests/test_concepts.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_covers.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1401,6 +1419,12 @@
       "language": "text"
     },
     {
+      "id": "file:scripts/backfill_covers.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/backfill_local_embeddings.py",
       "type": "file",
       "role": "script",
@@ -1570,6 +1594,12 @@
     },
     {
       "id": "file:supabase/migrations/011_query_indexes.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/012_book_covers.sql",
       "type": "file",
       "role": "migration",
       "language": "sql"
@@ -1771,6 +1801,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/005_local_embeddings.sql",
       "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/012_book_covers.sql",
+      "to": "table:books"
     },
     {
       "type": "calls_endpoint",
@@ -2636,6 +2671,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/processing_jobs.py"
     },
     {
@@ -2651,6 +2691,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/covers.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -2890,6 +2935,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_backfill_covers.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_covers.py",
+      "to": "file:scripts/backfill_covers.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
     },
@@ -2907,6 +2962,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_concepts.py",
       "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -3017,6 +3087,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/covers.py"
     },
     {
       "type": "imports",
@@ -3710,6 +3785,21 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/backfill_local_embeddings.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -4050,6 +4140,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_local_embeddings.py",
       "to": "table:chunks"
     },
@@ -4145,6 +4240,11 @@
     },
     {
       "type": "uses_env",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
       "from": "file:scripts/backfill_local_embeddings.py",
       "to": "env:ENV"
     },
@@ -4232,6 +4332,11 @@
       "type": "writes_table",
       "from": "file:backend/services/concept_store.py",
       "to": "table:concepts"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/covers.py",
+      "to": "table:books"
     },
     {
       "type": "writes_table",

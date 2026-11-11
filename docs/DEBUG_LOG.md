@@ -1351,3 +1351,77 @@ before (1 failed, 61 passed), passes after (62 passed).
 ### Commit
 Part of feat(design): add original SVG illustration set (C11.1), since the
 graph regeneration in that commit needs it.
+
+## 2026-11-11 C11.2 — a book with a cover on Open Library stored "none" (search terms)
+
+**Status:** fixed
+
+### Symptom
+`python scripts/backfill_covers.py --book-id 58a7d7e4-…` on dev saved
+`cover_source = 'none'` for *Digital Design and Computer Architecture*,
+which Open Library has. No error; a wrong result.
+
+### Repro
+The lookup terms for that book: metadata title `Digital Design and
+Computer Architecture (4th Edition)`, author `David Harris, Sarah Harris`.
+`search.json` with those returns no docs; with `Digital Design and
+Computer Architecture` and `David Harris` it returns cover 10140705.
+
+### Hypotheses
+1. The edition note in brackets makes the title search miss. Result:
+   **confirmed** (together with 2).
+2. A list of authors in one string matches no single author. Result:
+   **confirmed**.
+
+### Root cause
+`backend/services/covers.py` `lookup_terms` passed the metadata strings
+unchanged.
+
+### Fix
+Drop bracketed notes and a subtitle after ':' from the title; keep the
+first author (split on `,`, `;`, `&`, `and`).
+
+### Regression test
+`test_covers.py::test_lookup_terms_drop_editions_subtitles_and_extra_authors`:
+4 failed before, passes after.
+
+### Commit
+Part of feat(ingest): fetch book covers from Open Library with safe
+fallback (C11.2).
+
+## 2026-11-11 C11.2 — a found cover was not stored (image redirect)
+
+**Status:** fixed
+
+### Symptom
+After the fix above the same book still saved `cover_source = 'none'`.
+
+### Repro
+`GET https://covers.openlibrary.org/b/id/10140705-M.jpg?default=false`
+answers `302` to `archive.org/download/…`, which redirects again to an
+`ia8xxxxx.us.archive.org` node that returns the JPEG (12,355 bytes).
+
+### Hypotheses
+1. The client does not follow redirects (`follow_redirects=False`), so
+   the 302 is read as "no image". Result: **confirmed**.
+
+### Root cause
+`backend/services/covers.py` `fetch_image` treated any non-200 as a miss,
+and Open Library serves every cover through archive.org redirects.
+
+### Fix
+`fetch_image` follows up to three redirects itself, and only to https
+`covers.openlibrary.org`, `archive.org` or `*.archive.org`; any other
+target is refused before it is requested. The search request still does
+not follow redirects.
+
+### Regression test
+`test_covers.py::test_the_image_follows_open_library_redirects_to_archive_org`
+failed before (1 failed, 30 passed) and passes after;
+`test_an_image_redirect_off_archive_org_is_refused` covers the limit. On
+dev the book then stored `covers/ol/10140705-M.jpg` (200, image/jpeg,
+12,355 bytes, `max-age=31536000`).
+
+### Commit
+Part of feat(ingest): fetch book covers from Open Library with safe
+fallback (C11.2).

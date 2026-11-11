@@ -2095,12 +2095,163 @@ the cut order above applies.
 | [x] C12.6 fix: proper=1 lookups no longer share the plain word's cache key | this commit (`fix(lookup): keep Wikipedia-first answers apart in the shared cache`) | Found in the C12 close review. `backend/services/lookup.py` `look_up`: Wikipedia-first lookups (names, phrases) are cached as `P:<original casing>`; before, a `proper=1` lookup of a lower-case word was stored under the plain word's key, so any user could make everyone's plain lookup of that word show a Wikipedia summary for 90 days. `docs/DEBUG_LOG.md` entry. | Regression test `test_a_proper_lookup_never_answers_a_plain_lookup_of_the_same_word` failed before (1 failed, 37 passed), 38 passed after. Standard checks: see commit. | 2026-11-11 | Names cached on dev before the fix are fetched once more (no migration needed) |
 | [x] C12 close | this commit (`docs(progress): record the C12 close review`) | Standard checks (ten, with `test:e2e`) green; `make graph` gave no diff; `npx playwright test e2e/reader.spec.js` 8 passed. C12.1–C12.10 ticked. Exit criteria checked on the real `/read` page with the API mocked (screenshots viewed): a two-page spread with running heads, folios, drop cap and ribbon bookmark, page turns; the Concord card beside the word with its Wikipedia link in Paper and Lamplight; the compact sheet from a long-press at 375. No LLM, Google or scraping code (`grep` over `backend/` and `frontend/src` empty; frontend makes no direct external calls). Self-review of `git diff readfocus-2.0...HEAD` (80 files) with an independent read: nothing blocking; one shared-cache key clash fixed (`fcf7385`). | Timings in `docs/BENCHMARKS.md`: page turns 75 fps (74 at 4x CPU), hover-to-card about 360 ms cached and 370 ms first with the mock; real backend lookups 0.4–1 s first, cached 2.9 ms in process and 114 ms p95 from the table. | 2026-11-11 | Time: about 3 h 56 min from the C11 merge (12:40) to the close, against 2.5 h for the chunk (57% over; the plan had estimated 7.6 h). Noted, not fixed: the compact sheet (320 px) is narrower than the 375 px text measure, so line-end letters show beside it; the final position save on page close goes through `getSession` and a preflighted request and may be dropped by some browsers (at most the last second of reading); position saves are accepted for finished sessions; rate limit and busy-host table are per process; a malformed `fetched_at` in the cache would raise instead of being skipped |
 
-## C13
+## C13 — page redesign
 
-Title to be filled from the promptbook.
+Branch `chunk/C13-page-redesign`, created from `readfocus-2.0` at
+`9b62dc7`. Goal: every page outside the reader rebuilt to the handoff,
+page by page, with its motion moments and imagery, while every route, API
+call and behaviour stays. Source of truth: `design/HANDOFF_SUMMARY.md`
+(screens 01–05 and 07–10, D1–D6, motion moments 1 and 4–7) and
+`docs/DESIGN_AUDIT.md` (the C11 and C13 rows; the screens C11 handed on).
+Order of authority: accessibility > handoff > design direction > skill
+suggestions. impeccable, taste-skill (`design-taste-frontend`) and
+ui-ux-pro-max review against the handoff; they do not override it.
+
+### Plan (written at chunk start, 2026-11-11, before any code)
+
+What there is to build on (read from the code and the repo graph):
+
+| Page or area | Files today | Endpoints it calls (repo graph) | State |
+|---|---|---|---|
+| Shell | `App.jsx` (99), `components/Layout.jsx/.css` (55, 151) | none | Nav: wordmark, Library, Dashboard, theme toggle, email, Sign out; every route titled "ReadFocus" (U11) |
+| Sign in | `pages/Login.jsx/.css` (145, 171) | Supabase Auth only (`useAuth`) | Pre-2.0 quote panel; display name collected and never sent; labels without `htmlFor` (U6) |
+| Warming up, error, 404 | none | `GET /health` has no caller | Render Free cold start (~30–60 s) shows as a hang |
+| Library | `pages/Library.jsx/.css` (275, 227) | `GET /books` (load and 3 s poll), `POST /books/upload`, `DELETE /books/{id}`; `GET /books/{id}/status` has no caller | Upload zone over book rows; `alert`/`window.confirm` in 5 places (U15); "Ch. 1 of N" (U14); `GET /books` selects no `cover_url`, so `BookCover` (C11.3) is unused |
+| Test | `pages/ComprehensionTest.jsx/.css` (261, 301) | `GET /sessions/{id}`, `POST …/evaluate-single`, `POST …/submit-answers` | Dark exam bar and mono countdown (U18); multiple-choice options exist in the payload (`assembler.PUBLIC_KEYS` has `options`) but are answered in a text box (U13); `alert` in 3 places |
+| Results | `pages/Results.jsx/.css` (186, 239) | `GET /sessions/{id}`, `GET /books/{id}` (after a refresh; first render uses router state from the test) | No headings (U11), silent redirect on failure (U15), side-tab border (U20); the payload has `confidence`, `matched_concepts`, `missing_concepts`, `low_confidence_count`, `pace_recommendation`, `next_session.reason` |
+| Dashboard | `pages/Dashboard.jsx/.css` (245, 288) | `GET /dashboard`; `GET /mastery` has no caller | Recharts line per book, cards that look clickable (U21), side-tab quotes (U20), raw `err.message` |
+| Calibration | `components/CalibrationFlow.jsx` (87) | `POST /auth/profile/calibrate` | Not designed (H20); "I am done reading" is a `div` (U25); `alert` |
+
+Already built and reused, not rebuilt: tokens (Paper, Lamplight,
+terracotta, sage), `components/ui/` (Button, Card, Modal, Toast,
+Skeleton, Tooltip, EmptyState, ConceptChip, ScoreBadge, ProgressRing),
+`BookCover`, `lib/coverColor.js`,
+the seven illustrations (`ReadingLamp`, `BookStack`, `TeaCup`,
+`DuskWindow`, `EmptyShelf`, `OpenBook`, `CrescentMoon`; there is no
+candle), `motion/` (`MotionRoot`, `fadeIn`, `rise`, `stagger`,
+`shelfArrive`, `pageTurn`, `chipPop`, `drawIn`, `useCountUp`), the reader
+and word card (C12), Playwright e2e with every API call mocked (C12.10).
+Planned in C10 but not in the tree (checked with `ls` and `grep`):
+`TextInput`, `TextArea`, `SegmentedTabs`, `MasteryBar`; they are built in
+C13.3a and C13.4a below, in the gallery with every state, before a page
+uses them.
+
+Decisions that apply to every subchunk:
+
+- **Behaviour is frozen.** Every route (`/login`, `/`, `/dashboard`,
+  `/read/:bookId`, `/test/:sessionId`, `/results/:sessionId`), every
+  `fetchApi` call with its method, path and body, the 3 s library poll,
+  the 5-minute test timer with background grading and auto-submit, the
+  router state passed from test to results, and the refresh fallback stay.
+  Before editing a page: `python tools/repo_graph/query.py <file>`, and
+  the commit body lists the page's endpoints before and after (they must
+  match, or the difference is one of the additions below).
+- **Allowed backend changes are additive reads only**, each with a test:
+  `GET /books` also selects `cover_url` (C13.4a). New frontend callers of
+  existing endpoints: `GET /health` (C13.2), `GET /books/{id}/status`
+  (C13.4b), `GET /mastery` (C13.7b). No new endpoint, table, migration,
+  dependency, font, icon pack or image. Icons stay `lucide-react`.
+  Pictures are the C11 set and `BookCover` only.
+- **Native dialogs go.** `alert` and `window.confirm` become toasts,
+  inline errors or the `Modal` confirm, with the same outcome (the delete
+  still asks first; failures still stop the action).
+- **Motion.** Only transform and opacity, `--dur-*` and `--ease-*` (D3),
+  through the existing presets. Reduced motion: an instant cross-fade and
+  no loops. Any loop longer than 5 s (the warming-up lamp) has a visible
+  pause control or stops on its own (WCAG 2.2.2). Motion lands in its own
+  commit where a page's diff would pass ~200 lines.
+- **Accessibility, per page:** one `h1`, a document title per route
+  ("Your shelf · ReadFocus"), labelled fields with errors tied by
+  `aria-describedby`, 44 px targets, the A10 focus ring, keyboard-only
+  pass, polite live regions for progress and grading, `check:contrast`
+  covering any new pair, no information by colour alone.
+- **Every new state the handoff leaves open** (H16–H19, H22, H23) is
+  designed in the handoff's voice: loading, empty, error, long titles.
+- **Verification per commit:** the ten standard checks (ruff stays at 28,
+  ESLint at 18 errors and 2 warnings or fewer), `make graph` with
+  `purposes.json` entries, tooling tests after staging (and read in full,
+  not piped into `tail`: see the C12.5 fix). design-review at 1440 and
+  375 in Paper and Lamplight x terracotta and sage, reduced motion
+  emulated, keyboard only, compared with the screen PNGs in
+  `design/screens/`, before/after note in the commit body. Each page
+  subchunk adds or extends a Playwright spec under `frontend/e2e/` with
+  its API mocked (so `test:e2e` grows with the chunk).
+
+Subchunks (lines are estimates, excluding `package-lock.json` and
+`docs/repo-graph/`):
+
+| Step | Files | Est. lines | Tests | Done when |
+|---|---|---|---|---|
+| C13.1 app shell: top nav and account menu | `components/Layout.jsx/.css` (handoff top nav: open-book mark + "ReadFocus", Library and Dashboard with the accent underline, theme toggle, initials button); `components/AccountMenu.jsx/.css` (new, D4: `aria-haspopup="menu"`, real initials from the display name or email, name and email, Reading settings (text size from `reader/textSize.js`, theme, accent), Sign out; Esc and outside click close, focus returns); `lib/useDocumentTitle.js` (new) used by every routed page; skip link to `main` | ~190 | `e2e/shell.spec.js`: nav links, active state, menu open/close by keyboard, focus return, sign out calls `signOut`; titles per route | Nav matches screens 03/09 at 1440 and stays usable at 375 (A14 kept); menu passes a keyboard-only run |
+| C13.2 warming up, error and 404 | `lib/useBackendReady.js` (new: `GET /health` once at start; the warming screen shows only if no answer within 1.5 s, so a warm backend never flashes it; polls every 3 s up to 90 s, then the error screen; `model_ready` not awaited, since grading already waits); `pages/WarmingUp.jsx/.css` (screen 02: `ReadingLamp` + `TeaCup`, rotating copy every 2.6 s in a polite region, hairline progress, pause control for the 6 s lamp); `pages/ErrorScreen.jsx/.css` (screen 10: cold `TeaCup`, Try again, Back to sign in, a short request line); `NotFound` route `*` reusing the error layout (**cuttable**); an error boundary in `App.jsx` showing ErrorScreen | ~200 | Node unit test for the readiness state machine (fast answer, slow answer, timeout); `e2e/warming.spec.js` with a delayed and a failing `/health` | Cold start shows the room, a warm start shows nothing extra, an unreachable API shows the error with a working retry |
+| C13.3a form components | `components/ui/TextInput.jsx/.css` and `TextArea.jsx/.css` (label always visible, `--line-field` border (A1), focus ring, error with alert icon tied by `aria-describedby`, disabled and read-only, both themes (H15)); `components/ui/SegmentedTabs.jsx/.css` (radio-group semantics, raised `--surface` pill, arrow keys); gallery sections | ~190 | Gallery check in headless Edge: names, describedby, 44 px, contrast of every state in four theme x accent panels; `check:contrast` pairs for the error state | Components in the gallery match the components sheet; not used by a page yet |
+| C13.3b sign in | `pages/Login.jsx/.css` (screen 01: split 50/50 with a scene composed from `DuskWindow`, `BookStack`, `TeaCup`, `ReadingLamp`; Display tagline; `SegmentedTabs` Sign in / Create account; `TextInput` with labels and inline errors; the cold-start note; stacked at 375 with the scene above). Same `useAuth` calls; the display-name field keeps its current behaviour (see question 3) | ~180 | `e2e/login.spec.js`: both tabs, empty and wrong-password errors announced, Supabase calls mocked | Matches `sign-in-*-1440/375.png`; Lighthouse `/login` not below 88 |
+| C13.4a library: shelf layout and covers | `routers/books.py` (`GET /books` also selects `cover_url`) + test in `test_api_books`; `components/ui/MasteryBar.jsx/.css` (new: accent bar on a `--line-field` track (A1), the percentage in words, `role="img"` name; reused by C13.7b); `pages/Library.jsx/.css` (screen 03: "Your shelf" + count line, Today's reading card with `OpenBook` for the most recently read book, "On your shelf" + Add a book, 2:3 `BookCover` grid with title, author and progress from the existing fields; three across at 375), screen 04 empty state (`EmptyState` + `EmptyShelf`), screen 05 skeleton loading, the load error rendered (it is set and never shown today) | ~230 (MasteryBar becomes its own commit if over) | backend test for the field; `e2e/library.spec.js`: loading, empty, a shelf of 5 with one real and four typographic covers | Matches screens 03–05; CLS 0 with covers; "Ch. 1 of N" gone (U14) |
+| C13.4b library: upload, processing and toasts | Drop zone (idle, drag-over "Release to add …", page-wide drop), the title-and-author `Modal` with `TextInput`s, processing cover with "Reading the pages… 64%" from `GET /books/{id}/status` (the 3 s `/books` poll unchanged), toasts for upload success, failure and wrong file type, the `Modal` delete confirm | ~200 | `e2e/library.spec.js` extended: upload flow posts the same form fields, wrong type toasts, delete asks then calls `DELETE`, processing percent announced | No `alert`/`confirm` left in Library; same requests as before (HAR compared) |
+| C13.4c library: motion | Moment 1: a book arrives (`shelfArrive`) when processing ends; shelf `stagger` on first load; toast in; moment 2 hand-off into the reader (cover → `/read`) only if it stays transform/opacity (**secondary, cuttable**) | ~80 | e2e under reduced motion: no transform frames; arrival plays once | Motion matches the moment table; nothing moves under reduced motion |
+| C13.5a test: chrome and option cards | `pages/ComprehensionTest.jsx/.css` (screen 07: "× Leave test" with the `Modal` confirm in the handoff's copy, book · session + question dots, timer pill turning `--warn` on `--warn-soft` in the last 30 s, eyebrow "Question n of 5 · Multiple choice", Lora 500 question, option cards A–D as a radio group for questions with `options`, `TextArea` for the rest, Back / Next); timer-expired and submitting states (H19); `components/test/OptionCard.jsx/.css`, `TimerPill.jsx` (new). The submitted answer string for an option is exactly what the grader matches (checked against `grader.py` before coding) | ~200 | `e2e/test.spec.js`: options by keyboard (arrows, Space), free text, Back/Next, evaluate-single on navigation, auto-submit at 0 with a mocked clock, leave confirm, submit routes to results with state | Same three endpoints and bodies; U13 and U18 closed |
+| C13.5b test: motion | Moment 4: each question slides in 32 px (`--dur-4`), the chosen option settles 0.985 → 1 (`--dur-3`), timer pill colour change by opacity | ~60 | e2e under reduced motion | Matches the moment table |
+| C13.6a results: layout | `pages/Results.jsx/.css` (screen 08: eyebrow book · session, Playfair score, summary chip, one-line verdict, "Question by question" with status icon and words (Correct / Partly / Not quite / "We couldn't judge this one" for low confidence), the answer, grounded feedback on a `--paper-2` quote block (no side tab, U20); right column: Concepts card with `ConceptChipGroup` from `matched_concepts`/`missing_concepts`, Next session card with `next_session.reason` and pace, "See your dashboard" / "Back to library"); loading, error with retry (no silent redirect, U15), zero-question state (H17) | ~200 | `e2e/results.spec.js`: from router state, after refresh (both endpoints), low-confidence wording, failure shows the error not a redirect | Matches screen 08 at 1440 and 375; `h1` present (U11) |
+| C13.6b results: motion | Moment 5: `useCountUp` score over `--dur-6`, chips `chipPop` 60 ms apart, list `stagger` | ~60 | e2e: reduced motion shows the final score at once | Matches the moment table |
+| C13.7a dashboard: stats and trend | `pages/Dashboard.jsx/.css` (screen 09: eyebrow day and time of day, "Good evening.", streak pill (`CrescentMoon`; no candle exists), stat row of 4 from `/dashboard` fields (2 x 2 at 375); the test-score trend as an SVG line with a data table alternative, see question 1); loading, empty for a new reader (H16), error | ~200 | `e2e/dashboard.spec.js`: stats, chart table alternative, empty and error states | Matches the top of screen 09; U4, U19, U21 closed |
+| C13.7b dashboard: mastery | `components/dashboard/MasteryList.jsx/.css` (new): `GET /mastery` per book with underline book tabs (roving tabindex), weakest first, `MasteryBar` rows (C13.4a), "Needs revisiting" in words, "Show more" by `offset` | ~170 | e2e: tabs by keyboard, paging, empty book | Mastery for every book with concepts |
+| C13.7c dashboard: extras and motion (**cuttable**) | Recommended-for-tonight card (`ReadingLamp`; the most recently read book; no planner reason, since only `/sessions/start` plans), recent feedback quotes restyled; moment 6: trend `drawIn`, bars grow from zero, streak pill glow loop under 5 s | ~150 | e2e under reduced motion | Only if time allows |
+| C13.8 calibration and clean-up | `components/CalibrationFlow.jsx` (+ `.css`): the first-session speed test in the reader's look (`OpenBook`, Lora passage, a real button, inline error instead of `alert`, same `POST /auth/profile/calibrate` body); remove `hooks/usePageTransition.js` and the inert `page`/`visible` classes; remove the A4 old-colour aliases from `index.css` once grep finds no user; delete unused page CSS | ~180 | e2e: calibration posts the same WPM payload; `check:contrast` and build after alias removal | No pre-2.0 token or class left; U25 closed |
+| C13.9 final design review | No feature code. design-review over every route at 1440 and 375, Paper and Lamplight x terracotta and sage, reduced motion, keyboard only; impeccable critique and `detect --json`, taste-skill and ui-ux-pro-max as reviewers; in-page AA check; Lighthouse `/login` and `/` (3 runs, medians, `docs/BENCHMARKS.md`); an endpoint diff (`docs/repo-graph/REPO_MAP.md` "Endpoints" table before and after the chunk); `docs/DESIGN_AUDIT.md` issues U1–U25 marked closed or carried; fixes as `fix(ui): …` rows | ~0 (+ fixes) | All ten checks; full e2e suite | Every audit issue owned by C13 closed or recorded with a reason; close review written |
+
+Safe to cut, in this order: C13.7c (dashboard extras beyond mastery and
+trend), the 404 route in C13.2, C13.4c's library → reader hand-off, then
+the other secondary motion (C13.5b, C13.6b settle and stagger, keeping
+the score count-up). Not cuttable: sign in, library, test, results, the
+dashboard's mastery and trend, the warming-up and error screens,
+accessibility, reduced motion.
+
+Left to later chunks on purpose: saving reading settings on the profile
+(D4 question 1; browser storage for now), saving the D5 cover colour on
+the book, a "wrong cover?" control, a planner reason outside a started
+session, route code-splitting, the Vite template images and favicon.
+
+Questions for the user (asked at plan time):
+
+1. Dashboard chart: replace Recharts with a small SVG line drawn with
+   `drawIn` (moment 6 needs a left-to-right draw; removes the largest
+   vendor dependency on that route) or keep Recharts and restyle it?
+   Recommended: SVG, with a table alternative.
+2. Results evidence: `per_question` has `feedback` (which already quotes
+   the passage) but no separate evidence or page field, so the handoff's
+   quote block with a page reference cannot be drawn from separate data.
+   Show the feedback in the quote block as is (no backend change), or add
+   `evidence` to `PUBLIC_GRADE_KEYS` after submission (additive, one
+   test)? Recommended: as is in C13; the field later if wanted.
+3. Sign-in display name: it is collected and never sent today. Keep it
+   unchanged (behaviour frozen), or drop the field? Recommended: keep it
+   and leave the decision to the profile-settings chunk.
+
+Estimated time: about 7.8 h (C13.1 0.6, C13.2 0.7, C13.3a 0.5, C13.3b 0.5, C13.4a
+0.7, C13.4b 0.7, C13.4c 0.3, C13.5a 0.8, C13.5b 0.3, C13.6a 0.7, C13.6b
+0.3, C13.7a 0.6, C13.7b 0.5, C13.7c 0.4, C13.8 0.5, C13.9 0.7). At 50%
+over (11.7 h) the cut order above applies.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [ ] C13.1 app shell: top nav and account menu | | | | | |
+| [ ] C13.2 warming up, error and 404 | | | | | |
+| [ ] C13.3a form components | | | | | |
+| [ ] C13.3b sign in | | | | | |
+| [ ] C13.4a library: shelf layout and covers | | | | | |
+| [ ] C13.4b library: upload, processing and toasts | | | | | |
+| [ ] C13.4c library: motion | | | | | |
+| [ ] C13.5a test: chrome and option cards | | | | | |
+| [ ] C13.5b test: motion | | | | | |
+| [ ] C13.6a results: layout | | | | | |
+| [ ] C13.6b results: motion | | | | | |
+| [ ] C13.7a dashboard: stats and trend | | | | | |
+| [ ] C13.7b dashboard: mastery | | | | | |
+| [ ] C13.7c dashboard: extras and motion | | | | | |
+| [ ] C13.8 calibration and clean-up | | | | | |
+| [ ] C13.9 final design review | | | | | |
 
 ## C14
 

@@ -1908,9 +1908,164 @@ Close review (2026-11-11 12:42):
 - **Time.** About 1 h 10 min from the branch (11:31) to this review,
   against 1.0 h budgeted: about 20% over, under the 50% stop rule.
 
-## C12
+## C12 — book reader
 
-Title to be filled from the promptbook.
+Branch `chunk/C12-book-reader`, created from `readfocus-2.0` at `8ec47ff`.
+Goal: reading feels like a real book (paginated two-page spread, page
+turns, ribbon bookmark, contents), and the reader's attention never
+leaves it: hovering a word (tap-and-hold on phones, or selecting a 2–5
+word phrase) shows a small in-place card with its meaning from the Free
+Dictionary API or a Wikipedia summary, with the source credited. Source
+of truth: `design/HANDOFF_SUMMARY.md` (screen 06, D2, D3, D4, component
+inventory "Reader toolbar", "Word card", "Ribbon bookmark") and
+`docs/DESIGN_AUDIT.md` (C12 rows).
+
+### Plan (written at chunk start, 2026-11-11, before any code)
+
+What there is to build on (read from the code):
+
+- `ReadingSession.jsx` (269 lines) is a scrolling column: calibration
+  check, `POST /sessions/start`, a countdown timer (Start/Pause/Resume),
+  a word-count pacing bar estimated from WPM, the planner's reason strip,
+  distraction-free mode, "Done reading" → `finish-reading` →
+  `/test/:sessionId`, and an abandon modal that only navigates away
+  (issue 14). Text is `chunks[].content` joined and split on blank lines;
+  headings, quotes and lists are not known.
+- `book_ingestor.py` flattens EPUBs with `get_text(separator='\n\n')` and
+  PDFs page by page, then `chunk_text` packs paragraphs into ~600-word
+  chunks. `chunks.content` is what question evidence quotes verbatim and
+  what a resumed job rewrites at the same index, so **its text must not
+  change**. No table of contents is stored (D4 table in the handoff).
+- `reading_progress.last_chunk_index` is the planner's cursor; agents
+  write that row. Nothing records where on a page the reader is.
+- `/sessions/start` returns `chunks` (`chunk_index`, `content`,
+  `word_count`), `focus_duration_minutes`, `reason`, `assigned_words`.
+- Already built: tokens (`--page`, `--shadow-page`, `--radius-page`,
+  `--dur-*`, `--ease-*`, reading type 18/31, `.reading`, `.drop-cap`,
+  `.running-head`), `motion/presets.js` `pageTurn` (a −10° swing-in, not
+  a leaf), `ThemeToggle`, `Toast`, `Tooltip`, `Modal`, `Skeleton`,
+  `OpenBook` illustration with a ribbon part, `theme.js` storage helpers.
+- No word lookup code or endpoint. `covers.py` is the pattern for a
+  backend-only free API (httpx, short timeout, descriptive User-Agent,
+  never raises, offline tests with `httpx.MockTransport`).
+- No frontend test runner; C10/C11 checked UI with headless Edge scripts
+  in the scratchpad.
+
+Decisions that apply to every subchunk:
+
+- **Routes, timing, pacing and the test flow stay.** `/read/:bookId`,
+  `/test/:sessionId`, the countdown and its controls, `finish-reading`
+  with `actual_duration_minutes`, the abandon modal, calibration, and the
+  planner's chunk choice are unchanged. Pagination is presentation only;
+  the planner never sees pages.
+- **Positions are anchors, not page numbers.** A place in a book is
+  `(chunk_index, block_index, char_offset)`. Page numbers depend on
+  screen size and text size, so they are computed in the browser and
+  never stored.
+- **No DOM wrapping for lookup.** Text is rendered as plain blocks
+  (`<p data-b="12:3">`); words are found with
+  `caretPositionFromPoint`/`caretRangeFromPoint` and `Intl.Segmenter`,
+  and marked with the CSS Custom Highlight API (overlay rects where it is
+  missing). The paragraph DOM stays small and pagination stays fast.
+- **Lookup sources and limits.** Free Dictionary API for words (its data
+  is Wiktionary, CC BY-SA); Wikipedia REST `page/summary` for names,
+  places, concepts and phrases (CC BY-SA 4.0, article linked). Nothing
+  else: no "in this book" snippets, no Google or other search, no
+  scraping, no LLM, no keys. Every call goes through our backend with
+  `User-Agent: ReadFocus/2.0 (+https://github.com/asparagusD/readfocus)`
+  (app and repo, no personal email), a 2.5 s timeout, a shared cache, one
+  request per term in flight, a global upstream cap and a per-user rate
+  limit. A failure shows "unavailable", never an error page.
+- **Attention stays in the book.** The word card is non-modal: no scrim,
+  no focus trap, no route change; the page under it does not move. Links
+  to the sources open in a new tab only when clicked.
+- **Accessibility.** WCAG AA through `check:contrast` (new pairs added
+  for the card and highlights); every reader action keyboard-operable
+  (page turns, toolbar, contents, bookmark, and a word cursor for lookup,
+  C12.7); focus ring A10; reduced motion makes turns and the card an
+  instant cross-fade (A11); text stays in reading order for screen
+  readers, and page changes are announced politely.
+- **Verification per commit:** the eight standard checks (ruff stays at
+  28, ESLint at 20 errors and 2 warnings), `make graph` with
+  `purposes.json` entries, tooling tests after staging. Backend: offline
+  tests with mocked HTTP and the in-memory database, the
+  free-intelligence checklist, an RSS line in `docs/BENCHMARKS.md` for
+  C12.1 and C12.6. Frontend: design-review at 1440 and 375 in Paper and
+  Lamplight x terracotta and sage, reduced motion emulated, keyboard
+  only. Migrations applied to the dev database only.
+
+Subchunks (lines are estimates, excluding `package-lock.json`,
+migrations and `docs/repo-graph/`):
+
+Part A: book content and pagination
+
+| Step | Files | Est. lines | Tests | Done when |
+|---|---|---|---|---|
+| C12.1a structured blocks and contents: pure extraction | `backend/services/book_structure.py` (new, pure): `blocks_for(paragraphs, marks)` labels each paragraph of `chunk_text`'s own split as `h1`–`h3`, `p`, `quote` or `li` without changing its text; EPUB marks from the spine's `h1`–`h6`, `blockquote`, `li` (BeautifulSoup) and the TOC from `book.toc` (nav/NCX) matched to headings by href and text; PDF TOC from `PdfReader.outline` (page → first paragraph on that page); fallback detection for PDFs without an outline ("Chapter 3", "CHAPTER III", "Part One", short title-case line with no end stop, set apart by blank lines); `toc_entries(...)` → `[{title, level, chunk_index, block_index}]`; `supabase/migrations/013_book_structure.sql` (additive: `chunks.blocks jsonb`, `books.toc jsonb`, `books.toc_source text`) | ~190 | `test_book_structure.py`: an EPUB fixture with nav TOC, one with NCX only, a PDF with an outline, a PDF without one (detected headings), a book with no headings (`toc_source = 'none'`, one block type); **joined block texts equal `chunk_text` output byte for byte** for every fixture; heading heuristics' false positives (a short sentence, a list item, a page number); `test_migrations.py` (013 additive, columns present) | Pure functions tested offline; 013 applied to dev and the columns read back |
+| C12.1b structured blocks and contents: ingestion, endpoint, backfill | `book_ingestor.py` (`run_job` writes `blocks` with each chunk upsert and `toc`/`toc_source` at finish; a structure failure stores null and never fails the job); `routers/books.py` `GET /books/{id}/contents` (owner only: `toc`, `toc_source`, `total_chunks`); `routers/sessions.py` `/start` adds `blocks` per chunk (derived from `content` when null, so old books still render) and `book: {title, author}` for the running head; `scripts/backfill_structure.py` (dev only, `--dry-run` default, re-extracts from Storage, writes only when the re-chunked text equals the stored `content`, else reports `mismatch`); `docs/BENCHMARKS.md` (ingestion time and RSS for one EPUB before and after) | ~180 | `test_ingest_embeddings.py` additions (blocks stored, toc stored, structure failure keeps the job green, resume rewrites the same blocks); `test_api_books` contents (owner, other user 404, null toc); `test_api_sessions` start includes `blocks` and keeps every existing key; `test_backfill_structure.py` (dry run, mismatch skip, dev guard) | One EPUB and one PDF uploaded on dev show a TOC; the backfill fills the existing dev books or reports mismatches; ingestion time within noise |
+| C12.2 precise reading position | `supabase/migrations/014_reading_positions.sql` (new table `reading_positions`: `user_id`, `book_id`, `last jsonb`, `bookmark jsonb`, `updated_at`, unique `(user_id, book_id)`, RLS own rows; additive, so agent writes to `reading_progress` are untouched); `backend/routers/books.py` `GET /books/{id}/position` and `PUT /books/{id}/position` (`{anchor, kind: 'last'|'bookmark'}`; anchor validated with Pydantic: indices ≥ 0, chunk exists in this book, owner only; last-write-wins by client timestamp); `/sessions/start` returns `resume_at` when `last` lies inside the planned chunks | ~150 | `test_api_position.py`: round trip, bookmark separate from last, invalid anchor 422, chunk outside the book 422, another user's book 404, an older client timestamp does not overwrite, start returns `resume_at` only inside the plan; `test_migrations.py` (014) | Position saved and read back on dev for test user A; planner output unchanged for the same inputs (existing planner tests green) |
+| C12.3a pagination engine and the book spread | `frontend/src/components/reader/` (new): `paginate.js` (pure: page geometry from viewport and text size: spread at ≥ 1024 px, one page below; anchor ↔ page maths), `BookFlow.jsx` (renders blocks as `<h2>/<p>/<blockquote>/<li>` with `data-b`, in a CSS multi-column flow whose column = one page: justified Lora, `hyphens: auto`, widows/orphans 2, headings `break-after: avoid`, chapter starts `break-before: column`), `BookSpread.jsx/.css` (two `--page` leaves with `--shadow-page`, spine gutter, running heads per D2, folio "p. 3 of 14", the flow shown through a page window moved by `transform`), `useAnchor.js` (first visible block and offset via `caretPositionFromPoint`; re-paginate on resize, text size and `document.fonts.ready`, keeping the anchor); gallery section with fixture text in all four theme x accent panels | ~200 | `frontend/src/components/reader/paginate.test.js` with `node --test` (no new dependency; see question 2): page count, spread vs single, anchor → page → anchor round trip, text size change; scratchpad headless-Edge check: no clipped line at a page foot, no sideways overflow at 375, page count stable across reloads, 0 layout shift after fonts load | Gallery shows a real two-page spread at 1440 and one page at 375 that reads like a printed book |
+| C12.3b reader page uses the spread | `pages/ReadingSession.jsx/.css` rebuilt around `BookSpread`: keeps calibration, start, timer and controls, finish, abandon modal; pacing bar fills by pages turned, not by WPM estimate; reason strip moves to the first page's "Today" note (C12.5a); restores `resume_at`; saves `last` on page change (debounced 1 s, plus `keepalive` on `pagehide`); arrow keys, PageUp/PageDown, Space and two labelled buttons turn pages; `aria-live` "Page 3 of 14"; removes `usePageTransition` use here | ~180 | Headless-Edge check on dev with test user A: start → turn to page 4 → reload → back on page 4; Done reading → test page; abandon modal; keyboard only; contrast check green | The real session reads as a book end to end and still reaches the test |
+| C12.4 animated page turns | `components/reader/PageTurn.jsx/.css` (a leaf hinged at the spine: front shows the outgoing page, back the incoming one, both as windows on the same flow; `rotateY` 0 → −180° over `--dur-5` with `--ease-settle`, a soft shade by opacity only); `presets.js` `leafTurn` variant; one page at 375 slides with the finger (pointer events, threshold 30% or a flick), snaps back when released early; queued turns finish at double speed; reduced motion: an instant cross-fade | ~170 | Headless Edge: only `transform`/`opacity` animate (computed styles sampled), 600 ms at 1440, near 0 with reduced motion; 10 rapid turns end on the right page; swipe on touch emulation; frame timing recorded in `docs/BENCHMARKS.md` (no long task over 50 ms per turn) | Turning feels like a leaf at 1440 and a slide at 375, with no jank |
+| C12.5a toolbar, text size and session pages | `components/reader/ReaderToolbar.jsx/.css` (Back to Library, book · chapter in Lora italic, A− / A+ through 16.5 / 18 / 19.5 stored like the theme, Contents button, "Look up" switch, `ThemeToggle`; fades and lifts 8 px after 2.6 s idle, returns on move, hover or focus, stays while anything inside is focused or open; icons only at 375); first page "Today" note (pages, minutes, the planner's reason); last page "End of today's reading" with Done reading; lamp glow pulses once on the last page (moment 3) | ~190 | Headless Edge: toolbar hides after 2.6 s and returns on Tab; text size keeps the anchor; contrast pairs for the note; keyboard only | Toolbar matches screen 06 in both themes; changing text size never loses the place |
+| C12.5b contents drawer and ribbon bookmark | `routers/books.py` `GET /books/{id}/pages?from=&to=` (question 1: read-only, owner only, at most 4 chunks, blocks included; touches no session, timer, pacing or test; `test_api_books` cases for owner, other user 404, range cap 422); `components/reader/ContentsPopover.jsx/.css` (D4: chapters from `/books/{id}/contents`, "today" label, jump to a chapter's first page, "This is beyond today's reading" note for chapters outside the plan (see question 1), Esc and outside click close, focus returns, sheet at 375); `components/reader/Ribbon.jsx/.css` (D2: in the outer margin, never over text, the running head reserves its room; click or `B` saves `bookmark` through C12.2 and toasts "Place saved at page 15."; hidden at 375 if it cannot sit clear) | ~190 | Headless Edge: the ribbon's box never intersects a text line's box at 1440, 1024, 375 and all three text sizes; contents keyboard path; bookmark survives reload | Contents and bookmark work by mouse, keyboard and touch |
+
+Part B: in-place word lookup
+
+| Step | Files | Est. lines | Tests | Done when |
+|---|---|---|---|---|
+| C12.6a lookup: pure rules and shared cache | `backend/services/lookup/` (new): `terms.py` (pure: normalise a word or phrase: case, curly quotes, possessive `'s`, edge punctuation, hyphen line breaks; inflection fallbacks tried in order on a miss: `-ies→y`, `-es`, `-s`, `-ed`, `-ing`, doubled consonant; reject numbers, URLs, over 5 words or 60 characters), `route.py` (pure `decide(term, context)`: a lower-case single word → dictionary then Wikipedia; a capitalised word not at sentence start, or a 2–5 word phrase → Wikipedia then dictionary), `shape.py` (pure: Free Dictionary JSON → headword, IPA, up to 3 senses with parts of speech and one example, Wiktionary URL and licence; Wikipedia summary → title, description, extract trimmed to about 320 characters at a sentence end, article URL, licence; disambiguation pages count as "not found"), `cache.py` (in-process LRU of 2,000 entries over a shared Supabase table); `supabase/migrations/015_lookup_cache.sql` (`lookup_cache`: `key` primary, `source`, `status` found/not_found, `payload jsonb`, `fetched_at`; RLS on with no policies, so only the service role reads and writes; it holds no user data) | ~200 | `test_lookup_terms.py`, `test_lookup_route.py`, `test_lookup_shape.py` (recorded API responses as fixtures, trimmed), `test_lookup_cache.py` (memory first, table second, found kept 30 days, not found 7 days, errors never cached); `test_migrations.py` (015) | Pure parts tested offline; 015 on dev |
+| C12.6b lookup: HTTP clients and endpoint | `lookup/dictionary.py` (`https://api.dictionaryapi.dev/api/v2/entries/en/{word}`), `lookup/wikipedia.py` (`https://en.wikipedia.org/api/rest_v1/page/summary/{title}?redirect=true`), both with the shared User-Agent, 2.5 s timeout, one attempt, never raise; `lookup/service.py` (`look_up(term, context)`: cache → route → sources in order → cache; single-flight per key; a global semaphore of 4 upstream calls; a token bucket of 30 lookups a minute per user); `routers/lookup.py` `GET /lookup?q=&context=` (auth required) mounted in `main.py`; `docs/BENCHMARKS.md` (RSS after startup, cached and uncached latency); `free-intelligence` skill table row unchanged (both APIs already approved) | ~190 | `test_lookup_service.py` with `httpx.MockTransport`: dictionary hit, inflection fallback, Wikipedia hit for a name, phrase, both miss → `none`, timeout → `unavailable` and nothing cached, 429/503 handled, User-Agent and no personal data sent, second call makes no request, two concurrent calls make one, per-user limit → 429 with `Retry-After`; `test_api_lookup.py` (401 without a token, response shape); `test_no_paid_ai.py` and `test_offline.py` green | One real lookup of a word and a place against both APIs from dev, recorded with timings; cached repeat under 50 ms |
+| C12.7 word under the pointer, without DOM wrapping | `components/reader/lookup/hitTest.js` (point → caret → word range with `Intl.Segmenter`; confirms the point is inside one of the word's client rects, so margins and gaps return nothing; joins capitalised neighbours into a name ("Walden Pond") as a phrase candidate; returns text, range, rects and the sentence for `context`), `segment.js` (pure parts of the above), `useHoverWord.js` (380 ms dwell with under 4 px of movement; off while the "Look up" switch is off, during a turn or a selection), `highlight.js` (CSS Custom Highlight `::highlight(rf-lookup)` and `rf-looked-up` dotted underline; overlay-rect fallback), keyboard word cursor (`W` on the focused page enters it, arrows move by word, Enter looks up, Esc leaves; announced politely) | ~200 | `segment.test.js` with `node --test`: apostrophes, hyphens, em dashes, curly quotes, numbers, proper-noun joining, sentence extraction; headless Edge on the gallery spread: 50 sampled points give the expected word or nothing, no element added to the flow (`childElementCount` unchanged), highlight drawn, 0 long tasks over 50 ms while moving the pointer | Pointing at any word for 380 ms selects exactly that word, by mouse or keyboard |
+| C12.8 the word card | `components/reader/lookup/WordCard.jsx/.css` (anchored "in the margin beside the line": outer margin when it fits, else above or below the line; never covers the word; flips at viewport edges; own positioning, no new dependency); states: loading skeleton, definition (word, IPA, part of speech, numbered senses, one example, "Wiktionary · CC BY-SA" link), summary (title, description in accent caps, extract, "Wikipedia ↗" link, "Text from Wikipedia, CC BY-SA 4.0"), not found ("Nothing in Wiktionary or Wikipedia"; the handoff's "Search ↗" is dropped: no search engine), unavailable; stays open while the pointer is over it, closes 300 ms after leaving, on Esc, on a turn or on scroll; non-modal (`role="dialog"` without `aria-modal`, focus moved into it only when opened by keyboard, returned on close); `lookupClient.js` (per-tab cache and in-flight sharing over `fetchApi('/lookup')`); pronunciation audio button if the API gives a URL (cuttable) | ~200 | `lookupClient.test.js` with `node --test` (one request per term, failures not cached); headless Edge with `/lookup` mocked: card appears 380 ms after a still pointer, loading → definition, summary link has `rel="noopener"` and the article URL, Esc closes and focus returns, URL unchanged and no modal or scrim in the DOM, both themes pass the contrast check, reduced motion: no transform | Hovering a word shows the right card beside the line in both themes, with credit and link |
+| C12.9 phones: long-press and phrases | `components/reader/lookup/useLongPress.js` (450 ms touch hold, cancelled by 8 px of movement, a scroll or a page swipe; suppresses the native callout only on the reading flow), `PhraseChip.jsx/.css` (on `selectionchange`, a selection of 2–5 words inside the flow shows a small "Look up" chip above it; 1 word or over 5 shows nothing; works with mouse and keyboard selection on desktop too), `WordSheet.jsx/.css` (375: compact sheet at the bottom with grab handle, word, IPA, one sense, source, "Tap outside to close", swipe down to close); the looked-up word keeps its accent-wash highlight | ~190 | `longPress.test.js` (`node --test` on the timer state machine); headless Edge with touch emulation at 375: hold 450 ms opens the sheet, a 300 ms hold or a drag does not, a swipe still turns the page, selecting "Walden Pond" shows the chip and a summary card, selecting 7 words shows no chip | Tap-and-hold and phrase lookup work at 375 without breaking page swipes |
+| C12.10 reader and lookup end-to-end tests | `frontend/e2e/` (new): Playwright specs run on the installed Edge (`channel: 'msedge'`, no browser download; see question 2) against `vite preview` with the API mocked by `page.route` from fixtures, so they are offline and $0: spread at 1440 and single page at 375, keyboard turns, reload restores the place, contents jump with the "beyond today" note, bookmark, hover card with credit and no navigation, keyboard word cursor, long-press and phrase chip with touch, reduced motion; `@axe-core/playwright` scan of the reader with the card open in both themes (0 serious or critical); `npm run test:e2e`; one opt-in live smoke (`E2E_LIVE=1`) against the dev backend with test user A; `docs/BENCHMARKS.md` (time to first page, turn frame times, lookup p50) | ~200 | The suite itself; each spec seen failing once by breaking its feature locally, then passing | `npm --prefix frontend run test:e2e` green; whether it becomes a standard check is question 2 |
+
+Safe to cut, in this order: drop caps on chapter openings (plain first
+paragraph); the ribbon's swing animation (the ribbon stays, static);
+pronunciation audio; the lamp pulse on the last page; the keyboard word
+cursor's polite announcements beyond the word itself. Not cuttable:
+pagination, page turning, hover lookup, mobile long-press.
+
+Left to later chunks on purpose: the test, results and dashboard screens
+(C13); book-wide page numbers (pages are numbered within today's reading);
+notes and highlights kept by the reader; looking up words in other
+languages.
+
+Questions for the user (asked at plan time, all answered 2026-11-11: the
+recommended answer to each):
+
+- Answers: (1) the read-only `GET /books/{id}/pages` endpoint, built in
+  C12.5b; (2) `node --test` for pure JS and Playwright with
+  `@axe-core/playwright` on the installed Edge for C12.10; whether
+  `test:e2e` joins the standard checks had no recommendation and is
+  decided at C12.10 (until then it is not a standard check); (3) text
+  size in `localStorage`; (4) the shared `lookup_cache` table.
+
+1. **Contents beyond today (D4).** Jumping to a chapter outside today's
+   planned chunks needs those chunks' text, which `/sessions/start` does
+   not send. Recommended: a read-only `GET /books/{id}/pages?from=&to=`
+   (owner only, at most 4 chunks) used only for that jump; it does not
+   count toward the session, the timer, pacing or the test. Alternative:
+   list those chapters with the note but do not open them.
+2. **Test tooling.** Pure JS modules tested with Node's built-in
+   `node --test` (no new dependency), and Playwright with
+   `@axe-core/playwright` as frontend dev dependencies for C12.10, run on
+   the installed Edge. Is that acceptable, and should `test:e2e` become a
+   standard check (it needs a browser, so CI would need one too)?
+3. **Text size storage.** Recommended: `localStorage` beside theme and
+   accent (handoff question 1, D4), not profile columns.
+4. **Shared lookup cache.** Recommended: the `lookup_cache` table (one
+   fetch per term across all readers, survives Render restarts, holds no
+   user data). Alternative: in-process memory only, lost on every
+   spin-down.
+
+Estimated time: about 7.6 h (C12.1a 0.6, C12.1b 0.6, C12.2 0.5, C12.3a
+0.9, C12.3b 0.6, C12.4 0.7, C12.5a 0.6, C12.5b 0.6, C12.6a 0.5, C12.6b
+0.5, C12.7 0.6, C12.8 0.6, C12.9 0.5, C12.10 0.6). At 50% over (11.4 h)
+the cut order above applies.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|

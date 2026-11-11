@@ -1566,12 +1566,122 @@ Close review (2026-11-11 08:42):
 | [x] CD.3 save the screen boards | `ebdd7ee` | `design/screens/`: 43 new PNGs cut from `ReadFocus-png.zip` (six boards, 2 to 62 MB each, not committed whole): 10 screens x Paper/Lamplight at 1440 (1440 x 900, the 2x artboards scaled to 1x), the same at 375 (750 x 1624, 2x), two components sheets (2768 x 7672) and the prototype's one frame. `design/HANDOFF_SUMMARY.md`: second bundle, screen image table, component inventory and per-screen notes from the boards, illustrations, mapping (warming-up and error are new), gaps 1–14 and six questions. No application code changed. | Artboard edges found with a scratchpad projection script (row/column coverage, then the sharpest step per edge): desktop 2880 x 1800, mobile 750 x 1624; crops read back and checked by eye (lamplight desktop, lamplight mobile, paper desktop x3, components sheet in five bands). Largest file 1,251,738 B, none over 5 MB; 35 MB in `design/screens/` (2x desktop would have been 60 MB). Standard checks: ruff 28 errors (baseline), `pytest backend/tests -q` 608 passed, lint 22 errors and 2 warnings (baseline), build passes, import ok, tooling 62 passed. | 2026-11-11 09:55 | Primary button labels on Paper are dark ink in the screens (about 2.7:1, fails AA) but `#FFFDF9` in the foundations CSS; the reading screen mock has a broken left-page layout; artboards stop at the fold. Decided: accent is a reader setting. C10 starts only on your prompt |
 | [x] CD.4 record the six design decisions | this commit (`docs(design): record the six design decisions`) | `design/HANDOFF_SUMMARY.md`: new "Decisions" section (D1 `--accent-ink` on every accent fill; D2 ribbon in the outer margin, never over text; D3 long easing names, durations snapped to `--dur-1..6` with listed exceptions; D4 account menu and reader Contents popover; D5 Open Library covers with a saved FNV-1a typographic colour; D6 bundled `@fontsource-variable` fonts), stated to override the design files; a table of what each needs outside the frontend; gaps 1, 4, 5, 6, 9, 10, 12 and 14 marked resolved; questions replaced by three still-open ones. No application code changed. | Contrast for every D1 pair and every cover colour recomputed with the WCAG formula (5.65, 5.90, 7.63, 8.94; covers 5.41 to 12.44). Backend needs checked in the code: `supabase/migrations/001_initial.sql` (`books`, `profiles` columns), `backend/services/book_ingestor.py` (EPUB chapters split, no chapter list stored), `frontend/index.html` (Google Fonts loaded today). Standard checks: see commit. | 2026-11-11 10:30 | Still open: where reading settings live, where the Open Library lookup runs, whether DM Mono goes. D4 Contents and D5 covers need additive migrations and ingestion changes (planned in the chunk that builds them) |
 
-## C10
+## C10 — design system
 
-Title to be filled from the promptbook.
+Branch `chunk/C10-design-system`, created from `readfocus-2.0` at
+`8ee5c33`. Goal: the foundations every later screen is built on: tokens
+for both themes and both accents, bundled fonts and a type scale, motion
+tokens and presets that respect reduced motion, the core components, and a
+working Paper/Lamplight toggle. Frontend only: no backend code, routes,
+API calls or behaviour change. Source of truth: `design/HANDOFF_SUMMARY.md`
+(present; decisions D1–D6 override the design files).
+
+### Plan (written at chunk start, 2026-11-11, before any code)
+
+What there is to build on (read from the code):
+
+- `frontend/src/index.css` (59 lines) defines the pre-2.0 palette
+  (`--ink`, `--ink-light`, `--ink-faint`, `--paper`, `--paper-dark`,
+  `--paper-mid`, `--amber`, `--amber-pale`, `--red-soft`, `--green-soft`)
+  and four font variables. Page and component CSS use them 274 times
+  (`--font-ui` 52, `--paper-mid` 35, `--ink` 33, `--amber` 31, ...). The
+  only other hard-coded colours are `LINE_COLORS` in `Dashboard.jsx`.
+- Tailwind v4 and `@tailwindcss/vite` are installed but not wired into
+  `vite.config.js`; no file uses a utility class.
+- `frontend/index.html` loads DM Mono, DM Sans, Lora and Playfair Display
+  from Google Fonts (D6 replaces this). Body text is DM Sans **300**.
+- Motion: CSS transitions only, ad-hoc timings (150 ms to 1.4 s), no
+  `prefers-reduced-motion` rule anywhere, no motion library.
+- Components in `components/ui/`: `Button` (variants used: primary 4,
+  secondary 3, danger 1), `Modal` (used by Library and ReadingSession; no
+  focus trap or focus return despite the comment), `Skeleton` (Library),
+  `Card` (imported nowhere) and `ScoreBadge` (imported by Library, never
+  rendered). `App.css` is the unimported Vite template.
+- No theme switching. Focus ring is amber 2 px with a 2 px offset (design:
+  accent 2 px, 3 px offset). No frontend test runner.
+
+Decisions that apply to every subchunk:
+
+- **Tokens are CSS variables first, Tailwind second.** `src/styles/tokens.css`
+  holds the handoff values on `:root[data-theme][data-accent]`; Tailwind's
+  `@theme inline` maps them to utilities (`bg-paper`, `text-ink-2`,
+  `rounded-control`, `duration-3`, `ease-arrive`), so a theme switch needs
+  no rebuild. Attributes on `<html>` (`data-theme="paper|lamplight"`,
+  `data-accent="terracotta|sage"`) instead of the export's `.t-*`/`.a-*`
+  classes.
+- **No preflight.** Tailwind is imported as theme + utilities only, so the
+  existing pages keep their reset and layout.
+- **Old names become aliases.** `--ink-light` → `--ink-2`, `--amber` →
+  `--accent`, and so on, so the six existing pages take the new palette and
+  the theme switch without edits. The aliases are deleted when C13 has
+  rebuilt the last page.
+- **Existing component APIs stay.** `Button` keeps `variant`, `loading`,
+  `disabled` (and `danger`, drawn with `--warn`); `Modal` keeps
+  `isOpen`/`onClose`/`children`; `Skeleton` keeps `width`/`height`.
+- **Motion** is the `motion` package (MIT, free) through `LazyMotion` +
+  `domAnimation` to keep the bundle small; bundle size measured before and
+  after. Only transform and opacity animate (D3).
+- **Gallery, not a route.** A dev-only `frontend/gallery.html` entry (not
+  built, no app route) shows every component in both themes, both accents,
+  375 and 1440 px; each component commit adds its section. It is how the
+  `design-review` gate is checked.
+- **Verification per commit:** the six standard checks (lint stays at 22
+  errors and 2 warnings, new files add none), `npm run check:contrast`
+  (added in C10.2a) for every token pair, the gallery and the six existing
+  pages in the browser pane at 375 and 1440 px in both themes, and
+  reduced motion emulated. `make graph` plus `purposes.json` entries for
+  every new file, and the tooling tests run **after staging** (CD.2 lesson).
+
+Subchunks (lines are estimates, excluding `package-lock.json` and
+`docs/repo-graph/`):
+
+| Step | Files | Est. lines | Done when |
+|---|---|---|---|
+| C10.1 audit and reconcile with the handoff | `docs/DESIGN_AUDIT.md` (new, the name the C10.1 prompt gives): current-UI issues, handoff issues, decisions, handoff → code mapping. `App.css` deletion moved to C10.2b (this subchunk is docs only). | ~270 doc | The audit names every alias and every mismatch C10.2–C10.6 resolve; build unchanged |
+| C10.2a design tokens | `src/styles/tokens.css` (new): neutrals and status x 2 themes, accents x 4, covers, spacing `--space-1..9`, radii (with 4 px page and 16 px panel added from gap 7), surfaces and shadows, `--dur-1..6`, three easings; from the audit also `--line-field` (A1), `--radius-hair` (A5), `--shadow-page`/`--shadow-lift` (A7), and the wash rule in the contrast check (A2). `frontend/scripts/check-contrast.mjs` (new, no dependency) + `check:contrast` script in `package.json`: parses tokens.css and asserts WCAG AA for each text/ground pair in all four theme x accent combinations. | ~190 | Contrast script passes and fails on a deliberately bad pair; values equal the handoff |
+| C10.2b Tailwind wiring and aliases | `vite.config.js` (`@tailwindcss/vite`), `src/index.css` (imports tokens, Tailwind theme + utilities, `@theme inline` map, old-name aliases, default `data-theme`/`data-accent` in `index.html`) | ~120 | A utility class renders the token value; the six pages look the same apart from the new palette; build passes |
+| C10.3 typography and base styles | `package.json` (`@fontsource-variable/playfair-display`, `lora`, `dm-sans`), `index.html` (Google Fonts links removed), `src/styles/fonts.css`, `src/styles/typography.css` (type scale as `--text-*` tokens and Tailwind sizes, base body DM Sans 400, headings Playfair 500, `.reading` Lora 18/31 justified with `hyphens: auto` and a 65ch measure, eyebrow, figures with tabular numerals, drop cap, running head, folio; links in `--accent-text`; focus ring accent 2 px with 3 px offset) | ~170 | No request to Google Fonts in the network log; the four families load from the bundle; the gallery type specimen matches the handoff table |
+| C10.4 motion foundation | `package.json` (`motion`), `src/styles/motion.css` (global reduced-motion rule, shimmer 1.6 s, breathe and steam loops), `src/lib/motion.js` (durations and easings mirrored from the tokens, presets: fade, arrive 28 px with overshoot, slide-in 32 px, settle 0.985 → 1, press 0.98, stagger 60 ms), `src/main.jsx` (`MotionConfig reducedMotion="user"`, `LazyMotion`) | ~150 | Presets run in the gallery; with reduced motion emulated they become instant and loops stop; bundle size before/after recorded |
+| C10.5a Button and Surface | `components/ui/Button.jsx/.css` (primary, secondary, ghost, danger; loading label; 44 px target; press; D1 `--accent-ink`; Lamplight glow), `components/ui/Card.jsx/.css` → raised/sunken surface, `gallery.html`, `src/gallery/Gallery.jsx` | ~190 | Existing callers unchanged; all states in both themes; keyboard focus visible |
+| C10.5b form controls | `components/ui/TextInput.jsx`, `TextArea.jsx`, `SegmentedTabs.jsx` (+ one CSS file): label, hint, error with `--warn` and alert icon, `aria-invalid`/`aria-describedby`; tabs with arrow-key roving focus | ~190 | Not used by pages yet (C11 adopts them); labelled, keyboard-operable, error read out |
+| C10.5c overlays and feedback | `components/ui/Modal.jsx/.css` (focus trap, focus return, `role="dialog"` `aria-modal`, scrim, 250 ms in/out), `components/ui/Toast.jsx/.css` (provider + `useToast`, success/neutral/warning, 5 s, close button, `aria-live`), `components/ui/Skeleton.css` (`--paper-2`, radius 6, shimmer 1.6 s) | ~200 | Library upload and reading abandon modals behave as before; Tab stays inside the modal; Esc returns focus |
+| C10.5d display components | `components/ui/Chip.jsx`, `ScoreBadge.jsx` (filled/outlined, keeps `percentage`), `MasteryBar.jsx`, `ProgressRing.jsx` (+ one CSS file): differ by fill, border style and icon, not hue alone | ~180 | In the gallery in both themes; bars and ring animate with transform only |
+| C10.6 theme toggle | `src/theme/ThemeProvider.jsx` (theme and accent in `localStorage` `rf-theme`/`rf-accent`, first visit follows `prefers-color-scheme`, `useTheme`), inline no-flash script in `index.html`, `components/ThemeToggle.jsx/.css` (`role="switch"`, sun and moon, knob 250 ms, accent-ink knob, glow in Lamplight), `components/Layout.jsx` (toggle in the nav), `pages/Dashboard.jsx` (`LINE_COLORS` read from tokens) | ~180 | Toggle switches every page with no flash on reload; choice survives reload; keyboard and screen reader operable; contrast script passes in both themes |
+
+Safe to cut, in this order: `ProgressRing` (C13 can add it), the gallery's
+375 px frames (check pages directly instead), the accent setter (tokens
+stay; terracotta only until the C11 account menu), `TextArea` (C12 adds it
+with the written answer).
+
+Left to later chunks on purpose: option card, book cover, drop zone, word
+card, reader toolbar, ribbon, illustrations, top nav redesign and account
+menu (C11–C13); where reading settings live beyond `localStorage`
+(question 1); the Open Library lookup (question 2).
+
+Answered by the user (2026-11-11, at plan time):
+
+1. DM Mono is dropped in C10.3; `--font-mono` becomes
+   `ui-monospace, Menlo, monospace` (6 uses).
+2. `motion` (MIT) is added in C10.4 through `LazyMotion` +
+   `domAnimation`, with the bundle size recorded before and after.
+
+Estimated time: about 4 h (C10.1 0.3, C10.2 0.7, C10.3 0.5, C10.4 0.5,
+C10.5 1.6, C10.6 0.4).
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C10.1 audit and reconcile with the handoff | this commit (`docs(design): audit current UI and reconcile with Claude Design handoff`) | `docs/DESIGN_AUDIT.md` (new): how the audit ran; current UI (19/40 heuristics, detector and overlay results, 25 ranked issues U1–U25 with file:line evidence and the owning subchunk); handoff issues (contrast H1–H6, consistency H7–H13, missing states H14–H23, the rejected skill palette); decisions A1–A16 (notably `--line-field` for boundaries, no `--ink-3` on washes, old-token aliases, one focus ring, reduced motion, responsive modals, nav visible at 375); handoff → code mapping for tokens, old tokens, components and screens. Plan rows C10.1 and C10.2a updated to match. No application code changed. | App run from `.claude/launch.json` as dev test user A; fixture `sample.pdf` uploaded through the API and the flow walked once (calibration, reading, 5-answer test, results, dashboard), each page at 1440 and 375; book deleted afterwards (`DELETE /books/{id}` 200). impeccable critique with two isolated assessments: design review (19/40) and `impeccable detect --json frontend/src` (2 `side-tab`) plus the live overlay on Library, Dashboard and Results; in-page contrast and accessible-name check. Handoff contrast recomputed for all four theme x accent combinations by a scratchpad script; sample of the review's claims re-checked by grep. Standard checks: ruff 28 errors (baseline), `pytest backend/tests -q` 608 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling: see commit. `make graph` twice after staging. | 2026-11-11 | U4 (dashboard overflow at 375) is P0 and waits for C13; U12 and U13 have backend parts (PDF text cleaning, question quality) outside C10 with no owner yet. The calibration session, the reading session and the test result of test user A stay on dev (the book delete removes the book; profile reading speed was set by calibration) |
+| [ ] C10.2a design tokens | | | | | |
+| [ ] C10.2b Tailwind wiring and aliases | | | | | |
+| [ ] C10.3 typography and base styles | | | | | |
+| [ ] C10.4 motion foundation | | | | | |
+| [ ] C10.5a Button and Surface | | | | | |
+| [ ] C10.5b form controls | | | | | |
+| [ ] C10.5c overlays and feedback | | | | | |
+| [ ] C10.5d display components | | | | | |
+| [ ] C10.6 theme toggle | | | | | |
 
 ## C11
 

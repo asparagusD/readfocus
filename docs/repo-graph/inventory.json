@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 255,
-    "inventoried": 199,
+    "tracked": 256,
+    "inventoried": 200,
     "excluded": 56
   },
   "files": [
@@ -871,6 +871,14 @@
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
     {
+      "path": "docs/DESIGN_AUDIT.md",
+      "language": "markdown",
+      "lines": 271,
+      "size_bytes": 21501,
+      "role": "doc",
+      "purpose": "C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13."
+    },
+    {
       "path": "docs/MIGRATION_AUDIT.md",
       "language": "markdown",
       "lines": 364,
@@ -881,8 +889,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1609,
-      "size_bytes": 285744,
+      "lines": 1719,
+      "size_bytes": 297580,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1537,8 +1545,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 201,
-      "size_bytes": 45129,
+      "lines": 202,
+      "size_bytes": 45384,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

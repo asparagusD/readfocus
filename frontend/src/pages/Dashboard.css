@@ -263,3 +263,26 @@
 .rf-dash-empty-link:hover {
   text-decoration: underline;
 }
+
+/* ── Narrow screens ─────────────────────────────────────────────────── */
+/* The layout already gives a 24px gutter; the container's own padding and
+   the stat row's 32px gaps left no room for three stats at 375px. */
+@media (max-width: 639px) {
+  .rf-dash-container {
+    padding: 0;
+  }
+
+  .rf-dash-stats-row {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .rf-dash-stat {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .rf-dash-stat-value {
+    font-size: 24px;
+  }
+}

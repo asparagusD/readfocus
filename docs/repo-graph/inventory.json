@@ -865,8 +865,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1251,
-      "size_bytes": 54365,
+      "lines": 1313,
+      "size_bytes": 57266,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -874,7 +874,7 @@
       "path": "docs/DESIGN_AUDIT.md",
       "language": "markdown",
       "lines": 271,
-      "size_bytes": 21501,
+      "size_bytes": 21626,
       "role": "doc",
       "purpose": "C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13."
     },
@@ -889,8 +889,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1719,
-      "size_bytes": 297580,
+      "lines": 1720,
+      "size_bytes": 298611,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1129,8 +1129,8 @@
     {
       "path": "frontend/src/pages/Dashboard.css",
       "language": "css",
-      "lines": 265,
-      "size_bytes": 6018,
+      "lines": 288,
+      "size_bytes": 6589,
       "role": "page",
       "purpose": "Styles for the dashboard: header, stat row, chart frame, book progress cards, feedback quotes, empty states."
     },

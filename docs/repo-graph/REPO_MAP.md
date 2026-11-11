@@ -378,7 +378,7 @@ Each use is the file and line of the first import of that service.
 |---|---|---|
 | `frontend/src/pages/ComprehensionTest.css` | 300 | Styles for the test page: dark timer strip, question dots, slide animations, answer textarea, submitting overlay. |
 | `frontend/src/pages/ComprehensionTest.jsx` | 261 | Five-question timed test (5 minutes): grades each answer in the background on navigation, auto-submits at zero, routes to Results. |
-| `frontend/src/pages/Dashboard.css` | 265 | Styles for the dashboard: header, stat row, chart frame, book progress cards, feedback quotes, empty states. |
+| `frontend/src/pages/Dashboard.css` | 288 | Styles for the dashboard: header, stat row, chart frame, book progress cards, feedback quotes, empty states. |
 | `frontend/src/pages/Dashboard.jsx` | 245 | Progress page: streak, words this week, a Recharts score line per book, book progress cards, recent feedback. |
 | `frontend/src/pages/Library.css` | 227 | Styles for the library: upload zone, book rows, processing sweep, empty state; uses transition: all. |
 | `frontend/src/pages/Library.jsx` | 275 | Library page: drag-and-drop upload with a title and author modal, 3-second status polling, book list, delete. |
@@ -519,10 +519,10 @@ Each use is the file and line of the first import of that service.
 | `design/HANDOFF_SUMMARY.md` | 469 | Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions. |
 | `design/handoff/foundations-style-guide/README.md` | 21 | Claude Design export note, kept unchanged: treat Main.dc.html as a reference mockup and replicate its values rather than copy its markup. |
 | `docs/BENCHMARKS.md` | 768 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
-| `docs/DEBUG_LOG.md` | 1251 | Debug log rules, entry template, and one entry per failure. |
+| `docs/DEBUG_LOG.md` | 1313 | Debug log rules, entry template, and one entry per failure. |
 | `docs/DESIGN_AUDIT.md` | 271 | C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 1719 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 1720 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 

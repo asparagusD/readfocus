@@ -108,6 +108,7 @@ pytest tools/repo_graph/tests -q
 npm --prefix frontend run check:contrast
 npm --prefix frontend run check:images
 npm --prefix frontend run test:unit
+npm --prefix frontend run test:e2e
 ```
 
 Compare against the baseline table in `CLAUDE.md`. Nothing may be worse than

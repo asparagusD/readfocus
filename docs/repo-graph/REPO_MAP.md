@@ -566,12 +566,12 @@ Each use is the file and line of the first import of that service.
 
 | File | Lines | Purpose |
 |---|---|---|
-| `.claude/skills/atomic-commit/SKILL.md` | 189 | Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes. |
-| `.claude/skills/debug-protocol/SKILL.md` | 203 | Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template. |
+| `.claude/skills/atomic-commit/SKILL.md` | 190 | Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes. |
+| `.claude/skills/debug-protocol/SKILL.md` | 204 | Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template. |
 | `.claude/skills/design-review/SKILL.md` | 157 | Project skill: the gate for UI changes; chains the three design skills, then a checklist and a before/after commit note. |
 | `.claude/skills/free-intelligence/SKILL.md` | 209 | Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern. |
 | `.claude/skills/repo-graph/SKILL.md` | 122 | Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see. |
-| `CLAUDE.md` | 189 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
+| `CLAUDE.md` | 190 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
 | `README.md` | 137 | Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour. |
 | `design/HANDOFF_SUMMARY.md` | 469 | Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions. |
 | `design/handoff/foundations-style-guide/README.md` | 21 | Claude Design export note, kept unchanged: treat Main.dc.html as a reference mockup and replicate its values rather than copy its markup. |
@@ -580,7 +580,7 @@ Each use is the file and line of the first import of that service.
 | `docs/DEBUG_LOG.md` | 1819 | Debug log rules, entry template, and one entry per failure. |
 | `docs/DESIGN_AUDIT.md` | 271 | C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 2114 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 2115 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 

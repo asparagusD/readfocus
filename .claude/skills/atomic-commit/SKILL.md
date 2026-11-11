@@ -38,6 +38,7 @@ git diff --stat
   npm --prefix frontend run check:contrast
   npm --prefix frontend run check:images
   npm --prefix frontend run test:unit
+  npm --prefix frontend run test:e2e
   ```
 
   Never commit failing checks. `CLAUDE.md` holds a baseline table for checks

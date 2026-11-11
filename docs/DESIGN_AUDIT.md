@@ -269,3 +269,169 @@ in `frontend/src/index.css` (C10.2b).
 - C10.6 also keeps the nav links visible at 375 (A14).
 - `App.css` (unimported Vite template) is deleted in C10.2b, not here:
   this subchunk changes docs only.
+
+## After the redesign (C13.9)
+
+Run 2026-11-11 at the end of C13 on `chunk/C13-page-redesign`, after
+C13.8b and before the C13.9 fixes. The scores below are from that run;
+the fixes made after it are listed under "Fixed in C13.9".
+
+### How it was run
+
+- **Captures:** every page in Paper and Lamplight at 1440 x 900 and
+  375 x 812: sign in, warming up, library, reader, test, results,
+  dashboard and 404. They came from the production build with every API
+  call mocked, using a temporary Playwright spec that was not committed
+  (32 full-page PNGs).
+- **impeccable critique**, run as two isolated assessments as the skill
+  requires:
+  - A: a design review of all 32 captures against the handoff screens
+    and the source, covering heuristics, cognitive load, the emotional
+    journey and personas.
+  - B: `impeccable detect --json frontend/src`, plus an in-page probe on
+    7 routes x 2 themes x 2 widths. It checked the contrast of every
+    visible text node, sideways scroll, target sizes, accessible names,
+    clipping, the heading outline, titles and animated properties.
+
+  There is no PRODUCT.md or DESIGN.md, so the handoff
+  (`design/HANDOFF_SUMMARY.md`, D1–D6) was the visual authority. The
+  critique snapshot was not written to `.impeccable/critique/`; this
+  section is the record.
+- **ui-ux-pro-max:** its pre-delivery checklist and its UX guideline
+  search (reduced motion, focus, touch targets, spacing), applied to the
+  same captures.
+
+### Verdict
+
+**Heuristic score 29/40 (Good band), up from 19/40 (Poor) in C10.1.**
+
+The build reads as designed for this product. These all come from the
+book metaphor:
+
+- the two-page spread with its drop cap and ribbon,
+- the typographic covers,
+- the lamp, tea and window illustrations,
+- the tea-cup error screens,
+- the eyebrow-over-Playfair rhythm.
+
+Lamplight is, if anything, easier to read than the handoff. The one
+place it slipped back into generic app UI was the reader toolbar on
+phones, which is fixed below.
+
+| # | Heuristic | C10.1 | C13.9 | Key issue now |
+|---|---|---|---|---|
+| 1 | Visibility of system status | 2 | 3 | The session clock sat at "20:00 ▷" with nothing saying it was stopped (fixed: Start / Resume) |
+| 2 | Match with the real world | 2 | 3 | "4 of 10" in the dashboard feedback, "The next pages" on Results |
+| 3 | User control and freedom | 2 | 3 | An unlabelled X next to Done reading abandons the session (a confirm asks first) |
+| 4 | Consistency and standards | 2 | 3 | Concept labels in lowercase; "Back to library" sits outside its card on Results |
+| 5 | Error prevention | 2 | 2 | A test can be submitted with unanswered questions, with no warning |
+| 6 | Recognition over recall | 2 | 3 | Reader tools are icons only on phones, and the Look up switch has no label |
+| 7 | Flexibility and efficiency | 2 | 3 | Test keys 1–N and Enter work, but the hint also shows on touch screens |
+| 8 | Aesthetic and minimalist design | 3 | 3 | The reader toolbar wrapped to three rows at 375 (fixed: two) |
+| 9 | Error recovery | 1 | 3 | Toasts keep the reader's work and offer Try again; there are 404 and error screens |
+| 10 | Help and documentation | 1 | 2 | Nothing explains paced sessions, or that Done reading leads to a test |
+
+**Detector:** 0 findings, down from 2 `side-tab` findings. Its regex scan
+cannot judge contrast or text size, so the in-page probe covers those.
+
+**In-page probe (B), on every route, in both themes, at both widths:**
+
+- **Clean:**
+  - 0 text contrast failures.
+  - No sideways scroll.
+  - Every route has a title.
+  - Every keyframe animates only transform or opacity.
+  - Every control has a name. The reader's two edge zones are
+    `aria-hidden` and `tabIndex=-1` on purpose.
+- **Found:**
+  - No `h1` on the reading page.
+  - Targets under the chunk's 44 px rule: question dots (28 x 44),
+    Leave test (42 x 44 at 375), the wordmark (24 x 44 at 375) and the
+    theme toggle's options (40 x 40).
+  - The cover author line clipped at 375 ("HENRY DAVID THORE…"), inside
+    an `aria-hidden` cover.
+- **Advisory only:** short colour transitions on hover (buttons, tabs,
+  inputs). They do not animate layout properties.
+
+### The C10.1 issues
+
+| # | Status |
+|---|---|
+| U1, U2 | Closed (C10.2b, D1): 0 contrast failures measured in both themes |
+| U3 | Closed (C10.6, C13.2a): Library and Dashboard stay in the bar at 375 |
+| U4 | Closed: no sideways scroll on any route at 375 |
+| U5, U8 | Closed (C10.5c): responsive `Modal` with `role="dialog"`, `aria-modal`, focus trap and focus return |
+| U6, U7 | Closed (C10.5b, C12, C13): every field and icon button has a name |
+| U9 | Closed (C10.3): one focus ring |
+| U10 | Closed (C10.4 and every motion subchunk): reduced motion is checked per page in e2e |
+| U11 | Closed (C13.2a, C13.6a, C13.9): one `h1` and a title on every route |
+| U12 | Closed (C12): the reader shows the book and chapter. Text cleaning stays backend work |
+| U13 | Closed for the UI (C13.5a option cards). Question quality stays backend work |
+| U14 | Closed (C13.3a) |
+| U15 | Closed (C13.3b, C13.5a, C13.8b): no `alert` or `confirm` left |
+| U16 | Closed (C13.8b): the A4 aliases are gone |
+| U17 | Mostly closed: Start next session and the closing page's Start test are primary buttons. Done reading in the reader toolbar is still a tool-weight button (P3, carried) |
+| U18 | Closed (C12.5a, C13.5a) |
+| U19 | Closed (C13.7a) |
+| U20 | Closed (C13.6a, C13.7a): the detector finds 0 |
+| U21 | Closed (C13.7a): book rows are no longer links, and the chart has a table |
+| U22 | Closed (C12, C13.4): Keep reading is the primary choice |
+| U23 | Closed (C10.3): body text weight 400 |
+| U24 | Closed for the strings listed |
+| U25 | Closed (C12, C13.8b): a real button, restyled |
+
+### Fixed in C13.9
+
+High severity (P1), one commit each:
+
+| Finding | Source | Commit |
+|---|---|---|
+| The reader toolbar wrapped to three rows at 375, about 150 px over the page; the handoff's 375 frame has one row of tools | A | `fix(reader): keep the 375 px toolbar to a tools row and a session row` |
+| The session clock sat at "20:00 ▷" with nothing saying it was stopped, and its `aria-label` was on a plain `span` | A | `fix(reader): say Start or Resume on a stopped session clock` |
+| No `h1` on the reading page | B | `fix(reader): give the reading page an h1 that names the book` |
+
+One more commit applies the chunk's own 44 px rule (P2, measured by B):
+`fix(ui): bring the test dots, Leave test and the phone wordmark to 44 px`.
+
+### Carried
+
+These are P2 and P3; none blocks a task. They belong to a later chunk.
+
+| Sev | Issue | Where |
+|---|---|---|
+| P2 | A test can be submitted with unanswered questions, with no prompt | `ComprehensionTest.jsx` |
+| P2 | The X in the reader toolbar abandons the session. "End session" or an overflow menu item would say so (the confirm stays) | `ReadingSession.jsx` |
+| P2 | Whether the clock should start on the first page turn instead of by hand. This is behaviour, which C13 froze | `ReadingSession.jsx` |
+| P2 | Dashboard: "0 tests this week" next to a 12-day streak reads as a contradiction. The feedback meta "2026-11-10 · 4 of 10" needs a readable date and the word "points" | `Dashboard.jsx`, `lib/dashboard.js` |
+| P2 | Results: the feedback on a correct answer repeats the answer ("Correct: the answer is…") | grader feedback (backend) |
+| P2 | Dashboard at 375: For tonight comes after the whole mastery list | `Dashboard.css` |
+| P2 | Library: a book that is still processing shows no percentage on its card, and can be removed mid-ingest without a warning | `Library.jsx` |
+| P2 | The Look up switch has no visible label on phones | `ReaderToolbar.jsx` |
+| P3 | The cover author line is 6–7 px and clipped at 375; neighbouring covers can share a colour | `BookCover.css`, `lib/coverColor.js` |
+| P3 | No left running head ("Walden") in the spread; folios read "1", "2" | `reader/` |
+| P3 | Results: the next-session title is generic ("The next pages"), "Back to library" sits outside the card, and the ghost link is inset | `Results.jsx/.css` |
+| P3 | Dashboard chart: solid area fill, no label on the baseline, only two gridlines at 1440 | `Dashboard.jsx` |
+| P3 | Concept labels are lowercase; the handoff uses sentence case | chips and mastery rows |
+| P3 | The test's keyboard hint also shows on touch screens | `ComprehensionTest.jsx` |
+| P3 | Ink covers barely stand out from the Lamplight background | `BookCover.css` |
+| P3 | The theme toggle's options are 40 x 40 in a 44 px pill (C10.6 decision; passes WCAG 2.5.8) | `ThemeToggle.css` |
+| P3 | The wordmark text is hidden at 375 (icon only) | `Layout.css` |
+| P3 | Help: nothing explains paced sessions, or that Done reading leads to a test | product copy |
+
+### The journey
+
+A temporary Playwright journey (not committed) ran the whole path
+against the mocked API. It ran 8 times: Paper and Lamplight, at 1440 and
+375, each with and without reduced motion. All 8 passed. Each run:
+
+1. Opened the shelf and pressed Begin reading.
+2. Started the clock.
+3. Pressed Start test on the last page (one `finish-reading` call).
+4. Gave one multiple-choice answer and one written answer.
+5. Submitted (one `submit-answers` call with
+   `["(b) In life exchanged for it", "To live deliberately."]`).
+6. Opened Results, then See your dashboard.
+7. Showed the dashboard with no sideways scroll.
+
+No run had a page error or a console error. The Results and dashboard
+captures from every run were viewed.

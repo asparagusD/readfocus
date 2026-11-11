@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 212,
+    "tracked": 255,
     "inventoried": 199,
-    "excluded": 13
+    "excluded": 56
   },
   "files": [
     {
@@ -809,8 +809,8 @@
     {
       "path": "design/HANDOFF_SUMMARY.md",
       "language": "markdown",
-      "lines": 288,
-      "size_bytes": 16033,
+      "lines": 362,
+      "size_bytes": 26737,
       "role": "doc",
       "purpose": "Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions."
     },
@@ -881,8 +881,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1607,
-      "size_bytes": 283063,
+      "lines": 1608,
+      "size_bytes": 284487,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1601,7 +1601,179 @@
   ],
   "excluded": [
     {
+      "path": "design/screens/components-lamplight-sheet.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/components-paper-sheet.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/dashboard-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/dashboard-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/dashboard-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/dashboard-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/error-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/error-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/error-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/error-paper-375.png",
+      "reason": "binary"
+    },
+    {
       "path": "design/screens/foundations-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-empty-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-empty-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-empty-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-empty-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-loading-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-loading-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-loading-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-loading-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-processing-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-processing-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-processing-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/library-processing-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/prototype-sign-in-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/reading-word-card-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/reading-word-card-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/reading-word-card-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/reading-word-card-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/results-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/results-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/results-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/results-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/sign-in-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/sign-in-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/sign-in-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/sign-in-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/test-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/test-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/test-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/test-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/warming-up-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/warming-up-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/warming-up-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/warming-up-paper-375.png",
       "reason": "binary"
     },
     {

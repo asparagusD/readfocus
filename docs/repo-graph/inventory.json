@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 389,
-    "inventoried": 326,
+    "tracked": 391,
+    "inventoried": 328,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9750,
+      "size_bytes": 9784,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2284,
-      "size_bytes": 462685,
+      "size_bytes": 463979,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1701,6 +1701,22 @@
       "size_bytes": 1111,
       "role": "lib",
       "purpose": "Node test (npm run test:unit): initials from a display name, from email local parts with separators and accents, and the fallbacks."
+    },
+    {
+      "path": "frontend/src/lib/results.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2404,
+      "role": "lib",
+      "purpose": "Results page helpers, pure: splitFeedback (the sentence and the curly-quoted passage it rests on), outcome per grade (right 80%+, partial 40%+, wrong, unsure when low-confidence) and OUTCOME_LABEL, the summary line, concept chips (missed anywhere means to revisit) and the verdict sentence."
+    },
+    {
+      "path": "frontend/src/lib/results.test.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 2206,
+      "role": "lib",
+      "purpose": "Node test (npm run test:unit): feedback split, outcome bands and low confidence, the summary line, concept chips, verdict bands."
     },
     {
       "path": "frontend/src/lib/supabase.js",
@@ -2553,8 +2569,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 328,
-      "size_bytes": 90840,
+      "lines": 330,
+      "size_bytes": 91337,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

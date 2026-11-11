@@ -1494,6 +1494,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/lib/results.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/results.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/lib/supabase.js",
       "type": "file",
       "role": "lib",
@@ -4506,6 +4518,11 @@
       "type": "imports",
       "from": "file:frontend/src/lib/initials.test.js",
       "to": "file:frontend/src/lib/initials.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/results.test.js",
+      "to": "file:frontend/src/lib/results.js"
     },
     {
       "type": "imports",

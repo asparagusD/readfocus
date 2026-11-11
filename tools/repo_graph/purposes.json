@@ -128,6 +128,8 @@
   "frontend/src/lib/api.js": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response.",
   "frontend/src/lib/initials.js": "displayName(user) and initials(user) for the account button (D4): a Supabase user_metadata name first, else the email's local part split on . _ - +; first and last letters, at most two, '?' when there are none.",
   "frontend/src/lib/initials.test.js": "Node test (npm run test:unit): initials from a display name, from email local parts with separators and accents, and the fallbacks.",
+  "frontend/src/lib/results.js": "Results page helpers, pure: splitFeedback (the sentence and the curly-quoted passage it rests on), outcome per grade (right 80%+, partial 40%+, wrong, unsure when low-confidence) and OUTCOME_LABEL, the summary line, concept chips (missed anywhere means to revisit) and the verdict sentence.",
+  "frontend/src/lib/results.test.js": "Node test (npm run test:unit): feedback split, outcome bands and low confidence, the summary line, concept chips, verdict bands.",
   "frontend/src/lib/supabase.js": "Creates the browser Supabase client; falls back to a hard-coded project URL and publishable key when the env vars are unset.",
   "frontend/src/main.jsx": "React entry: renders App in StrictMode and loads index.css.",
   "frontend/src/motion/MotionRoot.jsx": "MotionConfig reducedMotion=\"user\" and strict LazyMotion around the app; domAnimation is loaded from motion/features.js after first paint.",

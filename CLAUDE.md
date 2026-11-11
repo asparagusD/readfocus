@@ -132,7 +132,7 @@ Baseline when this file was written (C1.1; the last four rows were added in C10.
 | `npm --prefix frontend run check:contrast` | passes: 204 pairs across 4 theme x accent combinations, 0 failing (200 until C10.3) |
 | `npm --prefix frontend run check:images` | passes: 1 raster (13.1 KB), 7 illustrations, 1 `<img>`, 0 failing |
 | `npm --prefix frontend run test:unit` | passes: 45 tests, 42 until C13.2a, 37 until C12.9, 27 until C12.8a, 18 until C12.7, 15 until C12.5a, 12 until C12.4 (Node's built-in runner over `frontend/src/**/*.test.js`; needs Node 22 or later) |
-| `npm --prefix frontend run test:e2e` | passes: 18 tests, 14 until C13.2a, 8 until C13.1b (Playwright on the installed Microsoft Edge, no browser download; builds the app and serves it with `vite preview` on port 4174, every API call mocked; about 30 s; port 4174 must be free) |
+| `npm --prefix frontend run test:e2e` | passes: 22 tests, 18 until C13.2b, 14 until C13.2a, 8 until C13.1b (Playwright on the installed Microsoft Edge, no browser download; builds the app and serves it with `vite preview` on port 4174, every API call mocked; about 30 s; port 4174 must be free) |
 
 Until a chunk brings ruff and ESLint to zero, "never commit failing checks"
 means: the eight passing checks stay green and the two error counts never go

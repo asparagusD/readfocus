@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9452,
+      "size_bytes": 9469,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -994,7 +994,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2279,
-      "size_bytes": 442871,
+      "size_bytes": 445525,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1049,10 +1049,10 @@
     {
       "path": "frontend/e2e/shell.spec.js",
       "language": "javascript",
-      "lines": 90,
-      "size_bytes": 4971,
+      "lines": 132,
+      "size_bytes": 6887,
       "role": "config",
-      "purpose": "Playwright e2e for the app shell (C13.2a): the current page marked and every page titled, the skip link first and leading to main, the account panel (initials, text size and accent saved, Esc returning focus, a press outside), sign out to /login, and at 375 px the links in the bar, no sideways scroll, 44 px targets and the theme inside the panel."
+      "purpose": "Playwright e2e for the app shell (C13.2a): the current page marked and every page titled, the skip link first and leading to main, the account panel (initials, text size and accent saved, Esc returning focus, a press outside), sign out to /login, and at 375 px the links in the bar, no sideways scroll, 44 px targets and the theme inside the panel; with and without reduced motion, the account panel and a page change carry a transform only when motion is allowed."
     },
     {
       "path": "frontend/eslint.config.js",
@@ -1121,18 +1121,18 @@
     {
       "path": "frontend/src/components/AccountMenu.css",
       "language": "css",
-      "lines": 202,
-      "size_bytes": 4213,
+      "lines": 198,
+      "size_bytes": 4164,
       "role": "component",
       "purpose": "Account button and panel styles: 44 px round initials with a field border, a raised surface panel with a lift shadow (full width under 640 px), segmented radio rows on paper-2 with the checked one raised, accent swatches, the theme row only under 640 px, Sign out."
     },
     {
       "path": "frontend/src/components/AccountMenu.jsx",
       "language": "jsx",
-      "lines": 118,
-      "size_bytes": 4289,
+      "lines": 134,
+      "size_bytes": 4791,
       "role": "component",
-      "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes."
+      "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes; the panel slides down as it opens (pop) and fades out, opacity only under reduced motion."
     },
     {
       "path": "frontend/src/components/BookCover.css",
@@ -2474,7 +2474,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 318,
-      "size_bytes": 84815,
+      "size_bytes": 85021,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

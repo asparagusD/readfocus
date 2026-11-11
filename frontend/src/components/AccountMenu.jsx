@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { LogOut } from 'lucide-react';
+import { AnimatePresence, m, useReducedMotion } from 'motion/react';
+import { fadeIn, pop } from '../motion/presets';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../theme/themeContext';
 import { displayName, initials } from '../lib/initials';
@@ -33,7 +35,8 @@ function Choice({ legend, name, options, value, onChange }) {
  * controls with a button, so it is a disclosure (aria-expanded,
  * aria-controls), not an ARIA menu. Esc closes it and returns focus to the
  * button; a press outside closes it. The theme toggle sits here, and in
- * the bar only from 640 px up.
+ * the bar only from 640 px up. The panel slides down a few pixels as it
+ * opens (pop) and fades out; under reduced motion it only fades.
  */
 export function AccountMenu() {
   const { user, signOut } = useAuth();
@@ -44,6 +47,7 @@ export function AccountMenu() {
   const buttonRef = useRef(null);
   const panelId = useId();
   const name = displayName(user);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -76,13 +80,23 @@ export function AccountMenu() {
         type="button"
         className="rf-account__button"
         aria-expanded={open}
-        aria-controls={panelId}
+        aria-controls={open ? panelId : undefined}
         aria-label="Account and reading settings"
         onClick={() => setOpen((o) => !o)}
       >
         <span aria-hidden="true">{initials(user)}</span>
       </button>
-      <div id={panelId} className="rf-account__panel" hidden={!open}>
+      <AnimatePresence>
+      {open && (
+      <m.div
+        key="panel"
+        id={panelId}
+        className="rf-account__panel"
+        variants={reduced ? fadeIn : pop}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+      >
         <div className="rf-account__who">
           {name && <p className="rf-account__name">{name}</p>}
           <p className="rf-account__email">{user?.email}</p>
@@ -112,7 +126,9 @@ export function AccountMenu() {
           <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
           <span>Sign out</span>
         </button>
-      </div>
+      </m.div>
+      )}
+      </AnimatePresence>
     </div>
   );
 }

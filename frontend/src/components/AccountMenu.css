@@ -40,10 +40,6 @@
   box-shadow: var(--shadow-lift);
 }
 
-.rf-account__panel[hidden] {
-  display: none;
-}
-
 .rf-account__who {
   padding-bottom: var(--space-3);
   border-bottom: var(--border-hair) solid var(--line);

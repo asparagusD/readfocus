@@ -35,7 +35,7 @@ test('the account panel: initials, settings, Esc and a press outside', async ({ 
   await button.focus();
   await page.keyboard.press('Enter');
   await expect(button).toHaveAttribute('aria-expanded', 'true');
-  const panel = page.locator(`#${await button.getAttribute('aria-controls')}`);
+  const panel = page.locator('.rf-account__panel');
   await expect(panel).toBeVisible();
   await expect(panel).toContainText('reader@e2e.test');
   // Text size and accent are radios; Tab reaches the size group first.
@@ -88,3 +88,45 @@ test.describe('at 375 px', () => {
     if (shots) { await page.waitForTimeout(700); await page.screenshot({ path: `${shots}/account-375-lamplight.png` }); } // after the theme cross-fade
   });
 });
+
+/** Transforms of `selector` on every frame for `frames` frames, started before `act` runs. */
+async function transformsDuring(page, selector, act, frames = 40) {
+  await page.evaluate(([sel, n]) => {
+    window.__seen = [];
+    const sample = () => {
+      for (const el of document.querySelectorAll(sel)) window.__seen.push(getComputedStyle(el).transform);
+      if (window.__seen.length < n * 4) requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+    window.__until = new Promise((resolve) => setTimeout(resolve, n * 17));
+  }, [selector, frames]);
+  await act();
+  await page.evaluate(() => window.__until);
+  return page.evaluate(() => window.__seen);
+}
+
+for (const reduced of [false, true]) {
+  test.describe(reduced ? 'under reduced motion' : 'with motion', () => {
+    test.use({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+
+    test(`the account panel ${reduced ? 'only fades' : 'slides in'}`, async ({ page }) => {
+      await page.goto('/');
+      const button = page.getByRole('button', { name: 'Account and reading settings' });
+      const seen = await transformsDuring(page, '.rf-account__panel', () => button.click());
+      const moved = seen.filter((t) => t !== 'none');
+      if (reduced) expect(moved).toEqual([]);
+      else expect(moved.length).toBeGreaterThan(0);
+    });
+
+    test(`a page change ${reduced ? 'only fades' : 'rises in'}`, async ({ page }) => {
+      await page.goto('/');
+      await page.getByRole('navigation', { name: 'Main' }).waitFor();
+      const link = page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Dashboard' });
+      const seen = await transformsDuring(page, '#main > div', () => link.click(), 60);
+      await expect(page).toHaveTitle('Dashboard · ReadFocus');
+      const moved = seen.filter((t) => t !== 'none');
+      if (reduced) expect(moved).toEqual([]);
+      else expect(moved.length).toBeGreaterThan(0);
+    });
+  });
+}

@@ -4020,6 +4020,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
       "to": "file:frontend/src/reader/textSize.js"
     },
     {

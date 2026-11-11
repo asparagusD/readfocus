@@ -10,6 +10,7 @@ import { BookStack, Candle } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { greeting, lastScore, lastScores, streakLine, testsThisWeek } from '../lib/dashboard';
 import { splitFeedback } from '../lib/results';
+import { MasteryList } from '../components/dashboard/MasteryList';
 import './Dashboard.css';
 
 /** A hollow point for each test, the last one filled (handoff chart). */
@@ -175,6 +176,7 @@ export function Dashboard() {
             </div>
             <ScoreTrend scores={scores} />
           </section>
+          <MasteryList books={books} />
         </div>
 
         <aside className="rf-dash__side">

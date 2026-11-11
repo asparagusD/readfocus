@@ -1152,6 +1152,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/dashboard/MasteryList.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/test/OptionCards.css",
       "type": "file",
       "role": "component",
@@ -2373,6 +2385,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "endpoint:POST /auth/profile/calibrate"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "endpoint:GET /mastery"
     },
     {
       "type": "calls_endpoint",
@@ -4252,6 +4269,46 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/dashboard/MasteryList.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/MasteryBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/SegmentedTabs.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/tabIds.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/lib/dashboard.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/test/OptionCards.jsx",
       "to": "file:frontend/src/components/test/OptionCards.css"
     },
@@ -4654,6 +4711,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
       "to": "file:frontend/src/pages/ComprehensionTest.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/dashboard/MasteryList.jsx"
     },
     {
       "type": "imports",

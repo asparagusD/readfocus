@@ -21,8 +21,25 @@ export const DASHBOARD = {
   ],
 };
 
-export async function mockDashboard(page, body = DASHBOARD, { status = 200 } = {}) {
+/** Walden has 13 concepts (weakest first, the API's order); Middlemarch none yet. */
+const CONCEPTS = Array.from({ length: 13 }, (_, i) => ({
+  book_id: 'walden', concept_key: `c${i}`, label: i === 0 ? 'quiet desperation' : `concept ${i}`,
+  mastery: 0.2 + i * 0.05, attempts: i === 12 ? 0 : 2, correct: 1, last_seen: null, next_review: null,
+}));
+
+export async function mockDashboard(page, body = DASHBOARD, { status = 200, mastery = 200 } = {}) {
+  const calls = [];
   await page.route('http://localhost:8000/dashboard', (route) => json(route, status === 200 ? body : { detail: 'down' }, status));
+  await page.route(/localhost:8000\/mastery\?/, (route) => {
+    const url = new URL(route.request().url());
+    if (route.request().method() === 'GET') calls.push(url.search);
+    if (mastery !== 200) return json(route, { detail: 'down' }, mastery);
+    const rows = url.searchParams.get('book_id') === 'walden' ? CONCEPTS : [];
+    const offset = Number(url.searchParams.get('offset'));
+    const limit = Number(url.searchParams.get('limit'));
+    return json(route, { items: rows.slice(offset, offset + limit), total: rows.length, limit, offset });
+  });
+  return calls;
 }
 
 test('greeting, streak, four figures, the trend with its table, books and feedback', async ({ page }) => {
@@ -79,4 +96,41 @@ test.describe('at 375 px', () => {
     expect(tops[2]).toBeGreaterThan(tops[0]);
     if (shots) await page.screenshot({ path: `${shots}/dashboard-375.png`, fullPage: true });
   });
+});
+
+test('concept mastery: a tab per book, weakest first, ten at a time, words for the weak ones', async ({ page }) => {
+  const calls = await mockDashboard(page);
+  await page.goto('/dashboard');
+  const tabs = page.getByRole('tablist', { name: 'Books' });
+  await expect(tabs.getByRole('tab')).toHaveCount(2);
+  const panel = page.getByRole('tabpanel', { name: 'Walden' });
+  const rows = panel.getByRole('listitem');
+  await expect(rows).toHaveCount(10);
+  await expect(rows.first()).toContainText('quiet desperation');
+  await expect(rows.first()).toContainText('Needs revisiting');
+  await expect(rows.first()).toContainText('20%');
+  await expect(rows.nth(6)).not.toContainText('Needs revisiting'); // 0.5 is not weak
+  await panel.getByRole('button', { name: 'Show more (3 left)' }).click();
+  await expect(rows).toHaveCount(13);
+  await expect(rows.last()).not.toContainText('Needs revisiting'); // untested: only the prior
+  await expect(panel.getByRole('button', { name: /Show more/ })).toHaveCount(0);
+  await tabs.getByRole('tab', { name: 'Walden' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(tabs.getByRole('tab', { name: 'Middlemarch' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tabpanel', { name: 'Middlemarch' })).toContainText('No concepts yet for this book.');
+  await page.keyboard.press('ArrowLeft');
+  await expect(rows).toHaveCount(13); // kept, not fetched again
+  expect(calls).toEqual(['?book_id=walden&limit=10&offset=0', '?book_id=walden&limit=10&offset=10', '?book_id=middlemarch&limit=10&offset=0']);
+  if (shots) await page.screenshot({ path: `${shots}/dashboard-mastery-1440.png`, fullPage: true });
+});
+
+test('a failed mastery load says so in its panel and can try again', async ({ page }) => {
+  await mockDashboard(page, DASHBOARD, { mastery: 503 });
+  await page.goto('/dashboard');
+  const panel = page.getByRole('tabpanel', { name: 'Walden' });
+  await expect(panel.getByRole('alert')).toContainText('This book’s concepts didn’t load.');
+  await page.unroute(/localhost:8000\/mastery\?/);
+  await page.route(/localhost:8000\/mastery\?/, (route) => json(route, { items: [], total: 0, limit: 10, offset: 0 }));
+  await panel.getByRole('button', { name: 'Try again' }).click();
+  await expect(panel).toContainText('No concepts yet for this book.');
 });

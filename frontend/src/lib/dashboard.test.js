@@ -1,7 +1,7 @@
 // node --test (npm run test:unit): the dashboard's pure helpers.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { greeting, lastScore, lastScores, partOfDay, streakLine, testsThisWeek } from './dashboard.js';
+import { greeting, lastScore, lastScores, needsRevisiting, partOfDay, streakLine, testsThisWeek } from './dashboard.js';
 
 const at = (iso) => new Date(iso); // local time
 
@@ -34,4 +34,10 @@ test('tests this week count from Monday', () => {
   assert.equal(testsThisWeek(scores, at('2026-11-11T20:00:00')), 2);
   assert.equal(testsThisWeek(scores, at('2026-11-09T08:00:00')), 2);
   assert.equal(testsThisWeek([], at('2026-11-11T20:00:00')), 0);
+});
+
+test('needs revisiting matches the planner: tested and under 0.5', () => {
+  assert.equal(needsRevisiting({ mastery: 0.41, attempts: 2 }), true);
+  assert.equal(needsRevisiting({ mastery: 0.5, attempts: 2 }), false);
+  assert.equal(needsRevisiting({ mastery: 0.3, attempts: 0 }), false); // untested: only the prior
 });

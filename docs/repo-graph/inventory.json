@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 398,
-    "inventoried": 334,
+    "tracked": 400,
+    "inventoried": 336,
     "excluded": 64
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9851,
+      "size_bytes": 9901,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2286,
-      "size_bytes": 469229,
+      "size_bytes": 471669,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1033,10 +1033,10 @@
     {
       "path": "frontend/e2e/dashboard.spec.js",
       "language": "javascript",
-      "lines": 82,
-      "size_bytes": 5074,
+      "lines": 136,
+      "size_bytes": 8379,
       "role": "config",
-      "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375."
+      "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here and GET /mastery (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375; concept mastery (tabs by keyboard, weakest first, Show more, the weak rule, the exact /mastery requests) and a failed mastery load."
     },
     {
       "path": "frontend/e2e/fixtures.js",
@@ -1247,6 +1247,22 @@
       "purpose": "Theme control: Paper, Lamplight or Match system as a radio group in the handoff's pill style; arrow keys move and choose."
     },
     {
+      "path": "frontend/src/components/dashboard/MasteryList.css",
+      "language": "css",
+      "lines": 79,
+      "size_bytes": 1577,
+      "role": "component",
+      "purpose": "Mastery list styles: heading row, rows of concept, bar and percentage on hairlines (the bar under the name on phones), 'Needs revisiting' in accent text, the empty and error notes."
+    },
+    {
+      "path": "frontend/src/components/dashboard/MasteryList.jsx",
+      "language": "jsx",
+      "lines": 90,
+      "size_bytes": 4176,
+      "role": "component",
+      "purpose": "MasteryList (handoff screen 09): underline SegmentedTabs per book in progress, that book's concepts weakest first from GET /mastery?book_id=&limit=10&offset=, kept per book, Show more, 'Needs revisiting' by the planner's rule, empty and failed (Try again) states."
+    },
+    {
       "path": "frontend/src/components/test/OptionCards.css",
       "language": "css",
       "lines": 87,
@@ -1409,18 +1425,18 @@
     {
       "path": "frontend/src/components/ui/SegmentedTabs.css",
       "language": "css",
-      "lines": 39,
-      "size_bytes": 1078,
+      "lines": 64,
+      "size_bytes": 1752,
       "role": "component",
-      "purpose": "Segmented tabs styles: a paper-2 pill track, the selected tab a raised surface pill with a field border, 44 px tabs."
+      "purpose": "Segmented tabs styles: a paper-2 pill track, the selected tab a raised surface pill with a field border, 44 px tabs; the underline variant: text tabs on a hairline, the selected one over a 2 px accent rule."
     },
     {
       "path": "frontend/src/components/ui/SegmentedTabs.jsx",
       "language": "jsx",
-      "lines": 48,
-      "size_bytes": 1686,
+      "lines": 49,
+      "size_bytes": 1834,
       "role": "component",
-      "purpose": "SegmentedTabs: a tablist with roving tabindex (Left/Right, Home, End select), the caller's panel named by the selected tab."
+      "purpose": "SegmentedTabs: a tablist with roving tabindex (Left/Right, Home, End select), the caller's panel named by the selected tab; variant 'underline' for the dashboard's book tabs."
     },
     {
       "path": "frontend/src/components/ui/Skeleton.css",
@@ -1721,18 +1737,18 @@
     {
       "path": "frontend/src/lib/dashboard.js",
       "language": "javascript",
-      "lines": 51,
-      "size_bytes": 2017,
+      "lines": 56,
+      "size_bytes": 2283,
       "role": "lib",
-      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday."
+      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday, needsRevisiting (tested and under the planner's 0.5)."
     },
     {
       "path": "frontend/src/lib/dashboard.test.js",
       "language": "javascript",
-      "lines": 37,
-      "size_bytes": 1875,
+      "lines": 43,
+      "size_bytes": 2213,
       "role": "lib",
-      "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday."
+      "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday, needs revisiting."
     },
     {
       "path": "frontend/src/lib/initials.js",
@@ -1849,10 +1865,10 @@
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 220,
-      "size_bytes": 8458,
+      "lines": 222,
+      "size_bytes": 8565,
       "role": "page",
-      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, the books in progress with read progress, recent feedback with its quoted passage; skeleton, a new reader's empty state and a failed load with Try again."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again."
     },
     {
       "path": "frontend/src/pages/Library.css",
@@ -2617,8 +2633,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 336,
-      "size_bytes": 94278,
+      "lines": 338,
+      "size_bytes": 95234,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

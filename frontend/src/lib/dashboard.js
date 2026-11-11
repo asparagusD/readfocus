@@ -49,3 +49,8 @@ export function testsThisWeek(scores, today) {
   const from = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
   return scores.filter((s) => s.date >= from).length;
 }
+
+const WEAK_BELOW = 0.5; // backend/agents/policy.py PLANNER_WEAK_BELOW
+
+/** A concept needs revisiting as the planner sees it: tested at least once and under half mastered. */
+export const needsRevisiting = (item) => item.attempts > 0 && item.mastery < WEAK_BELOW;

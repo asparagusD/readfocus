@@ -97,6 +97,7 @@ and are not on PATH otherwise.
 ```bash
 make dev-backend    # FastAPI on http://127.0.0.1:8000, health check at /health
 make dev-frontend   # Vite on http://localhost:5173
+npm --prefix frontend run test:e2e   # reader e2e on the installed Edge, API mocked (C12.10; not a standard check)
 ```
 
 Local configuration lives in `.env` and `frontend/.env` (both ignored); the

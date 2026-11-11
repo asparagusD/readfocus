@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 363,
-    "inventoried": 300,
+    "tracked": 366,
+    "inventoried": 303,
     "excluded": 63
   },
   "files": [
@@ -73,8 +73,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 188,
-      "size_bytes": 9077,
+      "lines": 189,
+      "size_bytes": 9192,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -961,8 +961,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 932,
-      "size_bytes": 51195,
+      "lines": 960,
+      "size_bytes": 52623,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2113,
-      "size_bytes": 413015,
+      "lines": 2114,
+      "size_bytes": 415840,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1009,8 +1009,8 @@
     {
       "path": "frontend/.gitignore",
       "language": "gitignore",
-      "lines": 24,
-      "size_bytes": 253,
+      "lines": 28,
+      "size_bytes": 309,
       "role": "config",
       "purpose": "Vite template ignore rules: logs, node_modules, dist, editor files."
     },
@@ -1023,10 +1023,26 @@
       "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
     },
     {
+      "path": "frontend/e2e/fixtures.js",
+      "language": "javascript",
+      "lines": 157,
+      "size_bytes": 8228,
+      "role": "config",
+      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session and answers every backend call from the Walden fixture (profile, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
+    },
+    {
+      "path": "frontend/e2e/reader.spec.js",
+      "language": "javascript",
+      "lines": 184,
+      "size_bytes": 9711,
+      "role": "config",
+      "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+    },
+    {
       "path": "frontend/eslint.config.js",
       "language": "javascript",
-      "lines": 21,
-      "size_bytes": 568,
+      "lines": 27,
+      "size_bytes": 897,
       "role": "config",
       "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx."
     },
@@ -1049,10 +1065,18 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 41,
-      "size_bytes": 1172,
+      "lines": 43,
+      "size_bytes": 1241,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
+    },
+    {
+      "path": "frontend/playwright.config.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 762,
+      "role": "config",
+      "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -2345,8 +2369,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 302,
-      "size_bytes": 79355,
+      "lines": 305,
+      "size_bytes": 80475,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

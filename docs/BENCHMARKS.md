@@ -794,6 +794,34 @@ holds at most 2,000 compact answers.
 
 ## Frontend: Lighthouse and image budgets
 
+### C12.10: page turns and lookup in the e2e run (2026-11-11)
+
+`npm --prefix frontend run test:e2e` (Playwright 1.64.1 on the installed
+Microsoft Edge, headless, 1440x900, a production build under `vite preview`,
+every API call mocked; `e2e/reader.spec.js`, last test). Page turns:
+`requestAnimationFrame` sampled over five turns (three forward, two back),
+each given 800 ms to land; then the same with CDP
+`Emulation.setCPUThrottlingRate` 4. Lookup: from the `pointermove` that
+reaches "woods" to the card in the DOM, timed inside the page; the answer
+comes from the mock, so this is the client's own time (the 350 ms hover
+intent included), not the network's. Two runs:
+
+| Measure | Run 1 | Run 2 |
+|---|---|---|
+| Page turns, frames per second | 75.0 (306 frames in 4.07 s) | 75.0 |
+| Worst frame gap | 13.7 ms | 14.0 ms |
+| Frames over 33 ms | 0 | 0 |
+| Page turns at 4x CPU, frames per second | 74.3 | 74.3 |
+| Worst frame gap at 4x CPU | 26.7 ms | 26.8 ms |
+| Hover to card, first (not cached) | 372 ms | 368 ms |
+| Hover to card, cached, 5 tries | 356–363 ms | 357–366 ms |
+
+Headless Edge paces frames at about 75 a second here, so 75 fps is the
+ceiling, not a measured limit. Real answers from the backend add the
+network: see C12.6 (cached in the table 96 ms p50, first lookups 0.4–1 s).
+Results also land in `frontend/test-results/reader-benchmarks.json`
+(ignored). Not measured: a real phone, Firefox, Safari.
+
 ### C12.8: @floating-ui/react for the word card (2026-11-11)
 
 `npm --prefix frontend run build` (Vite) before and after adding

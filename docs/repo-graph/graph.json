@@ -984,6 +984,18 @@
       "language": "markdown"
     },
     {
+      "id": "file:frontend/e2e/fixtures.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/reader.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/eslint.config.js",
       "type": "file",
       "role": "config",
@@ -1006,6 +1018,12 @@
       "type": "file",
       "role": "config",
       "language": "json"
+    },
+    {
+      "id": "file:frontend/playwright.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/scripts/check-contrast.mjs",
@@ -3820,6 +3838,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_text.py",
       "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/fixtures.js",
+      "to": "file:frontend/src/gallery/readerFixture.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/reader.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",

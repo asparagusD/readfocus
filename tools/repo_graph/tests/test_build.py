@@ -79,6 +79,8 @@ FIXTURE = {
         "const a = await fetchApi('/books');\n"
         "await fetchApi(`/books/${id}/open`, {\n  method: 'POST',\n});\n"
         "fetchApi('/nope').catch(console.error);\n"
+        # Regression (DEBUG_LOG 2026-11-11 C12.5b): a query string is not part of the route.
+        "await fetchApi(`/books/${id}/open?start=${n}&end=${n + 1}`, { method: 'POST' });\n"
     ),
 }
 
@@ -144,6 +146,7 @@ def test_calls_endpoint_matches_method_and_path(graph):
         (page, "endpoint:POST /books/{book_id}/open"),
     }
     assert {"from": page, "type": "calls_endpoint", "target": "GET /nope"} in graph["unresolved"]
+    assert not [u for u in graph["unresolved"] if "?" in u["target"]]  # a query string never blocks a match
 
 
 DB = "file:backend/services/db.py"

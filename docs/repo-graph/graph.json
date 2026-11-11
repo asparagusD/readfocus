@@ -2106,6 +2106,11 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:GET /books/{book_id}/pages"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:POST /sessions/start"
     },
     {
@@ -4960,11 +4965,5 @@
       "to": "table:books"
     }
   ],
-  "unresolved": [
-    {
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "type": "calls_endpoint",
-      "target": "GET /books/${bookId}/pages?start=${entry.chunk_index}&end=${entry.chunk_index + 1}"
-    }
-  ]
+  "unresolved": []
 }

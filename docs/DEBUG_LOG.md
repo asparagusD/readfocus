@@ -1759,3 +1759,61 @@ as without reduced motion.
 
 ### Commit
 fix(ui): make reduced-motion transitions instant instead of 0.01 ms
+
+## 2026-11-11 C12.5b — repo graph cannot match a fetchApi call that has a query string
+
+**Status:** fixed
+
+### Symptom
+After staging C12.5b, the tooling tests failed and the commit went
+ahead anyway: the check ran as `pytest tools/repo_graph/tests -q | tail -1`
+in a `&&` chain, so the pipe's exit status was `tail`'s and the commit
+step ran. Commit `a87eafc` therefore says "62 passed (after staging)",
+which is false.
+
+    pytest tools/repo_graph/tests -q
+    1 failed, 61 passed
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_covers_routers_and_pages
+    >       assert not [u for u in graph["unresolved"] if u["type"] == "calls_endpoint"]
+    E       AssertionError: assert not [{'from': 'file:frontend/src/pages/ReadingSession.jsx', 'type': 'calls_endpoint',
+            'target': 'GET /books/${bookId}/pages?start=${entry.chunk_index}&end=${entry.chunk_index + 1}'}]
+    tools\repo_graph\tests\test_build.py:228: AssertionError
+
+### Repro
+    pytest tools/repo_graph/tests/test_build.py::test_real_graph_covers_routers_and_pages -q
+
+### Hypotheses
+1. `tools/repo_graph/build.py` `route_key` compares the whole call text,
+   query string included, with the route path, which has none; the
+   C12.5b call is the first `fetchApi` call in the codebase with a query
+   string. Evidence: the unresolved target ends in `?start=…&end=…`; the
+   C12.4 read-ahead builds its query outside `fetchApi(` (a fetcher
+   argument), so it was never matched. Ruled out if: a call with a query
+   string resolves in the fixture. Result: **confirmed** by the fixture
+   test below.
+
+### Root cause
+`tools/repo_graph/build.py` `route_key` (line 290): the call text was
+compared with the route including its query string, so
+`/books/${bookId}/pages?start=…` never equalled `/books/{}/pages`.
+Process: the standard checks before commit `a87eafc` ran in an `&&`
+chain with `| tail -1`, which hides a failing exit status; the failure
+was printed and missed.
+
+### Fix
+`route_key` drops everything from `?` before comparing. Checks are run
+on their own (no pipe in a commit chain) and read before any commit.
+One attempt.
+
+### Regression test
+`tools/repo_graph/tests/test_build.py`: the fixture page calls
+`/books/${id}/open?start=${n}&end=${n + 1}` and
+`test_calls_endpoint_matches_method_and_path` asserts no unresolved call
+contains `?`. Before the fix: 2 failed, 12 passed (that test and
+`test_real_graph_covers_routers_and_pages`). After: 62 passed (all
+tooling tests); `query.py "GET /books/{book_id}/pages"` now lists
+`ReadingSession.jsx` as its caller.
+
+### Commit
+fix(graph): match frontend calls to routes without their query string
+(corrects the "62 passed" line of `a87eafc`, which was false)

@@ -288,8 +288,8 @@ def text_edges(graph: Graph, path: str, lang: str, text: str) -> None:
 
 
 def route_key(method: str, path: str) -> str:
-    """Compare routes with every path parameter reduced to `{}`."""
-    return f"{method} " + re.sub(r"\$?\{[^}]*\}", "{}", path)
+    """Compare routes with every path parameter reduced to `{}`; a call's query string is not part of the route."""
+    return f"{method} " + re.sub(r"\$?\{[^}]*\}", "{}", path.split("?")[0])
 
 
 def js_edges(graph: Graph, path: str, text: str, paths: set[str], routes: dict) -> None:

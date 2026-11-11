@@ -3,6 +3,9 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Modal } from '../components/ui/Modal';
 import { Skeleton } from '../components/ui/Skeleton';
+import { ScoreBadge } from '../components/ui/ScoreBadge';
+import { ProgressRing } from '../components/ui/ProgressRing';
+import { ConceptChip, ConceptChipGroup } from '../components/ui/ConceptChip';
 
 // Dev-only gallery: every component in every state, in both themes and
 // both accents, for the design-review checks at 375 and 1440 px.
@@ -58,6 +61,28 @@ function ModalDemo() {
   );
 }
 
+function ChipsDemo() {
+  const [run, setRun] = useState(0);
+  return (
+    <div className="gallery-grid" key={run}>
+      <ConceptChipGroup label="Concepts from this session">
+        <ConceptChip kind="strengthened">Opportunity cost</ConceptChip>
+        <ConceptChip kind="strengthened">Simplicity</ConceptChip>
+        <ConceptChip kind="revisit">Quiet desperation</ConceptChip>
+        <ConceptChip kind="revisit">The cost of a thing is the amount of life exchanged for it</ConceptChip>
+      </ConceptChipGroup>
+      <div className="gallery-row gallery-center">
+        <ScoreBadge percentage={86} label="Session 5" />
+        <ScoreBadge percentage={72} label="Session 6" variant="outlined" />
+        <ProgressRing value={64} label="Concept mastery, Walden" />
+        <ProgressRing value={0} label="Concept mastery, Middlemarch" />
+        <ProgressRing value={100} label="Concept mastery, Meditations" size={80} />
+      </div>
+      <div><Button variant="ghost" onClick={() => setRun((n) => n + 1)}>Replay</Button></div>
+    </div>
+  );
+}
+
 export function Gallery() {
   return (
     <main className="gallery">
@@ -99,6 +124,10 @@ export function Gallery() {
       <Section title="Modal">
         <ModalDemo />
         <p className="gallery-note">Tab stays inside; Esc or the scrim closes; focus returns to the button.</p>
+      </Section>
+
+      <Section title="Chips, badges, progress">
+        <ChipsDemo />
       </Section>
 
       <Section title="Skeleton">

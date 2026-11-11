@@ -70,6 +70,10 @@
   margin-top: var(--space-5);
 }
 
+.gallery-center {
+  align-items: center;
+}
+
 .gallery-skeletons {
   display: grid;
   gap: var(--space-5);

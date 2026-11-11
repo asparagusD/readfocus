@@ -959,6 +959,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/ui/ConceptChip.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/ui/Modal.css",
       "type": "file",
       "role": "component",
@@ -966,6 +978,18 @@
     },
     {
       "id": "file:frontend/src/components/ui/Modal.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ProgressRing.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ProgressRing.jsx",
       "type": "file",
       "role": "component",
       "language": "jsx"
@@ -3130,12 +3154,32 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "to": "file:frontend/src/components/ui/ConceptChip.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/ui/Modal.jsx",
       "to": "file:frontend/src/components/ui/Modal.css"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/components/ui/Modal.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ProgressRing.jsx",
+      "to": "file:frontend/src/components/ui/ProgressRing.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ProgressRing.jsx",
       "to": "file:frontend/src/motion/presets.js"
     },
     {
@@ -3161,7 +3205,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ConceptChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
       "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ProgressRing.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ScoreBadge.jsx"
     },
     {
       "type": "imports",

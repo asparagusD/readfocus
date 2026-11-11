@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 267,
-    "inventoried": 211,
+    "tracked": 271,
+    "inventoried": 215,
     "excluded": 56
   },
   "files": [
@@ -890,7 +890,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1719,
-      "size_bytes": 309557,
+      "size_bytes": 310918,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1023,6 +1023,22 @@
       "purpose": "Card surface: raised or sunken, optional interactive hover, any element via `as`; not used by any page yet."
     },
     {
+      "path": "frontend/src/components/ui/ConceptChip.css",
+      "language": "css",
+      "lines": 43,
+      "size_bytes": 874,
+      "role": "component",
+      "purpose": "Concept chip styles: strengthened (accent wash, check icon) and revisit (dashed field border, turn-back icon); group layout."
+    },
+    {
+      "path": "frontend/src/components/ui/ConceptChip.jsx",
+      "language": "jsx",
+      "lines": 41,
+      "size_bytes": 1378,
+      "role": "component",
+      "purpose": "ConceptChip (strengthened or revisit, told apart by fill, border, icon and words) and ConceptChipGroup, a labelled list that pops chips in 60 ms apart (fade only under reduced motion)."
+    },
+    {
       "path": "frontend/src/components/ui/Modal.css",
       "language": "css",
       "lines": 35,
@@ -1039,20 +1055,36 @@
       "purpose": "Modal dialog: role dialog, aria-modal, named by title, label or its first heading; focus moves in and Tab is trapped, Esc and the scrim close, page scroll locked, focus returns on close; pop animation, opacity only under reduced motion."
     },
     {
+      "path": "frontend/src/components/ui/ProgressRing.css",
+      "language": "css",
+      "lines": 35,
+      "size_bytes": 606,
+      "role": "component",
+      "purpose": "Progress ring styles: hairline track, accent arc from the top, centred value."
+    },
+    {
+      "path": "frontend/src/components/ui/ProgressRing.jsx",
+      "language": "jsx",
+      "lines": 39,
+      "size_bytes": 1382,
+      "role": "component",
+      "purpose": "Concept-mastery ring: SVG accent arc drawn with drawIn (instant under reduced motion), value in the middle, one image named '<label>: <value>%'."
+    },
+    {
       "path": "frontend/src/components/ui/ScoreBadge.css",
       "language": "css",
-      "lines": 17,
-      "size_bytes": 239,
+      "lines": 35,
+      "size_bytes": 697,
       "role": "component",
-      "purpose": "Score badge dot and text styles."
+      "purpose": "Score pill styles on tokens: filled wash, outlined hairline, figure and label."
     },
     {
       "path": "frontend/src/components/ui/ScoreBadge.jsx",
       "language": "jsx",
-      "lines": 26,
-      "size_bytes": 573,
+      "lines": 18,
+      "size_bytes": 668,
       "role": "component",
-      "purpose": "Coloured percentage badge (green from 75, amber from 50, red below); imported by Library but not rendered."
+      "purpose": "Score pill: Playfair percentage and a DM Sans label, filled (accent wash) or outlined; meaning from the number, not colour. Imported by Library but not rendered."
     },
     {
       "path": "frontend/src/components/ui/Skeleton.css",
@@ -1073,16 +1105,16 @@
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 114,
-      "size_bytes": 4281,
+      "lines": 143,
+      "size_bytes": 5618,
       "role": "asset",
       "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks."
     },
     {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
-      "lines": 77,
-      "size_bytes": 1311,
+      "lines": 81,
+      "size_bytes": 1355,
       "role": "asset",
       "purpose": "Layout styles for the dev-only component gallery."
     },
@@ -1633,8 +1665,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 213,
-      "size_bytes": 48615,
+      "lines": 217,
+      "size_bytes": 49455,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

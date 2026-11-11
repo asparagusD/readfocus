@@ -809,8 +809,8 @@
     {
       "path": "design/HANDOFF_SUMMARY.md",
       "language": "markdown",
-      "lines": 362,
-      "size_bytes": 26737,
+      "lines": 469,
+      "size_bytes": 32665,
       "role": "doc",
       "purpose": "Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions."
     },
@@ -881,8 +881,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1608,
-      "size_bytes": 284487,
+      "lines": 1609,
+      "size_bytes": 285744,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

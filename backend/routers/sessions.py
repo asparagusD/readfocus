@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 from backend.agents.evaluator_agent import evaluate_single_answer, load_passage, warm_up
 from backend.agents.question_generation.assembler import public_question
@@ -74,6 +74,31 @@ class EvaluateSingleRequest(BaseModel):
     index: int
     answer: str
 
+
+class PositionRequest(BaseModel):
+    """A place in a book (C12.2): chunk, reader block ("<chunk>.<n>", chunks.blocks) and offset in its text."""
+
+    chunk_index: int = Field(ge=0)
+    block_id: str = Field(pattern=r"^\d+\.\d+$", max_length=24)
+    char_offset: int = Field(ge=0, le=100_000)
+
+    @model_validator(mode="after")
+    def block_in_chunk(self):
+        if self.block_id.split(".")[0] != str(self.chunk_index):
+            raise ValueError("block_id must be a block of chunk_index")
+        return self
+
+
+def read_position(user_id: str, book_id: str):
+    """The saved place for /start; a failed read is no place, never a failed start."""
+    try:
+        rows = supabase.table("reading_progress").select("position").eq("user_id", user_id).eq(
+            "book_id", book_id).execute().data
+        return cast(dict[str, Any], rows[0]).get("position") if rows else None
+    except Exception as e:  # noqa: BLE001 - the reader starts at the plan's first page instead
+        print(f"Reading position not read: {e}")
+        return None
+
 @router.post("/start")
 async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     # 1. Run the start_session flow: the planner
@@ -98,7 +123,9 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         "status": "reading",
         "started_at": datetime.utcnow().isoformat()
     })
-    resp, session_resp = await asyncio.gather(run_in_threadpool(chunk_query.execute), run_in_threadpool(session_query.execute))
+    resp, session_resp, position = await asyncio.gather(
+        run_in_threadpool(chunk_query.execute), run_in_threadpool(session_query.execute),
+        run_in_threadpool(read_position, user_id, req.book_id))
     chunks_data: list[dict[str, Any]] = sorted(cast(list[dict[str, Any]], resp.data or []), key=lambda x: x["chunk_index"])
 
     if not session_resp.data:
@@ -117,8 +144,30 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         "chunk_indices": chunk_indices,
         "focus_duration_minutes": getattr(plan, "focus_duration_minutes", 20),
         "reason": getattr(plan, "reason", ""),
-        "chunks": chunks_data
+        "chunks": chunks_data,
+        "position": position,  # the last saved place in this book, or None; the reader decides whether to resume
     }
+
+
+@router.put("/{session_id}/position")
+async def save_position(session_id: str, req: PositionRequest, user_id: str = Depends(get_current_user)):
+    """Save the reader's place (sent debounced as pages turn). Only reading_progress.position changes."""
+    sess = await run_in_threadpool(
+        supabase.table("sessions").select("book_id").eq("id", session_id).eq("user_id", user_id).execute)
+    if not sess.data:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    book_id = cast(dict[str, Any], sess.data[0])["book_id"]
+    chunk = await run_in_threadpool(supabase.table("chunks").select("id").eq("book_id", book_id).eq(
+        "chunk_index", req.chunk_index).limit(1).execute)
+    if not chunk.data:
+        raise HTTPException(status_code=422, detail="No such chunk in this book.")
+    position = req.model_dump()
+    # Update only: the planner creates this row on a first start, and a row made here would reset its cursor.
+    updated = await run_in_threadpool(supabase.table("reading_progress").update({"position": position}).eq(
+        "user_id", user_id).eq("book_id", book_id).execute)
+    if not updated.data:
+        raise HTTPException(status_code=409, detail="This book has no reading progress yet.")
+    return {"position": position}
 
 @router.post("/{session_id}/finish-reading")
 async def finish_reading(

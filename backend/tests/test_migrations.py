@@ -353,3 +353,9 @@ def test_013_adds_blocks_and_toc_as_nullable_jsonb():
     assert re.search(r"ALTER\s+TABLE\s+public\.chunks\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+blocks\s+jsonb;", sql)
     assert re.search(r"ALTER\s+TABLE\s+public\.books\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+toc\s+jsonb;", sql)
     assert "NOT NULL" not in sql.upper() and "CREATE TABLE" not in sql.upper()
+
+
+def test_014_adds_reading_progress_position_as_nullable_jsonb():
+    sql = sql_without_comments(MIGRATIONS / "014_reading_position.sql")
+    assert re.search(r"ALTER\s+TABLE\s+public\.reading_progress\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+position\s+jsonb;", sql)
+    assert "NOT NULL" not in sql.upper() and "POLICY" not in sql.upper() and "CREATE TABLE" not in sql.upper()

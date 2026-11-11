@@ -121,6 +121,13 @@
       "handler": "submit_answers"
     },
     {
+      "id": "endpoint:PUT /sessions/{session_id}/position",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/sessions/{session_id}/position",
+      "handler": "save_position"
+    },
+    {
       "id": "env:DEV",
       "type": "env"
     },
@@ -616,6 +623,12 @@
     },
     {
       "id": "file:backend/tests/test_api_mastery.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_position.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1659,6 +1672,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/014_reading_position.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -1870,6 +1889,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/013_structured_content.sql",
       "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/014_reading_position.sql",
+      "to": "table:reading_progress"
     },
     {
       "type": "calls_endpoint",
@@ -2155,6 +2179,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:POST /sessions/{session_id}/submit-answers"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
       "type": "defines_function",
@@ -2920,6 +2949,21 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
       "to": "file:backend/tests/test_api_sessions.py"
     },
     {
@@ -4466,6 +4510,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/books.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:reading_progress"
     },
     {
       "type": "writes_table",

@@ -25,6 +25,10 @@ export function ComprehensionTest() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [slideDirection, setSlideDirection] = useState('in'); // 'in' or 'out'
+  // The latest answers and time for the automatic submit at zero, which runs from an
+  // interval created on an earlier render (docs/DEBUG_LOG.md, C13.5).
+  const latest = useRef({ answers, timeLeft });
+  latest.current = { answers, timeLeft };
   
   // Fetch session data and questions
   useEffect(() => {
@@ -83,17 +87,18 @@ export function ComprehensionTest() {
     setIsSubmitting(true);
     
     try {
+      const { answers: current, timeLeft: left } = latest.current;
       const data = await fetchApi(`/sessions/${sessionId}/submit-answers`, {
         method: 'POST',
-        body: JSON.stringify({ 
-          answers: answers,
-          time_taken_seconds: 300 - timeLeft
+        body: JSON.stringify({
+          answers: current,
+          time_taken_seconds: 300 - (autoSubmit ? 0 : left)
         })
       });
       // Use standard navigate to pass state, bypassing transition delay if needed, 
       // or we can use transition but we don't have it setup to pass state easily.
       // Wait, let's just use standard navigate since we want to pass state.
-      navigate(`/results/${sessionId}`, { state: { resultsData: data, userAnswers: answers } });
+      navigate(`/results/${sessionId}`, { state: { resultsData: data, userAnswers: current } });
     } catch (err) {
       alert('Failed to submit answers: ' + err.message);
       setIsSubmitting(false);

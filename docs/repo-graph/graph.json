@@ -1026,6 +1026,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/test.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/eslint.config.js",
       "type": "file",
       "role": "config",
@@ -4024,6 +4030,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/shell.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/test.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {

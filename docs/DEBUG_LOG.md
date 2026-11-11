@@ -1963,3 +1963,49 @@ the reader's first measurement free of transforms that change sizes.
 
 ### Commit
 feat(ui): polish the reading page with lamp notes and a gentle entrance
+
+## 2026-11-11 C13.5 — the automatic submit at zero sends empty answers
+
+**Status:** fixed
+
+### Symptom
+Found while planning the C13.5 test page (ESLint's `react-hooks/immutability`
+error on `ComprehensionTest.jsx:71`, "`handleSubmitAnswers` accessed before
+it is declared", pointed at it). When the 5-minute timer reaches zero the
+page submits by itself, but it sent the answers and time from the render
+that started the timer: every answer empty and `time_taken_seconds` 0. A
+reader who runs out of time loses everything they wrote. The Submit button
+was not affected (it calls the current render's function).
+
+### Reproduce
+Playwright with `page.clock.install()` on `/test/s9` (two questions, API
+mocked): type an answer, `page.clock.runFor(301_000)`; the submit body was
+`{"answers":["",""],"time_taken_seconds":0}`. Kept as
+`e2e/test.spec.js` "when time runs out, the answers typed so far are
+submitted": 1 failed (expected the typed answer and 300).
+
+### Upstream and downstream (repo graph)
+`pages/ComprehensionTest.jsx` calls `GET /sessions/{id}`,
+`POST /sessions/{id}/evaluate-single` and `POST /sessions/{id}/submit-answers`,
+then routes to `/results/{id}` with the answers in router state, which
+`pages/Results.jsx` shows.
+
+### Hypotheses
+1. The timer effect depends on `[loading, isSubmitting]` only, so its
+   interval keeps the `handleSubmitAnswers` closure of the render it was
+   created in, with that render's `answers` and `timeLeft`. Result:
+   **confirmed** (the body held the first render's empty answers).
+
+### Root cause
+A stale closure: the interval was never rebuilt as answers changed.
+
+### Fix
+`ComprehensionTest.jsx`: a ref holds the latest answers and time; the
+submit reads it, and the automatic submit counts the full 300 seconds.
+The router state carries the same answers. One attempt.
+
+### Regression test
+The test above: failed before, passes after.
+
+### Commit
+fix(test): submit the typed answers when the timer runs out

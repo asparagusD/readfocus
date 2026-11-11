@@ -6,4 +6,5 @@ export { DuskWindow } from './DuskWindow';
 export { EmptyShelf } from './EmptyShelf';
 export { OpenBook } from './OpenBook';
 export { CrescentMoon } from './CrescentMoon';
+export { Candle } from './Candle';
 export { PARTS } from './parts';

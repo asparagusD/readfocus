@@ -18,6 +18,7 @@ original file says "original".
 | `frontend/src/illustrations/svg/EmptyShelf.svg` | Empty bookcase | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
 | `frontend/src/illustrations/svg/OpenBook.svg` | Open book with ribbon bookmark | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
 | `frontend/src/illustrations/svg/CrescentMoon.svg` | Crescent moon with three stars | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
+| `frontend/src/illustrations/svg/Candle.svg` | Candle in a holder, flame and glow (the dashboard's streak) | original, drawn to the same style | ReadFocus | original | 2026-11-11, C13.7a | svgo 4.1.0 |
 
 ## Book covers (per book, not in the repo)
 

@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 393,
-    "inventoried": 330,
-    "excluded": 63
+    "tracked": 395,
+    "inventoried": 331,
+    "excluded": 64
   },
   "files": [
     {
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9817,
+      "size_bytes": 9834,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -961,8 +961,8 @@
     {
       "path": "docs/ASSETS.md",
       "language": "markdown",
-      "lines": 40,
-      "size_bytes": 3648,
+      "lines": 41,
+      "size_bytes": 3851,
       "role": "doc",
       "purpose": "Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License)."
     },
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2285,
-      "size_bytes": 467241,
+      "size_bytes": 468455,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1521,10 +1521,10 @@
     {
       "path": "frontend/src/gallery/IllustrationGallery.jsx",
       "language": "jsx",
-      "lines": 82,
-      "size_bytes": 2834,
+      "lines": 83,
+      "size_bytes": 2864,
       "role": "asset",
-      "purpose": "Dev-only /__illustrations page: the illustration set in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
+      "purpose": "Dev-only /__illustrations page: the illustration set (now with the candle) in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
     },
     {
       "path": "frontend/src/gallery/ReaderGallery.css",
@@ -1589,6 +1589,14 @@
       "size_bytes": 216,
       "role": "asset",
       "purpose": "Illustration component: the stack of four books, from svg/BookStack.svg through Illustration."
+    },
+    {
+      "path": "frontend/src/illustrations/Candle.jsx",
+      "language": "jsx",
+      "lines": 7,
+      "size_bytes": 248,
+      "role": "asset",
+      "purpose": "Illustration component: a candle in a holder (parts flame, glow), from svg/Candle.svg through Illustration; the dashboard's streak."
     },
     {
       "path": "frontend/src/illustrations/CrescentMoon.jsx",
@@ -1657,18 +1665,18 @@
     {
       "path": "frontend/src/illustrations/index.js",
       "language": "javascript",
-      "lines": 9,
-      "size_bytes": 373,
+      "lines": 10,
+      "size_bytes": 408,
       "role": "asset",
       "purpose": "Barrel export of the illustration components and PARTS."
     },
     {
       "path": "frontend/src/illustrations/parts.js",
       "language": "javascript",
-      "lines": 15,
-      "size_bytes": 770,
+      "lines": 16,
+      "size_bytes": 860,
       "role": "asset",
-      "purpose": "PARTS: data-part selectors for the animatable parts of the illustrations (glow, cone, bulb, steam, sun, hill, ribbon, stars), for Motion."
+      "purpose": "PARTS: data-part selectors for the animatable parts of the illustrations (glow, cone, bulb, steam, sun, hill, ribbon, stars, flame), for Motion."
     },
     {
       "path": "frontend/src/illustrations/svgo.config.mjs",
@@ -2585,8 +2593,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 332,
-      "size_bytes": 92855,
+      "lines": 333,
+      "size_bytes": 93062,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -2866,6 +2874,10 @@
     },
     {
       "path": "frontend/src/illustrations/svg/BookStack.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/Candle.svg",
       "reason": "binary"
     },
     {

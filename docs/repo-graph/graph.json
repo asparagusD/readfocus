@@ -1410,6 +1410,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/illustrations/Candle.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/illustrations/CrescentMoon.jsx",
       "type": "file",
       "role": "asset",
@@ -4499,6 +4505,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/illustrations/BookStack.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/Candle.jsx",
       "to": "file:frontend/src/illustrations/Illustration.jsx"
     },
     {

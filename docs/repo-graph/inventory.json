@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9695,
+      "size_bytes": 9750,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2284,
-      "size_bytes": 459953,
+      "size_bytes": 462685,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1081,10 +1081,10 @@
     {
       "path": "frontend/e2e/test.spec.js",
       "language": "javascript",
-      "lines": 138,
-      "size_bytes": 7911,
+      "lines": 173,
+      "size_bytes": 9662,
       "role": "config",
-      "purpose": "Playwright e2e for the comprehension test (C13.5) with GET /sessions/{id}, evaluate-single and submit-answers answered in the spec (mockTest, QUESTIONS): when time runs out the typed answers and 300 s are submitted; one question at a time (prompt without options, key 2 and Enter, evaluate-single body, written answer, dots, Back, submit body and route, storage cleared), answers kept across a reload, the timer warning at 30 s, the leave dialog, a failed submit tried again, and 375 px with 44 px targets."
+      "purpose": "Playwright e2e for the comprehension test (C13.5) with GET /sessions/{id}, evaluate-single and submit-answers answered in the spec (mockTest, QUESTIONS): when time runs out the typed answers and 300 s are submitted; one question at a time (prompt without options, key 2 and Enter, evaluate-single body, written answer, dots, Back, submit body and route, storage cleared), answers kept across a reload, the timer warning at 30 s, the leave dialog, a failed submit tried again, and 375 px with 44 px targets; with and without reduced motion, the question slide and the option settle."
     },
     {
       "path": "frontend/eslint.config.js",
@@ -1225,10 +1225,10 @@
     {
       "path": "frontend/src/components/test/OptionCards.css",
       "language": "css",
-      "lines": 77,
-      "size_bytes": 1708,
+      "lines": 87,
+      "size_bytes": 2008,
       "role": "component",
-      "purpose": "Option card styles: 60 px cards with a field border and radius 12, a lettered badge, Lora answer text; checked: accent border, accent-soft wash, letter filled with --accent and --accent-ink; the focus ring on the card."
+      "purpose": "Option card styles: 60 px cards with a field border and radius 12, a lettered badge, Lora answer text; checked: accent border, accent-soft wash, letter filled with --accent and --accent-ink; the focus ring on the card; a chosen card settles from 0.985 to 1 over --dur-3."
     },
     {
       "path": "frontend/src/components/test/OptionCards.jsx",
@@ -1769,10 +1769,10 @@
     {
       "path": "frontend/src/pages/ComprehensionTest.jsx",
       "language": "jsx",
-      "lines": 273,
-      "size_bytes": 11187,
+      "lines": 298,
+      "size_bytes": 12303,
       "role": "page",
-      "purpose": "Comprehension test (handoff screen 07): GET /sessions/{id}, one question per screen (the prompt without its appended options), multiple choice as OptionCards sent as '(b) <option>', written answers in a TextArea, progress dots with answered names, keys 1-n and Enter, answers kept in localStorage until submitted, evaluate-single when leaving a changed answer, the 5-minute TimerPill warning in the last 30 s and submitting itself at zero with the latest answers, submit-answers then /results with router state, a grading veil, toasts on failure, and a Leave test dialog."
+      "purpose": "Comprehension test (handoff screen 07): GET /sessions/{id}, one question per screen (the prompt without its appended options), multiple choice as OptionCards sent as '(b) <option>', written answers in a TextArea, progress dots with answered names, keys 1-n and Enter, answers kept in localStorage until submitted, evaluate-single when leaving a changed answer, the 5-minute TimerPill warning in the last 30 s and submitting itself at zero with the latest answers, submit-answers then /results with router state, a grading veil, toasts on failure, and a Leave test dialog. Motion (moment 4): each new question slides in 32 px from the side it comes from (--dur-4) after the last slips away; the first question does not move; fades only under reduced motion; the new question takes focus as it mounts."
     },
     {
       "path": "frontend/src/pages/Dashboard.css",
@@ -2554,7 +2554,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 328,
-      "size_bytes": 90485,
+      "size_bytes": 90840,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

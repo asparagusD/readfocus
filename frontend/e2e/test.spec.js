@@ -136,3 +136,38 @@ test.describe('at 375 px', () => {
     if (shots) await page.screenshot({ path: `${shots}/test-375.png`, fullPage: true });
   });
 });
+
+for (const reduced of [false, true]) {
+  test.describe(reduced ? 'test motion, reduced' : 'test motion', () => {
+    test.use({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+
+    test(`the next question ${reduced ? 'fades in without moving' : 'slides in'}, and a choice ${reduced ? 'does not' : 'settles'}`, async ({ page }) => {
+      await mockTest(page);
+      await page.goto('/test/t1');
+      await expect(page.getByRole('radio')).toHaveCount(2);
+      // The first question does not move on load.
+      expect(await page.locator('.rf-test__question').evaluate((el) => getComputedStyle(el).transform)).toBe('none');
+      await page.getByRole('radio', { name: 'In money paid' }).check();
+      const settle = await page.locator('.rf-option[data-checked]').evaluate((el) => {
+        const s = getComputedStyle(el);
+        return [s.animationName, s.animationDuration];
+      });
+      expect(settle).toEqual(['rf-option-settle', reduced ? '1e-05s' : '0.25s']);
+      await page.evaluate(() => {
+        window.__q = [];
+        const sample = () => {
+          const el = document.querySelector('.rf-test__question');
+          if (el) window.__q.push(getComputedStyle(el).transform);
+          if (window.__q.length < 50) requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      });
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(page.getByText('Question 2 of 2 · Written answer')).toBeVisible();
+      await page.waitForFunction(() => window.__q.length >= 50);
+      const moved = (await page.evaluate(() => window.__q)).filter((t) => t !== 'none');
+      if (reduced) expect(moved).toEqual([]);
+      else expect(moved.length).toBeGreaterThan(0);
+    });
+  });
+}

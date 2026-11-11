@@ -75,3 +75,13 @@
   background-color: var(--accent);
   color: var(--accent-ink);
 }
+
+/* Moment 4: a chosen card settles from 0.985 to full size (--dur-3); near-instant under reduced motion. */
+.rf-option[data-checked] {
+  animation: rf-option-settle var(--dur-3) var(--ease-settle);
+}
+
+@keyframes rf-option-settle {
+  from { transform: scale(0.985); }
+  to { transform: scale(1); }
+}

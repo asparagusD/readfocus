@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { AnimatePresence, m, useReducedMotion } from 'motion/react';
+import { easing, fadeIn, seconds } from '../motion/presets';
 import { fetchApi } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -12,6 +14,13 @@ import { useDocumentTitle } from '../lib/useDocumentTitle';
 import './ComprehensionTest.css';
 
 const TEST_SECONDS = 300;
+
+/** Moment 4: a question slides in 32 px from the side it comes from and the last one slips away. */
+const questionSlide = {
+  hidden: (dir) => ({ opacity: 0, x: 32 * dir }),
+  visible: { opacity: 1, x: 0, get transition() { return { duration: seconds('--dur-4'), ease: easing('--ease-arrive') }; } },
+  exit: (dir) => ({ opacity: 0, x: -16 * dir, transition: { duration: seconds('--dur-1'), ease: easing('--ease-settle') } }),
+};
 const storageKey = (sessionId) => `rf-test-answers:${sessionId}`;
 
 function readSaved(sessionId, count) {
@@ -69,6 +78,8 @@ export function ComprehensionTest() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [direction, setDirection] = useState(1);
+  const reduced = useReducedMotion();
   const promptRef = useRef(null);
   const moved = useRef(false);
   // The latest answers and time for the automatic submit at zero (docs/DEBUG_LOG.md, C13.5).
@@ -146,13 +157,16 @@ export function ComprehensionTest() {
       setEvaluated((list) => list.map((a, i) => (i === index ? answer : a)));
     }
     moved.current = true;
+    setDirection(next > index ? 1 : -1);
     setIndex(next);
   };
 
-  // After moving between questions, focus the new question so it is read out and the keys apply to it.
-  useEffect(() => {
-    if (moved.current) promptRef.current?.focus();
-  }, [index]);
+  // After moving between questions, the new question takes focus as it mounts, so it is read out
+  // and the keys apply to it (it mounts after the old one has slipped away).
+  const focusPrompt = useCallback((el) => {
+    promptRef.current = el;
+    if (el && moved.current) el.focus();
+  }, []);
 
   // 1-4 choose an option and Enter moves on, except while typing, in a dialog, or on a control of its own.
   const question = questions[index];
@@ -215,9 +229,19 @@ export function ComprehensionTest() {
       </header>
 
       <main className="rf-test__main">
-        <section className="rf-test__question" aria-labelledby="rf-test-prompt">
+        <AnimatePresence mode="wait" initial={false} custom={direction}>
+        <m.section
+          key={index}
+          className="rf-test__question"
+          aria-labelledby="rf-test-prompt"
+          custom={direction}
+          variants={reduced ? fadeIn : questionSlide}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
           <p className="eyebrow">Question {index + 1} of {questions.length} · {mcq ? 'Multiple choice' : 'Written answer'}</p>
-          <h1 id="rf-test-prompt" className="rf-test__prompt" tabIndex={-1} ref={promptRef}>{promptOf(question)}</h1>
+          <h1 id="rf-test-prompt" className="rf-test__prompt" tabIndex={-1} ref={focusPrompt}>{promptOf(question)}</h1>
           {mcq ? (
             <>
               <OptionCards
@@ -252,7 +276,8 @@ export function ComprehensionTest() {
               </Button>
             )}
           </div>
-        </section>
+        </m.section>
+        </AnimatePresence>
       </main>
 
       {isSubmitting && (

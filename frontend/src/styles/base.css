@@ -122,3 +122,18 @@ a:hover {
   font-weight: 500;
   font-variant-numeric: lining-nums tabular-nums;
 }
+
+/* A11 and D3: under reduced motion CSS animations and transitions become
+   near-instant and loops stop. In the base layer, so these !important
+   declarations beat the pages' unlayered ones. Motion's own animations
+   follow MotionRoot (reducedMotion="user"). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

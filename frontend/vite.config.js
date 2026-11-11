@@ -45,6 +45,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Motion stays out of vendor so its animation features can load
+          // as their own chunk after first paint (MotionRoot).
+          if (/[\\/]node_modules[\\/](motion|framer-motion|motion-dom|motion-utils)[\\/]/.test(id)) {
+            return undefined;
+          }
           if (id.includes('node_modules')) {
             return 'vendor';
           }

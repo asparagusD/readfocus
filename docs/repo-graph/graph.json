@@ -1025,6 +1025,30 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/motion/MotionRoot.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/motion/features.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/motion/presets.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/motion/useCountUp.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/pages/ComprehensionTest.css",
       "type": "file",
       "role": "page",
@@ -3013,6 +3037,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/motion/MotionRoot.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/pages/ComprehensionTest.jsx"
     },
     {
@@ -3104,6 +3138,11 @@
       "type": "imports",
       "from": "file:frontend/src/main.jsx",
       "to": "file:frontend/src/index.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/motion/useCountUp.js",
+      "to": "file:frontend/src/motion/presets.js"
     },
     {
       "type": "imports",

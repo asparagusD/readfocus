@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 259,
-    "inventoried": 203,
+    "tracked": 263,
+    "inventoried": 207,
     "excluded": 56
   },
   "files": [
@@ -890,7 +890,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1719,
-      "size_bytes": 303840,
+      "size_bytes": 306165,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -937,10 +937,10 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 37,
-      "size_bytes": 1003,
+      "lines": 38,
+      "size_bytes": 1029,
       "role": "config",
-      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans bundled through @fontsource-variable."
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -953,10 +953,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 42,
-      "size_bytes": 1480,
+      "lines": 77,
+      "size_bytes": 2747,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; MotionRoot around the router and AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put)."
     },
     {
       "path": "frontend/src/components/CalibrationFlow.jsx",
@@ -1082,7 +1082,7 @@
       "path": "frontend/src/index.css",
       "language": "css",
       "lines": 43,
-      "size_bytes": 1102,
+      "size_bytes": 1119,
       "role": "asset",
       "purpose": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; the reset (base layer) and the .page fade."
     },
@@ -1109,6 +1109,38 @@
       "size_bytes": 229,
       "role": "entry",
       "purpose": "React entry: renders App in StrictMode and loads index.css."
+    },
+    {
+      "path": "frontend/src/motion/MotionRoot.jsx",
+      "language": "jsx",
+      "lines": 22,
+      "size_bytes": 888,
+      "role": "asset",
+      "purpose": "MotionConfig reducedMotion=\"user\" and strict LazyMotion around the app; domAnimation is loaded from motion/features.js after first paint."
+    },
+    {
+      "path": "frontend/src/motion/features.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 132,
+      "role": "asset",
+      "purpose": "Re-exports Motion's domAnimation feature bundle as the default export, so MotionRoot can import it lazily into its own chunk."
+    },
+    {
+      "path": "frontend/src/motion/presets.js",
+      "language": "javascript",
+      "lines": 103,
+      "size_bytes": 3799,
+      "role": "asset",
+      "purpose": "Motion variants that read --dur-* and --ease-* from the CSS tokens when an animation starts: fadeIn, rise, routeTransition, routeFade, stagger(), shelfArrive, pageTurn, chipPop, drawIn; seconds(), easing() and prefersReducedMotion() helpers."
+    },
+    {
+      "path": "frontend/src/motion/useCountUp.js",
+      "language": "javascript",
+      "lines": 35,
+      "size_bytes": 1208,
+      "role": "asset",
+      "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
     },
     {
       "path": "frontend/src/pages/ComprehensionTest.css",
@@ -1209,8 +1241,8 @@
     {
       "path": "frontend/src/styles/base.css",
       "language": "css",
-      "lines": 124,
-      "size_bytes": 2653,
+      "lines": 139,
+      "size_bytes": 3168,
       "role": "asset",
       "purpose": "Editorial base styles in the base layer: body DM Sans 400, Playfair 500 headings, accent-text links, one focus ring, selection colour, .flow heading rhythm, .reading (Lora 18/31, 65ch, justified with hyphens), .drop-cap, .eyebrow, .running-head and .figure."
     },
@@ -1241,10 +1273,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 55,
-      "size_bytes": 1536,
+      "lines": 60,
+      "size_bytes": 1819,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a single vendor chunk."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand."
     },
     {
       "path": "package.json",
@@ -1569,8 +1601,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 205,
-      "size_bytes": 46542,
+      "lines": 209,
+      "size_bytes": 47577,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

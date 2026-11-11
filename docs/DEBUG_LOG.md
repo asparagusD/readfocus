@@ -56,6 +56,65 @@ after: <yes/no, output>.
 
 ## Entries
 
+## 2026-11-11 CD.2 — repo-graph tooling tests fail after the design handoff commit
+
+**Status:** fixed
+
+### Symptom
+After CD.2 (`1ba222c`, merged as `fbcc66f` and pushed), the tooling check
+and `make graph` fail. Expected: 62 passed, as recorded for CD.2.
+
+    pytest tools/repo_graph/tests -q
+    4 failed, 58 passed
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_covers_routers_and_pages
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents
+    FAILED tools/repo_graph/tests/test_inventory.py::test_repo_inventory_is_complete_and_deterministic
+    >           raise InventoryError(
+    E           tools.repo_graph.inventory.InventoryError: purposes.json is out of date.
+    tools\repo_graph\inventory.py:151: InventoryError
+
+    make graph
+    purposes.json is out of date.
+      No purpose (read the file, then add one): ['design/HANDOFF_SUMMARY.md',
+      'design/handoff/foundations-style-guide/Main.dc.html',
+      'design/handoff/foundations-style-guide/README.md',
+      'design/handoff/foundations-style-guide/support.js',
+      'design/handoff/foundations-style-guide/vendor/react-dom.js',
+      'design/handoff/foundations-style-guide/vendor/react.js']
+    make: *** [Makefile:17: graph] Error 1
+
+### Repro
+
+    pytest tools/repo_graph/tests/test_inventory.py::test_repo_inventory_is_complete_and_deterministic -q
+
+### Hypotheses
+1. The inventory reads tracked files only (`tracked_files(root)`), and the
+   six CD.2 text files have no entry in `purposes.json`. In CD.2 the checks
+   ran before `git add`, so the files were untracked and invisible to the
+   inventory. Evidence: the error lists exactly those six files; the PNG
+   (binary) is not listed. Result: confirmed (see Fix).
+2. CD.3's new files broke it. Ruled out: the CD.3 PNGs are untracked and
+   binary, and the list names only CD.2 files.
+
+### Root cause
+`tools/repo_graph/purposes.json` must hold a hand-written purpose for
+every tracked text file. CD.2 added six without purposes, and its checks
+ran while the files were still untracked, so the gap only showed after the
+commit.
+
+### Fix
+Added a purpose for each of the six files to `purposes.json`, read from
+the files themselves, and regenerated the graph with `make graph`.
+
+### Regression test
+`test_inventory.py::test_repo_inventory_is_complete_and_deterministic`
+already covers this: it failed before the fix (4 failed, 58 passed) and
+passes after (62 passed). Lesson for the checklist: run the tooling check
+after staging new files, not before.
+
+### Commit
+`fix(tooling): add repo-graph purposes for the design handoff files`
+
 ## 2026-11-10 C7.4 — finish-reading returns 500 once: "Server disconnected" from Supabase
 
 **Status:** fixed after C8.G, see "2026-11-11 C8 follow-up — issue 29" below

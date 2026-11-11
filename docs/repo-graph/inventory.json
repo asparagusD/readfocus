@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 202,
-    "inventoried": 190,
+    "tracked": 203,
+    "inventoried": 191,
     "excluded": 12
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7994,
+      "size_bytes": 8010,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -305,18 +305,18 @@
     {
       "path": "backend/dependencies.py",
       "language": "python",
-      "lines": 20,
-      "size_bytes": 752,
+      "lines": 45,
+      "size_bytes": 1620,
       "role": "lib",
-      "purpose": "get_current_user FastAPI dependency: resolves a Supabase JWT to a user id through supabase.auth.get_user; anything else is a 401."
+      "purpose": "FastAPI dependencies: get_current_user resolves a Supabase JWT to a user id through supabase.auth.get_user (anything else is a 401); require_model waits up to EMBED_WAIT_SECONDS for the embedding model, starting a load if none is running, and answers 503 with Retry-After before the endpoint runs."
     },
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 62,
-      "size_bytes": 1753,
+      "lines": 69,
+      "size_bytes": 2126,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the six routers and /health; its lifespan starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
+      "purpose": "FastAPI app: CORS, the six routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -345,10 +345,10 @@
     {
       "path": "backend/nlp/embedder.py",
       "language": "python",
-      "lines": 74,
-      "size_bytes": 2600,
+      "lines": 124,
+      "size_bytes": 4161,
       "role": "lib",
-      "purpose": "Local embeddings: one lazily loaded, thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE); embed and embed_one return unit-length float32 vectors."
+      "purpose": "Local embeddings: one thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE), preloaded and warmed on a daemon thread at startup unless EMBED_PRELOAD=0, or loaded on first use; a ready event that requests wait on and /health reports, and the load error if any; embed and embed_one return unit-length float32 vectors."
     },
     {
       "path": "backend/nlp/text.py",
@@ -410,9 +410,9 @@
       "path": "backend/routers/sessions.py",
       "language": "python",
       "lines": 264,
-      "size_bytes": 12734,
+      "size_bytes": 12827,
       "role": "router",
-      "purpose": "Session lifecycle endpoints, through backend/agents/workflow.py: start (the start_session flow plans; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -489,10 +489,10 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 83,
-      "size_bytes": 2370,
+      "lines": 94,
+      "size_bytes": 2688,
       "role": "test",
-      "purpose": "Offline test setup: dummy environment (with the ingestion sweep off), a fake Supabase client, and a guard that blocks non-loopback connections."
+      "purpose": "Offline test setup: dummy environment (ingestion sweep and model preload off), a fake Supabase client, a guard that blocks non-loopback connections, and an autouse fixture that marks the embedding model ready."
     },
     {
       "path": "backend/tests/fixtures/answers.json",
@@ -593,10 +593,10 @@
     {
       "path": "backend/tests/test_embedder.py",
       "language": "python",
-      "lines": 126,
-      "size_bytes": 4186,
+      "lines": 178,
+      "size_bytes": 6075,
       "role": "test",
-      "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; similar sentences beat unrelated ones on the real model when it is cached."
+      "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
       "path": "backend/tests/test_feedback.py",
@@ -633,10 +633,10 @@
     {
       "path": "backend/tests/test_health.py",
       "language": "python",
-      "lines": 19,
-      "size_bytes": 410,
+      "lines": 30,
+      "size_bytes": 894,
       "role": "test",
-      "purpose": "Pytest: /health returns 200 with status ok and a timestamp."
+      "purpose": "Pytest: /health returns 200 with exactly status, model_ready and timestamp, and answers at once while the model is still loading."
     },
     {
       "path": "backend/tests/test_ingest_embeddings.py",
@@ -677,6 +677,14 @@
       "size_bytes": 12783,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index."
+    },
+    {
+      "path": "backend/tests/test_model_ready.py",
+      "language": "python",
+      "lines": 50,
+      "size_bytes": 2014,
+      "role": "test",
+      "purpose": "Pytest: submit-answers and evaluate-single answer 503 with a clear message and Retry-After while the model loads, before touching the session; require_model returns at once when the model is ready and starts a load when none runs."
     },
     {
       "path": "backend/tests/test_no_paid_ai.py",
@@ -793,8 +801,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 568,
-      "size_bytes": 29719,
+      "lines": 617,
+      "size_bytes": 33061,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -817,8 +825,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1553,
-      "size_bytes": 267093,
+      "lines": 1554,
+      "size_bytes": 268864,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1465,8 +1473,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 192,
-      "size_bytes": 41577,
+      "lines": 193,
+      "size_bytes": 42726,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

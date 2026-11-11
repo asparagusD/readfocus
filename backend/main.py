@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from backend.routers import auth, books, sessions, agent, dashboard, mastery
+from backend.nlp import embedder
 from backend.services import ingestion_worker
 
 load_dotenv()
@@ -15,6 +16,10 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Load the embedding model on a background thread: /health answers at once
+    # and reports model_ready; grading endpoints wait for it (require_model).
+    if embedder.preload_enabled():
+        embedder.preload()
     # Resume ingestion jobs a stopped server left behind (processing_jobs).
     sweep = asyncio.create_task(ingestion_worker.sweep_forever()) if ingestion_worker.sweep_enabled() else None
     yield
@@ -56,7 +61,9 @@ app.include_router(mastery.router, prefix="/mastery", tags=["Mastery"])
 
 @app.get("/health")
 def health_check():
+    # Never waits on the model: it only reads whether the load has finished.
     return {
         "status": "ok",
+        "model_ready": embedder.is_ready(),
         "timestamp": datetime.utcnow().isoformat()
     }

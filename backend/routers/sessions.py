@@ -14,7 +14,7 @@ from backend.agents.workflow import (
     run_submit,
     save_decisions,
 )
-from backend.dependencies import get_current_user
+from backend.dependencies import get_current_user, require_model
 from backend.services.supabase_client import supabase
 
 router = APIRouter()
@@ -147,7 +147,7 @@ async def finish_reading(
         "questions": [public_question(q) for q in test_questions]
     }
 
-@router.post("/{session_id}/evaluate-single")
+@router.post("/{session_id}/evaluate-single", dependencies=[Depends(require_model)])
 async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: str = Depends(get_current_user)):
     """Grade one answer now and cache it with the session, so submit has less to do.
 
@@ -169,7 +169,7 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
     supabase.table("sessions").update({"test_questions": test_questions}).eq("id", session_id).eq("user_id", user_id).execute()
     return {"status": "graded"}
 
-@router.post("/{session_id}/submit-answers")
+@router.post("/{session_id}/submit-answers", dependencies=[Depends(require_model)])
 async def submit_answers(
     session_id: str, req: SubmitAnswersRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)
 ):

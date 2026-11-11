@@ -66,6 +66,7 @@ One row per model or heavy dependency (the memory rule in the
 | 2026-11-10 | C4.4 | `yake` 0.7.3 (brings `networkx`, `jellyfish`, `segtok`, `regex`, `tabulate`, `click`), imported | 16.7 MB (Windows) | 47.9 MB; 48.6 MB after one 600-word extraction | 31 MB, of which `numpy` is already paid for by the embedder | Unchanged: nothing the app imports at startup uses `backend/nlp/concepts.py` yet. A process with `backend.nlp.concepts` and `book_ingestor` imported is 137 MB, and 279 MB after the first extraction with embeddings (model loaded) |
 | 2026-11-10 | C4.4 | `rapidfuzz` 3.14.6, imported | 16.9 MB (Windows) | 19.0 MB | 2 MB | as above |
 | 2026-11-11 | C8.8 | **Removed**: `langchain`, `langchain-community`, `langchain-groq`, `groq`, `langchain-google-genai`, `tenacity` from `requirements.txt` (`langgraph` 1.2.20 and its `langchain-core` 1.7.6 kept) | 132.4 MB with `backend.main` and the LangGraph workflow imported; 327.0 MB with the embedding model loaded and 8 chunks embedded (Windows, median of 3) | 132.0 MB; 327.0 MB (same stages, the removed packages made unimportable) | 0 MB at run time: no app code had imported them since C8.4b | 134.0 MB idle, 2 processes, before and after (`scripts/dev/measure_rss.py`, 3 runs each) |
+| 2026-11-11 | C9.3 | No new dependency: the embedding model (C4.1) is now **loaded at startup** on a background thread (`EMBED_PRELOAD`, default on), not on first use | Windows: 136 MB idle (3 runs) | Windows: 266 to 267 MB idle, ready 2.6 to 3.7 s after process start (3 runs). Container at 0.1 CPU and 512 MB: 110 to 126 MB idle before, 272 to 275 MB after, ready 29.2 to 29.9 s after start (download included) | about +130 MB (Windows), about +150 MB (container) | The idle server now holds the model: 267 MB Windows, 275 MB in the container, against 512 MB on Render Free. Peak during ingestion in the container 328 to 335 MB (316 to 350 MB in C9.2) |
 
 Gate G3 (C8.G), 2026-11-11: after one full journey on the dev project
 (upload, start, finish-reading, submit, results, dashboard) with no AI
@@ -166,6 +167,54 @@ What this says for C9, read from these numbers only:
 
 Not measured: Render itself; the long book in the container; requests
 from a reader during ingestion; a restart mid-ingestion (C9.1b and C9.5).
+
+### C9.3: embedding model preloaded at startup (2026-11-11)
+
+The lifespan starts a daemon thread that loads the model and embeds one
+text; `/health` returns `model_ready` and never waits for it;
+`submit-answers` and `evaluate-single` wait up to `EMBED_WAIT_SECONDS`
+(20) and answer 503 if the model is still not loaded. "Before" is
+`c65ba2b` (C9.2): lazy load on first use. Startup times come from a
+one-off scratchpad script that starts the server, polls `/health` every
+0.25 s and reads memory 3 s after `model_ready` (psutil RSS on Windows,
+`docker stats` in the container); 3 runs each.
+
+| Measure | Before | After |
+|---|---|---|
+| Windows: process start -> `/health` | 2.60 to 2.70 s | 2.59 to 3.71 s |
+| Windows: first `/health` response time | 23 to 35 ms | 22 to 28 ms, one run 1,045 ms |
+| Windows: process start -> model ready | on first use | 2.60 to 3.72 s |
+| Windows: idle RSS | 136 MB | 266 to 267 MB |
+| Container: process start -> `/health` | 12.84 to 14.80 s | 13.08 to 13.24 s |
+| Container: first `/health` response time | 32 to 105 ms | 281 to 470 ms |
+| Container: process start -> model ready | on first use | 29.20 to 29.87 s |
+| Container: idle memory | 110 to 126 MB | 272 to 275 MB |
+
+Cold ingestion of `sample.pdf` in the container (`bench.py --ingest
+--cold`, same command as C9.0 with image `readfocus-c9-3`; the bench
+uploads as soon as `/health` answers, so the model load overlaps the first
+batch):
+
+| Step | C9.2 p50 (p95) | C9.3 p50 (p95) |
+|---|---|---|
+| `upload -> ready` | 56.55 s (58.26 s) | 50.38 s (63.69 s) |
+| `upload -> chunk 0 questions` | 53.70 s (57.97 s) | 50.38 s (59.52 s) |
+| `upload -> done` | 63.74 s (64.98 s) | 55.04 s (68.95 s) |
+
+How to read it: the medians are 3 to 9 s lower, but the spreads overlap
+with three runs each, so this is not a clear speed-up for ingestion. What
+the preload does change is where the model load is paid: before, the
+first request that graded or ingested after a cold start loaded it (about
+0.7 s on Windows, 12 s download and about 5 s load at 0.1 CPU); now it is
+paid from boot, and a request that arrives after `model_ready` does not
+pay it. A request that arrives earlier waits up to 20 s, then gets a 503.
+Not measured: the first grade after a cold start (a session needs a
+ready book first, which already loads the model in both versions). The
+cost is memory: the idle server is about 130 to 150 MB larger. On 0.1 CPU
+the load also slows the first `/health` answers to 0.3 to 0.5 s.
+A first attempt at the C9.3 ingestion runs stopped after one run without
+a table; the cause was hidden by an output filter (most likely the
+previous container's name still in use) and the runs were repeated.
 
 ### C9.2: ready after the first batch's questions (2026-11-11)
 

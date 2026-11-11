@@ -27,6 +27,7 @@ DUMMY_ENV = {
     "SUPABASE_ANON_KEY": "offline-anon-key",
     "ENV": "test",
     "INGEST_SWEEP": "0",  # no ingestion sweep on the fake database at startup
+    "EMBED_PRELOAD": "0",  # no real model load at startup
 }
 os.environ.update(DUMMY_ENV)
 
@@ -81,3 +82,13 @@ def fake_supabase():
     FAKE_SUPABASE.reset_mock(return_value=True)
     FAKE_SUPABASE.auth.get_user.side_effect = _reject_token
     return FAKE_SUPABASE
+
+
+@pytest.fixture(autouse=True)
+def model_ready():
+    """Tests run as if the embedding model had loaded; tests of loading replace the event."""
+    from backend.nlp import embedder
+
+    if hasattr(embedder, "_ready"):
+        embedder._ready.set()
+    yield

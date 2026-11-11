@@ -121,7 +121,15 @@
       "handler": "submit_answers"
     },
     {
+      "id": "env:EMBED_PRELOAD",
+      "type": "env"
+    },
+    {
       "id": "env:EMBED_THREADS",
+      "type": "env"
+    },
+    {
+      "id": "env:EMBED_WAIT_SECONDS",
       "type": "env"
     },
     {
@@ -688,6 +696,12 @@
     },
     {
       "id": "file:backend/tests/test_migrations.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_model_ready.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2167,7 +2181,17 @@
     {
       "type": "imports",
       "from": "file:backend/dependencies.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/dependencies.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",
@@ -2373,6 +2397,11 @@
       "type": "imports",
       "from": "file:backend/services/retriever.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/conftest.py",
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",
@@ -2646,6 +2675,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_health.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -2727,6 +2761,21 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_migrations.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_model_ready.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_model_ready.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_model_ready.py",
       "to": "file:backend/nlp/embedder.py"
     },
     {
@@ -3451,6 +3500,11 @@
     },
     {
       "type": "uses_env",
+      "from": "file:backend/dependencies.py",
+      "to": "env:EMBED_WAIT_SECONDS"
+    },
+    {
+      "type": "uses_env",
       "from": "file:backend/main.py",
       "to": "env:FRONTEND_URL"
     },
@@ -3468,6 +3522,11 @@
       "type": "uses_env",
       "from": "file:backend/mcp_server.py",
       "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/nlp/embedder.py",
+      "to": "env:EMBED_PRELOAD"
     },
     {
       "type": "uses_env",

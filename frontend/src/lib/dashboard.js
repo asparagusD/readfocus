@@ -50,6 +50,13 @@ export function testsThisWeek(scores, today) {
   return scores.filter((s) => s.date >= from).length;
 }
 
+/** The book to suggest for tonight: started and unfinished with the most read, else the first not started. */
+export function nextBook(books) {
+  const open = books.filter((b) => b.chunks_completed < b.total_chunks);
+  const started = open.filter((b) => b.sessions_completed > 0).sort((a, b) => b.progress_pct - a.progress_pct);
+  return started[0] ?? open[0] ?? null;
+}
+
 const WEAK_BELOW = 0.5; // backend/agents/policy.py PLANNER_WEAK_BELOW
 
 /** A concept needs revisiting as the planner sees it: tested at least once and under half mastered. */

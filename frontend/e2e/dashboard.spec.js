@@ -134,3 +134,35 @@ test('a failed mastery load says so in its panel and can try again', async ({ pa
   await panel.getByRole('button', { name: 'Try again' }).click();
   await expect(panel).toContainText('No concepts yet for this book.');
 });
+
+test('for tonight: the started book with the most read, and its way in', async ({ page }) => {
+  await mockDashboard(page);
+  await page.goto('/dashboard');
+  const card = page.getByRole('region', { name: 'For tonight' });
+  await expect(card).toContainText('Walden');
+  await expect(card).toContainText('60% read.');
+  await expect(card.getByRole('link', { name: 'Begin reading' })).toHaveAttribute('href', '/read/walden');
+});
+
+for (const reduced of [false, true]) {
+  test(`dashboard motion ${reduced ? 'is off under reduced motion' : 'draws, grows and flickers briefly'}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+    await mockDashboard(page);
+    await page.goto('/dashboard');
+    await expect(page.getByRole('tabpanel', { name: 'Walden' }).getByRole('listitem')).toHaveCount(10);
+    const flame = await page.locator('.rf-dash__candle [data-part="flame"]').evaluate((el) => {
+      const s = getComputedStyle(el);
+      return [s.animationName, s.animationDuration, s.animationIterationCount];
+    });
+    const grow = await page.locator('.rf-mastery-list__bar .rf-mastery__fill').first().evaluate((el) => getComputedStyle(el).animationDuration);
+    const drawn = await page.locator('.rf-trend .recharts-area-curve').getAttribute('stroke-dasharray');
+    if (reduced) {
+      expect(flame).toEqual(['rf-candle-flicker', '1e-05s', '1']);
+      expect(grow).toBe('1e-05s');
+      expect(drawn).toBeNull(); // Recharts draws nothing in
+    } else {
+      expect(flame).toEqual(['rf-candle-flicker', '2.4s', '2']); // 4.8 s in all, then still
+      expect(grow).toBe('0.8s');
+    }
+  });
+}

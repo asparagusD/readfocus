@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useReducedMotion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, Dot, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { fetchApi } from '../lib/api';
@@ -6,9 +7,10 @@ import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { MasteryBar } from '../components/ui/MasteryBar';
-import { BookStack, Candle } from '../illustrations';
+import { BookStack, Candle, ReadingLamp } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
-import { greeting, lastScore, lastScores, streakLine, testsThisWeek } from '../lib/dashboard';
+import { greeting, lastScore, lastScores, nextBook, streakLine, testsThisWeek } from '../lib/dashboard';
+import { seconds } from '../motion/presets';
 import { splitFeedback } from '../lib/results';
 import { MasteryList } from '../components/dashboard/MasteryList';
 import './Dashboard.css';
@@ -27,6 +29,7 @@ function TrendDot({ cx, cy, index, points }) {
  * numbers are in a table for assistive tech.
  */
 function ScoreTrend({ scores }) {
+  const reduced = useReducedMotion();
   const points = lastScores(scores);
   if (points.length === 0) return <p className="rf-dash__muted">Your scores appear here after your first test.</p>;
   return (
@@ -41,7 +44,9 @@ function ScoreTrend({ scores }) {
               type="linear"
               dataKey="score"
               className="rf-trend__line"
-              isAnimationActive={false}
+              isAnimationActive={!reduced}
+              animationDuration={seconds('--dur-6') * 1000}
+              animationEasing="ease-out"
               dot={(props) => <TrendDot key={props.index} {...props} points={points.length} />}
               activeDot={false}
             />
@@ -153,7 +158,7 @@ export function Dashboard() {
           <h1 className="rf-dash__title">{title}</h1>
         </div>
         <p className="rf-dash__streak">
-          <Candle size={40} />
+          <Candle size={40} className="rf-dash__candle" />
           <span>{streakLine(data.reading_streak)}</span>
         </p>
       </header>
@@ -180,6 +185,19 @@ export function Dashboard() {
         </div>
 
         <aside className="rf-dash__side">
+          {nextBook(books) && (
+            <section className="rf-dash__card rf-dash__tonight" aria-labelledby="rf-tonight-title">
+              <ReadingLamp size={96} />
+              <h2 id="rf-tonight-title" className="eyebrow">For tonight</h2>
+              <p className="rf-dash__tonight-title">{nextBook(books).title}</p>
+              <p className="rf-dash__muted">
+                {nextBook(books).sessions_completed > 0
+                  ? `${Math.round(nextBook(books).progress_pct)}% read. Today’s pages are planned when you open it.`
+                  : `By ${nextBook(books).author}. Your first session is ready when you are.`}
+              </p>
+              <Link to={`/read/${nextBook(books).book_id}`} className="rf-btn rf-btn--primary">Begin reading</Link>
+            </section>
+          )}
           {books.length > 0 && (
             <section className="rf-dash__card" aria-labelledby="rf-books-title">
               <h2 id="rf-books-title" className="eyebrow">Your books</h2>

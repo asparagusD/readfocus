@@ -72,7 +72,7 @@ export function MasteryList({ books }) {
                     <p className="rf-mastery-list__label">{item.label}</p>
                     {needsRevisiting(item) && <p className="rf-mastery-list__weak">Needs revisiting</p>}
                   </div>
-                  <MasteryBar value={pct} className="rf-mastery-list__bar" />
+                  <MasteryBar value={pct} grow className="rf-mastery-list__bar" />
                   <p className="rf-mastery-list__pct">{pct}%</p>
                 </li>
               );

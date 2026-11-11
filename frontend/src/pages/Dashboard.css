@@ -245,3 +245,40 @@
     font-size: 32px;
   }
 }
+
+/* For tonight (C13.7c): the reading lamp over the book to continue. */
+.rf-dash__tonight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.rf-dash__tonight .eyebrow {
+  margin: var(--space-2) 0 0;
+}
+
+.rf-dash__tonight-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-dash__tonight .rf-btn {
+  margin-top: var(--space-2);
+  text-decoration: none;
+}
+
+/* Moment 6: the streak candle flickers twice and rests (under 5 s, so no pause control is needed). */
+.rf-dash__candle [data-part="flame"] {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: rf-candle-flicker 2.4s var(--ease-breathe) 2;
+}
+
+@keyframes rf-candle-flicker {
+  0%, 100% { transform: scale(1, 1); }
+  30% { transform: scale(0.94, 1.06); }
+  60% { transform: scale(1.04, 0.97); }
+}

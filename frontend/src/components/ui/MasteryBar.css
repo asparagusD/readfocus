@@ -19,3 +19,12 @@
   background-color: var(--accent);
   transform-origin: left center;
 }
+
+/* Moment 6: grow from zero to the value (--dur-6); near-instant under reduced motion. */
+.rf-mastery--grow .rf-mastery__fill {
+  animation: rf-mastery-grow var(--dur-6) var(--ease-settle);
+}
+
+@keyframes rf-mastery-grow {
+  from { transform: scaleX(0); }
+}

@@ -15,10 +15,14 @@ import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
 import { useToast } from '../components/ui/toastContext';
 import { readSize, stepSize, storeSize } from '../reader/textSize';
+import { createLookupClient, readLookupOn, storeLookupOn } from '../reader/lookup';
+import { useAuth } from '../hooks/useAuth';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, fetched before the last page (C12.4).
 const readAhead = createReadAhead(fetchApi);
+// One lookup client for the app: its LRU of recent answers lasts the visit (C12.8).
+const lookupClient = createLookupClient(fetchApi);
 
 const formatTime = (seconds) => {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -51,6 +55,10 @@ export function ReadingSession() {
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [textSize, setTextSize] = useState(readSize);
+  const { user } = useAuth();
+  // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
+  const [switched, setSwitched] = useState(null); // { userId, on }
+  const hoverLookup = switched && switched.userId === user?.id ? switched.on : readLookupOn(user?.id);
   const [chapter, setChapter] = useState('');
   const [toolbarFocused, setToolbarFocused] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
@@ -97,6 +105,10 @@ export function ReadingSession() {
   }, [bookId, lastChunk]);
   const onPagesChange = useCallback((pages) => setChapter(pages.chapter || ''), []);
   const asideBlocks = useMemo(() => (aside ? blocksForChunks(aside.chunks) : null), [aside]);
+  const onLookupToggle = () => {
+    storeLookupOn(user?.id, !hoverLookup);
+    setSwitched({ userId: user?.id, on: !hoverLookup });
+  };
   const onSize = (direction) => setTextSize((size) => {
     const next = stepSize(size, direction);
     storeSize(next);
@@ -215,6 +227,8 @@ export function ReadingSession() {
           onContents={() => setContentsOpen((open) => !open)}
           contentsOpen={contentsOpen}
           contentsRef={contentsButton}
+          lookupOn={hoverLookup}
+          onLookupToggle={onLookupToggle}
         >
           {aside && (
             <button type="button" className="rf-tool" onClick={() => setAside(null)}>
@@ -248,6 +262,8 @@ export function ReadingSession() {
             initialAnchor={{ block_id: aside.entry.block_id, char_offset: 0 }}
             onPagesChange={onPagesChange}
             statusNote="Beyond today's reading"
+            lookupClient={lookupClient}
+            hoverLookup={hoverLookup}
             label={`${aside.entry.title}: beyond today's reading, it does not count toward today's session`}
           />
         ) : (
@@ -266,6 +282,8 @@ export function ReadingSession() {
             lead={note}
             endPage={closing}
             pacing
+            lookupClient={lookupClient}
+            hoverLookup={hoverLookup}
             label={`Today's reading from ${bookTitle}`}
           />
         )}

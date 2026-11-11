@@ -11,7 +11,8 @@ import './ReaderToolbar.css';
  * by keyboard. Icons only on narrow screens.
  */
 export function ReaderToolbar({
-  bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef, children,
+  bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
+  lookupOn, onLookupToggle, children,
 }) {
   const index = SIZES.indexOf(size);
   return (
@@ -44,6 +45,14 @@ export function ReaderToolbar({
           aria-haspopup="dialog" aria-expanded={contentsOpen} aria-label="Contents">
           <List size={18} strokeWidth={1.75} aria-hidden="true" />
           <span className="rf-tool-label">Contents</span>
+        </button>
+      )}
+      {onLookupToggle && (
+        // Handoff: a "Look up" switch. Off stops hover lookup; a selection with Enter or ? still works.
+        <button type="button" role="switch" aria-checked={lookupOn} className="rf-tool rf-switch"
+          onClick={onLookupToggle} aria-label="Look up words on hover">
+          <span className="rf-tool-label" aria-hidden="true">Look up</span>
+          <span className="rf-switch-track" aria-hidden="true"><span className="rf-switch-knob" /></span>
         </button>
       )}
       <ThemeToggle />

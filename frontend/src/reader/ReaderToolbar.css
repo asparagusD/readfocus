@@ -79,3 +79,27 @@
 
   .rf-toolbar { padding-inline: var(--space-2); }
 }
+
+/* "Look up" switch (C12.8, handoff): hover lookup on or off for this reader on this device. */
+.rf-switch-track {
+  position: relative;
+  display: inline-block;
+  inline-size: 32px;
+  block-size: 18px;
+  border: var(--border-hair) solid var(--line-2);
+  border-radius: var(--radius-pill);
+  background: var(--paper-2);
+  transition: background-color var(--dur-3) var(--ease-settle), border-color var(--dur-3) var(--ease-settle);
+}
+.rf-switch-knob {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-2);
+  transition: transform var(--dur-3) var(--ease-settle), background-color var(--dur-3) var(--ease-settle);
+}
+.rf-switch[aria-checked="true"] .rf-switch-track { border-color: var(--accent); background: var(--accent); }
+.rf-switch[aria-checked="true"] .rf-switch-knob { background: var(--accent-ink); transform: translateX(14px); }

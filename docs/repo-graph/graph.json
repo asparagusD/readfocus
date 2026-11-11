@@ -1396,6 +1396,12 @@
       "language": "css"
     },
     {
+      "id": "file:frontend/src/styles/base.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/styles/fonts.css",
       "type": "file",
       "role": "asset",

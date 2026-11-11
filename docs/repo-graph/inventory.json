@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 321,
-    "inventoried": 258,
+    "tracked": 322,
+    "inventoried": 259,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 186,
-      "size_bytes": 8633,
+      "size_bytes": 8650,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -929,8 +929,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1699,
-      "size_bytes": 74945,
+      "lines": 1761,
+      "size_bytes": 78131,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -953,8 +953,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2097,
-      "size_bytes": 378421,
+      "lines": 2099,
+      "size_bytes": 381287,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1009,10 +1009,10 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 39,
-      "size_bytes": 1082,
+      "lines": 40,
+      "size_bytes": 1135,
       "role": "config",
-      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -1585,10 +1585,18 @@
     {
       "path": "frontend/src/styles/base.css",
       "language": "css",
-      "lines": 147,
-      "size_bytes": 3446,
+      "lines": 152,
+      "size_bytes": 3767,
       "role": "asset",
-      "purpose": "Editorial base styles in the base layer: body DM Sans 400, Playfair 500 headings, accent-text links, one focus ring, selection colour, .flow heading rhythm, .reading (Lora 18/31, 65ch, justified with hyphens), .drop-cap, .eyebrow, .running-head and .figure."
+      "purpose": "Editorial base styles in the base layer: body DM Sans 400, Playfair 500 headings, accent-text links, one focus ring, selection colour, .flow heading rhythm, .reading (Lora 18/31, 65ch, justified with hyphens), .drop-cap, .eyebrow, .running-head and .figure; under reduced motion animations are near-instant and transitions instant (0s)."
+    },
+    {
+      "path": "frontend/src/styles/base.test.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 1074,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): base.css has a reduced-motion block whose transitions are instant (0s duration and delay), not 0.01 ms; regression for the reader paginating with stale values under reduced motion."
     },
     {
       "path": "frontend/src/styles/fonts.css",
@@ -2009,8 +2017,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 260,
-      "size_bytes": 62339,
+      "lines": 261,
+      "size_bytes": 62737,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

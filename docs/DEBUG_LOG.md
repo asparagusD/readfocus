@@ -1697,3 +1697,65 @@ heads and page numbers).
 
 ### Commit
 fix(ingest): stop taking running heads and formulas for chapters
+
+## 2026-11-11 C12.3 — under reduced motion the reader paginates with the old text size
+
+**Status:** fixed
+
+### Symptom
+In headless Edge with `prefers-reduced-motion: reduce`, changing the text
+size on `/__reader` re-paginates with the previous size: the page count
+lags one change behind and the anchored passage is not on screen
+(`anchorVisible: false`). Without reduced motion the same steps keep the
+place. No error. From the scratchpad probe `reader_lag.mjs` (status |
+flow's computed font-size | `--reading-size` on the book):
+
+    node reader_lag.mjs
+    dark reduce ["before pp. 1–2 of 6 | 18px | 18px","sync pp. 1–2 of 6 | 18px | 18px",
+                 "1 frame pp. 1–2 of 6 | 18px | 19.5px","300ms pp. 1–2 of 6 | 19.5px | 19.5px"]
+    dark no-preference ["…","1 frame pp. 1–2 of 7 | 19.5px | 19.5px", …]
+
+### Repro
+    node rm_probe.mjs   (scratchpad): a new div's font-size set from 18px to 24px
+    reduce        {"property":"all","duration":"1e-05s","sync":"18px","frame":"18px","later":"24px"}
+    no-preference {"property":"all","duration":"0s","sync":"24px","frame":"24px","later":"24px"}
+
+### Hypotheses
+1. The global reduced-motion rule (`frontend/src/styles/base.css`, A11,
+   C10.4) sets `transition-duration: 0.01ms !important` on every element.
+   Every element's `transition-property` is `all` by default (inert at
+   0s), so under reduced motion every style change becomes a 0.01 ms
+   transition, and a read in the same frame gets the old value. Ruled out
+   if: the probe div shows a 0s duration under reduce. Result:
+   **confirmed** (1e-05s and `all`; the value lands after the frame).
+2. React applies the size a frame late. Evidence against: `--reading-size`
+   on the book is already 19.5px after one frame in both modes; only the
+   computed font-size differs. Result: ruled out.
+
+### Root cause
+`frontend/src/styles/base.css`, the `prefers-reduced-motion: reduce`
+block: `transition-duration: 0.01ms !important` on `*`. With the default
+`transition-property: all`, every element transitioned every change for
+0.01 ms, so values read in the frame of a change were the old ones. The
+reader measures its columns right after a text-size change, so it
+paginated at the old size. It affected every reduced-motion reader since
+C10.4; nothing earlier measured layout right after a style change.
+
+### Fix
+Transitions under reduced motion are `0s` (with `transition-delay: 0s`),
+which means no transition at all: instant, as A11 intends. Animations
+keep 0.01 ms and one iteration. No code in `src` listens for
+`transitionend` (searched), so nothing waited on the old tiny
+transitions. One attempt.
+
+### Regression test
+`frontend/src/styles/base.test.js` (`npm run test:unit`, Node's test
+runner, agreed at C12 plan time): failed before the fix (7 passed, 1
+failed: "reduced motion makes transitions instant rather than 0.01 ms
+long"), 8 passed after. Repro re-run: `rm_probe.mjs` under reduce now
+`{"duration":"0s","sync":"24px","frame":"24px"}`; `reader_lag.mjs`
+under reduce now shows `pp. 1–2 of 7 | 19.5px` after one frame, the same
+as without reduced motion.
+
+### Commit
+fix(ui): make reduced-motion transitions instant instead of 0.01 ms

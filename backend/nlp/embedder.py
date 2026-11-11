@@ -33,6 +33,7 @@ _lock = threading.Lock()
 # Requests that need the model wait on it; /health reports it.
 _ready = threading.Event()
 _preload_thread = None
+_preload_lock = threading.Lock()  # guards _preload_thread only, never held during a load
 _load_error = None
 
 
@@ -81,10 +82,15 @@ def _warm() -> None:
 
 
 def preload() -> threading.Thread:
-    """Load and warm the model on a daemon thread, once; returns that thread."""
+    """Load and warm the model on a daemon thread; returns that thread.
+
+    Uses its own lock, not the load's: a caller on the event loop must not wait for a load in
+    progress. A thread that ended without a model (a failed load) is replaced by a new attempt.
+    """
     global _preload_thread
-    with _lock:
-        if _preload_thread is None:
+    with _preload_lock:
+        stale = _preload_thread is not None and not _preload_thread.is_alive() and not _ready.is_set()
+        if _preload_thread is None or stale:
             _preload_thread = threading.Thread(target=_warm, name="embedder-preload", daemon=True)
             _preload_thread.start()
     return _preload_thread

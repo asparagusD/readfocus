@@ -176,3 +176,41 @@ def test_preload_is_on_unless_embed_preload_is_0(monkeypatch):
     assert embedder.preload_enabled() is True
     monkeypatch.setenv("EMBED_PRELOAD", "0")
     assert embedder.preload_enabled() is False
+
+
+def test_ensure_loading_does_not_wait_for_a_load_in_progress(fresh, monkeypatch):
+    """Regression (DEBUG_LOG C9.3): a grade during the startup load must not block on the load's lock."""
+    import time
+
+    gate = threading.Event()
+
+    def slow_load():
+        gate.wait(5)
+        return FakeModel()
+
+    monkeypatch.setattr(embedder, "_load", slow_load)
+    embedder.preload()
+    time.sleep(0.05)  # the preload thread now holds the load
+    began = time.perf_counter()
+    embedder.ensure_loading()
+    waited = time.perf_counter() - began
+    gate.set()
+    assert waited < 0.5
+    assert embedder.wait_ready(5)
+
+
+def test_ensure_loading_retries_after_a_failed_preload(fresh, monkeypatch):
+    """Regression (DEBUG_LOG C9.3): a failed preload left the model unloaded until a restart."""
+    attempts = []
+
+    def flaky_load():
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise RuntimeError("download interrupted")
+        return FakeModel()
+
+    monkeypatch.setattr(embedder, "_load", flaky_load)
+    embedder.preload().join(5)
+    assert not embedder.is_ready() and "download interrupted" in embedder.load_error()
+    embedder.ensure_loading()
+    assert embedder.wait_ready(5) and len(attempts) == 2

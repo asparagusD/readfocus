@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 8087,
+      "size_bytes": 8119,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -345,8 +345,8 @@
     {
       "path": "backend/nlp/embedder.py",
       "language": "python",
-      "lines": 124,
-      "size_bytes": 4161,
+      "lines": 130,
+      "size_bytes": 4561,
       "role": "lib",
       "purpose": "Local embeddings: one thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE), preloaded and warmed on a daemon thread at startup unless EMBED_PRELOAD=0, or loaded on first use; a ready event that requests wait on and /health reports, and the load error if any; embed and embed_one return unit-length float32 vectors."
     },
@@ -601,10 +601,10 @@
     {
       "path": "backend/tests/test_embedder.py",
       "language": "python",
-      "lines": 178,
-      "size_bytes": 6075,
+      "lines": 216,
+      "size_bytes": 7314,
       "role": "test",
-      "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
+      "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
       "path": "backend/tests/test_feedback.py",
@@ -817,8 +817,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1139,
-      "size_bytes": 49273,
+      "lines": 1192,
+      "size_bytes": 51741,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -833,8 +833,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1559,
-      "size_bytes": 277576,
+      "lines": 1560,
+      "size_bytes": 278387,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1490,7 +1490,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 195,
-      "size_bytes": 43682,
+      "size_bytes": 43772,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1137,3 +1137,56 @@ Failed before the fix (`1 failed, 9 passed`); passes after (`10 passed`).
 
 ### Commit
 fix(tooling): stamp each bench reading when it arrives
+
+## 2026-11-11 C9.3 — a grade during the model load freezes the server; a failed preload is never retried
+
+**Status:** fixed
+
+### Symptom
+Found in the C9 close review of `backend/nlp/embedder.py` (no failure seen
+in a run yet). `preload()` takes `_lock` to start its thread, and
+`get_model()` holds the same `_lock` for the whole model load (seconds,
+about 5 s plus a 12 s download at 0.1 CPU). `require_model` runs on the
+event loop and calls `ensure_loading()` -> `preload()` whenever the model
+is not ready, so a `submit-answers` or `evaluate-single` that arrives
+during the startup load blocks the event loop until the load finishes:
+`/health` and every other request stall, against the C9.3 goal that
+`/health` never waits for the model. Second defect: if the preload fails,
+`_preload_thread` stays set, `ensure_loading()` never starts another load,
+and every grade waits 20 s and gets a 503 until a restart (before C9.3
+the next grade loaded the model again).
+
+### Repro
+
+    pytest backend/tests/test_embedder.py -q -k "ensure_loading"
+
+(the two regression tests below, written before the fix)
+
+### Hypotheses
+1. Lock sharing: `preload()` and `get_model()` use one lock. Evidence:
+   the code. Ruled out if `ensure_loading()` returns at once while another
+   thread holds the load. Result: see Regression test.
+2. One-shot preload: `_preload_thread` is never cleared after a failure.
+   Evidence: the code. Ruled out if a second `ensure_loading()` after a
+   failed preload starts a new load. Result: confirmed (test 2 below
+   failed before the fix).
+   Hypothesis 1 result: confirmed (test 1 below failed before the fix).
+
+### Root cause
+`backend/nlp/embedder.py` `preload()` guarded `_preload_thread` with
+`_lock`, the lock `get_model()` holds while loading, and never replaced a
+preload thread that had ended without a model.
+
+### Fix
+`preload()` now uses its own `_preload_lock`, never held during a load, so
+`ensure_loading()` returns at once while a load runs; and it starts a new
+thread when the previous one ended without the model being ready.
+
+### Regression test
+`backend/tests/test_embedder.py::test_ensure_loading_does_not_wait_for_a_load_in_progress`
+and `::test_ensure_loading_retries_after_a_failed_preload`. Before the
+fix: `2 failed` (the first waited for the whole fake load). After: 15
+passed in `test_embedder.py`; `pytest backend/tests -q` 608 passed.
+
+### Commit
+fix(api): never wait on the model load lock, and retry a failed preload

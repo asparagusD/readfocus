@@ -159,3 +159,42 @@ test.describe('word-lookup demo', () => {
     await expect(card).toHaveAttribute('data-compact', 'true');
   });
 });
+
+test.describe('features, questions and footer', () => {
+  test.use({ signedIn: false });
+
+  test('three feature sections and the honesty note are there', async ({ page }) => {
+    await page.goto('/');
+    for (const name of ['Feels like a book', 'Understand every word', 'Reading that adapts', 'What ReadFocus isn’t']) {
+      await expect(page.getByRole('heading', { level: 2, name })).toBeAttached();
+    }
+    await expect(page.locator('.rf-isnt')).toContainText('No generative AI');
+  });
+
+  test('questions open and close from the keyboard', async ({ page }) => {
+    await page.goto('/');
+    const items = page.locator('.rf-faq details');
+    await expect(items).toHaveCount(5);
+    const first = items.first();
+    await first.locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(first).toHaveAttribute('open', '');
+    await expect(first.getByText('PDF and EPUB.')).toBeVisible();
+    await page.keyboard.press('Space');
+    await expect(first).not.toHaveAttribute('open', '');
+  });
+
+  test('the footer links the source code, credits the sources and switches the theme', async ({ page }) => {
+    await page.goto('/');
+    const footer = page.getByRole('contentinfo');
+    await expect(footer.getByRole('link', { name: 'Source code on GitHub' })).toHaveAttribute('href', 'https://github.com/asparagusD/readfocus');
+    await expect(footer).toContainText('CC BY-SA 3.0');
+    await expect(footer).toContainText('CC BY-SA 4.0');
+    await footer.getByRole('radio', { name: 'Lamplight (dark)' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'lamplight');
+    await footer.getByRole('radio', { name: 'Paper (light)' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'paper');
+    await footer.getByRole('link', { name: 'Start reading' }).click();
+    await expect(page).toHaveURL(/\/login\?tab=signup$/);
+  });
+});

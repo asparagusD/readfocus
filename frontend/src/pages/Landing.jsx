@@ -7,6 +7,9 @@ import { wakeBackend } from './landing/wake';
 import { BookSpread } from './landing/BookSpread';
 import { Contents } from './landing/Contents';
 import { WordDemo } from './landing/WordDemo';
+import { Features } from './landing/Features';
+import { Faq } from './landing/Faq';
+import { LandingFooter } from './landing/LandingFooter';
 import { DuskWindow, ReadingLamp } from '../illustrations';
 import './Landing.css';
 
@@ -61,7 +64,10 @@ export function Landing() {
         </section>
         <Contents />
         <WordDemo />
+        <Features />
+        <Faq />
       </main>
+      <LandingFooter />
     </div>
   );
 }

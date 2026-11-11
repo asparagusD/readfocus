@@ -1776,6 +1776,24 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/pages/landing/Faq.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/Features.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/LandingFooter.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/pages/landing/WordDemo.jsx",
       "type": "file",
       "role": "page",
@@ -5078,6 +5096,21 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/Faq.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/Features.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/LandingFooter.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
       "to": "file:frontend/src/pages/landing/WordDemo.jsx"
     },
     {
@@ -5349,6 +5382,16 @@
       "type": "imports",
       "from": "file:frontend/src/pages/landing/Contents.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/Features.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/LandingFooter.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
     },
     {
       "type": "imports",

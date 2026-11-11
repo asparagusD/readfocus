@@ -16,6 +16,111 @@ The design files are reference only. The app rebuilds them as React
 components with Tailwind v4 theme tokens and Motion (C10–C13); nothing in
 `design/` is imported by the app.
 
+## Decisions (2026-11-11, CD.4)
+
+These six decisions **override anything the design files show**. Contrast
+ratios below were recomputed with the WCAG formula.
+
+### D1. Text on accent fills uses `--accent-ink`
+
+Every text or icon on an accent fill uses `--accent-ink`, never `--ink`:
+primary buttons, the theme-toggle knob, the selected option letter.
+
+| Theme · accent | Text on fill | Contrast |
+|---|---|---|
+| Paper · terracotta | `#FFFDF9` on `#A64B2A` | 5.65:1 |
+| Paper · sage | `#FFFDF9` on `#506A4A` | 5.90:1 |
+| Lamplight · terracotta | `#1D1915` on `#E59A6C` | 7.63:1 |
+| Lamplight · sage | `#1D1915` on `#A8C198` | 8.94:1 |
+
+Dark ink `#2A2420` on terracotta (2.67:1, as the screens show) fails AA
+and is not used.
+
+### D2. The ribbon never covers text
+
+- It hangs from the page's top edge inside the outer margin, outside the
+  text area.
+- The running header ends before the ribbon; it reserves that room, so a
+  long chapter name truncates instead of running under it.
+- On mobile it is shortened and stays in the outer margin; if it still
+  cannot sit clear, it is hidden.
+
+### D3. Motion tokens: the long names, durations on the scale
+
+- Easings: `--ease-settle` `cubic-bezier(.22,.61,.36,1)`,
+  `--ease-arrive` `cubic-bezier(.16,1,.3,1)`, `--ease-breathe`
+  `cubic-bezier(.45,0,.55,1)`. The short names `--ease`, `--arrive`,
+  `--breathe` are dropped.
+- Durations snap to `--dur-1` 150, `--dur-2` 200, `--dur-3` 250,
+  `--dur-4` 400, `--dur-5` 600, `--dur-6` 800 ms:
+
+| Was | Now |
+|---|---|
+| Question slide 450 ms | 400 ms, `--dur-4` |
+| Page turn 650, book arriving 650, library → reader 700 ms | 600 ms, `--dur-5` |
+| Option settle 260, toast and modal 300 ms | 250 ms, `--dur-3` |
+| Score count-up, chart draw, mastery bars 900 ms | 800 ms, `--dur-6` |
+
+- Kept as they are: ambient loops (steam 3.2 s, candle 3.2 s, lamp
+  brighten 6 s and breathe 4 s, lamp pulse 1.4 s, skeleton shimmer
+  1.6 s), the 60 ms chip stagger, and behaviour delays that are not
+  animations (380 ms hover before a word card, 450 ms long-press, 2.6 s
+  toolbar fade-out delay, 5 s toast lifetime).
+- Only transform and opacity animate. Under `prefers-reduced-motion`
+  everything becomes near-instant and loops stop.
+
+### D4. Account menu and reader Contents
+
+- **Initials** are a `<button aria-haspopup="menu">` showing the user's
+  real initials. It opens a small account menu: name and email (not
+  clickable), Reading settings (default text size, daily session length,
+  theme), Sign out. Esc and clicking outside close it; focus returns to
+  the button.
+- **Contents** opens a popover listing the book's chapters, from the EPUB
+  table of contents (PDF outline, or detected headings as a fallback).
+  Today's chapter carries a quiet "today" label. Picking a chapter jumps
+  to its first page; if that is outside today's planned pages, a one-line
+  note says "This is beyond today's reading" without blocking the jump.
+  The toolbar stays visible while it is open. Esc or clicking outside
+  closes it. On mobile it is a sheet.
+
+### D5. Book covers: Open Library, else a deterministic typographic cover
+
+- Try Open Library first: by ISBN from the file's metadata, otherwise a
+  title + author search for an Open Library ID.
+  `https://covers.openlibrary.org/b/isbn/{isbn}-L.jpg?default=false`
+  (`?default=false` makes a missing cover a 404 instead of a blank
+  image). Cache the result per book.
+- Show the typographic cover at once and cross-fade the real image in
+  when it loads (250 ms). With no match or a failed image, the
+  typographic cover stays for good.
+- Typographic colour is deterministic: FNV-1a hash of title + author,
+  modulo 5, into moss `#3F4B3B`, oxblood `#5C2F27`, ink `#2E2A27`, ochre
+  `#7A5C2E`, slate `#38434A`. Title and author in `#F6EFE3` (5.41:1 on
+  ochre, the lowest; 8.06, 9.72, 12.44 and 8.88 on the others). The chosen
+  colour is saved on the book record so it never changes, even if the
+  title is edited.
+
+### D6. Fonts are bundled, not loaded from Google Fonts
+
+- `@fontsource-variable/playfair-display`, `@fontsource-variable/lora`,
+  `@fontsource-variable/dm-sans`, plus the italic styles for Playfair and
+  Lora. `font-display: swap`. Preload Lora and DM Sans.
+- Fallbacks: Playfair Display → `Georgia, serif`; Lora → `Georgia, serif`;
+  DM Sans → `system-ui, sans-serif`. Both licences (OFL) allow bundling.
+
+### What the decisions need outside the frontend
+
+Found in the code on 2026-11-11; to be planned in the chunk that builds
+each piece.
+
+| Decision | Exists today | Needed |
+|---|---|---|
+| D4 account menu | `profiles.display_name`; email from Supabase Auth; pace (`focus_duration_minutes`) used by the planner | Somewhere to keep default text size, daily session length and theme (not specified: profile columns or browser storage) |
+| D4 Contents | `backend/services/book_ingestor.py` splits EPUBs into chapter texts but stores no chapter list; PDFs have no outline handling | Store each book's chapters (title, first chunk) at ingestion (additive migration), an endpoint to read them, and a backfill for books already ingested |
+| D5 covers | `books` has `title`, `author`; no ISBN, cover URL or colour columns | Additive migration for ISBN, Open Library result and the saved cover colour; ISBN read from EPUB/PDF metadata; Open Library is a free, keyless API not yet used in the repo, so it goes through the `free-intelligence` check. Where the lookup runs (backend at ingestion, or the browser) is not specified |
+| D6 fonts | `frontend/index.html` loads DM Mono, DM Sans, Lora and Playfair Display from Google Fonts at runtime (preconnect + stylesheet) | Three `@fontsource-variable/*` packages (frontend dependencies only) and removal of the Google Fonts links. DM Mono is used today and is not in the design: whether it goes is not specified (the error screen's monospace line can use `ui-monospace`) |
+
 ## What the HTML bundle contains (CD.2)
 
 | File | Size | What it is |
@@ -312,6 +417,7 @@ The toast sits bottom left over the shelf.
    "Sign in", "Start test"), while the foundations CSS sets
    `--accent-ink: #FFFDF9`. Dark ink `#2A2420` on `#A64B2A` is about
    2.7:1 (computed here), which fails WCAG AA; `#FFFDF9` is about 5.6:1.
+   **Resolved by D1.**
 2. **Reader page layout in the mock.** In `reading-word-card-*-1440.png`
    the left page's first paragraph is squeezed into a narrow column inside
    a dashed box, with "Walden Pond" floating beside it and words
@@ -321,42 +427,43 @@ The toast sits bottom left over the shelf.
 3. **Desktop and mobile artboards stop at the fold**, so the rest of the
    shelf, the results list and the mastery list are not shown.
 4. **Ribbon overlaps the running head** ("Economy") on the foundations
-   artboard and the reading screen.
+   artboard and the reading screen. **Resolved by D2.**
 5. **Easing names differ** between the motion table (`--ease-settle`,
    `--ease-arrive`, `--ease-breathe`) and the CSS (`--ease`, `--arrive`,
-   `--breathe`); `--dur-*` exists only in the table.
+   `--breathe`); `--dur-*` exists only in the table. **Resolved by D3.**
 6. **Moment timings are off-scale:** 450, 650, 900 and 260 ms (and 380,
    450 ms on the components sheet) are not `--dur-*` values.
+   **Resolved by D3** (380 and 450 ms are behaviour delays and stay).
 7. **Radii off-scale:** 4 px (book page) and 16 px (panels).
 8. **Links are not themed** in the HTML (`#A64B2A`, hover `#7E3820`); the
    boards show links in `--accent-text`-like colours in both themes.
 9. **Initials badge** ("FR"): what it opens (account menu, sign out) is
-   not specified.
+   not specified. **Resolved by D4.**
 10. **Reader toolbar:** what "Contents" opens is not specified; font-size
     buttons presumably step through 16.5 / 18 / 19.5 (inferred).
+    **Contents resolved by D4**; the font-size steps are still inferred.
 11. **Second illustration row** labels are cut off on the components
     board; names above are inferred from the drawings.
 12. **Word card sources:** the cards cite Wiktionary and Wikipedia;
     `CLAUDE.md` lists the Free Dictionary API (whose data comes from
     Wiktionary) and Wikipedia. Cover images cite Open Library, a free API
     not yet used in the repo; it needs the `free-intelligence` check.
+    **Covers: Open Library confirmed by D5** (the check still applies).
 13. The prototype board holds one still frame (sign in); the prototype's
     transitions are not in the export.
 14. Not specified: shadow values for covers, cards, toasts and modal;
-    font loading (Google Fonts CDN or self-hosted); Tailwind token names;
-    breakpoints between 375 and 1440.
+    Tailwind token names; breakpoints between 375 and 1440. (Font loading
+    resolved by D6.)
 
-## Questions for you
+## Questions
 
-1. Primary button labels on Paper: follow the foundations token
-   (`#FFFDF9`, passes AA) or the screens (dark ink, fails AA)?
-2. Should the ribbon overlap the running head, or move clear of it?
-3. Which easing names win: `--ease-settle` (table) or `--ease` (CSS)? And
-   should the off-scale timings snap to the `--dur-*` scale?
-4. What does the initials badge open? What does "Contents" open?
-5. Should covers come from Open Library when found, with a typographic
-   cover as the fallback? How should a typographic cover get its colour
-   (hash of the title, or user choice)?
-6. Fonts: load from Google Fonts or self-host in the bundle?
+All six earlier questions are answered by D1–D6 above, and the accent is
+a reader setting (2026-11-11). Still open, to settle in the chunk that
+needs them:
 
-Answered: the accent is a reader setting (2026-11-11).
+1. Where reading settings live (default text size, daily session length,
+   theme, accent): profile columns or browser storage (D4).
+2. Where the Open Library lookup runs: the backend at ingestion, or the
+   browser (D5).
+3. Whether DM Mono, loaded today, is dropped (D6).
+4. Gaps 2, 3, 7, 8, 11, 13 and 14 above.

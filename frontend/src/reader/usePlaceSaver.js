@@ -8,6 +8,7 @@ const DELAY_MS = 1000;
  * debounced: at most one request a second while pages turn, and the last
  * place is sent with keepalive when the page is hidden or closed. A failed
  * save is dropped quietly; the next turn sends a newer place anyway.
+ * Returns { save, saveNow }; saveNow skips the wait (the ribbon).
  */
 export function usePlaceSaver(sessionId) {
   const pending = useRef(null);
@@ -33,6 +34,12 @@ export function usePlaceSaver(sessionId) {
     timer.current = setTimeout(() => flush(false), DELAY_MS);
   }, [flush]);
 
+  // The ribbon bookmark (C12.5b): save this place now, not after the debounce.
+  const saveNow = useCallback((place) => {
+    pending.current = place;
+    flush(false);
+  }, [flush]);
+
   useEffect(() => {
     const onHide = () => { if (document.visibilityState === 'hidden') flush(true); };
     const onPageHide = () => flush(true);
@@ -45,5 +52,5 @@ export function usePlaceSaver(sessionId) {
     };
   }, [flush]);
 
-  return save;
+  return { save, saveNow };
 }

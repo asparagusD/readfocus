@@ -417,3 +417,39 @@
   transform-origin: left center;
   transition: transform var(--dur-5) var(--ease-settle);
 }
+
+/* C12.5b: the ribbon bookmark (D2). It hangs from the top edge in the outer margin of the right-hand
+   (or only) page, a 44 px target centred in that margin, never over the text; shorter on phones,
+   where it ends inside the running-head band. The running head on that page leaves it room. */
+.rf-ribbon {
+  position: absolute;
+  top: 0;
+  right: max(0px, calc(var(--margin) / 2 - 22px));
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  width: 44px;
+  height: 112px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rf-ribbon-tail {
+  display: block;
+  width: 16px;
+  height: 100%;
+  background: var(--accent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%);
+}
+
+.rf-ribbon:hover .rf-ribbon-tail { filter: brightness(1.08); }
+
+.rf-book[data-spread="false"] .rf-ribbon { height: 72px; }
+.rf-book[data-flush="true"] .rf-ribbon { height: var(--head); } /* 44 px: ends where the text block begins */
+.rf-book[data-flush="true"] .rf-ribbon-tail { width: 12px; }
+
+.rf-book[data-ribbon="true"] .rf-leaf:is([data-side="right"], [data-side="single"]) .rf-running-head {
+  inset-inline-end: max(var(--margin), 48px);
+}

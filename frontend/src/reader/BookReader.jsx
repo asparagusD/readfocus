@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AnimatePresence } from 'motion/react';
-import { prefersReducedMotion } from '../motion/presets';
+import { AnimatePresence, m } from 'motion/react';
+import { easing, prefersReducedMotion, seconds } from '../motion/presets';
 import { BookFlow } from './BookFlow';
 import { PageTurn } from './PageTurn';
 import { anchorForPage, pageForAnchor, pageOfElement } from './anchor';
@@ -53,7 +53,7 @@ const px = (n) => `${n}px`;
  */
 export function BookReader({
   blocks, bookTitle, chapterBefore = '', fontSize = 18, initialAnchor = null, lang = 'en',
-  onPlaceChange, onPagesChange, onNearEnd, label, lead = null, endPage = null, pacing = false,
+  onPlaceChange, onPagesChange, onNearEnd, label, lead = null, endPage = null, pacing = false, onBookmark, statusNote, ref,
 }) {
   const frameRef = useRef(null);
   const flowRef = useRef(null);
@@ -111,6 +111,25 @@ export function BookReader({
   }, [g, layout.count, onPlaceChange, page, turn]);
 
   const onTurnDone = useCallback(() => setTurn(null), []);
+  // For the contents drawer (C12.5b): open the page holding a place.
+  useImperativeHandle(ref, () => ({
+    goToPlace(place) {
+      const flow = flowRef.current;
+      if (flow && g) goTo(pageForAnchor(flow, place, g));
+    },
+  }), [g, goTo]);
+
+  // The ribbon bookmark (C12.5b): save the first place on this view now; it drops in again each time.
+  const [drops, setDrops] = useState(0);
+  const bookmark = () => {
+    const flow = flowRef.current;
+    if (!flow || !g || page >= layout.text) return;
+    const place = anchorForPage(flow, page, g);
+    if (!place) return;
+    anchor.current = place;
+    setDrops((n) => n + 1);
+    onBookmark?.(place, page + 1);
+  };
   useEffect(() => {
     if (turn || queued.current === null) return;
     const next = queued.current;
@@ -145,6 +164,7 @@ export function BookReader({
     const back = ['ArrowLeft', 'PageUp'].includes(event.key) || (event.key === ' ' && event.shiftKey);
     if (forward) goBy(step);
     else if (back) goBy(-step);
+    else if ((event.key === 'b' || event.key === 'B') && onBookmark) bookmark();
     else if (event.key === 'Home') goTo(0);
     else if (event.key === 'End') goTo(layout.count - 1);
     else return;
@@ -195,6 +215,7 @@ export function BookReader({
             data-spread={g.spread}
             data-flush={g.flush}
             data-turning={turn ? 'true' : 'false'}
+            data-ribbon={onBookmark ? 'true' : undefined}
             data-paginate-ms={layout.ms.toFixed(1)}
             role="region"
             aria-roledescription="book"
@@ -237,6 +258,20 @@ export function BookReader({
               onClick={() => onEdge(-step)} disabled={page === 0} />
             <button type="button" className="rf-edge" data-edge="forward" tabIndex={-1} aria-hidden="true"
               onClick={() => onEdge(step)} disabled={last >= layout.count} />
+            {onBookmark && page < layout.text && (
+              // D2: in the outer margin of the right-hand page, never over the text.
+              <button type="button" className="rf-ribbon" onClick={bookmark} aria-label="Save my place" aria-keyshortcuts="B"
+                title="Save my place (B)">
+                <m.span
+                  key={drops}
+                  className="rf-ribbon-tail"
+                  aria-hidden="true"
+                  initial={drops ? { y: '-40%' } : false}
+                  animate={{ y: 0 }}
+                  transition={{ duration: seconds('--dur-4'), ease: easing('--ease-arrive') }}
+                />
+              </button>
+            )}
           </div>
           <div className="rf-status">
             <button type="button" className="rf-turn" onClick={() => turnFrom(-step)} disabled={page === 0} aria-label="Previous page">
@@ -249,7 +284,7 @@ export function BookReader({
                 </span>
                 <p className="rf-page-status">{pacingText}</p>
               </div>
-            ) : <p className="rf-page-status">{status}</p>}
+            ) : <p className="rf-page-status">{statusNote ? `${statusNote} · ${status}` : status}</p>}
             <button type="button" className="rf-turn" onClick={() => turnFrom(step)} disabled={last >= layout.count} aria-label="Next page">
               <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
             </button>

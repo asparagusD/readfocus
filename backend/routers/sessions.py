@@ -102,7 +102,8 @@ def read_book(user_id: str, book_id: str, first_chunk: int):
             return None, None
         row = cast(dict[str, Any], rows[0])
         earlier = [entry for entry in row.get("toc") or [] if entry.get("chunk_index", 0) < first_chunk]
-        return {"title": row.get("title"), "author": row.get("author")}, (earlier[-1]["title"] if earlier else None)
+        book = {"title": row.get("title"), "author": row.get("author"), "toc": row.get("toc") or []}  # toc: contents drawer
+        return book, (earlier[-1]["title"] if earlier else None)
     except Exception as e:  # noqa: BLE001 - the running head shows less, the session still starts
         print(f"Book details not read: {e}")
         return None, None

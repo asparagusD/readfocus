@@ -1439,6 +1439,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/ContentsDrawer.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/reader/PageTurn.jsx",
       "type": "file",
       "role": "asset",
@@ -4115,6 +4127,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/hooks/usePageTransition.js"
     },
     {
@@ -4126,6 +4143,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/pages/ReadingSession.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/ContentsDrawer.jsx"
     },
     {
       "type": "imports",
@@ -4206,6 +4228,16 @@
       "type": "imports",
       "from": "file:frontend/src/reader/BookReader.jsx",
       "to": "file:frontend/src/reader/reader.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/reader/ContentsDrawer.css"
     },
     {
       "type": "imports",
@@ -4928,5 +4960,11 @@
       "to": "table:books"
     }
   ],
-  "unresolved": []
+  "unresolved": [
+    {
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "type": "calls_endpoint",
+      "target": "GET /books/${bookId}/pages?start=${entry.chunk_index}&end=${entry.chunk_index + 1}"
+    }
+  ]
 }

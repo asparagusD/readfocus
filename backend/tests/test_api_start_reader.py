@@ -28,8 +28,8 @@ def test_each_chunk_comes_with_its_blocks(api, book):  # noqa: F811
     assert {"chunk_index", "content", "word_count", "blocks"} <= set(body["chunks"][0])
 
 
-def test_the_book_title_and_author_come_with_the_session(api, book):  # noqa: F811
-    assert start(api, [0])["book"] == {"title": "Walden", "author": "Henry David Thoreau"}
+def test_the_book_title_author_and_contents_come_with_the_session(api, book):  # noqa: F811
+    assert start(api, [0])["book"] == {"title": "Walden", "author": "Henry David Thoreau", "toc": TOC}
 
 
 @pytest.mark.parametrize("chunks, chapter", [
@@ -47,6 +47,7 @@ def test_a_book_without_a_toc_or_blocks_still_starts(api, book):  # noqa: F811
         chunk.pop("blocks")
     body = start(api, [1])
     assert body["chapter_before"] is None and body["chunks"][0].get("blocks") is None
+    assert body["book"]["toc"] == []  # contents drawer: an empty list, not null
 
 
 def test_a_failed_book_read_never_fails_the_start(api, book):  # noqa: F811

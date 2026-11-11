@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, List } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
 import './ReaderToolbar.css';
@@ -10,7 +10,9 @@ import './ReaderToolbar.css';
  * the reader reads; focus inside keeps it shown, so it is always reachable
  * by keyboard. Icons only on narrow screens.
  */
-export function ReaderToolbar({ bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, children }) {
+export function ReaderToolbar({
+  bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef, children,
+}) {
   const index = SIZES.indexOf(size);
   return (
     <div
@@ -37,6 +39,13 @@ export function ReaderToolbar({ bookTitle, chapter, size, onSize, onBack, visibl
           aria-label="Larger text">A</button>
       </div>
       <span className="rf-toolbar-rule" aria-hidden="true" />
+      {onContents && (
+        <button type="button" className="rf-tool" ref={contentsRef} onClick={onContents}
+          aria-haspopup="dialog" aria-expanded={contentsOpen} aria-label="Contents">
+          <List size={18} strokeWidth={1.75} aria-hidden="true" />
+          <span className="rf-tool-label">Contents</span>
+        </button>
+      )}
       <ThemeToggle />
       {children && <span className="rf-toolbar-rule" aria-hidden="true" />}
       {children}

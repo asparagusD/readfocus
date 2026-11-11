@@ -1,6 +1,8 @@
-"""Structured blocks and table of contents (C12.1): PDF text heuristics, block shape, toc."""
+"""Structured blocks and table of contents (C12.1): EPUB tags, PDF text heuristics, chunk alignment."""
 
+import io
 import json
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -9,9 +11,115 @@ from backend.services import book_ingestor, book_structure
 from backend.services.book_structure import TYPES, build, text_blocks
 
 
+def make_book_epub(docs):
+    """A minimal EPUB that ebooklib reads: one XHTML document per body string, in spine order."""
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as z:
+        z.writestr("mimetype", "application/epub+zip")
+        z.writestr("META-INF/container.xml",
+                   '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">'
+                   '<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>'
+                   '</rootfiles></container>')
+        items = "".join(f'<item id="c{i}" href="c{i}.xhtml" media-type="application/xhtml+xml"/>' for i in range(len(docs)))
+        spine = "".join(f'<itemref idref="c{i}"/>' for i in range(len(docs)))
+        z.writestr("OEBPS/content.opf",
+                   '<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id">'
+                   '<metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">x</dc:identifier>'
+                   '<dc:title>T</dc:title><dc:language>en</dc:language></metadata>'
+                   f'<manifest>{items}</manifest><spine>{spine}</spine></package>')
+        for i, body in enumerate(docs):
+            z.writestr(f"OEBPS/c{i}.xhtml", '<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml">'
+                                           f'<head><title>c</title></head><body>{body}</body></html>')
+    return out.getvalue()
+
+
+WALDEN = [
+    ("<h1>Chapter I</h1><h2>Economy</h2>"
+    "<p>When I wrote the <em>following pages</em>, or rather the <strong>bulk</strong> of them, I lived alone, "
+    "in the woods, a mile from any neighbor, in a house which I had built myself.</p>"
+    "<blockquote><p>Simplicity, simplicity, simplicity!</p></blockquote>"
+    "<ul><li>Shelter</li><li>Fuel and <i>food</i></li></ul>"
+    "<script>alert('no')</script><style>p { color: red }</style><img src='pond.png' alt='The pond'/>"),
+    ("<h1>Chapter II</h1><p>Where I lived, and what I lived for. At a certain season of our life we are accustomed "
+    "to consider every spot as the possible site of a house.</p>"),
+]
+
+
 def skeleton(text):
     return "".join(ch for ch in text if not ch.isspace())
 
+
+def epub_book(docs, target_words=600):
+    data = make_book_epub(docs)
+    return data, book_ingestor.chunk_text(book_ingestor.extract_text_from_epub(data), target_words)
+
+
+def all_blocks(blocks):
+    return [block for chunk in blocks for block in chunk]
+
+
+# --- EPUB ---------------------------------------------------------------
+
+def test_epub_tags_become_typed_blocks_with_marks():
+    data, chunks = epub_book(WALDEN)
+    blocks, toc = build("epub", data, chunks)
+    flat = all_blocks(blocks)
+    assert [b["type"] for b in flat] == ["chapter", "heading", "paragraph", "quote", "list_item", "list_item",
+                                         "chapter", "paragraph"]
+    para = flat[2]
+    assert para["text"].startswith("When I wrote the following pages, or rather the bulk of them,")
+    assert [(para["text"][m["start"]:m["end"]], m["kind"]) for m in para["marks"]] == [
+        ("following pages", "em"), ("bulk", "strong")]
+    assert flat[5]["text"] == "Fuel and food" and flat[5]["marks"] == [{"start": 9, "end": 13, "kind": "em"}]
+    text = " ".join(b["text"] for b in flat)
+    assert "alert" not in text and "color" not in text and "The pond" not in text
+    assert toc == [{"title": "Chapter I: Economy", "chunk_index": 0, "block_id": "0.0"},
+                   {"title": "Chapter II", "chunk_index": 0, "block_id": "0.6"}]
+
+
+def test_epub_blocks_split_at_chunk_boundaries_and_cover_each_chunk_exactly():
+    data, chunks = epub_book(WALDEN, target_words=6)
+    assert len(chunks) == 5  # content is split per text node, so chunk ends fall inside paragraphs and lists
+    blocks, toc = build("epub", data, chunks)
+    assert len(blocks) == len(chunks)
+    for content, chunk_blocks in zip(chunks, blocks):
+        assert chunk_blocks, "every chunk has at least one block"
+        assert skeleton("".join(b["text"] for b in chunk_blocks)) == skeleton(content)
+    continued = [b for b in all_blocks(blocks) if b.get("continued")]
+    assert continued, "a paragraph cut by a chunk boundary continues in the next chunk"
+    for block in all_blocks(blocks):  # marks stay on the right words after the split
+        for mark in block["marks"]:
+            assert 0 <= mark["start"] < mark["end"] <= len(block["text"])
+            assert block["text"][mark["start"]:mark["end"]] in "following pages bulk food"
+    assert [entry["title"] for entry in toc] == ["Chapter I: Economy", "Chapter II"]
+    for entry in toc:
+        ids = [b["id"] for b in blocks[entry["chunk_index"]]]
+        assert entry["block_id"] in ids
+
+
+def test_epub_chapter_level_is_the_top_level_that_repeats():
+    data, chunks = epub_book(["<h1>The Book</h1><p>A title page with a few words on it.</p>",
+                              "<h2>One</h2><p>First chapter text runs here.</p>",
+                              "<h2>Two</h2><p>Second chapter text runs here.</p>"])
+    blocks, toc = build("epub", data, chunks)
+    assert [b["type"] for b in all_blocks(blocks)][:3] == ["heading", "paragraph", "chapter"]
+    assert [entry["title"] for entry in toc] == ["One", "Two"]
+
+
+def test_epub_that_does_not_match_its_chunks_falls_back_to_text_blocks():
+    data, _ = epub_book(WALDEN)
+    chunks = ["Some other text entirely.\n\nAnd a second paragraph."]
+    blocks, toc = build("epub", data, chunks)
+    assert [b["text"] for b in blocks[0]] == ["Some other text entirely.", "And a second paragraph."]
+    assert toc == []
+
+
+def test_unreadable_epub_falls_back_to_text_blocks():
+    blocks, _ = build("epub", b"not a zip", ["One paragraph only."])
+    assert blocks == [[{"id": "0.0", "type": "paragraph", "text": "One paragraph only.", "marks": []}]]
+
+
+# --- PDF and plain text -------------------------------------------------
 
 def texts(content):
     return [(b["type"], b["text"]) for b in text_blocks(content)]

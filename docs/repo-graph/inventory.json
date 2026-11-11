@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 379,
-    "inventoried": 316,
+    "tracked": 380,
+    "inventoried": 317,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9469,
+      "size_bytes": 9486,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -385,10 +385,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 174,
-      "size_bytes": 7580,
+      "lines": 179,
+      "size_bytes": 8168,
       "role": "router",
-      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list; details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
+      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -565,6 +565,14 @@
       "size_bytes": 2523,
       "role": "test",
       "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
+    },
+    {
+      "path": "backend/tests/test_api_books_list.py",
+      "language": "python",
+      "lines": 67,
+      "size_bytes": 3110,
+      "role": "test",
+      "purpose": "GET /books (C13.3a) on the in-memory database: only the caller's books, the old fields plus cover_url and progress, progress the caller's own and null before a first session, the selected columns, an empty shelf."
     },
     {
       "path": "backend/tests/test_api_dashboard.py",
@@ -994,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2279,
-      "size_bytes": 445525,
+      "size_bytes": 446765,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2473,8 +2481,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 318,
-      "size_bytes": 85021,
+      "lines": 319,
+      "size_bytes": 85359,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

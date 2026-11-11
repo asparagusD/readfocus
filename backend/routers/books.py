@@ -66,13 +66,18 @@ async def upload_book(
     # 6. Return immediately
     return {"book_id": book_id, "status": "processing"}
 
+BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url"
+PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")
+
+
 @router.get("")
 async def get_books(user_id: str = Depends(get_current_user)):
-    resp = supabase.table("books").select(
-        "id, status, title, author, total_chunks, total_words, created_at"
-    ).eq("user_id", user_id).execute()
-    
-    return resp.data
+    """The caller's books for the shelf, each with its cover and reading progress (null before a first session)."""
+    books = supabase.table("books").select(BOOK_LIST_FIELDS).eq("user_id", user_id).execute().data or []
+    rows = supabase.table("reading_progress").select(
+        "book_id, " + ", ".join(PROGRESS_FIELDS)).eq("user_id", user_id).execute().data or []
+    progress = {row["book_id"]: {key: row.get(key) for key in PROGRESS_FIELDS} for row in cast(list[dict[str, Any]], rows)}
+    return [{**book, "progress": progress.get(book["id"])} for book in cast(list[dict[str, Any]], books)]
 
 @router.get("/{book_id}")
 async def get_book_details(book_id: str, user_id: str = Depends(get_current_user)):

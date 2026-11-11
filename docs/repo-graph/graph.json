@@ -642,6 +642,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_books_list.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_dashboard.py",
       "type": "file",
       "role": "test",
@@ -3316,6 +3322,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_agent_state.py",
       "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_books_list.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_books_list.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_books_list.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_books_list.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",

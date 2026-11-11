@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 313,
-    "inventoried": 250,
+    "tracked": 314,
+    "inventoried": 251,
     "excluded": 63
   },
   "files": [
@@ -444,7 +444,7 @@
       "lines": 147,
       "size_bytes": 6385,
       "role": "service",
-      "purpose": "Book covers from Open Library (C11.2), backend only: title search (first author, no edition notes) for a cover ID, the image by ID through archive.org redirects (https, Open Library and archive.org hosts only), copied unchanged into the public covers bucket once per cover ID; the outcome (cover_url, cover_source openlibrary/none/error) saved on the book; 3 s timeout, one attempt, descriptive User-Agent; never raises."
+      "purpose": "Book covers from Open Library (C11.2), backend only: title search (first author, no edition notes) for a cover ID, the image by ID through archive.org redirects (https, Open Library and archive.org hosts only), copied unchanged (at most 150 KB, the C11.5 image budget) into the public covers bucket once per cover ID; the outcome (cover_url, cover_source openlibrary/none/error) saved on the book; 3 s timeout, one attempt, descriptive User-Agent; never raises."
     },
     {
       "path": "backend/services/ingestion_worker.py",
@@ -889,8 +889,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 768,
-      "size_bytes": 42037,
+      "lines": 821,
+      "size_bytes": 45216,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -921,8 +921,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1884,
-      "size_bytes": 341310,
+      "lines": 1885,
+      "size_bytes": 343084,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -980,7 +980,7 @@
       "lines": 39,
       "size_bytes": 1082,
       "role": "config",
-      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -989,6 +989,14 @@
       "size_bytes": 3626,
       "role": "config",
       "purpose": "WCAG contrast check of every text, boundary and cover pair in styles/tokens.css for the four theme x accent combinations; exit 1 on a failure (npm run check:contrast)."
+    },
+    {
+      "path": "frontend/scripts/check-images.mjs",
+      "language": "text",
+      "lines": 97,
+      "size_bytes": 4533,
+      "role": "config",
+      "purpose": "Image budgets (npm run check:images, a standard check since C11.5): each raster under src/ and public/ at most 150 KB, all together at most 400 KB, illustration SVGs at most 8 KB, every <img> with width, height, decoding and loading (lazy, or eager with fetchPriority high for the LCP image), and the backend cover cap within budget; optional root argument for scratch trees; exit 1 on any failure."
     },
     {
       "path": "frontend/src/App.jsx",
@@ -1945,8 +1953,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 252,
-      "size_bytes": 57972,
+      "lines": 253,
+      "size_bytes": 58468,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

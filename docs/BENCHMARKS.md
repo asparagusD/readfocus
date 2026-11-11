@@ -699,6 +699,59 @@ texts, one process per model:
 Not measured: Render itself; the whole backend in a Linux container;
 retrieval quality of either model; concurrent requests during a batch.
 
+## Frontend: Lighthouse and image budgets
+
+### C11.5: image budgets and Lighthouse (2026-11-11)
+
+Budgets, enforced by `npm --prefix frontend run check:images` (a standard
+check since C11.5): each raster at most 150 KB; all rasters under
+`frontend/src` and `frontend/public` together at most 400 KB (everything
+an initial route could load); illustration SVGs at most 8 KB; every
+`<img>` has width, height, decoding and loading, lazy unless it is the LCP
+image (then eager with `fetchpriority="high"`); covers stored by the
+backend are capped at the same 150 KB (`covers.MAX_IMAGE_BYTES`).
+
+| Check | Result |
+|---|---|
+| Rasters in the frontend | 1 (`src/assets/hero.png`, 13.1 KB, unused Vite template) |
+| Illustration SVGs | 7, 0.33 to 0.50 KB each |
+| `<img>` tags | 1 (`BookCover`): lazy, or eager with high priority when `priority` |
+| Stored covers on dev | 1 file, `covers/ol/10140705-M.jpg`, 12.4 KB |
+| Deliberately bad scratch tree | 10 failures: oversize raster, 620 KB total, 9 KB SVG, `<img>` without attributes, eager without high priority, high priority on a lazy image, cover cap 500 KB; a correct eager LCP `<img>` passes |
+
+Lighthouse 12.8.2, performance category only, its mobile defaults
+(simulated slow 4G, 4x CPU slowdown, 412 x 823 screen), Microsoft Edge
+157.0.4341.42 headless on the machine above. Production build served by
+`vite preview` (port 4173), backend on port 8000 against the dev
+database. `/login` signed out (Lighthouse launches Edge). `/` (Library)
+signed in as dev test user A through the app's own form in an Edge
+started with a debugging port, HTTP cache cleared and the session kept,
+then `lighthouse --port --disable-storage-reset`. Three separate runs per
+route; runner: scratchpad `lh_run.mjs`.
+
+| Route | Run | Score | FCP | LCP | TBT | CLS | Speed index | Transferred | Images | LCP element |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `/login` | 1 | 88 | 2.63 s | 3.31 s | 0 ms | 0.0002 | 2.63 s | 402 KB | 0 | `div.rf-auth-wordmark` |
+| `/login` | 2 | 88 | 2.63 s | 3.31 s | 0 ms | 0.0002 | 2.63 s | 402 KB | 0 | `div.rf-auth-wordmark` |
+| `/login` | 3 | 88 | 2.63 s | 3.31 s | 0 ms | 0.0002 | 2.63 s | 402 KB | 0 | `div.rf-auth-wordmark` |
+| `/` | 1 | 85 | 2.93 s | 3.61 s | 0 ms | 0.0002 | 2.93 s | 441 KB | 0 | `h1.rf-library-title` |
+| `/` | 2 | 87 | 2.78 s | 3.46 s | 0 ms | 0.0002 | 2.78 s | 403 KB | 0 | `h1.rf-library-title` |
+| `/` | 3 | 87 | 2.78 s | 3.46 s | 0 ms | 0.0002 | 2.78 s | 403 KB | 0 | `h1.rf-library-title` |
+
+Medians: `/login` 88, CLS 0.0002; `/` 87, CLS 0.0002. Targets: score at
+least 85, CLS under 0.1: both met. Neither route loads an image yet (the
+LCP element is text on both), so the initial-route image total is 0 KB
+of 400.
+
+Before the C11.5 fix (`fix(ui): let pages report their first contentful
+paint`) Lighthouse stopped on every run with `NO_FCP`: the pre-2.0 `.page`
+fade hid each page's first contentful paint (docs/DEBUG_LOG.md).
+
+Not measured: the Library with covers (no page renders `BookCover` yet,
+and `GET /books` does not return `cover_url`); desktop presets; Render
+and Vercel. Initial JS is most of the transfer (vendor chunk 227 KB gzip,
+C10 close review); images are not.
+
 ## Baseline
 
 API timings before the 2.0 migration, as seen by a client on the same

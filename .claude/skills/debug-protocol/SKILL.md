@@ -106,6 +106,7 @@ npm --prefix frontend run build
 python -c "import backend.main"
 pytest tools/repo_graph/tests -q
 npm --prefix frontend run check:contrast
+npm --prefix frontend run check:images
 ```
 
 Compare against the baseline table in `CLAUDE.md`. Nothing may be worse than

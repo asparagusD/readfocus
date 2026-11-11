@@ -29,7 +29,7 @@ IMAGE_URL = "https://covers.openlibrary.org/b/id/{cover_id}-M.jpg?default=false"
 # Names the app and why it calls; no person or email (C11.2 prompt).
 USER_AGENT = "ReadFocus/2.0 (reading comprehension app; one cover lookup per uploaded book)"
 TIMEOUT_SECONDS = 3.0
-MAX_IMAGE_BYTES = 500_000
+MAX_IMAGE_BYTES = 150_000  # the C11.5 per-image budget (frontend/scripts/check-images.mjs)
 MAX_REDIRECTS = 3  # covers.openlibrary.org -> archive.org -> an archive.org data node
 BUCKET = "covers"
 

@@ -36,6 +36,7 @@ git diff --stat
   python -c "import backend.main"
   pytest tools/repo_graph/tests -q
   npm --prefix frontend run check:contrast
+  npm --prefix frontend run check:images
   ```
 
   Never commit failing checks. `CLAUDE.md` holds a baseline table for checks

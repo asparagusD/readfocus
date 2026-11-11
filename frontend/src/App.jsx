@@ -21,6 +21,8 @@ import { routeFade, routeTransition } from './motion/presets';
 const IllustrationGallery = import.meta.env.DEV
   ? lazy(() => import('./gallery/IllustrationGallery.jsx'))
   : null;
+// Dev-only review page for the paginated reader (C12.3), dropped the same way.
+const ReaderGallery = import.meta.env.DEV ? lazy(() => import('./gallery/ReaderGallery.jsx')) : null;
 
 function AuthGuard({ children }) {
   const { user, loading } = useAuth();
@@ -70,6 +72,9 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 {IllustrationGallery && (
                   <Route path="/__illustrations" element={<Suspense fallback={null}><IllustrationGallery /></Suspense>} />
+                )}
+                {ReaderGallery && (
+                  <Route path="/__reader" element={<Suspense fallback={null}><ReaderGallery /></Suspense>} />
                 )}
                 <Route path="/read/:bookId" element={<AuthGuard><ReadingSession /></AuthGuard>} />
                 <Route path="/test/:sessionId" element={<AuthGuard><ComprehensionTest /></AuthGuard>} />

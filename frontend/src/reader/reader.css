@@ -1,0 +1,464 @@
+/* Paginated reader (C12.3). Sizes come from pageGeometry as custom properties
+   on .rf-book; colours, type, radii and shadows from tokens.css. */
+
+.rf-reader {
+  /* The page edge darkens toward the paper's own shadow, and the spine is
+     shaded: flat paper (handoff), toned only with theme tokens, no image. */
+  --page-edge: color-mix(in oklab, var(--page) 93%, var(--ink-3));
+  --spine-shade: color-mix(in oklab, var(--ink) 11%, transparent);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: clip; /* a turning leaf lifts toward the reader but never past the reader's frame */
+}
+
+[data-theme="lamplight"] .rf-reader {
+  --page-edge: color-mix(in oklab, var(--page) 72%, var(--paper-2));
+  --spine-shade: color-mix(in oklab, var(--paper-2) 80%, transparent);
+}
+
+.rf-book {
+  position: relative;
+  flex: none;
+  border-radius: var(--radius-page);
+  box-shadow: var(--elevation-page);
+}
+
+.rf-leaf {
+  position: absolute;
+  top: 0;
+  width: var(--page-w);
+  height: 100%;
+  border: 1px solid var(--line);
+  background: radial-gradient(140% 105% at 50% 42%, var(--page) 64%, var(--page-edge) 100%);
+}
+
+.rf-leaf[data-side="single"] { border-radius: var(--radius-page); }
+.rf-leaf[data-side="left"] { border-right: 0; border-radius: var(--radius-page) 0 0 var(--radius-page); }
+.rf-leaf[data-side="right"] { border-left: 0; border-radius: 0 var(--radius-page) var(--radius-page) 0; }
+
+.rf-leaf[data-side="left"]::after,
+.rf-leaf[data-side="right"]::after {
+  position: absolute;
+  inset-block: 0;
+  width: var(--space-7);
+  content: "";
+  pointer-events: none;
+}
+
+.rf-leaf[data-side="left"]::after {
+  right: 0;
+  background: linear-gradient(to left, var(--spine-shade), transparent);
+}
+
+.rf-leaf[data-side="right"]::after {
+  left: 0;
+  background: linear-gradient(to right, var(--spine-shade), transparent 70%);
+}
+
+/* Page furniture: running head at the top, folio at the foot, both outside the text block. */
+.rf-running-head {
+  position: absolute;
+  inset-inline: var(--margin);
+  top: calc(var(--head) * 0.42);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rf-leaf[data-side="right"] .rf-running-head { text-align: right; }
+
+/* A phone page is the screen itself: no edge, frame or lift (handoff, 375 px). */
+.rf-book[data-flush="true"] { border-radius: 0; box-shadow: none; }
+
+.rf-book[data-flush="true"] .rf-leaf {
+  border: 0;
+  border-radius: 0;
+  background: var(--page);
+}
+.rf-running-head[data-hidden="true"] { visibility: hidden; } /* not on a chapter's opening page */
+
+.rf-folio {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(var(--foot) * 0.32);
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--font-reading);
+  font-size: var(--text-label);
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  line-height: var(--text-label--line-height);
+  text-align: center;
+}
+
+/* The text: one multi-column flow, one column per page, moved a page at a time. */
+.rf-viewport {
+  position: absolute;
+  top: var(--head);
+  left: 0;
+  width: 100%;
+  height: var(--text-h);
+  overflow: hidden;
+}
+
+.rf-flow {
+  position: absolute;
+  top: 0;
+  left: var(--margin);
+  width: var(--column);
+  height: var(--text-h);
+  column-width: var(--column);
+  column-gap: var(--gap);
+  column-fill: auto;
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: var(--reading-size);
+  line-height: var(--text-reading--line-height);
+  text-align: justify;
+  hyphens: auto;
+  hanging-punctuation: first;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  orphans: 2;
+  widows: 2;
+}
+
+.rf-flow p { margin: 0; }
+.rf-flow em { font-style: italic; }
+.rf-flow strong { font-weight: 600; }
+
+.rf-para + .rf-para:not(.rf-continued) { text-indent: 1.5em; }
+
+/* A chapter opens a new page, set down the page under its title. */
+.rf-chapter {
+  padding-top: calc(var(--text-h) * 0.16);
+  padding-bottom: var(--space-5);
+  break-before: column;
+  break-inside: avoid;
+  break-after: avoid;
+  text-align: left;
+  hyphens: manual;
+}
+
+.rf-chapter::after {
+  display: block;
+  width: var(--space-7);
+  height: 2px;
+  margin-top: var(--space-4);
+  border-radius: var(--radius-hair);
+  background: var(--accent);
+  content: "";
+}
+
+.rf-chapter-label {
+  margin: 0 0 var(--space-2);
+  color: var(--ink-2);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.14em;
+}
+
+.rf-chapter-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--text-chapter);
+  font-style: italic;
+  font-weight: 400;
+  line-height: var(--text-chapter--line-height);
+  text-wrap: balance;
+}
+
+.rf-book[data-spread="false"] .rf-chapter-title {
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-opening::first-line {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.04em;
+}
+
+.rf-heading {
+  margin: var(--space-5) 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: 1.15em;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+  break-after: avoid;
+  break-inside: avoid;
+}
+
+.rf-quote {
+  margin: var(--space-3) 0 var(--space-3) 1.5em;
+  color: var(--ink-2);
+  font-size: 0.92em;
+  font-style: italic;
+}
+
+.rf-item {
+  position: relative;
+  padding-left: 1.4em;
+}
+
+.rf-item::before {
+  position: absolute;
+  left: 0.35em;
+  color: var(--ink-3);
+  content: "•";
+}
+
+/* Controls under the book. */
+.rf-status {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  height: 48px;
+}
+
+.rf-page-status {
+  min-width: 9.5em;
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--text-label--line-height);
+  text-align: center;
+}
+
+.rf-turn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-turn:hover:not(:disabled) { background: var(--paper-2); }
+.rf-turn:disabled { opacity: 0.35; cursor: default; }
+
+/* C12.4: page turns. The book is a 3D stage only while a leaf turns. */
+.rf-book { touch-action: pan-y pinch-zoom; } /* horizontal swipes turn pages */
+
+.rf-turning {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.rf-turn-slot,
+.rf-turn-leaf {
+  position: absolute;
+  top: 0;
+  width: var(--page-w);
+  height: 100%;
+}
+
+.rf-turn-leaf {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.rf-face {
+  left: 0;
+  backface-visibility: hidden;
+}
+
+.rf-face-back { transform: rotateY(180deg); }
+
+/* A window onto a copy of the flow, placed exactly where the main flow's page sits. */
+.rf-window {
+  position: absolute;
+  top: var(--head);
+  left: 0;
+  width: 100%;
+  height: var(--text-h);
+  overflow: hidden;
+}
+
+/* The travelling shadow: darker toward the spine the leaf turns on. */
+.rf-turn-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.rf-turn-shade[data-side="right"],
+.rf-turn-shade[data-side="single"] {
+  background: linear-gradient(to right, var(--spine-shade), transparent 75%);
+}
+
+.rf-turn-shade[data-side="left"] {
+  background: linear-gradient(to left, var(--spine-shade), transparent 75%);
+}
+
+/* Outer page edges: click or tap to turn. They cover the outer margin only, never the text. */
+.rf-edge {
+  position: absolute;
+  top: 0;
+  z-index: 3;
+  width: var(--margin);
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rf-edge[data-edge="back"] { left: 0; cursor: w-resize; }
+.rf-edge[data-edge="forward"] { right: 0; cursor: e-resize; }
+.rf-edge:disabled { cursor: default; }
+
+/* The live region that reads out "Page 3 of 14": hidden from sight, not from screen readers. */
+.rf-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* C12.5a: the planner's note on the session's first page (handoff, screen 06). */
+.rf-note {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-card);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: 1.55;
+  text-align: left;
+  hyphens: manual;
+  break-inside: avoid;
+}
+
+.rf-note svg { flex: none; margin-top: 2px; color: var(--accent-text); }
+.rf-note strong { color: var(--ink); font-weight: 600; }
+
+/* The opening chapter shares the first page with the note. */
+.rf-note + .rf-chapter {
+  padding-top: var(--space-2);
+  break-before: auto;
+}
+
+/* The closing page: quiet, centred in the text block, outside the flow (so its button is never off-screen). */
+.rf-end {
+  position: absolute;
+  inset: var(--head) var(--margin) var(--foot);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.rf-end-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-style: italic;
+  font-weight: 400;
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-end-text {
+  max-width: 34ch;
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+/* Pacing under the book: a hairline that fills as pages turn, and how much is left in words. */
+.rf-pacing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 15em;
+}
+
+.rf-pacing-track {
+  position: relative;
+  width: 120px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: var(--radius-hair);
+  background: var(--line);
+}
+
+.rf-pacing-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: left center;
+  transition: transform var(--dur-5) var(--ease-settle);
+}
+
+/* C12.5b: the ribbon bookmark (D2). It hangs from the top edge in the outer margin of the right-hand
+   (or only) page, a 44 px target centred in that margin, never over the text; shorter on phones,
+   where it ends inside the running-head band. The running head on that page leaves it room. */
+.rf-ribbon {
+  position: absolute;
+  top: 0;
+  right: max(0px, calc(var(--margin) / 2 - 22px));
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  width: 44px;
+  height: 112px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rf-ribbon-tail {
+  display: block;
+  width: 16px;
+  height: 100%;
+  background: var(--accent);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%);
+}
+
+.rf-ribbon:hover .rf-ribbon-tail { filter: brightness(1.08); }
+
+.rf-book[data-spread="false"] .rf-ribbon { height: 72px; }
+.rf-book[data-flush="true"] .rf-ribbon { height: var(--head); } /* 44 px: ends where the text block begins */
+.rf-book[data-flush="true"] .rf-ribbon-tail { width: 12px; }
+
+.rf-book[data-ribbon="true"] .rf-leaf:is([data-side="right"], [data-side="single"]) .rf-running-head {
+  inset-inline-end: max(var(--margin), 48px);
+}
+
+/* In-place lookup (C12.7): a soft wash on the word or phrase being looked up. The Custom
+   Highlight API paints it without changing the text's DOM; elsewhere .rf-mark boxes sit in a
+   layer under the text. --accent-soft is a checked text ground (check:contrast). No motion. */
+::highlight(rf-lookup) { background-color: var(--accent-soft); }
+/* C12.9: no iOS callout on a held word (the card opens instead); selection itself still works. */
+.rf-flow { -webkit-touch-callout: none; }
+.rf-mark-layer { position: absolute; inset: 0; pointer-events: none; }
+.rf-mark { position: absolute; border-radius: 2px; background: var(--accent-soft); }

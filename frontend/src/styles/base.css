@@ -131,17 +131,22 @@ a:hover {
   animation-timing-function: var(--ease-settle);
 }
 
-/* A11 and D3: under reduced motion CSS animations and transitions become
-   near-instant and loops stop. In the base layer, so these !important
-   declarations beat the pages' unlayered ones. Motion's own animations
-   follow MotionRoot (reducedMotion="user"). */
+/* A11 and D3: under reduced motion CSS animations become near-instant and
+   loops stop, and transitions are instant. In the base layer, so these
+   !important declarations beat the pages' unlayered ones. Motion's own
+   animations follow MotionRoot (reducedMotion="user").
+   Transitions are 0s, not 0.01ms: every element's transition-property is
+   `all` by default, so a tiny duration made every style change a
+   transition and layout read right after a change came back stale
+   (DEBUG_LOG 2026-11-11 C12.3). Nothing listens for transitionend. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }

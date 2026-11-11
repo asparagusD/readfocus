@@ -699,7 +699,146 @@ texts, one process per model:
 Not measured: Render itself; the whole backend in a Linux container;
 retrieval quality of either model; concurrent requests during a batch.
 
+### C12.1c: reader structure during ingestion (2026-11-11)
+
+`book_structure.build` now runs once per ingestion job, on a worker
+thread, before the first batch. No new dependency: BeautifulSoup, ebooklib
+and pypdf were already imported by ingestion. Measured in one Python 3.11
+process on this machine (an inline script: extract, `chunk_text`, then
+`build`, timed with `perf_counter`, RSS from `psutil`):
+
+| Book | Chunks | `build` | For comparison |
+|---|---|---|---|
+| `sample.pdf` (13-page journal paper) | 7 | 1 ms | |
+| Synthetic EPUB: 60 chapters, 80,760 words, an `<em>` in every sentence | 134 | 303 ms | extract + chunk of the same file: 167 ms |
+
+- Process RSS 97.9 MB before loading the books and building, 118.2 MB
+  after (the EPUB, its text and blocks held in memory together).
+- Stored size for the EPUB: blocks as JSON 652 KB against 389 KB of chunk
+  text (the marks on every sentence inflate it); a book without emphasis
+  stores about the text size again.
+- Against an ingestion of minutes (embedding and questions per batch),
+  0.3 s is small; it is paid once per job, also on a resume.
+
+Not measured: a real published EPUB or novel PDF, Render, memory of a
+book over 100,000 words.
+
+### C12.3: reader pagination (2026-11-11)
+
+`frontend/src/reader/BookReader.jsx` lays today's text out as CSS columns
+(one column a page) and reads the page count from `scrollWidth`. Measured
+in headless Edge 157 over CDP on `/__reader` (dev server), on the 4×
+fixture: 8 chapters, 3,541 words of *Walden*. "Layout" is the time from
+the start of the layout effect to the page count and anchor (forced
+column layout included, `data-paginate-ms`); "whole" is from the click
+on a text size to the new page count on screen (React render, commit and
+layout). Six text-size changes each; mount is the click that first
+renders the long text. Scratchpad script `reader_timing.mjs`.
+
+| CPU | Width | Mount (whole / layout) | Text size, layout max | Text size, whole max | Per chapter (whole / 8) |
+|---|---|---|---|---|---|
+| 1x | 1440 | 11.8 / 4.1 ms | 10.8 ms | 16.9 ms | about 2 ms |
+| 1x | 375 | 11.5 / 4.9 ms | 7.2 ms | 11.4 ms | about 1.5 ms |
+| 4x throttled | 1440 | 51.0 / 17.8 ms | 29.1 ms | 51.5 ms | about 6 ms |
+| 4x throttled | 375 | 52.6 / 20.9 ms | 29.9 ms | 48.5 ms | about 6 ms |
+| 6x throttled | 1440 | 80.0 / 27.7 ms | 42.0 ms | 72.3 ms | about 9 ms |
+| 6x throttled | 375 | 87.7 / 33.4 ms | 50.3 ms | 83.9 ms | about 11 ms |
+
+Budget: under 100 ms per chapter (C12.3 prompt). Met with room at every
+setting; even all eight chapters together stay under 100 ms at 6x.
+A session is one to four chunks of about 600 words, smaller than this
+fixture. Not measured: a real phone, Firefox or Safari (whose column
+layout differs), books with very long paragraphs.
+
+### C12.6: word and phrase lookup (2026-11-11)
+
+`GET /lookup` through FastAPI's TestClient on this machine, against the
+dev Supabase project and the live Free Dictionary API and Wikipedia
+(scratchpad `lookup_live.py`). "In-process" is a repeat answered by the
+LRU in front of the table; "table" clears that LRU before every call, so
+each repeat reads `term_lookups` on dev. 50 calls each.
+
+| Case | p50 | p95 |
+|---|---|---|
+| Cached, in-process | 2.7 ms | 2.9 ms |
+| Cached, `term_lookups` table only | 96.0 ms | 113.9 ms |
+
+Budget: cached p95 under 150 ms locally (C12.6 prompt). Met by both.
+
+First (uncached) lookups: `serendipity` 984 ms (dictionary), `wandered`
+1,048 ms (dictionary), `Henry David Thoreau` 398 ms and `Mercury` 500 ms
+(Wikipedia, the second a disambiguation page). Single calls: the Free
+Dictionary API answered in 190–1,430 ms and Wikipedia in 380–1,010 ms,
+but **4 of 12 dictionary lookups of made-up words hit the 2.5 s timeout**,
+so an unknown word is sometimes reported as "couldn't look this up"
+rather than "not found" (nothing is cached then).
+
+Follow-up, same day (Wikipedia after a failed source): 12 more made-up
+words, cache table bypassed. 6 came back "not found" (1.4–2.6 s, both
+sources asked) and 6 "unavailable": one dictionary timeout (3.7 s in all)
+and five fast failures that turned out to be intermittent **502s from the
+dictionary's Cloudflare front with `Retry-After: 60`**, each followed by a
+Wikipedia 404. A word cannot be called "not found" while the dictionary
+has not answered, so these stay unavailable and uncached. Real terms were
+unaffected: `serendipity` (dictionary) and `Walden Pond` (Wikipedia, 298 ms).
+
+Second follow-up (busy sources are skipped): 12 more made-up words. The
+second one met a dictionary 502 with `Retry-After: 60`; the ten after it
+went to Wikipedia only (500–1,720 ms, one request each) until the minute
+was up, instead of each waiting on the dictionary first.
+
+Memory: importing `backend/services/lookup.py` in a fresh process with
+httpx and the Supabase client already loaded: 55.8 → 57.1 MB RSS (+1.3
+MB). No new dependency (httpx was already pinned). The in-process LRU
+holds at most 2,000 compact answers.
+
 ## Frontend: Lighthouse and image budgets
+
+### C12.10: page turns and lookup in the e2e run (2026-11-11)
+
+`npm --prefix frontend run test:e2e` (Playwright 1.64.1 on the installed
+Microsoft Edge, headless, 1440x900, a production build under `vite preview`,
+every API call mocked; `e2e/reader.spec.js`, last test). Page turns:
+`requestAnimationFrame` sampled over five turns (three forward, two back),
+each given 800 ms to land; then the same with CDP
+`Emulation.setCPUThrottlingRate` 4. Lookup: from the `pointermove` that
+reaches "woods" to the card in the DOM, timed inside the page; the answer
+comes from the mock, so this is the client's own time (the 350 ms hover
+intent included), not the network's. Two runs:
+
+| Measure | Run 1 | Run 2 |
+|---|---|---|
+| Page turns, frames per second | 75.0 (306 frames in 4.07 s) | 75.0 |
+| Worst frame gap | 13.7 ms | 14.0 ms |
+| Frames over 33 ms | 0 | 0 |
+| Page turns at 4x CPU, frames per second | 74.3 | 74.3 |
+| Worst frame gap at 4x CPU | 26.7 ms | 26.8 ms |
+| Hover to card, first (not cached) | 372 ms | 368 ms |
+| Hover to card, cached, 5 tries | 356–363 ms | 357–366 ms |
+
+Headless Edge paces frames at about 75 a second here, so 75 fps is the
+ceiling, not a measured limit. Real answers from the backend add the
+network: see C12.6 (cached in the table 96 ms p50, first lookups 0.4–1 s).
+Results also land in `frontend/test-results/reader-benchmarks.json`
+(ignored). Not measured: a real phone, Firefox, Safari.
+
+### C12.8: @floating-ui/react for the word card (2026-11-11)
+
+`npm --prefix frontend run build` (Vite) before and after adding
+`@floating-ui/react@0.27.20` (MIT; its dependencies `@floating-ui/react-dom`,
+`@floating-ui/dom`, `@floating-ui/core`, `@floating-ui/utils` and `tabbable`
+are MIT too; 934 KB unpacked on npm). Only `useFloating`, `inline`, `offset`,
+`flip`, `shift`, `autoUpdate` and `FloatingPortal` are imported.
+
+| Asset | Before | After | Delta (raw / gzip) |
+|---|---|---|---|
+| `vendor-*.js` | 781.91 kB / 227.13 kB gzip | 813.56 kB / 238.65 kB gzip | +31.65 kB / +11.52 kB |
+| `index-*.js` (app code: card, client, hooks) | 114.40 kB / 37.86 kB gzip | 123.07 kB / 40.65 kB gzip | +8.67 kB / +2.79 kB |
+| `index-*.css` | 59.12 kB / 11.95 kB gzip | 63.68 kB / 12.69 kB gzip | +4.56 kB / +0.74 kB |
+
+About 15 kB gzip in all. `@floating-ui/react-dom` alone (with React's own
+`createPortal`) would have been lighter; the C12.8 prompt named
+`@floating-ui/react`. Not measured: time to first page.
 
 ### C11.5: image budgets and Lighthouse (2026-11-11)
 

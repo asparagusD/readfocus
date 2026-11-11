@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from backend.routers import auth, books, sessions, agent, dashboard, mastery
+from backend.routers import auth, books, sessions, agent, dashboard, mastery, lookup
 from backend.nlp import embedder
 from backend.services import ingestion_worker
 
@@ -58,6 +58,7 @@ app.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
 app.include_router(agent.router, prefix="/agent", tags=["Agent"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 app.include_router(mastery.router, prefix="/mastery", tags=["Mastery"])
+app.include_router(lookup.router, prefix="/lookup", tags=["Lookup"])
 
 @app.get("/health")
 def health_check():

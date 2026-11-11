@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 from typing import Any, cast
-from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException, Query
 from backend.services import book_ingestor
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
@@ -87,6 +87,29 @@ async def get_book_details(book_id: str, user_id: str = Depends(get_current_user
     book["reading_progress"] = progress_resp.data[0] if progress_resp.data else None
     
     return book
+
+PAGES_MAX_CHUNKS = 4  # reading ahead is a few chunks at a time
+PAGE_FIELDS = ("chunk_index", "content", "word_count", "blocks")
+
+
+@router.get("/{book_id}/pages")
+async def get_pages(book_id: str, start: int = Query(ge=0), end: int | None = Query(default=None, ge=0),
+                    user_id: str = Depends(get_current_user)):
+    """Chunks start..end (inclusive, at most four) of the caller's book, for reading ahead (C12.4, C12.5b).
+
+    Read-only: no session, timer, pacing or test is touched; the planner decides what a session reads.
+    """
+    end = start if end is None else end
+    if end < start or end - start + 1 > PAGES_MAX_CHUNKS:
+        raise HTTPException(status_code=422, detail=f"Ask for 1 to {PAGES_MAX_CHUNKS} chunks, start to end.")
+    owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
+    if not owned.data:
+        raise HTTPException(status_code=404, detail="Book not found")
+    rows = supabase.table("chunks").select(", ".join(PAGE_FIELDS)).eq("book_id", book_id).in_(
+        "chunk_index", list(range(start, end + 1))).execute().data or []
+    chunks = sorted((cast(dict[str, Any], row) for row in rows), key=lambda row: row["chunk_index"])
+    return {"chunks": [{field: row.get(field) for field in PAGE_FIELDS} for row in chunks]}
+
 
 JOB_FIELDS = ("status", "progress", "cursor", "attempts", "error", "updated_at")
 

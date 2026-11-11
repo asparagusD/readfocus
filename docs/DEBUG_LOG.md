@@ -1513,3 +1513,355 @@ then completes (score 88, docs/BENCHMARKS.md, C11.5).
 
 ### Commit
 fix(ui): let pages report their first contentful paint
+
+## 2026-11-11 C12.1c — structure backfill reports every dev book as a mismatch
+
+**Status:** fixed
+
+### Symptom
+The new structure backfill re-extracts and re-chunks each ready book's
+file and writes blocks only when the result equals the stored chunks. On
+the dev project it found no book it could fill: six of seven ready books
+are `mismatch` and the seventh has no file. Expected: books ingested by
+the current code re-chunk to exactly what is stored. No exception or
+stack trace; the outcome is the script's own report.
+
+    python scripts/backfill_structure.py --dry-run 2>/dev/null | grep -E "^ENV|^  [0-9a-f]{8}-|^checked"
+    ENV=development; books without a toc: 7
+      2f85c3de-…  'Sample': mismatch
+      3e3040a3-…  'Dagano 14 Chapter Operational Amplifiers.Pdf': mismatch
+      4cc38181-…  'My API Upload Test': mismatch
+      51fd1ff0-…  'Main': mismatch
+      58a7d7e4-…  'David Harris Sarah Harris Digital Design And Computer Architecture EN': mismatch
+      5c7fdf10-…  'David Harris Sarah Harris Digital Design And Computer Architecture EN': mismatch
+      f450cf54-…  'Sample PDF Test': no file
+    checked 7 books
+
+(Without the grep, pypdf also prints "fontTools is required…" warnings
+for the Harris book; they are not errors.)
+
+### Repro
+    python scripts/backfill_structure.py --dry-run --book-id 2f85c3de-cd9f-421a-bfbf-f5ca4fa16c66
+
+### Hypotheses
+1. The PDF text extracted today differs from what was extracted when
+   these books were ingested, in whitespace only. Evidence: on `Sample`
+   chunks 2, 3 and 6 differ, first at character 3029, stored
+   `'L = 1\nP\nP\n∑\ni=1\n\nSi'` against today's `'L = 1 P P ∑ i=1  Si'`,
+   same lengths; on the Harris book 280 of 302 chunks differ
+   (`'Patterson\nUniversity'` against `'Patterson University'`) and today's
+   text chunks into 307, not 302, because paragraph splits follow blank
+   lines. `pypdf` was unpinned when these books were ingested (May 2026)
+   and pinned to 7.0.0 in `e302ab8` (2026-11-10). Ruled out if: the texts
+   also differ outside whitespace. Result: **confirmed**: for both books
+   the text with all whitespace removed is identical.
+2. `stored_contents` reads a truncated or misordered list. Evidence
+   against: 7 of 7 and 302 of 302 chunks read, equal lengths per chunk.
+   Result: ruled out.
+3. `chunk_text` changed since ingestion. Evidence against: `git log -L`
+   shows no change since `3ce0ffb` (May). Result: ruled out.
+
+### Root cause
+The backfill's design, not ingestion: `scripts/backfill_structure.py`
+`backfill_book` re-extracted and re-chunked each file and required the
+result to equal the stored chunks exactly. Reader blocks for a PDF need
+only the stored chunk text, and the EPUB alignment already ignores
+whitespace, so the comparison was both unnecessary and impossible for any
+book ingested before pypdf was pinned.
+
+### Fix
+`backfill_book` builds blocks from the stored chunks
+(`stored_contents`); the file is downloaded only for an EPUB, whose tags
+`book_structure.assign` aligns to the stored text ignoring whitespace,
+falling back to text blocks. `chunks.content` is still never written.
+The `mismatch` and `no file` outcomes are gone (a PDF needs no file).
+One attempt.
+
+### Regression test
+`backend/tests/test_backfill_structure.py::test_blocks_come_from_the_stored_text_even_when_the_file_now_extracts_differently`
+and `::test_a_pdf_needs_no_file_and_is_not_downloaded`. With the old
+`backfill_book` put back: 2 failed, 5 passed. With the fix: 7 passed.
+Repro re-run on dev: all 7 books "would store" (7, 70, 7, 35, 302, 212
+and 7 chunks), none mismatch.
+
+Found while re-running it: chapter counts of 44 to 178 on technical PDFs
+(running headers and formula lines taken for chapters). That is a
+different fault in `book_structure.py`, logged in the next entry; nothing
+was written to dev before it is fixed.
+
+### Commit
+Folded into `feat(ingest): store structured blocks and table of contents`
+(C12.1c): the backfill had never been committed, so there is no earlier
+version to fix in a separate commit.
+
+## 2026-11-11 C12.1 — PDF chapter detection takes running headers and formulas for chapters
+
+**Status:** fixed
+
+### Symptom
+The structure backfill's dry run on dev (previous entry) reports far
+more chapters than the books have: 178 for the Harris and Harris
+textbook (about 9 chapters), 69 for `Main` (a lecture-notes PDF), 44 for
+`Dagano 14 Chapter Operational Amplifiers` (one chapter). Expected: about
+one toc entry per real chapter, and none from page furniture or maths.
+No exception. Titles detected (first entries, `ascii()`):
+
+    python scripts/backfill_structure.py --dry-run   # chapter counts above
+    58a7d7e4 178 {'caps': 96, 'chapter-word': 78, 'roman': 4}
+      'ONLINE SUPPLEMENTS', 'PCSPIM', 'LABS', 'BUGS', 'ACKNOWLEDGMENTS',
+      'CHAPTER ONE From Zero to One: Captain Meriwether ...',
+      'Chapter 01.qxd  1/27/07  10:20 AM  Page 8', 'DEAFDAD8: least',
+      'Chapter 01.qxd  1/27/07  10:20 AM  Page 16', 'CL CL', ...
+    51fd1ff0 69 {'caps': 6, 'chapter-word': 63}
+      'CONTENTS 2', 'CONTENTS 3', 'CHAPTER 1. INTRODUCTION TO MACHINE LEARNING8',
+      'CHAPTER 1. INTRODUCTION TO MACHINE LEARNING9', ...
+      'Chapter 2: Linear Regression with Multiple Vari-', 'Chapter 3: Classification', ...
+    3e3040a3 44 {'caps': 42, 'roman': 2}
+      '+VCC', 'IC I IC1: Icopy2', 'VBE2: IC2', '\U0001d43c\U0001d436\U0001d435: R8',
+      'VCC = +15V: Vid', ...
+
+### Repro
+    python -c "<build('pdf', b'', stored_contents(supabase, '<id>')) for the three books; print len(toc)>"
+    (script in the scratchpad; same numbers every run)
+
+### Hypotheses
+1. Running heads and footers are taken for chapters: they sit at the top
+   or bottom of every page, are short, often ALL CAPS or start with
+   "Chapter N", and are followed by text. Evidence: of the chapters found,
+   140 of 178 (Harris), 67 of 69 (`Main`) and 18 of 44 (`Dagano`) are
+   lines that occur 3 or more times in the book (digits ignored). Ruled
+   out if: the false chapters are one-off lines. Result: **confirmed**.
+2. The ALL CAPS test accepts lines that are not words: `line ==
+   line.upper()` is true for formulas (`+VCC`, `VCC = +15V`) and for
+   mathematical italic letters (U+1D43C and others are alphabetic and
+   have no case). Evidence: 60 (Harris), 6 (`Main`) and 41 (`Dagano`)
+   chapters contain digits, symbols or non-Latin letters. Result:
+   **confirmed**.
+3. The "Chapter N" pattern is too loose: `\b` after the number accepts
+   `Chapter 01.qxd 1/27/07 10:20 AM Page 2` (a print-job slug, 220 and 292
+   times) and `Chapter 5, you will see…`. Evidence: distinct
+   chapter-pattern lines listed for both books. Result: **confirmed**; the
+   same chapter number then appears many times.
+
+Also seen: in Harris the only chapter marker in the text is the running
+head (`CHAPTER ONE From Zero to One`, 23 times); in `Main` the opener is a
+one-off `Chapter 1` + title line and the heads repeat with the page number
+glued on (`…MACHINE LEARNING7`). So a repeated head cannot simply be
+dropped: its first occurrence is the only chapter marker some books have.
+
+### Root cause
+`backend/services/book_structure.py`, `text_blocks` and
+`_is_heading_line` (C12.1a): each chunk was read alone, so a line printed
+on every page could not be told from a heading; the ALL CAPS test was
+`line == line.upper()`, true for formulas and caseless maths letters;
+`CHAPTER_RE` ended in ``, which accepts `01.qxd` and `5,`; nothing kept
+a chapter number from being listed again. While fixing it, two more
+causes showed on `Main`: an opener right after a page that ends mid-line
+was joined into the previous paragraph (the page-break continuation rule
+skipped heading detection), and `ROMAN_RE` accepted `VDD`, `VCC`, `CL`
+and single-letter variables.
+
+### Fix
+- `running_heads(chunks)`: lines that start or end a page (a blank-line
+  segment) at least 3 times in the book, compared without case, spacing
+  or a page number at either end (a bare "Chapter N" keeps its number).
+  They are dropped from the text; the first one carrying an unseen
+  chapter becomes that chapter, without its glued page number (books
+  like Harris mark chapters only in the running head).
+- Chapters found are remembered across chunks (`book["seen"]`), so a
+  number or an ALL CAPS title is listed once.
+- `CHAPTER_RE`: the number must end the line or be followed by a space,
+  ". ", ": " or a dash. ALL CAPS: Latin capitals only, a word of 4 or
+  more letters, followed by prose (4 words with lower case). Roman
+  numerals: standard form, under 100, followed by a line with lower case.
+- A page break inside an open sentence still lets the next line start a
+  chapter. A title line is taken only after a bare "Chapter N" or numeral.
+Three rounds, each adding tests first; no attempt failed.
+
+### Regression test
+`backend/tests/test_book_structure.py`: the running-head, opener,
+print-slug, formula, chapter-once, refrain, opener-after-open-page,
+glued-number, canonical-numeral and single-letter tests (19 cases). With
+the C12.1b module put back (`git stash push -- backend/services/book_structure.py`):
+18 failed, 29 passed (the refrain test passes on both, as intended: it
+guards against dropping repeated lines inside a page). With the fix: 47
+passed.
+
+Repro re-run (chapters found, before → after): Harris 178 → 21 (front
+matter, the eight chapters, EXERCISES, EPILOGUE, plus PCSPIM, LABS,
+BUGS, VHDL, "YOU WILL GET A MILLION" and one variable "X" before a
+figure caption); its truncated copy (5c7fdf10) 140 → 19; `Main` 69 → 10 (its
+ten chapters with titles); `Dagano` 44 → 0; the three short test PDFs 0.
+Text kept in blocks: 97.1–99.9% of the chunk text (the rest is running
+heads and page numbers).
+
+### Commit
+fix(ingest): stop taking running heads and formulas for chapters
+
+## 2026-11-11 C12.3 — under reduced motion the reader paginates with the old text size
+
+**Status:** fixed
+
+### Symptom
+In headless Edge with `prefers-reduced-motion: reduce`, changing the text
+size on `/__reader` re-paginates with the previous size: the page count
+lags one change behind and the anchored passage is not on screen
+(`anchorVisible: false`). Without reduced motion the same steps keep the
+place. No error. From the scratchpad probe `reader_lag.mjs` (status |
+flow's computed font-size | `--reading-size` on the book):
+
+    node reader_lag.mjs
+    dark reduce ["before pp. 1–2 of 6 | 18px | 18px","sync pp. 1–2 of 6 | 18px | 18px",
+                 "1 frame pp. 1–2 of 6 | 18px | 19.5px","300ms pp. 1–2 of 6 | 19.5px | 19.5px"]
+    dark no-preference ["…","1 frame pp. 1–2 of 7 | 19.5px | 19.5px", …]
+
+### Repro
+    node rm_probe.mjs   (scratchpad): a new div's font-size set from 18px to 24px
+    reduce        {"property":"all","duration":"1e-05s","sync":"18px","frame":"18px","later":"24px"}
+    no-preference {"property":"all","duration":"0s","sync":"24px","frame":"24px","later":"24px"}
+
+### Hypotheses
+1. The global reduced-motion rule (`frontend/src/styles/base.css`, A11,
+   C10.4) sets `transition-duration: 0.01ms !important` on every element.
+   Every element's `transition-property` is `all` by default (inert at
+   0s), so under reduced motion every style change becomes a 0.01 ms
+   transition, and a read in the same frame gets the old value. Ruled out
+   if: the probe div shows a 0s duration under reduce. Result:
+   **confirmed** (1e-05s and `all`; the value lands after the frame).
+2. React applies the size a frame late. Evidence against: `--reading-size`
+   on the book is already 19.5px after one frame in both modes; only the
+   computed font-size differs. Result: ruled out.
+
+### Root cause
+`frontend/src/styles/base.css`, the `prefers-reduced-motion: reduce`
+block: `transition-duration: 0.01ms !important` on `*`. With the default
+`transition-property: all`, every element transitioned every change for
+0.01 ms, so values read in the frame of a change were the old ones. The
+reader measures its columns right after a text-size change, so it
+paginated at the old size. It affected every reduced-motion reader since
+C10.4; nothing earlier measured layout right after a style change.
+
+### Fix
+Transitions under reduced motion are `0s` (with `transition-delay: 0s`),
+which means no transition at all: instant, as A11 intends. Animations
+keep 0.01 ms and one iteration. No code in `src` listens for
+`transitionend` (searched), so nothing waited on the old tiny
+transitions. One attempt.
+
+### Regression test
+`frontend/src/styles/base.test.js` (`npm run test:unit`, Node's test
+runner, agreed at C12 plan time): failed before the fix (7 passed, 1
+failed: "reduced motion makes transitions instant rather than 0.01 ms
+long"), 8 passed after. Repro re-run: `rm_probe.mjs` under reduce now
+`{"duration":"0s","sync":"24px","frame":"24px"}`; `reader_lag.mjs`
+under reduce now shows `pp. 1–2 of 7 | 19.5px` after one frame, the same
+as without reduced motion.
+
+### Commit
+fix(ui): make reduced-motion transitions instant instead of 0.01 ms
+
+## 2026-11-11 C12.5b — repo graph cannot match a fetchApi call that has a query string
+
+**Status:** fixed
+
+### Symptom
+After staging C12.5b, the tooling tests failed and the commit went
+ahead anyway: the check ran as `pytest tools/repo_graph/tests -q | tail -1`
+in a `&&` chain, so the pipe's exit status was `tail`'s and the commit
+step ran. Commit `a87eafc` therefore says "62 passed (after staging)",
+which is false.
+
+    pytest tools/repo_graph/tests -q
+    1 failed, 61 passed
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_covers_routers_and_pages
+    >       assert not [u for u in graph["unresolved"] if u["type"] == "calls_endpoint"]
+    E       AssertionError: assert not [{'from': 'file:frontend/src/pages/ReadingSession.jsx', 'type': 'calls_endpoint',
+            'target': 'GET /books/${bookId}/pages?start=${entry.chunk_index}&end=${entry.chunk_index + 1}'}]
+    tools\repo_graph\tests\test_build.py:228: AssertionError
+
+### Repro
+    pytest tools/repo_graph/tests/test_build.py::test_real_graph_covers_routers_and_pages -q
+
+### Hypotheses
+1. `tools/repo_graph/build.py` `route_key` compares the whole call text,
+   query string included, with the route path, which has none; the
+   C12.5b call is the first `fetchApi` call in the codebase with a query
+   string. Evidence: the unresolved target ends in `?start=…&end=…`; the
+   C12.4 read-ahead builds its query outside `fetchApi(` (a fetcher
+   argument), so it was never matched. Ruled out if: a call with a query
+   string resolves in the fixture. Result: **confirmed** by the fixture
+   test below.
+
+### Root cause
+`tools/repo_graph/build.py` `route_key` (line 290): the call text was
+compared with the route including its query string, so
+`/books/${bookId}/pages?start=…` never equalled `/books/{}/pages`.
+Process: the standard checks before commit `a87eafc` ran in an `&&`
+chain with `| tail -1`, which hides a failing exit status; the failure
+was printed and missed.
+
+### Fix
+`route_key` drops everything from `?` before comparing. Checks are run
+on their own (no pipe in a commit chain) and read before any commit.
+One attempt.
+
+### Regression test
+`tools/repo_graph/tests/test_build.py`: the fixture page calls
+`/books/${id}/open?start=${n}&end=${n + 1}` and
+`test_calls_endpoint_matches_method_and_path` asserts no unresolved call
+contains `?`. Before the fix: 2 failed, 12 passed (that test and
+`test_real_graph_covers_routers_and_pages`). After: 62 passed (all
+tooling tests); `query.py "GET /books/{book_id}/pages"` now lists
+`ReadingSession.jsx` as its caller.
+
+### Commit
+fix(graph): match frontend calls to routes without their query string
+(corrects the "62 passed" line of `a87eafc`, which was false)
+
+## 2026-11-11 C12.6 — a proper=1 lookup can replace everyone's plain lookup of the same word
+
+**Status:** fixed
+
+### Symptom
+Found in the C12 close review (an independent read of
+`git diff readfocus-2.0...chunk/C12-book-reader`), not by a failing check.
+`GET /lookup?term=bank&proper=1` asks Wikipedia first and stores the answer
+in the shared `term_lookups` cache under `("bank", "en")`, the same key a
+plain `GET /lookup?term=bank` uses. For 90 days every reader's plain "bank"
+then shows the Wikipedia summary instead of the definition. `proper` comes
+from the client, so any signed-in user could do this.
+
+### Reproduce
+`backend/tests/test_lookup.py::test_a_proper_lookup_never_answers_a_plain_lookup_of_the_same_word`:
+`run` with `proper=1` (Wikipedia mocked), the in-process copy dropped, then
+plain `run`: the plain lookup returned the Wikipedia answer. 1 failed, 37
+passed.
+
+### Upstream and downstream (repo graph)
+`backend/services/lookup.py` is called by `backend/routers/lookup.py` only;
+it reads and writes `term_lookups` (migration 015). The frontend client
+(`frontend/src/reader/lookup.js`) already keeps names and words apart in its
+own LRU (`P:` and `w:` keys), so only the shared cache was affected.
+
+### Hypotheses
+1. The cache key is the display text for Wikipedia-first lookups, and the
+   display of a lower-case word equals its plain key. Ruled out if: the two
+   keys differ for `run`. Result: **confirmed** (both `run`).
+
+### Root cause
+`look_up` set `key = term.display if wiki_first else term.key`. For a
+capitalised name the two keys differed only by case, which hid the clash;
+for a lower-case word sent with `proper=1` they were the same string.
+
+### Fix
+Wikipedia-first lookups (names and phrases) are keyed `P:<original
+casing>`, plain words keep their lower-case key. Entries cached before the
+fix under bare names on dev are simply not found again and are fetched
+once more. One attempt.
+
+### Regression test
+The test above asserts the plain lookup goes to the dictionary and the
+table holds `P:run` and `run` apart. Before: failed; after: 38 passed.
+
+### Commit
+fix(lookup): keep Wikipedia-first answers apart in the shared cache

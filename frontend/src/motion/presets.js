@@ -86,10 +86,27 @@ export const shelfArrive = {
   },
 };
 
-/** Moment 2: the reader swings in from a slight 10 degree turn at the spine. */
-export const pageTurn = {
+/** Moment 2, opening: the reader swings in from a slight 10 degree turn at the spine. */
+export const bookOpen = {
   hidden: { opacity: 0, rotateY: -10, transformPerspective: 1200, originX: 0 },
   visible: { opacity: 1, rotateY: 0, get transition() { return timing('--dur-5', '--ease-settle'); } },
+};
+
+/**
+ * Moment 2, each later page (C12.4): a leaf hinged at the spine turns over.
+ * `custom` is the direction: 1 turns a right-hand leaf to the left (forward),
+ * -1 a left-hand leaf to the right (back); `from` starts it already over,
+ * for a page arriving on a single-page layout.
+ */
+export const pageTurn = {
+  flat: (dir) => ({ rotateY: dir.from ? dir.from : 0 }),
+  turned: (dir) => ({ rotateY: dir.to, get transition() { return timing('--dur-5', '--ease-settle'); } }),
+};
+
+/** The shadow travelling with a turning leaf: darkest halfway over, gone when it lands. */
+export const turnShade = {
+  flat: { opacity: 0 },
+  turned: { opacity: [0, 0.6, 0], get transition() { return timing('--dur-5', '--ease-settle'); } },
 };
 
 /** Moment 5: a concept chip pops in; use inside stagger(). */

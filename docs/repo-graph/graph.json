@@ -30,6 +30,13 @@
       "handler": "get_book_details"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/pages",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/pages",
+      "handler": "get_pages"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/status",
       "type": "endpoint",
       "method": "GET",
@@ -49,6 +56,13 @@
       "method": "GET",
       "path": "/health",
       "handler": "health_check"
+    },
+    {
+      "id": "endpoint:GET /lookup",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/lookup",
+      "handler": "look_up"
     },
     {
       "id": "endpoint:GET /mastery",
@@ -119,6 +133,13 @@
       "method": "POST",
       "path": "/sessions/{session_id}/submit-answers",
       "handler": "submit_answers"
+    },
+    {
+      "id": "endpoint:PUT /sessions/{session_id}/position",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/sessions/{session_id}/position",
+      "handler": "save_position"
     },
     {
       "id": "env:DEV",
@@ -495,6 +516,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/lookup.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/mastery.py",
       "type": "file",
       "role": "router",
@@ -519,6 +546,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/book_structure.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/concept_store.py",
       "type": "file",
       "role": "service",
@@ -532,6 +565,12 @@
     },
     {
       "id": "file:backend/services/ingestion_worker.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/lookup.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -615,7 +654,25 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_pages.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_position.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_sessions.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_start_reader.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -639,7 +696,19 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_structure.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_book_structure.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -712,6 +781,12 @@
     },
     {
       "id": "file:backend/tests/test_ingestor.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_lookup.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -909,6 +984,18 @@
       "language": "markdown"
     },
     {
+      "id": "file:frontend/e2e/fixtures.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/reader.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/eslint.config.js",
       "type": "file",
       "role": "config",
@@ -931,6 +1018,12 @@
       "type": "file",
       "role": "config",
       "language": "json"
+    },
+    {
+      "id": "file:frontend/playwright.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/scripts/check-contrast.mjs",
@@ -1137,6 +1230,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/gallery/ReaderGallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/gallery/gallery.css",
       "type": "file",
       "role": "asset",
@@ -1147,6 +1252,12 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/readerFixture.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/hooks/useAuth.jsx",
@@ -1359,10 +1470,208 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/BookFlow.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/BookReader.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/ContentsDrawer.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/PageTurn.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/PhraseChip.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/ReaderToolbar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/WordCard.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/WordCard.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/anchor.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/blocks.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/blocks.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/geometry.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/geometry.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/highlight.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/longPress.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/longPress.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/lookup.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/lookup.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAhead.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAhead.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/reader.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/textSize.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/textSize.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useChromeVisible.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/usePlaceSaver.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useWordAtPoint.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useWordCard.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/wordAt.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/wordAt.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/styles/base.css",
       "type": "file",
       "role": "asset",
       "language": "css"
+    },
+    {
+      "id": "file:frontend/src/styles/base.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/styles/fonts.css",
@@ -1450,6 +1759,12 @@
     },
     {
       "id": "file:scripts/backfill_local_embeddings.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/backfill_structure.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -1629,6 +1944,24 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/013_structured_content.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/014_reading_position.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/015_term_lookups.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -1797,6 +2130,10 @@
       "type": "table"
     },
     {
+      "id": "table:term_lookups",
+      "type": "table"
+    },
+    {
       "id": "table:test_results",
       "type": "table"
     },
@@ -1830,6 +2167,21 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/012_book_covers.sql",
       "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/013_structured_content.sql",
+      "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/013_structured_content.sql",
+      "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/014_reading_position.sql",
+      "to": "table:reading_progress"
     },
     {
       "type": "calls_endpoint",
@@ -1879,6 +2231,11 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:GET /books/{book_id}/pages"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:POST /sessions/start"
     },
     {
@@ -1895,6 +2252,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/reader/usePlaceSaver.js",
+      "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
       "type": "calls_external",
@@ -2064,6 +2426,11 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/pages"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}/status"
     },
     {
@@ -2080,6 +2447,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/dashboard.py",
       "to": "endpoint:GET /dashboard"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/lookup.py",
+      "to": "endpoint:GET /lookup"
     },
     {
       "type": "defines_endpoint",
@@ -2115,6 +2487,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:POST /sessions/{session_id}/submit-answers"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
       "type": "defines_function",
@@ -2190,6 +2567,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/010_processing_jobs.sql",
       "to": "table:processing_jobs"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/015_term_lookups.sql",
+      "to": "table:term_lookups"
     },
     {
       "type": "graph_edge",
@@ -2585,6 +2967,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/lookup.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/mastery.py"
     },
     {
@@ -2649,6 +3036,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/routers/lookup.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/lookup.py",
+      "to": "file:backend/services/lookup.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/mastery.py",
       "to": "file:backend/dependencies.py"
     },
@@ -2695,6 +3092,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/covers.py"
     },
     {
@@ -2735,6 +3137,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/lookup.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -2879,6 +3286,41 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/agents/evaluation/feedback.py"
     },
@@ -2944,6 +3386,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_api_start_reader.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_auth.py",
       "to": "file:backend/dependencies.py"
     },
@@ -2974,8 +3421,38 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:scripts/backfill_structure.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_structure.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_structure.py",
+      "to": "file:backend/services/book_structure.py"
     },
     {
       "type": "imports",
@@ -3184,6 +3661,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/services/lookup.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_mastery.py",
       "to": "file:backend/agents/knowledge_state/mastery.py"
     },
@@ -3341,6 +3838,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_text.py",
       "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/fixtures.js",
+      "to": "file:frontend/src/gallery/readerFixture.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/reader.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",
@@ -3594,6 +4101,36 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/gallery/ReaderGallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/gallery/readerFixture.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/reader/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gallery/main.jsx",
       "to": "file:frontend/src/components/ui/Toast.jsx"
     },
@@ -3790,6 +4327,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/hooks/usePageTransition.js"
     },
     {
@@ -3801,6 +4348,51 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/pages/ReadingSession.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/ContentsDrawer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/ReaderToolbar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/readAhead.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useChromeVisible.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/usePlaceSaver.js"
     },
     {
       "type": "imports",
@@ -3816,6 +4408,181 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/pages/Results.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/BookFlow.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/PageTurn.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/PhraseChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/WordCard.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/anchor.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/reader.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/useWordAtPoint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/useWordCard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/reader/ContentsDrawer.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/PageTurn.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/PageTurn.jsx",
+      "to": "file:frontend/src/reader/BookFlow.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/PhraseChip.jsx",
+      "to": "file:frontend/src/reader/WordCard.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/reader/ReaderToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/WordCard.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/anchor.js",
+      "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/blocks.test.js",
+      "to": "file:frontend/src/reader/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/geometry.test.js",
+      "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/longPress.test.js",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/lookup.js",
+      "to": "file:frontend/src/reader/wordAt.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/lookup.test.js",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/readAhead.test.js",
+      "to": "file:frontend/src/reader/readAhead.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/textSize.test.js",
+      "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/usePlaceSaver.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useWordAtPoint.js",
+      "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useWordAtPoint.js",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useWordAtPoint.js",
+      "to": "file:frontend/src/reader/wordAt.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/wordAt.test.js",
+      "to": "file:frontend/src/reader/wordAt.js"
     },
     {
       "type": "imports",
@@ -3850,6 +4617,21 @@
     {
       "type": "imports",
       "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -4105,6 +4887,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/books.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
       "to": "table:reading_progress"
     },
     {
@@ -4140,6 +4927,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
       "to": "table:chunks"
     },
     {
@@ -4169,6 +4961,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/lookup.py",
+      "to": "table:term_lookups"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:chunks"
     },
@@ -4190,6 +4987,16 @@
     {
       "type": "reads_table",
       "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_structure.py",
       "to": "table:chunks"
     },
     {
@@ -4299,6 +5106,11 @@
     },
     {
       "type": "uses_env",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
       "from": "file:scripts/dev/check_retriever.py",
       "to": "env:ENV"
     },
@@ -4365,6 +5177,11 @@
     {
       "type": "writes_table",
       "from": "file:backend/routers/sessions.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/sessions.py",
       "to": "table:sessions"
     },
     {
@@ -4394,6 +5211,11 @@
     },
     {
       "type": "writes_table",
+      "from": "file:backend/services/lookup.py",
+      "to": "table:term_lookups"
+    },
+    {
+      "type": "writes_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:question_bank"
     },
@@ -4410,6 +5232,16 @@
     {
       "type": "writes_table",
       "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_structure.py",
       "to": "table:chunks"
     },
     {

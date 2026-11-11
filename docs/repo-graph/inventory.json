@@ -1,24 +1,24 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 314,
-    "inventoried": 251,
+    "tracked": 366,
+    "inventoried": 303,
     "excluded": 63
   },
   "files": [
     {
       "path": ".claude/skills/atomic-commit/SKILL.md",
       "language": "markdown",
-      "lines": 188,
-      "size_bytes": 6005,
+      "lines": 190,
+      "size_bytes": 6080,
       "role": "doc",
       "purpose": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes."
     },
     {
       "path": ".claude/skills/debug-protocol/SKILL.md",
       "language": "markdown",
-      "lines": 202,
-      "size_bytes": 6349,
+      "lines": 204,
+      "size_bytes": 6420,
       "role": "doc",
       "purpose": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template."
     },
@@ -73,8 +73,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 186,
-      "size_bytes": 8546,
+      "lines": 190,
+      "size_bytes": 9366,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -313,10 +313,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 69,
-      "size_bytes": 2126,
+      "lines": 70,
+      "size_bytes": 2203,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the six routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
+      "purpose": "FastAPI app: CORS, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -385,10 +385,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 151,
-      "size_bytes": 6258,
+      "lines": 174,
+      "size_bytes": 7580,
       "role": "router",
-      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list; details with progress; status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
+      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list; details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -397,6 +397,14 @@
       "size_bytes": 7558,
       "role": "router",
       "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found."
+    },
+    {
+      "path": "backend/routers/lookup.py",
+      "language": "python",
+      "lines": 28,
+      "size_bytes": 1042,
+      "role": "router",
+      "purpose": "GET /lookup?term=&lang=en&proper=: auth required; normalises the term (422 if it is not a word or a phrase of up to 5 words), applies the per-user rate limit (60 a minute, a friendly 429 with Retry-After) and answers with lookup.look_up's compact payload."
     },
     {
       "path": "backend/routers/mastery.py",
@@ -409,10 +417,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 265,
-      "size_bytes": 13009,
+      "lines": 337,
+      "size_bytes": 16938,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author and toc and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -425,10 +433,18 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 252,
-      "size_bytes": 10920,
+      "lines": 259,
+      "size_bytes": 11579,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job."
+    },
+    {
+      "path": "backend/services/book_structure.py",
+      "language": "python",
+      "lines": 363,
+      "size_bytes": 16307,
+      "role": "service",
+      "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure apart from parsing the file: EPUB documents (in ingestion's order) walked into chapter, heading, paragraph, quote and list_item blocks with em and strong marks, plain text only, the top repeated heading level as chapters, then cut at the chunk boundaries by counting non-space characters (a text mismatch falls back to text blocks); PDF and fallback text rebuilt into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, page and chunk breaks continued) with chapter headings guessed from short lines (\"Chapter N\", standard Roman numerals under 100, Latin ALL CAPS followed by prose), running heads found across the book dropped from the text (the first one naming an unseen chapter becomes it), each chapter listed once; blocks are {id, type, text, marks[, continued]}; the toc lists chapter blocks; build never raises. chunks.content is untouched."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -453,6 +469,14 @@
       "size_bytes": 2426,
       "role": "service",
       "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time, or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
+    },
+    {
+      "path": "backend/services/lookup.py",
+      "language": "python",
+      "lines": 270,
+      "size_bytes": 10909,
+      "role": "service",
+      "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract and Wikipedia's short description; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
     },
     {
       "path": "backend/services/processing_jobs.py",
@@ -559,12 +583,36 @@
       "purpose": "Pytest on the in-memory database: record_test writes one row per concept with review dates, weighs low confidence, applies an event once and makes no round trip without concepts; GET /mastery needs a token and returns only the caller's rows, weakest first, with labels, paginated, empty past the end."
     },
     {
+      "path": "backend/tests/test_api_pages.py",
+      "language": "python",
+      "lines": 63,
+      "size_bytes": 2552,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: GET /books/{id}/pages returns chunks start..end in order with only index, content, word count and blocks, one chunk without end, nothing past the end, refuses a bad or over-four range (422) and another reader's book (404), and writes nothing."
+    },
+    {
+      "path": "backend/tests/test_api_position.py",
+      "language": "python",
+      "lines": 107,
+      "size_bytes": 4834,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start."
+    },
+    {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 600,
-      "size_bytes": 29241,
+      "lines": 601,
+      "size_bytes": 29305,
       "role": "test",
       "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time."
+    },
+    {
+      "path": "backend/tests/test_api_start_reader.py",
+      "language": "python",
+      "lines": 57,
+      "size_bytes": 2556,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: /sessions/start sends each chunk's blocks, the book's title, author and contents (an empty list when none), the chapter in effect before the first chunk (from books.toc), copes with a book without toc or blocks, and still starts when the book read fails."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -591,12 +639,28 @@
       "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, the dev-only guard, a failing book not stopping the run, and a book without a readable file looked up by its typed title."
     },
     {
+      "path": "backend/tests/test_backfill_structure.py",
+      "language": "python",
+      "lines": 95,
+      "size_bytes": 4637,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_structure.py on the in-memory database: pending books (ready, no toc) in id order, blocks and toc stored and the book then done, dry run writes nothing, blocks from the stored text when the file now extracts differently, a PDF needs no file, a failing book does not stop the run, the dev-only guard."
+    },
+    {
       "path": "backend/tests/test_bench.py",
       "language": "python",
       "lines": 108,
       "size_bytes": 4401,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+    },
+    {
+      "path": "backend/tests/test_book_structure.py",
+      "language": "python",
+      "lines": 280,
+      "size_bytes": 14422,
+      "role": "test",
+      "purpose": "Pytest on EPUBs built in memory, text snippets and sample.pdf: EPUB tags to typed blocks and marks with scripts and styles skipped, blocks cut at chunk boundaries covering each chunk exactly with marks kept, the chapter level, fallbacks for a mismatched or unreadable EPUB; PDF line joining, hyphenation, page numbers, paragraph breaks, chapter detection and its false positives, title lines, continuation across chunks, the stored block shape and toc, build never raising; regressions for running heads, print slugs, formulas, maths letters, Roman-looking variables, repeated chapter numbers and an opener after a page ending mid-sentence."
     },
     {
       "path": "backend/tests/test_concept_store.py",
@@ -673,10 +737,10 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 235,
-      "size_bytes": 9699,
+      "lines": 274,
+      "size_bytes": 11743,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails)."
+      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
@@ -695,6 +759,14 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_lookup.py",
+      "language": "python",
+      "lines": 318,
+      "size_bytes": 13608,
+      "role": "test",
+      "purpose": "Pytest with httpx.MockTransport and the in-memory database through TestClient: normalisation and base forms, dictionary hit payload and User-Agent, base-form retry, dictionary miss to Wikipedia, proper noun and phrase to Wikipedia, disambiguation, timeout answered gracefully and not cached, cache hit with no request, 90-day and 7-day expiry, a broken cache table, the per-user 429, 422 for non-terms, 401 without a user."
+    },
+    {
       "path": "backend/tests/test_mastery.py",
       "language": "python",
       "lines": 151,
@@ -705,10 +777,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 348,
-      "size_bytes": 14157,
+      "lines": 370,
+      "size_bytes": 15524,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb."
     },
     {
       "path": "backend/tests/test_model_ready.py",
@@ -889,16 +961,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 821,
-      "size_bytes": 45216,
+      "lines": 960,
+      "size_bytes": 52623,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1515,
-      "size_bytes": 65139,
+      "lines": 1867,
+      "size_bytes": 83010,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -921,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1937,
-      "size_bytes": 347020,
+      "lines": 2116,
+      "size_bytes": 417415,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -937,8 +1009,8 @@
     {
       "path": "frontend/.gitignore",
       "language": "gitignore",
-      "lines": 24,
-      "size_bytes": 253,
+      "lines": 28,
+      "size_bytes": 309,
       "role": "config",
       "purpose": "Vite template ignore rules: logs, node_modules, dist, editor files."
     },
@@ -951,10 +1023,26 @@
       "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
     },
     {
+      "path": "frontend/e2e/fixtures.js",
+      "language": "javascript",
+      "lines": 157,
+      "size_bytes": 8228,
+      "role": "config",
+      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session and answers every backend call from the Walden fixture (profile, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
+    },
+    {
+      "path": "frontend/e2e/reader.spec.js",
+      "language": "javascript",
+      "lines": 184,
+      "size_bytes": 9711,
+      "role": "config",
+      "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+    },
+    {
       "path": "frontend/eslint.config.js",
       "language": "javascript",
-      "lines": 21,
-      "size_bytes": 568,
+      "lines": 27,
+      "size_bytes": 897,
       "role": "config",
       "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx."
     },
@@ -977,10 +1065,18 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 39,
-      "size_bytes": 1082,
+      "lines": 43,
+      "size_bytes": 1241,
       "role": "config",
-      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
+    },
+    {
+      "path": "frontend/playwright.config.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 762,
+      "role": "config",
+      "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -1001,10 +1097,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 94,
-      "size_bytes": 3544,
+      "lines": 99,
+      "size_bytes": 3891,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); a dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader."
     },
     {
       "path": "frontend/src/components/BookCover.css",
@@ -1255,6 +1351,22 @@
       "purpose": "Dev-only /__illustrations page: the illustration set in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
     },
     {
+      "path": "frontend/src/gallery/ReaderGallery.css",
+      "language": "css",
+      "lines": 44,
+      "size_bytes": 1065,
+      "role": "asset",
+      "purpose": "Layout styles for the dev-only /__reader page."
+    },
+    {
+      "path": "frontend/src/gallery/ReaderGallery.jsx",
+      "language": "jsx",
+      "lines": 70,
+      "size_bytes": 2937,
+      "role": "asset",
+      "purpose": "Dev-only /__reader page: the paginated reader on the Walden fixture with text size, length (1x or 4x) and theme controls, the current anchor and page count, and what a hover or selection would look up (C12.7), with the word card over the real /lookup (C12.8); not in the production build."
+    },
+    {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
       "lines": 106,
@@ -1269,6 +1381,14 @@
       "size_bytes": 462,
       "role": "asset",
       "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery."
+    },
+    {
+      "path": "frontend/src/gallery/readerFixture.js",
+      "language": "javascript",
+      "lines": 39,
+      "size_bytes": 6013,
+      "role": "asset",
+      "purpose": "Dev-only fixture for /__reader: three chunks of blocks in the chunks.blocks shape, from Thoreau's Walden (1854, public domain): two chapter openings, paragraphs with em and strong marks, a quote and list items."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
@@ -1441,10 +1561,10 @@
     {
       "path": "frontend/src/motion/presets.js",
       "language": "javascript",
-      "lines": 110,
-      "size_bytes": 4154,
+      "lines": 127,
+      "size_bytes": 4892,
       "role": "asset",
-      "purpose": "Motion variants that read --dur-* and --ease-* from the CSS tokens when an animation starts: fadeIn, rise, routeTransition, routeFade, stagger(), shelfArrive, pageTurn, chipPop, drawIn; seconds(), easing() and prefersReducedMotion() helpers."
+      "purpose": "Motion variants that read --dur-* and --ease-* from the CSS tokens when an animation starts: fadeIn, rise, routeTransition, routeFade, stagger(), shelfArrive, bookOpen, pageTurn (a leaf turning over at the spine, C12.4), turnShade, chipPop, drawIn; seconds(), easing() and prefersReducedMotion() helpers."
     },
     {
       "path": "frontend/src/motion/useCountUp.js",
@@ -1521,18 +1641,18 @@
     {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
-      "lines": 297,
-      "size_bytes": 5461,
+      "lines": 45,
+      "size_bytes": 925,
       "role": "page",
-      "purpose": "Styles for the reading page: chrome bar, sticky timer strip, reason strip, distraction-free mode, reading column with drop cap."
+      "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state."
     },
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 269,
-      "size_bytes": 9715,
+      "lines": 315,
+      "size_bytes": 13668,
       "role": "page",
-      "purpose": "Reading page: checks calibration, starts a session, shows the timer and pacing bar, distraction-free mode, finish and abandon (abandon does not call the API)."
+      "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8)."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -1551,12 +1671,276 @@
       "purpose": "Results page: animated score, verdict, per-question feedback, next-session or re-read panel; rebuilds from the API after a refresh."
     },
     {
+      "path": "frontend/src/reader/BookFlow.jsx",
+      "language": "jsx",
+      "lines": 66,
+      "size_bytes": 2899,
+      "role": "asset",
+      "purpose": "Renders reader blocks (chunks.blocks) as book elements with data-b ids: chapter openings (label and italic title when a bare 'Chapter N' precedes a heading), headings, paragraphs with the drop cap and small-caps first line on a chapter's first paragraph, continued paragraphs without indent, quotes, list items; em and strong marks; an optional lead note before the first block, which no place points into."
+    },
+    {
+      "path": "frontend/src/reader/BookReader.jsx",
+      "language": "jsx",
+      "lines": 334,
+      "size_bytes": 16417,
+      "role": "asset",
+      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text); the word card when the caller passes a lookupClient (C12.8: opened on hover intent or a settled selection, Enter or ? on a selection opens it with focus, closed on a turn, page change or Esc, a polite live region announces each answer; hoverLookup turns hover off); the Look up chip for touch selections, kept to the page it was made on (C12.9)."
+    },
+    {
+      "path": "frontend/src/reader/ContentsDrawer.css",
+      "language": "css",
+      "lines": 92,
+      "size_bytes": 2068,
+      "role": "asset",
+      "purpose": "Contents drawer styles: a surface panel with a lift shadow, the bottom-sheet variant, Playfair heading, 44 px chapter rows in Lora, the current one on the accent wash, the 'today' label."
+    },
+    {
+      "path": "frontend/src/reader/ContentsDrawer.jsx",
+      "language": "jsx",
+      "lines": 86,
+      "size_bytes": 3679,
+      "role": "asset",
+      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), chapters from books.toc with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
+    },
+    {
+      "path": "frontend/src/reader/PageTurn.jsx",
+      "language": "jsx",
+      "lines": 84,
+      "size_bytes": 3593,
+      "role": "asset",
+      "purpose": "One page turn over the book (C12.4): a leaf hinged at the spine (Motion pageTurn, rotateY with perspective) with front and back faces, each paper with its running head, folio and a window onto a copy of the flow at that page, plus a cover keeping the page underneath until the leaf lands and a travelling shadow (turnShade); spread forward and back, single page lifting away or swinging in; transform and opacity only; a timer also ends the turn; aria-hidden."
+    },
+    {
+      "path": "frontend/src/reader/PhraseChip.jsx",
+      "language": "jsx",
+      "lines": 43,
+      "size_bytes": 1613,
+      "role": "asset",
+      "purpose": "The 'Look up' chip (C12.9): a 44 px pill placed by Floating UI below a 2-5 word touch selection (flipping above), keeping the selection on press; a tap opens the compact sheet."
+    },
+    {
+      "path": "frontend/src/reader/ReaderToolbar.css",
+      "language": "css",
+      "lines": 105,
+      "size_bytes": 3173,
+      "role": "asset",
+      "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px."
+    },
+    {
+      "path": "frontend/src/reader/ReaderToolbar.jsx",
+      "language": "jsx",
+      "lines": 63,
+      "size_bytes": 3007,
+      "role": "asset",
+      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8)."
+    },
+    {
+      "path": "frontend/src/reader/WordCard.css",
+      "language": "css",
+      "lines": 167,
+      "size_bytes": 5940,
+      "role": "asset",
+      "purpose": "Styles of the word card: page surface, hairline, --shadow-lift, Playfair headword, Lora text, accent-caps part of speech, 44 px close and link targets, a 150 ms rise (fade only under reduced motion, set inside @layer base to outrank base.css), --z-popover; the compact sheet (handle, touch-action none, spring back) and the dark 'Look up' chip."
+    },
+    {
+      "path": "frontend/src/reader/WordCard.jsx",
+      "language": "jsx",
+      "lines": 157,
+      "size_bytes": 6195,
+      "role": "asset",
+      "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard; opened by touch it is the compact sheet (grab handle, one sense, 'Tap outside to close', swipe down to close)."
+    },
+    {
+      "path": "frontend/src/reader/anchor.js",
+      "language": "javascript",
+      "lines": 88,
+      "size_bytes": 3403,
+      "role": "asset",
+      "purpose": "DOM helpers for reader places {block_id, char_offset}: the first visible place on a page (binary search over character rects), the page showing an anchor, the page an element starts on, and an anchor's chunk; x measured from the flow, so the page translate does not matter."
+    },
+    {
+      "path": "frontend/src/reader/blocks.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 1025,
+      "role": "asset",
+      "purpose": "blocksForChunks: the reader's blocks from /sessions/start chunks in chunk order, stored blocks as they are and paragraphs cut from the text (same '<chunk>.<n>' ids) for chunks without blocks; placeInChunks: the saved position as an anchor only when it is in today's chunks."
+    },
+    {
+      "path": "frontend/src/reader/blocks.test.js",
+      "language": "javascript",
+      "lines": 33,
+      "size_bytes": 1688,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): stored blocks in chunk order, the text fallback and its ids, empty input, and resuming a saved place only inside today's chunks."
+    },
+    {
+      "path": "frontend/src/reader/geometry.js",
+      "language": "javascript",
+      "lines": 65,
+      "size_bytes": 2830,
+      "role": "asset",
+      "purpose": "Pure page geometry for the paginated reader: a spread from 1024 px, one page below (flush with the screen under 480 px); page width capped for a 60-70 character measure, equal margins so each column stride is one page, a text block of whole lines, the page count from scrollWidth, the page of an x, view and clamp helpers."
+    },
+    {
+      "path": "frontend/src/reader/geometry.test.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2700,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): spread threshold, one page per stride, book measure bounds, whole-line text blocks at 16.5/18/19.5 px, page count, page of a point, view start and clamping."
+    },
+    {
+      "path": "frontend/src/reader/highlight.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1200,
+      "role": "asset",
+      "purpose": "The soft lookup mark: CSS Custom Highlight API ('rf-lookup'), or positioned boxes in a layer under the text where the API is missing."
+    },
+    {
+      "path": "frontend/src/reader/index.js",
+      "language": "javascript",
+      "lines": 3,
+      "size_bytes": 176,
+      "role": "asset",
+      "purpose": "Barrel export of the reader: BookReader, anchor helpers and page geometry."
+    },
+    {
+      "path": "frontend/src/reader/longPress.js",
+      "language": "javascript",
+      "lines": 53,
+      "size_bytes": 1633,
+      "role": "asset",
+      "purpose": "Touch gestures for lookup (C12.9) as small state machines: createLongPress (450 ms hold, 8 px slop, touch only; up() says whether the release ended a long-press) and sheetDrag (the sheet follows a downward drag and closes past 56 px)."
+    },
+    {
+      "path": "frontend/src/reader/longPress.test.js",
+      "language": "javascript",
+      "lines": 57,
+      "size_bytes": 2116,
+      "role": "asset",
+      "purpose": "node --test: a still hold fires once at its start, movement past the slop, an early lift or a cancel fire nothing, mouse presses are ignored, the handoff's timings, and the sheet drag."
+    },
+    {
+      "path": "frontend/src/reader/lookup.js",
+      "language": "javascript",
+      "lines": 102,
+      "size_bytes": 4180,
+      "role": "asset",
+      "purpose": "In-place lookup, client side (C12.8): createLookupClient over GET /lookup (LRU of 300 recent answers per visit, one request per term, a newer term aborts the older request with AbortController, errors and 'unavailable' answers not kept), the per-user hover setting in localStorage (on by default, storage failures tolerated), and cardContent, which turns an answer into what the card shows (definition, summary, ambiguous, none, unavailable, loading) with a sentence to announce."
+    },
+    {
+      "path": "frontend/src/reader/lookup.test.js",
+      "language": "javascript",
+      "lines": 135,
+      "size_bytes": 7383,
+      "role": "asset",
+      "purpose": "node --test: one request per term, names and words cached apart, stale requests aborted, shared in-flight requests, failures not cached, LRU eviction, the per-user hover setting, and cardContent for every state."
+    },
+    {
+      "path": "frontend/src/reader/readAhead.js",
+      "language": "javascript",
+      "lines": 35,
+      "size_bytes": 1186,
+      "role": "asset",
+      "purpose": "createReadAhead(fetcher): the chunk after today's reading from GET /books/{id}/pages, fetched once per book and chunk (null when there is none), a failed fetch forgotten so it is asked again; peek for what has arrived. Touches no session."
+    },
+    {
+      "path": "frontend/src/reader/readAhead.test.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1466,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the read-ahead fetches once and keeps the chunk, remembers that there is none, and asks again after a failure."
+    },
+    {
+      "path": "frontend/src/reader/reader.css",
+      "language": "css",
+      "lines": 464,
+      "size_bytes": 11876,
+      "role": "asset",
+      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b)."
+    },
+    {
+      "path": "frontend/src/reader/textSize.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 913,
+      "role": "asset",
+      "purpose": "Reader text size: the handoff's 16.5, 18 and 19.5 px, stepping that stops at either end, parsing a stored value, and reading and storing it in localStorage (rf-text-size) with storage failures falling back to 18 px."
+    },
+    {
+      "path": "frontend/src/reader/textSize.test.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 797,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the three sizes and default, stepping at the ends, and only known sizes accepted from storage."
+    },
+    {
+      "path": "frontend/src/reader/useChromeVisible.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1317,
+      "role": "asset",
+      "purpose": "useChromeVisible(hold): the reader's chrome shown at first, on mouse movement or a tap, and while held (focus inside, a dialog open), hidden after 2.6 s of stillness (handoff); page-turn keys do not wake it."
+    },
+    {
+      "path": "frontend/src/reader/usePlaceSaver.js",
+      "language": "javascript",
+      "lines": 56,
+      "size_bytes": 2017,
+      "role": "asset",
+      "purpose": "usePlaceSaver(sessionId): saves the reader's place with PUT /sessions/{id}/position at most once a second while pages turn, and the last place with keepalive when the page is hidden, closed or left; failures are dropped; saveNow skips the wait (the ribbon bookmark)."
+    },
+    {
+      "path": "frontend/src/reader/useWordAtPoint.js",
+      "language": "javascript",
+      "lines": 219,
+      "size_bytes": 10335,
+      "role": "asset",
+      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM: caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside the word's rects; 350 ms on the same word looks it up once; a 2-5 word selection (mouse or touch) looks up a phrase; marks the target via highlight.js; paused while a leaf turns; returns clear(); C12.8: hover can be turned off (selection still works), lookUpSelection() for Enter or ? on a selected word or phrase, clearMark() removes the mark without cancelling a hover under way; C12.9: a touch long-press (or the platform's touch contextmenu) on a lookable word opens it ('press') with the OS menu held off and the release swallowed, other long-presses keep native selection; a touch selection of 2-5 words goes to onChip instead of opening a card; lookUp(target, by)."
+    },
+    {
+      "path": "frontend/src/reader/useWordCard.js",
+      "language": "javascript",
+      "lines": 72,
+      "size_bytes": 3093,
+      "role": "asset",
+      "purpose": "The word card's state and closing rules (C12.8): open() shows a loading card and fetches through the lookup client; a hover-opened card closes 200 ms after the pointer leaves both word and card; any card closes on Esc, a press elsewhere or close(); closing from inside the card returns focus to the book."
+    },
+    {
+      "path": "frontend/src/reader/wordAt.js",
+      "language": "javascript",
+      "lines": 94,
+      "size_bytes": 4574,
+      "role": "asset",
+      "purpose": "Pure word rules for in-place lookup (C12.7): Intl.Segmenter words with hyphenated compounds kept whole, the word around an offset, eligibility (3+ letters, no digits, not an English stopword), sentence-initial and proper-noun tests, a 2-5 word phrase from a selection (60-character cap), and the GET /lookup path with proper=1 for names."
+    },
+    {
+      "path": "frontend/src/reader/wordAt.test.js",
+      "language": "javascript",
+      "lines": 70,
+      "size_bytes": 3501,
+      "role": "asset",
+      "purpose": "node --test: word under an offset, apostrophes and hyphens, stopwords/short words/numbers skipped, sentence starts, proper nouns, phrases of 2-5 words, the lookup path."
+    },
+    {
       "path": "frontend/src/styles/base.css",
       "language": "css",
-      "lines": 147,
-      "size_bytes": 3446,
+      "lines": 152,
+      "size_bytes": 3767,
       "role": "asset",
-      "purpose": "Editorial base styles in the base layer: body DM Sans 400, Playfair 500 headings, accent-text links, one focus ring, selection colour, .flow heading rhythm, .reading (Lora 18/31, 65ch, justified with hyphens), .drop-cap, .eyebrow, .running-head and .figure."
+      "purpose": "Editorial base styles in the base layer: body DM Sans 400, Playfair 500 headings, accent-text links, one focus ring, selection colour, .flow heading rhythm, .reading (Lora 18/31, 65ch, justified with hyphens), .drop-cap, .eyebrow, .running-head and .figure; under reduced motion animations are near-instant and transitions instant (0s)."
+    },
+    {
+      "path": "frontend/src/styles/base.test.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 1074,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): base.css has a reduced-motion block whose transitions are instant (0s duration and delay), not 0.01 ms; regression for the reader paginating with stale values under reduced motion."
     },
     {
       "path": "frontend/src/styles/fonts.css",
@@ -1677,6 +2061,14 @@
       "size_bytes": 4221,
       "role": "script",
       "purpose": "Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development."
+    },
+    {
+      "path": "scripts/backfill_structure.py",
+      "language": "python",
+      "lines": 110,
+      "size_bytes": 4758,
+      "role": "script",
+      "purpose": "Backfill: reader blocks and toc for ready books with no toc, built from each book's stored chunks (never a fresh extraction; the file is read only for an EPUB's tags), chunks.content never written, the toc written last so a stopped run redoes the book; --dry-run, --limit, --book-id; refuses unless ENV=development."
     },
     {
       "path": "scripts/bench.py",
@@ -1911,6 +2303,30 @@
       "purpose": "Adds books.cover_url and books.cover_source (text, nullable) and the public covers Storage bucket (service role writes). Additive."
     },
     {
+      "path": "supabase/migrations/013_structured_content.sql",
+      "language": "sql",
+      "lines": 17,
+      "size_bytes": 989,
+      "role": "migration",
+      "purpose": "Adds chunks.blocks and books.toc (jsonb, nullable) for the book reader. Additive."
+    },
+    {
+      "path": "supabase/migrations/014_reading_position.sql",
+      "language": "sql",
+      "lines": 13,
+      "size_bytes": 691,
+      "role": "migration",
+      "purpose": "Adds reading_progress.position (jsonb, nullable): the reader's place as {chunk_index, block_id, char_offset}. Additive; RLS unchanged."
+    },
+    {
+      "path": "supabase/migrations/015_term_lookups.sql",
+      "language": "sql",
+      "lines": 40,
+      "size_bytes": 1605,
+      "role": "migration",
+      "purpose": "Creates term_lookups (term, lang primary key; kind, payload jsonb, source, found, fetched_at): a shared, non-personal lookup cache. RLS on: signed-in users may read; no write policy, so only the service role writes. Additive."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1938,7 +2354,7 @@
       "path": "tools/repo_graph/build.py",
       "language": "python",
       "lines": 386,
-      "size_bytes": 17120,
+      "size_bytes": 17182,
       "role": "script",
       "purpose": "Builds docs/repo-graph/graph.json: typed nodes and edges for files, endpoints, tables, functions, env vars, external services and LangGraph nodes; LangGraph wiring is read from non-test files only."
     },
@@ -1953,8 +2369,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 253,
-      "size_bytes": 58468,
+      "lines": 305,
+      "size_bytes": 80475,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1985,8 +2401,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 260,
-      "size_bytes": 10625,
+      "lines": 263,
+      "size_bytes": 10936,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

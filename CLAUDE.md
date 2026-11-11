@@ -115,9 +115,10 @@ python -c "import backend.main"
 pytest tools/repo_graph/tests -q
 npm --prefix frontend run check:contrast
 npm --prefix frontend run check:images
+npm --prefix frontend run test:unit
 ```
 
-Baseline when this file was written (C1.1; the last two rows were added in C10.2 and C11.5):
+Baseline when this file was written (C1.1; the last three rows were added in C10.2, C11.5 and C12.3):
 
 | Check | Result |
 |---|---|
@@ -129,9 +130,10 @@ Baseline when this file was written (C1.1; the last two rows were added in C10.2
 | `pytest tools/repo_graph/tests -q` | passes: 62 tests (61 until C8.5) |
 | `npm --prefix frontend run check:contrast` | passes: 204 pairs across 4 theme x accent combinations, 0 failing (200 until C10.3) |
 | `npm --prefix frontend run check:images` | passes: 1 raster (13.1 KB), 7 illustrations, 1 `<img>`, 0 failing |
+| `npm --prefix frontend run test:unit` | passes: 12 tests (Node's built-in runner over `frontend/src/**/*.test.js`; needs Node 22 or later) |
 
 Until a chunk brings ruff and ESLint to zero, "never commit failing checks"
-means: the six passing checks stay green and the two error counts never go
+means: the seven passing checks stay green and the two error counts never go
 up. Update this table when a baseline changes.
 
 ## Commit format

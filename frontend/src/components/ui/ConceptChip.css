@@ -41,3 +41,13 @@
 .rf-chip--revisit .rf-chip__icon {
   color: var(--ink-2);
 }
+
+/* The kind's word, kept for assistive tech where a heading already says it. */
+.rf-chip__kind--quiet {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,244 +1,239 @@
-import React, { useState, useEffect } from 'react';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend
-} from 'recharts';
+import { useState, useEffect } from 'react';
+import { useReducedMotion } from 'motion/react';
+import { Link } from 'react-router-dom';
+import { Area, AreaChart, CartesianGrid, Dot, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { fetchApi } from '../lib/api';
-import { usePageTransition } from '../hooks/usePageTransition';
+import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
+import { MasteryBar } from '../components/ui/MasteryBar';
+import { BookStack, Candle, ReadingLamp } from '../illustrations';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { greeting, lastScore, lastScores, nextBook, streakLine, testsThisWeek } from '../lib/dashboard';
+import { seconds } from '../motion/presets';
+import { splitFeedback } from '../lib/results';
+import { MasteryList } from '../components/dashboard/MasteryList';
 import './Dashboard.css';
 
-// Warm palette for multi-book lines on the chart
-const LINE_COLORS = ['#c8832a', '#2d7a4f', '#4a6fa5', '#8e5ca6', '#a05040'];
-
-// Pivot score_over_time rows into recharts-friendly format:
-// [{ date: '2026-05-01', 'Book A': 85, 'Book B': 70 }, ...]
-function pivotScores(scoreData) {
-  const byDate = {};
-  for (const row of scoreData) {
-    if (!byDate[row.date]) byDate[row.date] = { date: row.date };
-    byDate[row.date][row.book_title] = row.score_pct;
-  }
-  return Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+/** A hollow point for each test, the last one filled (handoff chart). */
+function TrendDot({ cx, cy, index, points }) {
+  if (cx == null || cy == null) return null;
+  const last = index === points - 1;
+  return <Dot cx={cx} cy={cy} r={last ? 5 : 4} className={last ? 'rf-trend__dot rf-trend__dot--last' : 'rf-trend__dot'} />;
 }
 
-function BookProgressCard({ book }) {
-  const pct = book.progress_pct;
+/**
+ * Test scores (handoff screen 09): the last eight tests across all books as
+ * an accent line over a soft area, 0-100 in quarters, drawn by Recharts
+ * with every colour from CSS tokens. The chart is a picture; the same
+ * numbers are in a table for assistive tech.
+ */
+function ScoreTrend({ scores }) {
+  const reduced = useReducedMotion();
+  const points = lastScores(scores);
+  if (points.length === 0) return <p className="rf-dash__muted">Your scores appear here after your first test.</p>;
   return (
-    <div className="rf-dash-book-card">
-      <div className="rf-dash-book-header">
-        <div>
-          <div className="rf-dash-book-title">{book.title}</div>
-          <div className="rf-dash-book-author">{book.author}</div>
-        </div>
-        <div className="rf-dash-book-score">{book.avg_score > 0 ? `${book.avg_score}%` : '—'}</div>
+    <>
+      <div className="rf-trend" aria-hidden="true">
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={points} margin={{ top: 8, right: 12, left: -20, bottom: 0 }} accessibilityLayer={false}>
+            <CartesianGrid vertical={false} className="rf-trend__grid" />
+            <XAxis dataKey="n" hide />
+            <YAxis domain={[0, 100]} ticks={[25, 50, 75, 100]} tickLine={false} axisLine={false} className="rf-trend__axis" />
+            <Area
+              type="linear"
+              dataKey="score"
+              className="rf-trend__line"
+              isAnimationActive={!reduced}
+              animationDuration={seconds('--dur-6') * 1000}
+              animationEasing="ease-out"
+              dot={(props) => <TrendDot key={props.index} {...props} points={points.length} />}
+              activeDot={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
+      <table className="rf-dash__sr">
+        <caption>Test scores, oldest first</caption>
+        <thead><tr><th scope="col">Date</th><th scope="col">Book</th><th scope="col">Score</th></tr></thead>
+        <tbody>
+          {points.map((p) => <tr key={p.n}><td>{p.date}</td><td>{p.book_title}</td><td>{p.score}%</td></tr>)}
+        </tbody>
+      </table>
+    </>
+  );
+}
 
-      <div className="rf-dash-progress-track">
-        <div className="rf-dash-progress-fill" style={{ width: `${pct}%` }} />
-      </div>
-      <div className="rf-dash-progress-label">
-        {book.chunks_completed}/{book.total_chunks} chunks · {pct}% complete
-      </div>
-
-      <div className="rf-dash-book-meta">
-        <span>{book.sessions_completed} session{book.sessions_completed !== 1 ? 's' : ''} done</span>
-        <span className="rf-dash-meta-sep">·</span>
-        <span>
-          {book.est_sessions_to_finish > 0
-            ? `~${book.est_sessions_to_finish} to finish`
-            : book.chunks_completed >= book.total_chunks
-              ? 'Finished!'
-              : 'Start reading'}
-        </span>
-      </div>
+function DashboardSkeleton() {
+  return (
+    <div className="rf-dash" aria-busy="true" aria-label="Loading your progress">
+      <Skeleton width={160} height={12} />
+      <Skeleton width={320} height={48} className="rf-dash__skel-title" />
+      <Skeleton height={96} className="rf-dash__skel-stats" />
+      <Skeleton height={240} />
     </div>
   );
 }
 
-function ScoreChart({ scoreData, bookTitles }) {
-  const chartData = pivotScores(scoreData);
-  if (chartData.length === 0) {
-    return <div className="rf-dash-empty">No sessions completed yet — your scores will appear here.</div>;
-  }
-  return (
-    <ResponsiveContainer width="100%" height={260}>
-      <LineChart data={chartData} margin={{ top: 4, right: 16, left: -16, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--paper-mid)" />
-        <XAxis
-          dataKey="date"
-          tick={{ fontFamily: 'var(--font-ui)', fontSize: 11, fill: 'var(--ink-faint)' }}
-          tickLine={false}
-          axisLine={{ stroke: 'var(--paper-mid)' }}
-        />
-        <YAxis
-          domain={[0, 100]}
-          tick={{ fontFamily: 'var(--font-ui)', fontSize: 11, fill: 'var(--ink-faint)' }}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={v => `${v}%`}
-        />
-        <Tooltip
-          contentStyle={{
-            fontFamily: 'var(--font-ui)',
-            fontSize: 12,
-            backgroundColor: 'var(--paper)',
-            border: '1px solid var(--paper-mid)',
-            borderRadius: '4px',
-            color: 'var(--ink)',
-          }}
-          formatter={(value) => [`${value}%`, '']}
-        />
-        <Legend
-          wrapperStyle={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--ink-light)', paddingTop: 12 }}
-        />
-        {bookTitles.map((title, i) => (
-          <Line
-            key={title}
-            type="monotone"
-            dataKey={title}
-            stroke={LINE_COLORS[i % LINE_COLORS.length]}
-            strokeWidth={2}
-            dot={{ r: 4, fill: LINE_COLORS[i % LINE_COLORS.length], strokeWidth: 0 }}
-            activeDot={{ r: 5 }}
-            connectNulls
-          />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
-  );
-}
-
-function FeedbackQuote({ item }) {
-  const scorePct = item.max_score > 0 ? Math.round((item.score / item.max_score) * 100) : 0;
-  return (
-    <div className="rf-dash-feedback-card">
-      <blockquote className="rf-dash-feedback-text">"{item.feedback}"</blockquote>
-      <div className="rf-dash-feedback-meta">
-        <span className="rf-dash-feedback-book">{item.book_title}</span>
-        <span className="rf-dash-meta-sep">·</span>
-        <span className={`rf-dash-feedback-score ${scorePct >= 70 ? 'good' : scorePct >= 40 ? 'mid' : 'low'}`}>
-          {item.score}/{item.max_score}
-        </span>
-        <span className="rf-dash-meta-sep">·</span>
-        <span className="rf-dash-feedback-date">{item.date}</span>
-      </div>
-    </div>
-  );
-}
-
+/**
+ * Dashboard (handoff screen 09): greeting and streak, four figures, the
+ * test-score trend, the books in progress and recent feedback, from one
+ * GET /dashboard as before.
+ */
 export function Dashboard() {
+  useDocumentTitle('Dashboard');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const navigateTo = usePageTransition();
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     fetchApi('/dashboard')
-      .then(d => {
+      .then((d) => {
         setData(d);
+        setError(null);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [attempt]);
 
-  useEffect(() => {
-    if (!loading) setTimeout(() => setIsVisible(true), 16);
-  }, [loading]);
+  const retry = () => {
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  };
 
-  if (loading) {
-    return (
-      <div className="rf-dash-loading page">
-        <span className="rf-dash-loading-text">Loading your progress…</span>
-      </div>
-    );
-  }
+  if (loading) return <DashboardSkeleton />;
 
   if (error) {
     return (
-      <div className="rf-dash-loading page visible">
-        <span className="rf-dash-loading-text" style={{ color: 'var(--red-soft)' }}>{error}</span>
+      <div className="rf-dash">
+        <section className="rf-dash__card rf-dash__message" role="alert">
+          <h1 className="rf-dash__h2">Your progress didn’t load.</h1>
+          <p className="rf-dash__muted">Nothing is lost. Try again in a moment.</p>
+          <Button onClick={retry}>Try again</Button>
+        </section>
       </div>
     );
   }
 
-  const bookTitles = [...new Set(data.score_over_time.map(s => s.book_title))];
+  const now = new Date();
+  const { eyebrow, title } = greeting(now);
+  const scores = data.score_over_time ?? [];
+  const books = data.book_progress ?? [];
+  const feedback = data.recent_feedback ?? [];
+  const latest = lastScore(scores);
+
+  if (scores.length === 0 && books.length === 0) {
+    return (
+      <div className="rf-dash">
+        <p className="eyebrow">{eyebrow}</p>
+        <h1 className="rf-dash__title">{title}</h1>
+        <EmptyState
+          className="rf-dash__empty"
+          illustration={<BookStack size={180} />}
+          title="Your progress starts with a first session"
+          action={<Link to="/" className="rf-btn rf-btn--primary">Go to your shelf</Link>}
+        >
+          Read a session and take its short test. Your scores, streak and the ideas you are mastering will gather here.
+        </EmptyState>
+      </div>
+    );
+  }
+
+  const stats = [
+    [data.words_this_week.toLocaleString('en-GB'), 'words read this week'],
+    [latest == null ? '–' : `${latest}%`, 'last test score'],
+    [testsThisWeek(scores, now), 'tests this week'],
+    [books.length, books.length === 1 ? 'book in progress' : 'books in progress'],
+  ];
 
   return (
-    <div className={`rf-dash-page page ${isVisible ? 'visible' : ''}`}>
-      <div className="rf-dash-container">
+    <div className="rf-dash">
+      <header className="rf-dash__header">
+        <div>
+          <p className="eyebrow">{eyebrow}</p>
+          <h1 className="rf-dash__title">{title}</h1>
+        </div>
+        <p className="rf-dash__streak">
+          <Candle size={40} className="rf-dash__candle" />
+          <span>{streakLine(data.reading_streak)}</span>
+        </p>
+      </header>
 
-        {/* Page Header */}
-        <header className="rf-dash-header">
-          <h1 className="rf-dash-title">Your Progress</h1>
-          <p className="rf-dash-subtitle">A record of everything you have read and learned.</p>
-        </header>
+      <dl className="rf-dash__stats">
+        {stats.map(([value, label]) => (
+          <div key={label} className="rf-dash__stat">
+            <dt className="rf-dash__label">{label}</dt>
+            <dd className="rf-dash__figure">{value}</dd>
+          </div>
+        ))}
+      </dl>
 
-        {/* Stat Pills */}
-        <div className="rf-dash-stats-row">
-          <div className="rf-dash-stat">
-            <div className="rf-dash-stat-value">{data.reading_streak}</div>
-            <div className="rf-dash-stat-label">day streak</div>
-          </div>
-          <div className="rf-dash-stat-divider" />
-          <div className="rf-dash-stat">
-            <div className="rf-dash-stat-value">{data.words_this_week.toLocaleString()}</div>
-            <div className="rf-dash-stat-label">words this week</div>
-          </div>
-          <div className="rf-dash-stat-divider" />
-          <div className="rf-dash-stat">
-            <div className="rf-dash-stat-value">{data.book_progress.length}</div>
-            <div className="rf-dash-stat-label">book{data.book_progress.length !== 1 ? 's' : ''} in progress</div>
-          </div>
+      <div className="rf-dash__columns">
+        <div className="rf-dash__main">
+          <section aria-labelledby="rf-trend-title">
+            <div className="rf-dash__section-head">
+              <h2 id="rf-trend-title" className="rf-dash__h2">Test scores</h2>
+              <p className="rf-dash__muted">Last 8 tests · all books</p>
+            </div>
+            <ScoreTrend scores={scores} />
+          </section>
+          <MasteryList books={books} />
         </div>
 
-        {/* Score Chart */}
-        <section className="rf-dash-section">
-          <h2 className="rf-dash-section-title">Comprehension over time</h2>
-          <div className="rf-dash-chart-wrap">
-            <ScoreChart scoreData={data.score_over_time} bookTitles={bookTitles} />
-          </div>
-        </section>
-
-        {/* Book Progress List */}
-        <section className="rf-dash-section">
-          <h2 className="rf-dash-section-title">Books</h2>
-          {data.book_progress.length === 0 ? (
-            <div className="rf-dash-empty">
-              No books in progress yet.{' '}
-              <span
-                className="rf-dash-empty-link"
-                onClick={() => navigateTo('/')}
-              >
-                Visit the Library to get started.
-              </span>
-            </div>
-          ) : (
-            <div className="rf-dash-book-list">
-              {data.book_progress.map(book => (
-                <BookProgressCard key={book.book_id} book={book} />
-              ))}
-            </div>
+        <aside className="rf-dash__side">
+          {nextBook(books) && (
+            <section className="rf-dash__card rf-dash__tonight" aria-labelledby="rf-tonight-title">
+              <ReadingLamp size={96} />
+              <h2 id="rf-tonight-title" className="eyebrow">For tonight</h2>
+              <p className="rf-dash__tonight-title">{nextBook(books).title}</p>
+              <p className="rf-dash__muted">
+                {nextBook(books).sessions_completed > 0
+                  ? `${Math.round(nextBook(books).progress_pct)}% read. Today’s pages are planned when you open it.`
+                  : `By ${nextBook(books).author}. Your first session is ready when you are.`}
+              </p>
+              <Link to={`/read/${nextBook(books).book_id}`} className="rf-btn rf-btn--primary">Begin reading</Link>
+            </section>
           )}
-        </section>
-
-        {/* Recent Feedback */}
-        <section className="rf-dash-section">
-          <h2 className="rf-dash-section-title">Recent feedback</h2>
-          {data.recent_feedback.length === 0 ? (
-            <div className="rf-dash-empty">Complete a comprehension test to see your evaluator feedback here.</div>
-          ) : (
-            <div className="rf-dash-feedback-list">
-              {data.recent_feedback.map((item, i) => (
-                <FeedbackQuote key={i} item={item} />
-              ))}
-            </div>
+          {books.length > 0 && (
+            <section className="rf-dash__card" aria-labelledby="rf-books-title">
+              <h2 id="rf-books-title" className="eyebrow">Your books</h2>
+              <ul className="rf-dash__books">
+                {books.map((b) => (
+                  <li key={b.book_id}>
+                    <p className="rf-dash__book-title">{b.title}</p>
+                    <p className="rf-dash__muted">{b.author}</p>
+                    <MasteryBar value={b.progress_pct} className="rf-dash__book-bar" />
+                    <p className="rf-dash__muted">
+                      {Math.round(b.progress_pct)}% read · {b.sessions_completed} {b.sessions_completed === 1 ? 'session' : 'sessions'}
+                      {b.est_sessions_to_finish > 0 ? ` · about ${b.est_sessions_to_finish} to finish` : b.chunks_completed >= b.total_chunks ? ' · finished' : ''}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
-        </section>
-
+          {feedback.length > 0 && (
+            <section className="rf-dash__card" aria-labelledby="rf-feedback-title">
+              <h2 id="rf-feedback-title" className="eyebrow">Recent feedback</h2>
+              <ul className="rf-dash__feedback">
+                {feedback.map((f, i) => {
+                  const { text, quote } = splitFeedback(f.feedback);
+                  return (
+                    <li key={i}>
+                      <p className="rf-dash__muted">{f.book_title} · {f.date} · {f.score} of {f.max_score}</p>
+                      <p>{text}</p>
+                      {quote && <blockquote className="rf-dash__quote">“{quote}”</blockquote>}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+        </aside>
       </div>
     </div>
   );

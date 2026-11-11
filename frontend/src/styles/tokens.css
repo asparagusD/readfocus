@@ -180,6 +180,8 @@
   --line-field: #8f8273; /* A1: boundaries that are the only cue, 3:1+ */
   --warn: #8c5a00;
   --warn-soft: #f6e9cf;
+  --swatch-terracotta: #a64b2a; /* both accents, for the accent setting's swatches */
+  --swatch-sage: #506a4a;
 
   --accent: #a64b2a;
   --accent-hover: #904428; /* A8: 18% toward --ink */
@@ -221,6 +223,8 @@
   --line-field: #7a6e60;
   --warn: #e9b65e;
   --warn-soft: #3a2e1c;
+  --swatch-terracotta: #e59a6c;
+  --swatch-sage: #a8c198;
 
   --accent: #e59a6c;
   --accent-hover: #e7a87f;

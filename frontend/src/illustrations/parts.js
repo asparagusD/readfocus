@@ -12,4 +12,5 @@ export const PARTS = {
   hill: '[data-part="hill"]', // DuskWindow
   ribbon: '[data-part="ribbon"]', // OpenBook: bookmark ribbon
   stars: '[data-part="stars"] circle', // CrescentMoon
+  flame: '[data-part="flame"]', // Candle (its glow is [data-part="glow"], as the lamp's)
 };

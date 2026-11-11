@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 366,
-    "inventoried": 303,
-    "excluded": 63
+    "tracked": 431,
+    "inventoried": 366,
+    "excluded": 65
   },
   "files": [
     {
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9366,
+      "size_bytes": 10238,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -385,10 +385,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 174,
-      "size_bytes": 7580,
+      "lines": 179,
+      "size_bytes": 8168,
       "role": "router",
-      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list; details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
+      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -565,6 +565,14 @@
       "size_bytes": 2523,
       "role": "test",
       "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
+    },
+    {
+      "path": "backend/tests/test_api_books_list.py",
+      "language": "python",
+      "lines": 67,
+      "size_bytes": 3110,
+      "role": "test",
+      "purpose": "GET /books (C13.3a) on the in-memory database: only the caller's books, the old fields plus cover_url and progress, progress the caller's own and null before a first session, the selected columns, an empty shelf."
     },
     {
       "path": "backend/tests/test_api_dashboard.py",
@@ -953,32 +961,32 @@
     {
       "path": "docs/ASSETS.md",
       "language": "markdown",
-      "lines": 40,
-      "size_bytes": 3648,
+      "lines": 49,
+      "size_bytes": 5421,
       "role": "doc",
       "purpose": "Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License)."
     },
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 960,
-      "size_bytes": 52623,
+      "lines": 1000,
+      "size_bytes": 55036,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1867,
-      "size_bytes": 83010,
+      "lines": 2117,
+      "size_bytes": 93388,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
     {
       "path": "docs/DESIGN_AUDIT.md",
       "language": "markdown",
-      "lines": 271,
-      "size_bytes": 21626,
+      "lines": 437,
+      "size_bytes": 31093,
       "role": "doc",
       "purpose": "C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13."
     },
@@ -993,16 +1001,16 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2116,
-      "size_bytes": 417415,
+      "lines": 2298,
+      "size_bytes": 491671,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "frontend/.env.example",
       "language": "dotenv",
-      "lines": 6,
-      "size_bytes": 232,
+      "lines": 10,
+      "size_bytes": 398,
       "role": "config",
       "purpose": "Frontend environment template: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL."
     },
@@ -1023,20 +1031,116 @@
       "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
     },
     {
+      "path": "frontend/e2e/calibration.spec.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 3394,
+      "role": "config",
+      "purpose": "E2E: an uncalibrated reader gets the pace check (intro, passage, one POST with a clamped wpm, then today's reading); a failed save shows a toast and no native dialog; 375 without sideways scroll."
+    },
+    {
+      "path": "frontend/e2e/dashboard.spec.js",
+      "language": "javascript",
+      "lines": 168,
+      "size_bytes": 10042,
+      "role": "config",
+      "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here and GET /mastery (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375; concept mastery (tabs by keyboard, weakest first, Show more, the weak rule, the exact /mastery requests) and a failed mastery load; For tonight; the candle, bar and trend motion with and without reduced motion."
+    },
+    {
+      "path": "frontend/e2e/errors.spec.js",
+      "language": "javascript",
+      "lines": 37,
+      "size_bytes": 2596,
+      "role": "config",
+      "purpose": "E2E: an unknown address gets the 404 inside the shell (one main, title, link home); a dashboard payload that cannot render shows the error boundary, and Back to your shelf clears it."
+    },
+    {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 157,
-      "size_bytes": 8228,
+      "lines": 162,
+      "size_bytes": 8735,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session and answers every backend call from the Walden fixture (profile, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
+      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page; /health answers ready."
+    },
+    {
+      "path": "frontend/e2e/landing.spec.js",
+      "language": "javascript",
+      "lines": 254,
+      "size_bytes": 12242,
+      "role": "config",
+      "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset. Demo: hover opens the real card below the word's line and pointer-leave closes it with no lookup sent; Quadi shows the Wikipedia summary and link; Enter focuses the card and Esc returns to the word; a touch long-press opens the compact card. Features: the three sections and the isn't note; the five questions open with Enter and close with Space; the footer links GitHub, credits CC BY-SA sources, switches the theme and Start reading opens Create account."
+    },
+    {
+      "path": "frontend/e2e/library.spec.js",
+      "language": "javascript",
+      "lines": 286,
+      "size_bytes": 15956,
+      "role": "config",
+      "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs."
+    },
+    {
+      "path": "frontend/e2e/login.spec.js",
+      "language": "javascript",
+      "lines": 106,
+      "size_bytes": 5560,
+      "role": "config",
+      "purpose": "Playwright e2e for sign in (C13.1b), signed out with Supabase Auth answered in the spec: empty fields explained inline with nothing sent, a wrong password with the loading label and the error on the field, a correct one opening the library, and create account by keyboard (tab, short password, inbox message, back). Under reduced motion neither the form nor the drawings have a transform in any frame."
     },
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 184,
-      "size_bytes": 9711,
+      "lines": 250,
+      "size_bytes": 13711,
       "role": "config",
-      "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+      "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a mouse click on the last page's Start test finishing reading (C13.4 regression); a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+    },
+    {
+      "path": "frontend/e2e/reading.spec.js",
+      "language": "javascript",
+      "lines": 72,
+      "size_bytes": 4351,
+      "role": "config",
+      "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion."
+    },
+    {
+      "path": "frontend/e2e/results.spec.js",
+      "language": "javascript",
+      "lines": 169,
+      "size_bytes": 10038,
+      "role": "config",
+      "purpose": "Playwright e2e for results (C13.6): from the test (score, summary, verdict, outcomes, answer without the letter, feedback and quote, chips, next session and Start next session), a low-confidence grade, opened fresh (rebuilt from GET /sessions/{id} and GET /books/{id}, in that order), not graded yet, a failed load with Try again, and 375 px; with and without reduced motion, the count-up and the chips."
+    },
+    {
+      "path": "frontend/e2e/shell.spec.js",
+      "language": "javascript",
+      "lines": 133,
+      "size_bytes": 6984,
+      "role": "config",
+      "purpose": "Playwright e2e for the app shell (C13.2a): the current page marked and every page titled, the skip link first and leading to main, the account panel (initials, text size and accent saved, Esc returning focus, a press outside), sign out to /login, and at 375 px the links in the bar, no sideways scroll, 44 px targets and the theme inside the panel; with and without reduced motion, the account panel and a page change carry a transform only when motion is allowed."
+    },
+    {
+      "path": "frontend/e2e/test.spec.js",
+      "language": "javascript",
+      "lines": 162,
+      "size_bytes": 8926,
+      "role": "config",
+      "purpose": "Playwright e2e for the comprehension test (C13.5) with GET /sessions/{id}, evaluate-single and submit-answers answered by e2e/testSession.js: when time runs out the typed answers and 300 s are submitted; one question at a time (prompt without options, key 2 and Enter, evaluate-single body, written answer, dots, Back, submit body and route, storage cleared), answers kept across a reload, the timer warning at 30 s, the leave dialog, a failed submit tried again, and 375 px with 44 px targets; with and without reduced motion, the question slide and the option settle."
+    },
+    {
+      "path": "frontend/e2e/testSession.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1854,
+      "role": "config",
+      "purpose": "Shared e2e data, not a spec: QUESTIONS (one multiple choice, one written) and mockTest, which answers GET /sessions/t1, evaluate-single and submit-answers and records what was sent."
+    },
+    {
+      "path": "frontend/e2e/warmup.spec.js",
+      "language": "javascript",
+      "lines": 83,
+      "size_bytes": 4152,
+      "role": "config",
+      "purpose": "E2E: warm start, slow /health (warm-up, pause, then the shelf), sign in never held back, no answer in 90 s (Playwright clock) then Try again, 375 reduced motion."
     },
     {
       "path": "frontend/eslint.config.js",
@@ -1057,16 +1161,16 @@
     {
       "path": "frontend/index.html",
       "language": "html",
-      "lines": 32,
-      "size_bytes": 1182,
+      "lines": 59,
+      "size_bytes": 3458,
       "role": "entry",
-      "purpose": "HTML entry: an inline script applies the stored theme and accent (or the OS scheme) to <html> before first paint; mounts main.jsx."
+      "purpose": "HTML entry: an inline script applies the stored theme and accent (or the OS scheme) to <html> before first paint; mounts main.jsx. C13.10e: full title, description, theme-color for both schemes, Open Graph and Twitter tags (og.png); the inline script also hides the prerendered landing ([data-prerendered]) off / and when a Supabase session is stored."
     },
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 43,
-      "size_bytes": 1241,
+      "lines": 45,
+      "size_bytes": 1393,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -1077,6 +1181,14 @@
       "size_bytes": 762,
       "role": "config",
       "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker."
+    },
+    {
+      "path": "frontend/public/robots.txt",
+      "language": "text",
+      "lines": 9,
+      "size_bytes": 310,
+      "role": "config",
+      "purpose": "robots.txt (C13.10e): only / (plus its /assets/, og.png and favicon) is open to crawlers; every app route is disallowed."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -1095,12 +1207,52 @@
       "purpose": "Image budgets (npm run check:images, a standard check since C11.5): each raster under src/ and public/ at most 150 KB, all together at most 400 KB, illustration SVGs at most 8 KB, every <img> with width, height, decoding and loading (lazy, or eager with fetchPriority high for the LCP image), and the backend cover cap within budget; optional root argument for scratch trees; exit 1 on any failure."
     },
     {
+      "path": "frontend/scripts/make-og.mjs",
+      "language": "text",
+      "lines": 84,
+      "size_bytes": 4800,
+      "role": "config",
+      "purpose": "npm run make:og (C13.10e): lays out the 1200 x 630 share card in HTML with the app's tokens, bundled fonts and illustrations, renders it in installed Edge via Playwright and encodes public/og.png with sharp (palette PNG, fails over 150 KB)."
+    },
+    {
+      "path": "frontend/scripts/prerender.mjs",
+      "language": "text",
+      "lines": 20,
+      "size_bytes": 1289,
+      "role": "config",
+      "purpose": "Build step (npm run build, C13.10e): imports dist-ssr/prerender.js, writes the landing markup into dist/index.html's #root inside a [data-prerendered] wrapper, removes dist-ssr."
+    },
+    {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 99,
-      "size_bytes": 3891,
+      "lines": 126,
+      "size_bytes": 5462,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null)."
+    },
+    {
+      "path": "frontend/src/components/AccountMenu.css",
+      "language": "css",
+      "lines": 198,
+      "size_bytes": 4164,
+      "role": "component",
+      "purpose": "Account button and panel styles: 44 px round initials with a field border, a raised surface panel with a lift shadow (full width under 640 px), segmented radio rows on paper-2 with the checked one raised, accent swatches, the theme row only under 640 px, Sign out."
+    },
+    {
+      "path": "frontend/src/components/AccountMenu.jsx",
+      "language": "jsx",
+      "lines": 142,
+      "size_bytes": 5122,
+      "role": "component",
+      "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes; the panel slides down as it opens (pop) and fades out, opacity only under reduced motion."
+    },
+    {
+      "path": "frontend/src/components/BackendGate.jsx",
+      "language": "jsx",
+      "lines": 38,
+      "size_bytes": 1574,
+      "role": "component",
+      "purpose": "Holds every route but /login and the dev galleries until GET /health is ready (useBackendReady): nothing for 1.5 s, then WarmingUp, or after 90 s with no answer the ErrorScreen with Try again and Back to sign in."
     },
     {
       "path": "frontend/src/components/BookCover.css",
@@ -1119,28 +1271,60 @@
       "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative."
     },
     {
+      "path": "frontend/src/components/CalibrationFlow.css",
+      "language": "css",
+      "lines": 44,
+      "size_bytes": 962,
+      "role": "component",
+      "purpose": "Reading pace layout on tokens: one column, the passage at the reading size and measure."
+    },
+    {
       "path": "frontend/src/components/CalibrationFlow.jsx",
       "language": "jsx",
-      "lines": 87,
-      "size_bytes": 4329,
+      "lines": 60,
+      "size_bytes": 3779,
       "role": "component",
-      "purpose": "First-session reading speed test: times a 200-word passage and posts the WPM to /auth/profile/calibrate."
+      "purpose": "First-session reading pace: an intro, then a 200-word passage timed to words per minute (clamped 50-1000) and posted to /auth/profile/calibrate; a failed save is a warning toast and the session goes on at 200."
+    },
+    {
+      "path": "frontend/src/components/ErrorScreen.css",
+      "language": "css",
+      "lines": 66,
+      "size_bytes": 1357,
+      "role": "component",
+      "purpose": "Error screen layout: cup left, words right, stacked under 768 px; centred in the window when standalone."
+    },
+    {
+      "path": "frontend/src/components/ErrorScreen.jsx",
+      "language": "jsx",
+      "lines": 27,
+      "size_bytes": 1133,
+      "role": "component",
+      "purpose": "Error screen (handoff screen 10): cooled TeaCup, eyebrow, h1, body, actions, monospace code line; `standalone` renders it as the page's main."
     },
     {
       "path": "frontend/src/components/Layout.css",
       "language": "css",
-      "lines": 151,
-      "size_bytes": 2566,
+      "lines": 136,
+      "size_bytes": 2737,
       "role": "component",
-      "purpose": "Nav and main column styles; on phones the nav wraps to two rows and keeps the Library and Dashboard links."
+      "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the main column at 1120 px of content."
     },
     {
       "path": "frontend/src/components/Layout.jsx",
       "language": "jsx",
-      "lines": 55,
-      "size_bytes": 1596,
+      "lines": 44,
+      "size_bytes": 1646,
       "role": "component",
-      "purpose": "Global nav (wordmark, Library and Dashboard links, theme toggle, email, sign out) wrapped around page content."
+      "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target."
+    },
+    {
+      "path": "frontend/src/components/RouteErrorBoundary.jsx",
+      "language": "jsx",
+      "lines": 52,
+      "size_bytes": 1772,
+      "role": "component",
+      "purpose": "Error boundary keyed by the address: a page that throws while rendering shows the standalone ErrorScreen (Reload the page, Back to your shelf, the error's name); moving to another address clears it."
     },
     {
       "path": "frontend/src/components/ThemeToggle.css",
@@ -1159,12 +1343,76 @@
       "purpose": "Theme control: Paper, Lamplight or Match system as a radio group in the handoff's pill style; arrow keys move and choose."
     },
     {
+      "path": "frontend/src/components/WarmingUp.css",
+      "language": "css",
+      "lines": 125,
+      "size_bytes": 3499,
+      "role": "component",
+      "purpose": "Warm-up layout (stacked under 768 px), lamp brightening keyframes, hairline fill, pause state, reduced-motion hairline."
+    },
+    {
+      "path": "frontend/src/components/WarmingUp.jsx",
+      "language": "jsx",
+      "lines": 56,
+      "size_bytes": 2361,
+      "role": "component",
+      "purpose": "Warm-up screen (handoff screen 02, moment 7): ReadingLamp brightening over 6 s, TeaCup steam, a line that changes every 2.6 s, a 60 s hairline, a pause control (WCAG 2.2.2); role=status body."
+    },
+    {
+      "path": "frontend/src/components/dashboard/MasteryList.css",
+      "language": "css",
+      "lines": 79,
+      "size_bytes": 1577,
+      "role": "component",
+      "purpose": "Mastery list styles: heading row, rows of concept, bar and percentage on hairlines (the bar under the name on phones), 'Needs revisiting' in accent text, the empty and error notes."
+    },
+    {
+      "path": "frontend/src/components/dashboard/MasteryList.jsx",
+      "language": "jsx",
+      "lines": 90,
+      "size_bytes": 4181,
+      "role": "component",
+      "purpose": "MasteryList (handoff screen 09): underline SegmentedTabs per book in progress, that book's concepts weakest first from GET /mastery?book_id=&limit=10&offset=, kept per book, Show more, 'Needs revisiting' by the planner's rule, empty and failed (Try again) states."
+    },
+    {
+      "path": "frontend/src/components/test/OptionCards.css",
+      "language": "css",
+      "lines": 87,
+      "size_bytes": 2008,
+      "role": "component",
+      "purpose": "Option card styles: 60 px cards with a field border and radius 12, a lettered badge, Lora answer text; checked: accent border, accent-soft wash, letter filled with --accent and --accent-ink; the focus ring on the card; a chosen card settles from 0.985 to 1 over --dur-3."
+    },
+    {
+      "path": "frontend/src/components/test/OptionCards.jsx",
+      "language": "jsx",
+      "lines": 34,
+      "size_bytes": 1205,
+      "role": "component",
+      "purpose": "OptionCards (handoff option card): native radios in a radiogroup named by the question, each a card with letter A-H and the option text; LETTERS."
+    },
+    {
+      "path": "frontend/src/components/test/TimerPill.css",
+      "language": "css",
+      "lines": 35,
+      "size_bytes": 965,
+      "role": "component",
+      "purpose": "Timer pill styles: a 44 px surface pill with a field border, --warn on --warn-soft in the last 30 s, tabular figures; the hidden notice line."
+    },
+    {
+      "path": "frontend/src/components/test/TimerPill.jsx",
+      "language": "jsx",
+      "lines": 33,
+      "size_bytes": 1281,
+      "role": "component",
+      "purpose": "TimerPill: role=timer with a spoken label, m:ss face, warn styling at 30 s or less, and a polite line that speaks only at one minute, 30 seconds and zero."
+    },
+    {
       "path": "frontend/src/components/ui/Button.css",
       "language": "css",
-      "lines": 90,
-      "size_bytes": 1968,
+      "lines": 97,
+      "size_bytes": 2125,
       "role": "component",
-      "purpose": "Button styles on tokens: primary (accent fill, accent-ink text, Lamplight glow), secondary (surface, field border), ghost, danger; 44 px target, press scale 0.98, disabled and loading states, spinner."
+      "purpose": "Button styles on tokens: primary (accent fill, accent-ink text, Lamplight glow), secondary (surface, field border), ghost, danger; 44 px target, press scale 0.98, disabled and loading states, spinner; the children's span keeps the button's gap, so an icon sits apart from the label."
     },
     {
       "path": "frontend/src/components/ui/Button.jsx",
@@ -1193,18 +1441,18 @@
     {
       "path": "frontend/src/components/ui/ConceptChip.css",
       "language": "css",
-      "lines": 43,
-      "size_bytes": 874,
+      "lines": 53,
+      "size_bytes": 1100,
       "role": "component",
-      "purpose": "Concept chip styles: strengthened (accent wash, check icon) and revisit (dashed field border, turn-back icon); group layout."
+      "purpose": "Concept chip styles: strengthened (accent wash, check icon) and revisit (dashed field border, turn-back icon); group layout; the quiet kind word."
     },
     {
       "path": "frontend/src/components/ui/ConceptChip.jsx",
       "language": "jsx",
-      "lines": 41,
-      "size_bytes": 1378,
+      "lines": 43,
+      "size_bytes": 1595,
       "role": "component",
-      "purpose": "ConceptChip (strengthened or revisit, told apart by fill, border, icon and words) and ConceptChipGroup, a labelled list that pops chips in 60 ms apart (fade only under reduced motion)."
+      "purpose": "ConceptChip (strengthened or revisit, told apart by fill, border, icon and words) and ConceptChipGroup, a labelled list that pops chips in 60 ms apart (fade only under reduced motion); quiet hides the kind's word visually under a heading that says it."
     },
     {
       "path": "frontend/src/components/ui/EmptyState.css",
@@ -1221,6 +1469,22 @@
       "size_bytes": 827,
       "role": "component",
       "purpose": "Empty state: illustration slot, Playfair title (heading level configurable), one line of copy, one action."
+    },
+    {
+      "path": "frontend/src/components/ui/MasteryBar.css",
+      "language": "css",
+      "lines": 30,
+      "size_bytes": 892,
+      "role": "component",
+      "purpose": "Mastery bar styles: 3 px accent fill on a --line-2 track (3.58:1 or more between them), filled by scaleX from the left; the grow-from-zero animation over --dur-6."
+    },
+    {
+      "path": "frontend/src/components/ui/MasteryBar.jsx",
+      "language": "jsx",
+      "lines": 22,
+      "size_bytes": 854,
+      "role": "component",
+      "purpose": "MasteryBar: an accent bar for a 0-100 value (reading progress on the shelf, concept mastery on the dashboard); decorative unless given a label, as the caller prints the figure; grow draws it from zero when it appears."
     },
     {
       "path": "frontend/src/components/ui/Modal.css",
@@ -1271,6 +1535,22 @@
       "purpose": "Score pill: Playfair percentage and a DM Sans label, filled (accent wash) or outlined; meaning from the number, not colour. Imported by Library but not rendered."
     },
     {
+      "path": "frontend/src/components/ui/SegmentedTabs.css",
+      "language": "css",
+      "lines": 64,
+      "size_bytes": 1752,
+      "role": "component",
+      "purpose": "Segmented tabs styles: a paper-2 pill track, the selected tab a raised surface pill with a field border, 44 px tabs; the underline variant: text tabs on a hairline, the selected one over a 2 px accent rule."
+    },
+    {
+      "path": "frontend/src/components/ui/SegmentedTabs.jsx",
+      "language": "jsx",
+      "lines": 49,
+      "size_bytes": 1834,
+      "role": "component",
+      "purpose": "SegmentedTabs: a tablist with roving tabindex (Left/Right, Home, End select), the caller's panel named by the selected tab; variant 'underline' for the dashboard's book tabs."
+    },
+    {
       "path": "frontend/src/components/ui/Skeleton.css",
       "language": "css",
       "lines": 30,
@@ -1285,6 +1565,30 @@
       "size_bytes": 890,
       "role": "component",
       "purpose": "Skeleton placeholder, aria-hidden: a block sized by props or className, or `lines` of text with a shorter last line."
+    },
+    {
+      "path": "frontend/src/components/ui/TextArea.jsx",
+      "language": "jsx",
+      "lines": 13,
+      "size_bytes": 561,
+      "role": "component",
+      "purpose": "TextArea: the Field frame around a resizable textarea for written answers."
+    },
+    {
+      "path": "frontend/src/components/ui/TextInput.css",
+      "language": "css",
+      "lines": 90,
+      "size_bytes": 2009,
+      "role": "component",
+      "purpose": "Field and input styles: label above, --line-field border (A1), radius 8, 44 px, warn border and error line, read-only and disabled on paper-2, the text area in Lora resizing vertically."
+    },
+    {
+      "path": "frontend/src/components/ui/TextInput.jsx",
+      "language": "jsx",
+      "lines": 41,
+      "size_bytes": 1711,
+      "role": "component",
+      "purpose": "Field (visible label, optional hint, the control, an always-mounted polite error line with an alert icon; hint and error wired by aria-describedby, aria-invalid on error) and TextInput on it."
     },
     {
       "path": "frontend/src/components/ui/Toast.css",
@@ -1319,6 +1623,14 @@
       "purpose": "Tooltip: opens on hover after 200 ms and on focus, closes on Esc, blur or leaving, stays open while hovered; the trigger is described by a persistent hidden copy, the visible bubble is aria-hidden."
     },
     {
+      "path": "frontend/src/components/ui/tabIds.js",
+      "language": "javascript",
+      "lines": 4,
+      "size_bytes": 238,
+      "role": "component",
+      "purpose": "tabId(idBase, value) and panelId(idBase): the ids that tie SegmentedTabs to the caller's panel."
+    },
+    {
       "path": "frontend/src/components/ui/toastContext.js",
       "language": "javascript",
       "lines": 14,
@@ -1329,10 +1641,10 @@
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 211,
-      "size_bytes": 8978,
+      "lines": 272,
+      "size_bytes": 11507,
       "role": "asset",
-      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes)."
+      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes); a Form fields section (segmented tabs, inputs in default, error, hint, read-only and disabled states, a text area); mastery bars at 0, 34, 62 and 100%; the test's option cards and a calm and a warning timer."
     },
     {
       "path": "frontend/src/gallery/IllustrationGallery.css",
@@ -1345,10 +1657,10 @@
     {
       "path": "frontend/src/gallery/IllustrationGallery.jsx",
       "language": "jsx",
-      "lines": 82,
-      "size_bytes": 2834,
+      "lines": 83,
+      "size_bytes": 2864,
       "role": "asset",
-      "purpose": "Dev-only /__illustrations page: the illustration set in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
+      "purpose": "Dev-only /__illustrations page: the illustration set (now with the candle) in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
     },
     {
       "path": "frontend/src/gallery/ReaderGallery.css",
@@ -1369,10 +1681,10 @@
     {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
-      "lines": 106,
-      "size_bytes": 1847,
+      "lines": 121,
+      "size_bytes": 2065,
       "role": "asset",
-      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid."
+      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid, and the form field column, and the mastery bar row, and the test column."
     },
     {
       "path": "frontend/src/gallery/main.jsx",
@@ -1399,20 +1711,20 @@
       "purpose": "AuthProvider and useAuth: Supabase session state plus signIn, signUp and signOut."
     },
     {
-      "path": "frontend/src/hooks/usePageTransition.js",
-      "language": "javascript",
-      "lines": 33,
-      "size_bytes": 790,
-      "role": "hook",
-      "purpose": "Adds the .visible class on mount and returns navigateTo, which fades the page out before routing."
-    },
-    {
       "path": "frontend/src/illustrations/BookStack.jsx",
       "language": "jsx",
       "lines": 7,
       "size_bytes": 216,
       "role": "asset",
       "purpose": "Illustration component: the stack of four books, from svg/BookStack.svg through Illustration."
+    },
+    {
+      "path": "frontend/src/illustrations/Candle.jsx",
+      "language": "jsx",
+      "lines": 7,
+      "size_bytes": 248,
+      "role": "asset",
+      "purpose": "Illustration component: a candle in a holder (parts flame, glow), from svg/Candle.svg through Illustration; the dashboard's streak."
     },
     {
       "path": "frontend/src/illustrations/CrescentMoon.jsx",
@@ -1481,18 +1793,18 @@
     {
       "path": "frontend/src/illustrations/index.js",
       "language": "javascript",
-      "lines": 9,
-      "size_bytes": 373,
+      "lines": 10,
+      "size_bytes": 408,
       "role": "asset",
       "purpose": "Barrel export of the illustration components and PARTS."
     },
     {
       "path": "frontend/src/illustrations/parts.js",
       "language": "javascript",
-      "lines": 15,
-      "size_bytes": 770,
+      "lines": 16,
+      "size_bytes": 860,
       "role": "asset",
-      "purpose": "PARTS: data-part selectors for the animatable parts of the illustrations (glow, cone, bulb, steam, sun, hill, ribbon, stars), for Motion."
+      "purpose": "PARTS: data-part selectors for the animatable parts of the illustrations (glow, cone, bulb, steam, sun, hill, ribbon, stars, flame), for Motion."
     },
     {
       "path": "frontend/src/illustrations/svgo.config.mjs",
@@ -1505,8 +1817,8 @@
     {
       "path": "frontend/src/index.css",
       "language": "css",
-      "lines": 40,
-      "size_bytes": 1401,
+      "lines": 24,
+      "size_bytes": 793,
       "role": "asset",
       "purpose": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; and the reset (base layer); the pre-2.0 .page fade was removed in C11.5 (it hid every page's first contentful paint)."
     },
@@ -1514,9 +1826,25 @@
       "path": "frontend/src/lib/api.js",
       "language": "javascript",
       "lines": 40,
-      "size_bytes": 1044,
+      "size_bytes": 1051,
       "role": "lib",
-      "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response."
+      "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response; exports API_BASE_URL for the /health poll."
+    },
+    {
+      "path": "frontend/src/lib/backendReady.js",
+      "language": "javascript",
+      "lines": 49,
+      "size_bytes": 2197,
+      "role": "lib",
+      "purpose": "Backend readiness state machine, pure: checking (first 1.5 s), warming (the warm-up screen), ready (/health model_ready, or answering but still loading after 90 s), down (no answer in 90 s); the error line."
+    },
+    {
+      "path": "frontend/src/lib/backendReady.test.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 2164,
+      "role": "lib",
+      "purpose": "Node test (npm run test:unit): warm start, warm-up then ready, down after 90 s with its error line, reachable but loading after 90 s, Try again starts warm."
     },
     {
       "path": "frontend/src/lib/coverColor.js",
@@ -1527,12 +1855,76 @@
       "purpose": "coverColor(title, author): D5's deterministic cover colour, FNV-1a 32-bit of the trimmed, lower-cased title and author joined by U+001F, modulo 5, into moss, oxblood, ink, ochre, slate."
     },
     {
+      "path": "frontend/src/lib/dashboard.js",
+      "language": "javascript",
+      "lines": 63,
+      "size_bytes": 2656,
+      "role": "lib",
+      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday, needsRevisiting (tested and under the planner's 0.5), nextBook (started and unfinished with the most read, else the first not started)."
+    },
+    {
+      "path": "frontend/src/lib/dashboard.test.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 2213,
+      "role": "lib",
+      "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday, needs revisiting."
+    },
+    {
+      "path": "frontend/src/lib/initials.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 933,
+      "role": "lib",
+      "purpose": "displayName(user) and initials(user) for the account button (D4): a Supabase user_metadata name first, else the email's local part split on . _ - +; first and last letters, at most two, '?' when there are none."
+    },
+    {
+      "path": "frontend/src/lib/initials.test.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 1111,
+      "role": "lib",
+      "purpose": "Node test (npm run test:unit): initials from a display name, from email local parts with separators and accents, and the fallbacks."
+    },
+    {
+      "path": "frontend/src/lib/results.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2404,
+      "role": "lib",
+      "purpose": "Results page helpers, pure: splitFeedback (the sentence and the curly-quoted passage it rests on), outcome per grade (right 80%+, partial 40%+, wrong, unsure when low-confidence) and OUTCOME_LABEL, the summary line, concept chips (missed anywhere means to revisit) and the verdict sentence."
+    },
+    {
+      "path": "frontend/src/lib/results.test.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 2206,
+      "role": "lib",
+      "purpose": "Node test (npm run test:unit): feedback split, outcome bands and low confidence, the summary line, concept chips, verdict bands."
+    },
+    {
       "path": "frontend/src/lib/supabase.js",
       "language": "javascript",
       "lines": 6,
       "size_bytes": 341,
       "role": "lib",
       "purpose": "Creates the browser Supabase client; falls back to a hard-coded project URL and publishable key when the env vars are unset."
+    },
+    {
+      "path": "frontend/src/lib/useBackendReady.js",
+      "language": "javascript",
+      "lines": 64,
+      "size_bytes": 2208,
+      "role": "lib",
+      "purpose": "Hook: polls GET /health every 2 s (10 s timeout) from app start through lib/backendReady.js; returns the phase and retry."
+    },
+    {
+      "path": "frontend/src/lib/useDocumentTitle.js",
+      "language": "javascript",
+      "lines": 8,
+      "size_bytes": 272,
+      "role": "lib",
+      "purpose": "useDocumentTitle(title): the tab title '<title> · ReadFocus' while a page is shown (audit U11); used by every routed page."
     },
     {
       "path": "frontend/src/main.jsx",
@@ -1577,98 +1969,210 @@
     {
       "path": "frontend/src/pages/ComprehensionTest.css",
       "language": "css",
-      "lines": 301,
-      "size_bytes": 5745,
+      "lines": 194,
+      "size_bytes": 4035,
       "role": "page",
-      "purpose": "Styles for the test page: dark timer strip, question dots, slide animations, answer textarea, submitting overlay."
+      "purpose": "Test styles: three-part chrome (Leave test, label and dots, timer), 44 px dot targets, a 672 px question column with the Lora question, the hint, Back and Next or Submit, the grading veil, the leave dialog; icon-only Leave and hidden label under 640 px."
     },
     {
       "path": "frontend/src/pages/ComprehensionTest.jsx",
       "language": "jsx",
-      "lines": 261,
-      "size_bytes": 9242,
+      "lines": 298,
+      "size_bytes": 12303,
       "role": "page",
-      "purpose": "Five-question timed test (5 minutes): grades each answer in the background on navigation, auto-submits at zero, routes to Results."
+      "purpose": "Comprehension test (handoff screen 07): GET /sessions/{id}, one question per screen (the prompt without its appended options), multiple choice as OptionCards sent as '(b) <option>', written answers in a TextArea, progress dots with answered names, keys 1-n and Enter, answers kept in localStorage until submitted, evaluate-single when leaving a changed answer, the 5-minute TimerPill warning in the last 30 s and submitting itself at zero with the latest answers, submit-answers then /results with router state, a grading veil, toasts on failure, and a Leave test dialog. Motion (moment 4): each new question slides in 32 px from the side it comes from (--dur-4) after the last slips away; the first question does not move; fades only under reduced motion; the new question takes focus as it mounts."
     },
     {
       "path": "frontend/src/pages/Dashboard.css",
       "language": "css",
-      "lines": 288,
-      "size_bytes": 6589,
+      "lines": 284,
+      "size_bytes": 5712,
       "role": "page",
-      "purpose": "Styles for the dashboard: header, stat row, chart frame, book progress cards, feedback quotes, empty states."
+      "purpose": "Dashboard styles: header with the streak pill, the four-figure row with hairlines (2 x 2 under 640 px), two columns (one under 1024 px), the trend's token colours for Recharts' grid, axis, area, line and dots, cards, book rows, the feedback quote on paper-2, the hidden table, skeleton shapes, the For tonight card, the candle's flicker (2 x 2.4 s)."
     },
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 245,
-      "size_bytes": 8590,
+      "lines": 240,
+      "size_bytes": 9667,
       "role": "page",
-      "purpose": "Progress page: streak, words this week, a Recharts score line per book, book progress cards, recent feedback."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests."
+    },
+    {
+      "path": "frontend/src/pages/Landing.css",
+      "language": "css",
+      "lines": 646,
+      "size_bytes": 17051,
+      "role": "page",
+      "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero grid and illustration scene, the book spread (pages, spine shade, flyleaf, caption, one page under 640 px), the contents page (numerals, leaders), the word demo (marked words, page, pointer/touch hints), the features, the honesty note, the questions and the colophon (44 px theme toggle), on the project tokens."
+    },
+    {
+      "path": "frontend/src/pages/Landing.jsx",
+      "language": "jsx",
+      "lines": 76,
+      "size_bytes": 3141,
+      "role": "page",
+      "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount; masthead with Sign in; hero with headline, positioning lead, Start reading (to /login?tab=signup) and See how it works (scrolls and moves focus), DuskWindow and ReadingLamp behind the BookSpread; then Contents, WordDemo, Features and Faq, and the LandingFooter."
     },
     {
       "path": "frontend/src/pages/Library.css",
       "language": "css",
-      "lines": 227,
-      "size_bytes": 4008,
+      "lines": 304,
+      "size_bytes": 5715,
       "role": "page",
-      "purpose": "Styles for the library: upload zone, book rows, processing sweep, empty state; uses transition: all."
+      "purpose": "Library styles: header, the next-book card, 160 px cover grid (three across under 640 px with the remove button under the caption), captions, skeleton shapes, the error banner on warn-soft, the empty-state action row, the page-wide drop target, the upload and remove dialogs."
     },
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 275,
-      "size_bytes": 10926,
+      "lines": 380,
+      "size_bytes": 16542,
       "role": "page",
-      "purpose": "Library page: drag-and-drop upload with a title and author modal, 3-second status polling, book list, delete."
+      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion."
     },
     {
       "path": "frontend/src/pages/Login.css",
       "language": "css",
-      "lines": 171,
-      "size_bytes": 3036,
+      "lines": 174,
+      "size_bytes": 3837,
       "role": "page",
-      "purpose": "Styles for the split login page: quote panel, tabs, form fields; single column below 768 px."
+      "purpose": "Sign-in styles (handoff screen 01): split 50/50 with the scene on paper-2 (four drawings on one ground line, sized per breakpoint), the form column at 400 px; one column under 1024 px, icon-only mark and smaller drawings under 640 px."
     },
     {
       "path": "frontend/src/pages/Login.jsx",
       "language": "jsx",
-      "lines": 145,
-      "size_bytes": 4913,
+      "lines": 158,
+      "size_bytes": 7372,
       "role": "page",
-      "purpose": "Sign in and sign up form with a quote panel; collects a display name that is never sent."
+      "purpose": "Sign in and create account (handoff screen 01): scene with the tagline, segmented tabs over one tabpanel, labelled fields validated before sending (errors inline, focus to the first), Supabase errors mapped to the field or a form alert, loading label on submit, inbox message after sign-up; the display name is collected and never sent, as before. The drawings fade in and the form rises 12 px without fading (text paints at once); a nested AnimatePresence lets them play on a first load; under reduced motion the form does not move. Opens on Create account when the URL has ?tab=signup (the landing page's Start reading)."
+    },
+    {
+      "path": "frontend/src/pages/NotFound.jsx",
+      "language": "jsx",
+      "lines": 17,
+      "size_bytes": 590,
+      "role": "page",
+      "purpose": "404 page inside Layout: ErrorScreen with \"This page isn't on the shelf.\", Back to your shelf and \"404 · <path>\"."
     },
     {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
-      "lines": 45,
-      "size_bytes": 925,
+      "lines": 58,
+      "size_bytes": 1206,
       "role": "page",
-      "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state."
+      "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state; the leave dialog's text and actions."
     },
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 315,
-      "size_bytes": 13668,
+      "lines": 319,
+      "size_bytes": 14213,
       "role": "page",
-      "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8)."
+      "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8); C13.4: the first-page note carries a small ReadingLamp, the closing page a larger one whose glow pulses once, failures are toasts, and leaving asks in a Modal (Leave / Keep reading)."
     },
     {
       "path": "frontend/src/pages/Results.css",
       "language": "css",
-      "lines": 239,
-      "size_bytes": 4370,
+      "lines": 261,
+      "size_bytes": 5189,
       "role": "page",
-      "purpose": "Styles for the results page: large score, verdict colours, per-question breakdown, next-session and re-read panels."
+      "purpose": "Results styles: two columns (one under 1024 px), the 112 px Playfair score, summary pill and verdict, the question list with outcome icons, the evidence quote on paper-2 (no side rule), the concept and next-session cards, the message and skeleton states."
     },
     {
       "path": "frontend/src/pages/Results.jsx",
       "language": "jsx",
-      "lines": 186,
-      "size_bytes": 7040,
+      "lines": 247,
+      "size_bytes": 10896,
       "role": "page",
-      "purpose": "Results page: animated score, verdict, per-question feedback, next-session or re-read panel; rebuilds from the API after a refresh."
+      "purpose": "Results (handoff screen 08): the score, summary and verdict, a note when answers were not judged confidently; each question with its outcome in words and an icon, the reader's answer (without the '(b) ' the grader reads), the feedback and its quoted passage; concept chips strengthened and to revisit; the next session (planner mode, minutes and reason, or the pace's re-read) with Start next session and the dashboard; from router state after the test (GET /sessions/{id} for the questions) or rebuilt after a refresh from GET /sessions/{id} and GET /books/{id}; skeleton, not-graded and failed (Try again) states. Motion (moment 5): the score counts up with useCountUp and the chips pop in 60 ms apart under their own AnimatePresence; the final score at once and no movement under reduced motion."
+    },
+    {
+      "path": "frontend/src/pages/landing/BookSpread.jsx",
+      "language": "jsx",
+      "lines": 59,
+      "size_bytes": 2329,
+      "role": "page",
+      "purpose": "Landing hero's open book (C13.10b) in the reader's typography (running heads, justified Lora, old-style folios) with a source caption; a blank flyleaf turns once after load via pageTurn/turnShade, none under reduced motion; one page at phone width."
+    },
+    {
+      "path": "frontend/src/pages/landing/Contents.jsx",
+      "language": "jsx",
+      "lines": 44,
+      "size_bytes": 2130,
+      "role": "page",
+      "purpose": "How it works as a book's contents page (C13.10b): four steps with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works."
+    },
+    {
+      "path": "frontend/src/pages/landing/Faq.jsx",
+      "language": "jsx",
+      "lines": 22,
+      "size_bytes": 1236,
+      "role": "page",
+      "purpose": "Landing questions (C13.10d) as native details/summary: which files work, is it free, where definitions come from, why the first load is slow, deleting books; answers checked against the code."
+    },
+    {
+      "path": "frontend/src/pages/landing/Features.jsx",
+      "language": "jsx",
+      "lines": 50,
+      "size_bytes": 2271,
+      "role": "page",
+      "purpose": "Landing features (C13.10d): Feels like a book, Understand every word, Reading that adapts as three editorial sections with text and an illustration alternating sides (one plain sentence on rule-based agents and one small embedding model on the server), then the What ReadFocus isn't note."
+    },
+    {
+      "path": "frontend/src/pages/landing/LandingFooter.jsx",
+      "language": "jsx",
+      "lines": 26,
+      "size_bytes": 1212,
+      "role": "page",
+      "purpose": "Landing colophon (C13.10d): closing line with Start reading, credits for Wiktionary/Free Dictionary, Wikipedia and Project Gutenberg with licences, the GitHub source link (REPO_URL) and the ThemeToggle."
+    },
+    {
+      "path": "frontend/src/pages/landing/WordDemo.jsx",
+      "language": "jsx",
+      "lines": 114,
+      "size_bytes": 5852,
+      "role": "page",
+      "purpose": "Landing's Try it section (C13.10c): Meditations Book I.XV with seven marked words (buttons) that open the reader's real WordCard through useWordCard and a bundled client; mouse hover after HOVER_MS, touch long-press (createLongPress), click or tap, Enter opens and focuses, Esc returns focus; polite live announcement; no network calls."
+    },
+    {
+      "path": "frontend/src/pages/landing/demoDefinitions.json",
+      "language": "json",
+      "lines": 143,
+      "size_bytes": 4423,
+      "role": "page",
+      "purpose": "Bundled GET /lookup answers for the landing demo (six Free Dictionary/Wiktionary entries, one Wikipedia summary), fetched once with backend/services/lookup.py; sources and licences in _sources."
+    },
+    {
+      "path": "frontend/src/pages/landing/passages.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 1541,
+      "role": "page",
+      "purpose": "Public-domain text for the landing page: Marcus Aurelius, Meditations (Casaubon, 1634, Project Gutenberg #2680), Book IV.III for the hero spread (soft hyphens in long words), with its source."
+    },
+    {
+      "path": "frontend/src/pages/landing/wake.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 749,
+      "role": "page",
+      "purpose": "wakeBackend(): one fire-and-forget GET /health per page load from the landing page (no retries, errors ignored)."
+    },
+    {
+      "path": "frontend/src/pages/landing/wake.test.js",
+      "language": "javascript",
+      "lines": 18,
+      "size_bytes": 701,
+      "role": "page",
+      "purpose": "Node test (npm run test:unit): wakeBackend sends one GET /health per load, swallows failures, and does nothing without fetch."
+    },
+    {
+      "path": "frontend/src/prerender.jsx",
+      "language": "jsx",
+      "lines": 21,
+      "size_bytes": 962,
+      "role": "asset",
+      "purpose": "Build-time SSR entry (C13.10e): renderToString of the Landing page in a StaticRouter at / with a static theme context, so scripts/prerender.mjs can put the headline into dist/index.html before any script runs."
     },
     {
       "path": "frontend/src/reader/BookFlow.jsx",
@@ -1721,8 +2225,8 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.css",
       "language": "css",
-      "lines": 105,
-      "size_bytes": 3173,
+      "lines": 123,
+      "size_bytes": 3643,
       "role": "asset",
       "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px."
     },
@@ -1857,10 +2361,10 @@
     {
       "path": "frontend/src/reader/reader.css",
       "language": "css",
-      "lines": 464,
-      "size_bytes": 11876,
+      "lines": 491,
+      "size_bytes": 12713,
       "role": "asset",
-      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b)."
+      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b); the note's 40 px lamp and the closing page's 88 px lamp with a one-time 1.4 s glow pulse (scale only); the closing page above the text window (z-index 1)."
     },
     {
       "path": "frontend/src/reader/textSize.js",
@@ -1953,10 +2457,10 @@
     {
       "path": "frontend/src/styles/tokens.css",
       "language": "css",
-      "lines": 248,
-      "size_bytes": 8223,
+      "lines": 252,
+      "size_bytes": 8393,
       "role": "asset",
-      "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
+      "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (and a swatch of each accent for the accent setting) (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
     },
     {
       "path": "frontend/src/theme/ThemeProvider.jsx",
@@ -1993,10 +2497,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 60,
-      "size_bytes": 1819,
+      "lines": 80,
+      "size_bytes": 3019,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase."
     },
     {
       "path": "package.json",
@@ -2369,8 +2873,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 305,
-      "size_bytes": 80475,
+      "lines": 368,
+      "size_bytes": 104655,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -2637,6 +3141,10 @@
       "reason": "binary"
     },
     {
+      "path": "frontend/public/og.png",
+      "reason": "binary"
+    },
+    {
       "path": "frontend/src/assets/hero.png",
       "reason": "binary"
     },
@@ -2650,6 +3158,10 @@
     },
     {
       "path": "frontend/src/illustrations/svg/BookStack.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/src/illustrations/svg/Candle.svg",
       "reason": "binary"
     },
     {

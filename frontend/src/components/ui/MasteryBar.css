@@ -1,0 +1,30 @@
+/* Mastery bar (C13.3a): 3 px accent fill on a --line-2 track, filled by
+   scaleX so a grow animation moves only transform. Not A1's --line-field:
+   the accent fill would sit at about 1.9:1 against it, so filled and empty
+   would blur; the value is always printed beside the bar, which is
+   therefore decorative. */
+.rf-mastery {
+  position: relative;
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-hair);
+  background-color: var(--line-2);
+}
+
+.rf-mastery__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--accent);
+  transform-origin: left center;
+}
+
+/* Moment 6: grow from zero to the value (--dur-6); near-instant under reduced motion. */
+.rf-mastery--grow .rf-mastery__fill {
+  animation: rf-mastery-grow var(--dur-6) var(--ease-settle);
+}
+
+@keyframes rf-mastery-grow {
+  from { transform: scaleX(0); }
+}

@@ -77,6 +77,26 @@ test.describe('pagination and page turns', () => {
   });
 });
 
+test("the last page's Start test takes a mouse click and finishes reading", async ({ page }) => {
+  // Regression (docs/DEBUG_LOG.md, C13.4): the text viewport lay over the closing page, so the button
+  // could be reached by keyboard only.
+  const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
+  const answer = (route, body) => route.request().method() === 'OPTIONS'
+    ? route.fulfill({ status: 204, headers: cors })
+    : route.fulfill({ status: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  let finished = 0;
+  await page.route('http://localhost:8000/sessions/e2e-session/finish-reading', (route) => { if (route.request().method() === 'POST') finished += 1; return answer(route, {}); });
+  await page.route('http://localhost:8000/sessions/e2e-session', (route) => answer(route, { id: 'e2e-session', test_questions: [{ question: 'What did Thoreau build?', type: 'free_text' }] }));
+  await openReader(page);
+  await page.locator('.rf-book').focus();
+  await page.keyboard.press('End');
+  await expect(spoken(page)).toHaveText(/End of today's reading/);
+  await expect(page.locator('.rf-end')).toHaveCount(1);
+  await page.locator('.rf-end').getByRole('button', { name: 'Start test' }).click({ timeout: 3000 });
+  await expect(page).toHaveURL(/\/test\/e2e-session$/);
+  expect(finished).toBe(1);
+});
+
 test.describe('word lookup', () => {
   test('a known word shows its card within 600 ms once cached, and Esc closes it', async ({ page, api }) => {
     await openReader(page);
@@ -134,6 +154,52 @@ test.describe('word lookup', () => {
       expect(await spoken(page).textContent()).toBe(before); // no page turn
     });
   });
+});
+
+test.describe('the toolbar at 375', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  // C13.9: the tools on one row (handoff 375 frame), the session's controls on one row under them.
+  test('two rows, not three: tools above, the session below', async ({ page }) => {
+    await openReader(page);
+    const box = (locator) => locator.boundingBox();
+    const toolbar = page.getByRole('toolbar', { name: 'Reading controls' });
+    const back = await box(toolbar.getByRole('button', { name: 'Back to the library' }));
+    const theme = await box(toolbar.getByRole('radiogroup', { name: 'Theme' }));
+    const done = await box(toolbar.getByRole('button', { name: 'Done reading' }));
+    const abandon = await box(toolbar.getByRole('button', { name: 'Abandon session' }));
+    expect(Math.abs(theme.y - back.y)).toBeLessThan(4); // the theme toggle shares the tools' row
+    expect(done.y).toBeGreaterThan(back.y + back.height - 1); // the session row is under it
+    expect(Math.abs(abandon.y - done.y)).toBeLessThan(4);
+    expect((await box(toolbar)).height).toBeLessThanOrEqual(100);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
+  });
+});
+
+// C13.9: a stopped session clock says so in words, at 1440 and at 375.
+for (const width of [1440, 375]) {
+  test(`the session clock reads Start, then Resume, at ${width}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+    await openReader(page);
+    const session = page.getByRole('group', { name: 'Session' });
+    await expect(session.getByRole('timer')).toHaveAccessibleName('Time left 20:00');
+    const start = session.getByRole('button', { name: 'Start the timer' });
+    await expect(start).toHaveText('Start');
+    await expect(start.getByText('Start')).toBeVisible();
+    await start.click();
+    await expect(session.getByRole('button', { name: 'Pause the timer' })).toHaveText('');
+    await session.getByRole('button', { name: 'Pause the timer' }).click();
+    await expect(session.getByRole('button', { name: 'Resume the timer' })).toHaveText('Resume');
+  });
+}
+
+// C13.9: one h1 that names the book, hidden from sight (the page shows chapter headings as h2).
+test('the reading page has one h1 naming the book', async ({ page }) => {
+  await openReader(page);
+  const h1 = page.getByRole('heading', { level: 1 });
+  await expect(h1).toHaveCount(1);
+  await expect(h1).toHaveText("Walden: today's reading");
+  expect(await h1.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
 });
 
 test('page-turn frame rate and lookup timings (recorded in docs/BENCHMARKS.md)', async ({ page }, info) => {

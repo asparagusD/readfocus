@@ -1,0 +1,9 @@
+# ReadFocus (C13.10e): only the public landing page is for search engines.
+# The app's own routes need an account. The page's scripts, styles, fonts,
+# icon and share image stay open so crawlers can render and preview "/".
+User-agent: *
+Allow: /$
+Allow: /assets/
+Allow: /og.png
+Allow: /favicon.svg
+Disallow: /

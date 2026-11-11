@@ -18,6 +18,15 @@ original file says "original".
 | `frontend/src/illustrations/svg/EmptyShelf.svg` | Empty bookcase | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
 | `frontend/src/illustrations/svg/OpenBook.svg` | Open book with ribbon bookmark | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
 | `frontend/src/illustrations/svg/CrescentMoon.svg` | Crescent moon with three stars | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
+| `frontend/src/illustrations/svg/Candle.svg` | Candle in a holder, flame and glow (the dashboard's streak) | original, drawn to the same style | ReadFocus | original | 2026-11-11, C13.7a | svgo 4.1.0 |
+| `frontend/public/og.png` | 1200 x 630 share image (Open Graph, Twitter): wordmark, headline, DuskWindow, ReadingLamp and OpenBook on a sill | original, rendered by `frontend/scripts/make-og.mjs` from the app's tokens, bundled OFL fonts and the illustrations above | ReadFocus | original | 2026-11-11, C13.10e | sharp 0.35.5 palette PNG, 23.2 KB |
+
+## Text on the landing page (C13.10)
+
+| File | What | Source | Licence | Added | Changes |
+|---|---|---|---|---|---|
+| `frontend/src/pages/landing/passages.js`, `WordDemo.jsx` | Marcus Aurelius, *Meditations*, Book IV, III (hero spread) and Book I, XV (word demo), translated by Meric Casaubon (1634) | Project Gutenberg eBook #2680 (https://www.gutenberg.org/ebooks/2680), plain text, checked verbatim | Public domain (in the USA, per Project Gutenberg); the Gutenberg name and licence are not used, only the text, cited with a link | 2026-11-11, C13.10b, C13.10c | Soft hyphens added to long words in the spread |
+| `frontend/src/pages/landing/demoDefinitions.json` | Six dictionary entries (Betimes, odious, whosoever, kinsman, incur, reproachful) and one Wikipedia summary (Quadi) | Fetched once with `backend/services/lookup.py` from the Free Dictionary API (https://dictionaryapi.dev/, Wiktionary content) and the Wikipedia REST summary of "Quadi" | Wiktionary: CC BY-SA 3.0; Wikipedia: CC BY-SA 4.0. Credited on the card ("Wiktionary, via Free Dictionary"; "Summary from Wikipedia" with the article link) and in the file's `_sources` | 2026-11-11, C13.10c | Audio and thumbnail links removed (no network calls) |
 
 ## Book covers (per book, not in the repo)
 

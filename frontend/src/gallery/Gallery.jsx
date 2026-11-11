@@ -11,6 +11,13 @@ import { useToast } from '../components/ui/toastContext';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Tooltip } from '../components/ui/Tooltip';
 import { BookCover } from '../components/BookCover';
+import { MasteryBar } from '../components/ui/MasteryBar';
+import { OptionCards } from '../components/test/OptionCards';
+import { TimerPill } from '../components/test/TimerPill';
+import { TextInput } from '../components/ui/TextInput';
+import { TextArea } from '../components/ui/TextArea';
+import { SegmentedTabs } from '../components/ui/SegmentedTabs';
+import { tabId, panelId } from '../components/ui/tabIds';
 
 // One cover in each D5 colour, then the states. The real cover is the one
 // the C11.2 backfill stored in the dev project's public covers bucket.
@@ -34,6 +41,44 @@ function ToastDemo() {
       <Button variant="secondary" onClick={() => toast({ kind: 'success', message: 'Meditations is ready on your shelf.', action: { label: 'Plan sessions' } })}>Success toast</Button>
       <Button variant="secondary" onClick={() => toast({ kind: 'neutral', message: 'Place saved at page 15.' })}>Neutral toast</Button>
       <Button variant="secondary" onClick={() => toast({ kind: 'warning', message: 'This PDF is scanned images, so we can’t read its words yet.', action: { label: 'Try another' } })}>Warning toast</Button>
+    </div>
+  );
+}
+
+const TEST_OPTIONS = [
+  'In the money paid for it at the time of purchase',
+  'In the amount of life exchanged for it, now or later',
+  'In the labour of others needed to make it',
+  'In what it would fetch if sold again',
+];
+
+function TestDemo() {
+  const [picked, setPicked] = useState(TEST_OPTIONS[1]);
+  return (
+    <div className="gallery-grid gallery-test">
+      <p id="g-test-q" className="gallery-note">How does Thoreau measure the cost of a thing?</p>
+      <OptionCards name="g-test" labelledBy="g-test-q" options={TEST_OPTIONS} value={picked} onChange={setPicked} />
+      <div className="gallery-row">
+        <TimerPill seconds={462} />
+        <TimerPill seconds={24} />
+      </div>
+    </div>
+  );
+}
+
+function FormDemo() {
+  const [tab, setTab] = useState('signin');
+  const tabs = [{ value: 'signin', label: 'Sign in' }, { value: 'signup', label: 'Create account' }];
+  return (
+    <div className="gallery-grid gallery-form">
+      <SegmentedTabs idBase="g-auth" label="Sign in or create an account" options={tabs} value={tab} onChange={setTab} />
+      <div role="tabpanel" id={panelId('g-auth')} aria-labelledby={tabId('g-auth', tab)} className="gallery-grid">
+        <TextInput label="Email" type="email" placeholder="you@example.com" />
+        <TextInput label="Password" type="password" defaultValue="wrongpass" error="That password doesn't match this email." />
+        <TextInput label="Display name" hint="Shown on your shelf." defaultValue="Read only" readOnly />
+        <TextInput label="Disabled" disabled defaultValue="Not editable" />
+        <TextArea label="Your answer" placeholder="Two or three sentences in your own words…" />
+      </div>
     </div>
   );
 }
@@ -159,6 +204,14 @@ export function Gallery() {
 
       <Section title="Chips, badges, progress">
         <ChipsDemo />
+        <div className="gallery-bars">
+          {[0, 34, 62, 100].map((v) => (
+            <div key={v}>
+              <MasteryBar value={v} />
+              <p className="gallery-note">{v}% read</p>
+            </div>
+          ))}
+        </div>
       </Section>
 
       <Section title="Toasts">
@@ -196,6 +249,14 @@ export function Gallery() {
           <BookCover width={88} title="Walden" author="Henry David Thoreau" />
           <BookCover width={200} title="Walden" author="Henry David Thoreau" />
         </div>
+      </Section>
+
+      <Section title="Form fields">
+        <FormDemo />
+      </Section>
+
+      <Section title="Test: option cards and timer">
+        <TestDemo />
       </Section>
 
       <Section title="Skeleton">

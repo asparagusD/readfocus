@@ -1,0 +1,143 @@
+{
+  "_about": "Bundled answers for the landing page's word-lookup demo (C13.10c), in the shape GET /lookup returns. Fetched once on 2026-11-11 with backend/services/lookup.py (_dictionary, _wikipedia); audio and thumbnail links removed so the demo makes no network calls.",
+  "_sources": {
+    "dictionary": "Wiktionary definitions via the Free Dictionary API (https://dictionaryapi.dev/), licensed CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/).",
+    "wikipedia": "Summary of the Wikipedia article 'Quadi' (https://en.wikipedia.org/wiki/Quadi), licensed CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)."
+  },
+  "entries": {
+    "Quadi": {
+      "term": "quadi",
+      "phonetic": null,
+      "audio_url": null,
+      "meanings": [],
+      "wiki": {
+        "title": "Quadi",
+        "description": "Roman-era Germanic kingdom near present-day Bratislava",
+        "extract": "The Quadi were a Germanic people during the Roman era, who were prominent in Greek and Roman records from about 20 AD to about 400 AD. By about 20 AD they had a kingdom centred in the area of present-day western Slovakia, north of the Roman border on the Danube river.",
+        "url": "https://en.wikipedia.org/wiki/Quadi",
+        "thumbnail_url": null
+      },
+      "source": "wikipedia",
+      "found": true,
+      "ambiguous": false,
+      "url": "https://en.wikipedia.org/wiki/Quadi"
+    },
+    "Betimes": {
+      "term": "Betimes",
+      "phonetic": "/bəˈtaɪmz/",
+      "audio_url": null,
+      "meanings": [
+        {
+          "part_of_speech": "adverb",
+          "definitions": [
+            "In good season or time; early, especially in the morning; seasonably.",
+            "In a short time, soon; quickly, forthwith."
+          ],
+          "example": null
+        }
+      ],
+      "wiki": null,
+      "source": "dictionary",
+      "found": true,
+      "ambiguous": false,
+      "url": null
+    },
+    "odious": {
+      "term": "odious",
+      "phonetic": "/ˈəʊ.di.əs/",
+      "audio_url": null,
+      "meanings": [
+        {
+          "part_of_speech": "adjective",
+          "definitions": [
+            "Arousing or meriting strong dislike, aversion, or intense displeasure."
+          ],
+          "example": "Scrubbing the toilet is an odious task."
+        }
+      ],
+      "wiki": null,
+      "source": "dictionary",
+      "found": true,
+      "ambiguous": false,
+      "url": null
+    },
+    "whosoever": {
+      "term": "whosoever",
+      "phonetic": "/huːsəʊˈɛvə/",
+      "audio_url": null,
+      "meanings": [
+        {
+          "part_of_speech": "pronoun",
+          "definitions": [
+            "Whatever person or persons: emphasised or elaborated form of whoever."
+          ],
+          "example": "Whosoever partakes of this elixir shall have eternal life."
+        }
+      ],
+      "wiki": null,
+      "source": "dictionary",
+      "found": true,
+      "ambiguous": false,
+      "url": null
+    },
+    "kinsman": {
+      "term": "kinsman",
+      "phonetic": null,
+      "audio_url": null,
+      "meanings": [
+        {
+          "part_of_speech": "noun",
+          "definitions": [
+            "A male relative."
+          ],
+          "example": null
+        }
+      ],
+      "wiki": null,
+      "source": "dictionary",
+      "found": true,
+      "ambiguous": false,
+      "url": null
+    },
+    "incur": {
+      "term": "incur",
+      "phonetic": "/ɪnˈkəː/",
+      "audio_url": null,
+      "meanings": [
+        {
+          "part_of_speech": "verb",
+          "definitions": [
+            "To bring upon oneself or expose oneself to, especially something inconvenient, harmful, or onerous; to become liable or subject to",
+            "To enter or pass into"
+          ],
+          "example": null
+        }
+      ],
+      "wiki": null,
+      "source": "dictionary",
+      "found": true,
+      "ambiguous": false,
+      "url": null
+    },
+    "reproachful": {
+      "term": "reproachful",
+      "phonetic": null,
+      "audio_url": null,
+      "meanings": [
+        {
+          "part_of_speech": "adjective",
+          "definitions": [
+            "Expressing or containing reproach",
+            "Occasioning or deserving reproach; shameful; base"
+          ],
+          "example": "He lived a reproachful life."
+        }
+      ],
+      "wiki": null,
+      "source": "dictionary",
+      "found": true,
+      "ambiguous": false,
+      "url": null
+    }
+  }
+}

@@ -1865,3 +1865,253 @@ table holds `P:run` and `run` apart. Before: failed; after: 38 passed.
 
 ### Commit
 fix(lookup): keep Wikipedia-first answers apart in the shared cache
+
+## 2026-11-11 C13.4 — the last page's Start test cannot be clicked
+
+**Status:** fixed
+
+### Symptom
+Found while writing the C13.4 e2e for the closing page: a mouse click on
+"Start test" on the last page of today's reading never reached the button.
+Playwright: `locator.click: Timeout 3000ms exceeded`, "`<div
+class="rf-viewport">` intercepts pointer events". Keyboard (Tab, Enter) and
+the toolbar's Done reading still worked, so the C12 tests, which never
+clicked it, passed. Present on the committed code (`66cc26a`): probed with
+`document.elementFromPoint` at the button's centre, which returned
+`.rf-viewport`.
+
+### Reproduce
+`e2e/reader.spec.js` "the last page's Start test takes a mouse click and
+finishes reading": End to the closing page, click Start test with a 3 s
+timeout. 1 failed.
+
+### Upstream and downstream (repo graph)
+`reader/BookReader.jsx` renders each leaf's furniture (the closing page
+`.rf-end` on the last page), then `.rf-viewport` (the text window) as a later
+absolutely positioned sibling over the text block of every page; the turn
+overlay (z 2), edges (z 3) and ribbon (z 4) sit above.
+
+### Hypotheses
+1. `.rf-viewport` comes later in the DOM at the same stacking level and
+   covers `.rf-end`, which lies inside the text block. `.rf-leaf` sets no
+   z-index or transform, so a z-index on `.rf-end` would lift it. Result:
+   **confirmed**.
+
+### Root cause
+C12.5a placed the closing page "outside the flow" in the text block's box
+but under the viewport that shows the flow on every page.
+
+### Fix
+`reader/reader.css`: `.rf-end { z-index: 1 }`, above the viewport and
+below the turning leaf, edges and ribbon. One attempt.
+
+### Regression test
+The test above: failed before ("rf-viewport intercepts pointer events"),
+passes after; `e2e/reader.spec.js` 9 passed.
+
+### Commit
+fix(reader): let the last page's Start test take a click
+
+## 2026-11-11 C13.4 — the book-open entrance shrinks the reader's page count
+
+**Status:** resolved before commit (the entrance was cut)
+
+### Symptom
+With the reading area entering through Motion's `bookOpen` preset (moment 2:
+`rotateY` from -10 degrees with perspective, 600 ms),
+`npx playwright test e2e/reader.spec.js` failed 2 of 8: "arrow keys, the turn
+buttons and the page edge turn the page" timed out on a click (30 s), and
+"the place is saved and restored after a reload" expected `/^Pages 5 and 6 of/`
+and received "Page 5 of 5" after "Pages 3 and 4 of 5". The fixture book
+normally paginates to more pages, so the count was too small.
+
+### Reproduce
+The two tests above, on the change with `bookOpen`; the reduced-motion test
+(the same page with `fadeIn`) passed.
+
+### Upstream and downstream (repo graph)
+`pages/ReadingSession.jsx` renders `reader/BookReader.jsx`, which measures
+the page on mount and on resize (`reader/geometry.js`, `reader/anchor.js`:
+character rects and the frame's box).
+
+### Hypotheses
+1. The paginator measures while the area is rotated, so the frame and text
+   rects are narrower on screen than in layout, and the page count and
+   anchors come out wrong. Test: replace the rotation with a 2D entrance
+   (`rise`: opacity and a 12 px translate, which keep widths).
+   Result: **confirmed**, 8 of 8 passed.
+2. The entrance's opacity 0 hides the edge button from the click. Not
+   needed after 1.
+
+### Root cause
+`rotateY` with perspective changes the boxes `getBoundingClientRect` and
+`getClientRects` report during the first 600 ms, which is when the reader
+measures its first layout.
+
+### Fix
+First the reading area rose in (`rise`) instead of swinging open, and the
+reader tests passed. Lighthouse then measured the page at performance 83
+(84-85 without the entrance) with the toolbar caught mid-fade by the
+contrast audit in 2 of 3 runs; a rise without the fade still gave 83. The
+entrance is first in C13's cut order, so it was removed: the reading page
+opens as before. The page turns themselves (C12.4) are unchanged.
+
+### Regression test
+None kept: no entrance ships. `e2e/reader.spec.js` failed 2 of 8 with
+`bookOpen` and passed 8 of 8 with `rise`; a future entrance must keep
+the reader's first measurement free of transforms that change sizes.
+
+### Commit
+feat(ui): polish the reading page with lamp notes and a gentle entrance
+
+## 2026-11-11 C13.5 — the automatic submit at zero sends empty answers
+
+**Status:** fixed
+
+### Symptom
+Found while planning the C13.5 test page (ESLint's `react-hooks/immutability`
+error on `ComprehensionTest.jsx:71`, "`handleSubmitAnswers` accessed before
+it is declared", pointed at it). When the 5-minute timer reaches zero the
+page submits by itself, but it sent the answers and time from the render
+that started the timer: every answer empty and `time_taken_seconds` 0. A
+reader who runs out of time loses everything they wrote. The Submit button
+was not affected (it calls the current render's function).
+
+### Reproduce
+Playwright with `page.clock.install()` on `/test/s9` (two questions, API
+mocked): type an answer, `page.clock.runFor(301_000)`; the submit body was
+`{"answers":["",""],"time_taken_seconds":0}`. Kept as
+`e2e/test.spec.js` "when time runs out, the answers typed so far are
+submitted": 1 failed (expected the typed answer and 300).
+
+### Upstream and downstream (repo graph)
+`pages/ComprehensionTest.jsx` calls `GET /sessions/{id}`,
+`POST /sessions/{id}/evaluate-single` and `POST /sessions/{id}/submit-answers`,
+then routes to `/results/{id}` with the answers in router state, which
+`pages/Results.jsx` shows.
+
+### Hypotheses
+1. The timer effect depends on `[loading, isSubmitting]` only, so its
+   interval keeps the `handleSubmitAnswers` closure of the render it was
+   created in, with that render's `answers` and `timeLeft`. Result:
+   **confirmed** (the body held the first render's empty answers).
+
+### Root cause
+A stale closure: the interval was never rebuilt as answers changed.
+
+### Fix
+`ComprehensionTest.jsx`: a ref holds the latest answers and time; the
+submit reads it, and the automatic submit counts the full 300 seconds.
+The router state carries the same answers. One attempt.
+
+### Regression test
+The test above: failed before, passes after.
+
+### Commit
+fix(test): submit the typed answers when the timer runs out
+
+## 2026-11-11 C13.8a — the error boundary cut the route transition
+
+**Status:** fixed
+
+### Symptom
+Before committing C13.8a part 4, `npm --prefix frontend run test:e2e`: 1
+failed, 73 passed. `e2e/shell.spec.js` "with motion › a page change rises
+in": `expect(received).toBeGreaterThan(expected)`, Expected `> 0`, Received
+`0` (no transform on the incoming page during the change). Reproduced alone
+with `npx playwright test e2e/shell.spec.js -g "rises in"`.
+
+### Upstream and downstream (repo graph)
+`App.jsx` wraps `AnimatedRoutes` (the fade-and-rise between screens) in the
+new `components/RouteErrorBoundary.jsx`, inside `BackendGate`.
+
+### Hypotheses
+1. The boundary was rendered with `key={pathname}` so a new address would
+   clear an error; a key change remounts the whole route tree, so
+   `AnimatePresence` never sees an exit and an enter and nothing moves.
+   Result: **confirmed** (without the key the test passes).
+
+### Root cause
+Using a remount (`key`) to reset the boundary also reset the animated
+routes below it.
+
+### Fix
+`RouteErrorBoundary.jsx`: the boundary gets `pathname` as a prop and clears
+its error in `componentDidUpdate` when the address changes. One attempt.
+
+### Regression test
+`e2e/shell.spec.js` "a page change rises in" (failed with the key, passes
+without); `e2e/errors.spec.js` now also checks that browser Back from the
+error screen clears it without a reload.
+
+### Commit
+Folded into C13.8a part 4 (the failure never reached a commit).
+
+## 2026-11-11 C13.10a — sign out stopped at the landing page
+
+**Status:** fixed
+
+### Symptom
+Before committing C13.10a, `npm --prefix frontend run test:e2e`: 1 failed,
+86 passed. `e2e/shell.spec.js` "sign out leaves for the sign-in page":
+`expect(page).toHaveURL(expected) failed` (expected `/login$`, stayed on
+`/`). Also `npm --prefix frontend run test:unit`: 1 failed, 61 passed,
+`wake.test.js` "does nothing without fetch": `true !== false`.
+
+### Upstream and downstream (repo graph)
+`App.jsx` now renders `pages/Landing.jsx` for signed-out visitors at `/`
+(new `PublicHome`); `components/AccountMenu.jsx` signs out from `/`.
+
+### Hypotheses
+1. Sign out used to reach `/login` only through the Library route's
+   `AuthGuard` redirect; with `/` signed out now the landing page, the
+   redirect never runs. Result: **confirmed** (the URL stays `/` and the
+   landing page shows).
+2. The unit test passed `undefined` for `fetchImpl`, which takes the
+   default parameter (`globalThis.fetch`, present in Node 22), so the call
+   was sent. Result: **confirmed** (a test bug, not a code bug).
+
+### Root cause
+A redirect that the sign-out flow relied on was implicit in the route
+table; and a default parameter swallowed the test's "no fetch" case.
+
+### Fix
+`AccountMenu.jsx`: Sign out navigates to `/login` (replace) and then signs
+out, so it keeps its old destination. `wake.test.js` passes `null`. One
+attempt each.
+
+### Regression test
+`e2e/shell.spec.js` "sign out leaves for the sign-in page" (failed before,
+passes after); `wake.test.js` "does nothing without fetch".
+
+### Commit
+Folded into C13.10a (the failure never reached a commit).
+
+## 2026-11-11 C13.10e — make graph stopped on the share image
+
+**Status:** fixed
+
+### Symptom
+Before committing C13.10e, `make graph`: `Purpose for a file that is not
+inventoried: ['frontend/public/og.png']`, `make: *** [Makefile:17: graph]
+Error 1`; then `pytest tools/repo_graph/tests -q`: 4 failed, 58 passed.
+
+### Hypotheses
+1. The inventory skips binary files, so a purpose for `og.png` is an
+   orphan and `make graph` stops before writing a consistent graph; the
+   graph tests then read the half-updated files. Result: **confirmed**
+   (the purpose removed, `make graph` completes and the tests pass).
+
+### Root cause
+A purpose was written for a binary file the inventory never lists.
+
+### Fix
+`tools/repo_graph/purposes.json`: the `og.png` entry removed (the image
+is registered in `docs/ASSETS.md` instead). One attempt.
+
+### Regression test
+The repo-graph check itself (`make graph` fails on an orphan purpose);
+`pytest tools/repo_graph/tests -q`: 62 passed after the fix.
+
+### Commit
+Folded into C13.10e (the failure never reached a commit).

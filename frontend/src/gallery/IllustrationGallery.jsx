@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  ReadingLamp, BookStack, TeaCup, DuskWindow, EmptyShelf, OpenBook, CrescentMoon,
+  ReadingLamp, BookStack, TeaCup, DuskWindow, EmptyShelf, OpenBook, CrescentMoon, Candle,
 } from '../illustrations';
 import './IllustrationGallery.css';
 
@@ -17,6 +17,7 @@ const SET = [
   ['Empty shelf', EmptyShelf],
   ['Open book with ribbon', OpenBook],
   ['Crescent moon', CrescentMoon],
+  ['Candle', Candle],
 ];
 
 const PANELS = [

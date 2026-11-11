@@ -365,6 +365,7 @@
 /* The closing page: quiet, centred in the text block, outside the flow (so its button is never off-screen). */
 .rf-end {
   position: absolute;
+  z-index: 1; /* above .rf-viewport, which covers the text block of every page */
   inset: var(--head) var(--margin) var(--foot);
   display: flex;
   flex-direction: column;
@@ -462,3 +463,29 @@
 .rf-flow { -webkit-touch-callout: none; }
 .rf-mark-layer { position: absolute; inset: 0; pointer-events: none; }
 .rf-mark { position: absolute; border-radius: 2px; background: var(--accent-soft); }
+
+/* C13.4: a small reading lamp beside the note on the first page, and a larger one
+   on the closing page whose glow pulses once as the page appears (moment 3; 1.4 s,
+   transform and opacity; near-instant under reduced motion by base.css). */
+.rf-note .rf-note-lamp {
+  --illustration-size: 40px;
+  flex: none;
+  margin-top: -6px;
+}
+
+.rf-end-lamp {
+  --illustration-size: 88px;
+  margin-bottom: calc(var(--space-2) * -1);
+}
+
+.rf-end-lamp [data-part="glow"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rf-lamp-pulse 1.4s var(--ease-breathe) 1;
+}
+
+/* Scale only: the glow keeps its own opacity (--illustration-glow per theme). */
+@keyframes rf-lamp-pulse {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.18); }
+}

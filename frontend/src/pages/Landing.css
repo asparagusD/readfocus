@@ -1,0 +1,646 @@
+/* Landing page (C13.10): the opening pages of a printed book. */
+.rf-landing {
+  min-height: 100dvh;
+  overflow-x: clip; /* the lamp leans past the hero's edge between 1024 and 1280 px */
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.rf-landing__skip {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-popover);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-control);
+  background-color: var(--surface);
+  color: var(--ink);
+  transform: translateY(-200%);
+}
+
+.rf-landing__skip:focus-visible { transform: none; }
+
+.rf-landing__masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-5);
+}
+
+.rf-landing__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.rf-landing__mark svg { color: var(--accent-text); }
+
+.rf-landing__signin {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 4px;
+}
+
+.rf-landing__signin:hover { color: var(--ink); text-decoration-color: var(--accent); }
+
+.rf-landing main:focus { outline: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.rf-landing) { scroll-behavior: smooth; }
+}
+
+/* ── Hero (C13.10b): words at left, the open book at right. ─────────── */
+.rf-landing__hero {
+  display: grid;
+  gap: var(--space-8);
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5) var(--space-9);
+}
+
+@media (min-width: 1024px) {
+  .rf-landing__hero {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-7);
+    padding-top: var(--space-8);
+  }
+}
+
+.rf-landing__title {
+  max-width: 12ch;
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5.2vw, var(--text-title));
+  font-weight: 500;
+  line-height: var(--text-title--line-height);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.rf-landing__lead {
+  max-width: 34em;
+  margin: 0 0 var(--space-6);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+  color: var(--ink-2);
+}
+
+.rf-landing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rf-landing__actions .rf-btn { text-decoration: none; }
+
+/* The scene: dusk window behind, lamp at the right, the open book in front. */
+.rf-landing__scene {
+  position: relative;
+  padding-top: 200px;
+}
+
+.rf-landing__window {
+  --illustration-size: 300px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.rf-landing__lamp {
+  --illustration-size: 240px;
+  position: absolute;
+  top: 24px;
+  right: -40px;
+}
+
+@media (max-width: 1023px) {
+  .rf-landing__lamp { right: 0; }
+}
+
+@media (max-width: 639px) {
+  .rf-landing__scene { padding-top: 132px; }
+  .rf-landing__window { --illustration-size: 200px; }
+  .rf-landing__lamp { --illustration-size: 150px; top: 8px; }
+}
+
+/* ── The open book (C13.10b): the reader's page, type and furniture. ── */
+.rf-spread {
+  --page-edge: color-mix(in oklab, var(--page) 93%, var(--ink-3));
+  --spine-shade: color-mix(in oklab, var(--ink) 11%, transparent);
+  position: relative;
+  margin: 0;
+}
+
+[data-theme="lamplight"] .rf-spread {
+  --page-edge: color-mix(in oklab, var(--page) 72%, var(--paper-2));
+  --spine-shade: color-mix(in oklab, var(--paper-2) 80%, transparent);
+}
+
+.rf-spread__book {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: var(--radius-page);
+  box-shadow: var(--elevation-page);
+}
+
+.rf-spread__page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  border: var(--border-hair) solid var(--line);
+  background: radial-gradient(140% 105% at 50% 42%, var(--page) 64%, var(--page-edge) 100%);
+}
+
+.rf-spread__page[data-side="left"] { border-right: 0; border-radius: var(--radius-page) 0 0 var(--radius-page); }
+.rf-spread__page[data-side="right"] { border-left: 0; border-radius: 0 var(--radius-page) var(--radius-page) 0; }
+
+.rf-spread__page::after {
+  position: absolute;
+  inset-block: 0;
+  width: var(--space-7);
+  content: "";
+  pointer-events: none;
+}
+
+.rf-spread__page[data-side="left"]::after { right: 0; background: linear-gradient(to left, var(--spine-shade), transparent); }
+.rf-spread__page[data-side="right"]::after { left: 0; background: linear-gradient(to right, var(--spine-shade), transparent 70%); }
+
+.rf-spread__head {
+  margin: 0 0 var(--space-5);
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-running-head);
+  line-height: var(--text-running-head--line-height);
+  letter-spacing: var(--text-running-head--letter-spacing);
+  text-transform: uppercase;
+}
+
+.rf-spread__page[data-side="right"] .rf-spread__head { text-align: right; }
+
+.rf-spread__chapter {
+  margin: var(--space-3) 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-style: italic;
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-spread__text {
+  flex: 1;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: 15px;
+  line-height: var(--text-reading--line-height);
+  text-align: justify;
+  hyphens: auto;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+}
+
+.rf-spread__folio {
+  margin: var(--space-5) 0 0;
+  color: var(--ink-3);
+  font-family: var(--font-reading);
+  font-size: var(--text-label);
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  line-height: var(--text-label--line-height);
+  text-align: center;
+}
+
+/* The flyleaf: a blank page hinged at the spine that turns over once. */
+.rf-spread__leaf {
+  position: absolute;
+  inset: -1px -1px -1px 0;
+  z-index: var(--z-raised);
+  border: var(--border-hair) solid var(--line);
+  border-left: 0;
+  border-radius: 0 var(--radius-page) var(--radius-page) 0;
+  background: radial-gradient(140% 105% at 50% 42%, var(--page) 64%, var(--page-edge) 100%);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+.rf-spread__leaf-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, var(--spine-shade), transparent);
+  opacity: 0;
+}
+
+.rf-spread__caption {
+  margin-top: var(--space-4);
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-spread__caption a,
+.rf-colophon__credits a {
+  color: inherit;
+  text-decoration-line: underline; /* links in running text are told apart by more than colour (WCAG 1.4.1) */
+  text-decoration-color: var(--line-field);
+  text-underline-offset: 3px;
+}
+
+.rf-spread__caption a:hover,
+.rf-colophon__credits a:hover { color: var(--ink); text-decoration-color: var(--ink); }
+
+/* A phone shows the chapter's opening page alone, at a readable size. */
+@media (max-width: 639px) {
+  .rf-spread__book { grid-template-columns: 1fr; }
+  .rf-spread__page[data-side="left"] { border-right: var(--border-hair) solid var(--line); border-radius: var(--radius-page); }
+  .rf-spread__page[data-side="left"]::after { display: none; }
+  .rf-spread__page[data-side="right"] { display: none; }
+  .rf-spread__text { font-size: 16px; }
+}
+
+/* ── How it works, as a contents page (C13.10b). ─────────────────────── */
+.rf-toc {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) var(--space-9);
+  scroll-margin-top: var(--space-5);
+}
+
+.rf-toc:focus { outline: none; }
+
+.rf-toc__title {
+  margin: 0 0 var(--space-7);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-hair) solid var(--line-2);
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  font-weight: 500;
+  line-height: var(--text-section--line-height);
+}
+
+.rf-toc__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rf-toc__item {
+  display: grid;
+  grid-template-columns: var(--space-8) minmax(0, 1fr);
+  column-gap: var(--space-4);
+}
+
+.rf-toc__item + .rf-toc__item { margin-top: var(--space-6); }
+
+.rf-toc__num {
+  grid-row: span 2;
+  color: var(--accent-text);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-style: italic;
+  line-height: var(--text-h2--line-height);
+  text-align: right;
+}
+
+.rf-toc__line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-toc__leader {
+  flex: 1;
+  min-width: var(--space-6);
+  border-bottom: 2px dotted var(--line-field);
+}
+
+.rf-toc__note {
+  color: var(--ink-3);
+  font-family: var(--font-reading);
+  font-size: var(--text-quote);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.rf-toc__body {
+  max-width: 36em;
+  margin: var(--space-2) 0 0;
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+@media (max-width: 639px) {
+  .rf-toc__item { grid-template-columns: var(--space-6) minmax(0, 1fr); column-gap: var(--space-3); }
+  .rf-toc__num,
+  .rf-toc__line { font-size: 22px; line-height: 30px; }
+  .rf-toc__leader,
+  .rf-toc__note { display: none; }
+}
+
+/* ── Try it: the word-lookup demo (C13.10c). ─────────────────────────── */
+.rf-demo {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) var(--space-9);
+}
+
+@media (min-width: 1024px) {
+  .rf-demo { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: var(--space-8); align-items: start; }
+}
+
+.rf-demo__title {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  font-weight: 500;
+  line-height: var(--text-section--line-height);
+}
+
+.rf-demo__hint {
+  max-width: 30em;
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  line-height: 1.6;
+}
+
+.rf-demo__hint-touch { display: none; }
+
+@media (hover: none) {
+  .rf-demo__hint-pointer { display: none; }
+  .rf-demo__hint-touch { display: inline; }
+}
+
+.rf-demo__page {
+  margin: 0;
+  padding: var(--space-7) var(--space-7) var(--space-6);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-page);
+  background: var(--page);
+  box-shadow: var(--elevation-page);
+}
+
+.rf-demo__text {
+  max-width: 34em;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+/* A marked word: still part of the sentence, with a dotted accent underline. */
+.rf-demo__word {
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-hair);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: help;
+  -webkit-touch-callout: none;
+  user-select: none;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-demo__word:hover,
+.rf-demo__word[aria-expanded="true"] { background-color: var(--accent-soft); }
+
+.rf-demo__caption {
+  margin-top: var(--space-5);
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-demo__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .rf-demo__page { padding: var(--space-5) var(--space-4); }
+  .rf-demo__text { font-size: 16px; }
+}
+
+/* ── Features (C13.10d): text and drawing alternate sides, no cards. ──── */
+.rf-features {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) 0;
+}
+
+.rf-feature {
+  display: grid;
+  gap: var(--space-6);
+  align-items: center;
+  padding-block: var(--space-8);
+  border-top: var(--border-hair) solid var(--line);
+}
+
+@media (min-width: 768px) {
+  .rf-feature { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-8); }
+  .rf-feature:nth-of-type(even) { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .rf-feature:nth-of-type(even) .rf-feature__text { order: 2; }
+}
+
+.rf-feature__title {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  font-weight: 500;
+  line-height: var(--text-section--line-height);
+}
+
+.rf-feature__body {
+  max-width: 34em;
+  margin: 0 0 var(--space-4);
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+.rf-feature__body:last-child { margin-bottom: 0; }
+
+.rf-feature__art {
+  --illustration-size: 220px;
+  justify-self: center;
+}
+
+@media (max-width: 767px) {
+  .rf-feature__art { --illustration-size: 150px; order: -1; justify-self: start; }
+}
+
+/* What ReadFocus isn't: a short note set off by hairlines, like an aside in a margin. */
+.rf-isnt {
+  max-width: 712px; /* the questions' measure (760 less their side padding), on their axis */
+  margin: 0 auto var(--space-8);
+  padding: var(--space-5) 0;
+  border-block: var(--border-hair) solid var(--line-2);
+}
+
+.rf-isnt__title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-style: italic;
+  font-weight: 400;
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-isnt__list {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+/* ── Questions (C13.10d). ─────────────────────────────────────────────── */
+.rf-faq {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) var(--space-9);
+}
+
+.rf-faq__title {
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  font-weight: 500;
+  line-height: var(--text-section--line-height);
+}
+
+.rf-faq__item { border-bottom: var(--border-hair) solid var(--line); }
+.rf-faq__item:first-of-type { border-top: var(--border-hair) solid var(--line); }
+
+.rf-faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 56px;
+  padding-block: var(--space-3);
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1.3;
+  cursor: pointer;
+  list-style: none;
+}
+
+.rf-faq__q::-webkit-details-marker { display: none; }
+
+/* A plus that becomes a minus when the answer is open (no animation). */
+.rf-faq__q::after {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  content: "";
+  background:
+    linear-gradient(var(--accent-text), var(--accent-text)) center / 14px 2px no-repeat,
+    linear-gradient(var(--accent-text), var(--accent-text)) center / 2px 14px no-repeat;
+}
+
+.rf-faq__item[open] > .rf-faq__q::after {
+  background: linear-gradient(var(--accent-text), var(--accent-text)) center / 14px 2px no-repeat;
+}
+
+.rf-faq__q:hover { color: var(--accent-text); }
+
+.rf-faq__a {
+  max-width: 36em;
+  margin: 0 0 var(--space-5);
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+/* ── Colophon (C13.10d). ──────────────────────────────────────────────── */
+.rf-colophon {
+  border-top: var(--border-hair) solid var(--line);
+  background-color: var(--paper-2);
+}
+
+.rf-colophon__close,
+.rf-colophon__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5);
+}
+
+.rf-colophon__meta { padding-top: 0; }
+
+.rf-colophon__line {
+  max-width: 18em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  text-wrap: balance;
+}
+
+.rf-colophon__close .rf-btn { text-decoration: none; }
+
+.rf-colophon__credits {
+  max-width: 48em;
+  margin: 0;
+  padding-top: var(--space-5);
+  border-top: var(--border-hair) solid var(--line);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: 1.6;
+  flex: 1 1 28em;
+}
+
+
+/* The footer's theme toggle is the page's only one: full 44 px targets (the knob moves by its own width). */
+.rf-colophon .rf-theme-toggle__option,
+.rf-colophon .rf-theme-toggle__knob { width: 44px; height: 44px; }

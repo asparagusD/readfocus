@@ -1,53 +1,42 @@
 import { NavLink, Link } from 'react-router-dom';
+import { BookOpen } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
+import { AccountMenu } from './AccountMenu';
 import './Layout.css';
 
+const navClass = ({ isActive }) => (isActive ? 'rf-topbar__link is-active' : 'rf-topbar__link');
+
+/**
+ * The quiet top bar (handoff screens 03 and 09): the mark, Library and
+ * Dashboard (the current one underlined in the accent, aria-current from
+ * NavLink), the theme toggle from 640 px up, and the account button. A
+ * skip link leads past it to the page.
+ */
 export function Layout({ children }) {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   return (
     <div className="rf-layout-root">
-      <nav className="rf-global-nav">
-        <div className="rf-nav-container">
-          <Link to="/" className="rf-wordmark">
-            ReadFocus
+      <a className="rf-skip" href="#main">Skip to content</a>
+      <header className="rf-topbar">
+        <div className="rf-topbar__inner">
+          <Link to="/" className="rf-topbar__mark" aria-label="ReadFocus, your shelf">
+            <BookOpen size={24} strokeWidth={1.75} aria-hidden="true" />
+            <span aria-hidden="true">ReadFocus</span>
           </Link>
-          
-          <div className="rf-nav-right">
-            <div className="rf-nav-links">
-              <NavLink 
-                to="/" 
-                end
-                className={({ isActive }) => isActive ? "rf-nav-link active" : "rf-nav-link"}
-              >
-                Library
-              </NavLink>
-              <NavLink 
-                to="/dashboard" 
-                className={({ isActive }) => isActive ? "rf-nav-link active" : "rf-nav-link"}
-              >
-                Dashboard
-              </NavLink>
-            </div>
-            
-            <ThemeToggle />
-            {user && (
-              <>
-                <div className="rf-nav-divider"></div>
-                <div className="rf-user-info">
-                  <span className="rf-display-name">{user.email}</span>
-                  <button onClick={signOut} className="rf-signout-btn">
-                    Sign out
-                  </button>
-                </div>
-              </>
-            )}
+          <nav aria-label="Main" className="rf-topbar__nav">
+            <NavLink to="/" end className={navClass}>Library</NavLink>
+            <NavLink to="/dashboard" className={navClass}>Dashboard</NavLink>
+          </nav>
+          <div className="rf-topbar__end">
+            <div className="rf-topbar__theme"><ThemeToggle /></div>
+            {user && <AccountMenu />}
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="rf-main-content">
+      <main id="main" tabIndex={-1} className="rf-main-content">
         {children}
       </main>
     </div>

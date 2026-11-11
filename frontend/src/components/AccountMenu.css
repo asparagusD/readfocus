@@ -1,0 +1,198 @@
+/* Account button and panel (C13.2a, D4): a 44 px round initials button
+   with a field border; the panel a raised surface below it, full width
+   under 640 px. */
+.rf-account {
+  position: relative;
+}
+
+.rf-account__button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-pill);
+  background-color: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-account__button:hover,
+.rf-account__button[aria-expanded='true'] {
+  border-color: var(--ink-2);
+}
+
+.rf-account__panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: var(--z-popover);
+  width: 320px;
+  padding: var(--space-4);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-lift);
+}
+
+.rf-account__who {
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border-hair) solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.rf-account__name {
+  margin: 0;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.rf-account__email {
+  margin: 0;
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
+}
+
+.rf-account__settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-hair) solid var(--line);
+}
+
+.rf-account__settings > h2 {
+  margin: 0;
+}
+
+.rf-account__theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.rf-choice {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.rf-choice__legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.rf-account__theme .rf-choice__legend {
+  margin-bottom: 0;
+}
+
+.rf-choice__row {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-control);
+  background-color: var(--paper-2);
+}
+
+.rf-choice__option {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  border: var(--border-hair) solid transparent;
+  border-radius: var(--radius-input);
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rf-choice__option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.rf-choice__option:has(input:checked) {
+  border-color: var(--line-field);
+  background-color: var(--surface);
+  color: var(--ink);
+}
+
+.rf-choice__option:has(input:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Accent swatches show the colour beside the name; the name carries the meaning. */
+.rf-choice__option[data-swatch]::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-pill);
+}
+
+.rf-choice__option[data-swatch='terracotta']::before {
+  background-color: var(--swatch-terracotta);
+}
+
+.rf-choice__option[data-swatch='sage']::before {
+  background-color: var(--swatch-sage);
+}
+
+.rf-account__signout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 44px;
+  margin-top: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  cursor: pointer;
+}
+
+.rf-account__signout:hover {
+  background-color: var(--paper-2);
+}
+
+@media (max-width: 639px) {
+  .rf-account {
+    position: static;
+  }
+
+  .rf-account__panel {
+    left: var(--space-4);
+    right: var(--space-4);
+    width: auto;
+  }
+}
+
+/* From 640 px the theme toggle is in the bar, so the panel does not repeat it. */
+@media (min-width: 640px) {
+  .rf-account__theme {
+    display: none;
+  }
+}

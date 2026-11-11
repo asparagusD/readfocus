@@ -104,3 +104,18 @@
   align-items: flex-end;
   margin-block-start: var(--space-6);
 }
+
+.gallery-form {
+  max-width: 420px;
+}
+
+.gallery-bars {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 160px);
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.gallery-test {
+  max-width: 672px;
+}

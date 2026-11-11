@@ -1,0 +1,125 @@
+/* Warming up (C13.8a, handoff screen 02): the lamp and tea on the left,
+   the words on the right; stacked under 768 px. Only opacity and
+   transform move; base.css makes them instant under reduced motion. */
+.rf-warm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  gap: var(--space-8);
+  align-items: center;
+  min-height: 100dvh;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5);
+}
+
+.rf-warm__scene {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* The cup's saucer line sits 22/120 of its height above its foot, the lamp's
+   table line 12/120: lift the cup so both stand on one line. */
+.rf-warm__tea { --illustration-size: 120px; margin: 0 -56px 14px 0; }
+.rf-warm__lamp { --illustration-size: 360px; }
+
+/* Moment 7: the lamp brightens over 6 s, once. */
+.rf-warm__lamp [data-part="glow"] { animation: rf-warm-glow 6s var(--ease-settle) both; }
+.rf-warm__lamp [data-part="cone"] { animation: rf-warm-cone 6s var(--ease-settle) both; }
+.rf-warm__lamp [data-part="bulb"] { animation: rf-warm-bulb 6s var(--ease-settle) both; }
+
+@keyframes rf-warm-glow { from { opacity: 0; } to { opacity: var(--illustration-glow); } }
+@keyframes rf-warm-cone { from { opacity: 0; } to { opacity: calc(var(--illustration-glow) * 0.6); } }
+@keyframes rf-warm-bulb { from { opacity: 0.25; } to { opacity: 1; } }
+
+.rf-warm__title {
+  margin: var(--space-3) 0 var(--space-4);
+  font-size: 44px;
+  font-style: italic;
+  line-height: 1.15;
+}
+
+.rf-warm__body {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+/* A hairline that fills over about a minute, the time a cold start takes. */
+.rf-warm__line {
+  width: 220px;
+  height: 2px;
+  margin-top: var(--space-5);
+  overflow: hidden;
+  background: var(--line);
+}
+
+.rf-warm__line span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: rf-warm-fill 60s linear both;
+}
+
+@keyframes rf-warm-fill { from { transform: scaleX(0.08); } to { transform: scaleX(0.92); } }
+
+/* Without motion the line holds still near its start rather than jumping full. */
+@media (prefers-reduced-motion: reduce) {
+  .rf-warm__line span { animation: none; transform: scaleX(0.35); }
+}
+
+.rf-warm__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.rf-warm__rotating {
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--font-reading);
+  font-style: italic;
+  animation: rf-warm-line var(--dur-4) var(--ease-settle) both;
+}
+
+@keyframes rf-warm-line { from { opacity: 0; } to { opacity: 1; } }
+
+.rf-warm__pause {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.rf-warm__pause:hover { color: var(--ink); }
+
+.rf-warm[data-paused] *,
+.rf-warm[data-paused] .rf-illustration [data-steam],
+.rf-warm[data-paused] *::before,
+.rf-warm[data-paused] *::after {
+  animation-play-state: paused;
+}
+
+@media (max-width: 767px) {
+  .rf-warm {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    align-content: center;
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .rf-warm__tea { --illustration-size: 80px; margin: 0 -36px 9px 0; }
+  .rf-warm__lamp { --illustration-size: 240px; }
+  .rf-warm__title { font-size: 34px; }
+}

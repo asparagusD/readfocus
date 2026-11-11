@@ -593,6 +593,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_dashboard.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_mastery.py",
       "type": "file",
       "role": "test",
@@ -1260,6 +1266,12 @@
     },
     {
       "id": "file:supabase/migrations/010_processing_jobs.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/011_query_indexes.sql",
       "type": "file",
       "role": "migration",
       "language": "sql"
@@ -2452,6 +2464,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_agent_state.py",
       "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/routers/dashboard.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",

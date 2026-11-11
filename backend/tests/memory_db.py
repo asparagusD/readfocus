@@ -2,11 +2,13 @@
 
 It understands the calls the ingestion code makes: select, insert, update,
 upsert (with on_conflict and ignore_duplicates), eq, in_, lt, is_, order,
-limit and execute, plus Storage download. Rows are copied through JSON on
+limit, range and execute, plus Storage upload and download. It records
+each select's columns and window, and can add a delay to every call. Rows are copied through JSON on
 the way in and out, as they would be over HTTP.
 """
 
 import json
+import time
 from types import SimpleNamespace
 
 
@@ -17,9 +19,10 @@ def _copy(value):
 class Query:
     def __init__(self, db, name):
         self.db, self.name, self.filters, self.action = db, name, [], ("select", None)
-        self.orders, self.max_rows = [], None
+        self.orders, self.max_rows, self.window, self.columns = [], None, None, "*"
 
     def select(self, columns="*", count=None):
+        self.columns = columns
         return self
 
     def insert(self, values):
@@ -59,8 +62,16 @@ class Query:
         self.max_rows = count
         return self
 
+    def range(self, start, end):
+        self.window = (start, end)
+        return self
+
     def execute(self):
         self.db.calls.append((self.name, self.action[0]))
+        if self.action[0] == "select":
+            self.db.selects.append((self.name, self.columns, self.window or self.max_rows))
+        if self.db.delay:
+            time.sleep(self.db.delay)
         if self.name in self.db.broken:
             raise RuntimeError(f"{self.name} is down")
         rows = self.db.tables.setdefault(self.name, [])
@@ -91,6 +102,8 @@ class Query:
                 r.update(_copy(values))
         for column, desc in reversed(self.orders):
             matched.sort(key=lambda r: r.get(column), reverse=desc)
+        if self.window is not None:
+            matched = matched[self.window[0]: self.window[1] + 1]
         if self.max_rows is not None:
             matched = matched[: self.max_rows]
         return SimpleNamespace(data=_copy(matched))
@@ -112,6 +125,7 @@ class Bucket:
 class MemoryDb:
     def __init__(self):
         self.tables, self.calls, self.broken, self.files = {}, [], set(), {}
+        self.selects, self.delay = [], 0.0  # (table, columns, window or limit) per select; seconds per call
         self._ids = 0
         self.storage = SimpleNamespace(from_=lambda bucket: Bucket(self))
 

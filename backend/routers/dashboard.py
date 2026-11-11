@@ -1,6 +1,10 @@
+import asyncio
+from datetime import UTC, datetime, timedelta
 from typing import Any, cast
+
 from fastapi import APIRouter, Depends
-from datetime import datetime, timedelta, timezone
+from fastapi.concurrency import run_in_threadpool
+
 from backend.dependencies import get_current_user
 from backend.services.supabase_client import supabase
 
@@ -8,37 +12,66 @@ Row = dict[str, Any]
 
 router = APIRouter()
 
+FEEDBACK_ITEMS = 3  # quotes shown under "recent feedback"
+FEEDBACK_PAGE = 5  # results whose answers are read at a time to find them
+
+
+def _rows(query) -> list[Row]:
+    return cast(list[Row], query.execute().data or [])
+
+
+def latest_feedback(user_id: str) -> list[tuple[Row, Row]]:
+    """(result, answer) for the newest answers with feedback, newest first: answers are read a page at a time,
+    never for every result."""
+    found: list[tuple[Row, Row]] = []
+
+    def query():
+        return supabase.table("test_results").select("session_id, created_at, answers").eq(
+            "user_id", user_id).order("created_at", desc=True)
+
+    page = _rows(query().limit(FEEDBACK_PAGE))
+    while page:
+        for result in page:
+            for answer in result.get("answers") or []:
+                if isinstance(answer, dict) and answer.get("feedback"):
+                    found.append((result, answer))
+                    if len(found) >= FEEDBACK_ITEMS:
+                        return found
+        if len(page) < FEEDBACK_PAGE:
+            break
+        page = _rows(query().lt("created_at", page[-1]["created_at"]).limit(FEEDBACK_PAGE))
+    return found
+
+
 @router.get("")
 async def get_dashboard(user_id: str = Depends(get_current_user)):
     """
     Single endpoint that aggregates all dashboard data for the current user.
     """
 
-    # ── 1. All books with reading progress ───────────────────────────────────
-    books_resp = supabase.table("books").select(
-        "id, title, author, total_chunks, total_words, status"
-    ).eq("user_id", user_id).eq("status", "ready").execute()
-    books: list[Row] = cast(list[Row], books_resp.data or [])
-    [b["id"] for b in books]
-
-    progress_resp = supabase.table("reading_progress").select(
-        "book_id, chunks_completed, average_score"
-    ).eq("user_id", user_id).execute()
-    progress_data: list[Row] = cast(list[Row], progress_resp.data or [])
+    # ── 1-3. The reads do not depend on each other, so they run at once ──────
+    books, progress_data, sessions, results, feedback_rows = await asyncio.gather(
+        run_in_threadpool(_rows, supabase.table("books").select(
+            "id, title, author, total_chunks, total_words, status"
+        ).eq("user_id", user_id).eq("status", "ready")),
+        run_in_threadpool(_rows, supabase.table("reading_progress").select(
+            "book_id, chunks_completed, average_score"
+        ).eq("user_id", user_id)),
+        run_in_threadpool(_rows, supabase.table("sessions").select(
+            "id, book_id, assigned_words, completed_at, started_at, chunk_start_index, chunk_end_index"
+        ).eq("user_id", user_id).eq("status", "completed").order("completed_at", desc=False)),
+        # answers are heavy: only the latest results' answers are read, for the feedback quotes
+        run_in_threadpool(_rows, supabase.table("test_results").select(
+            "session_id, total_score, max_score, created_at"
+        ).eq("user_id", user_id).order("created_at", desc=False)),
+        run_in_threadpool(latest_feedback, user_id),
+    )
     progress_by_book = {p["book_id"]: p for p in progress_data}
-
-    # ── 2. All completed sessions ─────────────────────────────────────────────
-    sessions_resp = supabase.table("sessions").select(
-        "id, book_id, assigned_words, completed_at, started_at, chunk_start_index, chunk_end_index"
-    ).eq("user_id", user_id).eq("status", "completed").order("completed_at", desc=False).execute()
-    sessions: list[Row] = cast(list[Row], sessions_resp.data or [])
-
-    # ── 3. All test_results ───────────────────────────────────────────────────
-    results_resp = supabase.table("test_results").select(
-        "session_id, total_score, max_score, created_at, answers"
-    ).eq("user_id", user_id).order("created_at", desc=False).execute()
-    results: list[Row] = cast(list[Row], results_resp.data or [])
-    results_by_session = {r["session_id"]: r for r in results}
+    session_by_id = {s["id"]: s for s in sessions}
+    title_by_book = {b["id"]: b["title"] for b in books}
+    sessions_by_book: dict[str, list[Row]] = {}
+    for s in sessions:
+        sessions_by_book.setdefault(s["book_id"], []).append(s)
 
     # ── 4. Build book progress list ───────────────────────────────────────────
     book_progress_list = []
@@ -50,7 +83,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
         avg_score = prog.get("average_score", 0) or 0
 
         # Estimate avg chunks per session from completed sessions for this book
-        book_sessions = [s for s in sessions if s["book_id"] == bid]
+        book_sessions = sessions_by_book.get(bid, [])
         if book_sessions:
             total_session_chunks = sum(
                 (s.get("chunk_end_index", 0) - s.get("chunk_start_index", 0) + 1)
@@ -80,13 +113,11 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
     # ── 5. Score over time (one entry per completed test, keyed by book) ──────
     score_over_time = []
     for result in results:
-        results_by_session.get(result["session_id"])
-        # Find book_id from session
-        matched_session = next((s for s in sessions if s["id"] == result["session_id"]), None)
+        matched_session = session_by_id.get(result["session_id"])
         if not matched_session:
             continue
         bid = matched_session["book_id"]
-        book_title = next((b["title"] for b in books if b["id"] == bid), "Unknown")
+        book_title = title_by_book.get(bid, "Unknown")
         pct = round((result["total_score"] / result["max_score"]) * 100, 1) if result.get("max_score") else 0
         score_over_time.append({
             "date": result["created_at"][:10],  # YYYY-MM-DD
@@ -102,7 +133,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
             completed_dates.add(s["completed_at"][:10])
 
     streak = 0
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     check_date = today
     while str(check_date) in completed_dates:
         streak += 1
@@ -124,27 +155,15 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
 
     # ── 8. Recent evaluator feedback quotes ──────────────────────────────────
     recent_feedback = []
-    sorted_results = sorted(results, key=lambda r: r.get("created_at", ""), reverse=True)
-    for result in sorted_results:
-        answers = result.get("answers") or []
-        for answer in answers:
-            if isinstance(answer, dict) and answer.get("feedback"):
-                # Attach the book title for context
-                matched_session = next((s for s in sessions if s["id"] == result["session_id"]), None)
-                book_title = "Unknown"
-                if matched_session:
-                    book_title = next((b["title"] for b in books if b["id"] == matched_session["book_id"]), "Unknown")
-                recent_feedback.append({
-                    "feedback": answer["feedback"],
-                    "score": answer.get("score", 0),
-                    "max_score": answer.get("max_score", 10),
-                    "book_title": book_title,
-                    "date": result["created_at"][:10],
-                })
-                if len(recent_feedback) >= 3:
-                    break
-        if len(recent_feedback) >= 3:
-            break
+    for result, answer in feedback_rows:
+        matched_session = session_by_id.get(result["session_id"])
+        recent_feedback.append({
+            "feedback": answer["feedback"],
+            "score": answer.get("score", 0),
+            "max_score": answer.get("max_score", 10),
+            "book_title": title_by_book.get(matched_session["book_id"], "Unknown") if matched_session else "Unknown",
+            "date": result["created_at"][:10],
+        })
 
     return {
         "book_progress": book_progress_list,

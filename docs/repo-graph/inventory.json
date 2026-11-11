@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 203,
-    "inventoried": 191,
+    "tracked": 205,
+    "inventoried": 193,
     "excluded": 12
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 8010,
+      "size_bytes": 8057,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -393,10 +393,10 @@
     {
       "path": "backend/routers/dashboard.py",
       "language": "python",
-      "lines": 155,
-      "size_bytes": 7374,
+      "lines": 174,
+      "size_bytes": 7558,
       "role": "router",
-      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback."
+      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found."
     },
     {
       "path": "backend/routers/mastery.py",
@@ -409,8 +409,8 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 264,
-      "size_bytes": 12827,
+      "lines": 265,
+      "size_bytes": 13009,
       "role": "router",
       "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
@@ -505,10 +505,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 123,
-      "size_bytes": 4125,
+      "lines": 137,
+      "size_bytes": 4799,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, Storage upload and download) for the ingestion and job tests."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload and download), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -535,6 +535,14 @@
       "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
     },
     {
+      "path": "backend/tests/test_api_dashboard.py",
+      "language": "python",
+      "lines": 138,
+      "size_bytes": 6097,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database with a frozen clock: GET /dashboard returns the response recorded from the pre-C9.4 endpoint, reads answers only for a page of the newest results, pages on until it has three feedback quotes, and issues its reads at once."
+    },
+    {
       "path": "backend/tests/test_api_mastery.py",
       "language": "python",
       "lines": 125,
@@ -545,10 +553,10 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 573,
-      "size_bytes": 28120,
+      "lines": 600,
+      "size_bytes": 29241,
       "role": "test",
-      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict."
+      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -673,10 +681,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 315,
-      "size_bytes": 12783,
+      "lines": 339,
+      "size_bytes": 13666,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books."
     },
     {
       "path": "backend/tests/test_model_ready.py",
@@ -801,8 +809,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 617,
-      "size_bytes": 33061,
+      "lines": 649,
+      "size_bytes": 34800,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -825,8 +833,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1554,
-      "size_bytes": 268864,
+      "lines": 1555,
+      "size_bytes": 271403,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1431,6 +1439,14 @@
       "purpose": "Adds processing_jobs (user, book, kind, status queued/running/done/failed, progress, cursor, error, attempts, updated_at), unique per book and kind, indexed on (status, updated_at) for the sweep and readable only by its own user under RLS; adds a unique index on chunks (book_id, chunk_index) so re-run batches upsert."
     },
     {
+      "path": "supabase/migrations/011_query_indexes.sql",
+      "language": "sql",
+      "lines": 25,
+      "size_bytes": 1231,
+      "role": "migration",
+      "purpose": "Adds indexes for the per-user reads: sessions (user_id, status, completed_at) and (user_id, book_id), test_results (session_id) and (user_id, created_at), books (user_id, status). Indexes only."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1473,8 +1489,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 193,
-      "size_bytes": 42726,
+      "lines": 195,
+      "size_bytes": 43682,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

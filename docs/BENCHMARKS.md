@@ -168,6 +168,38 @@ What this says for C9, read from these numbers only:
 Not measured: Render itself; the long book in the container; requests
 from a reader during ingestion; a restart mid-ingestion (C9.1b and C9.5).
 
+### C9.4: fewer and lighter reads, and indexes (2026-11-11)
+
+`python scripts/bench.py --runs 20 --flow-runs 5` against the backend on
+this machine (`.claude/launch.json`, model preloaded) and the dev project,
+as test user A; before at `83b4f1f`, after with the C9.4 code and
+migration 011 applied. Books deleted by the script.
+
+| Step | Runs | Before p50 (p95) | After p50 (p95) |
+|---|---|---|---|
+| `GET /dashboard` | 20 | 455 ms (490 ms) | 194 ms (351 ms) |
+| `POST /sessions/start` | 5 | 590 ms (918 ms) | 503 ms (620 ms) |
+| `GET /books` | 20 | 189 ms (210 ms) | 183 ms (219 ms) |
+| `POST /sessions/{id}/finish-reading` | 5 | 750 ms (765 ms) | 575 ms (655 ms) |
+| `POST /sessions/{id}/submit-answers` | 5 | 1.07 s (1.09 s) | 1.05 s (1.09 s) |
+
+What changed: `GET /dashboard` ran four reads one after another and read
+the `answers` jsonb of every test result; now its reads run at once and
+answers are read for a page of the newest results (5 at a time) until
+three feedback quotes are found. `POST /sessions/start` reads the chunk
+text and inserts the session at the same time. The dashboard gain (about
+260 ms, a little more than two round trips at about 100 ms) and the start
+gain (about 90 ms, one round trip) match those changes.
+`finish-reading` and `submit-answers` were not changed: their difference
+is run-to-run noise, and `finish-reading`'s 175 ms shows how large it can
+be over five runs.
+
+The five indexes of migration 011 cannot be told apart from noise here:
+the dev tables are small (8 books, under 100 sessions), where Postgres
+scans the table anyway. `npx supabase inspect db index-stats --linked`
+lists all five right after the migration (16 kB each, not yet used).
+They are for larger tables; not measured on one.
+
 ### C9.3: embedding model preloaded at startup (2026-11-11)
 
 The lifespan starts a daemon thread that loads the model and embeds one

@@ -571,3 +571,30 @@ def test_finish_reading_shows_the_test_that_is_graded(api):
     shown = api.client.post(f"/sessions/{session_id}/finish-reading", json={"actual_duration_minutes": 3}).json()
     stored = api.db.tables["sessions"][0]["test_questions"]
     assert [q["question"] for q in shown["questions"]] == [q["question"] for q in stored]
+
+
+def test_start_reads_the_chunks_and_creates_the_session_at_once(api, monkeypatch):
+    """The chunk read and the session insert do not depend on each other, so they overlap (C9.4)."""
+    import threading
+    import time
+
+    real_execute = Query.execute
+    spans, lock = {}, threading.Lock()
+
+    def timed(self):
+        key = (self.name, self.action[0])
+        if key not in {("chunks", "select"), ("sessions", "insert")} or key in spans:
+            return real_execute(self)
+        began = time.perf_counter()
+        time.sleep(0.2)
+        try:
+            return real_execute(self)
+        finally:
+            with lock:
+                spans[key] = (began, time.perf_counter())
+
+    monkeypatch.setattr(Query, "execute", timed)
+    resp = api.client.post("/sessions/start", json={"book_id": BOOK})
+    assert resp.status_code == 200 and [c["chunk_index"] for c in resp.json()["chunks"]] == [0]
+    (read_start, read_end), (insert_start, insert_end) = spans[("chunks", "select")], spans[("sessions", "insert")]
+    assert read_start < insert_end and insert_start < read_end  # the two calls overlap in time

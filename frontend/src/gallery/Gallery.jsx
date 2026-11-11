@@ -11,6 +11,7 @@ import { useToast } from '../components/ui/toastContext';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Tooltip } from '../components/ui/Tooltip';
 import { BookCover } from '../components/BookCover';
+import { MasteryBar } from '../components/ui/MasteryBar';
 import { TextInput } from '../components/ui/TextInput';
 import { TextArea } from '../components/ui/TextArea';
 import { SegmentedTabs } from '../components/ui/SegmentedTabs';
@@ -180,6 +181,14 @@ export function Gallery() {
 
       <Section title="Chips, badges, progress">
         <ChipsDemo />
+        <div className="gallery-bars">
+          {[0, 34, 62, 100].map((v) => (
+            <div key={v}>
+              <MasteryBar value={v} />
+              <p className="gallery-note">{v}% read</p>
+            </div>
+          ))}
+        </div>
       </Section>
 
       <Section title="Toasts">

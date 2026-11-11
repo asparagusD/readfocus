@@ -108,3 +108,10 @@
 .gallery-form {
   max-width: 420px;
 }
+
+.gallery-bars {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 160px);
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}

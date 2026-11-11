@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 380,
-    "inventoried": 317,
+    "tracked": 382,
+    "inventoried": 319,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9486,
+      "size_bytes": 9504,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2279,
-      "size_bytes": 446765,
+      "lines": 2280,
+      "size_bytes": 447745,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1263,6 +1263,22 @@
       "purpose": "Empty state: illustration slot, Playfair title (heading level configurable), one line of copy, one action."
     },
     {
+      "path": "frontend/src/components/ui/MasteryBar.css",
+      "language": "css",
+      "lines": 21,
+      "size_bytes": 634,
+      "role": "component",
+      "purpose": "Mastery bar styles: 3 px accent fill on a --line-2 track (3.58:1 or more between them), filled by scaleX from the left."
+    },
+    {
+      "path": "frontend/src/components/ui/MasteryBar.jsx",
+      "language": "jsx",
+      "lines": 21,
+      "size_bytes": 743,
+      "role": "component",
+      "purpose": "MasteryBar: an accent bar for a 0-100 value (reading progress on the shelf, concept mastery on the dashboard); decorative unless given a label, as the caller prints the figure."
+    },
+    {
       "path": "frontend/src/components/ui/Modal.css",
       "language": "css",
       "lines": 35,
@@ -1417,10 +1433,10 @@
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 236,
-      "size_bytes": 10268,
+      "lines": 245,
+      "size_bytes": 10575,
       "role": "asset",
-      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes); a Form fields section (segmented tabs, inputs in default, error, hint, read-only and disabled states, a text area)."
+      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes); a Form fields section (segmented tabs, inputs in default, error, hint, read-only and disabled states, a text area); mastery bars at 0, 34, 62 and 100%."
     },
     {
       "path": "frontend/src/gallery/IllustrationGallery.css",
@@ -1457,10 +1473,10 @@
     {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
-      "lines": 110,
-      "size_bytes": 1886,
+      "lines": 117,
+      "size_bytes": 2026,
       "role": "asset",
-      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid, and the form field column."
+      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid, and the form field column, and the mastery bar row."
     },
     {
       "path": "frontend/src/gallery/main.jsx",
@@ -2481,8 +2497,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 319,
-      "size_bytes": 85359,
+      "lines": 321,
+      "size_bytes": 85817,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

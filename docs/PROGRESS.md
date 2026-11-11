@@ -2500,7 +2500,7 @@ CI, Lighthouse, security headers, the backfills, the docker build job.
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
-| [ ] C14.1 Render-ready Docker image | | | | | |
+| [x] C14.1 Render-ready Docker image | this commit (`build(deploy): Render-ready Docker image with baked embedding model`) | `Dockerfile`: python:3.11-slim, pinned requirements, non-root user, MiniLM baked into `FASTEMBED_CACHE=/app/.cache/fastembed` at build time through the app's embedder, then `HF_HUB_OFFLINE=1`; uvicorn on `${PORT:-8000}`, one worker. `.dockerignore` (new): allowlist of `requirements.txt` and `backend/` without tests. `render.yaml`: `runtime: docker`, `plan: free`, `healthCheckPath: /health`, `autoDeployTrigger: "off"`; four secrets `sync: false`, `FASTEMBED_CACHE` and `ENV=production` fixed; no AI key. `backend/tests/test_deploy_config.py` (new, 8 tests). | `docker build -t readfocus-api .` 74 s, image 885 MB (728 before, model layer 91.3 MB). At `--memory=512m --cpus=0.1`: model ready 20.0-21.0 s after start (29.8-32.3 s before, download included), no download in the log, idle 251-255 MiB. `sample.pdf` ingested 3 times through it (`scripts/bench.py --ingest --cold --docker`): ready p50 39.89 s, done 46.39 s, 7 chunks and 55 questions each, peak 301-308 MiB (docs/BENCHMARKS.md, C14.1). Standard checks: see commit. | 2026-11-12 | First `/health` 2-4 s later than before (model load competes for the 0.1 CPU; not separated). Region left at Render's default until C14.6. Not run on Render yet |
 | [ ] C14.2 frontend production config | | | | | |
 | [ ] C14.3 CORS | | | | | |
 | [ ] C14.4 🚦 Gate G4: production migrations (approval required) | | | | | |

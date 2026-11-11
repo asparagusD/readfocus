@@ -2115,3 +2115,31 @@ The repo-graph check itself (`make graph` fails on an orphan purpose);
 
 ### Commit
 Folded into C13.10e (the failure never reached a commit).
+
+## 2026-11-12 C14.1 — ruff count rose from 28 to 34
+
+**Status:** fixed
+
+### Symptom
+Standard checks before committing C14.1: `ruff check backend/` printed
+`Found 34 errors.` against the baseline of 28. Every other check passed.
+
+### Hypotheses
+1. The new `backend/tests/test_deploy_config.py` adds the 6 errors.
+   Result: **confirmed** (`ruff check backend/tests/test_deploy_config.py`:
+   6 x FURB167, "Use of regular expression alias `re.M`").
+
+### Root cause
+The new test passed `re.M` to `re.search`; the project's ruff rules
+require the full name `re.MULTILINE`.
+
+### Fix
+`backend/tests/test_deploy_config.py`: `re.M` replaced by
+`re.MULTILINE` in all six calls. One attempt.
+
+### Regression test
+The ruff check itself: `ruff check backend/` back to `Found 28 errors.`;
+`pytest backend/tests/test_deploy_config.py -q`: 8 passed.
+
+### Commit
+Folded into C14.1 (the failure never reached a commit).

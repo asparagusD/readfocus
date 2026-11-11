@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 431,
-    "inventoried": 366,
+    "tracked": 433,
+    "inventoried": 368,
     "excluded": 65
   },
   "files": [
@@ -47,6 +47,14 @@
       "purpose": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see."
     },
     {
+      "path": ".dockerignore",
+      "language": "text",
+      "lines": 8,
+      "size_bytes": 219,
+      "role": "config",
+      "purpose": "Docker build context allowlist: only requirements.txt and backend/ (without backend/tests/ and caches), so .env, .venv and frontend/ stay out of the image."
+    },
+    {
       "path": ".env.example",
       "language": "dotenv",
       "lines": 20,
@@ -74,17 +82,17 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 10238,
+      "size_bytes": 10255,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
     {
       "path": "Dockerfile",
       "language": "dockerfile",
-      "lines": 15,
-      "size_bytes": 303,
+      "lines": 39,
+      "size_bytes": 1454,
       "role": "config",
-      "purpose": "Backend image for Render: python:3.11-slim, installs root requirements.txt, copies backend/, runs uvicorn on port 8000."
+      "purpose": "Backend image for Render Free: python:3.11-slim, pinned requirements, a non-root user, the embedding model baked into FASTEMBED_CACHE at build time (then HF_HUB_OFFLINE), runs uvicorn with one worker on ${PORT:-8000}."
     },
     {
       "path": "Makefile",
@@ -695,6 +703,14 @@
       "purpose": "Pytest with httpx.MockTransport and the in-memory database: cover hit stored in the bucket with its URL, misses, missing or non-image covers, timeouts and network, server and storage errors stored as null, archive.org redirects followed and others refused, the client's 3 s timeout and User-Agent, lookup terms, and title/author metadata from PDF info and EPUB OPF."
     },
     {
+      "path": "backend/tests/test_deploy_config.py",
+      "language": "python",
+      "lines": 89,
+      "size_bytes": 3357,
+      "role": "test",
+      "purpose": "Pytest, C14.1: the Dockerfile is python:3.11-slim, bakes the model through the app's embedder before going offline, binds ${PORT:-8000} with one worker; .dockerignore is an allowlist; render.yaml is a free Docker service with /health, auto-deploy off, secrets unset and no AI key; /health exists."
+    },
+    {
       "path": "backend/tests/test_embedder.py",
       "language": "python",
       "lines": 216,
@@ -969,16 +985,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1000,
-      "size_bytes": 55036,
+      "lines": 1087,
+      "size_bytes": 60288,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2117,
-      "size_bytes": 93388,
+      "lines": 2145,
+      "size_bytes": 94294,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1001,8 +1017,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2298,
-      "size_bytes": 491671,
+      "lines": 2515,
+      "size_bytes": 508123,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2537,10 +2553,10 @@
     {
       "path": "render.yaml",
       "language": "yaml",
-      "lines": 15,
-      "size_bytes": 332,
+      "lines": 29,
+      "size_bytes": 1018,
       "role": "config",
-      "purpose": "Render blueprint for the Docker backend; declares the Supabase keys and FRONTEND_URL, and no AI provider key (since C8.8)."
+      "purpose": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key."
     },
     {
       "path": "requirements.txt",
@@ -2873,8 +2889,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 368,
-      "size_bytes": 104655,
+      "lines": 370,
+      "size_bytes": 105393,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

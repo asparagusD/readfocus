@@ -88,6 +88,54 @@ and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
 
+### C14.1: Render-ready image with the model baked in (2026-11-12)
+
+The model is downloaded at build time into `FASTEMBED_CACHE`
+(`/app/.cache/fastembed`) and the image runs with `HF_HUB_OFFLINE=1`, so
+a cold start loads it from disk. "Before" is the C13 `Dockerfile` built at
+`7306c01` as `readfocus-api-before` (model downloaded from Hugging Face at
+every start); "after" is `readfocus-api`. Both run as
+`docker run --memory=512m --cpus=0.1 -e PORT=8000 -p 8000:8000 --env-file .env <image>`
+against the dev project.
+
+```bash
+docker build -t readfocus-api .
+python scratchpad/coldstart.py <image> 3 .env   # one-off: polls /health every 0.25 s, docker stats 3 s after model_ready
+python scripts/bench.py --base-url http://127.0.0.1:8000 --ingest sample.pdf --flow-runs 3 --cold --quiet 120 --poll 2 --docker rf-c14 --server-cmd "docker run --rm --name rf-c14 --memory=512m --cpus=0.1 -e PORT=8000 -p 8000:8000 --env-file .env readfocus-api" --stop-cmd "docker stop rf-c14"
+```
+
+| Measure | Before | After |
+|---|---|---|
+| Image size (`docker images`) | 728 MB | 885 MB; the model layer is 91.3 MB |
+| Build time, requirements layer not cached | not measured | 74 s (pip 45 s, model bake 13 s) |
+| Process start -> first `/health` | 13.88 to 15.24 s | 17.13 to 18.35 s (3 cold-start runs); 15.80 to 18.30 s (3 bench runs) |
+| Process start -> `model_ready` | 29.77 to 32.33 s, download included | 20.04 to 21.04 s, no download in the log |
+| Idle memory, 3 s after `model_ready` (`docker stats`) | 267.4 to 292.5 MiB | 251.2 to 254.5 MiB |
+
+Cold ingestion of `sample.pdf` (7 chunks, 55 questions in every run; the
+bench uploads as soon as `/health` answers and deletes the book after).
+Before is the C9.5 container run (`readfocus-c9-5`, same command and
+settings); the before image above was not benched for ingestion.
+
+| Step | C9.5 p50 (p95) | C14.1 p50 (p95) |
+|---|---|---|
+| `POST /books/upload` | not recorded | 2.40 s (2.48 s) |
+| `upload -> ready` | 50.08 s | 39.89 s (40.62 s) |
+| `upload -> chunk 0 questions` | 51.20 s (52.20 s) | 40.28 s (40.94 s) |
+| `upload -> done` | 60.34 s (60.91 s) | 46.39 s (47.07 s) |
+| Peak memory during ingestion (`docker stats`) | 328, 331, 368 MB | 305, 301, 308 MiB |
+
+How to read it: the model is ready about 10 s sooner and nothing is
+fetched at boot, which on Render is every wake from a spin-down. The
+first `/health` answer comes 2 to 4 s later, most likely because loading
+from disk now competes for the 0.1 CPU while uvicorn starts, where before
+the download left the CPU idle (not separated). Ingestion finishes about
+10 to 14 s sooner, because the first batch no longer waits on a download;
+that comparison crosses a day and two chunks of code, so treat it as
+direction, not size. Peak memory stays under 310 MiB of the 512 MB limit
+in all three runs. Not measured: Render itself, the image pulled and
+started on Render, a long book in the container.
+
 ### C9.0: ingestion and cold start before C9 (2026-11-11)
 
 The "before" for C9 (speed and durability), at `5e5fcfb`: ingestion is

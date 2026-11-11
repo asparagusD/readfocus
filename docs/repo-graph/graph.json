@@ -256,6 +256,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:.dockerignore",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:.env.example",
       "type": "file",
       "role": "config",
@@ -737,6 +743,12 @@
     },
     {
       "id": "file:backend/tests/test_covers.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_deploy_config.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2773,6 +2785,16 @@
     {
       "type": "declares_env",
       "from": "file:render.yaml",
+      "to": "env:ENV"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:FASTEMBED_CACHE"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
       "to": "env:FRONTEND_URL"
     },
     {
@@ -3900,6 +3922,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_covers.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:tools/no_paid_ai.py"
     },
     {
       "type": "imports",

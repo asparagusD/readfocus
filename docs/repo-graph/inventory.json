@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 375,
-    "inventoried": 312,
+    "tracked": 377,
+    "inventoried": 314,
     "excluded": 63
   },
   "files": [
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2277,
-      "size_bytes": 441320,
+      "lines": 2278,
+      "size_bytes": 442176,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1589,6 +1589,22 @@
       "size_bytes": 760,
       "role": "lib",
       "purpose": "coverColor(title, author): D5's deterministic cover colour, FNV-1a 32-bit of the trimmed, lower-cased title and author joined by U+001F, modulo 5, into moss, oxblood, ink, ochre, slate."
+    },
+    {
+      "path": "frontend/src/lib/initials.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 933,
+      "role": "lib",
+      "purpose": "displayName(user) and initials(user) for the account button (D4): a Supabase user_metadata name first, else the email's local part split on . _ - +; first and last letters, at most two, '?' when there are none."
+    },
+    {
+      "path": "frontend/src/lib/initials.test.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 1111,
+      "role": "lib",
+      "purpose": "Node test (npm run test:unit): initials from a display name, from email local parts with separators and accents, and the fallbacks."
     },
     {
       "path": "frontend/src/lib/supabase.js",
@@ -2441,8 +2457,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 314,
-      "size_bytes": 83086,
+      "lines": 316,
+      "size_bytes": 83508,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

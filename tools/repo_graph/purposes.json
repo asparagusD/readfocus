@@ -120,6 +120,8 @@
   "frontend/src/hooks/usePageTransition.js": "Adds the .visible class on mount and returns navigateTo, which fades the page out before routing.",
   "frontend/src/index.css": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; and the reset (base layer); the pre-2.0 .page fade was removed in C11.5 (it hid every page's first contentful paint).",
   "frontend/src/lib/api.js": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response.",
+  "frontend/src/lib/initials.js": "displayName(user) and initials(user) for the account button (D4): a Supabase user_metadata name first, else the email's local part split on . _ - +; first and last letters, at most two, '?' when there are none.",
+  "frontend/src/lib/initials.test.js": "Node test (npm run test:unit): initials from a display name, from email local parts with separators and accents, and the fallbacks.",
   "frontend/src/lib/supabase.js": "Creates the browser Supabase client; falls back to a hard-coded project URL and publishable key when the env vars are unset.",
   "frontend/src/main.jsx": "React entry: renders App in StrictMode and loads index.css.",
   "frontend/src/motion/MotionRoot.jsx": "MotionConfig reducedMotion=\"user\" and strict LazyMotion around the app; domAnimation is loaded from motion/features.js after first paint.",

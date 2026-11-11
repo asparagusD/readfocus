@@ -794,6 +794,45 @@ holds at most 2,000 compact answers.
 
 ## Frontend: Lighthouse and image budgets
 
+### C13 close: every page (2026-11-11)
+
+Lighthouse 12.8.2 through its Node API on an Edge 157 headless page
+(puppeteer-core 24.10.0 connected to a Playwright persistent context), so
+each run used the e2e suite's approach: an unexpiring fake Supabase
+session in local storage and every API call answered locally (shelf of
+three books, a dashboard with 10 scores, the Walden fixture in the
+reader, a two-question test and its graded results). Nothing left the
+machine; no sign-in to Supabase. Production build on `vite preview` port
+5175; runner: a temporary script, not committed. Plan bar per page
+(C13 plan): accessibility at least 95, performance at least 85, CLS
+under 0.1.
+
+| Page | Route | Signed in | Mobile perf | Mobile a11y | Desktop perf | Desktop a11y | Best pr. | SEO | Mobile LCP | CLS (max) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Landing | `/` | no | 88 | 100 | 99 | 100 | 100 | 100 | 3.5 s | 0 |
+| Sign in | `/login` | no | 88 | 100 | 100 | 100 | 100 | 63 | 3.5 s | 0 |
+| Library | `/` | yes | 86 | 100 | 99 | 100 | 100 | 100 | 3.8 s | 0 |
+| Dashboard | `/dashboard` | yes | **81** | 100 | 99 | 100 | 100 | 63 | 4.3 s | 0 |
+| Reading | `/read/walden` | yes | **82** | 95 | 99 | 100 | 100 | 63 | 4.3 s | 0.002 |
+| Test | `/test/t1` | yes | 88 | 100 | 99 | 100 | 100 | 63 | 3.5 s | 0 |
+| Results | `/results/r1` | yes | 87 | 100 | 99 | 100 | 100 | 63 | 3.6 s | 0.006 |
+| Not found | `/no-such-page` | yes | 90 | 100 | 100 | 100 | 100 | 63 | 3.3 s | 0 |
+
+- Accessibility and CLS meet the bar everywhere. The reading page's 95
+  on mobile is one audit, colour contrast on the toolbar's clock and
+  buttons, sampled while the toolbar was fading out (measured #cbc7c0 on
+  #fbf9f4): the toolbar rests only at full opacity (`--ink-2` on
+  `--surface`, a pair `check:contrast` passes) or at opacity 0, hidden.
+- Performance under the bar on mobile: dashboard 81 (FCP 2.7 s; the
+  dashboard chunk with Recharts is 90 KB, 38 KB of it unused on first
+  paint) and reading 82. Every page is 99-100 on desktop.
+- SEO 63 on app routes is `is-crawlable` alone: `robots.txt` disallows
+  them on purpose (C13.10e).
+- Mobile numbers use Lighthouse's default simulated slow 4G and 4x CPU;
+  the first-load JavaScript common to every page (React, the router,
+  Supabase: 120 KB, about 70 KB unused on any one page) is the shared
+  cost.
+
 ### C13.10e: the public landing page (2026-11-11)
 
 Lighthouse 12.8.2 (`npx lighthouse@12.8.2`), all four categories,

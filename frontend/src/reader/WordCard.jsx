@@ -1,13 +1,46 @@
-import { useCallback, useId, useLayoutEffect } from 'react';
+import { useCallback, useId, useLayoutEffect, useRef } from 'react';
 import { autoUpdate, flip, FloatingPortal, inline, offset, shift, useFloating } from '@floating-ui/react';
 import { ArrowUpRight, X } from 'lucide-react';
 import { cardContent } from './lookup';
+import { sheetDrag } from './longPress';
 import './WordCard.css';
 
-/** The card itself: placed beside the word by Floating UI, below it or above when there is no room. */
+/** Swipe down to close (C12.9): the sheet follows the finger down and closes past the threshold. */
+function useSwipeDown(onClose) {
+  const drag = useRef(null);
+  const onPointerDown = (event) => {
+    if (event.pointerType === 'touch') drag.current = { y: event.clientY, el: event.currentTarget };
+  };
+  const onPointerMove = (event) => {
+    if (!drag.current) return;
+    drag.current.el.style.transition = 'none'; // follow the finger; the spring back is the CSS transition
+    drag.current.el.style.transform = `translateY(${sheetDrag(event.clientY - drag.current.y).offset}px)`;
+  };
+  const onPointerUp = (event) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d) return;
+    d.el.style.transition = '';
+    if (sheetDrag(event.clientY - d.y).close) onClose(false);
+    else d.el.style.transform = '';
+  };
+  const onPointerCancel = () => {
+    if (drag.current) Object.assign(drag.current.el.style, { transform: '', transition: '' });
+    drag.current = null;
+  };
+  return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel };
+}
+
+/**
+ * The card itself: placed beside the word by Floating UI, below it or above when there is no room.
+ * Opened by touch (a long-press or the Look up chip) it is the handoff's compact sheet: a grab
+ * handle, one sense, "Tap outside to close", and a swipe down closes it.
+ */
 export function WordCard({ card, cardRef, onClose }) {
   const titleId = useId();
   const content = cardContent(card.state, card.target);
+  const compact = card.by === 'press' || card.by === 'chip';
+  const swipe = useSwipeDown(onClose);
   const { refs, floatingStyles, placement } = useFloating({
     placement: 'bottom-start',
     strategy: 'fixed',
@@ -42,8 +75,11 @@ export function WordCard({ card, cardRef, onClose }) {
         tabIndex={-1}
         data-kind={content.kind}
         data-side={placement.split('-')[0]}
+        data-compact={compact || undefined}
         style={floatingStyles}
+        {...(compact ? swipe : {})}
       >
+        {compact && <span className="rf-wordcard-handle" aria-hidden="true" />}
         <div className="rf-wordcard-head">
           <h2 className="rf-wordcard-title" id={titleId}>{content.title}</h2>
           {content.phonetic && <span className="rf-wordcard-phonetic">{content.phonetic}</span>}
@@ -51,16 +87,17 @@ export function WordCard({ card, cardRef, onClose }) {
             <X size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
-        <CardBody content={content} />
+        <CardBody content={content} compact={compact} />
       </div>
     </FloatingPortal>
   );
 }
 
-function Source({ children, url }) {
+function Source({ children, url, hint }) {
   return (
     <p className="rf-wordcard-source">
       <span>{children}</span>
+      {!url && hint && <span>Tap outside to close</span>}
       {url && (
         <a href={url} target="_blank" rel="noopener noreferrer" className="rf-wordcard-link">
           Wikipedia <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -71,7 +108,7 @@ function Source({ children, url }) {
   );
 }
 
-function CardBody({ content }) {
+function CardBody({ content, compact }) {
   switch (content.kind) {
     case 'loading':
       return (
@@ -83,9 +120,11 @@ function CardBody({ content }) {
       return (
         <>
           <p className="rf-wordcard-kind">{content.pos}</p>
-          <ol className="rf-wordcard-senses">{content.senses.map((s) => <li key={s}>{s}</li>)}</ol>
-          {content.example && <p className="rf-wordcard-example">“{content.example}”</p>}
-          <Source>Wiktionary, via Free Dictionary</Source>
+          {compact
+            ? <p className="rf-wordcard-text">{content.senses[0]}</p>
+            : <ol className="rf-wordcard-senses">{content.senses.map((s) => <li key={s}>{s}</li>)}</ol>}
+          {content.example && !compact && <p className="rf-wordcard-example">“{content.example}”</p>}
+          <Source hint={compact}>{compact ? 'Wiktionary' : 'Wiktionary, via Free Dictionary'}</Source>
         </>
       );
     case 'summary':
@@ -109,7 +148,7 @@ function CardBody({ content }) {
           <p className="rf-wordcard-text">
             {content.phrase ? 'No definition found for this phrase. Try a single word.' : 'No definition found for this word.'}
           </p>
-          <Source>Nothing in Wiktionary or Wikipedia</Source>
+          <Source hint={compact}>Nothing in Wiktionary or Wikipedia</Source>
         </>
       );
     default:

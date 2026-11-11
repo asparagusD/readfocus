@@ -458,5 +458,7 @@
    Highlight API paints it without changing the text's DOM; elsewhere .rf-mark boxes sit in a
    layer under the text. --accent-soft is a checked text ground (check:contrast). No motion. */
 ::highlight(rf-lookup) { background-color: var(--accent-soft); }
+/* C12.9: no iOS callout on a held word (the card opens instead); selection itself still works. */
+.rf-flow { -webkit-touch-callout: none; }
 .rf-mark-layer { position: absolute; inset: 0; pointer-events: none; }
 .rf-mark { position: absolute; border-radius: 2px; background: var(--accent-soft); }

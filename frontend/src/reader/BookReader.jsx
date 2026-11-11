@@ -8,6 +8,7 @@ import { anchorForPage, pageForAnchor, pageOfElement } from './anchor';
 import { clampPage, pageCount, pageGeometry } from './geometry';
 import { useWordAtPoint } from './useWordAtPoint';
 import { WordCard } from './WordCard';
+import { PhraseChip } from './PhraseChip';
 import { useWordCard } from './useWordCard';
 import { cardContent } from './lookup';
 import './reader.css';
@@ -126,8 +127,12 @@ export function BookReader({
     onLookup?.(target);
     if (lookupClient) openCard(target, target.by);
   }, [onLookup, lookupClient, openCard]);
-  const { clear: clearLookup, clearMark: clearLookupMark, lookUpSelection } = useWordAtPoint(flowRef, markRef, {
-    onLookup: onLookup || lookupClient ? onTarget : undefined, lang, paused: !g || Boolean(turn), hover: hoverLookup,
+  // A 2-5 word touch selection offering "Look up" (C12.9); it belongs to the page it was made on.
+  const [chip, setChip] = useState(null); // { target, page }
+  const onChip = useCallback((target) => setChip(target && { target, page }), [page]);
+  const { clear: clearLookup, clearMark: clearLookupMark, lookUpSelection, lookUp } = useWordAtPoint(flowRef, markRef, {
+    onLookup: onLookup || lookupClient ? onTarget : undefined, onChip: lookupClient ? onChip : undefined,
+    lang, paused: !g || Boolean(turn), hover: hoverLookup,
   });
   useEffect(() => { clearMark.current = clearLookupMark; }, [clearLookupMark]);
   useEffect(() => { // the marked word has moved or left the page
@@ -319,6 +324,9 @@ export function BookReader({
           <p className="rf-live" aria-live="polite" aria-atomic="true">{spoken}</p>
           {lookupClient && <p className="rf-live" aria-live="polite" aria-atomic="true">{announce}</p>}
           {card && <WordCard card={card} cardRef={cardRef} onClose={closeCard} />}
+          {chip?.page === page && !turn && !card && (
+            <PhraseChip target={chip.target} onLookUp={() => { lookUp(chip.target, 'chip'); setChip(null); }} />
+          )}
         </>
       )}
     </section>

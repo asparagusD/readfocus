@@ -9,7 +9,7 @@
   background: var(--surface);
   box-shadow: var(--shadow-lift);
   color: var(--ink);
-  animation: rf-wordcard-rise var(--dur-1) var(--ease-arrive) both;
+  animation: rf-wordcard-rise var(--dur-1) var(--ease-arrive) backwards;
 }
 .rf-wordcard[data-side="top"] { animation-name: rf-wordcard-drop; }
 .rf-wordcard:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
@@ -22,7 +22,7 @@
    !important inside @layer base; an important rule only beats it from the same layer, by specificity. */
 @layer base {
   @media (prefers-reduced-motion: reduce) {
-    .rf-wordcard.rf-wordcard { animation: rf-wordcard-fade var(--dur-1) linear both !important; }
+    .rf-wordcard.rf-wordcard { animation: rf-wordcard-fade var(--dur-1) linear backwards !important; }
   }
 }
 
@@ -134,3 +134,34 @@
 .rf-wordcard-skeleton span { block-size: 10px; border-radius: var(--radius-skeleton); background: var(--paper-2); }
 .rf-wordcard-skeleton span:nth-child(1) { inline-size: 40%; }
 .rf-wordcard-skeleton span:nth-child(3) { inline-size: 75%; }
+
+/* Touch (C12.9, handoff "word card · mobile"): the compact sheet. A grab handle, one sense, the
+   hint; the sheet takes the finger (touch-action) so a swipe down closes it, and springs back
+   from a short drag. */
+.rf-wordcard[data-compact] { padding-block-start: var(--space-2); touch-action: none; transition: transform var(--dur-2) var(--ease-settle); }
+.rf-wordcard-handle {
+  display: block;
+  inline-size: 36px;
+  block-size: 4px;
+  margin: 0 auto var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--line-2);
+}
+
+/* The "Look up" chip on a touch selection: a dark pill (light in Lamplight), 44 px tall. */
+.rf-lookchip {
+  z-index: var(--z-popover);
+  min-block-size: 44px;
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  box-shadow: var(--shadow-lift);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  cursor: pointer;
+  animation: rf-wordcard-fade var(--dur-1) var(--ease-arrive) backwards;
+}
+.rf-lookchip:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }

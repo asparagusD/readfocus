@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 360,
-    "inventoried": 297,
+    "tracked": 363,
+    "inventoried": 300,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 188,
-      "size_bytes": 9061,
+      "size_bytes": 9077,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2111,
-      "size_bytes": 407948,
+      "lines": 2113,
+      "size_bytes": 413015,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1657,10 +1657,10 @@
     {
       "path": "frontend/src/reader/BookReader.jsx",
       "language": "jsx",
-      "lines": 326,
-      "size_bytes": 15891,
+      "lines": 334,
+      "size_bytes": 16417,
       "role": "asset",
-      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text); the word card when the caller passes a lookupClient (C12.8: opened on hover intent or a settled selection, Enter or ? on a selection opens it with focus, closed on a turn, page change or Esc, a polite live region announces each answer; hoverLookup turns hover off)."
+      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text); the word card when the caller passes a lookupClient (C12.8: opened on hover intent or a settled selection, Enter or ? on a selection opens it with focus, closed on a turn, page change or Esc, a polite live region announces each answer; hoverLookup turns hover off); the Look up chip for touch selections, kept to the page it was made on (C12.9)."
     },
     {
       "path": "frontend/src/reader/ContentsDrawer.css",
@@ -1687,6 +1687,14 @@
       "purpose": "One page turn over the book (C12.4): a leaf hinged at the spine (Motion pageTurn, rotateY with perspective) with front and back faces, each paper with its running head, folio and a window onto a copy of the flow at that page, plus a cover keeping the page underneath until the leaf lands and a travelling shadow (turnShade); spread forward and back, single page lifting away or swinging in; transform and opacity only; a timer also ends the turn; aria-hidden."
     },
     {
+      "path": "frontend/src/reader/PhraseChip.jsx",
+      "language": "jsx",
+      "lines": 43,
+      "size_bytes": 1613,
+      "role": "asset",
+      "purpose": "The 'Look up' chip (C12.9): a 44 px pill placed by Floating UI below a 2-5 word touch selection (flipping above), keeping the selection on press; a tap opens the compact sheet."
+    },
+    {
       "path": "frontend/src/reader/ReaderToolbar.css",
       "language": "css",
       "lines": 105,
@@ -1705,18 +1713,18 @@
     {
       "path": "frontend/src/reader/WordCard.css",
       "language": "css",
-      "lines": 136,
-      "size_bytes": 4762,
+      "lines": 167,
+      "size_bytes": 5940,
       "role": "asset",
-      "purpose": "Styles of the word card: page surface, hairline, --shadow-lift, Playfair headword, Lora text, accent-caps part of speech, 44 px close and link targets, a 150 ms rise (fade only under reduced motion, set inside @layer base to outrank base.css), --z-popover."
+      "purpose": "Styles of the word card: page surface, hairline, --shadow-lift, Playfair headword, Lora text, accent-caps part of speech, 44 px close and link targets, a 150 ms rise (fade only under reduced motion, set inside @layer base to outrank base.css), --z-popover; the compact sheet (handle, touch-action none, spring back) and the dark 'Look up' chip."
     },
     {
       "path": "frontend/src/reader/WordCard.jsx",
       "language": "jsx",
-      "lines": 118,
-      "size_bytes": 4385,
+      "lines": 157,
+      "size_bytes": 6195,
       "role": "asset",
-      "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard."
+      "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard; opened by touch it is the compact sheet (grab handle, one sense, 'Tap outside to close', swipe down to close)."
     },
     {
       "path": "frontend/src/reader/anchor.js",
@@ -1775,6 +1783,22 @@
       "purpose": "Barrel export of the reader: BookReader, anchor helpers and page geometry."
     },
     {
+      "path": "frontend/src/reader/longPress.js",
+      "language": "javascript",
+      "lines": 53,
+      "size_bytes": 1633,
+      "role": "asset",
+      "purpose": "Touch gestures for lookup (C12.9) as small state machines: createLongPress (450 ms hold, 8 px slop, touch only; up() says whether the release ended a long-press) and sheetDrag (the sheet follows a downward drag and closes past 56 px)."
+    },
+    {
+      "path": "frontend/src/reader/longPress.test.js",
+      "language": "javascript",
+      "lines": 57,
+      "size_bytes": 2116,
+      "role": "asset",
+      "purpose": "node --test: a still hold fires once at its start, movement past the slop, an early lift or a cancel fire nothing, mouse presses are ignored, the handoff's timings, and the sheet drag."
+    },
+    {
       "path": "frontend/src/reader/lookup.js",
       "language": "javascript",
       "lines": 102,
@@ -1809,8 +1833,8 @@
     {
       "path": "frontend/src/reader/reader.css",
       "language": "css",
-      "lines": 462,
-      "size_bytes": 11735,
+      "lines": 464,
+      "size_bytes": 11876,
       "role": "asset",
       "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b)."
     },
@@ -1849,10 +1873,10 @@
     {
       "path": "frontend/src/reader/useWordAtPoint.js",
       "language": "javascript",
-      "lines": 167,
-      "size_bytes": 7554,
+      "lines": 219,
+      "size_bytes": 10335,
       "role": "asset",
-      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM: caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside the word's rects; 350 ms on the same word looks it up once; a 2-5 word selection (mouse or touch) looks up a phrase; marks the target via highlight.js; paused while a leaf turns; returns clear(); C12.8: hover can be turned off (selection still works), lookUpSelection() for Enter or ? on a selected word or phrase, clearMark() removes the mark without cancelling a hover under way."
+      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM: caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside the word's rects; 350 ms on the same word looks it up once; a 2-5 word selection (mouse or touch) looks up a phrase; marks the target via highlight.js; paused while a leaf turns; returns clear(); C12.8: hover can be turned off (selection still works), lookUpSelection() for Enter or ? on a selected word or phrase, clearMark() removes the mark without cancelling a hover under way; C12.9: a touch long-press (or the platform's touch contextmenu) on a lookable word opens it ('press') with the OS menu held off and the release swallowed, other long-presses keep native selection; a touch selection of 2-5 words goes to onChip instead of opening a card; lookUp(target, by)."
     },
     {
       "path": "frontend/src/reader/useWordCard.js",
@@ -2321,8 +2345,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 299,
-      "size_bytes": 78059,
+      "lines": 302,
+      "size_bytes": 79355,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { clearHighlight, showHighlight } from './highlight';
+import { createLongPress } from './longPress';
 import { eligible, isProperNoun, phraseOf, wordAround, words } from './wordAt';
 
 export const HOVER_MS = 350;
@@ -68,7 +69,7 @@ function wordTarget(flow, x, y, lang) {
  * selected inside the flow, by mouse or touch. Each gives onLookup({kind, term, proper, range})
  * once and marks it softly; a turn (paused), clear() or the next target removes the mark.
  */
-export function useWordAtPoint(flowRef, layerRef, { onLookup, lang = 'en', paused = false, hover = true }) {
+export function useWordAtPoint(flowRef, layerRef, { onLookup, onChip, lang = 'en', paused = false, hover = true }) {
   const shown = useRef(null); // key of the marked target
   const candidate = useRef(null);
   const timer = useRef(0);
@@ -76,6 +77,8 @@ export function useWordAtPoint(flowRef, layerRef, { onLookup, lang = 'en', pause
   const enabled = Boolean(onLookup);
   const lookup = useRef(onLookup);
   useEffect(() => { lookup.current = onLookup; }, [onLookup]);
+  const chip = useRef(onChip);
+  useEffect(() => { chip.current = onChip; }, [onChip]);
 
   /** Remove the mark only: a hover already under way on another word goes on (C12.8). */
   const clearMark = useCallback(() => {
@@ -89,7 +92,8 @@ export function useWordAtPoint(flowRef, layerRef, { onLookup, lang = 'en', pause
     clearMark();
   }, [clearMark]);
 
-  // by: 'hover', 'select' (a selection settled) or 'key' (Enter or ? on a selection).
+  // by: 'hover', 'select' (a selection settled), 'key' (Enter or ? on a selection), 'press' (touch
+  // long-press) or 'chip' (the Look up chip on a touch selection).
   const show = useCallback((target, by) => {
     shown.current = target.key;
     showHighlight(target.range, layerRef.current);
@@ -120,7 +124,7 @@ export function useWordAtPoint(flowRef, layerRef, { onLookup, lang = 'en', pause
       if (target && target.key !== shown.current) timer.current = setTimeout(() => show(target, 'hover'), HOVER_MS);
     };
     const onMove = (event) => {
-      // Touch has its own gesture (selection here, long-press later); a pressed button is a selection in progress.
+      // Touch has its own gestures (long-press, selection); a pressed button is a selection in progress.
       if (event.pointerType === 'touch' || event.buttons) return;
       cancelAnimationFrame(frame.current);
       frame.current = requestAnimationFrame(() => settle(event.clientX, event.clientY));
@@ -135,18 +139,59 @@ export function useWordAtPoint(flowRef, layerRef, { onLookup, lang = 'en', pause
       clearTimeout(settleSelection);
       settleSelection = setTimeout(() => {
         const selection = document.getSelection();
-        if (!selection?.rangeCount || selection.isCollapsed) return;
-        if (!flow.contains(selection.getRangeAt(0).commonAncestorContainer)) return;
+        if (!selection?.rangeCount || selection.isCollapsed) return chip.current?.(null);
+        if (!flow.contains(selection.getRangeAt(0).commonAncestorContainer)) return chip.current?.(null);
         const target = selectionTarget(flow, lang, false);
         if (!target) { // one word, or more than five: no lookup, and no older phrase mark left beside it
+          chip.current?.(null);
           if (shown.current?.startsWith('phrase:')) clearMark();
-          return;
+          return undefined;
         }
-        if (shown.current === target.key) return;
+        // On touch the OS menu sits on the selection: offer a chip instead of opening a card unasked (C12.9).
+        if (lastPointer === 'touch' && chip.current) return chip.current(target);
+        if (shown.current === target.key) return undefined;
         clearTimeout(timer.current);
-        show(target, 'select');
+        return show(target, 'select');
       }, SELECTION_SETTLE_MS);
     };
+    // Touch long-press (C12.9): the card for the word held, with no page turn and no OS menu for it.
+    let lastPointer = 'mouse';
+    let swallowClick = false;
+    const holdAt = (x, y) => {
+      const target = wordTarget(flow, x, y, lang);
+      if (!target) return false; // a space, a short or common word: the platform's own selection goes on
+      clearTimeout(timer.current);
+      show(target, 'press');
+      return true;
+    };
+    let heldWord = false;
+    const press = createLongPress({ onHold: ({ x, y }) => { heldWord = holdAt(x, y); } });
+    const onDown = (event) => {
+      lastPointer = event.pointerType;
+      heldWord = false;
+      press.down({ x: event.clientX, y: event.clientY, pointerType: event.pointerType });
+    };
+    const onTouchMove = (event) => { if (event.pointerType === 'touch') press.move({ x: event.clientX, y: event.clientY }); };
+    const onUp = () => { if (press.up() && heldWord) swallowClick = true; };
+    const onCancel = () => press.cancel(); // the browser took the gesture: a scroll or a swipe
+    const onContextMenu = (event) => {
+      if (event.pointerType !== 'touch' && lastPointer !== 'touch') return; // a mouse's own menu stays
+      // The platform's long-press (Android) can come before our timer: it counts as the hold.
+      if (!press.held && holdAt(event.clientX, event.clientY)) heldWord = true;
+      if (heldWord) event.preventDefault();
+    };
+    const onClick = (event) => {
+      if (!swallowClick) return;
+      swallowClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    flow.addEventListener('pointerdown', onDown);
+    flow.addEventListener('pointermove', onTouchMove);
+    flow.addEventListener('pointerup', onUp);
+    flow.addEventListener('pointercancel', onCancel);
+    flow.addEventListener('contextmenu', onContextMenu);
+    flow.addEventListener('click', onClick, true);
     if (hover) { // the reader can turn hover off (toolbar); selection and Enter still work
       flow.addEventListener('pointermove', onMove);
       flow.addEventListener('pointerleave', onLeave);
@@ -160,8 +205,15 @@ export function useWordAtPoint(flowRef, layerRef, { onLookup, lang = 'en', pause
       flow.removeEventListener('pointerleave', onLeave);
       flow.removeEventListener('pointerdown', onLeave);
       document.removeEventListener('selectionchange', onSelection);
+      press.cancel();
+      flow.removeEventListener('pointerdown', onDown);
+      flow.removeEventListener('pointermove', onTouchMove);
+      flow.removeEventListener('pointerup', onUp);
+      flow.removeEventListener('pointercancel', onCancel);
+      flow.removeEventListener('contextmenu', onContextMenu);
+      flow.removeEventListener('click', onClick, true);
     };
   }, [flowRef, enabled, paused, hover, lang, show, clearMark]);
 
-  return { clear, clearMark, lookUpSelection };
+  return { clear, clearMark, lookUpSelection, lookUp: show };
 }

@@ -1482,6 +1482,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/PhraseChip.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/reader/ReaderToolbar.css",
       "type": "file",
       "role": "asset",
@@ -1543,6 +1549,18 @@
     },
     {
       "id": "file:frontend/src/reader/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/longPress.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/longPress.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4381,6 +4399,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/PhraseChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
       "to": "file:frontend/src/reader/WordCard.jsx"
     },
     {
@@ -4435,6 +4458,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/PhraseChip.jsx",
+      "to": "file:frontend/src/reader/WordCard.css"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/ReaderToolbar.jsx",
       "to": "file:frontend/src/components/ThemeToggle.jsx"
     },
@@ -4456,6 +4484,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
       "to": "file:frontend/src/reader/lookup.js"
     },
     {
@@ -4472,6 +4505,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/geometry.test.js",
       "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/longPress.test.js",
+      "to": "file:frontend/src/reader/longPress.js"
     },
     {
       "type": "imports",
@@ -4502,6 +4540,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/useWordAtPoint.js",
       "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useWordAtPoint.js",
+      "to": "file:frontend/src/reader/longPress.js"
     },
     {
       "type": "imports",

@@ -1,0 +1,96 @@
+/* Landing page (C13.10): the opening pages of a printed book. */
+.rf-landing {
+  min-height: 100dvh;
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.rf-landing__skip {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-popover);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-control);
+  background-color: var(--surface);
+  color: var(--ink);
+  transform: translateY(-200%);
+}
+
+.rf-landing__skip:focus-visible { transform: none; }
+
+.rf-landing__masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-5);
+}
+
+.rf-landing__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.rf-landing__mark svg { color: var(--accent-text); }
+
+.rf-landing__signin {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 4px;
+}
+
+.rf-landing__signin:hover { color: var(--ink); text-decoration-color: var(--accent); }
+
+.rf-landing main:focus { outline: none; }
+
+.rf-landing__hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) var(--space-9);
+}
+
+.rf-landing__title {
+  max-width: 14ch;
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, var(--text-title));
+  font-weight: 500;
+  line-height: var(--text-title--line-height);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.rf-landing__lead {
+  max-width: 34em;
+  margin: 0 0 var(--space-6);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+  color: var(--ink-2);
+}
+
+.rf-landing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.rf-landing__actions .rf-btn { text-decoration: none; }

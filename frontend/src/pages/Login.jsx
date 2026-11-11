@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { BookOpen } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -47,7 +47,9 @@ function fromServer(error) {
 export function Login() {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState('signin');
+  const [params] = useSearchParams();
+  // The landing page's "Start reading" opens on Create account (C13.10a).
+  const [tab, setTab] = useState(() => (params.get('tab') === 'signup' ? 'signup' : 'signin'));
   const [values, setValues] = useState({ name: '', email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);

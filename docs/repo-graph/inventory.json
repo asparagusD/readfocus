@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 413,
-    "inventoried": 349,
+    "tracked": 418,
+    "inventoried": 354,
     "excluded": 64
   },
   "files": [
@@ -985,8 +985,8 @@
     {
       "path": "docs/DESIGN_AUDIT.md",
       "language": "markdown",
-      "lines": 271,
-      "size_bytes": 21626,
+      "lines": 437,
+      "size_bytes": 31093,
       "role": "doc",
       "purpose": "C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13."
     },
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2292,
-      "size_bytes": 486288,
+      "lines": 2293,
+      "size_bytes": 488513,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1061,6 +1061,14 @@
       "size_bytes": 8735,
       "role": "config",
       "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page; /health answers ready."
+    },
+    {
+      "path": "frontend/e2e/landing.spec.js",
+      "language": "javascript",
+      "lines": 57,
+      "size_bytes": 2567,
+      "role": "config",
+      "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf."
     },
     {
       "path": "frontend/e2e/library.spec.js",
@@ -1193,8 +1201,8 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 107,
-      "size_bytes": 4342,
+      "lines": 120,
+      "size_bytes": 4819,
       "role": "entry",
       "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout."
     },
@@ -1967,6 +1975,22 @@
       "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests."
     },
     {
+      "path": "frontend/src/pages/Landing.css",
+      "language": "css",
+      "lines": 96,
+      "size_bytes": 2211,
+      "role": "page",
+      "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero type on the project tokens."
+    },
+    {
+      "path": "frontend/src/pages/Landing.jsx",
+      "language": "jsx",
+      "lines": 43,
+      "size_bytes": 1821,
+      "role": "page",
+      "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount to start waking Render; masthead with Sign in, hero with Start reading (to /login?tab=signup)."
+    },
+    {
       "path": "frontend/src/pages/Library.css",
       "language": "css",
       "lines": 304,
@@ -1993,10 +2017,10 @@
     {
       "path": "frontend/src/pages/Login.jsx",
       "language": "jsx",
-      "lines": 156,
-      "size_bytes": 7190,
+      "lines": 158,
+      "size_bytes": 7372,
       "role": "page",
-      "purpose": "Sign in and create account (handoff screen 01): scene with the tagline, segmented tabs over one tabpanel, labelled fields validated before sending (errors inline, focus to the first), Supabase errors mapped to the field or a form alert, loading label on submit, inbox message after sign-up; the display name is collected and never sent, as before. The drawings fade in and the form rises 12 px without fading (text paints at once); a nested AnimatePresence lets them play on a first load; under reduced motion the form does not move."
+      "purpose": "Sign in and create account (handoff screen 01): scene with the tagline, segmented tabs over one tabpanel, labelled fields validated before sending (errors inline, focus to the first), Supabase errors mapped to the field or a form alert, loading label on submit, inbox message after sign-up; the display name is collected and never sent, as before. The drawings fade in and the form rises 12 px without fading (text paints at once); a nested AnimatePresence lets them play on a first load; under reduced motion the form does not move. Opens on Create account when the URL has ?tab=signup (the landing page's Start reading)."
     },
     {
       "path": "frontend/src/pages/NotFound.jsx",
@@ -2037,6 +2061,22 @@
       "size_bytes": 10896,
       "role": "page",
       "purpose": "Results (handoff screen 08): the score, summary and verdict, a note when answers were not judged confidently; each question with its outcome in words and an icon, the reader's answer (without the '(b) ' the grader reads), the feedback and its quoted passage; concept chips strengthened and to revisit; the next session (planner mode, minutes and reason, or the pace's re-read) with Start next session and the dashboard; from router state after the test (GET /sessions/{id} for the questions) or rebuilt after a refresh from GET /sessions/{id} and GET /books/{id}; skeleton, not-graded and failed (Try again) states. Motion (moment 5): the score counts up with useCountUp and the chips pop in 60 ms apart under their own AnimatePresence; the final score at once and no movement under reduced motion."
+    },
+    {
+      "path": "frontend/src/pages/landing/wake.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 749,
+      "role": "page",
+      "purpose": "wakeBackend(): one fire-and-forget GET /health per page load from the landing page (no retries, errors ignored)."
+    },
+    {
+      "path": "frontend/src/pages/landing/wake.test.js",
+      "language": "javascript",
+      "lines": 18,
+      "size_bytes": 706,
+      "role": "page",
+      "purpose": "Node test (npm run test:unit): wakeBackend sends one GET /health per load, swallows failures, and does nothing without fetch."
     },
     {
       "path": "frontend/src/reader/BookFlow.jsx",
@@ -2737,8 +2777,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 351,
-      "size_bytes": 98717,
+      "lines": 356,
+      "size_bytes": 99818,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

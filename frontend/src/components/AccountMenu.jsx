@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { fadeIn, pop } from '../motion/presets';
@@ -40,6 +41,7 @@ function Choice({ legend, name, options, value, onChange }) {
  */
 export function AccountMenu() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { accent, setAccent } = useTheme();
   const [open, setOpen] = useState(false);
   const [size, setSize] = useState(readSize);
@@ -48,6 +50,12 @@ export function AccountMenu() {
   const panelId = useId();
   const name = displayName(user);
   const reduced = useReducedMotion();
+  // Sign out goes to sign in, as before C13.10a: "/" signed out is now the landing page,
+  // so it is named here instead of left to the Library route's redirect.
+  const leave = () => {
+    navigate('/login', { replace: true });
+    signOut();
+  };
 
   useEffect(() => {
     if (!open) return undefined;
@@ -122,7 +130,7 @@ export function AccountMenu() {
             onChange={setAccent}
           />
         </section>
-        <button type="button" className="rf-account__signout" onClick={signOut}>
+        <button type="button" className="rf-account__signout" onClick={leave}>
           <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
           <span>Sign out</span>
         </button>

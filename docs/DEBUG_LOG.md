@@ -2046,3 +2046,43 @@ error screen clears it without a reload.
 
 ### Commit
 Folded into C13.8a part 4 (the failure never reached a commit).
+
+## 2026-11-11 C13.10a — sign out stopped at the landing page
+
+**Status:** fixed
+
+### Symptom
+Before committing C13.10a, `npm --prefix frontend run test:e2e`: 1 failed,
+86 passed. `e2e/shell.spec.js` "sign out leaves for the sign-in page":
+`expect(page).toHaveURL(expected) failed` (expected `/login$`, stayed on
+`/`). Also `npm --prefix frontend run test:unit`: 1 failed, 61 passed,
+`wake.test.js` "does nothing without fetch": `true !== false`.
+
+### Upstream and downstream (repo graph)
+`App.jsx` now renders `pages/Landing.jsx` for signed-out visitors at `/`
+(new `PublicHome`); `components/AccountMenu.jsx` signs out from `/`.
+
+### Hypotheses
+1. Sign out used to reach `/login` only through the Library route's
+   `AuthGuard` redirect; with `/` signed out now the landing page, the
+   redirect never runs. Result: **confirmed** (the URL stays `/` and the
+   landing page shows).
+2. The unit test passed `undefined` for `fetchImpl`, which takes the
+   default parameter (`globalThis.fetch`, present in Node 22), so the call
+   was sent. Result: **confirmed** (a test bug, not a code bug).
+
+### Root cause
+A redirect that the sign-out flow relied on was implicit in the route
+table; and a default parameter swallowed the test's "no fetch" case.
+
+### Fix
+`AccountMenu.jsx`: Sign out navigates to `/login` (replace) and then signs
+out, so it keeps its old destination. `wake.test.js` passes `null`. One
+attempt each.
+
+### Regression test
+`e2e/shell.spec.js` "sign out leaves for the sign-in page" (failed before,
+passes after); `wake.test.js` "does nothing without fetch".
+
+### Commit
+Folded into C13.10a (the failure never reached a commit).

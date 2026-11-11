@@ -1,0 +1,43 @@
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { BookOpen } from 'lucide-react';
+import { API_BASE_URL } from '../lib/api';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { wakeBackend } from './landing/wake';
+import './Landing.css';
+
+/**
+ * The public landing page for signed-out visitors at "/" (C13.10).
+ * Static: it renders without waiting on the backend, and only starts
+ * waking it with one fire-and-forget GET /health.
+ */
+export function Landing() {
+  useDocumentTitle(null);
+  useEffect(() => { wakeBackend(API_BASE_URL); }, []);
+
+  return (
+    <div className="rf-landing">
+      <a className="rf-landing__skip" href="#landing-main">Skip to content</a>
+      <header className="rf-landing__masthead">
+        <Link to="/" className="rf-landing__mark" aria-label="ReadFocus, home">
+          <BookOpen size={24} strokeWidth={1.75} aria-hidden="true" />
+          <span aria-hidden="true">ReadFocus</span>
+        </Link>
+        <Link to="/login" className="rf-landing__signin">Sign in</Link>
+      </header>
+      <main id="landing-main" tabIndex={-1}>
+        <section className="rf-landing__hero" aria-labelledby="landing-title">
+          <h1 id="landing-title" className="rf-landing__title">A quiet place to read deeply.</h1>
+          <p className="rf-landing__lead">
+            ReadFocus turns any book into focused reading sessions that feel like a real book,
+            explains unfamiliar words right where you read them, checks what you understood,
+            and plans your next session around what you missed.
+          </p>
+          <div className="rf-landing__actions">
+            <Link to="/login?tab=signup" className="rf-btn rf-btn--primary">Start reading</Link>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

@@ -12,6 +12,7 @@ import { ReadingSession } from './pages/ReadingSession';
 import { ComprehensionTest } from './pages/ComprehensionTest';
 import { Results } from './pages/Results';
 import { Login } from './pages/Login';
+import { Landing } from './pages/Landing';
 import { NotFound } from './pages/NotFound';
 import { MotionRoot } from './motion/MotionRoot';
 import { ToastProvider } from './components/ui/Toast';
@@ -26,6 +27,18 @@ const IllustrationGallery = import.meta.env.DEV
   : null;
 // Dev-only review page for the paginated reader (C12.3), dropped the same way.
 const ReaderGallery = import.meta.env.DEV ? lazy(() => import('./gallery/ReaderGallery.jsx')) : null;
+
+/**
+ * Signed-out visitors at "/" get the static landing page (C13.10a), outside
+ * the backend gate so it never waits on a sleeping backend. Everyone else,
+ * and every other route, goes through the gate exactly as before.
+ */
+function PublicHome({ children }) {
+  const { user } = useAuth();
+  const { pathname } = useLocation();
+  if (!user && pathname === '/') return <Landing />;
+  return <BackendGate>{children}</BackendGate>;
+}
 
 function AuthGuard({ children }) {
   const { user, loading } = useAuth();
@@ -71,7 +84,7 @@ function App() {
         <MotionRoot>
           <ToastProvider>
             <BrowserRouter>
-              <BackendGate>
+              <PublicHome>
                 <RouteErrorBoundary>
                   <AnimatedRoutes scope={screenOf}>
                     <Route path="/login" element={<Login />} />
@@ -95,7 +108,7 @@ function App() {
                     } />
                   </AnimatedRoutes>
                 </RouteErrorBoundary>
-              </BackendGate>
+              </PublicHome>
             </BrowserRouter>
           </ToastProvider>
         </MotionRoot>

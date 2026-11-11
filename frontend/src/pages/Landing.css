@@ -1,6 +1,7 @@
 /* Landing page (C13.10): the opening pages of a printed book. */
 .rf-landing {
   min-height: 100dvh;
+  overflow-x: clip; /* the lamp leans past the hero's edge between 1024 and 1280 px */
   background-color: var(--paper);
   color: var(--ink);
 }
@@ -257,8 +258,16 @@
   line-height: var(--text-label--line-height);
 }
 
-.rf-spread__caption a { color: inherit; text-underline-offset: 3px; }
-.rf-spread__caption a:hover { color: var(--ink); }
+.rf-spread__caption a,
+.rf-colophon__credits a {
+  color: inherit;
+  text-decoration-line: underline; /* links in running text are told apart by more than colour (WCAG 1.4.1) */
+  text-decoration-color: var(--line-field);
+  text-underline-offset: 3px;
+}
+
+.rf-spread__caption a:hover,
+.rf-colophon__credits a:hover { color: var(--ink); text-decoration-color: var(--ink); }
 
 /* A phone shows the chapter's opening page alone, at a readable size. */
 @media (max-width: 639px) {
@@ -504,8 +513,8 @@
 
 /* What ReadFocus isn't: a short note set off by hairlines, like an aside in a margin. */
 .rf-isnt {
-  max-width: 40em;
-  margin: 0 0 var(--space-8);
+  max-width: 712px; /* the questions' measure (760 less their side padding), on their axis */
+  margin: 0 auto var(--space-8);
   padding: var(--space-5) 0;
   border-block: var(--border-hair) solid var(--line-2);
 }
@@ -562,7 +571,7 @@
 
 .rf-faq__q::-webkit-details-marker { display: none; }
 
-/* A plus that turns into a minus: the vertical bar fades and turns flat. */
+/* A plus that becomes a minus when the answer is open (no animation). */
 .rf-faq__q::after {
   flex: none;
   width: 14px;
@@ -571,12 +580,10 @@
   background:
     linear-gradient(var(--accent-text), var(--accent-text)) center / 14px 2px no-repeat,
     linear-gradient(var(--accent-text), var(--accent-text)) center / 2px 14px no-repeat;
-  transition: transform var(--dur-2) var(--ease-settle);
 }
 
 .rf-faq__item[open] > .rf-faq__q::after {
   background: linear-gradient(var(--accent-text), var(--accent-text)) center / 14px 2px no-repeat;
-  transform: rotate(180deg);
 }
 
 .rf-faq__q:hover { color: var(--accent-text); }
@@ -633,8 +640,6 @@
   flex: 1 1 28em;
 }
 
-.rf-colophon__credits a { color: inherit; text-underline-offset: 3px; }
-.rf-colophon__credits a:hover { color: var(--ink); }
 
 /* The footer's theme toggle is the page's only one: full 44 px targets (the knob moves by its own width). */
 .rf-colophon .rf-theme-toggle__option,

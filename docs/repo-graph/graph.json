@@ -194,6 +194,10 @@
       "type": "env"
     },
     {
+      "id": "env:VITE_SITE_URL",
+      "type": "env"
+    },
+    {
       "id": "env:VITE_SUPABASE_ANON_KEY",
       "type": "env"
     },
@@ -1104,6 +1108,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/public/robots.txt",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:frontend/scripts/check-contrast.mjs",
       "type": "file",
       "role": "config",
@@ -1111,6 +1121,18 @@
     },
     {
       "id": "file:frontend/scripts/check-images.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/make-og.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/prerender.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -1822,6 +1844,12 @@
       "type": "file",
       "role": "page",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/prerender.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
     },
     {
       "id": "file:frontend/src/reader/BookFlow.jsx",
@@ -2726,6 +2754,11 @@
       "type": "declares_env",
       "from": "file:frontend/.env.example",
       "to": "env:VITE_API_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:frontend/.env.example",
+      "to": "env:VITE_SITE_URL"
     },
     {
       "type": "declares_env",
@@ -4336,42 +4369,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
-      "to": "file:frontend/src/pages/ComprehensionTest.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/App.jsx",
-      "to": "file:frontend/src/pages/Dashboard.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/pages/Landing.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/App.jsx",
-      "to": "file:frontend/src/pages/Library.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/App.jsx",
-      "to": "file:frontend/src/pages/Login.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/App.jsx",
-      "to": "file:frontend/src/pages/NotFound.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/App.jsx",
-      "to": "file:frontend/src/pages/ReadingSession.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/App.jsx",
-      "to": "file:frontend/src/pages/Results.jsx"
     },
     {
       "type": "imports",
@@ -5076,11 +5074,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Landing.jsx",
-      "to": "file:frontend/src/lib/useDocumentTitle.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/Landing.jsx",
       "to": "file:frontend/src/pages/Landing.css"
     },
     {
@@ -5432,6 +5425,16 @@
       "type": "imports",
       "from": "file:frontend/src/pages/landing/wake.test.js",
       "to": "file:frontend/src/pages/landing/wake.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/prerender.jsx",
+      "to": "file:frontend/src/pages/Landing.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/prerender.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
     },
     {
       "type": "imports",

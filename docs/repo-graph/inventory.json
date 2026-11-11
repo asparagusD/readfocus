@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 426,
-    "inventoried": 362,
-    "excluded": 64
+    "tracked": 431,
+    "inventoried": 366,
+    "excluded": 65
   },
   "files": [
     {
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 10035,
+      "size_bytes": 10238,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -961,16 +961,16 @@
     {
       "path": "docs/ASSETS.md",
       "language": "markdown",
-      "lines": 48,
-      "size_bytes": 5072,
+      "lines": 49,
+      "size_bytes": 5421,
       "role": "doc",
       "purpose": "Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License)."
     },
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 960,
-      "size_bytes": 52623,
+      "lines": 1000,
+      "size_bytes": 55036,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1001,16 +1001,16 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2293,
-      "size_bytes": 488513,
+      "lines": 2298,
+      "size_bytes": 491671,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "frontend/.env.example",
       "language": "dotenv",
-      "lines": 6,
-      "size_bytes": 232,
+      "lines": 10,
+      "size_bytes": 398,
       "role": "config",
       "purpose": "Frontend environment template: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL."
     },
@@ -1065,8 +1065,8 @@
     {
       "path": "frontend/e2e/landing.spec.js",
       "language": "javascript",
-      "lines": 200,
-      "size_bytes": 9510,
+      "lines": 254,
+      "size_bytes": 12242,
       "role": "config",
       "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset. Demo: hover opens the real card below the word's line and pointer-leave closes it with no lookup sent; Quadi shows the Wikipedia summary and link; Enter focuses the card and Esc returns to the word; a touch long-press opens the compact card. Features: the three sections and the isn't note; the five questions open with Enter and close with Space; the footer links GitHub, credits CC BY-SA sources, switches the theme and Start reading opens Create account."
     },
@@ -1161,16 +1161,16 @@
     {
       "path": "frontend/index.html",
       "language": "html",
-      "lines": 32,
-      "size_bytes": 1182,
+      "lines": 59,
+      "size_bytes": 3458,
       "role": "entry",
-      "purpose": "HTML entry: an inline script applies the stored theme and accent (or the OS scheme) to <html> before first paint; mounts main.jsx."
+      "purpose": "HTML entry: an inline script applies the stored theme and accent (or the OS scheme) to <html> before first paint; mounts main.jsx. C13.10e: full title, description, theme-color for both schemes, Open Graph and Twitter tags (og.png); the inline script also hides the prerendered landing ([data-prerendered]) off / and when a Supabase session is stored."
     },
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 43,
-      "size_bytes": 1241,
+      "lines": 45,
+      "size_bytes": 1393,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -1181,6 +1181,14 @@
       "size_bytes": 762,
       "role": "config",
       "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker."
+    },
+    {
+      "path": "frontend/public/robots.txt",
+      "language": "text",
+      "lines": 9,
+      "size_bytes": 310,
+      "role": "config",
+      "purpose": "robots.txt (C13.10e): only / (plus its /assets/, og.png and favicon) is open to crawlers; every app route is disallowed."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -1199,12 +1207,28 @@
       "purpose": "Image budgets (npm run check:images, a standard check since C11.5): each raster under src/ and public/ at most 150 KB, all together at most 400 KB, illustration SVGs at most 8 KB, every <img> with width, height, decoding and loading (lazy, or eager with fetchPriority high for the LCP image), and the backend cover cap within budget; optional root argument for scratch trees; exit 1 on any failure."
     },
     {
+      "path": "frontend/scripts/make-og.mjs",
+      "language": "text",
+      "lines": 84,
+      "size_bytes": 4800,
+      "role": "config",
+      "purpose": "npm run make:og (C13.10e): lays out the 1200 x 630 share card in HTML with the app's tokens, bundled fonts and illustrations, renders it in installed Edge via Playwright and encodes public/og.png with sharp (palette PNG, fails over 150 KB)."
+    },
+    {
+      "path": "frontend/scripts/prerender.mjs",
+      "language": "text",
+      "lines": 20,
+      "size_bytes": 1289,
+      "role": "config",
+      "purpose": "Build step (npm run build, C13.10e): imports dist-ssr/prerender.js, writes the landing markup into dist/index.html's #root inside a [data-prerendered] wrapper, removes dist-ssr."
+    },
+    {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 120,
-      "size_bytes": 4819,
+      "lines": 126,
+      "size_bytes": 5462,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null)."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -1977,16 +2001,16 @@
     {
       "path": "frontend/src/pages/Landing.css",
       "language": "css",
-      "lines": 641,
-      "size_bytes": 16849,
+      "lines": 646,
+      "size_bytes": 17051,
       "role": "page",
       "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero grid and illustration scene, the book spread (pages, spine shade, flyleaf, caption, one page under 640 px), the contents page (numerals, leaders), the word demo (marked words, page, pointer/touch hints), the features, the honesty note, the questions and the colophon (44 px theme toggle), on the project tokens."
     },
     {
       "path": "frontend/src/pages/Landing.jsx",
       "language": "jsx",
-      "lines": 73,
-      "size_bytes": 3066,
+      "lines": 76,
+      "size_bytes": 3141,
       "role": "page",
       "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount; masthead with Sign in; hero with headline, positioning lead, Start reading (to /login?tab=signup) and See how it works (scrolls and moves focus), DuskWindow and ReadingLamp behind the BookSpread; then Contents, WordDemo, Features and Faq, and the LandingFooter."
     },
@@ -2141,6 +2165,14 @@
       "size_bytes": 701,
       "role": "page",
       "purpose": "Node test (npm run test:unit): wakeBackend sends one GET /health per load, swallows failures, and does nothing without fetch."
+    },
+    {
+      "path": "frontend/src/prerender.jsx",
+      "language": "jsx",
+      "lines": 21,
+      "size_bytes": 962,
+      "role": "asset",
+      "purpose": "Build-time SSR entry (C13.10e): renderToString of the Landing page in a StaticRouter at / with a static theme context, so scripts/prerender.mjs can put the headline into dist/index.html before any script runs."
     },
     {
       "path": "frontend/src/reader/BookFlow.jsx",
@@ -2465,10 +2497,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 60,
-      "size_bytes": 1819,
+      "lines": 80,
+      "size_bytes": 3019,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase."
     },
     {
       "path": "package.json",
@@ -2841,8 +2873,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 364,
-      "size_bytes": 103185,
+      "lines": 368,
+      "size_bytes": 104655,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -3106,6 +3138,10 @@
     },
     {
       "path": "frontend/public/icons.svg",
+      "reason": "binary"
+    },
+    {
+      "path": "frontend/public/og.png",
       "reason": "binary"
     },
     {

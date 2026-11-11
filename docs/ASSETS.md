@@ -19,6 +19,7 @@ original file says "original".
 | `frontend/src/illustrations/svg/OpenBook.svg` | Open book with ribbon bookmark | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
 | `frontend/src/illustrations/svg/CrescentMoon.svg` | Crescent moon with three stars | original, as above | ReadFocus | original | 2026-11-11, C11.1 | svgo 4.1.0 |
 | `frontend/src/illustrations/svg/Candle.svg` | Candle in a holder, flame and glow (the dashboard's streak) | original, drawn to the same style | ReadFocus | original | 2026-11-11, C13.7a | svgo 4.1.0 |
+| `frontend/public/og.png` | 1200 x 630 share image (Open Graph, Twitter): wordmark, headline, DuskWindow, ReadingLamp and OpenBook on a sill | original, rendered by `frontend/scripts/make-og.mjs` from the app's tokens, bundled OFL fonts and the illustrations above | ReadFocus | original | 2026-11-11, C13.10e | sharp 0.35.5 palette PNG, 23.2 KB |
 
 ## Text on the landing page (C13.10)
 

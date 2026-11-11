@@ -2086,3 +2086,32 @@ passes after); `wake.test.js` "does nothing without fetch".
 
 ### Commit
 Folded into C13.10a (the failure never reached a commit).
+
+## 2026-11-11 C13.10e — make graph stopped on the share image
+
+**Status:** fixed
+
+### Symptom
+Before committing C13.10e, `make graph`: `Purpose for a file that is not
+inventoried: ['frontend/public/og.png']`, `make: *** [Makefile:17: graph]
+Error 1`; then `pytest tools/repo_graph/tests -q`: 4 failed, 58 passed.
+
+### Hypotheses
+1. The inventory skips binary files, so a purpose for `og.png` is an
+   orphan and `make graph` stops before writing a consistent graph; the
+   graph tests then read the half-updated files. Result: **confirmed**
+   (the purpose removed, `make graph` completes and the tests pass).
+
+### Root cause
+A purpose was written for a binary file the inventory never lists.
+
+### Fix
+`tools/repo_graph/purposes.json`: the `og.png` entry removed (the image
+is registered in `docs/ASSETS.md` instead). One attempt.
+
+### Regression test
+The repo-graph check itself (`make graph` fails on an orphan purpose);
+`pytest tools/repo_graph/tests -q`: 62 passed after the fix.
+
+### Commit
+Folded into C13.10e (the failure never reached a commit).

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { API_BASE_URL } from '../lib/api';
-import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { wakeBackend } from './landing/wake';
 import { BookSpread } from './landing/BookSpread';
 import { Contents } from './landing/Contents';
@@ -18,6 +17,8 @@ import './Landing.css';
  * Static: it renders without waiting on the backend, and only starts
  * waking it with one fire-and-forget GET /health.
  */
+const TITLE = 'ReadFocus — read deeply, remember more';
+
 /** "See how it works" scrolls to the contents (smoothly unless reduced motion, in CSS) and moves focus there. */
 function toContents(event) {
   const target = document.getElementById('how-it-works');
@@ -29,8 +30,10 @@ function toContents(event) {
 }
 
 export function Landing() {
-  useDocumentTitle(null);
-  useEffect(() => { wakeBackend(API_BASE_URL); }, []);
+  useEffect(() => {
+    document.title = TITLE; // as in index.html, for a visitor who comes back from another page
+    wakeBackend(API_BASE_URL);
+  }, []);
 
   return (
     <div className="rf-landing">

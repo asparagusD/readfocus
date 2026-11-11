@@ -198,3 +198,57 @@ test.describe('features, questions and footer', () => {
     await expect(page).toHaveURL(/\/login\?tab=signup$/);
   });
 });
+
+test.describe('head, sharing and first paint', () => {
+  test.use({ signedIn: false });
+
+  test('the HTML itself carries the headline, the title, the description and the share tags', async ({ page, request }) => {
+    const html = await (await request.get('/')).text();
+    expect(html).toContain('A quiet place to read deeply.</h1>');
+    await page.goto('/');
+    await expect(page).toHaveTitle('ReadFocus — read deeply, remember more');
+    const meta = (sel) => page.locator(sel).first().getAttribute('content');
+    expect(await meta('meta[name="description"]')).toMatch(/PDF or EPUB/);
+    expect(await meta('meta[property="og:image"]')).toMatch(/\/og\.png$/);
+    expect(await meta('meta[name="twitter:card"]')).toBe('summary_large_image');
+    await expect(page.locator('meta[name="theme-color"]')).toHaveCount(2);
+  });
+
+  test('robots.txt opens only "/" and the share image is 1200 x 630 within budget', async ({ page, request }) => {
+    const robots = await (await request.get('/robots.txt')).text();
+    expect(robots).toContain('Allow: /$');
+    expect(robots).toContain('Disallow: /');
+    const og = await request.get('/og.png');
+    expect(og.headers()['content-type']).toBe('image/png');
+    const body = await og.body();
+    expect(body.length).toBeLessThanOrEqual(150_000);
+    expect([body.readUInt32BE(16), body.readUInt32BE(20)]).toEqual([1200, 630]); // PNG IHDR width, height
+    await page.goto('/');
+  });
+
+  test('a deep link never shows the prerendered landing page', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page.locator('html')).toHaveAttribute('data-prerender', 'hidden');
+    await expect(page.getByRole('heading', { level: 1, name: 'Welcome back' })).toBeVisible();
+    await expect(page.getByText('A quiet place to read deeply.')).toHaveCount(0);
+  });
+});
+
+test('signed in, the prerendered landing page is hidden from the first paint', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-prerender', 'hidden');
+  await expect(page.getByRole('heading', { level: 1, name: 'Your shelf' })).toBeVisible();
+});
+
+test.describe('critique fixes', () => {
+  test.use({ signedIn: false, viewport: { width: 1100, height: 800 } });
+
+  test('links in running text are underlined and nothing scrolls sideways at 1100 px', async ({ page }) => {
+    await page.goto('/');
+    for (const sel of ['.rf-spread__caption a', '.rf-colophon__credits a']) {
+      await expect(page.locator(sel).first()).toHaveCSS('text-decoration-line', 'underline');
+    }
+    const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+    expect(scroll).toBe(client);
+  });
+});

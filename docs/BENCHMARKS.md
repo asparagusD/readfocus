@@ -794,6 +794,46 @@ holds at most 2,000 compact answers.
 
 ## Frontend: Lighthouse and image budgets
 
+### C13.10e: the public landing page (2026-11-11)
+
+Lighthouse 12.8.2 (`npx lighthouse@12.8.2`), all four categories,
+Microsoft Edge 157.0.4341.42 headless (`CHROME_PATH`). Production build
+(`VITE_SITE_URL=http://localhost:5175 npm --prefix frontend run build`,
+which now prerenders the landing page into `index.html`) served by
+`vite preview --port 5175`; backend on port 8000 so the landing page's
+one `GET /health` answers as it would deployed. `/` signed out, fresh
+profile. Targets from the C13.10 brief: performance at least 90,
+accessibility at least 95, best practices at least 95, SEO at least 95,
+CLS under 0.1.
+
+| Run | Throttling | Perf | A11y | Best pr. | SEO | FCP | LCP | TBT | CLS | Speed index | Transferred |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Mobile 1 | simulated (default) | 88 | 100 | 100 | 100 | 2.49 s | 3.47 s | 10 ms | 0 | 2.49 s | 370 KB |
+| Mobile 2 | simulated (default) | 88 | 100 | 100 | 100 | 2.49 s | 3.47 s | 0 ms | 0 | 2.49 s | 370 KB |
+| Mobile | applied (`--throttling-method=devtools`) | 95 | 100 | 100 | 100 | 2.27 s | 2.45 s | 0 ms | 0.0006 | 2.31 s | 370 KB |
+| Desktop | `--preset=desktop` | 99 | 100 | 100 | 100 | 0.59 s | 0.77 s | 0 ms | 0 | 0.59 s | 411 KB |
+
+Met: accessibility, best practices, SEO and CLS on every run; performance
+on desktop and with applied throttling. **Not met: mobile performance with
+the default simulated throttling, 88 of 90.** Its estimate still counts the
+app's scripts toward first paint: unused JavaScript is 102 KB, 81 KB of it
+the Supabase client in the vendor chunk, which the auth check loads before
+anything else. Taking it off the first load is the remaining lever (a
+follow-up, not done here). Dropping the DM Sans preload was tried and made
+it worse (87, FCP 2.8 s).
+
+LCP element: text in every run, never an image (the page has no raster
+image): the lead paragraph under the headline on mobile (it is larger
+than the two-line headline at 412 px), the spread's text on desktop.
+
+Changes behind these numbers: every page but the landing page is
+`React.lazy` (initial JS for `/` went from about 285 KB to about 175 KB gzip;
+the dashboard's charts, 93 KB gzip, now load with the dashboard only);
+the vendor chunk holds only React, the router and Supabase; the landing
+page is prerendered into `index.html` (`src/prerender.jsx`,
+`scripts/prerender.mjs`); Playfair Display joins Lora and DM Sans in the
+font preloads.
+
 ### C12.10: page turns and lookup in the e2e run (2026-11-11)
 
 `npm --prefix frontend run test:e2e` (Playwright 1.64.1 on the installed

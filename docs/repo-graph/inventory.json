@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9623,
+      "size_bytes": 9695,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2283,
-      "size_bytes": 459041,
+      "lines": 2284,
+      "size_bytes": 459953,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1081,10 +1081,10 @@
     {
       "path": "frontend/e2e/test.spec.js",
       "language": "javascript",
-      "lines": 42,
-      "size_bytes": 2558,
+      "lines": 138,
+      "size_bytes": 7911,
       "role": "config",
-      "purpose": "Playwright e2e for the comprehension test (C13.5) with GET /sessions/{id}, evaluate-single and submit-answers answered in the spec (mockTest, QUESTIONS): when time runs out the typed answers and 300 s are submitted."
+      "purpose": "Playwright e2e for the comprehension test (C13.5) with GET /sessions/{id}, evaluate-single and submit-answers answered in the spec (mockTest, QUESTIONS): when time runs out the typed answers and 300 s are submitted; one question at a time (prompt without options, key 2 and Enter, evaluate-single body, written answer, dots, Back, submit body and route, storage cleared), answers kept across a reload, the timer warning at 30 s, the leave dialog, a failed submit tried again, and 375 px with 44 px targets."
     },
     {
       "path": "frontend/eslint.config.js",
@@ -1761,18 +1761,18 @@
     {
       "path": "frontend/src/pages/ComprehensionTest.css",
       "language": "css",
-      "lines": 301,
-      "size_bytes": 5745,
+      "lines": 191,
+      "size_bytes": 3880,
       "role": "page",
-      "purpose": "Styles for the test page: dark timer strip, question dots, slide animations, answer textarea, submitting overlay."
+      "purpose": "Test styles: three-part chrome (Leave test, label and dots, timer), 44 px dot targets, a 672 px question column with the Lora question, the hint, Back and Next or Submit, the grading veil, the leave dialog; icon-only Leave and hidden label under 640 px."
     },
     {
       "path": "frontend/src/pages/ComprehensionTest.jsx",
       "language": "jsx",
-      "lines": 268,
-      "size_bytes": 9658,
+      "lines": 273,
+      "size_bytes": 11187,
       "role": "page",
-      "purpose": "Five-question timed test (5 minutes): grades each answer in the background on navigation, auto-submits at zero, routes to Results."
+      "purpose": "Comprehension test (handoff screen 07): GET /sessions/{id}, one question per screen (the prompt without its appended options), multiple choice as OptionCards sent as '(b) <option>', written answers in a TextArea, progress dots with answered names, keys 1-n and Enter, answers kept in localStorage until submitted, evaluate-single when leaving a changed answer, the 5-minute TimerPill warning in the last 30 s and submitting itself at zero with the latest answers, submit-answers then /results with router state, a grading veil, toasts on failure, and a Leave test dialog."
     },
     {
       "path": "frontend/src/pages/Dashboard.css",
@@ -2554,7 +2554,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 328,
-      "size_bytes": 89613,
+      "size_bytes": 90485,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

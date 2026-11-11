@@ -4525,12 +4525,32 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/test/OptionCards.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/test/TimerPill.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
-      "to": "file:frontend/src/hooks/usePageTransition.js"
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/ui/TextArea.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
     },
     {
       "type": "imports",

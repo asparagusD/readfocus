@@ -1,6 +1,6 @@
-import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { ThemeToggle } from './ThemeToggle';
 import './Layout.css';
 
 export function Layout({ children }) {
@@ -31,6 +31,7 @@ export function Layout({ children }) {
               </NavLink>
             </div>
             
+            <ThemeToggle />
             {user && (
               <>
                 <div className="rf-nav-divider"></div>

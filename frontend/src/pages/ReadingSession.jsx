@@ -253,8 +253,8 @@ export function ReadingSession() {
       </button>
 
       {/* Abandon Modal */}
-      <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)}>
-        <div style={{ padding: '24px', width: '400px', boxSizing: 'border-box' }}>
+      <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)} label="Abandon this session?">
+        <div style={{ padding: '24px', maxWidth: '400px', boxSizing: 'border-box' }}>
           <p style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: '18px', color: 'var(--ink)', lineHeight: '1.4', marginBottom: '32px' }}>
             If you abandon this session, no progress will be saved and the time you spent reading will not count.
           </p>

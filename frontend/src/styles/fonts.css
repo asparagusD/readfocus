@@ -1,0 +1,12 @@
+/*
+ * D6: fonts are bundled, never loaded from Google Fonts. Variable files,
+ * weight axis only, font-display: swap (set by Fontsource). The browser
+ * fetches only the subsets a page uses (unicode-range); Latin is 37-41 KB
+ * per file. Lora and DM Sans are preloaded by vite.config.js.
+ * DM Sans italic and its optical-size axis are not used, so not loaded.
+ */
+@import "@fontsource-variable/lora/wght.css";
+@import "@fontsource-variable/lora/wght-italic.css";
+@import "@fontsource-variable/playfair-display/wght.css";
+@import "@fontsource-variable/playfair-display/wght-italic.css";
+@import "@fontsource-variable/dm-sans/wght.css";

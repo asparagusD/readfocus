@@ -845,6 +845,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:docs/DESIGN_AUDIT.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/MIGRATION_AUDIT.md",
       "type": "file",
       "role": "doc",
@@ -881,6 +887,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/gallery.html",
+      "type": "file",
+      "role": "config",
+      "language": "html"
+    },
+    {
       "id": "file:frontend/index.html",
       "type": "file",
       "role": "entry",
@@ -893,10 +905,10 @@
       "language": "json"
     },
     {
-      "id": "file:frontend/src/App.css",
+      "id": "file:frontend/scripts/check-contrast.mjs",
       "type": "file",
-      "role": "asset",
-      "language": "css"
+      "role": "config",
+      "language": "text"
     },
     {
       "id": "file:frontend/src/App.jsx",
@@ -918,6 +930,18 @@
     },
     {
       "id": "file:frontend/src/components/Layout.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ThemeToggle.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ThemeToggle.jsx",
       "type": "file",
       "role": "component",
       "language": "jsx"
@@ -947,6 +971,30 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/ui/ConceptChip.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/EmptyState.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/EmptyState.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/ui/Modal.css",
       "type": "file",
       "role": "component",
@@ -954,6 +1002,18 @@
     },
     {
       "id": "file:frontend/src/components/ui/Modal.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ProgressRing.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ProgressRing.jsx",
       "type": "file",
       "role": "component",
       "language": "jsx"
@@ -980,6 +1040,54 @@
       "id": "file:frontend/src/components/ui/Skeleton.jsx",
       "type": "file",
       "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Toast.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Toast.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Tooltip.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Tooltip.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/toastContext.js",
+      "type": "file",
+      "role": "component",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/gallery/Gallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/gallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/main.jsx",
+      "type": "file",
+      "role": "asset",
       "language": "jsx"
     },
     {
@@ -1017,6 +1125,30 @@
       "type": "file",
       "role": "entry",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/motion/MotionRoot.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/motion/features.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/motion/presets.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/motion/useCountUp.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/pages/ComprehensionTest.css",
@@ -1089,6 +1221,42 @@
       "type": "file",
       "role": "page",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/styles/base.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/styles/fonts.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/styles/tokens.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/theme/ThemeProvider.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/theme/theme.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/theme/themeContext.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/vercel.json",
@@ -1622,12 +1790,6 @@
       "from": "file:design/handoff/foundations-style-guide/Main.dc.html",
       "to": "external:google_fonts",
       "line": 13
-    },
-    {
-      "type": "calls_external",
-      "from": "file:frontend/index.html",
-      "to": "external:google_fonts",
-      "line": 8
     },
     {
       "type": "calls_external",
@@ -2990,7 +3152,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/ui/Toast.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/motion/MotionRoot.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/motion/presets.js"
     },
     {
       "type": "imports",
@@ -3024,6 +3201,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/theme/ThemeProvider.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -3040,7 +3222,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ThemeToggle.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ThemeToggle.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
     },
     {
       "type": "imports",
@@ -3054,8 +3251,38 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "to": "file:frontend/src/components/ui/ConceptChip.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/EmptyState.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.css"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/ui/Modal.jsx",
       "to": "file:frontend/src/components/ui/Modal.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Modal.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ProgressRing.jsx",
+      "to": "file:frontend/src/components/ui/ProgressRing.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ProgressRing.jsx",
+      "to": "file:frontend/src/motion/presets.js"
     },
     {
       "type": "imports",
@@ -3066,6 +3293,106 @@
       "type": "imports",
       "from": "file:frontend/src/components/ui/Skeleton.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/components/ui/Toast.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Tooltip.jsx",
+      "to": "file:frontend/src/components/ui/Tooltip.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Tooltip.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Card.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ConceptChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ProgressRing.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ScoreBadge.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Tooltip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/components/ui/Toast.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/gallery/Gallery.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/gallery/gallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/index.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/motion/MotionRoot.jsx"
     },
     {
       "type": "imports",
@@ -3086,6 +3413,11 @@
       "type": "imports",
       "from": "file:frontend/src/main.jsx",
       "to": "file:frontend/src/index.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/motion/useCountUp.js",
+      "to": "file:frontend/src/motion/presets.js"
     },
     {
       "type": "imports",
@@ -3221,6 +3553,16 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/pages/Results.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/theme/ThemeProvider.jsx",
+      "to": "file:frontend/src/theme/theme.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/theme/ThemeProvider.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
     },
     {
       "type": "imports",

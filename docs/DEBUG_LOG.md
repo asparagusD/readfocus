@@ -1249,3 +1249,65 @@ passed in `test_embedder.py`; `pytest backend/tests -q` 608 passed.
 
 ### Commit
 fix(api): never wait on the model load lock, and retry a failed preload
+
+## 2026-11-11 C10.1 — dashboard stat row overflows at 375 px
+
+**Status:** fixed
+
+### Symptom
+Found in the C10.1 audit (issue U4, P0): at 375 x 812 the dashboard
+scrolled sideways (`document.documentElement.scrollWidth` 385 with test
+user A's data) and the "Books in progress" label was cut off. Expected: no
+horizontal scroll at 375 px. No error or stack trace; a layout fault. With
+no data the page itself fits, but the row's content (322 px) still spills
+out of its 279 px card.
+
+### Repro
+Vite dev server, signed in, viewport 375 x 812, `/dashboard`, then in the
+console (stat values set to realistic lengths so the result does not
+depend on the account's data):
+
+    const v=[...document.querySelectorAll('.rf-dash-stat-value')];
+    ['365','184200','12'].forEach((t,i)=>v[i].textContent=t);
+    const r=document.querySelector('.rf-dash-stats-row');
+    [r.clientWidth, r.scrollWidth, document.documentElement.scrollWidth]
+
+Before the fix: `[277, 406, 455]`, every time.
+
+### Hypotheses
+1. Fixed desktop spacing does not fit: the row has `gap: 32px` between
+   five children (three stats, two dividers: 128 px) and `padding: 24px
+   32px` (64 px across), inside a container that adds its own 24 px gutter on top of
+   the layout's 24 px. Evidence: measured min-content widths 47 + 47 + 68
+   px, dividers shrunk to 0, so 162 + 128 + 64 + 2 = 356 px needed in 279
+   px. Ruled out if: removing that spacing in the console leaves the
+   overflow. Result: **confirmed**; with the spacing reduced and the
+   container padding removed, the row is 325 px with nothing overflowing.
+2. Long stat values in a 32 px monospace font force the overflow on their
+   own. Evidence: "184200" in DM Mono 32 px is wider than a third of the
+   row. Result: **contributes**; with hypothesis 1 fixed but 32 px values,
+   six digits still need more than a third of the row, so the values drop
+   to 24 px under 640 px.
+
+### Root cause
+`frontend/src/pages/Dashboard.css:9-13` and `:53-62`: the container's
+24 px side padding doubles the layout's gutter, and the stat row keeps its
+desktop gap (32 px) and padding (32 px) at every width; nothing lets the
+stats shrink.
+
+### Fix
+`frontend/src/pages/Dashboard.css`, one `@media (max-width: 639px)` block
+(640 px is the C10 small breakpoint, A9): no container padding (the
+layout's gutter is enough), row gap 12 px and padding 16 px, stats
+`flex: 1 1 0; min-width: 0`, values 24 px. Desktop is unchanged.
+
+### Regression test
+No automated test: the frontend has no test runner and the fault is
+layout, only measurable in a browser. Manual check instead, the repro
+above: before `[277, 406, 455]`, after `[325, 325, 375]`; also with the
+account's real data (all zeros) row 325/325, page 375. At 1440 x 900 the
+row is unchanged: 622 px, gap 32 px, padding 24px 32px, values 32 px,
+container padding 0 24px.
+
+### Commit
+fix(ui): fit the dashboard stat row on 375 px screens

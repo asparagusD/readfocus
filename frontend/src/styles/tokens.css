@@ -1,0 +1,248 @@
+/*
+ * ReadFocus design tokens (C10.2).
+ * Source: design/HANDOFF_SUMMARY.md and its decisions D1-D6; changes for
+ * accessibility are decisions A1-A16 in docs/DESIGN_AUDIT.md.
+ * Imported once, by src/index.css, after Tailwind's theme layer.
+ *
+ * Theme and accent live on <html>: data-theme="paper|lamplight",
+ * data-accent="terracotta|sage". With neither set, Paper and terracotta.
+ * Keep the colour blocks in this order (general first): the contrast check
+ * (scripts/check-contrast.mjs) applies them in source order.
+ */
+
+/* ── Tailwind theme: fixed tokens ───────────────────────────────────── */
+@theme static {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --ease-*: initial;
+
+  /* D6: bundled variable fonts (C10.3), Google-hosted names until then. */
+  --font-display: "Playfair Display Variable", "Playfair Display", Georgia, serif;
+  --font-reading: "Lora Variable", "Lora", Georgia, serif;
+  --font-ui: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
+  /* A15: DM Mono dropped; Consolas and Liberation Mono cover Windows and Linux. */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Type roles: size / line height (handoff table; A6 adds title, section). */
+  --text-title: 64px;
+  --text-title--line-height: 1.05;
+  --text-display: 56px;
+  --text-display--line-height: 60px;
+  --text-display--letter-spacing: -0.01em;
+  --text-h1: 44px;
+  --text-h1--line-height: 48px;
+  --text-chapter: 44px;
+  --text-chapter--line-height: 52px;
+  --text-figure: 40px;
+  --text-figure--line-height: 1;
+  --text-section: 34px;
+  --text-section--line-height: 1.15;
+  --text-h2: 28px;
+  --text-h2--line-height: 36px;
+  --text-question: 26px;
+  --text-question--line-height: 36px;
+  --text-reading: 18px;
+  --text-reading--line-height: 1.72;
+  --text-ui: 15px;
+  --text-ui--line-height: 20px;
+  --text-quote: 15px;
+  --text-quote--line-height: 24px;
+  --text-label: 13px;
+  --text-label--line-height: 18px;
+  --text-folio: 13px;
+  --text-folio--line-height: 18px;
+  --text-eyebrow: 12px;
+  --text-eyebrow--line-height: 16px;
+  --text-eyebrow--letter-spacing: 0.12em;
+  --text-running-head: 11px;
+  --text-running-head--line-height: 16px;
+  --text-running-head--letter-spacing: 0.16em;
+
+  /* Radii (handoff scale; A5 adds hair, page, panel). */
+  --radius-hair: 2px;
+  --radius-cover: 3px;
+  --radius-page: 4px;
+  --radius-skeleton: 6px;
+  --radius-input: 8px;
+  --radius-control: 10px;
+  --radius-card: 12px;
+  --radius-surface: 14px;
+  --radius-panel: 16px;
+  --radius-pill: 999px;
+
+  /* D3: easing curves, long names only. */
+  --ease-settle: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-breathe: cubic-bezier(0.45, 0, 0.55, 1);
+
+  --default-transition-duration: var(--dur-1);
+  --default-transition-timing-function: var(--ease-settle);
+}
+
+/* ── Tailwind theme: themed colours and shadows, by reference ───────── */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-surface: var(--surface);
+  --color-page: var(--page);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-line-field: var(--line-field);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-inverse: var(--accent-inverse);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-cover-moss: var(--cover-moss);
+  --color-cover-oxblood: var(--cover-oxblood);
+  --color-cover-ink: var(--cover-ink);
+  --color-cover-ochre: var(--cover-ochre);
+  --color-cover-slate: var(--cover-slate);
+  --color-cover-title: var(--cover-title);
+
+  --shadow-page: var(--elevation-page);
+  --shadow-lift: var(--elevation-lift);
+  --shadow-accent: var(--elevation-accent);
+}
+
+/* ── Fixed tokens for plain CSS ─────────────────────────────────────── */
+:root {
+  /* Spacing: a 4-based scale that leans generous. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* Borders and focus (A10: one ring, 2 px accent, 3 px offset). */
+  --border-hair: 1px;
+  --border-strong: 2px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 3px;
+
+  /* D3: durations on the scale. */
+  --dur-1: 150ms; /* hover, press */
+  --dur-2: 200ms; /* focus ring, word card in, option settle */
+  --dur-3: 250ms; /* toggle knob, toolbar, toast, modal */
+  --dur-4: 400ms; /* question slide, chip stagger */
+  --dur-5: 600ms; /* page turn, book arrives, library to reading */
+  --dur-6: 800ms; /* score count-up, chart draw */
+  --duration-micro: var(--dur-1);
+  --duration-base: var(--dur-3);
+  --duration-signature: var(--dur-5);
+  --stagger: 60ms;
+
+  /* Layers. */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-popover: 30;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+
+  /* D5: typographic book covers; cream title on each (5.41:1 or more). */
+  --cover-moss: #3f4b3b;
+  --cover-oxblood: #5c2f27;
+  --cover-ink: #2e2a27;
+  --cover-ochre: #7a5c2e;
+  --cover-slate: #38434a;
+  --cover-title: #f6efe3;
+}
+
+/* ── Colour: Paper, terracotta (default) ────────────────────────────── */
+:root,
+[data-theme="paper"] {
+  color-scheme: light;
+  --paper: #faf7f2;
+  --paper-2: #f3ede3;
+  --surface: #fffdf9;
+  --page: #fbf8f2;
+  --ink: #2a2420;
+  --ink-2: #5c534a;
+  --ink-3: #756a5f; /* A2: never on --accent-soft or --warn-soft */
+  --line: #e6ded2;
+  --line-2: #d6cbbb;
+  --line-field: #8f8273; /* A1: boundaries that are the only cue, 3:1+ */
+  --warn: #8c5a00;
+  --warn-soft: #f6e9cf;
+
+  --accent: #a64b2a;
+  --accent-hover: #904428; /* A8: 18% toward --ink */
+  --accent-ink: #fffdf9; /* D1 */
+  --accent-inverse: #e59a6c; /* accent drawn on an --ink fill: the other theme's accent */
+  --accent-soft: #f3e2d7;
+  --accent-text: #9a4526;
+  --glow: rgba(166, 75, 42, 0);
+
+  --elevation-page: 0 24px 48px -32px rgba(40, 25, 10, 0.35);
+  --elevation-lift: 0 12px 32px -16px rgba(40, 25, 10, 0.28);
+  --elevation-accent: none;
+  --scrim: rgba(42, 36, 32, 0.4); /* behind a modal */
+}
+
+/* ── Colour: Paper, sage ────────────────────────────────────────────── */
+[data-accent="sage"] {
+  --accent: #506a4a;
+  --accent-hover: #495d42;
+  --accent-ink: #fffdf9;
+  --accent-inverse: #a8c198;
+  --accent-soft: #e3eadd;
+  --accent-text: #4a6244;
+  --glow: rgba(80, 106, 74, 0);
+}
+
+/* ── Colour: Lamplight, terracotta ──────────────────────────────────── */
+[data-theme="lamplight"] {
+  color-scheme: dark;
+  --paper: #1d1915;
+  --paper-2: #161310;
+  --surface: #25201b;
+  --page: #231e19;
+  --ink: #eee5d5;
+  --ink-2: #c4b8a5;
+  --ink-3: #a09481;
+  --line: #383029;
+  --line-2: #4a4037;
+  --line-field: #7a6e60;
+  --warn: #e9b65e;
+  --warn-soft: #3a2e1c;
+
+  --accent: #e59a6c;
+  --accent-hover: #e7a87f;
+  --accent-ink: #1d1915;
+  --accent-inverse: #a64b2a;
+  --accent-soft: #3a271c;
+  --accent-text: #eda77b;
+  --glow: rgba(229, 154, 108, 0.28);
+
+  --elevation-page: 0 0 60px -24px var(--glow);
+  --elevation-lift: 0 12px 32px -12px rgba(0, 0, 0, 0.55);
+  --elevation-accent: 0 0 24px var(--glow);
+  --scrim: rgba(8, 6, 4, 0.6);
+}
+
+/* ── Colour: Lamplight, sage ────────────────────────────────────────── */
+[data-theme="lamplight"][data-accent="sage"] {
+  --accent: #a8c198;
+  --accent-hover: #b5c7a3;
+  --accent-ink: #1d1915;
+  --accent-inverse: #506a4a;
+  --accent-soft: #26301f;
+  --accent-text: #b3cba3;
+  --glow: rgba(168, 193, 152, 0.24);
+}

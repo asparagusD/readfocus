@@ -1,11 +1,25 @@
+/* Card / surface (C10.5a). */
 .rf-card {
-  background-color: var(--paper);
-  border: 1px solid var(--paper-mid);
-  border-radius: 6px;
-  padding: 24px;
-  transition: background-color 150ms ease-out;
+  display: block;
+  padding: var(--space-5);
+  border-radius: var(--radius-surface);
+  color: var(--ink);
 }
 
-.rf-card-hoverable:hover {
-  background-color: var(--paper-dark);
+.rf-card--raised {
+  background-color: var(--surface);
+  border: var(--border-hair) solid var(--line);
+}
+
+.rf-card--sunken {
+  background-color: var(--paper-2);
+}
+
+.rf-card--interactive {
+  text-decoration: none;
+  transition: border-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-card--interactive:hover {
+  border-color: var(--line-field);
 }

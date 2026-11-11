@@ -1,17 +1,35 @@
-.rf-score-badge {
+/* Score badge (C10.5c). */
+.rf-score {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-hair) solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  white-space: nowrap;
 }
 
-.rf-score-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.rf-score--filled {
+  background-color: var(--accent-soft);
 }
 
-.rf-score-text {
-  font-family: var(--font-ui);
-  font-weight: 500;
-  font-size: 14px;
+/* The figure says it all, so this edge is decorative: --line-2. */
+.rf-score--outlined {
+  border-color: var(--line-2);
+}
+
+.rf-score__figure {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.rf-score__unit {
+  font-size: 0.6em;
+}
+
+.rf-score__label {
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
 }

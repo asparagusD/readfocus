@@ -977,8 +977,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2088,
-      "size_bytes": 92331,
+      "lines": 2117,
+      "size_bytes": 93388,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },

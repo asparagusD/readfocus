@@ -642,7 +642,7 @@ Each use is the file and line of the first import of that service.
 | `design/handoff/foundations-style-guide/README.md` | 21 | Claude Design export note, kept unchanged: treat Main.dc.html as a reference mockup and replicate its values rather than copy its markup. |
 | `docs/ASSETS.md` | 49 | Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License). |
 | `docs/BENCHMARKS.md` | 1000 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
-| `docs/DEBUG_LOG.md` | 2088 | Debug log rules, entry template, and one entry per failure. |
+| `docs/DEBUG_LOG.md` | 2117 | Debug log rules, entry template, and one entry per failure. |
 | `docs/DESIGN_AUDIT.md` | 437 | C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
 | `docs/PROGRESS.md` | 2298 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |

@@ -14,6 +14,7 @@
   width: 100%;
   height: 100%;
   min-height: 0;
+  overflow: clip; /* a turning leaf lifts toward the reader but never past the reader's frame */
 }
 
 [data-theme="lamplight"] .rf-reader {
@@ -249,3 +250,88 @@
 
 .rf-turn:hover:not(:disabled) { background: var(--paper-2); }
 .rf-turn:disabled { opacity: 0.35; cursor: default; }
+
+/* C12.4: page turns. The book is a 3D stage only while a leaf turns. */
+.rf-book { touch-action: pan-y pinch-zoom; } /* horizontal swipes turn pages */
+
+.rf-turning {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.rf-turn-slot,
+.rf-turn-leaf {
+  position: absolute;
+  top: 0;
+  width: var(--page-w);
+  height: 100%;
+}
+
+.rf-turn-leaf {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.rf-face {
+  left: 0;
+  backface-visibility: hidden;
+}
+
+.rf-face-back { transform: rotateY(180deg); }
+
+/* A window onto a copy of the flow, placed exactly where the main flow's page sits. */
+.rf-window {
+  position: absolute;
+  top: var(--head);
+  left: 0;
+  width: 100%;
+  height: var(--text-h);
+  overflow: hidden;
+}
+
+/* The travelling shadow: darker toward the spine the leaf turns on. */
+.rf-turn-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.rf-turn-shade[data-side="right"],
+.rf-turn-shade[data-side="single"] {
+  background: linear-gradient(to right, var(--spine-shade), transparent 75%);
+}
+
+.rf-turn-shade[data-side="left"] {
+  background: linear-gradient(to left, var(--spine-shade), transparent 75%);
+}
+
+/* Outer page edges: click or tap to turn. They cover the outer margin only, never the text. */
+.rf-edge {
+  position: absolute;
+  top: 0;
+  z-index: 3;
+  width: var(--margin);
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rf-edge[data-edge="back"] { left: 0; cursor: w-resize; }
+.rf-edge[data-edge="forward"] { right: 0; cursor: e-resize; }
+.rf-edge:disabled { cursor: default; }
+
+/* The live region that reads out "Page 3 of 14": hidden from sight, not from screen readers. */
+.rf-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -30,6 +30,13 @@
       "handler": "get_book_details"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/pages",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/pages",
+      "handler": "get_pages"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/status",
       "type": "endpoint",
       "method": "GET",
@@ -623,6 +630,12 @@
     },
     {
       "id": "file:backend/tests/test_api_mastery.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_pages.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1426,6 +1439,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/PageTurn.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/reader/anchor.js",
       "type": "file",
       "role": "asset",
@@ -1457,6 +1476,18 @@
     },
     {
       "id": "file:frontend/src/reader/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAhead.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAhead.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -2219,6 +2250,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/pages"
     },
     {
       "type": "defines_endpoint",
@@ -3045,6 +3081,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_mastery.py",
       "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -4054,6 +4110,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/readAhead.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/usePlaceSaver.js"
     },
     {
@@ -4074,7 +4135,17 @@
     {
       "type": "imports",
       "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
       "to": "file:frontend/src/reader/BookFlow.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/PageTurn.jsx"
     },
     {
       "type": "imports",
@@ -4093,6 +4164,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/PageTurn.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/PageTurn.jsx",
+      "to": "file:frontend/src/reader/BookFlow.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/anchor.js",
       "to": "file:frontend/src/reader/geometry.js"
     },
@@ -4105,6 +4186,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/geometry.test.js",
       "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/readAhead.test.js",
+      "to": "file:frontend/src/reader/readAhead.js"
     },
     {
       "type": "imports",
@@ -4410,6 +4496,11 @@
       "type": "reads_table",
       "from": "file:backend/routers/books.py",
       "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:chunks"
     },
     {
       "type": "reads_table",

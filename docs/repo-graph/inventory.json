@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 336,
-    "inventoried": 273,
+    "tracked": 340,
+    "inventoried": 277,
     "excluded": 63
   },
   "files": [
@@ -385,10 +385,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 151,
-      "size_bytes": 6258,
+      "lines": 174,
+      "size_bytes": 7580,
       "role": "router",
-      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list; details with progress; status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
+      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list; details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -565,6 +565,14 @@
       "size_bytes": 6345,
       "role": "test",
       "purpose": "Pytest on the in-memory database: record_test writes one row per concept with review dates, weighs low confidence, applies an event once and makes no round trip without concepts; GET /mastery needs a token and returns only the caller's rows, weakest first, with labels, paginated, empty past the end."
+    },
+    {
+      "path": "backend/tests/test_api_pages.py",
+      "language": "python",
+      "lines": 63,
+      "size_bytes": 2552,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: GET /books/{id}/pages returns chunks start..end in order with only index, content, word count and blocks, one chunk without end, nothing past the end, refuses a bad or over-four range (422) and another reader's book (404), and writes nothing."
     },
     {
       "path": "backend/tests/test_api_position.py",
@@ -1505,10 +1513,10 @@
     {
       "path": "frontend/src/motion/presets.js",
       "language": "javascript",
-      "lines": 110,
-      "size_bytes": 4154,
+      "lines": 127,
+      "size_bytes": 4892,
       "role": "asset",
-      "purpose": "Motion variants that read --dur-* and --ease-* from the CSS tokens when an animation starts: fadeIn, rise, routeTransition, routeFade, stagger(), shelfArrive, pageTurn, chipPop, drawIn; seconds(), easing() and prefersReducedMotion() helpers."
+      "purpose": "Motion variants that read --dur-* and --ease-* from the CSS tokens when an animation starts: fadeIn, rise, routeTransition, routeFade, stagger(), shelfArrive, bookOpen, pageTurn (a leaf turning over at the spine, C12.4), turnShade, chipPop, drawIn; seconds(), easing() and prefersReducedMotion() helpers."
     },
     {
       "path": "frontend/src/motion/useCountUp.js",
@@ -1593,10 +1601,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 270,
-      "size_bytes": 10262,
+      "lines": 279,
+      "size_bytes": 10758,
       "role": "page",
-      "purpose": "Reading page: checks calibration, starts a session, shows today's text as the paginated book (BookReader) resuming the saved place when it is in today's chunks and saving places as pages turn; timer, pacing bar, reason strip, distraction-free mode, finish (to the test) and abandon (does not call the API) unchanged."
+      "purpose": "Reading page: checks calibration, starts a session, shows today's text as the paginated book (BookReader) resuming the saved place when it is in today's chunks and saving places as pages turn and reading the next chunk ahead near the last page; timer, pacing bar, reason strip, distraction-free mode, finish (to the test) and abandon (does not call the API) unchanged."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -1625,10 +1633,18 @@
     {
       "path": "frontend/src/reader/BookReader.jsx",
       "language": "jsx",
-      "lines": 171,
-      "size_bytes": 7309,
+      "lines": 241,
+      "size_bytes": 10736,
       "role": "asset",
-      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; keyboard (arrows, Page Up/Down, Space, Home, End) and labelled turn buttons; reports places and pages to the caller; records the pagination time on data-paginate-ms."
+      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms."
+    },
+    {
+      "path": "frontend/src/reader/PageTurn.jsx",
+      "language": "jsx",
+      "lines": 84,
+      "size_bytes": 3557,
+      "role": "asset",
+      "purpose": "One page turn over the book (C12.4): a leaf hinged at the spine (Motion pageTurn, rotateY with perspective) with front and back faces, each paper with its running head, folio and a window onto a copy of the flow at that page, plus a cover keeping the page underneath until the leaf lands and a travelling shadow (turnShade); spread forward and back, single page lifting away or swinging in; transform and opacity only; a timer also ends the turn; aria-hidden."
     },
     {
       "path": "frontend/src/reader/anchor.js",
@@ -1679,12 +1695,28 @@
       "purpose": "Barrel export of the reader: BookReader, anchor helpers and page geometry."
     },
     {
+      "path": "frontend/src/reader/readAhead.js",
+      "language": "javascript",
+      "lines": 35,
+      "size_bytes": 1186,
+      "role": "asset",
+      "purpose": "createReadAhead(fetcher): the chunk after today's reading from GET /books/{id}/pages, fetched once per book and chunk (null when there is none), a failed fetch forgotten so it is asked again; peek for what has arrived. Touches no session."
+    },
+    {
+      "path": "frontend/src/reader/readAhead.test.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1466,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the read-ahead fetches once and keeps the chunk, remembers that there is none, and asks again after a failure."
+    },
+    {
       "path": "frontend/src/reader/reader.css",
       "language": "css",
-      "lines": 251,
-      "size_bytes": 6110,
+      "lines": 337,
+      "size_bytes": 8060,
       "role": "asset",
-      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status."
+      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4)."
     },
     {
       "path": "frontend/src/reader/usePlaceSaver.js",
@@ -2129,8 +2161,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 275,
-      "size_bytes": 67161,
+      "lines": 279,
+      "size_bytes": 69107,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

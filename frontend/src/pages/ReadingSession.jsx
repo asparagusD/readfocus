@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Maximize, Minimize } from 'lucide-react';
 import { fetchApi } from '../lib/api';
@@ -9,7 +9,11 @@ import { CalibrationFlow } from '../components/CalibrationFlow';
 import { BookReader } from '../reader';
 import { blocksForChunks, placeInChunks } from '../reader/blocks';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
+import { createReadAhead } from '../reader/readAhead';
 import './ReadingSession.css';
+
+// One read-ahead cache for the app: the chunk after today's reading, fetched before the last page (C12.4).
+const readAhead = createReadAhead(fetchApi);
 
 export function ReadingSession() {
   const { bookId } = useParams();
@@ -37,6 +41,10 @@ export function ReadingSession() {
   const blocks = useMemo(() => blocksForChunks(sessionData?.chunks), [sessionData]);
   const resumeAt = useMemo(() => placeInChunks(sessionData?.position, sessionData?.chunks), [sessionData]);
   const savePlace = usePlaceSaver(sessionData?.session_id);
+  const lastChunk = sessionData?.chunk_indices?.length ? Math.max(...sessionData.chunk_indices) : null;
+  const preloadNext = useCallback(() => {
+    if (lastChunk !== null) readAhead.load(bookId, lastChunk + 1);
+  }, [bookId, lastChunk]);
 
   // 1. Check Profile Calibration
   useEffect(() => {
@@ -240,6 +248,7 @@ export function ReadingSession() {
           chapterBefore={sessionData.chapter_before || ''}
           initialAnchor={resumeAt}
           onPlaceChange={savePlace}
+          onNearEnd={preloadNext}
           label={`Today's reading${sessionData.book?.title ? ` from ${sessionData.book.title}` : ''}`}
         />
       </main>

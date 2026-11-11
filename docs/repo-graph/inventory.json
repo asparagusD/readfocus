@@ -9,16 +9,16 @@
     {
       "path": ".claude/skills/atomic-commit/SKILL.md",
       "language": "markdown",
-      "lines": 187,
-      "size_bytes": 5964,
+      "lines": 188,
+      "size_bytes": 6005,
       "role": "doc",
       "purpose": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes."
     },
     {
       "path": ".claude/skills/debug-protocol/SKILL.md",
       "language": "markdown",
-      "lines": 201,
-      "size_bytes": 6310,
+      "lines": 202,
+      "size_bytes": 6349,
       "role": "doc",
       "purpose": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template."
     },
@@ -73,8 +73,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 184,
-      "size_bytes": 8361,
+      "lines": 186,
+      "size_bytes": 8546,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -442,7 +442,7 @@
       "path": "backend/services/covers.py",
       "language": "python",
       "lines": 147,
-      "size_bytes": 6319,
+      "size_bytes": 6385,
       "role": "service",
       "purpose": "Book covers from Open Library (C11.2), backend only: title search (first author, no edition notes) for a cover ID, the image by ID through archive.org redirects (https, Open Library and archive.org hosts only), copied unchanged into the public covers bucket once per cover ID; the outcome (cover_url, cover_source openlibrary/none/error) saved on the book; 3 s timeout, one attempt, descriptive User-Agent; never raises."
     },
@@ -897,8 +897,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1465,
-      "size_bytes": 62920,
+      "lines": 1515,
+      "size_bytes": 65139,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -921,8 +921,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1883,
-      "size_bytes": 340314,
+      "lines": 1884,
+      "size_bytes": 341310,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -977,8 +977,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 38,
-      "size_bytes": 1029,
+      "lines": 39,
+      "size_bytes": 1082,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -1377,10 +1377,10 @@
     {
       "path": "frontend/src/index.css",
       "language": "css",
-      "lines": 43,
-      "size_bytes": 1119,
+      "lines": 40,
+      "size_bytes": 1401,
       "role": "asset",
-      "purpose": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; the reset (base layer) and the .page fade."
+      "purpose": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; and the reset (base layer); the pre-2.0 .page fade was removed in C11.5 (it hid every page's first contentful paint)."
     },
     {
       "path": "frontend/src/lib/api.js",
@@ -1946,7 +1946,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 252,
-      "size_bytes": 57897,
+      "size_bytes": 57972,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

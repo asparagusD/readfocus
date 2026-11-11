@@ -1463,3 +1463,53 @@ looked up the last book (`none`); a dry run then lists 0 books.
 
 ### Commit
 fix(ingest): keep the cover backfill going past a book with no file
+
+## 2026-11-11 C11.5 — Lighthouse NO_FCP: no page reported a contentful paint
+
+**Status:** fixed
+
+### Symptom
+`npx lighthouse@12.8.2 http://localhost:4173/login --only-categories=performance`
+(production preview; Edge via `CHROME_PATH`, headless and windowed):
+`Runtime error encountered: The page did not paint any content ...
+(NO_FCP)`, every run. The page is on screen (screenshot taken), but
+`performance.getEntriesByType('paint')` holds only `first-paint`: no
+`first-contentful-paint`, no `largest-contentful-paint` entries.
+
+### Repro
+Scratchpad `fcp_bisect.mjs` (headless Edge, fresh profile per load,
+paint entries read after 3 s): `/login` on the preview 0/6 loads with
+FCP; the component gallery (`/gallery.html`, same libraries, no app
+shell) 4/4; the backend's `/docs` 4/4.
+
+### Hypotheses
+1. Something on `/login` starts invisible: Motion's route wrapper
+   (`m.div`) or the pre-2.0 `.page` fade (`opacity: 0` until
+   `usePageTransition` adds `.visible`). Evidence: the gallery has
+   neither. Test: route wrapper as a plain `div`: 1/4 (not it); Login
+   without the `page` class: 4/4. Result: **confirmed** for `.page`.
+2. A View Transition on load. Evidence against: theme.js skips it under
+   reduced motion, which failed as well. Result: rejected.
+3. Headless only, or the page counted as hidden. Evidence against:
+   windowed Lighthouse also NO_FCP; `visibilityState` "visible" in failing
+   loads. Result: rejected.
+
+### Root cause
+`frontend/src/index.css` `.page { opacity: 0 }` with a transition to 1 on
+`.visible`. Chrome does not count text painted under opacity 0, and the
+reveal is a composited opacity transition that paints nothing new, so the
+first contentful paint is never reported. Every page carries `.page`.
+Since C10.4 the route transition in `App.jsx` does the fade; this one is
+redundant.
+
+### Fix
+Remove the two `.page` rules; the class names stay on the pages until
+their rebuilds (C12–C13).
+
+### Regression test
+No frontend test runner. `fcp_bisect.mjs`: `/login` 6/6 loads with FCP on
+dev and on the rebuilt preview (0/6 before). Lighthouse on `/login`
+then completes (score 88, docs/BENCHMARKS.md, C11.5).
+
+### Commit
+fix(ui): let pages report their first contentful paint

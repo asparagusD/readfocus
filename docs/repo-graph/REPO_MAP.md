@@ -467,7 +467,7 @@ Each use is the file and line of the first import of that service.
 | `frontend/.gitignore` | 24 | Vite template ignore rules: logs, node_modules, dist, editor files. |
 | `frontend/eslint.config.js` | 21 | ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx. |
 | `frontend/gallery.html` | 14 | Dev-only component gallery entry served by Vite at /gallery.html; not built or routed. |
-| `frontend/package.json` | 38 | Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation. |
+| `frontend/package.json` | 39 | Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation. |
 | `frontend/scripts/check-contrast.mjs` | 84 | WCAG contrast check of every text, boundary and cover pair in styles/tokens.css for the four theme x accent combinations; exit 1 on a failure (npm run check:contrast). |
 | `frontend/vercel.json` | 10 | Vercel config: build command, dist output, and a rewrite of every path to index.html. |
 | `frontend/vite.config.js` | 60 | Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. |
@@ -536,21 +536,21 @@ Each use is the file and line of the first import of that service.
 
 | File | Lines | Purpose |
 |---|---|---|
-| `.claude/skills/atomic-commit/SKILL.md` | 187 | Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes. |
-| `.claude/skills/debug-protocol/SKILL.md` | 201 | Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template. |
+| `.claude/skills/atomic-commit/SKILL.md` | 188 | Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes. |
+| `.claude/skills/debug-protocol/SKILL.md` | 202 | Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template. |
 | `.claude/skills/design-review/SKILL.md` | 157 | Project skill: the gate for UI changes; chains the three design skills, then a checklist and a before/after commit note. |
 | `.claude/skills/free-intelligence/SKILL.md` | 209 | Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern. |
 | `.claude/skills/repo-graph/SKILL.md` | 122 | Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see. |
-| `CLAUDE.md` | 184 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
+| `CLAUDE.md` | 186 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
 | `README.md` | 137 | Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour. |
 | `design/HANDOFF_SUMMARY.md` | 469 | Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions. |
 | `design/handoff/foundations-style-guide/README.md` | 21 | Claude Design export note, kept unchanged: treat Main.dc.html as a reference mockup and replicate its values rather than copy its markup. |
 | `docs/ASSETS.md` | 31 | Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License). |
 | `docs/BENCHMARKS.md` | 768 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
-| `docs/DEBUG_LOG.md` | 1465 | Debug log rules, entry template, and one entry per failure. |
+| `docs/DEBUG_LOG.md` | 1515 | Debug log rules, entry template, and one entry per failure. |
 | `docs/DESIGN_AUDIT.md` | 271 | C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 1883 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 1884 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 
@@ -575,7 +575,7 @@ Each use is the file and line of the first import of that service.
 | `frontend/src/illustrations/index.js` | 9 | Barrel export of the illustration components and PARTS. |
 | `frontend/src/illustrations/parts.js` | 15 | PARTS: data-part selectors for the animatable parts of the illustrations (glow, cone, bulb, steam, sun, hill, ribbon, stars), for Motion. |
 | `frontend/src/illustrations/svgo.config.mjs` | 10 | svgo settings for the illustration sources: multipass, preset-default keeping the viewBox, dimensions removed; classes and data-part hooks kept. |
-| `frontend/src/index.css` | 43 | Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; the reset (base layer) and the .page fade. |
+| `frontend/src/index.css` | 40 | Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; and the reset (base layer); the pre-2.0 .page fade was removed in C11.5 (it hid every page's first contentful paint). |
 | `frontend/src/motion/MotionRoot.jsx` | 22 | MotionConfig reducedMotion="user" and strict LazyMotion around the app; domAnimation is loaded from motion/features.js after first paint. |
 | `frontend/src/motion/features.js` | 2 | Re-exports Motion's domAnimation feature bundle as the default export, so MotionRoot can import it lazily into its own chunk. |
 | `frontend/src/motion/presets.js` | 110 | Motion variants that read --dur-* and --ease-* from the CSS tokens when an animation starts: fadeIn, rise, routeTransition, routeFade, stagger(), shelfArrive, pageTurn, chipPop, drawIn; seconds(), easing() and prefersReducedMotion() helpers. |

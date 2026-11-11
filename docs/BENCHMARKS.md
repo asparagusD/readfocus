@@ -723,6 +723,33 @@ process on this machine (an inline script: extract, `chunk_text`, then
 Not measured: a real published EPUB or novel PDF, Render, memory of a
 book over 100,000 words.
 
+### C12.3: reader pagination (2026-11-11)
+
+`frontend/src/reader/BookReader.jsx` lays today's text out as CSS columns
+(one column a page) and reads the page count from `scrollWidth`. Measured
+in headless Edge 157 over CDP on `/__reader` (dev server), on the 4×
+fixture: 8 chapters, 3,541 words of *Walden*. "Layout" is the time from
+the start of the layout effect to the page count and anchor (forced
+column layout included, `data-paginate-ms`); "whole" is from the click
+on a text size to the new page count on screen (React render, commit and
+layout). Six text-size changes each; mount is the click that first
+renders the long text. Scratchpad script `reader_timing.mjs`.
+
+| CPU | Width | Mount (whole / layout) | Text size, layout max | Text size, whole max | Per chapter (whole / 8) |
+|---|---|---|---|---|---|
+| 1x | 1440 | 11.8 / 4.1 ms | 10.8 ms | 16.9 ms | about 2 ms |
+| 1x | 375 | 11.5 / 4.9 ms | 7.2 ms | 11.4 ms | about 1.5 ms |
+| 4x throttled | 1440 | 51.0 / 17.8 ms | 29.1 ms | 51.5 ms | about 6 ms |
+| 4x throttled | 375 | 52.6 / 20.9 ms | 29.9 ms | 48.5 ms | about 6 ms |
+| 6x throttled | 1440 | 80.0 / 27.7 ms | 42.0 ms | 72.3 ms | about 9 ms |
+| 6x throttled | 375 | 87.7 / 33.4 ms | 50.3 ms | 83.9 ms | about 11 ms |
+
+Budget: under 100 ms per chapter (C12.3 prompt). Met with room at every
+setting; even all eight chapters together stay under 100 ms at 6x.
+A session is one to four chunks of about 600 words, smaller than this
+fixture. Not measured: a real phone, Firefox or Safari (whose column
+layout differs), books with very long paragraphs.
+
 ## Frontend: Lighthouse and image budgets
 
 ### C11.5: image budgets and Lighthouse (2026-11-11)

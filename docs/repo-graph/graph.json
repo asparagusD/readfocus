@@ -1168,6 +1168,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/gallery/ReaderGallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/gallery/gallery.css",
       "type": "file",
       "role": "asset",
@@ -1178,6 +1190,12 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/readerFixture.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/hooks/useAuth.jsx",
@@ -1388,6 +1406,48 @@
       "type": "file",
       "role": "page",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/BookFlow.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/BookReader.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/anchor.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/geometry.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/geometry.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/reader.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
     },
     {
       "id": "file:frontend/src/styles/base.css",
@@ -3719,6 +3779,26 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/gallery/ReaderGallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/gallery/readerFixture.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/reader/index.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gallery/main.jsx",
       "to": "file:frontend/src/components/ui/Toast.jsx"
     },
@@ -3941,6 +4021,36 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/pages/Results.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/BookFlow.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/anchor.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/reader.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/anchor.js",
+      "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/geometry.test.js",
+      "to": "file:frontend/src/reader/geometry.js"
     },
     {
       "type": "imports",

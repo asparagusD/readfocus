@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 322,
-    "inventoried": 259,
+    "tracked": 332,
+    "inventoried": 269,
     "excluded": 63
   },
   "files": [
@@ -921,8 +921,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 845,
-      "size_bytes": 46419,
+      "lines": 872,
+      "size_bytes": 47985,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1033,10 +1033,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 94,
-      "size_bytes": 3544,
+      "lines": 99,
+      "size_bytes": 3891,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); a dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader."
     },
     {
       "path": "frontend/src/components/BookCover.css",
@@ -1287,6 +1287,22 @@
       "purpose": "Dev-only /__illustrations page: the illustration set in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
     },
     {
+      "path": "frontend/src/gallery/ReaderGallery.css",
+      "language": "css",
+      "lines": 44,
+      "size_bytes": 1065,
+      "role": "asset",
+      "purpose": "Layout styles for the dev-only /__reader page."
+    },
+    {
+      "path": "frontend/src/gallery/ReaderGallery.jsx",
+      "language": "jsx",
+      "lines": 61,
+      "size_bytes": 2342,
+      "role": "asset",
+      "purpose": "Dev-only /__reader page: the paginated reader on the Walden fixture with text size, length (1x or 4x) and theme controls, the current anchor and page count; not in the production build."
+    },
+    {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
       "lines": 106,
@@ -1301,6 +1317,14 @@
       "size_bytes": 462,
       "role": "asset",
       "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery."
+    },
+    {
+      "path": "frontend/src/gallery/readerFixture.js",
+      "language": "javascript",
+      "lines": 39,
+      "size_bytes": 6013,
+      "role": "asset",
+      "purpose": "Dev-only fixture for /__reader: three chunks of blocks in the chunks.blocks shape, from Thoreau's Walden (1854, public domain): two chapter openings, paragraphs with em and strong marks, a quote and list items."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
@@ -1581,6 +1605,62 @@
       "size_bytes": 7040,
       "role": "page",
       "purpose": "Results page: animated score, verdict, per-question feedback, next-session or re-read panel; rebuilds from the API after a refresh."
+    },
+    {
+      "path": "frontend/src/reader/BookFlow.jsx",
+      "language": "jsx",
+      "lines": 65,
+      "size_bytes": 2721,
+      "role": "asset",
+      "purpose": "Renders reader blocks (chunks.blocks) as book elements with data-b ids: chapter openings (label and italic title when a bare 'Chapter N' precedes a heading), headings, paragraphs with the drop cap and small-caps first line on a chapter's first paragraph, continued paragraphs without indent, quotes, list items; em and strong marks."
+    },
+    {
+      "path": "frontend/src/reader/BookReader.jsx",
+      "language": "jsx",
+      "lines": 171,
+      "size_bytes": 7309,
+      "role": "asset",
+      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; keyboard (arrows, Page Up/Down, Space, Home, End) and labelled turn buttons; reports places and pages to the caller; records the pagination time on data-paginate-ms."
+    },
+    {
+      "path": "frontend/src/reader/anchor.js",
+      "language": "javascript",
+      "lines": 88,
+      "size_bytes": 3403,
+      "role": "asset",
+      "purpose": "DOM helpers for reader places {block_id, char_offset}: the first visible place on a page (binary search over character rects), the page showing an anchor, the page an element starts on, and an anchor's chunk; x measured from the flow, so the page translate does not matter."
+    },
+    {
+      "path": "frontend/src/reader/geometry.js",
+      "language": "javascript",
+      "lines": 65,
+      "size_bytes": 2830,
+      "role": "asset",
+      "purpose": "Pure page geometry for the paginated reader: a spread from 1024 px, one page below (flush with the screen under 480 px); page width capped for a 60-70 character measure, equal margins so each column stride is one page, a text block of whole lines, the page count from scrollWidth, the page of an x, view and clamp helpers."
+    },
+    {
+      "path": "frontend/src/reader/geometry.test.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2700,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): spread threshold, one page per stride, book measure bounds, whole-line text blocks at 16.5/18/19.5 px, page count, page of a point, view start and clamping."
+    },
+    {
+      "path": "frontend/src/reader/index.js",
+      "language": "javascript",
+      "lines": 3,
+      "size_bytes": 176,
+      "role": "asset",
+      "purpose": "Barrel export of the reader: BookReader, anchor helpers and page geometry."
+    },
+    {
+      "path": "frontend/src/reader/reader.css",
+      "language": "css",
+      "lines": 251,
+      "size_bytes": 6110,
+      "role": "asset",
+      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status."
     },
     {
       "path": "frontend/src/styles/base.css",
@@ -2017,8 +2097,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 261,
-      "size_bytes": 62737,
+      "lines": 271,
+      "size_bytes": 65705,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

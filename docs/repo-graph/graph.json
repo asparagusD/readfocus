@@ -2323,6 +2323,11 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:GET /books/{book_id}/status"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "endpoint:POST /books/upload"
     },
     {
@@ -4525,6 +4530,16 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
     },
     {
       "type": "imports",

@@ -98,3 +98,131 @@ test.describe('at 375 px', () => {
     if (shots) await page.screenshot({ path: `${shots}/library-shelf-375.png`, fullPage: true });
   });
 });
+
+/** Record and answer the writes and the status poll; GET /books comes from `shelf()` on each call. */
+async function mockWrites(page, shelf, { progress = 0.64, failUpload = false } = {}) {
+  const calls = { uploads: [], deletes: [], statuses: 0 };
+  const json = (route, body, status = 200) => route.fulfill({ status, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  await page.route('http://localhost:8000/books', async (route) => {
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+    return json(route, shelf());
+  });
+  await page.route(/localhost:8000\/books\/[^/]+(\/status)?$/, async (route) => {
+    const req = route.request();
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+    const path = new URL(req.url()).pathname;
+    if (path === '/books/upload') return route.fallback();
+    if (path.endsWith('/status')) {
+      calls.statuses += 1;
+      return json(route, { status: 'processing', total_chunks: null, ingestion: { status: 'running', progress } });
+    }
+    if (req.method() === 'DELETE') {
+      calls.deletes.push(path);
+      return json(route, { message: 'deleted' });
+    }
+    return route.fallback();
+  });
+  await page.route('http://localhost:8000/books/upload', async (route) => {
+    const req = route.request();
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+    const body = req.postDataBuffer()?.toString('latin1') ?? '';
+    const field = (name) => new RegExp(`name="${name}"\\r\\n\\r\\n([^\\r]*)`).exec(body)?.[1];
+    calls.uploads.push({ title: field('title'), author: field('author'), file: /filename="([^"]+)"/.exec(body)?.[1] });
+    if (failUpload) return json(route, { detail: 'That file is too large' }, 400);
+    return json(route, { book_id: 'new-book', status: 'processing' });
+  });
+  return calls;
+}
+
+const PDF = { name: 'the_age_of_innocence.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 e2e') };
+
+test('adding a book: picker, inline errors, the same form fields, a toast and a processing tile', async ({ page }) => {
+  const calls = await mockWrites(page, () => SHELF.slice(0, 3));
+  await page.goto('/');
+  await page.getByRole('list').waitFor();
+  await page.locator('input[type=file]').setInputFiles(PDF);
+  const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
+  await expect(dialog).toContainText('the_age_of_innocence.pdf');
+  await expect(dialog.getByLabel('Title')).toHaveValue('The Age Of Innocence');
+  await dialog.getByRole('button', { name: 'Add book' }).click();
+  await expect(dialog.getByLabel('Author')).toHaveAccessibleDescription('Enter the author’s name.');
+  await expect(dialog.getByLabel('Author')).toBeFocused();
+  expect(calls.uploads).toEqual([]);
+  await dialog.getByLabel('Author').fill('Edith Wharton');
+  await dialog.getByLabel('Author').press('Enter');
+  await expect(dialog).toBeHidden();
+  expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: 'Edith Wharton', file: 'the_age_of_innocence.pdf' }]);
+  await expect(page.getByText('The Age Of Innocence is on your shelf. We’re reading its pages now.')).toBeVisible();
+  await expect(page.locator('.rf-shelf__item').first()).toContainText('Reading the pages…');
+});
+
+test('a failed upload keeps the dialog open and says why', async ({ page }) => {
+  await mockWrites(page, () => SHELF.slice(0, 3), { failUpload: true });
+  await page.goto('/');
+  await page.getByRole('list').waitFor();
+  await page.locator('input[type=file]').setInputFiles(PDF);
+  const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
+  await dialog.getByLabel('Author').fill('Edith Wharton');
+  await dialog.getByRole('button', { name: 'Add book' }).click();
+  await expect(page.getByText('We couldn’t add that book: That file is too large.')).toBeVisible();
+  await expect(dialog).toBeVisible();
+});
+
+test('a file dropped on the page: the drop target shows, then the dialog; other files are refused', async ({ page }) => {
+  await mockWrites(page, () => SHELF.slice(0, 3));
+  await page.goto('/');
+  await page.getByRole('list').waitFor();
+  const drag = (type, name) => page.evaluate(([t, n]) => {
+    const dt = new DataTransfer();
+    dt.items.add(new File(['x'], n, { type: 'application/octet-stream' }));
+    window.dispatchEvent(new DragEvent(t, { dataTransfer: dt, bubbles: true, cancelable: true }));
+  }, [type, name]);
+  await drag('dragenter', 'notes.epub');
+  await expect(page.getByText('Release to add your book')).toBeVisible();
+  if (shots) await page.screenshot({ path: `${shots}/library-drop.png` });
+  await drag('drop', 'notes.epub');
+  await expect(page.getByText('Release to add your book')).toBeHidden();
+  await expect(page.getByRole('dialog', { name: 'Add to your shelf' })).toContainText('notes.epub');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await drag('dragenter', 'photo.jpg');
+  await drag('drop', 'photo.jpg');
+  await expect(page.getByText('photo.jpg isn’t a PDF or EPUB, so it can’t go on the shelf.')).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('a processing book shows how far its pages are read, then says when it is ready', async ({ page }) => {
+  let polls = 0;
+  const origin = SHELF.find((b) => b.id === 'origin');
+  const calls = await mockWrites(page, () => {
+    polls += 1;
+    return [SHELF[0], polls < 3 ? origin : { ...origin, status: 'ready', total_chunks: 30 }];
+  });
+  await page.goto('/');
+  const tile = page.locator('.rf-shelf__item').filter({ hasText: 'On the Origin of Species' });
+  await expect(tile).toContainText('Reading the pages… 64%', { timeout: 6000 });
+  expect(calls.statuses).toBeGreaterThan(0);
+  await expect(page.getByText('On the Origin of Species is ready on your shelf.')).toBeVisible({ timeout: 6000 });
+  await expect(tile).toContainText('New · not started');
+});
+
+test('removing a book asks first, in a dialog; Keep it changes nothing', async ({ page }) => {
+  let books = SHELF.slice(0, 3);
+  const calls = await mockWrites(page, () => books);
+  await page.goto('/');
+  const remove = page.getByRole('button', { name: 'Remove Middlemarch from your shelf' });
+  await remove.click();
+  const dialog = page.getByRole('dialog', { name: 'Remove Middlemarch?' });
+  await expect(dialog).toContainText('can’t be undone');
+  await dialog.getByRole('button', { name: 'Keep it' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(remove).toBeFocused();
+  expect(calls.deletes).toEqual([]);
+  await remove.click();
+  books = SHELF.slice(0, 2);
+  await page.getByRole('dialog').getByRole('button', { name: 'Remove', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(calls.deletes).toEqual(['/books/middlemarch']);
+  await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(2);
+  await expect(page.getByText('Middlemarch is off your shelf.')).toBeVisible();
+});

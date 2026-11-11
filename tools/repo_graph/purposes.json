@@ -337,5 +337,7 @@
   "frontend/e2e/reader.spec.js": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a mouse click on the last page's Start test finishing reading (C13.4 regression); a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results.",
   "frontend/src/lib/backendReady.js": "Backend readiness state machine, pure: checking (first 1.5 s), warming (the warm-up screen), ready (/health model_ready, or answering but still loading after 90 s), down (no answer in 90 s); the error line.",
   "frontend/src/lib/backendReady.test.js": "Node test (npm run test:unit): warm start, warm-up then ready, down after 90 s with its error line, reachable but loading after 90 s, Try again starts warm.",
-  "frontend/src/lib/useBackendReady.js": "Hook: polls GET /health every 2 s (10 s timeout) from app start through lib/backendReady.js; returns the phase and retry."
+  "frontend/src/lib/useBackendReady.js": "Hook: polls GET /health every 2 s (10 s timeout) from app start through lib/backendReady.js; returns the phase and retry.",
+  "frontend/src/components/WarmingUp.jsx": "Warm-up screen (handoff screen 02, moment 7): ReadingLamp brightening over 6 s, TeaCup steam, a line that changes every 2.6 s, a 60 s hairline, a pause control (WCAG 2.2.2); role=status body.",
+  "frontend/src/components/WarmingUp.css": "Warm-up layout (stacked under 768 px), lamp brightening keyframes, hairline fill, pause state, reduced-motion hairline."
 }

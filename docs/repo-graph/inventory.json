@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 403,
-    "inventoried": 339,
+    "tracked": 405,
+    "inventoried": 341,
     "excluded": 64
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9952,
+      "size_bytes": 9969,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2286,
-      "size_bytes": 474978,
+      "lines": 2287,
+      "size_bytes": 476090,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1245,6 +1245,22 @@
       "size_bytes": 1890,
       "role": "component",
       "purpose": "Theme control: Paper, Lamplight or Match system as a radio group in the handoff's pill style; arrow keys move and choose."
+    },
+    {
+      "path": "frontend/src/components/WarmingUp.css",
+      "language": "css",
+      "lines": 125,
+      "size_bytes": 3499,
+      "role": "component",
+      "purpose": "Warm-up layout (stacked under 768 px), lamp brightening keyframes, hairline fill, pause state, reduced-motion hairline."
+    },
+    {
+      "path": "frontend/src/components/WarmingUp.jsx",
+      "language": "jsx",
+      "lines": 56,
+      "size_bytes": 2361,
+      "role": "component",
+      "purpose": "Warm-up screen (handoff screen 02, moment 7): ReadingLamp brightening over 6 s, TeaCup steam, a line that changes every 2.6 s, a 60 s hairline, a pause control (WCAG 2.2.2); role=status body."
     },
     {
       "path": "frontend/src/components/dashboard/MasteryList.css",
@@ -2657,8 +2673,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 341,
-      "size_bytes": 96406,
+      "lines": 343,
+      "size_bytes": 96810,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

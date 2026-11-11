@@ -1152,6 +1152,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/WarmingUp.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/WarmingUp.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/dashboard/MasteryList.css",
       "type": "file",
       "role": "component",
@@ -4284,6 +4296,21 @@
       "type": "imports",
       "from": "file:frontend/src/components/ThemeToggle.jsx",
       "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/WarmingUp.jsx",
+      "to": "file:frontend/src/components/WarmingUp.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/WarmingUp.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/WarmingUp.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
     },
     {
       "type": "imports",

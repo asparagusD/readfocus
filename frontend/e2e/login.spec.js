@@ -88,3 +88,19 @@ test('create account by keyboard: the tab, a short password, then the inbox mess
   await page.getByRole('button', { name: 'Back to sign in' }).click();
   await expect(page.getByRole('tab', { name: 'Sign in' })).toHaveAttribute('aria-selected', 'true');
 });
+
+test('under reduced motion the form and the drawings do not move', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addInitScript(() => {
+    window.__frames = [];
+    const sample = () => {
+      for (const el of document.querySelectorAll('.rf-login__card, .rf-login__art')) window.__frames.push(getComputedStyle(el).transform);
+      if (window.__frames.length < 120) requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+  await page.goto('/login');
+  await page.waitForFunction(() => window.__frames.length >= 120);
+  const moved = await page.evaluate(() => window.__frames.filter((t) => t !== 'none'));
+  expect(moved).toEqual([]);
+});

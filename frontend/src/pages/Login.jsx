@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { BookOpen } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
@@ -7,7 +8,14 @@ import { TextInput } from '../components/ui/TextInput';
 import { SegmentedTabs } from '../components/ui/SegmentedTabs';
 import { tabId, panelId } from '../components/ui/tabIds';
 import { DuskWindow, ReadingLamp, BookStack, TeaCup } from '../illustrations';
+import { fadeIn, rise } from '../motion/presets';
 import './Login.css';
+
+/** The form rises into place without fading, so its text paints at once (first contentful paint). */
+const formRise = {
+  hidden: { y: rise.hidden.y },
+  visible: { y: 0, get transition() { return rise.visible.transition; } },
+};
 
 const TABS = [{ value: 'signin', label: 'Sign in' }, { value: 'signup', label: 'Create account' }];
 const COPY = {
@@ -45,6 +53,7 @@ export function Login() {
   const [signedUp, setSignedUp] = useState(false);
   const formRef = useRef(null);
   const copy = COPY[tab];
+  const reduced = useReducedMotion();
 
   useEffect(() => { document.title = 'Sign in · ReadFocus'; }, []);
 
@@ -83,27 +92,32 @@ export function Login() {
     else navigate('/');
   };
 
+  // The routes' AnimatePresence starts with initial={false}, which would skip these
+  // entrances on a first load; a nested AnimatePresence gives them their own start.
+  // Only the drawings fade; text is never hidden, so the first paint is not held back
+  // until Motion loads. Under reduced motion the form does not move at all.
   return (
     <div className="rf-login">
-      <aside className="rf-login__scene">
+      <AnimatePresence>
+      <aside key="scene" className="rf-login__scene">
         <p className="rf-login__mark">
           <BookOpen size={24} strokeWidth={1.75} aria-hidden="true" />
           <span>ReadFocus</span>
         </p>
-        <div className="rf-login__art">
+        <m.div className="rf-login__art" variants={fadeIn} initial="hidden" animate="visible">
           <BookStack className="rf-login__books" />
           <DuskWindow className="rf-login__window" />
           <TeaCup className="rf-login__tea" />
           <ReadingLamp className="rf-login__lamp" />
-        </div>
+        </m.div>
         <div className="rf-login__words">
           <p className="rf-login__tagline">Read slowly.<br />Keep what you read.</p>
           <p className="rf-login__sub">Focused sessions, a short test, and a reading plan that remembers where you struggled.</p>
         </div>
       </aside>
 
-      <main className="rf-login__panel">
-        <div className="rf-login__card">
+      <main key="panel" className="rf-login__panel">
+        <m.div className="rf-login__card" variants={formRise} initial={reduced ? false : 'hidden'} animate="visible">
           {signedUp ? (
             <div className="rf-login__done" role="status">
               <h1 className="rf-login__title">Check your inbox</h1>
@@ -133,8 +147,9 @@ export function Login() {
               <p className="rf-login__note">First visit of the evening? The room may take a moment to warm up.</p>
             </>
           )}
-        </div>
+        </m.div>
       </main>
+      </AnimatePresence>
     </div>
   );
 }

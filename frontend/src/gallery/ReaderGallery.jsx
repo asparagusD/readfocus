@@ -24,8 +24,11 @@ export default function ReaderGallery() {
   const [copies, setCopies] = useState(1);
   const [place, setPlace] = useState(null);
   const [pages, setPages] = useState(null);
+  const [looked, setLooked] = useState(null);
   const blocks = useMemo(() => repeated(copies), [copies]);
   const onPlaceChange = useCallback((anchor) => setPlace(anchor), []);
+  // C12.7: what a hover or selection would look up (the card comes in C12.8).
+  const onLookup = useCallback(({ kind, term, proper }) => setLooked({ kind, term, proper }), []);
 
   return (
     <div className="reader-gallery">
@@ -45,6 +48,7 @@ export default function ReaderGallery() {
         <output className="reader-gallery-place">
           {place ? `${place.block_id} @ ${place.char_offset}` : 'no turn yet'}
           {pages ? ` · ${pages.count} pages` : ''}
+          {looked ? ` · ${looked.kind} “${looked.term}”${looked.proper ? ' (proper)' : ''}` : ''}
         </output>
       </div>
       <div className="reader-gallery-frame">
@@ -54,6 +58,7 @@ export default function ReaderGallery() {
           fontSize={size}
           onPlaceChange={onPlaceChange}
           onPagesChange={setPages}
+          onLookup={onLookup}
         />
       </div>
     </div>

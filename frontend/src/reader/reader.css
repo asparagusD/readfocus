@@ -453,3 +453,10 @@
 .rf-book[data-ribbon="true"] .rf-leaf:is([data-side="right"], [data-side="single"]) .rf-running-head {
   inset-inline-end: max(var(--margin), 48px);
 }
+
+/* In-place lookup (C12.7): a soft wash on the word or phrase being looked up. The Custom
+   Highlight API paints it without changing the text's DOM; elsewhere .rf-mark boxes sit in a
+   layer under the text. --accent-soft is a checked text ground (check:contrast). No motion. */
+::highlight(rf-lookup) { background-color: var(--accent-soft); }
+.rf-mark-layer { position: absolute; inset: 0; pointer-events: none; }
+.rf-mark { position: absolute; border-radius: 2px; background: var(--accent-soft); }

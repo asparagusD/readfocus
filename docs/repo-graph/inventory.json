@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 351,
-    "inventoried": 288,
+    "tracked": 355,
+    "inventoried": 292,
     "excluded": 63
   },
   "files": [
@@ -1337,10 +1337,10 @@
     {
       "path": "frontend/src/gallery/ReaderGallery.jsx",
       "language": "jsx",
-      "lines": 61,
-      "size_bytes": 2342,
+      "lines": 66,
+      "size_bytes": 2699,
       "role": "asset",
-      "purpose": "Dev-only /__reader page: the paginated reader on the Walden fixture with text size, length (1x or 4x) and theme controls, the current anchor and page count; not in the production build."
+      "purpose": "Dev-only /__reader page: the paginated reader on the Walden fixture with text size, length (1x or 4x) and theme controls, the current anchor and page count, and what a hover or selection would look up (C12.7); not in the production build."
     },
     {
       "path": "frontend/src/gallery/gallery.css",
@@ -1657,10 +1657,10 @@
     {
       "path": "frontend/src/reader/BookReader.jsx",
       "language": "jsx",
-      "lines": 297,
-      "size_bytes": 13955,
+      "lines": 304,
+      "size_bytes": 14592,
       "role": "asset",
-      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b)."
+      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text)."
     },
     {
       "path": "frontend/src/reader/ContentsDrawer.css",
@@ -1743,6 +1743,14 @@
       "purpose": "Node test (npm run test:unit): spread threshold, one page per stride, book measure bounds, whole-line text blocks at 16.5/18/19.5 px, page count, page of a point, view start and clamping."
     },
     {
+      "path": "frontend/src/reader/highlight.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1200,
+      "role": "asset",
+      "purpose": "The soft lookup mark: CSS Custom Highlight API ('rf-lookup'), or positioned boxes in a layer under the text where the API is missing."
+    },
+    {
       "path": "frontend/src/reader/index.js",
       "language": "javascript",
       "lines": 3,
@@ -1769,8 +1777,8 @@
     {
       "path": "frontend/src/reader/reader.css",
       "language": "css",
-      "lines": 455,
-      "size_bytes": 11233,
+      "lines": 462,
+      "size_bytes": 11735,
       "role": "asset",
       "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b)."
     },
@@ -1805,6 +1813,30 @@
       "size_bytes": 2017,
       "role": "asset",
       "purpose": "usePlaceSaver(sessionId): saves the reader's place with PUT /sessions/{id}/position at most once a second while pages turn, and the last place with keepalive when the page is hidden, closed or left; failures are dropped; saveNow skips the wait (the ribbon bookmark)."
+    },
+    {
+      "path": "frontend/src/reader/useWordAtPoint.js",
+      "language": "javascript",
+      "lines": 129,
+      "size_bytes": 5604,
+      "role": "asset",
+      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM: caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside the word's rects; 350 ms on the same word looks it up once; a 2-5 word selection (mouse or touch) looks up a phrase; marks the target via highlight.js; paused while a leaf turns; returns clear()."
+    },
+    {
+      "path": "frontend/src/reader/wordAt.js",
+      "language": "javascript",
+      "lines": 94,
+      "size_bytes": 4574,
+      "role": "asset",
+      "purpose": "Pure word rules for in-place lookup (C12.7): Intl.Segmenter words with hyphenated compounds kept whole, the word around an offset, eligibility (3+ letters, no digits, not an English stopword), sentence-initial and proper-noun tests, a 2-5 word phrase from a selection (60-character cap), and the GET /lookup path with proper=1 for names."
+    },
+    {
+      "path": "frontend/src/reader/wordAt.test.js",
+      "language": "javascript",
+      "lines": 70,
+      "size_bytes": 3501,
+      "role": "asset",
+      "purpose": "node --test: word under an offset, apostrophes and hyphens, stopwords/short words/numbers skipped, sentence starts, proper nouns, phrases of 2-5 words, the lookup path."
     },
     {
       "path": "frontend/src/styles/base.css",
@@ -2249,8 +2281,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 290,
-      "size_bytes": 73909,
+      "lines": 294,
+      "size_bytes": 75368,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -83,6 +83,14 @@ def test_upload_creates_a_job_and_ingests_the_book(client, db):
         "status": "done", "cursor": 9, "progress": 1, "attempts": 1}
 
 
+def test_status_reports_the_progress_of_a_running_job(client, db):
+    add_book(db, "b1", status="ready", job={"status": "running", "cursor": 21, "progress": 21 / 40, "attempts": 1})
+    status = client.get("/books/b1/status").json()
+    assert status["status"] == "ready"
+    assert {k: status["ingestion"][k] for k in ("status", "cursor", "progress", "attempts", "error")} == {
+        "status": "running", "cursor": 21, "progress": 0.525, "attempts": 1, "error": None}
+
+
 def test_resume_finishes_a_failed_job(client, db):
     add_book(db, "b1", status="error", job={"status": "failed", "cursor": 0, "attempts": jobs.MAX_ATTEMPTS})
     resp = client.post("/books/b1/resume")

@@ -167,6 +167,47 @@ What this says for C9, read from these numbers only:
 Not measured: Render itself; the long book in the container; requests
 from a reader during ingestion; a restart mid-ingestion (C9.1b and C9.5).
 
+### C9.2: ready after the first batch's questions (2026-11-11)
+
+Same commands, books and settings as C9.0 (three cold runs each), at the
+C9.2 working tree: ingestion is a `processing_jobs` job in batches of 5
+then 16 (C9.1), and the book is marked ready only once the first five
+chunks **and their questions and concepts** are stored (before C9.2 it was
+marked ready as soon as the chunks were stored). Container image rebuilt
+as `readfocus-c9-2`.
+
+Windows (p50 of 3):
+
+| Step | C9.0 before | C9.2 after |
+|---|---|---|
+| `upload -> ready (sample.pdf)` | 2.33 s | 4.97 s |
+| `upload -> chunk 0 questions (sample.pdf)` | 4.67 s | 4.97 s |
+| `upload -> done (sample.pdf)` | 4.67 s | 4.97 s |
+| `upload -> ready (pride-and-prejudice.epub)` | 2.36 s | 4.83 s |
+| `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 4.70 s | 4.83 s |
+| `upload -> done (pride-and-prejudice.epub)` | 138.34 s | 134.54 s |
+| Peak server RSS | 320 to 321 MB; 349 to 352 MB | 321 MB; 348 to 351 MB |
+
+Container, 0.1 CPU and 512 MB, `sample.pdf` (p50 of 3):
+
+| Step | C9.0 before | C9.2 after |
+|---|---|---|
+| Process start -> `/health` | 12.4 to 14.4 s | 13.2 to 15.3 s |
+| `upload -> ready` | 26.29 s | **56.55 s** |
+| `upload -> chunk 0 questions` | 53.64 s | 53.70 s |
+| `upload -> done` | 61.70 s | 63.74 s |
+| Peak container memory | 319 to 326 MB | 316 to 350 MB |
+
+What it says: `ready` comes **later**, by the first batch's question
+generation (about 2.5 s on Windows, about 30 s at 0.1 CPU), and the first
+questions arrive at the same time as before. The change is in what
+`ready` means: a reader who starts the first session gets a test from the
+bank, instead of `finish-reading` generating one on demand. No speed-up is
+claimed. The long book now has 1,760 questions (1,718 in C9.0) because of
+the 16-chunk batches (C9.1b). One container run peaked at 350 MB, the
+other two at 316 and 320 MB; with three runs that is not separated from
+noise.
+
 ### C8.6: session lifecycle through the LangGraph workflow (2026-11-11)
 
 Backend on this machine (`uvicorn backend.main:app --port 8000`, from

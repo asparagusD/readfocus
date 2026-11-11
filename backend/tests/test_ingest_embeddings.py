@@ -92,18 +92,36 @@ def test_every_chunk_is_stored_once_with_a_local_embedding_and_the_job_is_done(e
     assert (book["status"], book["total_chunks"], result["status"]) == ("ready", 40, "ready")
 
 
-def test_the_book_is_ready_after_the_first_batch_before_its_questions(env, monkeypatch):
+def test_the_book_is_ready_once_the_first_batch_and_its_questions_are_stored(env, monkeypatch):
     db, events = env["db"], env["events"]
     original = book_ingestor.mark_ready
+    seen = {}
 
     def spy(book_id, total, words):
         events.append("ready")
+        seen["chunks"] = chunk_indices(db)
+        seen["questions"] = sorted(q["chunk_index"] for q in db.tables.get("question_bank", []))
         original(book_id, total, words)
 
     monkeypatch.setattr(book_ingestor, "mark_ready", spy)
     run(env["book"](7), b"%PDF")
-    assert events == ["ready", ("questions", [0, 1, 2, 3, 4]), ("questions", [5, 6])]
+    assert events == [("questions", [0, 1, 2, 3, 4]), "ready", ("questions", [5, 6])]
+    assert seen == {"chunks": [0, 1, 2, 3, 4], "questions": [0, 1, 2, 3, 4]}  # the first session has a bank test
     assert len(db.tables["question_bank"]) == 7
+
+
+def test_a_failing_first_batch_of_questions_still_makes_the_book_ready(env, monkeypatch):
+    calls = []
+
+    def first_fails(book_id, chunk_ids):
+        calls.append(len(chunk_ids))
+        if len(calls) == 1:
+            raise RuntimeError("question bank unavailable")
+
+    monkeypatch.setattr(book_ingestor.question_agent, "run", first_fails)
+    run(env["book"](7), b"%PDF")
+    assert env["db"].tables["books"][0]["status"] == "ready"  # finish-reading generates on demand
+    assert calls == [5, 2] and jobs.get(BOOK)["status"] == "done"
 
 
 def test_a_crash_keeps_the_cursor_and_a_resume_finishes_without_duplicates(env):

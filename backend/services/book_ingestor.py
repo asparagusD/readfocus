@@ -16,8 +16,8 @@ from backend.services.supabase_client import supabase
 question_agent = QuestionGenerationAgent()
 
 # Chunks embedded, stored and questioned together; the job's cursor is saved
-# after each batch. The first batch is smaller so the book unlocks for
-# reading as soon as five chunks are stored.
+# after each batch. The first batch is smaller so the book unlocks as soon
+# as five chunks and their questions are stored.
 FIRST_BATCH = 5
 INGEST_BATCH = 16
 TARGET_WORDS = 600
@@ -194,10 +194,10 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
                  "embedding_local": [float(value) for value in vectors[offset]]}
                 for offset, chunk in enumerate(batch)
             ], on_conflict="book_id,chunk_index").execute()
-            if not ready:  # the first stored batch unlocks the book for reading
+            await generate_questions(book_id, stored.data)  # questions and concepts of the batch
+            if not ready:  # the first batch is stored with its questions: the first session can start
                 mark_ready(book_id, total, words)
                 ready = True
-            await generate_questions(book_id, stored.data)
             processing_jobs.advance(job["id"], end, total)
         if not ready:  # a book with no text at all is still ready, as before
             mark_ready(book_id, total, words)

@@ -426,9 +426,9 @@
       "path": "backend/services/book_ingestor.py",
       "language": "python",
       "lines": 211,
-      "size_bytes": 8654,
+      "size_bytes": 8723,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), marks the book ready after the first stored batch, has the question generation agent fill the bank for the batch, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -641,18 +641,18 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 179,
-      "size_bytes": 7313,
+      "lines": 197,
+      "size_bytes": 8135,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready after the first batch and before its questions, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent."
+      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
-      "lines": 112,
-      "size_bytes": 5131,
+      "lines": 120,
+      "size_bytes": 5605,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
+      "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
     },
     {
       "path": "backend/tests/test_ingestor.py",
@@ -793,8 +793,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 527,
-      "size_bytes": 27782,
+      "lines": 568,
+      "size_bytes": 29719,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -817,8 +817,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1552,
-      "size_bytes": 263951,
+      "lines": 1553,
+      "size_bytes": 267093,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1466,7 +1466,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 192,
-      "size_bytes": 41450,
+      "size_bytes": 41577,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

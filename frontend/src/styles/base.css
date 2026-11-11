@@ -123,6 +123,14 @@ a:hover {
   font-variant-numeric: lining-nums tabular-nums;
 }
 
+/* C10.6: a theme switch cross-fades the whole page over --dur-3
+   (View Transitions; theme.js skips it under reduced motion). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-3);
+  animation-timing-function: var(--ease-settle);
+}
+
 /* A11 and D3: under reduced motion CSS animations and transitions become
    near-instant and loops stop. In the base layer, so these !important
    declarations beat the pages' unlayered ones. Motion's own animations

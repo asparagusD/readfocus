@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 278,
-    "inventoried": 222,
+    "tracked": 283,
+    "inventoried": 227,
     "excluded": 56
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 184,
-      "size_bytes": 8294,
+      "size_bytes": 8310,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -890,7 +890,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1719,
-      "size_bytes": 313053,
+      "size_bytes": 315338,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -937,10 +937,10 @@
     {
       "path": "frontend/index.html",
       "language": "html",
-      "lines": 13,
-      "size_bytes": 361,
+      "lines": 32,
+      "size_bytes": 1182,
       "role": "entry",
-      "purpose": "Vite HTML shell: loads the Google Fonts (DM Mono, DM Sans, Lora, Playfair Display) and mounts /src/main.jsx."
+      "purpose": "HTML entry: an inline script applies the stored theme and accent (or the OS scheme) to <html> before first paint; mounts main.jsx."
     },
     {
       "path": "frontend/package.json",
@@ -961,10 +961,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 80,
-      "size_bytes": 2883,
+      "lines": 83,
+      "size_bytes": 3023,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put)."
     },
     {
       "path": "frontend/src/components/CalibrationFlow.jsx",
@@ -977,18 +977,34 @@
     {
       "path": "frontend/src/components/Layout.css",
       "language": "css",
-      "lines": 140,
-      "size_bytes": 2282,
+      "lines": 151,
+      "size_bytes": 2566,
       "role": "component",
-      "purpose": "Styles for the global nav and main content column; hides nav links below 640 px."
+      "purpose": "Nav and main column styles; on phones the nav wraps to two rows and keeps the Library and Dashboard links."
     },
     {
       "path": "frontend/src/components/Layout.jsx",
       "language": "jsx",
-      "lines": 54,
-      "size_bytes": 1550,
+      "lines": 55,
+      "size_bytes": 1596,
       "role": "component",
-      "purpose": "Global nav (wordmark, Library and Dashboard links, email, sign out) wrapped around page content."
+      "purpose": "Global nav (wordmark, Library and Dashboard links, theme toggle, email, sign out) wrapped around page content."
+    },
+    {
+      "path": "frontend/src/components/ThemeToggle.css",
+      "language": "css",
+      "lines": 45,
+      "size_bytes": 1047,
+      "role": "component",
+      "purpose": "Theme toggle styles: 44 px pill, three 40 px options, accent knob sliding over --dur-3, accent-ink icon on the knob."
+    },
+    {
+      "path": "frontend/src/components/ThemeToggle.jsx",
+      "language": "jsx",
+      "lines": 53,
+      "size_bytes": 1890,
+      "role": "component",
+      "purpose": "Theme control: Paper, Lamplight or Match system as a radio group in the handoff's pill style; arrow keys move and choose."
     },
     {
       "path": "frontend/src/components/ui/Button.css",
@@ -1361,8 +1377,8 @@
     {
       "path": "frontend/src/styles/base.css",
       "language": "css",
-      "lines": 139,
-      "size_bytes": 3168,
+      "lines": 147,
+      "size_bytes": 3446,
       "role": "asset",
       "purpose": "Editorial base styles in the base layer: body DM Sans 400, Playfair 500 headings, accent-text links, one focus ring, selection colour, .flow heading rhythm, .reading (Lora 18/31, 65ch, justified with hyphens), .drop-cap, .eyebrow, .running-head and .figure."
     },
@@ -1381,6 +1397,30 @@
       "size_bytes": 8223,
       "role": "asset",
       "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
+    },
+    {
+      "path": "frontend/src/theme/ThemeProvider.jsx",
+      "language": "jsx",
+      "lines": 40,
+      "size_bytes": 1620,
+      "role": "asset",
+      "purpose": "Theme provider: the reader's theme choice and accent from localStorage, applied to <html> (cross-fade), following the OS while the choice is system."
+    },
+    {
+      "path": "frontend/src/theme/theme.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2029,
+      "role": "asset",
+      "purpose": "Theme helpers: storage keys, read and store with try/catch, resolve system to paper or lamplight, OS watcher, apply with a View Transitions cross-fade skipped under reduced motion."
+    },
+    {
+      "path": "frontend/src/theme/themeContext.js",
+      "language": "javascript",
+      "lines": 13,
+      "size_bytes": 419,
+      "role": "asset",
+      "purpose": "ThemeContext and useTheme(), which returns choice, theme, accent, setChoice and setAccent."
     },
     {
       "path": "frontend/vercel.json",
@@ -1721,8 +1761,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 224,
-      "size_bytes": 50767,
+      "lines": 229,
+      "size_bytes": 51724,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

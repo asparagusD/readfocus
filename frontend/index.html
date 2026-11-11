@@ -4,7 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>ReadFocus</title>
+    <script>
+      // C10.6: apply the stored theme before first paint (no flash).
+      // Mirrors resolve() in src/theme/theme.js; keep the keys in step.
+      (function () {
+        var theme = 'system';
+        var accent = 'terracotta';
+        try {
+          theme = localStorage.getItem('rf-theme') || theme;
+          accent = localStorage.getItem('rf-accent') || accent;
+        } catch (e) {}
+        if (theme !== 'paper' && theme !== 'lamplight') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'lamplight' : 'paper';
+        }
+        if (accent !== 'sage') accent = 'terracotta';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.accent = accent;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

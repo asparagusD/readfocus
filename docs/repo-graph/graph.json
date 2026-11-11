@@ -935,6 +935,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/ThemeToggle.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ThemeToggle.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/ui/Button.css",
       "type": "file",
       "role": "component",
@@ -1227,6 +1239,24 @@
       "type": "file",
       "role": "asset",
       "language": "css"
+    },
+    {
+      "id": "file:frontend/src/theme/ThemeProvider.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/theme/theme.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/theme/themeContext.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/vercel.json",
@@ -3171,6 +3201,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/theme/ThemeProvider.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -3187,7 +3222,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ThemeToggle.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ThemeToggle.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
     },
     {
       "type": "imports",
@@ -3503,6 +3553,16 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/pages/Results.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/theme/ThemeProvider.jsx",
+      "to": "file:frontend/src/theme/theme.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/theme/ThemeProvider.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
     },
     {
       "type": "imports",

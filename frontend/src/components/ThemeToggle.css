@@ -1,0 +1,45 @@
+/* Theme toggle (C10.6): three 40 px options in a 44 px pill. */
+.rf-theme-toggle {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  padding: 1px;
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-pill);
+  background-color: var(--surface);
+}
+
+.rf-theme-toggle__knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent);
+  box-shadow: var(--elevation-accent);
+  transition: transform var(--dur-3) var(--ease-settle);
+}
+
+.rf-theme-toggle__option {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color var(--dur-3) var(--ease-settle);
+}
+
+.rf-theme-toggle__option:hover {
+  color: var(--ink);
+}
+
+/* D1: the icon on the accent knob uses --accent-ink. */
+.rf-theme-toggle__option[aria-checked='true'] {
+  color: var(--accent-ink);
+}

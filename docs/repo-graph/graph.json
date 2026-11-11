@@ -905,12 +905,6 @@
       "language": "text"
     },
     {
-      "id": "file:frontend/src/App.css",
-      "type": "file",
-      "role": "asset",
-      "language": "css"
-    },
-    {
       "id": "file:frontend/src/App.jsx",
       "type": "file",
       "role": "entry",
@@ -1101,6 +1095,18 @@
       "type": "file",
       "role": "page",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/styles/base.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/styles/fonts.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
     },
     {
       "id": "file:frontend/src/styles/tokens.css",
@@ -1640,12 +1646,6 @@
       "from": "file:design/handoff/foundations-style-guide/Main.dc.html",
       "to": "external:google_fonts",
       "line": 13
-    },
-    {
-      "type": "calls_external",
-      "from": "file:frontend/index.html",
-      "to": "external:google_fonts",
-      "line": 8
     },
     {
       "type": "calls_external",

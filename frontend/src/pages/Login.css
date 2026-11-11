@@ -38,7 +38,7 @@
   font-family: var(--font-ui);
   font-weight: 300;
   font-size: 13px;
-  color: var(--ink-faint);
+  color: var(--paper-mid); /* on the ink panel; --ink-faint is for paper */
 }
 
 .rf-login-right {
@@ -123,7 +123,6 @@
   font-weight: 300;
   font-size: 15px;
   color: var(--ink);
-  outline: none;
   transition: border-color 150ms ease-out;
 }
 

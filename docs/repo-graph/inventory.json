@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 258,
-    "inventoried": 202,
+    "tracked": 259,
+    "inventoried": 203,
     "excluded": 56
   },
   "files": [
@@ -890,7 +890,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1719,
-      "size_bytes": 301185,
+      "size_bytes": 303840,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -929,34 +929,26 @@
     {
       "path": "frontend/index.html",
       "language": "html",
-      "lines": 16,
-      "size_bytes": 732,
+      "lines": 13,
+      "size_bytes": 361,
       "role": "entry",
       "purpose": "Vite HTML shell: loads the Google Fonts (DM Mono, DM Sans, Lora, Playfair Display) and mounts /src/main.jsx."
     },
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 34,
-      "size_bytes": 859,
+      "lines": 37,
+      "size_bytes": 1003,
       "role": "config",
-      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 is loaded through @tailwindcss/vite."
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans bundled through @fontsource-variable."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
       "language": "text",
-      "lines": 83,
-      "size_bytes": 3533,
+      "lines": 84,
+      "size_bytes": 3626,
       "role": "config",
       "purpose": "WCAG contrast check of every text, boundary and cover pair in styles/tokens.css for the four theme x accent combinations; exit 1 on a failure (npm run check:contrast)."
-    },
-    {
-      "path": "frontend/src/App.css",
-      "language": "css",
-      "lines": 184,
-      "size_bytes": 2891,
-      "role": "asset",
-      "purpose": "Leftover Vite template styles; not imported by any file."
     },
     {
       "path": "frontend/src/App.jsx",
@@ -994,7 +986,7 @@
       "path": "frontend/src/components/ui/Button.css",
       "language": "css",
       "lines": 86,
-      "size_bytes": 1470,
+      "size_bytes": 1535,
       "role": "component",
       "purpose": "Button styles: primary, secondary and danger variants and the loading sweep; uses transition: all."
     },
@@ -1089,10 +1081,10 @@
     {
       "path": "frontend/src/index.css",
       "language": "css",
-      "lines": 71,
-      "size_bytes": 1410,
+      "lines": 43,
+      "size_bytes": 1102,
       "role": "asset",
-      "purpose": "Global stylesheet: imports Tailwind's theme and utilities layers (no preflight) and styles/tokens.css, keeps the pre-2.0 colour names still used by the pages, reset, focus ring, and the .page fade."
+      "purpose": "Global stylesheet: Tailwind's theme and utilities layers (no preflight), then tokens.css, fonts.css and base.css (in the base layer); the pre-2.0 colour names as aliases of the tokens; the reset (base layer) and the .page fade."
     },
     {
       "path": "frontend/src/lib/api.js",
@@ -1121,8 +1113,8 @@
     {
       "path": "frontend/src/pages/ComprehensionTest.css",
       "language": "css",
-      "lines": 300,
-      "size_bytes": 5611,
+      "lines": 301,
+      "size_bytes": 5745,
       "role": "page",
       "purpose": "Styles for the test page: dark timer strip, question dots, slide animations, answer textarea, submitting overlay."
     },
@@ -1169,8 +1161,8 @@
     {
       "path": "frontend/src/pages/Login.css",
       "language": "css",
-      "lines": 172,
-      "size_bytes": 3004,
+      "lines": 171,
+      "size_bytes": 3036,
       "role": "page",
       "purpose": "Styles for the split login page: quote panel, tabs, form fields; single column below 768 px."
     },
@@ -1215,10 +1207,26 @@
       "purpose": "Results page: animated score, verdict, per-question feedback, next-session or re-read panel; rebuilds from the API after a refresh."
     },
     {
+      "path": "frontend/src/styles/base.css",
+      "language": "css",
+      "lines": 124,
+      "size_bytes": 2653,
+      "role": "asset",
+      "purpose": "Editorial base styles in the base layer: body DM Sans 400, Playfair 500 headings, accent-text links, one focus ring, selection colour, .flow heading rhythm, .reading (Lora 18/31, 65ch, justified with hyphens), .drop-cap, .eyebrow, .running-head and .figure."
+    },
+    {
+      "path": "frontend/src/styles/fonts.css",
+      "language": "css",
+      "lines": 12,
+      "size_bytes": 636,
+      "role": "asset",
+      "purpose": "Bundled variable fonts (D6): Lora and Playfair Display, upright and italic, and DM Sans upright, weight axis only, font-display swap."
+    },
+    {
       "path": "frontend/src/styles/tokens.css",
       "language": "css",
-      "lines": 241,
-      "size_bytes": 7910,
+      "lines": 246,
+      "size_bytes": 8137,
       "role": "asset",
       "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
     },
@@ -1233,10 +1241,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 29,
-      "size_bytes": 625,
+      "lines": 55,
+      "size_bytes": 1536,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, an /api dev proxy to port 8000, and a single vendor chunk."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a single vendor chunk."
     },
     {
       "path": "package.json",
@@ -1561,8 +1569,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 204,
-      "size_bytes": 45995,
+      "lines": 205,
+      "size_bytes": 46542,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

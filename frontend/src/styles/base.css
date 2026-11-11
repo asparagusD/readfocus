@@ -1,0 +1,124 @@
+/*
+ * Editorial base styles (C10.3): element defaults and the few type roles
+ * that are classes rather than Tailwind sizes. Values come from tokens.css.
+ */
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-weight: 400; /* was 300: thin strokes on paper */
+  font-kerning: normal;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+h5,
+h6 {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* A3: links are accent text in both themes; hover draws an underline. */
+a {
+  color: var(--accent-text);
+  text-decoration-line: none;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-line: underline;
+}
+
+/* A10: one focus ring for every interactive element. */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+::selection {
+  background-color: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* Vertical rhythm for running content: more room before a heading than after. */
+.flow > * + * {
+  margin-block-start: var(--flow-space, var(--space-4));
+}
+
+.flow > * + :is(h2, h3, h4) {
+  margin-block-start: var(--space-7);
+}
+
+.flow > :is(h1, h2, h3, h4) + * {
+  margin-block-start: var(--space-3);
+}
+
+/* Book text: Lora 18/31, 60-75 characters a line, justified with hyphens. */
+.reading {
+  max-width: 65ch;
+  font-family: var(--font-reading);
+  font-size: var(--reading-size, var(--text-reading));
+  line-height: var(--text-reading--line-height);
+  text-align: justify;
+  hyphens: auto;
+  hanging-punctuation: first;
+}
+
+.reading > p + p {
+  margin-block-start: 0;
+  text-indent: 1.5em;
+}
+
+.drop-cap::first-letter {
+  float: left;
+  padding: 6px 10px 0 0;
+  color: var(--accent-text);
+  font-family: var(--font-display);
+  font-size: 4.1em;
+  line-height: 0.82;
+}
+
+.eyebrow,
+.running-head {
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  font-size: var(--text-eyebrow);
+  font-weight: 600;
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+}
+
+.running-head {
+  font-size: var(--text-running-head);
+  line-height: var(--text-running-head--line-height);
+  letter-spacing: var(--text-running-head--letter-spacing);
+}
+
+.figure {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variant-numeric: lining-nums tabular-nums;
+}

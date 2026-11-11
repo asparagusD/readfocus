@@ -64,7 +64,7 @@
   font-family: var(--font-ui);
   font-weight: 300;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--paper-mid); /* was 50% white: lost on the light Lamplight panel */
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -76,11 +76,13 @@
 }
 
 .rf-test-arc-bg {
-  stroke: rgba(255, 255, 255, 0.2);
+  stroke: var(--paper-mid);
+  stroke-opacity: 0.25;
 }
 
+/* On the ink strip the accent needs its inverse (2.7:1 -> 6.7:1). */
 .rf-test-arc-fg {
-  stroke: var(--amber);
+  stroke: var(--accent-inverse);
   transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
 }
 
@@ -96,7 +98,7 @@
 
 /* Timer Warning State */
 .rf-test-timer-warning .rf-test-timer-digits {
-  color: var(--amber);
+  color: var(--accent-inverse);
   animation: timerPulse 1s infinite alternate ease-in-out;
 }
 
@@ -220,7 +222,6 @@
 }
 
 .rf-test-textarea:focus {
-  outline: none;
   border-color: var(--amber);
 }
 

@@ -53,8 +53,9 @@ const rules = [
   ['--accent-ink', '--accent-hover', 4.5, 'text on accent hover'],
   // A1 and A10: boundaries and the focus ring, 3:1 (WCAG 1.4.11).
   ...['--line-field', '--accent'].flatMap((fg) => grounds.map((bg) => [fg, bg, 3, 'boundary'])),
-  // Toast fill: ground colour on ink.
+  // Inverted panels (toast, timer strip): ground colour and accent on ink.
   ['--paper', '--ink', 4.5, 'inverse text'],
+  ['--accent-inverse', '--ink', 4.5, 'inverse accent'],
   // D5: cream title on each cover.
   ...['--cover-moss', '--cover-oxblood', '--cover-ink', '--cover-ochre', '--cover-slate'].map((bg) => ['--cover-title', bg, 4.5, 'cover']),
 ];

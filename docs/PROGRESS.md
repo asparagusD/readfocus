@@ -1857,6 +1857,57 @@ Estimated time: about 3.9 h (C11.1a 0.6, C11.1b 0.6, C11.2a 0.5, C11.2b
 | [x] C11.5 image budgets and Lighthouse | this commit (`perf(ui): enforce image budgets and record Lighthouse results`) | `frontend/scripts/check-images.mjs` (new) and `npm run check:images`: each raster at most 150 KB, all rasters together at most 400 KB (what an initial route could load), illustration SVGs at most 8 KB, every `<img>` with width, height, decoding and loading (lazy, or eager with `fetchPriority="high"` for the LCP image), and `covers.MAX_IMAGE_BYTES` within budget. `backend/services/covers.py`: cover download cap 500 KB → 150 KB. `check:images` is a standard check (answer of the user at plan time): `CLAUDE.md` (list, baseline row, "six passing checks"; the contrast row corrected to 204 pairs), the `atomic-commit` and `debug-protocol` skills. `docs/BENCHMARKS.md`: budgets and Lighthouse results. The planned WebP re-encoding of covers is not done: stored covers are 12 KB JPEGs, far under budget. | `check:images` on the repo: 1 raster (13.1 KB), 7 illustrations, 1 `<img>`, 0 failing; on a scratch tree with one fault per rule: 10 failures, exit 1, and a correct eager LCP `<img>` passes; it first caught the 500 KB cover cap. Lighthouse 12.8.2 (mobile defaults, Edge 157 headless, production preview, 3 runs each, cold cache): `/login` 88/88/88, CLS 0.0002; `/` signed in as test user A 85/87/87, CLS 0.0002; 0 images on either route; LCP elements are text. Before the fix row above: NO_FCP on every run. `test_covers.py` 31 passed with the new cap. Standard checks: see commit. | 2026-11-11 | Library with covers not measured (no page renders `BookCover`; `GET /books` lacks `cover_url`). `/` scored 85 on one run, at the threshold: the 227 KB gzip vendor chunk dominates, not images. The unused Vite template images are still in the tree |
 | [x] C11.1 fix: template images logged in the asset register | this commit (`fix(docs): log the Vite template images in the asset register`) | Found in the C11 close review (exit criterion "licences logged"): `docs/ASSETS.md` listed the create-vite template files as "not yet logged", and one of them, `favicon.svg` (the Vite logo), reaches readers. Now a table: file, what, source, licence (MIT template; logos are their owners' marks), whether it is used. No file changed. | Files read and identified (`favicon.svg` Vite logo, `icons.svg` social icon sprite, `hero.png` 343 x 361, `react.svg`, `vite.svg`); `git log --diff-filter=A`: all added in `f107f08` (project scaffold); grep: only `favicon.svg` is referenced (`index.html`). Standard checks: see commit. | 2026-11-11 | The favicon is still the Vite logo, and the unused files are still in the tree (deleting them is a separate change) |
 
+Close review (2026-11-11 12:42):
+
+- **Checks.** ruff 28 errors (baseline), `pytest backend/tests -q` 652
+  passed (608 at chunk start), ESLint 20 errors and 2 warnings
+  (baseline), build passes, `import backend.main` exit 0, tooling 62
+  passed, `check:contrast` 204 pairs and 0 failing, `check:images` 0
+  failing (new in C11.5). `make graph` gave no diff.
+- **Subchunks.** C11.1, C11.2, C11.3 and C11.5 ticked, with four fix
+  rows; C11.4 cut at plan time (the user's answer).
+- **Exit criteria.** (1) Illustrations render in both themes: seven
+  pictures in all four theme x accent panels (C11.1); rechecked at close
+  in headless Edge at 1440 and 375, loops running and stopping under
+  reduced motion, no sideways overflow. (2) Real covers for books Open
+  Library knows, typographic otherwise: on dev every ready book is
+  looked up; the one published book (two uploads) has its cover stored,
+  the five test PDFs have none and stay typographic; `BookCover` shows
+  the stored cover and falls back on a missing or broken one (rechecked
+  at close: 3 images loaded across the runs, every other cover
+  typographic, box size constant). Covers are not on any app page yet:
+  `GET /books` does not return `cover_url` and no page renders
+  `BookCover` (the library chunk). (3) Licences logged: illustrations
+  (original), covers (Open Library, publishers' art under D5), and the
+  Vite template files (fixed at close, `2c889a0`). (4) Image budgets met:
+  `check:images` passes; Lighthouse `/login` 88 and `/` 87 (medians),
+  CLS 0.0002, 0 images on either route (`docs/BENCHMARKS.md`).
+- **Diff.** `git diff readfocus-2.0...HEAD`: 52 files, 2,544 insertions
+  and 114 deletions (39 files and 1,437 insertions in frontend, backend,
+  scripts and migrations); `git diff --check` clean; no secrets, test
+  credentials or env files; no `debugger` or TODO; the only
+  `console.log` calls are `check-images.mjs`'s report.
+- **Blocking findings.** None.
+- **Non-blocking.**
+  - Release order: `book_ingestor.run_job` now selects `title, author,
+    cover_source`, so migration 012 must be applied to production before
+    this backend is deployed, or ingestion fails at its first query.
+    012 is applied on dev only.
+  - Cover hit rate on dev: 2 of 7 ready books (29%); both are uploads of
+    the one real published book (1 of 1 found). Title search matches the
+    work, not the edition (that book got the ARM edition's cover).
+  - The D5 cover colour is computed, not saved; no ISBN column.
+  - The favicon is still the Vite logo; the four unused template images
+    are still in the tree.
+  - `usePageTransition` and the `page`/`visible` class names are inert
+    since the C11.5 fix.
+  - Ambient illustration loops have no pause control (WCAG 2.2.2) for
+    the screen that turns them on.
+  - C11.1, C11.2 and C11.3 are over the ~200-line guideline because the
+    prompts asked for one commit each.
+- **Time.** About 1 h 10 min from the branch (11:31) to this review,
+  against 1.0 h budgeted: about 20% over, under the 50% stop rule.
+
 ## C12
 
 Title to be filled from the promptbook.

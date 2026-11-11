@@ -551,7 +551,7 @@ Each use is the file and line of the first import of that service.
 | `docs/DEBUG_LOG.md` | 1515 | Debug log rules, entry template, and one entry per failure. |
 | `docs/DESIGN_AUDIT.md` | 271 | C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 1886 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 1937 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 

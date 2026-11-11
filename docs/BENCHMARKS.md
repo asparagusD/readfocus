@@ -773,6 +773,15 @@ but **4 of 12 dictionary lookups of made-up words hit the 2.5 s timeout**,
 so an unknown word is sometimes reported as "couldn't look this up"
 rather than "not found" (nothing is cached then).
 
+Follow-up, same day (Wikipedia after a failed source): 12 more made-up
+words, cache table bypassed. 6 came back "not found" (1.4–2.6 s, both
+sources asked) and 6 "unavailable": one dictionary timeout (3.7 s in all)
+and five fast failures that turned out to be intermittent **502s from the
+dictionary's Cloudflare front with `Retry-After: 60`**, each followed by a
+Wikipedia 404. A word cannot be called "not found" while the dictionary
+has not answered, so these stay unavailable and uncached. Real terms were
+unaffected: `serendipity` (dictionary) and `Walden Pond` (Wikipedia, 298 ms).
+
 Memory: importing `backend/services/lookup.py` in a fresh process with
 httpx and the Supabase client already loaded: 55.8 → 57.1 MB RSS (+1.3
 MB). No new dependency (httpx was already pinned). The in-process LRU

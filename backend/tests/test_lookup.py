@@ -167,9 +167,35 @@ def test_a_timeout_is_graceful_and_not_cached(env):
     body = response.json()
     assert body["found"] is False and body["unavailable"] is True
     assert "couldn't look this up" in body["message"].lower()
-    assert env.upstream.urls == [DICT + "slow"]  # no base forms, no Wikipedia: no retry storm
+    assert env.upstream.urls == [DICT + "slow", WIKI + "Slow"]  # no base forms after a timeout: no retry storm
     assert env.db.tables.get("term_lookups", []) == []
     assert lookup.TIMEOUT_SECONDS == 2.5
+
+
+def test_a_dictionary_timeout_still_tries_wikipedia_and_keeps_its_answer_out_of_the_cache(env):
+    env.upstream.routes[DICT + "thoreauvian"] = httpx.ReadTimeout("slow")
+    env.upstream.routes[WIKI + "Thoreauvian"] = dict(THOREAU, title="Thoreauvian")
+    body = get(env, "thoreauvian").json()
+    assert body["found"] is True and body["source"] == "wikipedia" and not body.get("unavailable")
+    assert env.upstream.urls == [DICT + "thoreauvian", WIKI + "Thoreauvian"]
+    assert env.db.tables.get("term_lookups", []) == []  # the dictionary may still have it: ask again next time
+    get(env, "thoreauvian")
+    assert len(env.upstream.requests) == 4
+
+
+def test_a_wikipedia_timeout_still_tries_the_dictionary_for_a_proper_noun(env):
+    env.upstream.routes[WIKI + "Run"] = httpx.ConnectTimeout("slow")
+    env.upstream.routes[DICT + "run"] = RUN
+    body = get(env, "Run", proper=1).json()
+    assert body["source"] == "dictionary" and env.upstream.urls == [WIKI + "Run", DICT + "run"]
+    assert env.db.tables.get("term_lookups", []) == []
+
+
+def test_both_sources_failing_is_unavailable(env):
+    env.upstream.routes[DICT + "slow"] = httpx.ReadTimeout("slow")
+    env.upstream.routes[WIKI + "Slow"] = httpx.ConnectError("down")
+    body = get(env, "slow").json()
+    assert body["unavailable"] is True and len(env.upstream.requests) == 2
 
 
 def test_a_cache_hit_makes_no_request(env):

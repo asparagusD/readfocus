@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 188,
-      "size_bytes": 8942,
+      "size_bytes": 8990,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -473,10 +473,10 @@
     {
       "path": "backend/services/lookup.py",
       "language": "python",
-      "lines": 235,
-      "size_bytes": 9163,
+      "lines": 244,
+      "size_bytes": 9569,
       "role": "service",
-      "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract; 2.5 s timeout, no retries, a failure is never cached and returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
+      "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
     },
     {
       "path": "backend/services/processing_jobs.py",
@@ -761,8 +761,8 @@
     {
       "path": "backend/tests/test_lookup.py",
       "language": "python",
-      "lines": 236,
-      "size_bytes": 9495,
+      "lines": 262,
+      "size_bytes": 10856,
       "role": "test",
       "purpose": "Pytest with httpx.MockTransport and the in-memory database through TestClient: normalisation and base forms, dictionary hit payload and User-Agent, base-form retry, dictionary miss to Wikipedia, proper noun and phrase to Wikipedia, disambiguation, timeout answered gracefully and not cached, cache hit with no request, 90-day and 7-day expiry, a broken cache table, the per-user 429, 422 for non-terms, 401 without a user."
     },
@@ -961,8 +961,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 872,
-      "size_bytes": 47985,
+      "lines": 909,
+      "size_bytes": 49908,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2106,
-      "size_bytes": 395195,
+      "lines": 2108,
+      "size_bytes": 399684,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2250,7 +2250,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 290,
-      "size_bytes": 73754,
+      "size_bytes": 73848,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

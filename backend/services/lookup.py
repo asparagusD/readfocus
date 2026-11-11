@@ -2,9 +2,10 @@
 
 Both are free, keyless APIs (free-intelligence skill). Every answer, "not
 found" included, is kept in the shared `term_lookups` table (90 days found,
-7 days not found) with a small in-process copy in front of it. A timeout or
-error stops the lookup at once (no retries) and is never cached, so reading
-never waits more than one slow call.
+7 days not found) with a small in-process copy in front of it. Each source
+gets one attempt: a timeout or error skips it (no retries, no base forms)
+and the other source is still asked, so a lookup waits at most two slow
+calls. An answer found after a skipped source is returned but not cached.
 """
 
 import logging
@@ -221,15 +222,23 @@ def look_up(term: Term, lang: str = "en", proper: bool = False) -> dict:
     cached = _cached(key, lang)
     if cached is not None:
         return cached
-    try:
-        if term.words > 1:
-            payload = _wikipedia(term)
-        elif wiki_first:
-            payload = _wikipedia(term) or _dictionary(term)
-        else:
-            payload = _dictionary(term) or _wikipedia(term)
-    except Unavailable:
+    if term.words > 1:
+        sources = [_wikipedia]
+    else:
+        sources = [_wikipedia, _dictionary] if wiki_first else [_dictionary, _wikipedia]
+    failed = False
+    for source in sources:  # a failed source is skipped, never retried
+        try:
+            payload = source(term)
+        except Unavailable:
+            failed = True
+            continue
+        if payload:
+            if not failed:  # the skipped source might have answered better: don't keep this one
+                _store(key, lang, payload)
+            return payload
+    if failed:
         return dict(_blank(term.key), unavailable=True, message=UNAVAILABLE)
-    payload = payload or _blank(term.key)
+    payload = _blank(term.key)
     _store(key, lang, payload)
     return payload

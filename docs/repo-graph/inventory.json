@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 391,
-    "inventoried": 328,
+    "tracked": 393,
+    "inventoried": 330,
     "excluded": 63
   },
   "files": [
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2284,
-      "size_bytes": 463979,
+      "lines": 2285,
+      "size_bytes": 464852,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1071,6 +1071,14 @@
       "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion."
     },
     {
+      "path": "frontend/e2e/results.spec.js",
+      "language": "javascript",
+      "lines": 120,
+      "size_bytes": 7834,
+      "role": "config",
+      "purpose": "Playwright e2e for results (C13.6): from the test (score, summary, verdict, outcomes, answer without the letter, feedback and quote, chips, next session and Start next session), a low-confidence grade, opened fresh (rebuilt from GET /sessions/{id} and GET /books/{id}, in that order), not graded yet, a failed load with Try again, and 375 px."
+    },
+    {
       "path": "frontend/e2e/shell.spec.js",
       "language": "javascript",
       "lines": 132,
@@ -1081,10 +1089,18 @@
     {
       "path": "frontend/e2e/test.spec.js",
       "language": "javascript",
-      "lines": 173,
-      "size_bytes": 9662,
+      "lines": 147,
+      "size_bytes": 8032,
       "role": "config",
-      "purpose": "Playwright e2e for the comprehension test (C13.5) with GET /sessions/{id}, evaluate-single and submit-answers answered in the spec (mockTest, QUESTIONS): when time runs out the typed answers and 300 s are submitted; one question at a time (prompt without options, key 2 and Enter, evaluate-single body, written answer, dots, Back, submit body and route, storage cleared), answers kept across a reload, the timer warning at 30 s, the leave dialog, a failed submit tried again, and 375 px with 44 px targets; with and without reduced motion, the question slide and the option settle."
+      "purpose": "Playwright e2e for the comprehension test (C13.5) with GET /sessions/{id}, evaluate-single and submit-answers answered by e2e/testSession.js: when time runs out the typed answers and 300 s are submitted; one question at a time (prompt without options, key 2 and Enter, evaluate-single body, written answer, dots, Back, submit body and route, storage cleared), answers kept across a reload, the timer warning at 30 s, the leave dialog, a failed submit tried again, and 375 px with 44 px targets; with and without reduced motion, the question slide and the option settle."
+    },
+    {
+      "path": "frontend/e2e/testSession.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1854,
+      "role": "config",
+      "purpose": "Shared e2e data, not a spec: QUESTIONS (one multiple choice, one written) and mockTest, which answers GET /sessions/t1, evaluate-single and submit-answers and records what was sent."
     },
     {
       "path": "frontend/eslint.config.js",
@@ -1289,18 +1305,18 @@
     {
       "path": "frontend/src/components/ui/ConceptChip.css",
       "language": "css",
-      "lines": 43,
-      "size_bytes": 874,
+      "lines": 53,
+      "size_bytes": 1100,
       "role": "component",
-      "purpose": "Concept chip styles: strengthened (accent wash, check icon) and revisit (dashed field border, turn-back icon); group layout."
+      "purpose": "Concept chip styles: strengthened (accent wash, check icon) and revisit (dashed field border, turn-back icon); group layout; the quiet kind word."
     },
     {
       "path": "frontend/src/components/ui/ConceptChip.jsx",
       "language": "jsx",
-      "lines": 41,
-      "size_bytes": 1378,
+      "lines": 43,
+      "size_bytes": 1595,
       "role": "component",
-      "purpose": "ConceptChip (strengthened or revisit, told apart by fill, border, icon and words) and ConceptChipGroup, a labelled list that pops chips in 60 ms apart (fade only under reduced motion)."
+      "purpose": "ConceptChip (strengthened or revisit, told apart by fill, border, icon and words) and ConceptChipGroup, a labelled list that pops chips in 60 ms apart (fade only under reduced motion); quiet hides the kind's word visually under a heading that says it."
     },
     {
       "path": "frontend/src/components/ui/EmptyState.css",
@@ -1857,18 +1873,18 @@
     {
       "path": "frontend/src/pages/Results.css",
       "language": "css",
-      "lines": 241,
-      "size_bytes": 4468,
+      "lines": 251,
+      "size_bytes": 4973,
       "role": "page",
-      "purpose": "Styles for the results page: large score, verdict colours, per-question breakdown, next-session and re-read panels; its own 720 px column."
+      "purpose": "Results styles: two columns (one under 1024 px), the 112 px Playfair score, summary pill and verdict, the question list with outcome icons, the evidence quote on paper-2 (no side rule), the concept and next-session cards, the message and skeleton states."
     },
     {
       "path": "frontend/src/pages/Results.jsx",
       "language": "jsx",
-      "lines": 188,
-      "size_bytes": 7131,
+      "lines": 230,
+      "size_bytes": 10197,
       "role": "page",
-      "purpose": "Results page: animated score, verdict, per-question feedback, next-session or re-read panel; rebuilds from the API after a refresh."
+      "purpose": "Results (handoff screen 08): the score, summary and verdict, a note when answers were not judged confidently; each question with its outcome in words and an icon, the reader's answer (without the '(b) ' the grader reads), the feedback and its quoted passage; concept chips strengthened and to revisit; the next session (planner mode, minutes and reason, or the pace's re-read) with Start next session and the dashboard; from router state after the test (GET /sessions/{id} for the questions) or rebuilt after a refresh from GET /sessions/{id} and GET /books/{id}; skeleton, not-graded and failed (Try again) states."
     },
     {
       "path": "frontend/src/reader/BookFlow.jsx",
@@ -2569,8 +2585,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 330,
-      "size_bytes": 91337,
+      "lines": 332,
+      "size_bytes": 92611,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

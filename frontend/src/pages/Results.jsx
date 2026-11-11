@@ -1,188 +1,230 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
+import { Check, RotateCcw, Minus, HelpCircle } from 'lucide-react';
 import { fetchApi } from '../lib/api';
-import { usePageTransition } from '../hooks/usePageTransition';
-import './Results.css';
+import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
+import { ConceptChip, ConceptChipGroup } from '../components/ui/ConceptChip';
+import { OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { OUTCOME_LABEL, conceptChips, outcome, splitFeedback, summary, verdict } from '../lib/results';
+import './Results.css';
 
+const ICONS = { right: Check, partial: Minus, wrong: RotateCcw, unsure: HelpCircle };
+const NEXT_TITLE = {
+  new: 'The next pages',
+  re_read: 'A second look at today’s pages',
+  review: 'A review of what needs another look',
+  finished: 'You have reached the end of the book',
+};
+
+/** A stored multiple-choice question lists its options after the prompt; an answer is "(b) <option>". */
+const promptOf = (q) => (q?.options?.length ? q.question.split('\n')[0] : q?.question);
+const shownAnswer = (answer) => (answer ?? '').replace(/^\([a-h]\)\s+/, '');
+
+function ResultsSkeleton() {
+  return (
+    <div className="rf-results" aria-busy="true" aria-label="Loading your results">
+      <div className="rf-results__main">
+        <Skeleton width={220} height={12} />
+        <Skeleton width={200} height={96} className="rf-results__skel-score" />
+        <Skeleton lines={6} />
+      </div>
+      <div className="rf-results__side">
+        <Skeleton height={220} className="rf-results__skel-card" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Results (handoff screen 08): the score, a one-line verdict and a count
+ * by outcome; each question with its outcome in words and an icon, the
+ * reader's answer, the feedback and the passage it rests on; the concepts
+ * strengthened and to revisit; and the next session. Coming from the test
+ * the grades arrive in router state; after a refresh they are rebuilt
+ * from GET /sessions/{id} and the pace from GET /books/{id}, as before.
+ */
 export function Results() {
   useDocumentTitle('Results');
   const { sessionId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  usePageTransition();
 
   const [loading, setLoading] = useState(true);
+  const [problem, setProblem] = useState(null); // 'failed' | 'not-graded'
   const [sessionData, setSessionData] = useState(null);
   const [resultsData, setResultsData] = useState(null);
   const [userAnswers, setUserAnswers] = useState([]);
-  
-  // Animation state
-  const [animatedScore, setAnimatedScore] = useState(0);
-  const scoreAnimationRef = useRef(null);
+
+  const [attempt, setAttempt] = useState(0); // Try again loads once more
 
   useEffect(() => {
-    async function loadData() {
-      // If we came directly from the test page, we have everything in state
+    async function load() {
       if (location.state?.resultsData) {
-        setResultsData(location.state.resultsData);
-        if (location.state.userAnswers) setUserAnswers(location.state.userAnswers);
-        
-        // Fetch session strictly to get the questions text
+        let sess = null;
         try {
-          const sess = await fetchApi(`/sessions/${sessionId}`);
-          setSessionData(sess);
+          sess = await fetchApi(`/sessions/${sessionId}`); // the questions' text
         } catch (e) {
           console.error(e);
         }
+        setSessionData(sess);
+        setResultsData(location.state.resultsData);
+        if (location.state.userAnswers) setUserAnswers(location.state.userAnswers);
         setLoading(false);
-      } else {
-        // Fallback: user refreshed the page, fetch from backend DB
-        try {
-          const sess = await fetchApi(`/sessions/${sessionId}`);
-          setSessionData(sess);
-          if (sess.test_results) {
-            // Reconstruct resultsData from DB test_results
-            const reconstructed = {
-              total_score: sess.test_results.total_score,
-              max_score: sess.test_results.max_score,
-              percentage: (sess.test_results.total_score / sess.test_results.max_score) * 100,
-              per_question: sess.test_results.answers, // Array of { question, user_answer, score, feedback }
-            };
-            
-            // Map the user answers from the DB
-            const dbAnswers = sess.test_results.answers.map(a => a.user_answer || '');
-            setUserAnswers(dbAnswers);
-            
-            // Need to fetch pace_recommendation from the book's reading_progress
-            const bookId = sess.book_id;
-            const book = await fetchApi(`/books/${bookId}`);
-            if (book.reading_progress?.pace_recommendation) {
-                reconstructed.pace_recommendation = book.reading_progress.pace_recommendation;
-            }
-            
-            setResultsData(reconstructed);
-          } else {
-            // Test not taken or not finished
-            navigate('/');
-          }
-        } catch (e) {
-            console.error(e);
-            navigate('/');
-        }
-        setLoading(false);
+        return;
       }
-    }
-    loadData();
-  }, [sessionId, location.state, navigate]);
-
-  useEffect(() => {
-    if (!loading && resultsData) {
-      // Animate score from 0 to total_score over 800ms
-      const targetScore = resultsData.total_score;
-      const duration = 800;
-      const startTime = performance.now();
-      
-      const animate = (currentTime) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // ease-out cubic
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        
-        setAnimatedScore(Math.round(targetScore * easeOut));
-        
-        if (progress < 1) {
-          scoreAnimationRef.current = requestAnimationFrame(animate);
-        } else {
-          setAnimatedScore(targetScore);
+      // After a refresh: rebuild from the stored test results.
+      try {
+        const sess = await fetchApi(`/sessions/${sessionId}`);
+        setSessionData(sess);
+        if (!sess.test_results) {
+          setProblem('not-graded');
+          setLoading(false);
+          return;
         }
-      };
-      
-      scoreAnimationRef.current = requestAnimationFrame(animate);
-      
-      return () => {
-        if (scoreAnimationRef.current) cancelAnimationFrame(scoreAnimationRef.current);
-      };
+        const results = sess.test_results;
+        const reconstructed = {
+          total_score: results.total_score,
+          max_score: results.max_score,
+          percentage: results.max_score ? (results.total_score / results.max_score) * 100 : 0,
+          per_question: results.answers,
+        };
+        setUserAnswers(results.answers.map((a) => a.user_answer || ''));
+        const book = await fetchApi(`/books/${sess.book_id}`);
+        if (book.reading_progress?.pace_recommendation) reconstructed.pace_recommendation = book.reading_progress.pace_recommendation;
+        setResultsData(reconstructed);
+      } catch (e) {
+        console.error(e);
+        setProblem('failed');
+      }
+      setLoading(false);
     }
-  }, [loading, resultsData]);
+    load();
+  }, [sessionId, location.state, attempt]);
 
-  if (loading) {
-    return <div className="rf-results-loading">Loading results...</div>;
+  const retry = () => {
+    setProblem(null);
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  };
+
+  if (loading) return <ResultsSkeleton />;
+
+  if (problem) {
+    return (
+      <div className="rf-results rf-results--message">
+        <section className="rf-results__card" role={problem === 'failed' ? 'alert' : undefined}>
+          <h1 className="rf-results__title">{problem === 'failed' ? 'Your results didn’t load.' : 'This test hasn’t been graded yet.'}</h1>
+          <p>{problem === 'failed' ? 'Nothing is lost; the grades are saved. Try again in a moment.' : 'Finish the test first, then your results appear here.'}</p>
+          <div className="rf-results__actions">
+            {problem === 'failed' && <Button onClick={retry}>Try again</Button>}
+            <Link to="/" className="rf-btn rf-btn--ghost">Back to library</Link>
+          </div>
+        </section>
+      </div>
+    );
   }
 
-  // Calculate verdict
-  const pct = resultsData.percentage;
-  let verdictText = "Needs review";
-  let verdictClass = "rf-verdict-needs-review";
-  
-  if (pct >= 80) {
-    verdictText = "Excellent";
-    verdictClass = "rf-verdict-excellent";
-  } else if (pct >= 60) {
-    verdictText = "Good";
-    verdictClass = "rf-verdict-good";
-  } else if (pct < 50) { 
-    verdictText = "Re-read required";
-    verdictClass = "rf-verdict-re-read";
-  }
+  const grades = resultsData.per_question ?? [];
+  const pct = Math.round(resultsData.percentage ?? 0);
+  const chips = conceptChips(grades);
+  const unsure = grades.filter((g) => outcome(g) === 'unsure').length;
+  const next = resultsData.next_session;
+  const pace = resultsData.pace_recommendation;
+  const minutes = next?.focus_duration_minutes || pace?.focus_duration_minutes;
+  const bookId = sessionData?.book_id;
 
-  const paceRec = resultsData.pace_recommendation;
-  const isReRead = paceRec?.re_read_mode === true;
-  
   return (
-    <div className="rf-results-page">
-      <div className="rf-results-score-section">
-        <div className="rf-results-score-label">Comprehension score</div>
-        <div className="rf-results-score-number-wrapper">
-          <span className="rf-results-score-number">{animatedScore}</span>
-          <span className="rf-results-score-max">/ {resultsData.max_score}</span>
+    <div className="rf-results">
+      <div className="rf-results__main">
+        <h1 className="eyebrow rf-results__eyebrow">Session results</h1>
+        <div className="rf-results__headline">
+          <p className="rf-results__score" aria-label={`Score: ${pct}%`}>
+            <span className="rf-results__figure">{pct}</span><span className="rf-results__pct">%</span>
+          </p>
+          <div className="rf-results__verdict">
+            {grades.length > 0 && <p className="rf-results__summary">{summary(grades)}</p>}
+            <p className="rf-results__line">{verdict(pct)}</p>
+            <p className="rf-results__points">{resultsData.total_score} of {resultsData.max_score} points</p>
+          </div>
         </div>
-        <div className="rf-results-percentage">{Math.round(pct)}% correct</div>
-        <div className={`rf-results-verdict ${verdictClass}`}>{verdictText}</div>
-      </div>
-      
-      <div className="rf-results-breakdown-heading">Answer Breakdown</div>
-      <div className="rf-results-breakdown-list">
-        {resultsData.per_question.map((q, i) => {
-          // Determine question text based on where data came from
-          const qText = q.question?.question || sessionData?.test_questions?.[i]?.question || `Question ${i + 1}`;
-          const uAns = userAnswers[i] || q.user_answer;
-          
-          let scoreClass = "rf-score-mid";
-          if (q.score >= 8) scoreClass = "rf-score-high";
-          else if (q.score < 5) scoreClass = "rf-score-low";
-          
-          return (
-            <div key={i} className="rf-results-q-row">
-              <div className="rf-results-q-top">
-                <div className="rf-results-q-text">{qText}</div>
-                <div className={`rf-results-q-score ${scoreClass}`}>{q.score} / 10</div>
-              </div>
-              {uAns && <div className="rf-results-q-answer">— '{uAns}'</div>}
-              <div className="rf-results-q-feedback">{q.feedback}</div>
-            </div>
-          );
-        })}
-      </div>
-      
-      {paceRec && (
-        isReRead ? (
-          <div className="rf-results-reread-panel">
-            <div className="rf-results-reread-title">You'll revisit this section next session.</div>
-            <div className="rf-results-reread-desc">Revisiting difficult material is how mastery is built.</div>
-          </div>
+        {unsure > 0 && (
+          <p className="rf-results__unsure">
+            We couldn’t judge {unsure === 1 ? 'one answer' : `${unsure} answers`} confidently, so {unsure === 1 ? 'it counts' : 'they count'} for less in your plan.
+          </p>
+        )}
+
+        <h2 className="rf-results__section">Question by question</h2>
+        {grades.length === 0 ? (
+          <p className="rf-results__empty">No questions were graded in this session.</p>
         ) : (
-          <div className="rf-results-next-panel">
-            <div className="rf-results-next-info">Next session — {paceRec.focus_duration_minutes} min</div>
-            <button className="rf-results-next-btn" onClick={() => navigate(`/read/${sessionData?.book_id}`)}>Start next session &rarr;</button>
-          </div>
-        )
-      )}
-      
-      <div className="rf-results-bottom">
-        <Link to="/" className="rf-results-library-link">Back to library</Link>
+          <ol className="rf-results__list">
+            {grades.map((g, i) => {
+              const kind = outcome(g);
+              const Icon = ICONS[kind];
+              const question = promptOf(g.question) || promptOf(sessionData?.test_questions?.[i]) || `Question ${i + 1}`;
+              const answer = shownAnswer(userAnswers[i] || g.user_answer);
+              const { text, quote } = splitFeedback(g.feedback);
+              return (
+                <li key={i} className="rf-results__item" data-outcome={kind}>
+                  <span className="rf-results__icon" aria-hidden="true"><Icon size={16} strokeWidth={1.75} /></span>
+                  <div className="rf-results__body">
+                    <p className="rf-results__outcome">{OUTCOME_LABEL[kind]}</p>
+                    <h3 className="rf-results__question">{question}</h3>
+                    <p className="rf-results__answer">{answer ? <>You answered <span>{answer}</span></> : 'No answer given'}</p>
+                    {text && <p className="rf-results__feedback">{text}</p>}
+                    {quote && <blockquote className="rf-results__quote">“{quote}”</blockquote>}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </div>
+
+      <aside className="rf-results__side">
+        {(chips.strengthened.length > 0 || chips.revisit.length > 0) && (
+          <section className="rf-results__card" aria-labelledby="rf-concepts">
+            <h2 id="rf-concepts" className="eyebrow">Concepts from this session</h2>
+            {chips.strengthened.length > 0 && (
+              <>
+                <h3 className="rf-results__chips-title">Strengthened</h3>
+                <ConceptChipGroup label="Strengthened concepts">
+                  {chips.strengthened.map((c) => <ConceptChip key={c} kind="strengthened" quiet>{c}</ConceptChip>)}
+                </ConceptChipGroup>
+              </>
+            )}
+            {chips.revisit.length > 0 && (
+              <>
+                <h3 className="rf-results__chips-title">To revisit</h3>
+                <ConceptChipGroup label="Concepts to revisit">
+                  {chips.revisit.map((c) => <ConceptChip key={c} kind="revisit" quiet>{c}</ConceptChip>)}
+                </ConceptChipGroup>
+              </>
+            )}
+          </section>
+        )}
+
+        <section className="rf-results__card rf-results__next" aria-labelledby="rf-next">
+          <OpenBook size={72} />
+          <h2 id="rf-next" className="eyebrow">Next session</h2>
+          <p className="rf-results__next-title">
+            {next ? NEXT_TITLE[next.mode] ?? NEXT_TITLE.new : pace?.re_read_mode ? NEXT_TITLE.re_read : NEXT_TITLE.new}
+          </p>
+          <p className="rf-results__next-line">
+            {minutes ? `About ${minutes} minutes.` : ''}
+            {next?.reason ? ` ${next.reason}` : pace?.re_read_mode ? ' Revisiting difficult material is how mastery is built.' : ''}
+          </p>
+          <div className="rf-results__actions">
+            {bookId && (!next || next.mode !== 'finished') && (
+              <Button onClick={() => navigate(`/read/${bookId}`)}>Start next session</Button>
+            )}
+            <Link to="/dashboard" className="rf-btn rf-btn--ghost">See your dashboard</Link>
+          </div>
+        </section>
+        <Link to="/" className="rf-results__back">Back to library</Link>
+      </aside>
     </div>
   );
 }

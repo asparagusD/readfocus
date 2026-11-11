@@ -12,15 +12,17 @@ const KINDS = {
  * Concept chip from the results screen. The two kinds differ by fill,
  * border style, icon and words, never by hue alone: `strengthened` is an
  * accent wash with a check, `revisit` a dashed outline with a turn-back
- * arrow. Use inside ConceptChipGroup so they pop in 60 ms apart.
+ * arrow. Use inside ConceptChipGroup so they pop in 60 ms apart. `quiet`
+ * hides the kind's word visually (it stays in the accessible name) for
+ * groups that already sit under a heading saying it.
  */
-export function ConceptChip({ kind = 'strengthened', children }) {
+export function ConceptChip({ kind = 'strengthened', quiet = false, children }) {
   const reduced = useReducedMotion();
   const { prefix, Icon } = KINDS[kind];
   return (
     <m.li className={`rf-chip rf-chip--${kind}`} variants={reduced ? fadeIn : chipPop}>
       <Icon className="rf-chip__icon" size={16} strokeWidth={1.75} aria-hidden="true" />
-      <span>{prefix} · {children}</span>
+      <span><span className={quiet ? 'rf-chip__kind--quiet' : undefined}>{prefix} · </span>{children}</span>
     </m.li>
   );
 }

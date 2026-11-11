@@ -1020,6 +1020,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/results.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/shell.spec.js",
       "type": "file",
       "role": "config",
@@ -1027,6 +1033,12 @@
     },
     {
       "id": "file:frontend/e2e/test.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/testSession.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -4041,6 +4053,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/results.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/results.spec.js",
+      "to": "file:frontend/e2e/testSession.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/shell.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -4048,6 +4070,11 @@
       "type": "imports",
       "from": "file:frontend/e2e/test.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/test.spec.js",
+      "to": "file:frontend/e2e/testSession.js"
     },
     {
       "type": "imports",
@@ -4812,12 +4839,32 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
-      "to": "file:frontend/src/hooks/usePageTransition.js"
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/components/ui/ConceptChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/lib/results.js"
     },
     {
       "type": "imports",

@@ -945,6 +945,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/BookCover.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/BookCover.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/CalibrationFlow.jsx",
       "type": "file",
       "role": "component",
@@ -1222,6 +1234,12 @@
     },
     {
       "id": "file:frontend/src/lib/api.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/coverColor.js",
       "type": "file",
       "role": "lib",
       "language": "javascript"
@@ -3380,6 +3398,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/BookCover.jsx",
+      "to": "file:frontend/src/components/BookCover.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BookCover.jsx",
+      "to": "file:frontend/src/lib/coverColor.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -3492,6 +3520,11 @@
       "type": "imports",
       "from": "file:frontend/src/components/ui/Tooltip.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/BookCover.jsx"
     },
     {
       "type": "imports",
@@ -4222,6 +4255,11 @@
       "type": "uses_env",
       "from": "file:frontend/src/App.jsx",
       "to": "env:DEV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "env:VITE_SUPABASE_URL"
     },
     {
       "type": "uses_env",

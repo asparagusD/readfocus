@@ -10,6 +10,22 @@ import { LibraryBig } from 'lucide-react';
 import { useToast } from '../components/ui/toastContext';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Tooltip } from '../components/ui/Tooltip';
+import { BookCover } from '../components/BookCover';
+
+// One cover in each D5 colour, then the states. The real cover is the one
+// the C11.2 backfill stored in the dev project's public covers bucket.
+const REAL_COVER = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/covers/ol/10140705-M.jpg`;
+const COVERS = [
+  { label: 'moss', title: 'Silent Spring', author: 'Rachel Carson' },
+  { label: 'oxblood', title: 'The Wealth of Nations', author: 'Adam Smith' },
+  { label: 'ink', title: 'Meditations', author: 'Marcus Aurelius' },
+  { label: 'ochre', title: 'Leviathan', author: 'Thomas Hobbes' },
+  { label: 'slate', title: 'Walden', author: 'Henry David Thoreau' },
+  { label: 'real cover', title: 'Digital Design and Computer Architecture', author: 'David Harris', coverUrl: REAL_COVER },
+  { label: 'broken image → typographic', title: 'Middlemarch', author: 'George Eliot', coverUrl: '/missing-cover.jpg' },
+  { label: 'processing · 64%', title: 'On the Origin of Species', author: 'Charles Darwin', processing: true, progress: 64 },
+  { label: 'long title, no author', title: 'An Inquiry into the Nature and Causes of the Wealth of Nations, Volume the Second' },
+];
 
 function ToastDemo() {
   const { toast } = useToast();
@@ -164,6 +180,22 @@ export function Gallery() {
         >
           Add a book you mean to read properly.
         </EmptyState>
+      </Section>
+
+      <Section title="Book covers">
+        <ul className="gallery-covers">
+          {COVERS.map((book) => (
+            <li key={book.label}>
+              <BookCover width={120} {...book} />
+              <span className="gallery-cover-label">{book.label}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="gallery-row gallery-cover-sizes">
+          <BookCover width={56} title="Walden" author="Henry David Thoreau" />
+          <BookCover width={88} title="Walden" author="Henry David Thoreau" />
+          <BookCover width={200} title="Walden" author="Henry David Thoreau" />
+        </div>
       </Section>
 
       <Section title="Skeleton">

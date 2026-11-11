@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 310,
-    "inventoried": 247,
+    "tracked": 313,
+    "inventoried": 250,
     "excluded": 63
   },
   "files": [
@@ -921,8 +921,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1882,
-      "size_bytes": 337879,
+      "lines": 1883,
+      "size_bytes": 340314,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -997,6 +997,22 @@
       "size_bytes": 3544,
       "role": "entry",
       "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); a dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery."
+    },
+    {
+      "path": "frontend/src/components/BookCover.css",
+      "language": "css",
+      "lines": 115,
+      "size_bytes": 3534,
+      "role": "component",
+      "purpose": "BookCover styles: 2:3 box in container units, the five cover tokens by data-color, frame, title and author, image cross-fade over --dur-3, spine band and its 1.6 s processing shimmer (stopped under reduced motion), author hidden below 80 px."
+    },
+    {
+      "path": "frontend/src/components/BookCover.jsx",
+      "language": "jsx",
+      "lines": 74,
+      "size_bytes": 3093,
+      "role": "component",
+      "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative."
     },
     {
       "path": "frontend/src/components/CalibrationFlow.jsx",
@@ -1209,10 +1225,10 @@
     {
       "path": "frontend/src/gallery/Gallery.jsx",
       "language": "jsx",
-      "lines": 179,
-      "size_bytes": 7149,
+      "lines": 211,
+      "size_bytes": 8978,
       "role": "asset",
-      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks."
+      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes)."
     },
     {
       "path": "frontend/src/gallery/IllustrationGallery.css",
@@ -1233,10 +1249,10 @@
     {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
-      "lines": 81,
-      "size_bytes": 1355,
+      "lines": 106,
+      "size_bytes": 1847,
       "role": "asset",
-      "purpose": "Layout styles for the dev-only component gallery."
+      "purpose": "Layout styles for the dev-only component gallery, including the book cover grid."
     },
     {
       "path": "frontend/src/gallery/main.jsx",
@@ -1373,6 +1389,14 @@
       "size_bytes": 1044,
       "role": "lib",
       "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response."
+    },
+    {
+      "path": "frontend/src/lib/coverColor.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 760,
+      "role": "lib",
+      "purpose": "coverColor(title, author): D5's deterministic cover colour, FNV-1a 32-bit of the trimmed, lower-cased title and author joined by U+001F, modulo 5, into moss, oxblood, ink, ochre, slate."
     },
     {
       "path": "frontend/src/lib/supabase.js",
@@ -1921,8 +1945,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 249,
-      "size_bytes": 56763,
+      "lines": 252,
+      "size_bytes": 57897,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

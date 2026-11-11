@@ -107,8 +107,8 @@
   "frontend/src/components/ui/Tooltip.css": "Tooltip styles: inverted pill above the trigger with a pointer; visually-hidden helper.",
   "frontend/src/components/ui/Tooltip.jsx": "Tooltip: opens on hover after 200 ms and on focus, closes on Esc, blur or leaving, stays open while hovered; the trigger is described by a persistent hidden copy, the visible bubble is aria-hidden.",
   "frontend/src/components/ui/toastContext.js": "ToastContext and useToast(), which returns { toast, dismiss } and throws without a ToastProvider.",
-  "frontend/src/gallery/Gallery.jsx": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks.",
-  "frontend/src/gallery/gallery.css": "Layout styles for the dev-only component gallery.",
+  "frontend/src/gallery/Gallery.jsx": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks; a Book covers section (each colour, a real cover from the dev covers bucket, a broken image, processing, a long title, three sizes).",
+  "frontend/src/gallery/gallery.css": "Layout styles for the dev-only component gallery, including the book cover grid.",
   "frontend/src/gallery/main.jsx": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery.",
   "frontend/src/hooks/useAuth.jsx": "AuthProvider and useAuth: Supabase session state plus signIn, signUp and signOut.",
   "frontend/src/hooks/usePageTransition.js": "Adds the .visible class on mount and returns navigateTo, which fades the page out before routing.",
@@ -245,5 +245,8 @@
   "backend/tests/test_covers.py": "Pytest with httpx.MockTransport and the in-memory database: cover hit stored in the bucket with its URL, misses, missing or non-image covers, timeouts and network, server and storage errors stored as null, archive.org redirects followed and others refused, the client's 3 s timeout and User-Agent, lookup terms, and title/author metadata from PDF info and EPUB OPF.",
   "backend/tests/test_backfill_covers.py": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, the dev-only guard, a failing book not stopping the run, and a book without a readable file looked up by its typed title.",
   "scripts/backfill_covers.py": "Backfill: looks up Open Library covers for ready books never looked up or whose lookup failed, one at a time 1.5 s apart, with file metadata and the typed title as fallback (also when the file is missing or unreadable); a failing book is reported as error and the run goes on; --dry-run, --limit, --book-id; refuses unless ENV=development.",
-  "supabase/migrations/012_book_covers.sql": "Adds books.cover_url and books.cover_source (text, nullable) and the public covers Storage bucket (service role writes). Additive."
+  "supabase/migrations/012_book_covers.sql": "Adds books.cover_url and books.cover_source (text, nullable) and the public covers Storage bucket (service role writes). Additive.",
+  "frontend/src/components/BookCover.jsx": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative.",
+  "frontend/src/components/BookCover.css": "BookCover styles: 2:3 box in container units, the five cover tokens by data-color, frame, title and author, image cross-fade over --dur-3, spine band and its 1.6 s processing shimmer (stopped under reduced motion), author hidden below 80 px.",
+  "frontend/src/lib/coverColor.js": "coverColor(title, author): D5's deterministic cover colour, FNV-1a 32-bit of the trimmed, lower-cased title and author joined by U+001F, modulo 5, into moss, oxblood, ink, ochre, slate."
 }

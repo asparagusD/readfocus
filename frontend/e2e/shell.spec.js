@@ -74,8 +74,9 @@ test.describe('at 375 px', () => {
     await expect(nav.getByRole('link', { name: 'Dashboard' })).toBeVisible();
     await expect(page.getByRole('radiogroup', { name: 'Theme' })).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
-    for (const box of await page.locator('.rf-topbar a, .rf-topbar button').evaluateAll((els) => els.filter((e) => e.offsetParent).map((e) => e.getBoundingClientRect().height))) {
-      expect(box).toBeGreaterThanOrEqual(44);
+    for (const box of await page.locator('.rf-topbar a, .rf-topbar button').evaluateAll((els) => els.filter((e) => e.offsetParent).map((e) => e.getBoundingClientRect()))) {
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.width).toBeGreaterThanOrEqual(44); // C13.9: the wordmark's icon was 24 px wide
     }
     await page.getByRole('button', { name: 'Account and reading settings' }).click();
     const theme = page.getByRole('radiogroup', { name: 'Theme' });

@@ -105,9 +105,24 @@ test.describe('at 375 px', () => {
     await page.goto('/test/t1');
     await expect(page.getByRole('radio')).toHaveCount(2);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
-    const small = await page.locator('button:visible, label.rf-option').evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).filter((r) => r.height < 44).length);
+    const small = await page.locator('button:visible, label.rf-option').evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).filter((r) => r.height < 44 || r.width < 44).length);
     expect(small).toBe(0);
     if (shots) await page.screenshot({ path: `${shots}/test-375.png`, fullPage: true });
+  });
+
+  // C13.9: a full test has five questions; five 44 px dots still fit beside Leave and the timer.
+  test('five question dots fit at 44 px', async ({ page }) => {
+    await mockTest(page, { questions: Array.from({ length: 5 }, (_, i) => ({ question: `Question ${i + 1}?`, type: 'summary' })) });
+    await page.goto('/test/t1');
+    const dots = page.getByRole('button', { name: /^Question \d/ });
+    await expect(dots).toHaveCount(5);
+    for (const box of await dots.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()))) {
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.right).toBeLessThanOrEqual(375);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
+    const leave = await page.getByRole('button', { name: 'Leave test' }).boundingBox();
+    expect(leave.width).toBeGreaterThanOrEqual(44);
   });
 });
 

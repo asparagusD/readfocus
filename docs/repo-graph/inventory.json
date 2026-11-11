@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2291,
-      "size_bytes": 485462,
+      "lines": 2292,
+      "size_bytes": 486288,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1105,16 +1105,16 @@
     {
       "path": "frontend/e2e/shell.spec.js",
       "language": "javascript",
-      "lines": 132,
-      "size_bytes": 6887,
+      "lines": 133,
+      "size_bytes": 6984,
       "role": "config",
       "purpose": "Playwright e2e for the app shell (C13.2a): the current page marked and every page titled, the skip link first and leading to main, the account panel (initials, text size and accent saved, Esc returning focus, a press outside), sign out to /login, and at 375 px the links in the bar, no sideways scroll, 44 px targets and the theme inside the panel; with and without reduced motion, the account panel and a page change carry a transform only when motion is allowed."
     },
     {
       "path": "frontend/e2e/test.spec.js",
       "language": "javascript",
-      "lines": 147,
-      "size_bytes": 8032,
+      "lines": 162,
+      "size_bytes": 8926,
       "role": "config",
       "purpose": "Playwright e2e for the comprehension test (C13.5) with GET /sessions/{id}, evaluate-single and submit-answers answered by e2e/testSession.js: when time runs out the typed answers and 300 s are submitted; one question at a time (prompt without options, key 2 and Enter, evaluate-single body, written answer, dots, Back, submit body and route, storage cleared), answers kept across a reload, the timer warning at 30 s, the leave dialog, a failed submit tried again, and 375 px with 44 px targets; with and without reduced motion, the question slide and the option settle."
     },
@@ -1273,8 +1273,8 @@
     {
       "path": "frontend/src/components/Layout.css",
       "language": "css",
-      "lines": 135,
-      "size_bytes": 2664,
+      "lines": 136,
+      "size_bytes": 2737,
       "role": "component",
       "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the main column at 1120 px of content."
     },
@@ -1937,8 +1937,8 @@
     {
       "path": "frontend/src/pages/ComprehensionTest.css",
       "language": "css",
-      "lines": 191,
-      "size_bytes": 3880,
+      "lines": 194,
+      "size_bytes": 4035,
       "role": "page",
       "purpose": "Test styles: three-part chrome (Leave test, label and dots, timer), 44 px dot targets, a 672 px question column with the Lora question, the hint, Back and Next or Submit, the grading veil, the leave dialog; icon-only Leave and hidden label under 640 px."
     },

@@ -32,6 +32,7 @@
   align-items: center;
   gap: var(--space-2);
   justify-self: start;
+  min-width: 44px;
   min-height: 44px;
   padding: 0 var(--space-3);
   margin-left: calc(var(--space-3) * -1);
@@ -68,11 +69,11 @@
   list-style: none;
 }
 
-/* 44 px targets around 8 px dots; the state is in the name and the dot's fill. */
+/* 44 px targets around 8 px dots (C13.9: were 28 px wide); the state is in the name and the dot's fill. */
 .rf-test__dot {
   display: grid;
   place-items: center;
-  width: 28px;
+  width: 44px;
   height: 44px;
   margin-block: -12px;
   padding: 0;
@@ -166,9 +167,11 @@
 }
 
 @media (max-width: 639px) {
+  /* C13.9: tighter gaps so five 44 px dots fit beside Leave and the timer at 375. */
   .rf-test__chrome {
     grid-template-columns: auto 1fr auto;
-    padding: var(--space-2) var(--space-4);
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
   }
 
   .rf-test__leave span,

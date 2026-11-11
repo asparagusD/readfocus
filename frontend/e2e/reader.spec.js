@@ -193,6 +193,15 @@ for (const width of [1440, 375]) {
   });
 }
 
+// C13.9: one h1 that names the book, hidden from sight (the page shows chapter headings as h2).
+test('the reading page has one h1 naming the book', async ({ page }) => {
+  await openReader(page);
+  const h1 = page.getByRole('heading', { level: 1 });
+  await expect(h1).toHaveCount(1);
+  await expect(h1).toHaveText("Walden: today's reading");
+  expect(await h1.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
+});
+
 test('page-turn frame rate and lookup timings (recorded in docs/BENCHMARKS.md)', async ({ page }, info) => {
   await openReader(page);
   await page.locator('.rf-book').focus();

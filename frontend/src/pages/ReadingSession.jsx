@@ -259,6 +259,8 @@ export function ReadingSession() {
       </div>
 
       <main className="rf-reading-area">
+        {/* C13.9: the page's one h1 for assistive tech; the book page itself shows chapter headings (h2). */}
+        <h1 className="sr-only">{bookTitle}: today's reading</h1>
         {aside ? (
           <BookReader
             key={`aside-${aside.entry.block_id}`}

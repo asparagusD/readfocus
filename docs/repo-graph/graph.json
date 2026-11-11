@@ -996,6 +996,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/errors.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/fixtures.js",
       "type": "file",
       "role": "config",
@@ -1159,6 +1165,12 @@
     },
     {
       "id": "file:frontend/src/components/Layout.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/RouteErrorBoundary.jsx",
       "type": "file",
       "role": "component",
       "language": "jsx"
@@ -1693,6 +1705,12 @@
     },
     {
       "id": "file:frontend/src/pages/Login.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/NotFound.jsx",
       "type": "file",
       "role": "page",
       "language": "jsx"
@@ -4128,6 +4146,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/errors.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/fixtures.js",
       "to": "file:frontend/src/gallery/readerFixture.js"
     },
@@ -4194,6 +4217,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/RouteErrorBoundary.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/components/ui/Toast.jsx"
     },
     {
@@ -4230,6 +4258,11 @@
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/pages/Login.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/pages/NotFound.jsx"
     },
     {
       "type": "imports",
@@ -4360,6 +4393,16 @@
       "type": "imports",
       "from": "file:frontend/src/components/Layout.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/RouteErrorBoundary.jsx",
+      "to": "file:frontend/src/components/ErrorScreen.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/RouteErrorBoundary.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
     },
     {
       "type": "imports",
@@ -5015,6 +5058,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Login.jsx",
       "to": "file:frontend/src/pages/Login.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/NotFound.jsx",
+      "to": "file:frontend/src/components/ErrorScreen.jsx"
     },
     {
       "type": "imports",

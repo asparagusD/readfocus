@@ -2009,3 +2009,40 @@ The test above: failed before, passes after.
 
 ### Commit
 fix(test): submit the typed answers when the timer runs out
+
+## 2026-11-11 C13.8a — the error boundary cut the route transition
+
+**Status:** fixed
+
+### Symptom
+Before committing C13.8a part 4, `npm --prefix frontend run test:e2e`: 1
+failed, 73 passed. `e2e/shell.spec.js` "with motion › a page change rises
+in": `expect(received).toBeGreaterThan(expected)`, Expected `> 0`, Received
+`0` (no transform on the incoming page during the change). Reproduced alone
+with `npx playwright test e2e/shell.spec.js -g "rises in"`.
+
+### Upstream and downstream (repo graph)
+`App.jsx` wraps `AnimatedRoutes` (the fade-and-rise between screens) in the
+new `components/RouteErrorBoundary.jsx`, inside `BackendGate`.
+
+### Hypotheses
+1. The boundary was rendered with `key={pathname}` so a new address would
+   clear an error; a key change remounts the whole route tree, so
+   `AnimatePresence` never sees an exit and an enter and nothing moves.
+   Result: **confirmed** (without the key the test passes).
+
+### Root cause
+Using a remount (`key`) to reset the boundary also reset the animated
+routes below it.
+
+### Fix
+`RouteErrorBoundary.jsx`: the boundary gets `pathname` as a prop and clears
+its error in `componentDidUpdate` when the address changes. One attempt.
+
+### Regression test
+`e2e/shell.spec.js` "a page change rises in" (failed with the key, passes
+without); `e2e/errors.spec.js` now also checks that browser Back from the
+error screen clears it without a reload.
+
+### Commit
+Folded into C13.8a part 4 (the failure never reached a commit).

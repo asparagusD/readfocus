@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 409,
-    "inventoried": 345,
+    "tracked": 412,
+    "inventoried": 348,
     "excluded": 64
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9969,
+      "size_bytes": 9986,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -977,8 +977,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2011,
-      "size_bytes": 89207,
+      "lines": 2048,
+      "size_bytes": 90686,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2288,
-      "size_bytes": 477359,
+      "lines": 2289,
+      "size_bytes": 479821,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1037,6 +1037,14 @@
       "size_bytes": 10042,
       "role": "config",
       "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here and GET /mastery (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375; concept mastery (tabs by keyboard, weakest first, Show more, the weak rule, the exact /mastery requests) and a failed mastery load; For tonight; the candle, bar and trend motion with and without reduced motion."
+    },
+    {
+      "path": "frontend/e2e/errors.spec.js",
+      "language": "javascript",
+      "lines": 37,
+      "size_bytes": 2596,
+      "role": "config",
+      "purpose": "E2E: an unknown address gets the 404 inside the shell (one main, title, link home); a dashboard payload that cannot render shows the error boundary, and Back to your shelf clears it."
     },
     {
       "path": "frontend/e2e/fixtures.js",
@@ -1177,10 +1185,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 102,
-      "size_bytes": 4044,
+      "lines": 107,
+      "size_bytes": 4342,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -1261,6 +1269,14 @@
       "size_bytes": 1646,
       "role": "component",
       "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target."
+    },
+    {
+      "path": "frontend/src/components/RouteErrorBoundary.jsx",
+      "language": "jsx",
+      "lines": 52,
+      "size_bytes": 1772,
+      "role": "component",
+      "purpose": "Error boundary keyed by the address: a page that throws while rendering shows the standalone ErrorScreen (Reload the page, Back to your shelf, the error's name); moving to another address clears it."
     },
     {
       "path": "frontend/src/components/ThemeToggle.css",
@@ -1973,6 +1989,14 @@
       "size_bytes": 7190,
       "role": "page",
       "purpose": "Sign in and create account (handoff screen 01): scene with the tagline, segmented tabs over one tabpanel, labelled fields validated before sending (errors inline, focus to the first), Supabase errors mapped to the field or a form alert, loading label on submit, inbox message after sign-up; the display name is collected and never sent, as before. The drawings fade in and the form rises 12 px without fading (text paints at once); a nested AnimatePresence lets them play on a first load; under reduced motion the form does not move."
+    },
+    {
+      "path": "frontend/src/pages/NotFound.jsx",
+      "language": "jsx",
+      "lines": 17,
+      "size_bytes": 590,
+      "role": "page",
+      "purpose": "404 page inside Layout: ErrorScreen with \"This page isn't on the shelf.\", Back to your shelf and \"404 · <path>\"."
     },
     {
       "path": "frontend/src/pages/ReadingSession.css",
@@ -2705,8 +2729,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 347,
-      "size_bytes": 97675,
+      "lines": 350,
+      "size_bytes": 98381,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

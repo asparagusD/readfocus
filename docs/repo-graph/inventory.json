@@ -9,16 +9,16 @@
     {
       "path": ".claude/skills/atomic-commit/SKILL.md",
       "language": "markdown",
-      "lines": 186,
-      "size_bytes": 5921,
+      "lines": 187,
+      "size_bytes": 5964,
       "role": "doc",
       "purpose": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes."
     },
     {
       "path": ".claude/skills/debug-protocol/SKILL.md",
       "language": "markdown",
-      "lines": 200,
-      "size_bytes": 6269,
+      "lines": 201,
+      "size_bytes": 6310,
       "role": "doc",
       "purpose": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template."
     },
@@ -73,8 +73,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 182,
-      "size_bytes": 8119,
+      "lines": 184,
+      "size_bytes": 8276,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -889,8 +889,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1718,
-      "size_bytes": 300791,
+      "lines": 1719,
+      "size_bytes": 301185,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

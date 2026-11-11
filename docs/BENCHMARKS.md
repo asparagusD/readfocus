@@ -66,6 +66,7 @@ One row per model or heavy dependency (the memory rule in the
 | 2026-11-10 | C4.4 | `yake` 0.7.3 (brings `networkx`, `jellyfish`, `segtok`, `regex`, `tabulate`, `click`), imported | 16.7 MB (Windows) | 47.9 MB; 48.6 MB after one 600-word extraction | 31 MB, of which `numpy` is already paid for by the embedder | Unchanged: nothing the app imports at startup uses `backend/nlp/concepts.py` yet. A process with `backend.nlp.concepts` and `book_ingestor` imported is 137 MB, and 279 MB after the first extraction with embeddings (model loaded) |
 | 2026-11-10 | C4.4 | `rapidfuzz` 3.14.6, imported | 16.9 MB (Windows) | 19.0 MB | 2 MB | as above |
 | 2026-11-11 | C8.8 | **Removed**: `langchain`, `langchain-community`, `langchain-groq`, `groq`, `langchain-google-genai`, `tenacity` from `requirements.txt` (`langgraph` 1.2.20 and its `langchain-core` 1.7.6 kept) | 132.4 MB with `backend.main` and the LangGraph workflow imported; 327.0 MB with the embedding model loaded and 8 chunks embedded (Windows, median of 3) | 132.0 MB; 327.0 MB (same stages, the removed packages made unimportable) | 0 MB at run time: no app code had imported them since C8.4b | 134.0 MB idle, 2 processes, before and after (`scripts/dev/measure_rss.py`, 3 runs each) |
+| 2026-11-11 | C9.3 | No new dependency: the embedding model (C4.1) is now **loaded at startup** on a background thread (`EMBED_PRELOAD`, default on), not on first use | Windows: 136 MB idle (3 runs) | Windows: 266 to 267 MB idle, ready 2.6 to 3.7 s after process start (3 runs). Container at 0.1 CPU and 512 MB: 110 to 126 MB idle before, 272 to 275 MB after, ready 29.2 to 29.9 s after start (download included) | about +130 MB (Windows), about +150 MB (container) | The idle server now holds the model: 267 MB Windows, 275 MB in the container, against 512 MB on Render Free. Peak during ingestion in the container 328 to 335 MB (316 to 350 MB in C9.2) |
 
 Gate G3 (C8.G), 2026-11-11: after one full journey on the dev project
 (upload, start, finish-reading, submit, results, dashboard) with no AI
@@ -86,6 +87,326 @@ Concept extraction time per chunk, Windows, `sample.pdf` chunks of 507, 740
 and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
+
+### C9.0: ingestion and cold start before C9 (2026-11-11)
+
+The "before" for C9 (speed and durability), at `5e5fcfb`: ingestion is
+still a FastAPI background task, the model is downloaded and loaded on
+first use. Each run starts a fresh server (`--cold`), uploads the book as
+dev test user A, polls once a second (twice in the container), and deletes
+the book afterwards. Books:
+
+- `sample.pdf`: 3.6 MB journal paper, 7 chunks, 55 bank questions.
+- `pride-and-prejudice.epub`: Project Gutenberg ebook 1342 (public
+  domain, 609 KB, `https://www.gutenberg.org/ebooks/1342.epub.noimages`),
+  kept in the git-ignored `.cache/bench/`. 204 chunks, 130,536 words,
+  1,718 bank questions. Extraction 0.29 s and chunking 0.008 s in process.
+
+"Done" is the last change to the book's chunk, embedding and question
+counts once every chunk is stored and embedded and nothing has moved for
+`--quiet` seconds (there is no done signal before C9). "Chunk 0 questions"
+is the first moment the bank has a question for chunk 0, which the first
+session reads. The tables were pasted from the script's output.
+
+Windows, the machine above:
+
+```bash
+python scripts/bench.py --ingest sample.pdf .cache/bench/pride-and-prejudice.epub --flow-runs 3 --cold --quiet 30
+```
+
+<!-- bench:c9-before-windows:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /books/upload (sample.pdf)` | 3 | 1.58 s | 2.33 s | |
+| `upload -> ready (sample.pdf)` | 3 | 2.33 s | 2.58 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 4.67 s | 5.05 s | |
+| `upload -> done (sample.pdf)` | 3 | 4.67 s | 5.05 s | |
+| `POST /books/upload (pride-and-prejudice.epub)` | 3 | 1.09 s | 1.10 s | |
+| `upload -> ready (pride-and-prejudice.epub)` | 3 | 2.36 s | 2.38 s | |
+| `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 3 | 4.70 s | 4.73 s | |
+| `upload -> done (pride-and-prejudice.epub)` | 3 | 138.34 s | 148.44 s | |
+<!-- bench:c9-before-windows:end -->
+
+Process start to `/health`: 2.60 to 2.63 s. Peak server RSS (sampled each
+poll): 320 to 321 MB for `sample.pdf`, 349 to 352 MB for the long book.
+
+Linux container like Render Free: the repo `Dockerfile` built as
+`readfocus-c9-before` (728 MB image), `--cpus=0.1 --memory=512m`, only the
+Supabase variables passed and no model cache, so every start downloads the
+model from Hugging Face as Render does today. `sample.pdf` only: at 0.1 CPU
+the long book would take close to an hour per run.
+
+```bash
+python scripts/bench.py --base-url http://127.0.0.1:8001 --ingest sample.pdf --flow-runs 3 --cold --quiet 120 --poll 2 --docker rf-c9 --server-cmd "docker run --rm --name rf-c9 --cpus=0.1 --memory=512m -p 8001:8000 --env-file <supabase-only env file> readfocus-c9-before" --stop-cmd "docker stop rf-c9"
+```
+
+<!-- bench:c9-before-container:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /books/upload (sample.pdf)` | 3 | 1.84 s | 2.12 s | |
+| `upload -> ready (sample.pdf)` | 3 | 26.29 s | 27.87 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 53.64 s | 55.08 s | |
+| `upload -> done (sample.pdf)` | 3 | 61.70 s | 63.39 s | |
+<!-- bench:c9-before-container:end -->
+
+Process start to `/health`: 12.40, 13.21 and 14.41 s. The model download
+took about 12 s of each run (the server log's "Fetching 5 files" bar).
+Peak container memory (`docker stats`, cgroup usage, not RSS): 319 to
+326 MB.
+
+What this says for C9, read from these numbers only:
+
+- On Render-like CPU the reader waits about 26 s for `ready` and about
+  54 s before the first session's questions exist; on Windows 2.3 and
+  4.7 s. The download, the model load and the first batch's five
+  embeddings all sit before `ready`.
+- Extraction is not a cost worth streaming (0.29 s for 204 chunks), so
+  C9.2 drops streaming extraction.
+- A long book keeps the server busy for over two minutes on Windows,
+  which on Render is the window a restart or spin-down can cut.
+
+Not measured: Render itself; the long book in the container; requests
+from a reader during ingestion; a restart mid-ingestion (C9.1b and C9.5).
+
+### C9.5: After C9, and Before/After (2026-11-11)
+
+#### After
+
+Everything rerun at `3294058` (C9.1 to C9.4), same commands, books and
+settings as the C9 "before" runs. Ingestion: three cold runs per book on
+Windows and three of `sample.pdf` in the 0.1-CPU, 512 MB container
+(image rebuilt as `readfocus-c9-5`). API:
+`python scripts/bench.py --runs 20 --flow-runs 5` against the backend
+from `.claude/launch.json`. Idle memory: `python scripts/dev/measure_rss.py`
+three times. Every benchmark book was deleted by the script; no container
+was left.
+
+The ingestion tables below were taken after the bench fix described
+under "Measurement resolution" (each reading stamped when its answer
+arrives). A first After run with the old stamping gave, p50: Windows
+ready 4.81 s / 4.86 s, chunk 0 questions 4.81 s / 2.39 s, done 4.81 s /
+132.68 s; container ready 53.29 s, chunk 0 questions 51.49 s, done
+57.87 s, peak 330, 332 and 391 MB.
+
+<!-- bench:c9-after-windows:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /books/upload (sample.pdf)` | 3 | 1.99 s | 2.56 s | |
+| `upload -> ready (sample.pdf)` | 3 | 5.12 s | 5.24 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 6.25 s | 6.32 s | |
+| `upload -> done (sample.pdf)` | 3 | 6.25 s | 6.32 s | |
+| `POST /books/upload (pride-and-prejudice.epub)` | 3 | 1.23 s | 1.33 s | |
+| `upload -> ready (pride-and-prejudice.epub)` | 3 | 5.27 s | 5.41 s | |
+| `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 3 | 3.84 s | 4.00 s | |
+| `upload -> done (pride-and-prejudice.epub)` | 3 | 133.69 s | 134.56 s | |
+<!-- bench:c9-after-windows:end -->
+
+Windows: process start -> `/health` 2.59 to 2.61 s; peak RSS 322 MB and
+350 MB; idle RSS 266.6 to 266.9 MB (2 processes).
+
+<!-- bench:c9-after-container:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `POST /books/upload (sample.pdf)` | 3 | 2.58 s | 2.61 s | |
+| `upload -> ready (sample.pdf)` | 3 | 50.08 s | 51.11 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 51.20 s | 52.20 s | |
+| `upload -> done (sample.pdf)` | 3 | 60.34 s | 60.91 s | |
+<!-- bench:c9-after-container:end -->
+
+Container: process start -> `/health` 13.57, 14.43 and 27.08 s (one slow
+start); peak memory 328, 331 and 368 MB (`docker stats`).
+
+<!-- bench:c9-after-api:start -->
+| Step | Runs | p50 | p95 | Notes |
+|---|---|---|---|---|
+| `GET /health` | 20 | 0.8 ms | 2 ms | |
+| `GET /books` | 20 | 185 ms | 232 ms | |
+| `POST /books/upload` | 5 | 1.70 s | 2.32 s | sample.pdf, 3.6 MB |
+| `upload -> status ready` | 5 | 4.23 s | 4.35 s | polled every 0.5 s |
+| `POST /sessions/start` | 5 | 625 ms | 815 ms | planner |
+| `POST /sessions/{id}/finish-reading` | 5 | 679 ms | 709 ms | called right after start |
+| `POST /sessions/{id}/submit-answers` | 5 | 1.08 s | 1.09 s | 5 grades, then the optimizer |
+| `GET /dashboard` | 20 | 193 ms | 211 ms | |
+<!-- bench:c9-after-api:end -->
+
+#### Measurement resolution
+
+The first After run showed the long book's chunk 0 questions 2.5 s before
+`ready`. Investigated (`docs/DEBUG_LOG.md`, C9.5): the questions do come
+first, by design (C9.2 stores them, then marks the book ready), but by
+about 0.4 s, not 2.5 s: a scratchpad poll every 0.1 s, each reading
+stamped on arrival, saw them at 5.45 s and `ready` at 5.82 s. The bench
+had stamped both readings of a poll iteration with the time at its top,
+and one iteration takes about 2.9 s on Windows (status 0.75 s, four
+counts 1.1 s, a 1 s sleep), longer in the container (2 s sleep). Fixed:
+each reading is now stamped when its answer arrives.
+
+That fix removes the shared stamp, not the coarse sampling: every
+ingestion time here is the moment a reading first saw the change, up to
+one iteration after it happened. Differences smaller than about 3 s
+(Windows) or 5 s (container) are not resolved, including the order of
+`ready` and chunk 0 questions. All earlier ingestion numbers (C9.0, C9.2,
+C9.3) used the old stamping and share that resolution.
+
+#### Before/After
+
+"Before" for ingestion and cold start is C9.0 (`5e5fcfb`, the start of
+the chunk); for the API it is the C9.4 "before" (`83b4f1f`), since C9.0
+did not time the API, and C9.1 to C9.3 did not change those endpoints'
+reads. p50 unless stated. The verdict says what the numbers support, not
+what the code was meant to do.
+
+| Measure | Before | After | Verdict |
+|---|---|---|---|
+| `GET /dashboard` | 455 ms (p95 490) | 193 ms (p95 211) | **Faster**: measured twice (194 ms in C9.4, 193 ms here), outside the before spread |
+| `POST /sessions/start` | 590 ms | 625 ms | No clear change: 503 ms in C9.4, not reproduced here |
+| `GET /books` | 189 ms | 185 ms | No change |
+| `POST /sessions/{id}/finish-reading` | 750 ms | 679 ms | No change claimed: code not changed, noise |
+| `POST /sessions/{id}/submit-answers` | 1.07 s | 1.08 s | No change |
+| Windows `upload -> ready`, `sample.pdf` | 2.33 s | 5.12 s | Later by design (C9.2: ready waits for the first batch's questions); the gap is about one poll iteration, so its size is not resolved |
+| Windows `upload -> chunk 0 questions`, `sample.pdf` | 4.67 s | 6.25 s | No clear change (within one iteration) |
+| Windows `upload -> ready`, 204-chunk EPUB | 2.36 s | 5.27 s | Later by design (C9.2); size not resolved, as above |
+| Windows `upload -> chunk 0 questions`, EPUB | 4.70 s | 3.84 s | No clear change (within one iteration) |
+| Windows `upload -> done`, EPUB | 138.34 s (p95 148.44) | 133.69 s (p95 134.56) | No clear change |
+| Container `upload -> ready` | 26.29 s | 50.08 s | **Slower** (C9.2), well beyond the resolution |
+| Container `upload -> chunk 0 questions` | 53.64 s (p95 55.08) | 51.20 s (p95 52.20) | No clear change |
+| Container `upload -> done` | 61.70 s (p95 63.39) | 60.34 s (p95 60.91) | No clear change |
+| Container process start -> `/health` | 12.4 to 14.4 s | 13.6 to 14.4 s, one 27.1 s | No change, one slow start |
+| Container process start -> model ready | first use | 29.2 to 29.9 s (C9.3) | New: the load happens at boot, not in a request |
+| Idle RSS, Windows | 136 MB (C9.3 before; 134 MB in C8.8) | 266.6 to 266.9 MB | **Heavier**: about +130 MB, the preloaded model (C9.3) |
+| Idle memory, container | 110 to 126 MB | 272 to 275 MB (C9.3) | **Heavier**: about +150 MB |
+| Peak memory during ingestion, Windows | 321 MB; 349 to 352 MB | 322 MB; 350 MB | No change |
+| Peak memory during ingestion, container | 319 to 326 MB | 328, 331, 368 MB (330, 332, 391 MB in the first After run) | Higher in one run of three each time; not separated from noise |
+| Ingestion after a hard kill mid-book | book stuck in `processing`, no retry (issue 20) | resumed from cursor 53 of 204 by the sweep, 0 duplicate chunks or questions, counts equal to an uninterrupted run (C9.1b) | **Durable** (measured once on dev) |
+
+Measured improvements from C9: the dashboard (about 260 ms faster), and
+ingestion that survives a restart. Everything else is unchanged within
+noise, slower by choice (`ready` waits for the first questions), or
+heavier (the preloaded model). Ingestion times are resolved to about one
+poll iteration (3 to 5 s). Not measured: Render itself, a cold start
+followed by a grade, the indexes on tables larger than dev's, more than
+three runs per ingestion measure.
+
+### C9.4: fewer and lighter reads, and indexes (2026-11-11)
+
+`python scripts/bench.py --runs 20 --flow-runs 5` against the backend on
+this machine (`.claude/launch.json`, model preloaded) and the dev project,
+as test user A; before at `83b4f1f`, after with the C9.4 code and
+migration 011 applied. Books deleted by the script.
+
+| Step | Runs | Before p50 (p95) | After p50 (p95) |
+|---|---|---|---|
+| `GET /dashboard` | 20 | 455 ms (490 ms) | 194 ms (351 ms) |
+| `POST /sessions/start` | 5 | 590 ms (918 ms) | 503 ms (620 ms) |
+| `GET /books` | 20 | 189 ms (210 ms) | 183 ms (219 ms) |
+| `POST /sessions/{id}/finish-reading` | 5 | 750 ms (765 ms) | 575 ms (655 ms) |
+| `POST /sessions/{id}/submit-answers` | 5 | 1.07 s (1.09 s) | 1.05 s (1.09 s) |
+
+What changed: `GET /dashboard` ran four reads one after another and read
+the `answers` jsonb of every test result; now its reads run at once and
+answers are read for a page of the newest results (5 at a time) until
+three feedback quotes are found. `POST /sessions/start` reads the chunk
+text and inserts the session at the same time. The dashboard gain (about
+260 ms, a little more than two round trips at about 100 ms) and the start
+gain (about 90 ms, one round trip) match those changes.
+`finish-reading` and `submit-answers` were not changed: their difference
+is run-to-run noise, and `finish-reading`'s 175 ms shows how large it can
+be over five runs.
+
+The five indexes of migration 011 cannot be told apart from noise here:
+the dev tables are small (8 books, under 100 sessions), where Postgres
+scans the table anyway. `npx supabase inspect db index-stats --linked`
+lists all five right after the migration (16 kB each, not yet used).
+They are for larger tables; not measured on one.
+
+### C9.3: embedding model preloaded at startup (2026-11-11)
+
+The lifespan starts a daemon thread that loads the model and embeds one
+text; `/health` returns `model_ready` and never waits for it;
+`submit-answers` and `evaluate-single` wait up to `EMBED_WAIT_SECONDS`
+(20) and answer 503 if the model is still not loaded. "Before" is
+`c65ba2b` (C9.2): lazy load on first use. Startup times come from a
+one-off scratchpad script that starts the server, polls `/health` every
+0.25 s and reads memory 3 s after `model_ready` (psutil RSS on Windows,
+`docker stats` in the container); 3 runs each.
+
+| Measure | Before | After |
+|---|---|---|
+| Windows: process start -> `/health` | 2.60 to 2.70 s | 2.59 to 3.71 s |
+| Windows: first `/health` response time | 23 to 35 ms | 22 to 28 ms, one run 1,045 ms |
+| Windows: process start -> model ready | on first use | 2.60 to 3.72 s |
+| Windows: idle RSS | 136 MB | 266 to 267 MB |
+| Container: process start -> `/health` | 12.84 to 14.80 s | 13.08 to 13.24 s |
+| Container: first `/health` response time | 32 to 105 ms | 281 to 470 ms |
+| Container: process start -> model ready | on first use | 29.20 to 29.87 s |
+| Container: idle memory | 110 to 126 MB | 272 to 275 MB |
+
+Cold ingestion of `sample.pdf` in the container (`bench.py --ingest
+--cold`, same command as C9.0 with image `readfocus-c9-3`; the bench
+uploads as soon as `/health` answers, so the model load overlaps the first
+batch):
+
+| Step | C9.2 p50 (p95) | C9.3 p50 (p95) |
+|---|---|---|
+| `upload -> ready` | 56.55 s (58.26 s) | 50.38 s (63.69 s) |
+| `upload -> chunk 0 questions` | 53.70 s (57.97 s) | 50.38 s (59.52 s) |
+| `upload -> done` | 63.74 s (64.98 s) | 55.04 s (68.95 s) |
+
+How to read it: the medians are 3 to 9 s lower, but the spreads overlap
+with three runs each, so this is not a clear speed-up for ingestion. What
+the preload does change is where the model load is paid: before, the
+first request that graded or ingested after a cold start loaded it (about
+0.7 s on Windows, 12 s download and about 5 s load at 0.1 CPU); now it is
+paid from boot, and a request that arrives after `model_ready` does not
+pay it. A request that arrives earlier waits up to 20 s, then gets a 503.
+Not measured: the first grade after a cold start (a session needs a
+ready book first, which already loads the model in both versions). The
+cost is memory: the idle server is about 130 to 150 MB larger. On 0.1 CPU
+the load also slows the first `/health` answers to 0.3 to 0.5 s.
+A first attempt at the C9.3 ingestion runs stopped after one run without
+a table; the cause was hidden by an output filter (most likely the
+previous container's name still in use) and the runs were repeated.
+
+### C9.2: ready after the first batch's questions (2026-11-11)
+
+Same commands, books and settings as C9.0 (three cold runs each), at the
+C9.2 working tree: ingestion is a `processing_jobs` job in batches of 5
+then 16 (C9.1), and the book is marked ready only once the first five
+chunks **and their questions and concepts** are stored (before C9.2 it was
+marked ready as soon as the chunks were stored). Container image rebuilt
+as `readfocus-c9-2`.
+
+Windows (p50 of 3):
+
+| Step | C9.0 before | C9.2 after |
+|---|---|---|
+| `upload -> ready (sample.pdf)` | 2.33 s | 4.97 s |
+| `upload -> chunk 0 questions (sample.pdf)` | 4.67 s | 4.97 s |
+| `upload -> done (sample.pdf)` | 4.67 s | 4.97 s |
+| `upload -> ready (pride-and-prejudice.epub)` | 2.36 s | 4.83 s |
+| `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 4.70 s | 4.83 s |
+| `upload -> done (pride-and-prejudice.epub)` | 138.34 s | 134.54 s |
+| Peak server RSS | 320 to 321 MB; 349 to 352 MB | 321 MB; 348 to 351 MB |
+
+Container, 0.1 CPU and 512 MB, `sample.pdf` (p50 of 3):
+
+| Step | C9.0 before | C9.2 after |
+|---|---|---|
+| Process start -> `/health` | 12.4 to 14.4 s | 13.2 to 15.3 s |
+| `upload -> ready` | 26.29 s | **56.55 s** |
+| `upload -> chunk 0 questions` | 53.64 s | 53.70 s |
+| `upload -> done` | 61.70 s | 63.74 s |
+| Peak container memory | 319 to 326 MB | 316 to 350 MB |
+
+What it says: `ready` comes **later**, by the first batch's question
+generation (about 2.5 s on Windows, about 30 s at 0.1 CPU), and the first
+questions arrive at the same time as before. The change is in what
+`ready` means: a reader who starts the first session gets a test from the
+bank, instead of `finish-reading` generating one on demand. No speed-up is
+claimed. The long book now has 1,760 questions (1,718 in C9.0) because of
+the 16-chunk batches (C9.1b). One container run peaked at 350 MB, the
+other two at 316 and 320 MB; with three runs that is not separated from
+noise.
 
 ### C8.6: session lifecycle through the LangGraph workflow (2026-11-11)
 

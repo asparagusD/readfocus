@@ -29,6 +29,12 @@ DEFAULT_CACHE = ".cache/fastembed"
 
 _model = None
 _lock = threading.Lock()
+# Set once the model is loaded (by the startup preload or by a first use).
+# Requests that need the model wait on it; /health reports it.
+_ready = threading.Event()
+_preload_thread = None
+_preload_lock = threading.Lock()  # guards _preload_thread only, never held during a load
+_load_error = None
 
 
 def cache_dir() -> str:
@@ -56,7 +62,57 @@ def get_model():
         with _lock:
             if _model is None:
                 _model = _load()
+                _ready.set()
     return _model
+
+
+def preload_enabled() -> bool:
+    """Load the model at startup unless EMBED_PRELOAD=0 (the test suite sets it)."""
+    return os.getenv("EMBED_PRELOAD", "1") != "0"
+
+
+def _warm() -> None:
+    global _load_error
+    try:
+        get_model()
+        embed(["warm up"])  # the first call also initialises the ONNX session
+    except Exception as error:  # noqa: BLE001 - grading falls back without the model; requests get a 503
+        _load_error = f"{type(error).__name__}: {error}"
+        print(f"Embedding model preload failed: {_load_error}")
+
+
+def preload() -> threading.Thread:
+    """Load and warm the model on a daemon thread; returns that thread.
+
+    Uses its own lock, not the load's: a caller on the event loop must not wait for a load in
+    progress. A thread that ended without a model (a failed load) is replaced by a new attempt.
+    """
+    global _preload_thread
+    with _preload_lock:
+        stale = _preload_thread is not None and not _preload_thread.is_alive() and not _ready.is_set()
+        if _preload_thread is None or stale:
+            _preload_thread = threading.Thread(target=_warm, name="embedder-preload", daemon=True)
+            _preload_thread.start()
+    return _preload_thread
+
+
+def ensure_loading() -> None:
+    """Start a background load if the model is neither loaded nor loading."""
+    if not _ready.is_set():
+        preload()
+
+
+def is_ready() -> bool:
+    return _ready.is_set()
+
+
+def wait_ready(timeout: float) -> bool:
+    """Block up to `timeout` seconds for the model; True if it is loaded."""
+    return _ready.wait(timeout)
+
+
+def load_error() -> str | None:
+    return _load_error
 
 
 def embed(texts: list[str]) -> np.ndarray:

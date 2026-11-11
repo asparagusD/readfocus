@@ -1026,3 +1026,167 @@ fix: 3 of 3 sessions show the stored test.
 
 ### Commit
 fix(api): store a session's test once
+
+## 2026-11-11 C9.1a — repo-graph test does not know processing_jobs
+
+**Status:** fixed
+
+### Symptom
+After adding `supabase/migrations/010_processing_jobs.sql` and running
+`make graph`, the tooling check failed:
+
+    pytest tools/repo_graph/tests -q
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents
+    >       assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
+    E       AssertionError: assert {'table:agent...rofiles', ...} == {'table:agent...on_bank', ...}
+    E         Extra items in the left set:
+    E         'table:processing_jobs'
+    tools\repo_graph\tests\test_build.py:233: AssertionError
+    1 failed, 61 passed
+
+### Repro
+
+    pytest tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents -q
+
+### Hypotheses
+1. The test pins the set of tables defined by the migrations, and 010
+   adds one. Evidence: the only extra item is `table:processing_jobs`;
+   the same failure came with 008 (C7.1) and 009 (C8.6). Ruled out if:
+   the graph shows a table that no migration creates. Result: confirmed,
+   010 creates exactly that table.
+
+### Root cause
+`tools/repo_graph/tests/test_build.py:228` lists the expected tables by
+name; the list did not include the new `processing_jobs`.
+
+### Fix
+Added `processing_jobs` to the expected set. The graph builder is right;
+only the test's expectation was out of date.
+
+### Regression test
+The same test. Failed before the fix (above); passes after: `pytest
+tools/repo_graph/tests -q` 62 passed.
+
+### Commit
+feat(ingest): add processing_jobs and the job service (C9.1a)
+
+## 2026-11-11 C9.5 — long book's chunk 0 questions seen 2.5 s before ready
+
+**Status:** fixed
+
+### Symptom
+Since C9.2, `run_job` marks the book ready right after the first batch's
+questions are stored, so `upload -> chunk 0 questions` should never be
+earlier than `upload -> ready`. The C9.5 Windows run of the 204-chunk EPUB
+reported otherwise (`sample.pdf` in the same run showed both at 4.81 s):
+
+    python scripts/bench.py --ingest sample.pdf .cache/bench/pride-and-prejudice.epub --flow-runs 3 --cold --quiet 30
+    | `upload -> ready (pride-and-prejudice.epub)` | 3 | 4.86 s | 4.86 s | |
+    | `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 3 | 2.39 s | 2.42 s | |
+
+No error or stack trace: a wrong result.
+
+### Repro
+A scratchpad script (not committed) starts the backend, uploads the EPUB
+as test user A, then polls `GET /books/{id}/status` and the chunk 0
+question count every 0.1 s, stamping each with the moment its answer
+arrived, and finally times one bench iteration's parts:
+
+    chunk 0 questions first seen at 5.45 s; status read just before: 'processing' at 5.18 s
+    first ready 5.82 s, first chunk-0 questions 5.45 s
+    status: 748 ms
+    ingest_state (4 counts): 1117 ms
+    server_rss: 9 ms
+
+### Hypotheses
+1. The bench stamps both observations with the time at the top of the
+   poll iteration, reads the status before the counts, and one iteration
+   takes about 2.9 s (status 0.75 s, four counts 1.1 s, sleep 1 s); a
+   change that lands between the two reads gets its ready stamp one
+   iteration late. Evidence: the gap (2.47 s) is about one iteration;
+   `sample.pdf` showed both at the same stamp. Ruled out if a tight,
+   separately stamped poll shows ready before the questions or a gap of
+   seconds. Result: confirmed; the tight poll shows a gap of 0.37 s.
+2. `run_job` stores the questions and marks the book ready seconds
+   apart. Evidence: none beyond the symptom. Ruled out if the tight poll
+   shows ready within one or two round trips of the questions. Result:
+   ruled out: 0.37 s, about the `mark_ready` update. The questions coming
+   first is the C9.2 order (questions, then ready), not a defect; the
+   C9.5 note that the order "should not allow" it was wrong.
+
+### Root cause
+`scripts/bench.py` `measure_ingest` takes `now` once per poll iteration
+and uses it for the status read and for the count read that follows
+about 0.75 s later; with a 2.9 s iteration, ingestion times have about
+3 s resolution and `ready` is biased late against the counts.
+
+### Fix
+Stamp each observation with the time its own answer arrived (the status
+after the status call; questions, counts and done after the counts).
+The sampling stays coarse (one reading per iteration, about 3 s on
+Windows), so the bench cannot order `ready` and the first questions; the
+tight poll above is the evidence for the order. `docs/BENCHMARKS.md` C9.5
+says so, replaces the After ingestion tables with a rerun on the fixed
+script, and withdraws the C9.5 note that the order "should not allow" the
+reading.
+
+### Regression test
+`backend/tests/test_bench.py::test_measure_ingest_stamps_each_reading_when_it_arrives`:
+a fake clock and a book that turns ready while the counts are read.
+Failed before the fix (`1 failed, 9 passed`); passes after (`10 passed`).
+
+### Commit
+fix(tooling): stamp each bench reading when it arrives
+
+## 2026-11-11 C9.3 — a grade during the model load freezes the server; a failed preload is never retried
+
+**Status:** fixed
+
+### Symptom
+Found in the C9 close review of `backend/nlp/embedder.py` (no failure seen
+in a run yet). `preload()` takes `_lock` to start its thread, and
+`get_model()` holds the same `_lock` for the whole model load (seconds,
+about 5 s plus a 12 s download at 0.1 CPU). `require_model` runs on the
+event loop and calls `ensure_loading()` -> `preload()` whenever the model
+is not ready, so a `submit-answers` or `evaluate-single` that arrives
+during the startup load blocks the event loop until the load finishes:
+`/health` and every other request stall, against the C9.3 goal that
+`/health` never waits for the model. Second defect: if the preload fails,
+`_preload_thread` stays set, `ensure_loading()` never starts another load,
+and every grade waits 20 s and gets a 503 until a restart (before C9.3
+the next grade loaded the model again).
+
+### Repro
+
+    pytest backend/tests/test_embedder.py -q -k "ensure_loading"
+
+(the two regression tests below, written before the fix)
+
+### Hypotheses
+1. Lock sharing: `preload()` and `get_model()` use one lock. Evidence:
+   the code. Ruled out if `ensure_loading()` returns at once while another
+   thread holds the load. Result: see Regression test.
+2. One-shot preload: `_preload_thread` is never cleared after a failure.
+   Evidence: the code. Ruled out if a second `ensure_loading()` after a
+   failed preload starts a new load. Result: confirmed (test 2 below
+   failed before the fix).
+   Hypothesis 1 result: confirmed (test 1 below failed before the fix).
+
+### Root cause
+`backend/nlp/embedder.py` `preload()` guarded `_preload_thread` with
+`_lock`, the lock `get_model()` holds while loading, and never replaced a
+preload thread that had ended without a model.
+
+### Fix
+`preload()` now uses its own `_preload_lock`, never held during a load, so
+`ensure_loading()` returns at once while a load runs; and it starts a new
+thread when the previous one ended without the model being ready.
+
+### Regression test
+`backend/tests/test_embedder.py::test_ensure_loading_does_not_wait_for_a_load_in_progress`
+and `::test_ensure_loading_retries_after_a_failed_preload`. Before the
+fix: `2 failed` (the first waited for the whole fake load). After: 15
+passed in `test_embedder.py`; `pytest backend/tests -q` 608 passed.
+
+### Commit
+fix(api): never wait on the model load lock, and retry a failed preload

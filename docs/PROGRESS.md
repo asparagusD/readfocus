@@ -54,6 +54,7 @@ kept for history only.
 | 34 | `finish-reading` right after `start` assembles the test twice: the background run and the inline fallback both run the test generator (seen in every bench session's decisions, two `finish_reading` runs). Whichever stores last is graded, and it may not be the set the client was shown; `times_used` also goes up twice. The page reads for minutes first, so the background run normally wins alone. **Closed after C8.G: the store is conditional on the session having no test; the second run returns the stored test and counts nothing.** | C8 follow-up | C8 follow-up |
 | 33 | Submitting the same session twice moves mastery once (`last_event_id`, C7.4; tested in C8.7), but the evaluator inserts a second `test_results` row and the optimizer adapts the pace and queue again, since `submit-answers` does not check the session is already `completed`. From the code; the page does not resubmit. **Closed after C8.G: the session is claimed before grading and a resubmit gets the stored result; nothing runs twice.** | C8.7 | C8 follow-up |
 | 30 | Mastery moves once per question that names a concept, and the key-term link is broad, so one test can move a concept several times: on `sample.pdf`, `antenna-design` was named by 4 of 5 questions and went 0.3 to 0.83 after one good test, then to 0.26 after one blank test. Boilerplate concepts (`licensee-mdpi`, `basel`, `switzerland`) get mastery rows too (issue 25). | C7.4 | unassigned |
+| 35 | Session work after the response is still a FastAPI background task: saving a run's `agent_decisions`, assembling the test at start (finish-reading has an inline fallback) and the abandon flow (one pace update). A restart or spin-down in that window loses them; only ingestion became durable in C9.1. | C9 plan, C9.5 | unassigned |
 
 ## C0 — setup
 
@@ -1360,13 +1361,201 @@ Close review (2026-11-11 04:45):
 - **Time.** 1 h 50 min of wall-clock, from the plan at 02:55 to this review
   at 04:45, against 2.0 h budgeted.
 
-## C9
+## C9 — speed and durability
 
-Title to be filled from the promptbook.
+Branch `chunk/C9-speed-durability`, created from `readfocus-2.0` at
+`a8b3188`. Goal: a book upload that survives a Render Free spin-down or
+restart and resumes where it stopped, a book that opens for reading sooner,
+no model download or load on a reader's first request, and fewer Supabase
+round trips per request. No paid queue (no Redis, Celery, paid worker), and
+no durable state in process memory, local disk or a detached task. Every
+speed claim has a before and an after number.
+
+### Plan (written at chunk start, 2026-11-11 05:27, before any code)
+
+What there is to build on (read from the code):
+
+- `POST /books/upload` (`backend/routers/books.py`) uploads the file to
+  Storage, inserts the `books` row as `processing`, and hands the **file
+  bytes held in memory** to `ingest_book` as a FastAPI `BackgroundTasks`
+  task. A restart or spin-down mid-ingestion loses the task: the book stays
+  `processing` forever (issue 20: 1 of 8 dev books is stuck like this) and
+  nothing ever retries it.
+- `ingest_book` (`backend/services/book_ingestor.py`) extracts the whole
+  file, chunks it, then in batches (5, then 8) embeds, **inserts** chunks,
+  and runs question generation for the batch. The book turns `ready` after
+  the first batch is embedded and inserted, before its questions exist.
+  `chunks` has an index on `(book_id, chunk_index)` but **no unique
+  constraint**, so re-running a batch would store duplicates. The
+  `question_bank` and `concepts` writes are already idempotent upserts.
+- Reading needs only `chunks.content`; the test needs `question_bank` rows
+  (or the 1 s on-demand fallback in `finish-reading`); only the retriever
+  reads `chunks.embedding_local`. So a book can open before any embedding.
+- The embedding model is loaded lazily. The `Dockerfile` does not ship it
+  and `render.yaml` sets no `FASTEMBED_CACHE`, so on Render every cold
+  start downloads it from Hugging Face on first use (11.8 s on this machine
+  in C4.1) and then loads it (4.8 s at 0.1 CPU). `warm_up()` runs only in
+  the `start` background task.
+- `get_current_user` (`backend/dependencies.py`) calls
+  `supabase.auth.get_user(token)`: one network round trip (about 100 ms)
+  on **every** authenticated request. `GET /dashboard` makes four reads in
+  sequence (one selects every `answers` jsonb). Start and submit were
+  parallelised in C8 (issue 28: submit p50 1.12 s, start 0.59 s).
+- `PyJWT` 2.12.1 is installed (through `supabase`) but not pinned.
+- Session work also uses `BackgroundTasks` (saving decisions, test
+  assembly, the abandon flow). Out of scope here: the test has an inline
+  fallback; the losses are an audit gap and one missed pace update. Noted
+  as an open issue, not planned.
+
+Design decisions that apply to every subchunk:
+
+- **Postgres is the queue.** A new `ingestion_jobs` table holds one job per
+  book with a lease (`lease_until`, `worker_id`), `attempts`, `stage`,
+  `last_error` and timestamps. A worker claims a job through an RPC that
+  uses `FOR UPDATE SKIP LOCKED` and sets the lease, so two processes never
+  run the same job and an expired lease is taken over.
+- **Progress is derived from the rows, not from a counter.** Chunk rows
+  with text are stored first; "still to embed" is `embedding_local IS
+  NULL`, "still to question" is a chunk with no `question_bank` row. Each
+  step is an upsert on a unique key, so redoing a step after a crash is
+  harmless and the cursor cannot drift from the data.
+- **The source is Storage, not memory.** A resumed job downloads the file
+  from `books.storage_path`; the request's bytes are only an optimisation
+  for the first run.
+- **The worker is an in-process asyncio loop** started in the FastAPI
+  lifespan: it resumes queued and expired jobs at startup, wakes on
+  enqueue, and polls slowly otherwise. Losing it loses nothing, because all
+  state is in Postgres. While the instance sleeps nothing runs; the next
+  request wakes it and the job resumes. The Library page already polls
+  while a book is `processing`, which keeps the instance awake while the
+  reader waits.
+- **`books.status` keeps its three values** (its CHECK constraint is not
+  touched); the job row carries the detail, exposed as an additive
+  `ingestion` field on `GET /books/{id}/status`.
+- **Measured in a Linux container too.** Ingestion and cold-start numbers
+  are taken on Windows and in `python:3.11-slim` with `--cpus=0.1
+  --memory=512m` (the C4.1 setup), because Render Free is CPU-bound.
+  RSS before and after any change that loads the model earlier.
+- **No new dependency** except pinning `PyJWT` (already installed) in
+  C9.4; no model, so RSS rows only where load timing changes (C9.3).
+- Database: one additive migration (010), dev only, after a dry run
+  (constraint 2). Estimated lines are hand-written lines with tests;
+  migrations and `docs/repo-graph/` do not count.
+
+| Step | Files | Est. lines | Tests | Est. time |
+|---|---|---|---|---|
+| C9.0 before benchmark (added to the requested list: a speed-up needs a before) | `scripts/bench.py` (new `--ingest` measures: upload → `ready`, upload → first session's questions stored, upload → job done; `--cold` measures process start → `/health` → first embed; results to a `bench:c9-before` marker block), `docs/BENCHMARKS.md` (C9 before: Windows and the 0.1-CPU container, `sample.pdf` and one long EPUB or PDF of at least 100 chunks, 3 runs each; RSS idle and peak) | 120 (100 script, 20 doc) | None automated (bench script); by hand: the run itself, books deleted afterwards | 30 min |
+| C9.1a job table and job service | `supabase/migrations/010_ingestion_jobs.sql` (new: `ingestion_jobs` (`id`, `book_id` unique FK cascade, `user_id`, `status` queued/running/done/error, `stage` chunk/questions/embed/done, `attempts`, `lease_until`, `worker_id`, `last_error`, `created_at`, `updated_at`); RLS select own rows; unique index `chunks (book_id, chunk_index)`, after a dev query shows no duplicates; RPC `claim_ingestion_job(worker_id, lease_seconds)` with `FOR UPDATE SKIP LOCKED`), `backend/services/ingestion_jobs.py` (new: `enqueue`, `claim`, `renew`, `set_stage`, `complete`, `fail` (attempts up to `INGEST_MAX_ATTEMPTS`, then `books.status = error`)), `backend/tests/test_ingestion_jobs.py` (new), `backend/tests/test_migrations.py`, `backend/tests/conftest.py` (fake RPC), `tools/repo_graph/purposes.json` | 190 (80 code, 105 tests, 5 other; SQL not counted) | About 9: enqueue twice gives one job; claim takes a queued job and sets the lease; a job with a live lease is not claimed; an expired lease is claimed and `attempts` goes up; the attempts cap marks the book `error` with `last_error`; `complete` marks done; plus the migration's static checks (additive only, the unique index, RLS on, `SKIP LOCKED` in the RPC) | 40 min |
+| C9.1b resumable ingestion worker | `backend/services/book_ingestor.py` (split into idempotent steps: `store_chunks` (extract, chunk, upsert all chunk rows with text on `(book_id, chunk_index)`), `embed_pending` (batches where `embedding_local IS NULL`), `question_pending` (chunks with no bank rows); each step renews the lease; the file comes from Storage when not passed), `backend/services/ingestion_worker.py` (new: `run_job`, the loop, `wake()`), `backend/main.py` (lifespan starts and stops the loop), `backend/routers/books.py` (upload enqueues and wakes instead of `BackgroundTasks`; `/status` adds `ingestion`), `backend/tests/test_ingestion_worker.py` (new), `backend/tests/test_ingestor.py`, `tools/repo_graph/purposes.json` | 200 (95 code, 100 tests, 5 other); split the router change out if over | About 9 on the fake database: a job killed after the second batch (raised exception) resumes and ends with each chunk once, every chunk embedded and questioned; a resumed job with no bytes reads Storage; a failing step records `last_error` and retries; the loop picks up a job left `running` with an expired lease at startup; upload returns the same keys and creates one job; `/status` shows the stage. By hand on dev: upload a long book, kill uvicorn mid-ingestion, restart, the book finishes with no duplicate chunk (SQL count) | 50 min |
+| C9.2 fast-first ingestion | `backend/services/book_ingestor.py` (order: chunk rows with text → `books.status = ready` → question bank for the first session's chunks (the planner's first plan: chunk 0 up to `PLANNER_MAX_CHUNKS`) → remaining questions → embeddings; extraction streams pages so the first chunks are stored before the whole file is parsed, if C9.0 shows extraction matters for long books), `backend/agents/policy.py` (`INGEST_FIRST_QUESTION_CHUNKS`), `backend/tests/test_ingestor.py`, `docs/BENCHMARKS.md` (after numbers for upload → ready and upload → first questions) | 140 (60 code, 70 tests, 10 doc) | About 6: `ready` is set before any embedding call (call order recorded by fakes); the first session's chunks get questions before later chunks; a session started before embeddings finish gets its bank test; the retriever ignores chunks with no embedding; a crash after `ready` resumes at questions, not at chunking; an empty book is `ready` with 0 chunks | 30 min |
+| C9.3 model warmup | `Dockerfile` (download the model at build into `/app/.cache/fastembed`, `ENV FASTEMBED_CACHE` and `HF_HUB_OFFLINE=1`), `backend/nlp/embedder.py` (`warm()`: load and embed one short text, so the ONNX session is initialised; timing logged), `backend/main.py` (lifespan schedules `warm()` in a thread after startup when `EMBED_WARMUP` is on, so `/health` answers first), `backend/agents/evaluator_agent.py` (`warm_up` delegates to `embedder.warm`), `backend/tests/test_embedder.py`, `docs/BENCHMARKS.md` (RSS row and cold-start numbers) | 90 (40 code, 40 tests, 10 doc) | About 4: `warm` loads once when called from several threads; `/health` does not wait for the warmup (fake slow loader); `EMBED_WARMUP=0` skips it; a failed warmup is logged and the app still answers. By hand in the container: image build, cold start → first embed before and after, RSS idle before and after (expected about 134 → 265 MB, to be measured) | 30 min |
+| C9.4a local token verification | `backend/dependencies.py` (verify the Supabase JWT locally with `PyJWT`: signature against the project's JWKS (cached, refreshed on an unknown `kid`) or the HS256 secret, `exp`, `aud = authenticated`, `iss`; fall back to `auth.get_user` only when the key cannot be fetched), `requirements.txt` (pin `PyJWT`), `.env.example` (`SUPABASE_JWT_SECRET` if HS256), `backend/tests/test_auth_dependency.py` (new), `tools/repo_graph/purposes.json` | 150 (55 code, 90 tests, 5 other) | About 8 with keys generated in the test: a valid token gives its `sub`; expired, wrong audience, wrong issuer, wrong signature, `alg: none` and a raw UUID (issue 10) are 401; an unknown `kid` refreshes the key set once; no network call on the happy path (network guard) | 30 min |
+| C9.4b fewer and lighter reads | `backend/routers/dashboard.py` (the four reads at once, as in C8's planner; `answers` only for the sessions the page shows), `backend/routers/sessions.py` (`start`: chunk text read inside the planner's parallel batch if C9.0 shows it on the path), `backend/routers/books.py` (`GET /books` and `/status` read one row set), `backend/tests/test_api_dashboard.py`, `backend/tests/test_api_sessions.py`, `docs/BENCHMARKS.md` | 130 (50 code, 70 tests, 10 doc) | About 5: dashboard response unchanged on the fake database (snapshot of keys and values); reads issued at once (the fake records overlap); start response unchanged; one query per `GET /books` | 30 min |
+| C9.5 after benchmark | `docs/BENCHMARKS.md` (C9 after: the C9.0 commands rerun on the same books and both machines, 3 runs; a before/after table per measure, including RSS idle and peak and `start`/`submit` p50 (issue 28); the restart-resume check timed: kill at mid-ingestion → restart → done), `docs/PROGRESS.md` (C9 close review: diff stats, open issues) | 60 (doc only) | None new; the six standard checks and the bench runs | 30 min |
+
+Total: about 1,080 hand-written lines plus one migration, in 8 commits,
+about 4 h 30 min. No budget for C9 is recorded in this file; the plan is to
+be checked against the promptbook's hours before C9.0.
+
+Safe to cut, in this order: C9.4b (dashboard is not on the reading path);
+streaming extraction in C9.2 (keep the ready-first order); the container
+runs in C9.0 and C9.5 (keep Windows); C9.3's startup warmup (keep the
+model baked into the image, which removes the download). C9.1 is not on
+the cut list: it is the durability goal.
+
+Risks and open questions:
+
+- **Spin-down still pauses ingestion.** Render Free sleeps after a period
+  with no inbound requests, and background work does not count. The job
+  resumes on the next request, so nothing is lost, but a book uploaded and
+  then left alone finishes only when someone comes back. A free keep-alive
+  while a job is pending (Supabase `pg_cron` + `pg_net` calling `/health`,
+  or a scheduled GitHub Action) would fix it; that is new infrastructure
+  and needs your approval, so it is not planned.
+- **Unique index on `chunks (book_id, chunk_index)`** fails if dev already
+  has duplicates. C9.1a queries for them first and stops to ask if any
+  exist (deleting rows is not additive).
+- **Which signing key the dev project uses** decides C9.4a: asymmetric
+  keys (JWKS endpoint, no secret) or the legacy HS256 secret (a new
+  server-side secret in `.env` and on Render). Checked on dev before code.
+  A wrong verification is a security bug, so the tests cover the rejection
+  cases first.
+- **Startup warmup costs memory all the time**: about 130 MB more at idle
+  (C4.1 figures), on a 512 MB instance, and CPU at boot that competes with
+  the first request on 0.1 CPU. Measured in the container; if idle RSS
+  goes over about 300 MB on Linux, warmup moves back to on-demand and only
+  the baked model stays.
+- **Ingestion competes with readers for 0.1 CPU.** One job at a time per
+  process, and each batch yields to the event loop; a reader's request
+  during ingestion is timed in C9.5.
+- **Re-extracting the file on resume** repeats parsing for a long book.
+  Acceptable because chunk rows are stored first, so a resume after
+  `store_chunks` never parses again.
+- Stuck `processing` books from before C9 (issue 20) get no job. C9.1b can
+  enqueue them with a one-off script if you want; not planned.
+- Session `BackgroundTasks` (decisions, abandon flow) stay non-durable;
+  carried as a new open issue at C9.5.
+- The three `docs/repo-graph/` files show as modified at chunk start with
+  an empty `git diff --stat`: line endings only, as before.
+
+Replanned after C9.0 (2026-11-11 05:57): extraction and chunking of a
+204-chunk EPUB take 0.3 s, so C9.2 drops streaming extraction. The long
+book runs on Windows only; in the 0.1-CPU container it would take about an
+hour per run, so the container measures `sample.pdf`.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C9.0a, C9.0b | `db14228`, `b9b04e3` | `scripts/bench.py --ingest` times upload → ready, → chunk 0 questions, → done, with peak memory, and `--cold` starts a fresh server (local or container) per run; before numbers in `docs/BENCHMARKS.md` (C9.0) | `pytest backend/tests/test_bench.py -q`: 9 passed; the two bench runs in BENCHMARKS (Windows: ready 2.33 s, done 138 s for 204 chunks; container: /health 13 s, ready 26 s, chunk 0 questions 54 s); standard checks below | 2026-11-11 05:57 | Container numbers for `sample.pdf` only; "done" is inferred from a quiet window until C9.1 adds a done signal |
+| [x] C9.1a processing_jobs table and job service (dev only) | `57a161b` | Replanned by the C9.1 prompt: the table is `processing_jobs` (`id`, `user_id`, `book_id`, `kind`, `status` queued/running/done/failed, `progress`, `cursor`, `error`, `attempts`, `updated_at`), not the plan's `ingestion_jobs` with a lease column; the stale `updated_at` is the lease. Added `supabase/migrations/010_processing_jobs.sql` (the prompt says `009_processing_jobs.sql`; 009 is taken by `009_agent_decisions.sql`): the table, unique `(book_id, kind)`, checks on status, progress, cursor and attempts, index `(status, updated_at)`, RLS with one own-rows `SELECT` policy, and a unique index on `chunks (book_id, chunk_index)` so a re-run batch upserts. `backend/services/processing_jobs.py`: `create`, `get`, pure `claimable`, `claim` (optimistic update on `attempts` and `updated_at`, so one caller wins), `advance`, `finish`, `fail`, `stale_jobs`; `INGEST_STALE_MINUTES` (default 5), `MAX_ATTEMPTS` 3. `backend/tests/memory_db.py` (new in-memory Supabase stand-in). Applied to the dev project only. | Tests written first: 3 migration tests failed (no 010 file) and `test_processing_jobs.py` failed to import, then 45 passed. Before the migration, a read-only scan of dev found 642 chunks in 642 distinct `(book_id, chunk_index)` pairs (no duplicates). The linked project is the one in `.env` (`ENV=development`); `npx supabase db push --linked --dry-run` listed only 010; applied; `migration list` shows 001 to 010 on both sides. On dev, with a fixture book of test user A (removed afterwards; 8 books, 642 chunks, 0 jobs before and after): defaults filled; a second job for the book refused (23505); status `paused`, progress 1.5 and cursor -1 refused (23514); a duplicate chunk index refused (23505) and an upsert on `(book_id, chunk_index)` kept one row with the same id; user A reads 1 job, user B and the anon key 0; user A's insert refused (403, 42501) and their update changed nothing; deleting the book removed its job and chunks. Standard checks: ruff 31 errors (baseline), `pytest backend/tests -q` 568 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed (1 failed first: `test_build.py` pins the table names; `docs/DEBUG_LOG.md`). `make graph` twice, no change after the second. | 2026-11-11 06:06 | Nothing uses the jobs yet (C9.1b). The sweep compares `updated_at`, written with the backend's clock, against the backend's clock, so two servers with skewed clocks on one database could misjudge staleness. Not applied to production |
+| [x] C9.1b durable, resumable ingestion (C9.1 done) | `8d75e33` | `backend/services/book_ingestor.py`: `ingest_book` replaced by `run_job(job, file_bytes=None)`, which runs a claimed job from its cursor in bounded batches (5, then 16: `INGEST_BATCH`), upserts chunks on `(book_id, chunk_index)`, marks the book ready after the first stored batch, generates the batch's questions (already an idempotent upsert), saves the cursor and progress, and records a failure on the job (a readable book stays `ready`); without bytes it reads the file from Storage. New `backend/services/ingestion_worker.py`: the sweep claims queued or running jobs not updated for `INGEST_STALE_MINUTES` (default 5) and runs them one at a time, or fails them after `MAX_ATTEMPTS` (3); it runs at startup and then once per window, from the FastAPI lifespan in `backend/main.py`; `INGEST_SWEEP=0` turns it off (set in `conftest.py`). `backend/routers/books.py`: upload records and claims a job before ingesting after the response (response unchanged); `GET /books/{id}/status` adds `ingestion` (status, progress, cursor, attempts, error, updated_at); new `POST /books/{id}/resume` (404 for another user's book, 409 when done or live, otherwise claims past the attempt cap, sets an `error` book back to `processing`, and also starts a job for a book left `processing` with none, issue 20). | Tests written first: both new test files failed to collect, then one failed (the in-memory fake had no Storage `upload`), then 22 passed. On dev, backend on port 8010 with `INGEST_STALE_MINUTES=0.25`, test user A, `pride-and-prejudice.epub` (204 chunks; scratchpad script, both books deleted afterwards, 0 rows left): an uninterrupted run finished in 134 s with 204 chunks, 204 embedded, 1,760 questions, no duplicate index or question key; a second upload was hard-killed (process tree killed, no shutdown) at cursor 53: job `running`, cursor 53, book `ready`, 53 chunks and 433 questions stored; restarted 6.2 s later; the job was not yet stale at startup, and the sweep 30 s later claimed it (attempts 2) and finished in 96 s: 204 chunks, 204 distinct indices, 204 embedded, 1,760 questions, 0 duplicates, every count equal to the uninterrupted run, and the 53 chunks stored before the kill kept their ids. Standard checks: ruff 30 errors (31 before: the old blind `except` now carries a reason), `pytest backend/tests -q` 582 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 06:16 | While the instance sleeps nothing runs: a job resumes on the next start or sweep after a request wakes it (no keep-alive, as planned). A job killed less than a window before a restart waits for the next sweep (up to one window). Batches of 16 instead of 8 changed the questions for the long book from 1,718 (C9.0) to 1,760: distractors and the quality filter see a batch's concepts (issue 25). Peak memory with 16-chunk batches not measured yet (C9.5). `scripts/manual/test_ingest.py` still imports the removed `ingest_book`; manual scripts are not run. Not applied to production |
+| [x] C9.2 ready after the first batch's questions | `c65ba2b` | Replanned by the C9.2 prompt: instead of the plan's text-first order (ready before any embedding), the book is marked ready once the first batch (five chunks) is stored **with its questions and concepts**; the remaining batches stay job work. `backend/services/book_ingestor.py`: `mark_ready` moved after the batch's question generation (a failed question run still marks it ready: `finish-reading` generates on demand). Job progress on `GET /books/{id}/status` was already exposed in C9.1b (`ingestion`); a test now pins it for a running job. Header type `feat`, not the prompt's `perf`: chosen with the user, because `ready` got slower. | Tests written first: the new order test failed (ready came before the questions), the failure and status tests passed already; after the change 24 passed. `python scripts/bench.py --ingest ... --flow-runs 3 --cold` (`docs/BENCHMARKS.md`, C9.2), p50: Windows ready 2.33 -> 4.97 s (`sample.pdf`) and 2.36 -> 4.83 s (204-chunk EPUB), chunk 0 questions 4.67 -> 4.97 s and 4.70 -> 4.83 s; container at 0.1 CPU ready 26.29 -> 56.55 s, chunk 0 questions 53.64 -> 53.70 s, done 61.70 -> 63.74 s; peak memory 321 MB and 348 to 351 MB on Windows, 316 to 350 MB in the container. Standard checks: ruff 30 errors (baseline), `pytest backend/tests -q` 584 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 07:02 | `ready` now comes about 30 s later on Render-like CPU; the first test is no sooner. Making the first batch faster (C9.3: model baked into the image and warmed) is what can move both. The Library page shows no progress yet, although `/status` returns it |
+| [x] C9.3 preload the embedding model | `83b4f1f` | Header type `feat`, not the prompt's `perf`: chosen with the user (new behaviour; mixed timings). Replanned by the C9.3 prompt: a background preload with a ready event, `model_ready` on `/health` and a 503 after a bounded wait; the plan's baked-in model (Dockerfile) is not part of it. `backend/nlp/embedder.py`: `preload()` loads and warms the model once on a daemon thread, `_ready` is set by any load (preload or first use), `is_ready`, `wait_ready(timeout)`, `ensure_loading`, `load_error`, `EMBED_PRELOAD` (default on). `backend/main.py`: the lifespan calls `preload()`; `/health` returns `status`, `model_ready`, `timestamp` and only reads the event. `backend/dependencies.py`: `require_model` waits up to `EMBED_WAIT_SECONDS` (20) off the event loop and answers 503 with `Retry-After: 5` and "The reading model is still loading. Please try again in a few seconds."; `backend/routers/sessions.py`: on `submit-answers` and `evaluate-single`, so it runs before the session is claimed. `conftest.py`: `EMBED_PRELOAD=0` and an autouse fixture that marks the model ready. | Tests written first: 5 failed and 5 errored (no preload, ready event or dependency), then 20 passed (embedder, health, new `test_model_ready.py`). By a scratchpad script, 3 runs each (`docs/BENCHMARKS.md`, C9.3): Windows idle RSS 136 -> 266 to 267 MB, model ready 2.6 to 3.7 s after process start, first `/health` 22 to 28 ms (one run 1,045 ms during the load); container at 0.1 CPU idle 110 to 126 -> 272 to 275 MB, `/health` still about 13 s after start, model ready 29.2 to 29.9 s after start, first `/health` 281 to 470 ms (32 to 105 ms before). `bench.py --ingest sample.pdf --cold` in the container: ready p50 56.55 -> 50.38 s, done 63.74 -> 55.04 s, with overlapping p95s. Standard checks: ruff 30 errors (baseline), `pytest backend/tests -q` 593 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 07:26 | Idle memory about +130 to 150 MB (275 MB in the container, against 512 MB). The ingestion medians are lower but the spreads overlap: not a clear speed-up. The first grade after a cold start was not measured. The model is still downloaded on every Render start (about 12 s): baking it into the image is not done. `model_ready` turns true before the warm-up embed finishes. `finish-reading`'s on-demand generation and ingestion do not use `require_model` (ingestion waits on the load lock) |
+| [x] C9.4 fewer and lighter reads, and indexes (dev only) | `3294058` | Found with the repo graph (`query.py` on both routers and every reader of `sessions`, `test_results`, `books`, `reading_progress`): no per-row database query (no true N+1); `GET /dashboard` ran four reads in sequence, read the `answers` jsonb of every test result for three feedback quotes, and matched results to sessions and books by scanning lists per row (N x M in memory); `POST /sessions/start` read chunks and inserted the session one after the other; `sessions`, `test_results` and `books` had no index beyond their primary keys. `backend/routers/dashboard.py`: the reads run at once (`asyncio.gather` over `run_in_threadpool`), dictionaries replace the scans, the results read no longer selects `answers`, and `latest_feedback` reads answers for the newest 5 results at a time (keyset on `created_at`) until it has three quotes. `backend/routers/sessions.py`: `start` runs the chunk read and the session insert at once. `supabase/migrations/011_query_indexes.sql`: `sessions (user_id, status, completed_at)`, `sessions (user_id, book_id)`, `test_results (session_id)`, `test_results (user_id, created_at)`, `books (user_id, status)`. Applied to the dev project only. | Tests written first: the dashboard response was recorded from the old endpoint on a fixed data set with a frozen clock (passes before and after); the answers, overlap and start tests and 7 migration tests failed before, then 605 passed with a paging test added. Dev link matches `.env` (`ENV=development`); `npx supabase db push --linked --dry-run` listed only 011; applied; `migration list` 001 to 011; `inspect db index-stats` lists the five. `python scripts/bench.py --runs 20 --flow-runs 5` (`docs/BENCHMARKS.md`, C9.4), p50: dashboard 455 -> 194 ms, start 590 -> 503 ms, books 189 -> 183 ms; finish-reading 750 -> 575 ms and submit 1.07 -> 1.05 s with no code change there (noise). Standard checks: ruff 28 errors (30 before: the rewritten dashboard lost its two), `pytest backend/tests -q` 605 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. `make graph` twice, no change after the second. | 2026-11-11 07:37 | The indexes' effect is not measurable on the small dev tables. `stored_result` (resubmit only) still makes two reads in sequence, and `GET /sessions/{id}` still selects `*` because it returns the row as it is. The first feedback page is read even when the user has no results. Not applied to production |
+| [x] C9.5 after benchmark | `bc7a347` | `docs/BENCHMARKS.md`: C9.5 "After" (ingestion on Windows and in the 0.1-CPU container, API reads and session flow, idle RSS, all at `3294058`) and a Before/After table with a verdict per measure. Measured improvements: `GET /dashboard` p50 455 -> 193 ms (reproduced from C9.4's 194 ms) and ingestion that resumes after a hard kill (C9.1b). Slower by choice: `ready` (C9.2). Heavier: idle memory +130 to 150 MB (C9.3). Unchanged within noise: start, books, submit, first questions, done. Open issue 35 added (session background tasks are not durable). | `python scripts/bench.py --ingest sample.pdf .cache/bench/pride-and-prejudice.epub --flow-runs 3 --cold --quiet 30`; the same for `sample.pdf` in `docker run --cpus=0.1 --memory=512m` (image `readfocus-c9-5`); `python scripts/bench.py --runs 20 --flow-runs 5` against the launch.json backend; `python scripts/dev/measure_rss.py` three times (266.6 to 266.9 MB). Books deleted by the script, no container left. Standard checks: ruff 28 errors (baseline), `pytest backend/tests -q` 605 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. | 2026-11-11 08:07 | `POST /sessions/start`'s C9.4 gain (590 -> 503 ms) was not reproduced (625 ms). In the long-book run chunk 0's questions were seen 2.5 s before `ready`: investigated and fixed in the bench in the next row (the questions do come first, by about 0.4 s, by design). Not measured: Render, a cold start followed by a grade, indexes on large tables. Three runs per ingestion measure |
+| [x] C9.5 fix: bench stamps each reading when it arrives | `fa52103` | `scripts/bench.py` `measure_ingest` stamped the status and the counts of a poll iteration with the time at its top; an iteration takes about 2.9 s on Windows, so a book that turned ready between the two reads looked ready a whole iteration after its questions. Each reading is now stamped when its answer arrives. `docs/BENCHMARKS.md` C9.5: After ingestion tables replaced by a rerun on the fixed script (the first run kept in the text), a "Measurement resolution" note (ingestion times are first-seen times, resolved to about one iteration, 3 s Windows, 5 s container; the same holds for C9.0 to C9.3), and the Before/After rows updated; the Windows `ready` row is now "later by design, size not resolved". `docs/DEBUG_LOG.md` entry, fixed. | Debug protocol: tight scratchpad poll every 0.1 s on dev (questions 5.45 s, ready 5.82 s; status call 748 ms, four counts 1,117 ms); regression test `test_bench.py::test_measure_ingest_stamps_each_reading_when_it_arrives` failed before (1 failed, 9 passed), passes after (10 passed). Rerun: Windows ready 5.12 s / 5.27 s, chunk 0 questions 6.25 s / 3.84 s, done 6.25 s / 133.69 s; container ready 50.08 s, chunk 0 questions 51.20 s, done 60.34 s. Books deleted, no container left. Standard checks: ruff 28 errors (baseline), `pytest backend/tests -q` 606 passed, lint 22 errors and 2 warnings (baseline), build passes, import exit 0, tooling 62 passed. | 2026-11-11 08:34 | The bench still samples once per iteration: it cannot order `ready` and the first questions, and the C9 ingestion comparisons hold only for differences above about 3 to 5 s. A faster poll (fewer counts per iteration) would sharpen it; not done |
+| [x] C9.3 fix (close review): model preload lock and retry | `b4f463c` | Found in the C9 close review: `embedder.preload()` took the lock `get_model()` holds for the whole load, so a grade arriving during the startup load blocked the event loop (and `/health`) until the load ended; and a failed preload was never retried, so grading answered 503 until a restart. `preload()` now has its own `_preload_lock` and replaces a thread that ended without the model. `docs/DEBUG_LOG.md` entry, fixed. | Two regression tests in `test_embedder.py` failed before the fix (2 failed) and pass after (15 passed); `pytest backend/tests -q` 608 passed; ruff 28 errors (baseline); the other standard checks as at the close. | 2026-11-11 08:38 | Found by reading the code, not seen in a run; not re-measured on a live server |
 
+
+Close review (2026-11-11 08:42):
+
+- **Checks.** ruff 28 errors (31 at chunk start), `pytest backend/tests -q`
+  608 passed (548 at chunk start), ESLint 22 errors and 2 warnings
+  (baseline), build passes, `import backend.main` exit 0, tooling 62
+  passed. `make graph` gave no diff beyond line endings.
+- **Exit criteria.** (1) Interrupted ingestion resumes: rerun on the final
+  ingestion code on dev (scratchpad script, test user A, 204-chunk EPUB,
+  `INGEST_STALE_MINUTES=0.25`): hard kill at cursor 53, restart 6.2 s
+  later, the sweep claimed the job 30 s after restart (attempts 2) and
+  finished in 99 s; 204 chunks, 204 distinct indices, 1,760 questions, 0
+  duplicates, every count equal to an uninterrupted run, the 53 earlier
+  chunk ids kept; books deleted, 0 rows left. (2) `/health` returns
+  `status`, `model_ready`, `timestamp` (`test_health.py`; live timings in
+  BENCHMARKS C9.3). (3) Before/After table in `docs/BENCHMARKS.md` C9.5.
+- **Diff.** `git diff readfocus-2.0...HEAD`: 33 files, about 2,810
+  insertions and 380 deletions; `git diff --check` clean; no secret-like
+  strings; nothing under `frontend/`; two migrations (010, 011), dev only,
+  additive.
+- **Blocking findings.** One, fixed in `b4f463c`: a grade during the
+  model load froze the event loop on the load's lock, and a failed preload
+  was never retried.
+- **Non-blocking.**
+  - `run_job` makes its Supabase calls synchronously on the event loop
+    (as `ingest_book` did), each about 0.1 to 0.3 s per batch.
+  - The dashboard's feedback paging is keyed on `created_at`; results
+    with an identical timestamp at a page boundary could skip a quote.
+  - Nothing runs while the Render instance sleeps; a job resumes on the
+    next start or sweep. No keep-alive (needs approval).
+  - The model is still downloaded on every Render start (about 12 s).
+  - Open issue 35: session background tasks are not durable.
+  - Ingestion benchmark times are resolved to about one poll iteration
+    (3 to 5 s).
+- **Time.** About 3 h 15 min of wall-clock, from the plan at 05:27 to this
+  review, against 1.5 h budgeted: about 120% over. The 50% rule was not
+  applied during the chunk; most of the overrun is benchmark runs (cold
+  starts, the 0.1-CPU container, the 204-chunk book) and two
+  investigations (the C9.5 bench stamping and this review's fix).
 ## C10
 
 Title to be filled from the promptbook.

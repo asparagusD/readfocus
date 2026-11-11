@@ -268,3 +268,72 @@ def test_009_has_the_lookup_indexes_and_touches_no_existing_table():
     assert set(re.findall(r"ALTER TABLE public\.(\w+)", sql)) == {"agent_decisions"}
     assert re.findall(r"CREATE TABLE IF NOT EXISTS public\.(\w+)", sql) == ["agent_decisions"]
     assert not re.search(r"\b(INSERT|UPDATE)\b", sql)
+
+
+# --- 010: processing_jobs, durable ingestion jobs (C9.1) -------------------------------------
+
+def migration_010() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "010_processing_jobs.sql"))
+
+
+PROCESSING_JOBS = {
+    "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+    "user_id": OWNER,
+    "book_id": BOOK,
+    "kind": "text NOT NULL DEFAULT 'ingest' CHECK (kind IN ('ingest'))",
+    "status": "text NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'running', 'done', 'failed'))",
+    "progress": "real NOT NULL DEFAULT 0 CHECK (progress >= 0 AND progress <= 1)",
+    "cursor": "integer NOT NULL DEFAULT 0 CHECK (cursor >= 0)",
+    "error": "text",
+    "attempts": "integer NOT NULL DEFAULT 0 CHECK (attempts >= 0)",
+    "updated_at": "timestamptz NOT NULL DEFAULT now()",
+    "UNIQUE": "(book_id, kind)",
+}
+
+
+def test_010_creates_processing_jobs_with_the_agreed_columns():
+    definition = table_definition(migration_010(), "processing_jobs")
+    assert list(definition) == list(PROCESSING_JOBS)
+    for name, expected in PROCESSING_JOBS.items():
+        assert definition[name] == expected, f"processing_jobs.{name}: {definition[name]}"
+
+
+def test_010_readers_see_only_their_own_jobs_and_cannot_write():
+    sql = migration_010()
+    assert "ALTER TABLE public.processing_jobs ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(r"CREATE POLICY \"[^\"]+\" ON public\.processing_jobs FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert policies == ["SELECT"]  # only the backend's service role writes
+    assert "SECURITY DEFINER" not in sql
+
+
+def test_010_indexes_the_sweep_and_makes_chunk_upserts_idempotent():
+    sql = migration_010()
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.processing_jobs \(status, updated_at\)", sql)
+    assert re.search(r"CREATE UNIQUE INDEX IF NOT EXISTS \w+ ON public\.chunks \(book_id, chunk_index\)", sql)
+    assert re.findall(r"CREATE TABLE IF NOT EXISTS public\.(\w+)", sql) == ["processing_jobs"]
+    assert set(re.findall(r"ALTER TABLE public\.(\w+)", sql)) == {"processing_jobs"}
+    assert not re.search(r"\b(INSERT|UPDATE)\b", sql)
+
+
+# --- 011: indexes for the per-user reads (C9.4) ------------------------------------------------
+
+def migration_011() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "011_query_indexes.sql"))
+
+
+@pytest.mark.parametrize("table, columns", [
+    ("sessions", "user_id, status, completed_at"),
+    ("sessions", "user_id, book_id"),
+    ("test_results", "session_id"),
+    ("test_results", "user_id, created_at"),
+    ("books", "user_id, status"),
+])
+def test_011_indexes_the_filters_the_api_uses(table, columns):
+    assert re.search(rf"CREATE INDEX IF NOT EXISTS \w+ ON public\.{table} \({columns}\)", migration_011())
+
+
+def test_011_only_adds_indexes():
+    sql = migration_011()
+    statements = [s.strip() for s in sql.split(";") if s.strip()]
+    assert len(statements) == 5
+    assert all(s.startswith("CREATE INDEX IF NOT EXISTS") for s in statements)

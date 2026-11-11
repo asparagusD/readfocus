@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Any, cast
 
@@ -14,7 +15,7 @@ from backend.agents.workflow import (
     run_submit,
     save_decisions,
 )
-from backend.dependencies import get_current_user
+from backend.dependencies import get_current_user, require_model
 from backend.services.supabase_client import supabase
 
 router = APIRouter()
@@ -84,12 +85,10 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
     if not chunk_indices:
         raise HTTPException(status_code=400, detail="No more chunks available to read.")
         
-    # 2. Fetch chunk content
-    resp = supabase.table("chunks").select("chunk_index, content, word_count").eq("book_id", req.book_id).in_("chunk_index", chunk_indices).execute()
-    chunks_data: list[dict[str, Any]] = sorted(cast(list[dict[str, Any]], resp.data or []), key=lambda x: x["chunk_index"])
-    
-    # 3. Create session row
-    session_resp = supabase.table("sessions").insert({
+    # 2-3. Fetch the chunk content and create the session row; neither needs the other, so they run at once
+    chunk_query = supabase.table("chunks").select("chunk_index, content, word_count").eq(
+        "book_id", req.book_id).in_("chunk_index", chunk_indices)
+    session_query = supabase.table("sessions").insert({
         "user_id": user_id,
         "book_id": req.book_id,
         "chunk_start_index": chunk_indices[0],
@@ -98,8 +97,10 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         "focus_duration_minutes": getattr(plan, "focus_duration_minutes", 20),
         "status": "reading",
         "started_at": datetime.utcnow().isoformat()
-    }).execute()
-    
+    })
+    resp, session_resp = await asyncio.gather(run_in_threadpool(chunk_query.execute), run_in_threadpool(session_query.execute))
+    chunks_data: list[dict[str, Any]] = sorted(cast(list[dict[str, Any]], resp.data or []), key=lambda x: x["chunk_index"])
+
     if not session_resp.data:
         raise HTTPException(status_code=500, detail="Failed to create session.")
         
@@ -147,7 +148,7 @@ async def finish_reading(
         "questions": [public_question(q) for q in test_questions]
     }
 
-@router.post("/{session_id}/evaluate-single")
+@router.post("/{session_id}/evaluate-single", dependencies=[Depends(require_model)])
 async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: str = Depends(get_current_user)):
     """Grade one answer now and cache it with the session, so submit has less to do.
 
@@ -169,7 +170,7 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
     supabase.table("sessions").update({"test_questions": test_questions}).eq("id", session_id).eq("user_id", user_id).execute()
     return {"status": "graded"}
 
-@router.post("/{session_id}/submit-answers")
+@router.post("/{session_id}/submit-answers", dependencies=[Depends(require_model)])
 async def submit_answers(
     session_id: str, req: SubmitAnswersRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)
 ):

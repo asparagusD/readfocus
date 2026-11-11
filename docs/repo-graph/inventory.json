@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 196,
-    "inventoried": 184,
+    "tracked": 205,
+    "inventoried": 193,
     "excluded": 12
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7927,
+      "size_bytes": 8119,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -305,18 +305,18 @@
     {
       "path": "backend/dependencies.py",
       "language": "python",
-      "lines": 20,
-      "size_bytes": 752,
+      "lines": 45,
+      "size_bytes": 1620,
       "role": "lib",
-      "purpose": "get_current_user FastAPI dependency: resolves a Supabase JWT to a user id through supabase.auth.get_user; anything else is a 401."
+      "purpose": "FastAPI dependencies: get_current_user resolves a Supabase JWT to a user id through supabase.auth.get_user (anything else is a 401); require_model waits up to EMBED_WAIT_SECONDS for the embedding model, starting a load if none is running, and answers 503 with Retry-After before the endpoint runs."
     },
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 49,
-      "size_bytes": 1337,
+      "lines": 69,
+      "size_bytes": 2126,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the six routers and /health. Starts no other process."
+      "purpose": "FastAPI app: CORS, the six routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -345,10 +345,10 @@
     {
       "path": "backend/nlp/embedder.py",
       "language": "python",
-      "lines": 74,
-      "size_bytes": 2600,
+      "lines": 130,
+      "size_bytes": 4561,
       "role": "lib",
-      "purpose": "Local embeddings: one lazily loaded, thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE); embed and embed_one return unit-length float32 vectors."
+      "purpose": "Local embeddings: one thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE), preloaded and warmed on a daemon thread at startup unless EMBED_PRELOAD=0, or loaded on first use; a ready event that requests wait on and /health reports, and the load error if any; embed and embed_one return unit-length float32 vectors."
     },
     {
       "path": "backend/nlp/text.py",
@@ -385,18 +385,18 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 125,
-      "size_bytes": 4670,
+      "lines": 151,
+      "size_bytes": 6258,
       "role": "router",
-      "purpose": "Book endpoints: upload to Storage and start ingestion in the background, list, details with progress, status poll, delete."
+      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list; details with progress; status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
     },
     {
       "path": "backend/routers/dashboard.py",
       "language": "python",
-      "lines": 155,
-      "size_bytes": 7374,
+      "lines": 174,
+      "size_bytes": 7558,
       "role": "router",
-      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback."
+      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found."
     },
     {
       "path": "backend/routers/mastery.py",
@@ -409,10 +409,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 264,
-      "size_bytes": 12734,
+      "lines": 265,
+      "size_bytes": 13009,
       "role": "router",
-      "purpose": "Session lifecycle endpoints, through backend/agents/workflow.py: start (the start_session flow plans; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -425,10 +425,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 216,
-      "size_bytes": 8196,
+      "lines": 211,
+      "size_bytes": 8723,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks, then has the question generation agent fill the question bank for each batch."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -437,6 +437,22 @@
       "size_bytes": 3686,
       "role": "service",
       "purpose": "The concepts of a book in the concepts table: save upserts one row per (user, book, concept key) for a batch of chunks, keeping the first label, growing chunk_indices and taking the highest weight; concepts_for_chunks reads the concepts some chunks mention; link_key_terms (pure) ties a question's key terms to concept keys."
+    },
+    {
+      "path": "backend/services/ingestion_worker.py",
+      "language": "python",
+      "lines": 61,
+      "size_bytes": 2426,
+      "role": "service",
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time, or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
+    },
+    {
+      "path": "backend/services/processing_jobs.py",
+      "language": "python",
+      "lines": 100,
+      "size_bytes": 4429,
+      "role": "service",
+      "purpose": "processing_jobs rows for book ingestion: create one queued job per book, the pure claimable rule (done, fresh running, attempt cap), claim with an optimistic update on attempts and updated_at so only one caller runs a job, advance the cursor and progress after each batch, finish, fail, and list stale queued or running jobs for the startup sweep."
     },
     {
       "path": "backend/services/question_bank.py",
@@ -473,10 +489,10 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 82,
-      "size_bytes": 2291,
+      "lines": 94,
+      "size_bytes": 2688,
       "role": "test",
-      "purpose": "Offline test setup: dummy environment, a fake Supabase client, and a guard that blocks non-loopback connections."
+      "purpose": "Offline test setup: dummy environment (ingestion sweep and model preload off), a fake Supabase client, a guard that blocks non-loopback connections, and an autouse fixture that marks the embedding model ready."
     },
     {
       "path": "backend/tests/fixtures/answers.json",
@@ -485,6 +501,14 @@
       "size_bytes": 16853,
       "role": "test",
       "purpose": "Labelled answers for calibrating the grader: 34 cases over five questions, each with question, type, evidence, key terms, an answer, a category (correct, paraphrase, partial, wrong, off-topic, empty, copy of the question) and a hand-given human_score from 0 to 1."
+    },
+    {
+      "path": "backend/tests/memory_db.py",
+      "language": "python",
+      "lines": 137,
+      "size_bytes": 4799,
+      "role": "test",
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload and download), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -511,6 +535,14 @@
       "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
     },
     {
+      "path": "backend/tests/test_api_dashboard.py",
+      "language": "python",
+      "lines": 138,
+      "size_bytes": 6097,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database with a frozen clock: GET /dashboard returns the response recorded from the pre-C9.4 endpoint, reads answers only for a page of the newest results, pages on until it has three feedback quotes, and issues its reads at once."
+    },
+    {
       "path": "backend/tests/test_api_mastery.py",
       "language": "python",
       "lines": 125,
@@ -521,10 +553,10 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 573,
-      "size_bytes": 28120,
+      "lines": 600,
+      "size_bytes": 29241,
       "role": "test",
-      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict."
+      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -545,8 +577,8 @@
     {
       "path": "backend/tests/test_bench.py",
       "language": "python",
-      "lines": 40,
-      "size_bytes": 1555,
+      "lines": 108,
+      "size_bytes": 4401,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
     },
@@ -569,10 +601,10 @@
     {
       "path": "backend/tests/test_embedder.py",
       "language": "python",
-      "lines": 126,
-      "size_bytes": 4186,
+      "lines": 216,
+      "size_bytes": 7314,
       "role": "test",
-      "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; similar sentences beat unrelated ones on the real model when it is cached."
+      "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
       "path": "backend/tests/test_feedback.py",
@@ -609,18 +641,26 @@
     {
       "path": "backend/tests/test_health.py",
       "language": "python",
-      "lines": 19,
-      "size_bytes": 410,
+      "lines": 30,
+      "size_bytes": 894,
       "role": "test",
-      "purpose": "Pytest: /health returns 200 with status ok and a timestamp."
+      "purpose": "Pytest: /health returns 200 with exactly status, model_ready and timestamp, and answers at once while the model is still loading."
     },
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 147,
-      "size_bytes": 6080,
+      "lines": 197,
+      "size_bytes": 8135,
       "role": "test",
-      "purpose": "Pytest on the fake database: ingest_book stores every chunk once with a 384-value embedding_local, in batches, unlocks the book after the first five, marks it error if embedding fails, and does not use the Google client."
+      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent."
+    },
+    {
+      "path": "backend/tests/test_ingestion_worker.py",
+      "language": "python",
+      "lines": 120,
+      "size_bytes": 5605,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
     },
     {
       "path": "backend/tests/test_ingestor.py",
@@ -641,10 +681,18 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 270,
-      "size_bytes": 10630,
+      "lines": 339,
+      "size_bytes": 13666,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books."
+    },
+    {
+      "path": "backend/tests/test_model_ready.py",
+      "language": "python",
+      "lines": 50,
+      "size_bytes": 2014,
+      "role": "test",
+      "purpose": "Pytest: submit-answers and evaluate-single answer 503 with a clear message and Retry-After while the model loads, before touching the session; require_model returns at once when the model is ready and starts a load when none runs."
     },
     {
       "path": "backend/tests/test_no_paid_ai.py",
@@ -677,6 +725,14 @@
       "size_bytes": 9947,
       "role": "test",
       "purpose": "Pytest on hand-made chunks and concept states: cold start, a finished book, a weak concept brought back with its reason, re-read queue priority, the score formula and its boundaries, difficulty fit, the optimizer's multiplier and minutes, size and duration bounds, question mixes, and that decide is pure."
+    },
+    {
+      "path": "backend/tests/test_processing_jobs.py",
+      "language": "python",
+      "lines": 87,
+      "size_bytes": 3993,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: one queued job per book, the claimable rule at each boundary, a racing second claim gets nothing, advance records cursor and progress, finish and fail, which jobs the sweep sees as stale, and the stale window from INGEST_STALE_MINUTES."
     },
     {
       "path": "backend/tests/test_question_assembler.py",
@@ -753,16 +809,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 447,
-      "size_bytes": 23736,
+      "lines": 768,
+      "size_bytes": 42037,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1028,
-      "size_bytes": 44290,
+      "lines": 1192,
+      "size_bytes": 51741,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -777,8 +833,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1410,
-      "size_bytes": 245866,
+      "lines": 1560,
+      "size_bytes": 278387,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1169,8 +1225,8 @@
     {
       "path": "scripts/bench.py",
       "language": "python",
-      "lines": 195,
-      "size_bytes": 7574,
+      "lines": 368,
+      "size_bytes": 16239,
       "role": "script",
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
     },
@@ -1375,6 +1431,22 @@
       "purpose": "Adds agent_decisions: one row per node of each agent workflow run (user, book, session, run id, event, step, agent, inputs and output summaries, reason, duration), unique per run and step, indexed by session and by user and book, readable only by its own user under RLS and written by the service role."
     },
     {
+      "path": "supabase/migrations/010_processing_jobs.sql",
+      "language": "sql",
+      "lines": 49,
+      "size_bytes": 2645,
+      "role": "migration",
+      "purpose": "Adds processing_jobs (user, book, kind, status queued/running/done/failed, progress, cursor, error, attempts, updated_at), unique per book and kind, indexed on (status, updated_at) for the sweep and readable only by its own user under RLS; adds a unique index on chunks (book_id, chunk_index) so re-run batches upsert."
+    },
+    {
+      "path": "supabase/migrations/011_query_indexes.sql",
+      "language": "sql",
+      "lines": 25,
+      "size_bytes": 1231,
+      "role": "migration",
+      "purpose": "Adds indexes for the per-user reads: sessions (user_id, status, completed_at) and (user_id, book_id), test_results (session_id) and (user_id, created_at), books (user_id, status). Indexes only."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1417,8 +1489,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 186,
-      "size_bytes": 38633,
+      "lines": 195,
+      "size_bytes": 43772,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1450,7 +1522,7 @@
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
       "lines": 256,
-      "size_bytes": 10333,
+      "size_bytes": 10352,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

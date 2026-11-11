@@ -55,3 +55,43 @@ test('signed in, "/" is still the shelf', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Your shelf' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'A quiet place to read deeply.' })).toHaveCount(0);
 });
+
+test.describe('hero and how it works', () => {
+  test.use({ signedIn: false });
+
+  test('the book spread cites its source and the flyleaf turns over once', async ({ page }) => {
+    await page.goto('/');
+    const spread = page.locator('.rf-spread');
+    await expect(spread.getByText('The Fourth Book').first()).toBeVisible();
+    await expect(spread.getByRole('link', { name: 'Project Gutenberg' })).toHaveAttribute('href', 'https://www.gutenberg.org/ebooks/2680');
+    const leaf = page.locator('.rf-spread__leaf');
+    await expect(leaf).toHaveCount(1);
+    // Turned over at the spine: rotateY(-180deg) leaves a matrix3d with m11 = -1.
+    await expect.poll(() => leaf.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m11), { timeout: 5000 }).toBeCloseTo(-1, 2);
+  });
+
+  test('See how it works moves to the contents page and focus follows', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('link', { name: 'See how it works' }).click();
+    await expect(page.locator('#how-it-works')).toBeFocused();
+    const steps = page.locator('#how-it-works li');
+    await expect(steps).toHaveCount(4);
+    await expect(steps.nth(3)).toBeVisible();
+    await expect(steps.nth(0)).toContainText('Upload a PDF or EPUB');
+    await expect(steps.nth(3)).toContainText('Your next session adapts');
+  });
+
+  test.describe('reduced motion', () => {
+    test.use({ reducedMotion: 'reduce' });
+
+    test('no flyleaf is drawn and the steps do not move', async ({ page }) => {
+      await page.goto('/');
+      await expect(page.locator('.rf-spread__text').first()).toBeVisible();
+      await expect(page.locator('.rf-spread__leaf')).toHaveCount(0);
+      await page.locator('#how-it-works').scrollIntoViewIfNeeded();
+      await expect(page.locator('#how-it-works li').last()).toHaveCSS('opacity', '1');
+      const transforms = await page.locator('#how-it-works li').evaluateAll((items) => items.map((el) => getComputedStyle(el).transform));
+      expect(transforms).toEqual(['none', 'none', 'none', 'none']);
+    });
+  });
+});

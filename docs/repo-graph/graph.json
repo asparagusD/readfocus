@@ -1764,6 +1764,24 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/pages/landing/BookSpread.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/Contents.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/passages.js",
+      "type": "file",
+      "role": "page",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/pages/landing/wake.js",
       "type": "file",
       "role": "page",
@@ -5018,6 +5036,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
       "to": "file:frontend/src/lib/api.js"
     },
     {
@@ -5029,6 +5052,16 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Landing.jsx",
       "to": "file:frontend/src/pages/Landing.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/BookSpread.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/Contents.jsx"
     },
     {
       "type": "imports",
@@ -5284,6 +5317,21 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/pages/Results.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/BookSpread.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/BookSpread.jsx",
+      "to": "file:frontend/src/pages/landing/passages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/Contents.jsx",
+      "to": "file:frontend/src/motion/presets.js"
     },
     {
       "type": "imports",

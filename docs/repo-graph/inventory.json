@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 418,
-    "inventoried": 354,
+    "tracked": 421,
+    "inventoried": 357,
     "excluded": 64
   },
   "files": [
@@ -977,8 +977,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2048,
-      "size_bytes": 90686,
+      "lines": 2088,
+      "size_bytes": 92331,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1065,10 +1065,10 @@
     {
       "path": "frontend/e2e/landing.spec.js",
       "language": "javascript",
-      "lines": 57,
-      "size_bytes": 2567,
+      "lines": 97,
+      "size_bytes": 4620,
       "role": "config",
-      "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf."
+      "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset."
     },
     {
       "path": "frontend/e2e/library.spec.js",
@@ -1217,8 +1217,8 @@
     {
       "path": "frontend/src/components/AccountMenu.jsx",
       "language": "jsx",
-      "lines": 134,
-      "size_bytes": 4791,
+      "lines": 142,
+      "size_bytes": 5122,
       "role": "component",
       "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes; the panel slides down as it opens (pop) and fades out, opacity only under reduced motion."
     },
@@ -1977,18 +1977,18 @@
     {
       "path": "frontend/src/pages/Landing.css",
       "language": "css",
-      "lines": 96,
-      "size_bytes": 2211,
+      "lines": 355,
+      "size_bytes": 9293,
       "role": "page",
-      "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero type on the project tokens."
+      "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero grid and illustration scene, the book spread (pages, spine shade, flyleaf, caption, one page under 640 px), the contents page (numerals, leaders), on the project tokens."
     },
     {
       "path": "frontend/src/pages/Landing.jsx",
       "language": "jsx",
-      "lines": 43,
-      "size_bytes": 1821,
+      "lines": 65,
+      "size_bytes": 2796,
       "role": "page",
-      "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount to start waking Render; masthead with Sign in, hero with Start reading (to /login?tab=signup)."
+      "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount; masthead with Sign in; hero with headline, positioning lead, Start reading (to /login?tab=signup) and See how it works (scrolls and moves focus), DuskWindow and ReadingLamp behind the BookSpread; then the Contents section."
     },
     {
       "path": "frontend/src/pages/Library.css",
@@ -2063,6 +2063,30 @@
       "purpose": "Results (handoff screen 08): the score, summary and verdict, a note when answers were not judged confidently; each question with its outcome in words and an icon, the reader's answer (without the '(b) ' the grader reads), the feedback and its quoted passage; concept chips strengthened and to revisit; the next session (planner mode, minutes and reason, or the pace's re-read) with Start next session and the dashboard; from router state after the test (GET /sessions/{id} for the questions) or rebuilt after a refresh from GET /sessions/{id} and GET /books/{id}; skeleton, not-graded and failed (Try again) states. Motion (moment 5): the score counts up with useCountUp and the chips pop in 60 ms apart under their own AnimatePresence; the final score at once and no movement under reduced motion."
     },
     {
+      "path": "frontend/src/pages/landing/BookSpread.jsx",
+      "language": "jsx",
+      "lines": 59,
+      "size_bytes": 2329,
+      "role": "page",
+      "purpose": "Landing hero's open book (C13.10b) in the reader's typography (running heads, justified Lora, old-style folios) with a source caption; a blank flyleaf turns once after load via pageTurn/turnShade, none under reduced motion; one page at phone width."
+    },
+    {
+      "path": "frontend/src/pages/landing/Contents.jsx",
+      "language": "jsx",
+      "lines": 44,
+      "size_bytes": 2130,
+      "role": "page",
+      "purpose": "How it works as a book's contents page (C13.10b): four steps with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works."
+    },
+    {
+      "path": "frontend/src/pages/landing/passages.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 1541,
+      "role": "page",
+      "purpose": "Public-domain text for the landing page: Marcus Aurelius, Meditations (Casaubon, 1634, Project Gutenberg #2680), Book IV.III for the hero spread (soft hyphens in long words), with its source."
+    },
+    {
       "path": "frontend/src/pages/landing/wake.js",
       "language": "javascript",
       "lines": 20,
@@ -2074,7 +2098,7 @@
       "path": "frontend/src/pages/landing/wake.test.js",
       "language": "javascript",
       "lines": 18,
-      "size_bytes": 706,
+      "size_bytes": 701,
       "role": "page",
       "purpose": "Node test (npm run test:unit): wakeBackend sends one GET /health per load, swallows failures, and does nothing without fetch."
     },
@@ -2777,8 +2801,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 356,
-      "size_bytes": 99818,
+      "lines": 359,
+      "size_bytes": 101083,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

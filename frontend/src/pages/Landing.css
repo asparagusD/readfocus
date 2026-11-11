@@ -60,17 +60,33 @@
 
 .rf-landing main:focus { outline: none; }
 
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.rf-landing) { scroll-behavior: smooth; }
+}
+
+/* ── Hero (C13.10b): words at left, the open book at right. ─────────── */
 .rf-landing__hero {
+  display: grid;
+  gap: var(--space-8);
+  align-items: center;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-8) var(--space-5) var(--space-9);
+  padding: var(--space-7) var(--space-5) var(--space-9);
+}
+
+@media (min-width: 1024px) {
+  .rf-landing__hero {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-7);
+    padding-top: var(--space-8);
+  }
 }
 
 .rf-landing__title {
-  max-width: 14ch;
+  max-width: 12ch;
   margin: 0 0 var(--space-5);
   font-family: var(--font-display);
-  font-size: clamp(40px, 6vw, var(--text-title));
+  font-size: clamp(40px, 5.2vw, var(--text-title));
   font-weight: 500;
   line-height: var(--text-title--line-height);
   letter-spacing: -0.01em;
@@ -90,7 +106,250 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .rf-landing__actions .rf-btn { text-decoration: none; }
+
+/* The scene: dusk window behind, lamp at the right, the open book in front. */
+.rf-landing__scene {
+  position: relative;
+  padding-top: 200px;
+}
+
+.rf-landing__window {
+  --illustration-size: 300px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.rf-landing__lamp {
+  --illustration-size: 240px;
+  position: absolute;
+  top: 24px;
+  right: -40px;
+}
+
+@media (max-width: 1023px) {
+  .rf-landing__lamp { right: 0; }
+}
+
+@media (max-width: 639px) {
+  .rf-landing__scene { padding-top: 132px; }
+  .rf-landing__window { --illustration-size: 200px; }
+  .rf-landing__lamp { --illustration-size: 150px; top: 8px; }
+}
+
+/* ── The open book (C13.10b): the reader's page, type and furniture. ── */
+.rf-spread {
+  --page-edge: color-mix(in oklab, var(--page) 93%, var(--ink-3));
+  --spine-shade: color-mix(in oklab, var(--ink) 11%, transparent);
+  position: relative;
+  margin: 0;
+}
+
+[data-theme="lamplight"] .rf-spread {
+  --page-edge: color-mix(in oklab, var(--page) 72%, var(--paper-2));
+  --spine-shade: color-mix(in oklab, var(--paper-2) 80%, transparent);
+}
+
+.rf-spread__book {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: var(--radius-page);
+  box-shadow: var(--elevation-page);
+}
+
+.rf-spread__page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  border: var(--border-hair) solid var(--line);
+  background: radial-gradient(140% 105% at 50% 42%, var(--page) 64%, var(--page-edge) 100%);
+}
+
+.rf-spread__page[data-side="left"] { border-right: 0; border-radius: var(--radius-page) 0 0 var(--radius-page); }
+.rf-spread__page[data-side="right"] { border-left: 0; border-radius: 0 var(--radius-page) var(--radius-page) 0; }
+
+.rf-spread__page::after {
+  position: absolute;
+  inset-block: 0;
+  width: var(--space-7);
+  content: "";
+  pointer-events: none;
+}
+
+.rf-spread__page[data-side="left"]::after { right: 0; background: linear-gradient(to left, var(--spine-shade), transparent); }
+.rf-spread__page[data-side="right"]::after { left: 0; background: linear-gradient(to right, var(--spine-shade), transparent 70%); }
+
+.rf-spread__head {
+  margin: 0 0 var(--space-5);
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-running-head);
+  line-height: var(--text-running-head--line-height);
+  letter-spacing: var(--text-running-head--letter-spacing);
+  text-transform: uppercase;
+}
+
+.rf-spread__page[data-side="right"] .rf-spread__head { text-align: right; }
+
+.rf-spread__chapter {
+  margin: var(--space-3) 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-style: italic;
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-spread__text {
+  flex: 1;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: 15px;
+  line-height: var(--text-reading--line-height);
+  text-align: justify;
+  hyphens: auto;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+}
+
+.rf-spread__folio {
+  margin: var(--space-5) 0 0;
+  color: var(--ink-3);
+  font-family: var(--font-reading);
+  font-size: var(--text-label);
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  line-height: var(--text-label--line-height);
+  text-align: center;
+}
+
+/* The flyleaf: a blank page hinged at the spine that turns over once. */
+.rf-spread__leaf {
+  position: absolute;
+  inset: -1px -1px -1px 0;
+  z-index: var(--z-raised);
+  border: var(--border-hair) solid var(--line);
+  border-left: 0;
+  border-radius: 0 var(--radius-page) var(--radius-page) 0;
+  background: radial-gradient(140% 105% at 50% 42%, var(--page) 64%, var(--page-edge) 100%);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+.rf-spread__leaf-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, var(--spine-shade), transparent);
+  opacity: 0;
+}
+
+.rf-spread__caption {
+  margin-top: var(--space-4);
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-spread__caption a { color: inherit; text-underline-offset: 3px; }
+.rf-spread__caption a:hover { color: var(--ink); }
+
+/* A phone shows the chapter's opening page alone, at a readable size. */
+@media (max-width: 639px) {
+  .rf-spread__book { grid-template-columns: 1fr; }
+  .rf-spread__page[data-side="left"] { border-right: var(--border-hair) solid var(--line); border-radius: var(--radius-page); }
+  .rf-spread__page[data-side="left"]::after { display: none; }
+  .rf-spread__page[data-side="right"] { display: none; }
+  .rf-spread__text { font-size: 16px; }
+}
+
+/* ── How it works, as a contents page (C13.10b). ─────────────────────── */
+.rf-toc {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) var(--space-9);
+  scroll-margin-top: var(--space-5);
+}
+
+.rf-toc:focus { outline: none; }
+
+.rf-toc__title {
+  margin: 0 0 var(--space-7);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-hair) solid var(--line-2);
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  font-weight: 500;
+  line-height: var(--text-section--line-height);
+}
+
+.rf-toc__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rf-toc__item {
+  display: grid;
+  grid-template-columns: var(--space-8) minmax(0, 1fr);
+  column-gap: var(--space-4);
+}
+
+.rf-toc__item + .rf-toc__item { margin-top: var(--space-6); }
+
+.rf-toc__num {
+  grid-row: span 2;
+  color: var(--accent-text);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-style: italic;
+  line-height: var(--text-h2--line-height);
+  text-align: right;
+}
+
+.rf-toc__line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-toc__leader {
+  flex: 1;
+  min-width: var(--space-6);
+  border-bottom: 2px dotted var(--line-field);
+}
+
+.rf-toc__note {
+  color: var(--ink-3);
+  font-family: var(--font-reading);
+  font-size: var(--text-quote);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.rf-toc__body {
+  max-width: 36em;
+  margin: var(--space-2) 0 0;
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+@media (max-width: 639px) {
+  .rf-toc__item { grid-template-columns: var(--space-6) minmax(0, 1fr); column-gap: var(--space-3); }
+  .rf-toc__num,
+  .rf-toc__line { font-size: 22px; line-height: 30px; }
+  .rf-toc__leader,
+  .rf-toc__note { display: none; }
+}

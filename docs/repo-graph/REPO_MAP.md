@@ -546,12 +546,12 @@ Each use is the file and line of the first import of that service.
 | `README.md` | 137 | Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour. |
 | `design/HANDOFF_SUMMARY.md` | 469 | Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions. |
 | `design/handoff/foundations-style-guide/README.md` | 21 | Claude Design export note, kept unchanged: treat Main.dc.html as a reference mockup and replicate its values rather than copy its markup. |
-| `docs/ASSETS.md` | 31 | Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License). |
+| `docs/ASSETS.md` | 40 | Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License). |
 | `docs/BENCHMARKS.md` | 821 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
 | `docs/DEBUG_LOG.md` | 1515 | Debug log rules, entry template, and one entry per failure. |
 | `docs/DESIGN_AUDIT.md` | 271 | C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 1885 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 1886 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 

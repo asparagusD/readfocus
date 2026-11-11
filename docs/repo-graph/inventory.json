@@ -881,8 +881,8 @@
     {
       "path": "docs/ASSETS.md",
       "language": "markdown",
-      "lines": 31,
-      "size_bytes": 2708,
+      "lines": 40,
+      "size_bytes": 3648,
       "role": "doc",
       "purpose": "Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License)."
     },
@@ -921,8 +921,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1885,
-      "size_bytes": 343084,
+      "lines": 1886,
+      "size_bytes": 343981,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 205,
-    "inventoried": 193,
-    "excluded": 12
+    "tracked": 212,
+    "inventoried": 199,
+    "excluded": 13
   },
   "files": [
     {
@@ -807,6 +807,54 @@
       "purpose": "Pytest, table-driven: sentence splitting (abbreviations, quotes, lists, hyphenated line breaks), normalisation, tokens, stopwords, and informativeness rankings."
     },
     {
+      "path": "design/HANDOFF_SUMMARY.md",
+      "language": "markdown",
+      "lines": 288,
+      "size_bytes": 16033,
+      "role": "doc",
+      "purpose": "Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions."
+    },
+    {
+      "path": "design/handoff/foundations-style-guide/Main.dc.html",
+      "language": "html",
+      "lines": 291,
+      "size_bytes": 22694,
+      "role": "config",
+      "purpose": "Claude Design export, kept unchanged: the foundations style guide artboard (accents, colour palettes, type, spacing, radii, surfaces, motion tokens and signature moments) as a Design Component page; reference mockup, not app code."
+    },
+    {
+      "path": "design/handoff/foundations-style-guide/README.md",
+      "language": "markdown",
+      "lines": 21,
+      "size_bytes": 907,
+      "role": "doc",
+      "purpose": "Claude Design export note, kept unchanged: treat Main.dc.html as a reference mockup and replicate its values rather than copy its markup."
+    },
+    {
+      "path": "design/handoff/foundations-style-guide/support.js",
+      "language": "javascript",
+      "lines": 48,
+      "size_bytes": 46105,
+      "role": "config",
+      "purpose": "Claude Design export, kept unchanged: generated dc-runtime that renders Main.dc.html in a browser; not part of the design or the app."
+    },
+    {
+      "path": "design/handoff/foundations-style-guide/vendor/react-dom.js",
+      "language": "javascript",
+      "lines": 267,
+      "size_bytes": 131835,
+      "role": "config",
+      "purpose": "Claude Design export, kept unchanged: React DOM production build used by the dc-runtime viewer; not used by the app."
+    },
+    {
+      "path": "design/handoff/foundations-style-guide/vendor/react.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 10751,
+      "role": "config",
+      "purpose": "Claude Design export, kept unchanged: React production build used by the dc-runtime viewer; not used by the app."
+    },
+    {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
       "lines": 768,
@@ -817,8 +865,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1192,
-      "size_bytes": 51741,
+      "lines": 1251,
+      "size_bytes": 54365,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -833,8 +881,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1606,
-      "size_bytes": 282010,
+      "lines": 1607,
+      "size_bytes": 283063,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1489,8 +1537,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 195,
-      "size_bytes": 43772,
+      "lines": 201,
+      "size_bytes": 45129,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1552,6 +1600,10 @@
     }
   ],
   "excluded": [
+    {
+      "path": "design/screens/foundations-paper-1440.png",
+      "reason": "binary"
+    },
     {
       "path": "docs/repo-graph/AGENT_GRAPH.md",
       "reason": "generated"

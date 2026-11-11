@@ -797,6 +797,42 @@
       "language": "python"
     },
     {
+      "id": "file:design/HANDOFF_SUMMARY.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/Main.dc.html",
+      "type": "file",
+      "role": "config",
+      "language": "html"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/README.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/support.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/vendor/react-dom.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/vendor/react.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:docs/BENCHMARKS.md",
       "type": "file",
       "role": "doc",
@@ -1580,6 +1616,12 @@
       "from": "file:backend/tests/test_graph.py",
       "to": "external:langgraph",
       "line": 6
+    },
+    {
+      "type": "calls_external",
+      "from": "file:design/handoff/foundations-style-guide/Main.dc.html",
+      "to": "external:google_fonts",
+      "line": 13
     },
     {
       "type": "calls_external",

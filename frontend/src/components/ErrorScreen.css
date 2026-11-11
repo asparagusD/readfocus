@@ -1,0 +1,66 @@
+/* Error screen (C13.8a, handoff screen 10): the cup on the left, the
+   words on the right; stacked under 768 px. */
+.rf-error {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: var(--space-7);
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5);
+}
+
+/* Outside Layout (the backend did not answer): centred in the window. */
+main.rf-error {
+  min-height: 100dvh;
+}
+
+.rf-error__art {
+  --illustration-size: 360px;
+  justify-self: center;
+}
+
+.rf-error__title {
+  margin: var(--space-3) 0 var(--space-4);
+  font-size: var(--text-section);
+  line-height: var(--text-section--line-height);
+}
+
+.rf-error__body {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--ink-2);
+}
+
+.rf-error__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.rf-error__actions .rf-btn > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rf-error__code {
+  margin: var(--space-4) 0 0;
+  color: var(--ink-3);
+  font: 12px/1.5 var(--font-mono);
+}
+
+@media (max-width: 767px) {
+  .rf-error {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    padding: var(--space-7) var(--space-4);
+  }
+
+  .rf-error__art {
+    --illustration-size: 200px;
+    justify-self: start;
+  }
+}

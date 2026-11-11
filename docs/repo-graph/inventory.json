@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 405,
-    "inventoried": 341,
+    "tracked": 409,
+    "inventoried": 345,
     "excluded": 64
   },
   "files": [
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2287,
-      "size_bytes": 476090,
+      "lines": 2288,
+      "size_bytes": 477359,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1041,10 +1041,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 161,
-      "size_bytes": 8616,
+      "lines": 162,
+      "size_bytes": 8735,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
+      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page; /health answers ready."
     },
     {
       "path": "frontend/e2e/library.spec.js",
@@ -1111,6 +1111,14 @@
       "purpose": "Shared e2e data, not a spec: QUESTIONS (one multiple choice, one written) and mockTest, which answers GET /sessions/t1, evaluate-single and submit-answers and records what was sent."
     },
     {
+      "path": "frontend/e2e/warmup.spec.js",
+      "language": "javascript",
+      "lines": 83,
+      "size_bytes": 4152,
+      "role": "config",
+      "purpose": "E2E: warm start, slow /health (warm-up, pause, then the shelf), sign in never held back, no answer in 90 s (Playwright clock) then Try again, 375 reduced motion."
+    },
+    {
       "path": "frontend/eslint.config.js",
       "language": "javascript",
       "lines": 27,
@@ -1169,10 +1177,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 99,
-      "size_bytes": 3891,
+      "lines": 102,
+      "size_bytes": 4044,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a)."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -1189,6 +1197,14 @@
       "size_bytes": 4791,
       "role": "component",
       "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes; the panel slides down as it opens (pop) and fades out, opacity only under reduced motion."
+    },
+    {
+      "path": "frontend/src/components/BackendGate.jsx",
+      "language": "jsx",
+      "lines": 38,
+      "size_bytes": 1574,
+      "role": "component",
+      "purpose": "Holds every route but /login and the dev galleries until GET /health is ready (useBackendReady): nothing for 1.5 s, then WarmingUp, or after 90 s with no answer the ErrorScreen with Try again and Back to sign in."
     },
     {
       "path": "frontend/src/components/BookCover.css",
@@ -1213,6 +1229,22 @@
       "size_bytes": 4329,
       "role": "component",
       "purpose": "First-session reading speed test: times a 200-word passage and posts the WPM to /auth/profile/calibrate."
+    },
+    {
+      "path": "frontend/src/components/ErrorScreen.css",
+      "language": "css",
+      "lines": 66,
+      "size_bytes": 1357,
+      "role": "component",
+      "purpose": "Error screen layout: cup left, words right, stacked under 768 px; centred in the window when standalone."
+    },
+    {
+      "path": "frontend/src/components/ErrorScreen.jsx",
+      "language": "jsx",
+      "lines": 27,
+      "size_bytes": 1133,
+      "role": "component",
+      "purpose": "Error screen (handoff screen 10): cooled TeaCup, eyebrow, h1, body, actions, monospace code line; `standalone` renders it as the page's main."
     },
     {
       "path": "frontend/src/components/Layout.css",
@@ -2673,8 +2705,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 343,
-      "size_bytes": 96810,
+      "lines": 347,
+      "size_bytes": 97675,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

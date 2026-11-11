@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { Layout } from './components/Layout';
+import { BackendGate } from './components/BackendGate';
 import { Library } from './pages/Library';
 import { Dashboard } from './pages/Dashboard';
 import { ReadingSession } from './pages/ReadingSession';
@@ -68,26 +69,28 @@ function App() {
         <MotionRoot>
           <ToastProvider>
             <BrowserRouter>
-              <AnimatedRoutes scope={screenOf}>
-                <Route path="/login" element={<Login />} />
-                {IllustrationGallery && (
-                  <Route path="/__illustrations" element={<Suspense fallback={null}><IllustrationGallery /></Suspense>} />
-                )}
-                {ReaderGallery && (
-                  <Route path="/__reader" element={<Suspense fallback={null}><ReaderGallery /></Suspense>} />
-                )}
-                <Route path="/read/:bookId" element={<AuthGuard><ReadingSession /></AuthGuard>} />
-                <Route path="/test/:sessionId" element={<AuthGuard><ComprehensionTest /></AuthGuard>} />
-                <Route path="/*" element={
-                  <Layout>
-                    <AnimatedRoutes scope={pageOf}>
-                      <Route path="/" element={<AuthGuard><Library /></AuthGuard>} />
-                      <Route path="dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
-                      <Route path="results/:sessionId" element={<AuthGuard><Results /></AuthGuard>} />
-                    </AnimatedRoutes>
-                  </Layout>
-                } />
-              </AnimatedRoutes>
+              <BackendGate>
+                <AnimatedRoutes scope={screenOf}>
+                  <Route path="/login" element={<Login />} />
+                  {IllustrationGallery && (
+                    <Route path="/__illustrations" element={<Suspense fallback={null}><IllustrationGallery /></Suspense>} />
+                  )}
+                  {ReaderGallery && (
+                    <Route path="/__reader" element={<Suspense fallback={null}><ReaderGallery /></Suspense>} />
+                  )}
+                  <Route path="/read/:bookId" element={<AuthGuard><ReadingSession /></AuthGuard>} />
+                  <Route path="/test/:sessionId" element={<AuthGuard><ComprehensionTest /></AuthGuard>} />
+                  <Route path="/*" element={
+                    <Layout>
+                      <AnimatedRoutes scope={pageOf}>
+                        <Route path="/" element={<AuthGuard><Library /></AuthGuard>} />
+                        <Route path="dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+                        <Route path="results/:sessionId" element={<AuthGuard><Results /></AuthGuard>} />
+                      </AnimatedRoutes>
+                    </Layout>
+                  } />
+                </AnimatedRoutes>
+              </BackendGate>
             </BrowserRouter>
           </ToastProvider>
         </MotionRoot>

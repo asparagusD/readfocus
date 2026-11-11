@@ -59,3 +59,50 @@ def test_parse_mem_reads_docker_stats_units():
     assert bench.parse_mem("1.5GiB") == 1536.0
     assert bench.parse_mem("512KiB") == 0.5
     assert bench.parse_mem("") is None
+
+
+def test_measure_ingest_stamps_each_reading_when_it_arrives(monkeypatch, tmp_path):
+    """Regression (DEBUG_LOG C9.5): the status and the counts were both stamped with the time at the
+    top of the poll iteration, so a book that turned ready between the two reads looked ready a whole
+    iteration after its questions."""
+    clock = [0.0]
+    monkeypatch.setattr(bench.time, "perf_counter", lambda: clock[0])
+    monkeypatch.setattr(bench.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds))
+    statuses = iter(["processing", "ready", "ready"])
+
+    class Resp:
+        status_code = 200
+
+        def __init__(self, body):
+            self.body = body
+
+        def json(self):
+            return self.body
+
+    class Client:
+        def post(self, *args, **kwargs):
+            return Resp({"book_id": "b1"})
+
+        def get(self, path):
+            clock[0] += 0.7  # the status call
+            return Resp({"status": next(statuses), "total_chunks": 2})
+
+        def delete(self, path):
+            pass
+
+    def counts(env, token, book_id):
+        clock[0] += 1.1  # the four counts; the book turned ready while they ran
+        return (2, 2, 1, 5)
+
+    monkeypatch.setattr(bench, "ingest_state", counts)
+    monkeypatch.setattr(bench, "server_rss", lambda port: 100.0)
+    book = tmp_path / "b.epub"
+    book.write_bytes(b"x")
+    steps = [bench.Step(name) for name in ("upload", "ready", "first questions", "done")]
+    args = type("Args", (), {"base_url": "http://127.0.0.1:8000", "ingest_timeout": 60, "poll": 1.0, "quiet": 0,
+                             "docker": "", "keep": True})()
+    bench.measure_ingest(Client(), {}, "token", book, steps, args)
+    _, ready, first_q, done = steps
+    assert first_q.samples == [pytest.approx(1.8)]  # when the first counts arrived
+    assert ready.samples == [pytest.approx(3.5)]  # when the status that said ready arrived
+    assert done.samples == [pytest.approx(1.8)]

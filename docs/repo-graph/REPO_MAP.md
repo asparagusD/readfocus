@@ -466,7 +466,7 @@ Each use is the file and line of the first import of that service.
 | `backend/tests/test_api_sessions.py` | 600 | Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time. |
 | `backend/tests/test_auth.py` | 73 | Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked). |
 | `backend/tests/test_backfill.py` | 74 | Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development. |
-| `backend/tests/test_bench.py` | 61 | Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py. |
+| `backend/tests/test_bench.py` | 108 | Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py. |
 | `backend/tests/test_concept_store.py` | 150 | Pytest on an in-memory concepts table: one row per concept of a book, later batches add their chunks and keep the first label, a repeated batch writes nothing, other books are untouched, and key terms link to concept keys by key or by the words of the key. |
 | `backend/tests/test_concepts.py` | 124 | Pytest: plural reduction, phrase normalisation, concept key slugs, merging of identical, fuzzy, overlapping and embedding-close phrases, and extract_concepts on a fixed passage without the real model. |
 | `backend/tests/test_embedder.py` | 178 | Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached. |
@@ -512,10 +512,10 @@ Each use is the file and line of the first import of that service.
 | `.claude/skills/repo-graph/SKILL.md` | 122 | Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see. |
 | `CLAUDE.md` | 182 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
 | `README.md` | 137 | Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour. |
-| `docs/BENCHMARKS.md` | 649 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
-| `docs/DEBUG_LOG.md` | 1071 | Debug log rules, entry template, and one entry per failure. |
+| `docs/BENCHMARKS.md` | 768 | Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats. |
+| `docs/DEBUG_LOG.md` | 1139 | Debug log rules, entry template, and one entry per failure. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 1555 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 1559 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |
 
@@ -531,7 +531,7 @@ Each use is the file and line of the first import of that service.
 | File | Lines | Purpose |
 |---|---|---|
 | `scripts/backfill_local_embeddings.py` | 104 | Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development. |
-| `scripts/bench.py` | 365 | Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md. |
+| `scripts/bench.py` | 368 | Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md. |
 | `scripts/dev/check_retriever.py` | 91 | Integration check of the hybrid retriever on the dev database: inserts sample.pdf's chunks with local embeddings as a fixture book for test user A, runs searches with expected chunks, deletes the fixture; refuses to run unless ENV=development. |
 | `scripts/dev/create_test_users.py` | 117 | Creates or resets two confirmed dev test users and writes .env.test; refuses to run unless ENV=development. |
 | `scripts/dev/measure_embedder.py` | 86 | Measures the embedding model in a fresh process: psutil RSS before and after import, load and batches, model load time, and the latency of a batch of short and of chunk-sized texts. |

@@ -1069,3 +1069,71 @@ tools/repo_graph/tests -q` 62 passed.
 
 ### Commit
 feat(ingest): add processing_jobs and the job service (C9.1a)
+
+## 2026-11-11 C9.5 — long book's chunk 0 questions seen 2.5 s before ready
+
+**Status:** fixed
+
+### Symptom
+Since C9.2, `run_job` marks the book ready right after the first batch's
+questions are stored, so `upload -> chunk 0 questions` should never be
+earlier than `upload -> ready`. The C9.5 Windows run of the 204-chunk EPUB
+reported otherwise (`sample.pdf` in the same run showed both at 4.81 s):
+
+    python scripts/bench.py --ingest sample.pdf .cache/bench/pride-and-prejudice.epub --flow-runs 3 --cold --quiet 30
+    | `upload -> ready (pride-and-prejudice.epub)` | 3 | 4.86 s | 4.86 s | |
+    | `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 3 | 2.39 s | 2.42 s | |
+
+No error or stack trace: a wrong result.
+
+### Repro
+A scratchpad script (not committed) starts the backend, uploads the EPUB
+as test user A, then polls `GET /books/{id}/status` and the chunk 0
+question count every 0.1 s, stamping each with the moment its answer
+arrived, and finally times one bench iteration's parts:
+
+    chunk 0 questions first seen at 5.45 s; status read just before: 'processing' at 5.18 s
+    first ready 5.82 s, first chunk-0 questions 5.45 s
+    status: 748 ms
+    ingest_state (4 counts): 1117 ms
+    server_rss: 9 ms
+
+### Hypotheses
+1. The bench stamps both observations with the time at the top of the
+   poll iteration, reads the status before the counts, and one iteration
+   takes about 2.9 s (status 0.75 s, four counts 1.1 s, sleep 1 s); a
+   change that lands between the two reads gets its ready stamp one
+   iteration late. Evidence: the gap (2.47 s) is about one iteration;
+   `sample.pdf` showed both at the same stamp. Ruled out if a tight,
+   separately stamped poll shows ready before the questions or a gap of
+   seconds. Result: confirmed; the tight poll shows a gap of 0.37 s.
+2. `run_job` stores the questions and marks the book ready seconds
+   apart. Evidence: none beyond the symptom. Ruled out if the tight poll
+   shows ready within one or two round trips of the questions. Result:
+   ruled out: 0.37 s, about the `mark_ready` update. The questions coming
+   first is the C9.2 order (questions, then ready), not a defect; the
+   C9.5 note that the order "should not allow" it was wrong.
+
+### Root cause
+`scripts/bench.py` `measure_ingest` takes `now` once per poll iteration
+and uses it for the status read and for the count read that follows
+about 0.75 s later; with a 2.9 s iteration, ingestion times have about
+3 s resolution and `ready` is biased late against the counts.
+
+### Fix
+Stamp each observation with the time its own answer arrived (the status
+after the status call; questions, counts and done after the counts).
+The sampling stays coarse (one reading per iteration, about 3 s on
+Windows), so the bench cannot order `ready` and the first questions; the
+tight poll above is the evidence for the order. `docs/BENCHMARKS.md` C9.5
+says so, replaces the After ingestion tables with a rerun on the fixed
+script, and withdraws the C9.5 note that the order "should not allow" the
+reading.
+
+### Regression test
+`backend/tests/test_bench.py::test_measure_ingest_stamps_each_reading_when_it_arrives`:
+a fake clock and a book that turns ready while the counts are read.
+Failed before the fix (`1 failed, 9 passed`); passes after (`10 passed`).
+
+### Commit
+fix(tooling): stamp each bench reading when it arrives

@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 8057,
+      "size_bytes": 8087,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -577,8 +577,8 @@
     {
       "path": "backend/tests/test_bench.py",
       "language": "python",
-      "lines": 61,
-      "size_bytes": 2451,
+      "lines": 108,
+      "size_bytes": 4401,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
     },
@@ -809,16 +809,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 649,
-      "size_bytes": 34800,
+      "lines": 768,
+      "size_bytes": 42037,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1071,
-      "size_bytes": 45924,
+      "lines": 1139,
+      "size_bytes": 49273,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -833,8 +833,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1555,
-      "size_bytes": 271403,
+      "lines": 1559,
+      "size_bytes": 277576,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1225,8 +1225,8 @@
     {
       "path": "scripts/bench.py",
       "language": "python",
-      "lines": 365,
-      "size_bytes": 16001,
+      "lines": 368,
+      "size_bytes": 16239,
       "role": "script",
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
     },

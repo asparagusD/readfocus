@@ -236,15 +236,18 @@ def measure_ingest(client, env, token, path, steps, args):
     last, changes, peak, total = None, [], 0.0, None
     try:
         while time.perf_counter() - began < args.ingest_timeout:
-            now = time.perf_counter() - began
+            # Each reading is stamped when its answer arrives: one iteration takes seconds, and a
+            # stamp from the top of it made ready look later than the counts read after it.
             status = client.get(f"/books/{book['book_id']}/status").json()
+            seen = time.perf_counter() - began
             if status.get("status") == "error":
                 done.note = "ingestion ended with status error"
                 return None
             if status.get("status") == "ready" and len(ready.samples) < len(upload.samples):
-                ready.samples.append(now)
+                ready.samples.append(seen)
                 total = status.get("total_chunks")
             state = ingest_state(env, token, book["book_id"])
+            now = time.perf_counter() - began
             if state != last:
                 last, changes = state, [*changes, now]
             if state[2] and len(first_q.samples) < len(upload.samples):

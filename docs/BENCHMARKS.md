@@ -181,33 +181,40 @@ from `.claude/launch.json`. Idle memory: `python scripts/dev/measure_rss.py`
 three times. Every benchmark book was deleted by the script; no container
 was left.
 
+The ingestion tables below were taken after the bench fix described
+under "Measurement resolution" (each reading stamped when its answer
+arrives). A first After run with the old stamping gave, p50: Windows
+ready 4.81 s / 4.86 s, chunk 0 questions 4.81 s / 2.39 s, done 4.81 s /
+132.68 s; container ready 53.29 s, chunk 0 questions 51.49 s, done
+57.87 s, peak 330, 332 and 391 MB.
+
 <!-- bench:c9-after-windows:start -->
 | Step | Runs | p50 | p95 | Notes |
 |---|---|---|---|---|
-| `POST /books/upload (sample.pdf)` | 3 | 2.01 s | 2.29 s | |
-| `upload -> ready (sample.pdf)` | 3 | 4.81 s | 4.90 s | |
-| `upload -> chunk 0 questions (sample.pdf)` | 3 | 4.81 s | 4.90 s | |
-| `upload -> done (sample.pdf)` | 3 | 4.81 s | 4.90 s | |
-| `POST /books/upload (pride-and-prejudice.epub)` | 3 | 1.35 s | 1.39 s | |
-| `upload -> ready (pride-and-prejudice.epub)` | 3 | 4.86 s | 4.86 s | |
-| `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 3 | 2.39 s | 2.42 s | |
-| `upload -> done (pride-and-prejudice.epub)` | 3 | 132.68 s | 141.53 s | |
+| `POST /books/upload (sample.pdf)` | 3 | 1.99 s | 2.56 s | |
+| `upload -> ready (sample.pdf)` | 3 | 5.12 s | 5.24 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 6.25 s | 6.32 s | |
+| `upload -> done (sample.pdf)` | 3 | 6.25 s | 6.32 s | |
+| `POST /books/upload (pride-and-prejudice.epub)` | 3 | 1.23 s | 1.33 s | |
+| `upload -> ready (pride-and-prejudice.epub)` | 3 | 5.27 s | 5.41 s | |
+| `upload -> chunk 0 questions (pride-and-prejudice.epub)` | 3 | 3.84 s | 4.00 s | |
+| `upload -> done (pride-and-prejudice.epub)` | 3 | 133.69 s | 134.56 s | |
 <!-- bench:c9-after-windows:end -->
 
-Windows: process start -> `/health` 2.59 to 3.10 s; peak RSS 322 MB and
-349 to 351 MB; idle RSS 266.6 to 266.9 MB (2 processes).
+Windows: process start -> `/health` 2.59 to 2.61 s; peak RSS 322 MB and
+350 MB; idle RSS 266.6 to 266.9 MB (2 processes).
 
 <!-- bench:c9-after-container:start -->
 | Step | Runs | p50 | p95 | Notes |
 |---|---|---|---|---|
-| `POST /books/upload (sample.pdf)` | 3 | 2.15 s | 5.98 s | |
-| `upload -> ready (sample.pdf)` | 3 | 53.29 s | 59.55 s | |
-| `upload -> chunk 0 questions (sample.pdf)` | 3 | 51.49 s | 59.37 s | |
-| `upload -> done (sample.pdf)` | 3 | 57.87 s | 64.75 s | |
+| `POST /books/upload (sample.pdf)` | 3 | 2.58 s | 2.61 s | |
+| `upload -> ready (sample.pdf)` | 3 | 50.08 s | 51.11 s | |
+| `upload -> chunk 0 questions (sample.pdf)` | 3 | 51.20 s | 52.20 s | |
+| `upload -> done (sample.pdf)` | 3 | 60.34 s | 60.91 s | |
 <!-- bench:c9-after-container:end -->
 
-Container: process start -> `/health` 13.21 to 16.14 s; peak memory 330,
-332 and 391 MB (`docker stats`).
+Container: process start -> `/health` 13.57, 14.43 and 27.08 s (one slow
+start); peak memory 328, 331 and 368 MB (`docker stats`).
 
 <!-- bench:c9-after-api:start -->
 | Step | Runs | p50 | p95 | Notes |
@@ -222,11 +229,24 @@ Container: process start -> `/health` 13.21 to 16.14 s; peak memory 330,
 | `GET /dashboard` | 20 | 193 ms | 211 ms | |
 <!-- bench:c9-after-api:end -->
 
-One reading in the long-book run is not explained: the bench saw chunk
-0's questions 2.4 s after upload and `ready` 2.5 s later, although since
-C9.2 the code marks the book ready right after the first batch's
-questions are stored (`sample.pdf` shows both at the same moment, and in
-C9.2 the long book did too). Not investigated.
+#### Measurement resolution
+
+The first After run showed the long book's chunk 0 questions 2.5 s before
+`ready`. Investigated (`docs/DEBUG_LOG.md`, C9.5): the questions do come
+first, by design (C9.2 stores them, then marks the book ready), but by
+about 0.4 s, not 2.5 s: a scratchpad poll every 0.1 s, each reading
+stamped on arrival, saw them at 5.45 s and `ready` at 5.82 s. The bench
+had stamped both readings of a poll iteration with the time at its top,
+and one iteration takes about 2.9 s on Windows (status 0.75 s, four
+counts 1.1 s, a 1 s sleep), longer in the container (2 s sleep). Fixed:
+each reading is now stamped when its answer arrives.
+
+That fix removes the shared stamp, not the coarse sampling: every
+ingestion time here is the moment a reading first saw the change, up to
+one iteration after it happened. Differences smaller than about 3 s
+(Windows) or 5 s (container) are not resolved, including the order of
+`ready` and chunk 0 questions. All earlier ingestion numbers (C9.0, C9.2,
+C9.3) used the old stamping and share that resolution.
 
 #### Before/After
 
@@ -243,26 +263,27 @@ what the code was meant to do.
 | `GET /books` | 189 ms | 185 ms | No change |
 | `POST /sessions/{id}/finish-reading` | 750 ms | 679 ms | No change claimed: code not changed, noise |
 | `POST /sessions/{id}/submit-answers` | 1.07 s | 1.08 s | No change |
-| Windows `upload -> ready`, `sample.pdf` | 2.33 s | 4.81 s | **Slower** (C9.2: ready now waits for the first batch's questions) |
-| Windows `upload -> chunk 0 questions`, `sample.pdf` | 4.67 s | 4.81 s | No change |
-| Windows `upload -> ready`, 204-chunk EPUB | 2.36 s | 4.86 s | **Slower** (C9.2) |
-| Windows `upload -> chunk 0 questions`, EPUB | 4.70 s | 2.39 s | Lower, but inconsistent with `ready` (above); not claimed |
-| Windows `upload -> done`, EPUB | 138.34 s (p95 148.44) | 132.68 s (p95 141.53) | No clear change |
-| Container `upload -> ready` | 26.29 s | 53.29 s | **Slower** (C9.2) |
-| Container `upload -> chunk 0 questions` | 53.64 s (p95 55.08) | 51.49 s (p95 59.37) | No clear change |
-| Container `upload -> done` | 61.70 s (p95 63.39) | 57.87 s (p95 64.75) | No clear change |
-| Container process start -> `/health` | 12.4 to 14.4 s | 13.2 to 16.1 s | No change |
+| Windows `upload -> ready`, `sample.pdf` | 2.33 s | 5.12 s | Later by design (C9.2: ready waits for the first batch's questions); the gap is about one poll iteration, so its size is not resolved |
+| Windows `upload -> chunk 0 questions`, `sample.pdf` | 4.67 s | 6.25 s | No clear change (within one iteration) |
+| Windows `upload -> ready`, 204-chunk EPUB | 2.36 s | 5.27 s | Later by design (C9.2); size not resolved, as above |
+| Windows `upload -> chunk 0 questions`, EPUB | 4.70 s | 3.84 s | No clear change (within one iteration) |
+| Windows `upload -> done`, EPUB | 138.34 s (p95 148.44) | 133.69 s (p95 134.56) | No clear change |
+| Container `upload -> ready` | 26.29 s | 50.08 s | **Slower** (C9.2), well beyond the resolution |
+| Container `upload -> chunk 0 questions` | 53.64 s (p95 55.08) | 51.20 s (p95 52.20) | No clear change |
+| Container `upload -> done` | 61.70 s (p95 63.39) | 60.34 s (p95 60.91) | No clear change |
+| Container process start -> `/health` | 12.4 to 14.4 s | 13.6 to 14.4 s, one 27.1 s | No change, one slow start |
 | Container process start -> model ready | first use | 29.2 to 29.9 s (C9.3) | New: the load happens at boot, not in a request |
 | Idle RSS, Windows | 136 MB (C9.3 before; 134 MB in C8.8) | 266.6 to 266.9 MB | **Heavier**: about +130 MB, the preloaded model (C9.3) |
 | Idle memory, container | 110 to 126 MB | 272 to 275 MB (C9.3) | **Heavier**: about +150 MB |
-| Peak memory during ingestion, Windows | 321 MB; 349 to 352 MB | 322 MB; 349 to 351 MB | No change |
-| Peak memory during ingestion, container | 319 to 326 MB | 330, 332, 391 MB | Higher in one run of three; not separated from noise |
+| Peak memory during ingestion, Windows | 321 MB; 349 to 352 MB | 322 MB; 350 MB | No change |
+| Peak memory during ingestion, container | 319 to 326 MB | 328, 331, 368 MB (330, 332, 391 MB in the first After run) | Higher in one run of three each time; not separated from noise |
 | Ingestion after a hard kill mid-book | book stuck in `processing`, no retry (issue 20) | resumed from cursor 53 of 204 by the sweep, 0 duplicate chunks or questions, counts equal to an uninterrupted run (C9.1b) | **Durable** (measured once on dev) |
 
 Measured improvements from C9: the dashboard (about 260 ms faster), and
 ingestion that survives a restart. Everything else is unchanged within
 noise, slower by choice (`ready` waits for the first questions), or
-heavier (the preloaded model). Not measured: Render itself, a cold start
+heavier (the preloaded model). Ingestion times are resolved to about one
+poll iteration (3 to 5 s). Not measured: Render itself, a cold start
 followed by a grade, the indexes on tables larger than dev's, more than
 three runs per ingestion measure.
 

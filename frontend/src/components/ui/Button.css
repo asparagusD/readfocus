@@ -22,6 +22,13 @@
     transform var(--dur-1) var(--ease-settle);
 }
 
+/* Children sit in one span; an icon inside it keeps the button's gap. */
+.rf-btn > span {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+
 .rf-btn:active:not(:disabled) {
   transform: scale(0.98);
 }

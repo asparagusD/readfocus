@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 382,
-    "inventoried": 319,
+    "tracked": 383,
+    "inventoried": 320,
     "excluded": 63
   },
   "files": [
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2280,
-      "size_bytes": 447745,
+      "lines": 2281,
+      "size_bytes": 448486,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1037,6 +1037,14 @@
       "size_bytes": 8616,
       "role": "config",
       "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
+    },
+    {
+      "path": "frontend/e2e/library.spec.js",
+      "language": "javascript",
+      "lines": 100,
+      "size_bytes": 6046,
+      "role": "config",
+      "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; mockShelf for later specs."
     },
     {
       "path": "frontend/e2e/login.spec.js",
@@ -1170,9 +1178,9 @@
       "path": "frontend/src/components/Layout.css",
       "language": "css",
       "lines": 135,
-      "size_bytes": 2611,
+      "size_bytes": 2664,
       "role": "component",
-      "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the pre-2.0 main column."
+      "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the main column at 1120 px of content."
     },
     {
       "path": "frontend/src/components/Layout.jsx",
@@ -1201,10 +1209,10 @@
     {
       "path": "frontend/src/components/ui/Button.css",
       "language": "css",
-      "lines": 90,
-      "size_bytes": 1968,
+      "lines": 97,
+      "size_bytes": 2125,
       "role": "component",
-      "purpose": "Button styles on tokens: primary (accent fill, accent-ink text, Lamplight glow), secondary (surface, field border), ghost, danger; 44 px target, press scale 0.98, disabled and loading states, spinner."
+      "purpose": "Button styles on tokens: primary (accent fill, accent-ink text, Lamplight glow), secondary (surface, field border), ghost, danger; 44 px target, press scale 0.98, disabled and loading states, spinner; the children's span keeps the button's gap, so an icon sits apart from the label."
     },
     {
       "path": "frontend/src/components/ui/Button.jsx",
@@ -1737,18 +1745,18 @@
     {
       "path": "frontend/src/pages/Library.css",
       "language": "css",
-      "lines": 227,
-      "size_bytes": 4008,
+      "lines": 251,
+      "size_bytes": 4654,
       "role": "page",
-      "purpose": "Styles for the library: upload zone, book rows, processing sweep, empty state; uses transition: all."
+      "purpose": "Library styles: header, the next-book card, 160 px cover grid (three across under 640 px with the remove button under the caption), captions, skeleton shapes, the error banner on warn-soft, the empty-state action row."
     },
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 277,
-      "size_bytes": 11020,
+      "lines": 312,
+      "size_bytes": 12816,
       "role": "page",
-      "purpose": "Library page: drag-and-drop upload with a title and author modal, 3-second status polling, book list, delete."
+      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, drop anywhere, title-and-author modal) and the 3 s poll while a book is processing."
     },
     {
       "path": "frontend/src/pages/Login.css",
@@ -1785,10 +1793,10 @@
     {
       "path": "frontend/src/pages/Results.css",
       "language": "css",
-      "lines": 239,
-      "size_bytes": 4370,
+      "lines": 241,
+      "size_bytes": 4468,
       "role": "page",
-      "purpose": "Styles for the results page: large score, verdict colours, per-question breakdown, next-session and re-read panels."
+      "purpose": "Styles for the results page: large score, verdict colours, per-question breakdown, next-session and re-read panels; its own 720 px column."
     },
     {
       "path": "frontend/src/pages/Results.jsx",
@@ -2497,8 +2505,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 321,
-      "size_bytes": 85817,
+      "lines": 322,
+      "size_bytes": 86790,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

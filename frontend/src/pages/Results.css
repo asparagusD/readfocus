@@ -1,5 +1,7 @@
 /* Results Page Layout */
 .rf-results-page {
+  max-width: 720px; /* its own column since the main column widened (C13.3a) */
+  margin: 0 auto;
   padding: 40px 24px;
 }
 

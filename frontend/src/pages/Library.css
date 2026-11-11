@@ -1,227 +1,251 @@
-.rf-library-header {
-  margin-bottom: 40px;
+/* Library (C13.3a, handoff screens 03-05): "Your shelf", the next book to
+   open, and the shelf of 2:3 covers. */
+.rf-library {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
 }
 
-.rf-library-title {
-  font-family: var(--font-display);
-  font-size: 32px;
+.rf-library__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rf-library__title {
+  margin: 0;
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+}
+
+.rf-library__count {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.rf-library__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-hair) solid var(--warn);
+  border-radius: var(--radius-surface);
+  background-color: var(--warn-soft);
   color: var(--ink);
-  margin-bottom: 4px;
 }
 
-.rf-library-subtitle {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 14px;
-  color: var(--ink-faint);
+.rf-library__error p {
+  margin: 0;
 }
 
-.rf-upload-zone {
+.rf-library__empty-action {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  height: 120px;
-  border: 1.5px dashed var(--paper-mid);
-  border-radius: 6px;
-  background-color: var(--paper-dark);
-  cursor: pointer;
-  margin-bottom: 40px;
-  transition: all 150ms ease-out;
+  gap: var(--space-3) var(--space-4);
+  color: var(--ink-2);
+  font-size: var(--text-label);
 }
 
-.rf-upload-zone.drag-over {
-  border-color: var(--amber);
-  background-color: var(--amber-pale);
+/* The next book: a raised card with the open book, its title and the way in. */
+.rf-today {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background-color: var(--surface);
 }
 
-.rf-upload-text {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 14px;
-  color: var(--ink-faint);
-  margin: 8px 0 2px 0;
+.rf-today__text .eyebrow {
+  margin: 0 0 var(--space-1);
 }
 
-.rf-upload-btn {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 13px;
-  color: var(--amber);
-  background: none;
-  border: none;
+.rf-today__title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-today__line {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.rf-today__go {
+  text-decoration: none;
+}
+
+.rf-today__go:hover {
+  text-decoration: none;
+}
+
+.rf-shelf-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.rf-shelf-section__head h2 {
+  margin: 0;
+}
+
+/* Covers 160 px wide, left-aligned, 32 px apart; three across on phones. */
+.rf-shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 160px);
+  gap: var(--space-6) var(--space-6);
+  margin: 0;
   padding: 0;
-  cursor: pointer;
+  list-style: none;
 }
 
-.rf-books-list {
+.rf-shelf__item {
   display: flex;
   flex-direction: column;
-}
-
-.rf-book-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  height: 72px;
-  padding: 16px 20px;
-  background-color: var(--paper);
-  border: 1px solid var(--paper-mid);
-  border-radius: 6px;
-  margin-bottom: 12px;
-  transition: all 150ms ease-out;
-}
-
-.rf-book-card:hover {
-  background-color: var(--paper-dark);
-  border-color: var(--paper-mid);
-}
-
-.rf-card-bar {
-  width: 3px;
-  height: 40px;
-  border-radius: 2px;
-  background-color: var(--paper-mid);
-  flex-shrink: 0;
-}
-
-.rf-card-bar.started {
-  background-color: var(--amber);
-}
-
-.rf-card-middle {
-  flex: 1;
-  margin-left: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   min-width: 0;
 }
 
-.rf-card-title {
+.rf-shelf__book {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+a.rf-shelf__book:hover {
+  text-decoration: none;
+}
+
+a.rf-shelf__book:hover .rf-shelf__title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rf-shelf__book .rf-cover {
+  margin-bottom: var(--space-3);
+}
+
+.rf-shelf__title {
   font-family: var(--font-display);
   font-size: 17px;
-  color: var(--ink);
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.rf-card-meta {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 13px;
-  color: var(--ink-faint);
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.rf-dot {
-  margin: 0 6px;
-}
-
-.rf-ext {
+  line-height: 1.3;
   font-weight: 500;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
-.rf-processing-skeleton {
-  width: 240px;
-  height: 16px;
-  margin-bottom: 4px;
+.rf-shelf__author {
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
 }
 
-.rf-card-right {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 20px;
+.rf-shelf__bar {
+  margin-top: var(--space-3);
 }
 
-.rf-progress-text {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 12px;
-  color: var(--ink-faint);
-}
-
-.rf-processing-text {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 13px;
-  color: var(--ink-faint);
-  position: relative;
-  overflow: hidden;
-  display: inline-block;
-}
-
-/* Amber sweep animation */
-.rf-processing-text::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background-color: var(--amber);
-  transform: translateX(-100%);
-  animation: sweep 1.2s infinite ease-out;
-}
-
-@keyframes sweep {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(0); }
-  100% { transform: translateX(100%); }
-}
-
-.rf-action-link {
-  font-family: var(--font-ui);
-  font-weight: 500;
-  font-size: 14px;
-  color: var(--amber);
-  text-decoration: none;
+.rf-shelf__foot {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.rf-shelf__caption {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-shelf__caption.is-error {
+  color: var(--warn);
+}
+
+.rf-shelf__remove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: calc(var(--space-3) * -1);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--ink-2);
   cursor: pointer;
 }
 
-.rf-arrow {
-  margin-left: 4px;
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: all 150ms ease-out;
+.rf-shelf__remove:hover {
+  background-color: var(--paper-2);
+  color: var(--warn);
 }
 
-.rf-book-card:hover .rf-arrow {
-  opacity: 1;
-  transform: translateX(0);
+/* Loading (screen 05). */
+.rf-library__skel-line {
+  margin-top: calc(var(--space-4) * -1);
 }
 
-.rf-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-top: 64px;
+.rf-shelf__skel-cover {
+  aspect-ratio: 2 / 3;
+  margin-bottom: var(--space-3);
 }
 
-.rf-empty-state h2 {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 22px;
-  color: var(--ink-faint);
-  margin-bottom: 4px;
+.rf-library__skel-card {
+  border-radius: var(--radius-surface);
 }
 
-.rf-empty-state p {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 14px;
-  color: var(--ink-faint);
+@media (max-width: 639px) {
+  .rf-library {
+    gap: var(--space-5);
+  }
+
+  .rf-library__title {
+    font-size: var(--text-section);
+    line-height: var(--text-section--line-height);
+  }
+
+  .rf-today {
+    grid-template-columns: 1fr;
+    padding: var(--space-5);
+  }
+
+  .rf-today__art {
+    display: none;
+  }
+
+  .rf-today__go {
+    width: 100%;
+  }
+
+  .rf-shelf {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-3);
+  }
+
+  .rf-shelf__title {
+    font-size: 15px;
+  }
+
+  /* Narrow tiles: the caption takes the full width, the remove button sits under it. */
+  .rf-shelf__foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .rf-shelf__remove {
+    margin: 0 0 0 calc(var(--space-3) * -1);
+  }
+}
+
+.rf-library__empty .rf-empty__body {
+  max-width: 56ch;
 }

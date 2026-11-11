@@ -996,6 +996,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/library.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/login.spec.js",
       "type": "file",
       "role": "config",
@@ -3962,6 +3968,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/library.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/login.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -4488,7 +4499,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/BookCover.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/MasteryBar.jsx"
     },
     {
       "type": "imports",
@@ -4498,17 +4524,12 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
-      "to": "file:frontend/src/components/ui/ScoreBadge.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.jsx"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
-      "to": "file:frontend/src/hooks/usePageTransition.js"
+      "to": "file:frontend/src/illustrations/index.js"
     },
     {
       "type": "imports",

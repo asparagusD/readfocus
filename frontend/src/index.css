@@ -1,21 +1,22 @@
+/* Tailwind v4 without preflight: the reset below stays in charge. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./styles/tokens.css";
+
+/* Pre-2.0 names still used by the pages. --ink, --paper and the four
+   font families now come from tokens.css; the rest become aliases of the
+   tokens in C10.3 (docs/DESIGN_AUDIT.md, A4). */
 :root {
   /* Color Palette */
-  --ink: #1a1714;
   --ink-light: #4a4540;
   --ink-faint: #9a918a;
-  --paper: #faf8f4;
   --paper-dark: #f0ece4;
   --paper-mid: #e8e2d8;
   --amber: #c8832a;
   --amber-pale: #f5e9d6;
   --red-soft: #c0392b;
   --green-soft: #2d7a4f;
-
-  /* Typography */
-  --font-display: 'Playfair Display', serif;
-  --font-ui: 'DM Sans', sans-serif;
-  --font-reading: 'Lora', serif;
-  --font-mono: 'DM Mono', monospace;
 
   /* Spacing Base */
   --grid: 8px;

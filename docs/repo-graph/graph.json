@@ -899,6 +899,12 @@
       "language": "json"
     },
     {
+      "id": "file:frontend/scripts/check-contrast.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:frontend/src/App.css",
       "type": "file",
       "role": "asset",
@@ -1095,6 +1101,12 @@
       "type": "file",
       "role": "page",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/styles/tokens.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
     },
     {
       "id": "file:frontend/vercel.json",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 256,
-    "inventoried": 200,
+    "tracked": 258,
+    "inventoried": 202,
     "excluded": 56
   },
   "files": [
@@ -889,8 +889,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1720,
-      "size_bytes": 298611,
+      "lines": 1718,
+      "size_bytes": 300791,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -937,10 +937,18 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 33,
-      "size_bytes": 802,
+      "lines": 34,
+      "size_bytes": 859,
       "role": "config",
-      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview); lists Tailwind, which the Vite config does not load."
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast); Tailwind v4 is loaded through @tailwindcss/vite."
+    },
+    {
+      "path": "frontend/scripts/check-contrast.mjs",
+      "language": "text",
+      "lines": 83,
+      "size_bytes": 3533,
+      "role": "config",
+      "purpose": "WCAG contrast check of every text, boundary and cover pair in styles/tokens.css for the four theme x accent combinations; exit 1 on a failure (npm run check:contrast)."
     },
     {
       "path": "frontend/src/App.css",
@@ -1081,10 +1089,10 @@
     {
       "path": "frontend/src/index.css",
       "language": "css",
-      "lines": 70,
-      "size_bytes": 1180,
+      "lines": 71,
+      "size_bytes": 1410,
       "role": "asset",
-      "purpose": "Design tokens (ink, paper and amber colours, four font families, 8 px grid), reset, focus ring, and the .page fade."
+      "purpose": "Global stylesheet: imports Tailwind's theme and utilities layers (no preflight) and styles/tokens.css, keeps the pre-2.0 colour names still used by the pages, reset, focus ring, and the .page fade."
     },
     {
       "path": "frontend/src/lib/api.js",
@@ -1207,6 +1215,14 @@
       "purpose": "Results page: animated score, verdict, per-question feedback, next-session or re-read panel; rebuilds from the API after a refresh."
     },
     {
+      "path": "frontend/src/styles/tokens.css",
+      "language": "css",
+      "lines": 241,
+      "size_bytes": 7910,
+      "role": "asset",
+      "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
+    },
+    {
       "path": "frontend/vercel.json",
       "language": "json",
       "lines": 10,
@@ -1217,10 +1233,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 28,
-      "size_bytes": 566,
+      "lines": 29,
+      "size_bytes": 625,
       "role": "config",
-      "purpose": "Vite config: React plugin, an /api dev proxy to port 8000, and a single vendor chunk."
+      "purpose": "Vite config: React and Tailwind v4 plugins, an /api dev proxy to port 8000, and a single vendor chunk."
     },
     {
       "path": "package.json",
@@ -1545,8 +1561,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 202,
-      "size_bytes": 45384,
+      "lines": 204,
+      "size_bytes": 45995,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

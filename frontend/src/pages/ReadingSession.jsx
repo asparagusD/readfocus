@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bookmark, Pause, Play, X } from 'lucide-react';
+import { ArrowLeft, Pause, Play, X } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
-import { usePageTransition } from '../hooks/usePageTransition';
 import { CalibrationFlow } from '../components/CalibrationFlow';
 import { BookReader } from '../reader';
 import { blocksForChunks, placeInChunks } from '../reader/blocks';
@@ -17,8 +16,9 @@ import { useToast } from '../components/ui/toastContext';
 import { readSize, stepSize, storeSize } from '../reader/textSize';
 import { createLookupClient, readLookupOn, storeLookupOn } from '../reader/lookup';
 import { useAuth } from '../hooks/useAuth';
-import './ReadingSession.css';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { ReadingLamp } from '../illustrations';
+import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, fetched before the last page (C12.4).
 const readAhead = createReadAhead(fetchApi);
@@ -41,7 +41,6 @@ const formatTime = (seconds) => {
  */
 export function ReadingSession() {
   const { bookId } = useParams();
-  const navigateTo = usePageTransition();
   const navigate = useNavigate();
 
   const [profileChecked, setProfileChecked] = useState(false);
@@ -144,12 +143,12 @@ export function ReadingSession() {
         setTimeLeft(data.focus_duration_minutes * 60);
         setLoading(false);
       } catch (err) {
-        alert('Failed to start session: ' + err.message);
+        toast({ kind: 'warning', message: `Today's reading couldn't be prepared: ${err.message}` });
         navigate('/');
       }
     }
     startSession();
-  }, [bookId, navigate, profileChecked, isCalibrated]);
+  }, [bookId, navigate, profileChecked, isCalibrated, toast]);
 
   // Timer loop, as before
   useEffect(() => {
@@ -173,27 +172,29 @@ export function ReadingSession() {
         method: 'POST',
         body: JSON.stringify({ actual_duration_minutes: actualMinutes }),
       });
-      navigateTo(`/test/${sessionData.session_id}`);
+      navigate(`/test/${sessionData.session_id}`);
     } catch (err) {
-      alert('Failed to finish reading: ' + err.message);
+      toast({ kind: 'warning', message: `The test couldn't be opened just now: ${err.message}` });
       setIsFinishing(false);
     }
   };
 
-  const handleAbandon = () => navigateTo('/');
+  const handleAbandon = () => navigate('/');
 
   // The planner's reason, once, as a note on the first page; the closing page with the test.
   const note = useMemo(() => sessionData && (
     <>
-      <Bookmark size={16} strokeWidth={1.75} aria-hidden="true" />
+      <ReadingLamp className="rf-note-lamp" />
       <p>
         <strong>Today: about {sessionData.focus_duration_minutes} minutes.</strong>
         {sessionData.reason ? ` ${sessionData.reason}` : ''}
       </p>
     </>
   ), [sessionData]);
+  // The closing page mounts only when it is shown, so its lamp's one glow pulse (moment 3) lands then.
   const closing = (
     <>
+      <ReadingLamp className="rf-end-lamp" />
       <h2 className="rf-end-title">That's today's reading.</h2>
       <p className="rf-end-text">When you're ready, a short test on what you read.</p>
       <Button onClick={handleFinishReading} loading={isFinishing} loadingLabel="Saving…">Start test</Button>
@@ -223,7 +224,7 @@ export function ReadingSession() {
           chapter={chapter}
           size={textSize}
           onSize={onSize}
-          onBack={() => navigateTo('/')}
+          onBack={() => navigate('/')}
           visible={chromeVisible}
           onFocusChange={setToolbarFocused}
           onContents={() => setContentsOpen((open) => !open)}
@@ -301,15 +302,11 @@ export function ReadingSession() {
         returnTo={contentsButton}
       />
 
-      <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)} label="Abandon this session?">
-        <div style={{ padding: '24px', maxWidth: '400px', boxSizing: 'border-box' }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: '18px', color: 'var(--ink)', lineHeight: '1.4', marginBottom: '32px' }}>
-            If you abandon this session, no progress will be saved and the time you spent reading will not count.
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-            <Button variant="danger" onClick={handleAbandon}>Abandon</Button>
-            <Button variant="primary" onClick={() => setShowAbandonModal(false)}>Keep reading</Button>
-          </div>
+      <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)} title="Leave today's reading?">
+        <p className="rf-leave-text">Your place in the book is kept. This session's reading time won't count, and its test won't open.</p>
+        <div className="rf-leave-actions">
+          <Button variant="secondary" onClick={handleAbandon}>Leave</Button>
+          <Button onClick={() => setShowAbandonModal(false)}>Keep reading</Button>
         </div>
       </Modal>
     </div>

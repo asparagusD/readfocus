@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 383,
-    "inventoried": 320,
+    "tracked": 384,
+    "inventoried": 321,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9572,
+      "size_bytes": 9607,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -977,8 +977,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1913,
-      "size_bytes": 84870,
+      "lines": 1965,
+      "size_bytes": 87249,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1001,8 +1001,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2281,
-      "size_bytes": 454503,
+      "lines": 2282,
+      "size_bytes": 455235,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1061,6 +1061,14 @@
       "size_bytes": 11140,
       "role": "config",
       "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a mouse click on the last page's Start test finishing reading (C13.4 regression); a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+    },
+    {
+      "path": "frontend/e2e/reading.spec.js",
+      "language": "javascript",
+      "lines": 72,
+      "size_bytes": 4351,
+      "role": "config",
+      "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion."
     },
     {
       "path": "frontend/e2e/shell.spec.js",
@@ -1777,18 +1785,18 @@
     {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
-      "lines": 45,
-      "size_bytes": 925,
+      "lines": 58,
+      "size_bytes": 1206,
       "role": "page",
-      "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state."
+      "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state; the leave dialog's text and actions."
     },
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 317,
-      "size_bytes": 13827,
+      "lines": 314,
+      "size_bytes": 13659,
       "role": "page",
-      "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8)."
+      "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8); C13.4: the first-page note carries a small ReadingLamp, the closing page a larger one whose glow pulses once, failures are toasts, and leaving asks in a Modal (Leave / Keep reading)."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -1993,10 +2001,10 @@
     {
       "path": "frontend/src/reader/reader.css",
       "language": "css",
-      "lines": 465,
-      "size_bytes": 11958,
+      "lines": 491,
+      "size_bytes": 12713,
       "role": "asset",
-      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b)."
+      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b); the note's 40 px lamp and the closing page's 88 px lamp with a one-time 1.4 s glow pulse (scale only); the closing page above the text window (z-index 1)."
     },
     {
       "path": "frontend/src/reader/textSize.js",
@@ -2505,8 +2513,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 322,
-      "size_bytes": 87698,
+      "lines": 323,
+      "size_bytes": 88416,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1014,6 +1014,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/reading.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/shell.spec.js",
       "type": "file",
       "role": "config",
@@ -3988,6 +3994,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/reading.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/shell.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -4639,7 +4650,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/hooks/usePageTransition.js"
+      "to": "file:frontend/src/illustrations/index.js"
     },
     {
       "type": "imports",

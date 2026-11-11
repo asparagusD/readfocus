@@ -1911,3 +1911,55 @@ passes after; `e2e/reader.spec.js` 9 passed.
 
 ### Commit
 fix(reader): let the last page's Start test take a click
+
+## 2026-11-11 C13.4 — the book-open entrance shrinks the reader's page count
+
+**Status:** resolved before commit (the entrance was cut)
+
+### Symptom
+With the reading area entering through Motion's `bookOpen` preset (moment 2:
+`rotateY` from -10 degrees with perspective, 600 ms),
+`npx playwright test e2e/reader.spec.js` failed 2 of 8: "arrow keys, the turn
+buttons and the page edge turn the page" timed out on a click (30 s), and
+"the place is saved and restored after a reload" expected `/^Pages 5 and 6 of/`
+and received "Page 5 of 5" after "Pages 3 and 4 of 5". The fixture book
+normally paginates to more pages, so the count was too small.
+
+### Reproduce
+The two tests above, on the change with `bookOpen`; the reduced-motion test
+(the same page with `fadeIn`) passed.
+
+### Upstream and downstream (repo graph)
+`pages/ReadingSession.jsx` renders `reader/BookReader.jsx`, which measures
+the page on mount and on resize (`reader/geometry.js`, `reader/anchor.js`:
+character rects and the frame's box).
+
+### Hypotheses
+1. The paginator measures while the area is rotated, so the frame and text
+   rects are narrower on screen than in layout, and the page count and
+   anchors come out wrong. Test: replace the rotation with a 2D entrance
+   (`rise`: opacity and a 12 px translate, which keep widths).
+   Result: **confirmed**, 8 of 8 passed.
+2. The entrance's opacity 0 hides the edge button from the click. Not
+   needed after 1.
+
+### Root cause
+`rotateY` with perspective changes the boxes `getBoundingClientRect` and
+`getClientRects` report during the first 600 ms, which is when the reader
+measures its first layout.
+
+### Fix
+First the reading area rose in (`rise`) instead of swinging open, and the
+reader tests passed. Lighthouse then measured the page at performance 83
+(84-85 without the entrance) with the toolbar caught mid-fade by the
+contrast audit in 2 of 3 runs; a rise without the fade still gave 83. The
+entrance is first in C13's cut order, so it was removed: the reading page
+opens as before. The page turns themselves (C12.4) are unchanged.
+
+### Regression test
+None kept: no entrance ships. `e2e/reader.spec.js` failed 2 of 8 with
+`bookOpen` and passed 8 of 8 with `rise`; a future entrance must keep
+the reader's first measurement free of transforms that change sizes.
+
+### Commit
+feat(ui): polish the reading page with lamp notes and a gentle entrance

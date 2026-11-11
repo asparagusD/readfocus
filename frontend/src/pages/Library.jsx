@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Trash2, Upload } from 'lucide-react';
+import { AnimatePresence, m, useReducedMotion } from 'motion/react';
+import { fadeIn, rise, shelfArrive, stagger } from '../motion/presets';
 import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
@@ -65,6 +67,8 @@ export function Library() {
   const [dragging, setDragging] = useState(false);
   const [removing, setRemoving] = useState(null); // the book whose removal is being confirmed
   const [isRemoving, setIsRemoving] = useState(false);
+  const [arrived, setArrived] = useState(() => new Set()); // books that turned ready while the shelf was open
+  const reduced = useReducedMotion();
 
   // Upload state
   const fileInputRef = useRef(null);
@@ -124,6 +128,7 @@ export function Library() {
         const was = new Map(books.map((b) => [b.id, b.status]));
         for (const book of data) {
           if (was.get(book.id) === 'processing' && book.status === 'ready') {
+            setArrived((prev) => new Set(prev).add(book.id));
             toast({ kind: 'success', message: `${book.title} is ready on your shelf.`, action: { label: 'Begin reading', onClick: () => navigate(`/read/${book.id}`) } });
           }
         }
@@ -311,7 +316,11 @@ export function Library() {
             <h2 id="rf-shelf-title" className="eyebrow">On your shelf</h2>
             <Button variant="secondary" onClick={pickFile}><Upload size={18} strokeWidth={1.75} aria-hidden="true" />Add a book</Button>
           </div>
-          <ul className="rf-shelf">
+          {/* The routes' AnimatePresence starts with initial={false}; this one lets the shelf
+              stagger in on a first load. A book that turns ready remounts under a new key and
+              plays shelfArrive (moment 1). Under reduced motion both only fade. */}
+          <AnimatePresence>
+          <m.ul key="shelf" className="rf-shelf" variants={stagger()} initial="hidden" animate="visible">
             {books.map((book, i) => {
               const ready = book.status === 'ready';
               const face = (
@@ -322,7 +331,13 @@ export function Library() {
                 </>
               );
               return (
-                <li key={book.id} className="rf-shelf__item">
+                <m.li
+                  key={arrived.has(book.id) ? `${book.id}-ready` : book.id}
+                  className="rf-shelf__item"
+                  variants={reduced ? fadeIn : arrived.has(book.id) ? shelfArrive : rise}
+                  initial={arrived.has(book.id) ? 'hidden' : undefined}
+                  animate={arrived.has(book.id) ? 'visible' : undefined}
+                >
                   {ready ? <Link to={`/read/${book.id}`} className="rf-shelf__book">{face}</Link> : <div className="rf-shelf__book">{face}</div>}
                   <MasteryBar value={readPct(book)} className="rf-shelf__bar" />
                   <div className="rf-shelf__foot">
@@ -331,10 +346,11 @@ export function Library() {
                       <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />
                     </button>
                   </div>
-                </li>
+                </m.li>
               );
             })}
-          </ul>
+          </m.ul>
+          </AnimatePresence>
         </section>
       )}
 

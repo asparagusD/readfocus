@@ -90,6 +90,8 @@ test.describe('at 375 px', () => {
     await mockShelf(page, SHELF);
     await page.goto('/');
     await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(5);
+    // the tiles rise into place first (C13.3c); measure them once they have settled
+    await expect.poll(() => page.locator('.rf-shelf__item').evaluateAll((els) => els.every((e) => getComputedStyle(e).transform === 'none'))).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
     const tops = await page.locator('.rf-shelf__item').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
     expect(tops[0]).toBe(tops[1]);
@@ -226,3 +228,59 @@ test('removing a book asks first, in a dialog; Keep it changes nothing', async (
   await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(2);
   await expect(page.getByText('Middlemarch is off your shelf.')).toBeVisible();
 });
+
+/** Every frame, each shelf tile's first words and transform, with the time since the page started. */
+async function recordTiles(page) {
+  await page.addInitScript(() => {
+    window.__tiles = [];
+    const start = performance.now();
+    const sample = () => {
+      for (const el of document.querySelectorAll('.rf-shelf__item')) {
+        window.__tiles.push({ t: performance.now() - start, text: el.textContent.slice(0, 24), transform: getComputedStyle(el).transform });
+      }
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+}
+
+for (const reduced of [false, true]) {
+  test.describe(reduced ? 'shelf motion, reduced' : 'shelf motion', () => {
+    test.use({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+
+    test(`the shelf ${reduced ? 'fades in without moving' : 'rises in, one cover after another'}`, async ({ page }) => {
+      await recordTiles(page);
+      await mockShelf(page, SHELF);
+      await page.goto('/');
+      await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(5);
+      await page.waitForTimeout(900);
+      const tiles = await page.evaluate(() => window.__tiles);
+      const moved = tiles.filter((x) => x.transform !== 'none');
+      if (reduced) {
+        expect(moved).toEqual([]);
+      } else {
+        expect(moved.length).toBeGreaterThan(0);
+        const firstMove = (name) => tiles.find((x) => x.text.startsWith(name) && x.transform === 'none' && tiles.some((y) => y.text.startsWith(name) && y.transform !== 'none' && y.t < x.t))?.t;
+        expect(firstMove('Walden')).toBeLessThan(firstMove('A scanned')); // the first cover settles before the last
+      }
+    });
+
+    test(`a book that turns ready ${reduced ? 'appears without moving' : 'arrives on the shelf'}`, async ({ page }) => {
+      await recordTiles(page);
+      let polls = 0;
+      const origin = SHELF.find((b) => b.id === 'origin');
+      await mockWrites(page, () => {
+        polls += 1;
+        return [SHELF[0], polls < 2 ? origin : { ...origin, status: 'ready', total_chunks: 30 }];
+      });
+      await page.goto('/');
+      await expect(page.getByText('On the Origin of Species is ready on your shelf.')).toBeVisible({ timeout: 6000 });
+      await page.waitForTimeout(900);
+      const tiles = await page.evaluate(() => window.__tiles);
+      const after = tiles.filter((x) => x.t > 2500 && x.text.startsWith('On the Origin'));
+      const moved = after.filter((x) => x.transform !== 'none');
+      if (reduced) expect(moved).toEqual([]);
+      else expect(moved.some((x) => x.transform !== 'none')).toBe(true);
+    });
+  });
+}

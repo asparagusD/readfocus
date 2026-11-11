@@ -53,7 +53,7 @@ const px = (n) => `${n}px`;
  */
 export function BookReader({
   blocks, bookTitle, chapterBefore = '', fontSize = 18, initialAnchor = null, lang = 'en',
-  onPlaceChange, onPagesChange, onNearEnd, label,
+  onPlaceChange, onPagesChange, onNearEnd, label, lead = null, endPage = null, pacing = false,
 }) {
   const frameRef = useRef(null);
   const flowRef = useRef(null);
@@ -62,30 +62,35 @@ export function BookReader({
   const tick = useRelayoutTick();
   const g = useMemo(() => (size ? pageGeometry({ ...size, fontSize }) : null), [size, fontSize]);
   const anchor = useRef(initialAnchor);
-  const [layout, setLayout] = useState({ count: 1, chapters: [], ms: 0 });
+  // count: every page, the closing page included; text: pages of today's text (C12.5a).
+  const [layout, setLayout] = useState({ count: 1, text: 1, chapters: [], ms: 0 });
   const [page, setPage] = useState(0);
   const [turn, setTurn] = useState(null); // { id, from, to, dir } while a leaf is turning (C12.4)
   const queued = useRef(null); // the page asked for while a leaf was turning; the latest wins
   const swipe = useRef(null);
+  const hasEnd = Boolean(endPage);
 
   useLayoutEffect(() => {
     const flow = flowRef.current;
     if (!g || !flow) return;
     const started = performance.now();
-    const count = pageCount(flow.scrollWidth, g); // forces the column layout at the new size
+    const text = pageCount(flow.scrollWidth, g); // forces the column layout at the new size
+    const count = text + (hasEnd ? 1 : 0);
     const chapters = [...flow.querySelectorAll('.rf-chapter')].map((el) => ({
       page: pageOfElement(flow, el, g), title: el.querySelector('.rf-chapter-title')?.textContent ?? '',
     }));
     const target = clampPage(pageForAnchor(flow, anchor.current, g), count, g.perView);
-    setLayout({ count, chapters, ms: performance.now() - started });
+    setLayout({ count, text, chapters, ms: performance.now() - started });
     setPage(target);
-  }, [g, blocks, tick]);
+  }, [g, blocks, tick, lead, hasEnd]); // lead is memoised by the caller; the closing page only adds a page
 
   useEffect(() => {
-    onPagesChange?.({ page, count: layout.count, perView: g?.perView ?? 1 });
+    const shown = Math.min(page + (g?.perView ?? 1), layout.text) - 1;
+    const chapter = layout.chapters.filter((c) => c.page <= shown).at(-1)?.title || chapterBefore;
+    onPagesChange?.({ page, count: layout.count, text: layout.text, perView: g?.perView ?? 1, chapter });
     // Within the last two views of today's pages: time to fetch what comes next (C12.4).
     if (g && page + 2 * g.perView >= layout.count) onNearEnd?.();
-  }, [page, layout.count, g, onPagesChange, onNearEnd]);
+  }, [page, layout, g, onPagesChange, onNearEnd, chapterBefore]);
 
   const goTo = useCallback((next) => {
     const flow = flowRef.current;
@@ -152,13 +157,22 @@ export function BookReader({
   const status = step === 2 && last > page + 1
     ? `pp. ${page + 1}–${last} of ${layout.count}`
     : `p. ${page + 1} of ${layout.count}`;
-  const spoken = step === 2 && last > page + 1
-    ? `Pages ${page + 1} and ${last} of ${layout.count}`
-    : `Page ${page + 1} of ${layout.count}`;
+  const spoken = page >= layout.text ? "End of today's reading"
+    : step === 2 && Math.min(last, layout.text) > page + 1
+      ? `Pages ${page + 1} and ${Math.min(last, layout.text)} of ${layout.text}`
+      : `Page ${page + 1} of ${layout.text}`;
+  // Session pacing (C12.5a): how much of today's text is left, as words and a hairline that fills.
+  const left = Math.max(0, layout.text - (page + step));
+  const pacingText = page + step > layout.text ? "That's today's reading"
+    : left === 0 ? "Last page of today's reading"
+      : `${left} ${left === 1 ? 'page' : 'pages'} left in today's reading`;
+  const progress = Math.min(1, (page + step) / Math.max(1, layout.text));
+  const isEnd = (p) => endPage && p === layout.text;
 
   // Running head and folio of page p on a side. Spread: book title left, chapter right. One page:
   // "Book · Chapter" (handoff, 375 px).
   const furniture = (p, side) => {
+    if (isEnd(p)) return <div className="rf-end">{endPage}</div>; // the closing page, outside the flow
     const chapter = chapterOn(p);
     const head = side === 'left' ? bookTitle
       : side === 'right' ? chapter || bookTitle
@@ -201,20 +215,20 @@ export function BookReader({
               const p = page + k;
               const side = g.spread ? (k === 0 ? 'left' : 'right') : 'single';
               return (
-                <div className="rf-leaf" data-side={side} key={side} style={{ left: px(k * g.pageWidth) }} aria-hidden="true">
+                <div className="rf-leaf" data-side={side} key={side} style={{ left: px(k * g.pageWidth) }} aria-hidden={isEnd(p) ? undefined : 'true'}>
                   {p < layout.count && furniture(p, side)}
                 </div>
               );
             })}
             <div className="rf-viewport">
               <div className="rf-flow" lang={lang} ref={flowRef} style={{ transform: `translateX(${-page * g.stride}px)` }}>
-                <BookFlow blocks={blocks} />
+                <BookFlow blocks={blocks} lead={lead} />
               </div>
             </div>
             {/* Its own AnimatePresence: the routes' initial={false} would otherwise skip the leaf's start state. */}
             <AnimatePresence>
               {turn && (
-                <PageTurn key={turn.id} turn={turn} g={g} blocks={blocks} lang={lang} count={layout.count}
+                <PageTurn key={turn.id} turn={turn} g={g} blocks={blocks} lead={lead} lang={lang} count={layout.count}
                   furniture={furniture} onDone={onTurnDone} />
               )}
             </AnimatePresence>
@@ -228,7 +242,14 @@ export function BookReader({
             <button type="button" className="rf-turn" onClick={() => turnFrom(-step)} disabled={page === 0} aria-label="Previous page">
               <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
             </button>
-            <p className="rf-page-status">{status}</p>
+            {pacing ? (
+              <div className="rf-pacing">
+                <span className="rf-pacing-track" aria-hidden="true">
+                  <span className="rf-pacing-fill" style={{ transform: `scaleX(${progress})` }} />
+                </span>
+                <p className="rf-page-status">{pacingText}</p>
+              </div>
+            ) : <p className="rf-page-status">{status}</p>}
             <button type="button" className="rf-turn" onClick={() => turnFrom(step)} disabled={last >= layout.count} aria-label="Next page">
               <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
             </button>

@@ -1,0 +1,81 @@
+/* Reader toolbar (C12.5a, handoff screen 06): a floating pill above the book. */
+.rf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1) var(--space-2);
+  width: fit-content;
+  max-width: calc(100% - 2 * var(--space-4));
+  margin-inline: auto;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  box-shadow: var(--elevation-lift);
+  transition:
+    opacity var(--dur-3) var(--ease-settle),
+    transform var(--dur-3) var(--ease-settle);
+}
+
+/* While reading it fades and lifts 8 px; keyboard focus inside brings it back (data-visible). */
+.rf-toolbar[data-visible="false"] {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+.rf-toolbar-rule {
+  width: var(--border-hair);
+  height: 24px;
+  background: var(--line);
+}
+
+.rf-toolbar-title {
+  max-width: 32ch;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-label);
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rf-toolbar-group { display: flex; align-items: center; }
+
+.rf-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-tool:hover:not(:disabled) { background: var(--paper-2); }
+.rf-tool:disabled { opacity: 0.4; cursor: default; }
+
+.rf-size { font-family: var(--font-reading); font-weight: 400; }
+.rf-size--small { font-size: 13px; }
+.rf-size--large { font-size: 20px; }
+
+/* Narrow screens: icons only, the title goes (the running head names the chapter). */
+@media (width < 640px) {
+  .rf-tool-label,
+  .rf-toolbar-title,
+  .rf-toolbar-rule { display: none; } /* the pill wraps; dividers would end up at row ends */
+
+  .rf-toolbar { padding-inline: var(--space-2); }
+}

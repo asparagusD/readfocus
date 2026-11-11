@@ -124,13 +124,13 @@ Baseline when this file was written (C1.1; the last three rows were added in C10
 |---|---|
 | `ruff check backend/` | fails: 28 errors in existing code (30 until C9.4, 31 until C9.1b, 32 until the issue 29 fix, 36 until C8.8, 40 until C8.5, 84 until C3.4, 83 until C4.5, 82 until C5.5, 81 until C6.4, 64 until C8.3, 63 until C8.4a, 48 until C8.4b) |
 | `pytest backend/tests -q` | passes: 743 tests, offline (735 until C12.4, 728 until C12.3b, 712 until C12.2, 689 until the C12.1 chapter fix, 678 until C12.1c, 673 until C12.1b, 652 until C12.1a, 650 until the C11.2 backfill fix, 608 until C11.2, 606 until the C9.3 preload fix, 605 until the C9.5 bench fix, 593 until C9.4, 584 until C9.3, 582 until C9.2, 568 until C9.1b, 551 until C9.1a, 548 until C9.0a, 546 until the issue 34 fix, 543 until the issue 33 fix, 542 until the issue 29 fix, 541 until the C8.G fix, 538 until C8.8, 527 until C8.7, 525 until the C8.5 fix of issue 32, 524 until the C8.5 fix of issue 31, 516 until C8.6, 495 until C8.5, 485 until C8.4b, 472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
-| `npm --prefix frontend run lint` | fails: 19 errors, 2 warnings in existing code (20 until C12.3b, 21 until C10.6, 22 until C10.5b) |
+| `npm --prefix frontend run lint` | fails: 18 errors, 2 warnings in existing code (19 until C12.5a, 20 until C12.3b, 21 until C10.6, 22 until C10.5b) |
 | `npm --prefix frontend run build` | passes |
 | `python -c "import backend.main"` | passes |
 | `pytest tools/repo_graph/tests -q` | passes: 62 tests (61 until C8.5) |
 | `npm --prefix frontend run check:contrast` | passes: 204 pairs across 4 theme x accent combinations, 0 failing (200 until C10.3) |
 | `npm --prefix frontend run check:images` | passes: 1 raster (13.1 KB), 7 illustrations, 1 `<img>`, 0 failing |
-| `npm --prefix frontend run test:unit` | passes: 15 tests, 12 until C12.4 (Node's built-in runner over `frontend/src/**/*.test.js`; needs Node 22 or later) |
+| `npm --prefix frontend run test:unit` | passes: 18 tests, 15 until C12.5a, 12 until C12.4 (Node's built-in runner over `frontend/src/**/*.test.js`; needs Node 22 or later) |
 
 Until a chunk brings ruff and ESLint to zero, "never commit failing checks"
 means: the seven passing checks stay green and the two error counts never go

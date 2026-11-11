@@ -6,7 +6,7 @@ import { BookFlow } from './BookFlow';
 const px = (n) => `${n}px`;
 
 /** A page as paper: its furniture and, when it exists, a window onto a copy of the flow at that page. */
-function Face({ page, side, g, blocks, lang, count, furniture, className = '', shade }) {
+function Face({ page, side, g, blocks, lead, lang, count, furniture, className = '', shade }) {
   return (
     <div className={`rf-leaf rf-face ${className}`} data-side={side}>
       {page < count && (
@@ -14,7 +14,7 @@ function Face({ page, side, g, blocks, lang, count, furniture, className = '', s
           {furniture(page, side)}
           <div className="rf-window">
             <div className="rf-flow" lang={lang} style={{ transform: `translateX(${-page * g.stride}px)` }}>
-              <BookFlow blocks={blocks} />
+              <BookFlow blocks={blocks} lead={lead} />
             </div>
           </div>
         </>
@@ -34,7 +34,7 @@ function Face({ page, side, g, blocks, lang, count, furniture, className = '', s
  * move. A timer ends the turn too, in case Motion's features have not
  * loaded yet. aria-hidden: the live region speaks for it.
  */
-export function PageTurn({ turn, g, blocks, lang, count, furniture, onDone }) {
+export function PageTurn({ turn, g, blocks, lead, lang, count, furniture, onDone }) {
   const done = useRef(false);
   useEffect(() => {
     done.current = false;
@@ -44,7 +44,7 @@ export function PageTurn({ turn, g, blocks, lang, count, furniture, onDone }) {
   const finish = () => { if (!done.current) { done.current = true; onDone(); } };
 
   const { from, to, dir } = turn;
-  const face = { g, blocks, lang, count, furniture };
+  const face = { g, blocks, lead, lang, count, furniture };
   let cover = null;
   let leaf;
   if (g.spread && dir > 0) {
@@ -61,7 +61,7 @@ export function PageTurn({ turn, g, blocks, lang, count, furniture, onDone }) {
   }
 
   return (
-    <div className="rf-turning" aria-hidden="true">
+    <div className="rf-turning" aria-hidden="true" inert>
       {cover && (
         <m.div className="rf-turn-slot" style={{ left: px(cover.slot * g.pageWidth) }} initial="flat" animate="turned">
           <Face {...face} page={cover.page} side={cover.side} shade />

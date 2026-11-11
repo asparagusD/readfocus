@@ -335,3 +335,85 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* C12.5a: the planner's note on the session's first page (handoff, screen 06). */
+.rf-note {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-card);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: 1.55;
+  text-align: left;
+  hyphens: manual;
+  break-inside: avoid;
+}
+
+.rf-note svg { flex: none; margin-top: 2px; color: var(--accent-text); }
+.rf-note strong { color: var(--ink); font-weight: 600; }
+
+/* The opening chapter shares the first page with the note. */
+.rf-note + .rf-chapter {
+  padding-top: var(--space-2);
+  break-before: auto;
+}
+
+/* The closing page: quiet, centred in the text block, outside the flow (so its button is never off-screen). */
+.rf-end {
+  position: absolute;
+  inset: var(--head) var(--margin) var(--foot);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.rf-end-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-style: italic;
+  font-weight: 400;
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-end-text {
+  max-width: 34ch;
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+/* Pacing under the book: a hairline that fills as pages turn, and how much is left in words. */
+.rf-pacing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 15em;
+}
+
+.rf-pacing-track {
+  position: relative;
+  width: 120px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: var(--radius-hair);
+  background: var(--line);
+}
+
+.rf-pacing-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: left center;
+  transition: transform var(--dur-5) var(--ease-settle);
+}

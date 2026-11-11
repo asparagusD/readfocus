@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 340,
-    "inventoried": 277,
+    "tracked": 345,
+    "inventoried": 282,
     "excluded": 63
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 188,
-      "size_bytes": 8875,
+      "size_bytes": 8908,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -969,8 +969,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2102,
-      "size_bytes": 386493,
+      "lines": 2103,
+      "size_bytes": 389135,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1593,18 +1593,18 @@
     {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
-      "lines": 270,
-      "size_bytes": 5038,
+      "lines": 45,
+      "size_bytes": 925,
       "role": "page",
-      "purpose": "Styles for the reading page: a fixed-height column (100dvh) of chrome bar, sticky timer strip, reason strip and the book area the paginated reader fills; distraction-free mode; abandon link in the chrome bar."
+      "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state."
     },
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 279,
-      "size_bytes": 10758,
+      "lines": 227,
+      "size_bytes": 9461,
       "role": "page",
-      "purpose": "Reading page: checks calibration, starts a session, shows today's text as the paginated book (BookReader) resuming the saved place when it is in today's chunks and saving places as pages turn and reading the next chunk ahead near the last page; timer, pacing bar, reason strip, distraction-free mode, finish (to the test) and abandon (does not call the API) unchanged."
+      "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -1625,26 +1625,42 @@
     {
       "path": "frontend/src/reader/BookFlow.jsx",
       "language": "jsx",
-      "lines": 65,
-      "size_bytes": 2721,
+      "lines": 66,
+      "size_bytes": 2899,
       "role": "asset",
-      "purpose": "Renders reader blocks (chunks.blocks) as book elements with data-b ids: chapter openings (label and italic title when a bare 'Chapter N' precedes a heading), headings, paragraphs with the drop cap and small-caps first line on a chapter's first paragraph, continued paragraphs without indent, quotes, list items; em and strong marks."
+      "purpose": "Renders reader blocks (chunks.blocks) as book elements with data-b ids: chapter openings (label and italic title when a bare 'Chapter N' precedes a heading), headings, paragraphs with the drop cap and small-caps first line on a chapter's first paragraph, continued paragraphs without indent, quotes, list items; em and strong marks; an optional lead note before the first block, which no place points into."
     },
     {
       "path": "frontend/src/reader/BookReader.jsx",
       "language": "jsx",
-      "lines": 241,
-      "size_bytes": 10736,
+      "lines": 262,
+      "size_bytes": 12338,
       "role": "asset",
-      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms."
+      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller."
     },
     {
       "path": "frontend/src/reader/PageTurn.jsx",
       "language": "jsx",
       "lines": 84,
-      "size_bytes": 3557,
+      "size_bytes": 3593,
       "role": "asset",
       "purpose": "One page turn over the book (C12.4): a leaf hinged at the spine (Motion pageTurn, rotateY with perspective) with front and back faces, each paper with its running head, folio and a window onto a copy of the flow at that page, plus a cover keeping the page underneath until the leaf lands and a travelling shadow (turnShade); spread forward and back, single page lifting away or swinging in; transform and opacity only; a timer also ends the turn; aria-hidden."
+    },
+    {
+      "path": "frontend/src/reader/ReaderToolbar.css",
+      "language": "css",
+      "lines": 81,
+      "size_bytes": 2211,
+      "role": "asset",
+      "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px."
+    },
+    {
+      "path": "frontend/src/reader/ReaderToolbar.jsx",
+      "language": "jsx",
+      "lines": 45,
+      "size_bytes": 2071,
+      "role": "asset",
+      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens."
     },
     {
       "path": "frontend/src/reader/anchor.js",
@@ -1713,10 +1729,34 @@
     {
       "path": "frontend/src/reader/reader.css",
       "language": "css",
-      "lines": 337,
-      "size_bytes": 8060,
+      "lines": 419,
+      "size_bytes": 10066,
       "role": "asset",
-      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4)."
+      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a)."
+    },
+    {
+      "path": "frontend/src/reader/textSize.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 913,
+      "role": "asset",
+      "purpose": "Reader text size: the handoff's 16.5, 18 and 19.5 px, stepping that stops at either end, parsing a stored value, and reading and storing it in localStorage (rf-text-size) with storage failures falling back to 18 px."
+    },
+    {
+      "path": "frontend/src/reader/textSize.test.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 797,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the three sizes and default, stepping at the ends, and only known sizes accepted from storage."
+    },
+    {
+      "path": "frontend/src/reader/useChromeVisible.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1317,
+      "role": "asset",
+      "purpose": "useChromeVisible(hold): the reader's chrome shown at first, on mouse movement or a tap, and while held (focus inside, a dialog open), hidden after 2.6 s of stillness (handoff); page-turn keys do not wake it."
     },
     {
       "path": "frontend/src/reader/usePlaceSaver.js",
@@ -2161,8 +2201,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 279,
-      "size_bytes": 69107,
+      "lines": 284,
+      "size_bytes": 70955,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

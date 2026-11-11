@@ -25,8 +25,9 @@ const BARE_CHAPTER = /^(chapter|book|part)\s+\S+\.?$|^[IVXLC]+\.?$/i;
  * becomes a label above the title. The first paragraph of a chapter gets
  * the drop cap and a small-caps first line.
  */
-export const BookFlow = memo(function BookFlow({ blocks }) {
-  const out = [];
+export const BookFlow = memo(function BookFlow({ blocks, lead = null }) {
+  // A note set before the text on the first page (C12.5a): not a block, so no place points into it.
+  const out = lead ? [<aside className="rf-note" key="lead">{lead}</aside>] : [];
   let opening = false; // the next paragraph opens a chapter
   for (let i = 0; i < blocks.length; i += 1) {
     const block = blocks[i];

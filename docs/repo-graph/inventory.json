@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 372,
-    "inventoried": 309,
+    "tracked": 373,
+    "inventoried": 310,
     "excluded": 63
   },
   "files": [
@@ -993,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2275,
-      "size_bytes": 435801,
+      "lines": 2276,
+      "size_bytes": 437095,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1025,10 +1025,18 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 157,
-      "size_bytes": 8228,
+      "lines": 160,
+      "size_bytes": 8461,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session and answers every backend call from the Walden fixture (profile, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
+      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page."
+    },
+    {
+      "path": "frontend/e2e/login.spec.js",
+      "language": "javascript",
+      "lines": 90,
+      "size_bytes": 4851,
+      "role": "config",
+      "purpose": "Playwright e2e for sign in (C13.1b), signed out with Supabase Auth answered in the spec: empty fields explained inline with nothing sent, a wrong password with the loading label and the error on the field, a correct one opening the library, and create account by keyboard (tab, short password, inbox message, back)."
     },
     {
       "path": "frontend/e2e/reader.spec.js",
@@ -1273,8 +1281,8 @@
     {
       "path": "frontend/src/components/ui/SegmentedTabs.css",
       "language": "css",
-      "lines": 38,
-      "size_bytes": 1027,
+      "lines": 39,
+      "size_bytes": 1078,
       "role": "component",
       "purpose": "Segmented tabs styles: a paper-2 pill track, the selected tab a raised surface pill with a field border, 44 px tabs."
     },
@@ -1673,18 +1681,18 @@
     {
       "path": "frontend/src/pages/Login.css",
       "language": "css",
-      "lines": 171,
-      "size_bytes": 3036,
+      "lines": 174,
+      "size_bytes": 3837,
       "role": "page",
-      "purpose": "Styles for the split login page: quote panel, tabs, form fields; single column below 768 px."
+      "purpose": "Sign-in styles (handoff screen 01): split 50/50 with the scene on paper-2 (four drawings on one ground line, sized per breakpoint), the form column at 400 px; one column under 1024 px, icon-only mark and smaller drawings under 640 px."
     },
     {
       "path": "frontend/src/pages/Login.jsx",
       "language": "jsx",
-      "lines": 145,
-      "size_bytes": 4913,
+      "lines": 140,
+      "size_bytes": 6247,
       "role": "page",
-      "purpose": "Sign in and sign up form with a quote panel; collects a display name that is never sent."
+      "purpose": "Sign in and create account (handoff screen 01): scene with the tagline, segmented tabs over one tabpanel, labelled fields validated before sending (errors inline, focus to the first), Supabase errors mapped to the field or a form alert, loading label on submit, inbox message after sign-up; the display name is collected and never sent, as before."
     },
     {
       "path": "frontend/src/pages/ReadingSession.css",
@@ -2417,8 +2425,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 311,
-      "size_bytes": 81705,
+      "lines": 312,
+      "size_bytes": 82514,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

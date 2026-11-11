@@ -1,10 +1,11 @@
 /* Segmented tabs (C13.1a): a sunken track, the selected tab a raised
-   surface pill with a field border, so selection shows without colour. */
+   surface with a field border, so selection shows without colour; corners
+   as on screen 01 (track 10 px, tab 8 px). */
 .rf-segmented {
   display: flex;
   gap: var(--space-1);
   padding: var(--space-1);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-control);
   background-color: var(--paper-2);
 }
 
@@ -13,7 +14,7 @@
   min-height: 44px;
   padding: 0 var(--space-4);
   border: var(--border-hair) solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-input);
   background-color: transparent;
   color: var(--ink-2);
   font-family: var(--font-ui);

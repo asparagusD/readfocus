@@ -990,6 +990,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/login.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/reader.spec.js",
       "type": "file",
       "role": "config",
@@ -3882,6 +3888,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/login.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/reader.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -4373,12 +4384,27 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/components/ui/SegmentedTabs.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/components/ui/tabIds.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Login.jsx",
-      "to": "file:frontend/src/hooks/usePageTransition.js"
+      "to": "file:frontend/src/illustrations/index.js"
     },
     {
       "type": "imports",

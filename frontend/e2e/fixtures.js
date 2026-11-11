@@ -42,6 +42,7 @@ async function mockBackend(page, api) {
     const url = new URL(request.url());
     const path = url.pathname;
     if (path === '/auth/profile') return json(route, { id: 'e2e-reader', is_calibrated: true, wpm: 240 });
+    if (path === '/books' && request.method() === 'GET') return json(route, []);
     if (path === '/sessions/start') {
       api.starts += 1;
       return json(route, {
@@ -80,8 +81,10 @@ async function signIn(page) {
 }
 
 export const test = base.extend({
+  // A spec that starts signed out (the sign-in page) sets test.use({ signedIn: false }).
+  signedIn: [true, { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
-  api: [async ({ page }, use, info) => {
+  api: [async ({ page, signedIn }, use, info) => {
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [] };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
@@ -90,7 +93,7 @@ export const test = base.extend({
     page.on('request', (r) => { if (!r.url().startsWith('http://localhost:4174')) trail.push(`${r.method()} ${r.url().slice(0, 120)}`); });
     page.on('framenavigated', (f) => { if (f === page.mainFrame()) trail.push(`navigated ${f.url()}`); });
     await mockBackend(page, api);
-    await signIn(page);
+    if (signedIn) await signIn(page);
     await use(api);
     if (info.status !== info.expectedStatus) console.log([`--- ${info.title}`, ...trail].join(String.fromCharCode(10)));
     expect(api.unmocked, 'calls the e2e fixtures do not answer').toEqual([]);

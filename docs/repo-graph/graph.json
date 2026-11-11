@@ -887,6 +887,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/gallery.html",
+      "type": "file",
+      "role": "config",
+      "language": "html"
+    },
+    {
       "id": "file:frontend/index.html",
       "type": "file",
       "role": "entry",
@@ -986,6 +992,24 @@
       "id": "file:frontend/src/components/ui/Skeleton.jsx",
       "type": "file",
       "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/Gallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/gallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/main.jsx",
+      "type": "file",
+      "role": "asset",
       "language": "jsx"
     },
     {
@@ -3118,6 +3142,36 @@
       "type": "imports",
       "from": "file:frontend/src/components/ui/Skeleton.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Card.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/gallery/Gallery.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/gallery/gallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/index.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/motion/MotionRoot.jsx"
     },
     {
       "type": "imports",

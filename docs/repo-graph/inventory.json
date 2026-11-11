@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 263,
-    "inventoried": 207,
+    "tracked": 267,
+    "inventoried": 211,
     "excluded": 56
   },
   "files": [
@@ -890,7 +890,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1719,
-      "size_bytes": 306165,
+      "size_bytes": 307721,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -925,6 +925,14 @@
       "size_bytes": 568,
       "role": "config",
       "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx."
+    },
+    {
+      "path": "frontend/gallery.html",
+      "language": "html",
+      "lines": 14,
+      "size_bytes": 462,
+      "role": "config",
+      "purpose": "Dev-only component gallery entry served by Vite at /gallery.html; not built or routed."
     },
     {
       "path": "frontend/index.html",
@@ -985,34 +993,34 @@
     {
       "path": "frontend/src/components/ui/Button.css",
       "language": "css",
-      "lines": 86,
-      "size_bytes": 1535,
+      "lines": 90,
+      "size_bytes": 1968,
       "role": "component",
-      "purpose": "Button styles: primary, secondary and danger variants and the loading sweep; uses transition: all."
+      "purpose": "Button styles on tokens: primary (accent fill, accent-ink text, Lamplight glow), secondary (surface, field border), ghost, danger; 44 px target, press scale 0.98, disabled and loading states, spinner."
     },
     {
       "path": "frontend/src/components/ui/Button.jsx",
       "language": "jsx",
-      "lines": 22,
-      "size_bytes": 463,
+      "lines": 32,
+      "size_bytes": 920,
       "role": "component",
-      "purpose": "Button with variant and loading props."
+      "purpose": "Button: variant (primary, secondary, ghost, danger), loading with spinner and loadingLabel, disabled; type defaults to button."
     },
     {
       "path": "frontend/src/components/ui/Card.css",
       "language": "css",
-      "lines": 11,
-      "size_bytes": 240,
+      "lines": 25,
+      "size_bytes": 494,
       "role": "component",
-      "purpose": "Card surface and hover styles."
+      "purpose": "Card surfaces on tokens: raised (surface with hairline), sunken (paper-2), interactive hairline on hover."
     },
     {
       "path": "frontend/src/components/ui/Card.jsx",
       "language": "jsx",
-      "lines": 18,
-      "size_bytes": 277,
+      "lines": 24,
+      "size_bytes": 682,
       "role": "component",
-      "purpose": "Card container with an optional hover state; not used by any page."
+      "purpose": "Card surface: raised or sunken, optional interactive hover, any element via `as`; not used by any page yet."
     },
     {
       "path": "frontend/src/components/ui/Modal.css",
@@ -1061,6 +1069,30 @@
       "size_bytes": 247,
       "role": "component",
       "purpose": "Loading placeholder block with width and height props."
+    },
+    {
+      "path": "frontend/src/gallery/Gallery.jsx",
+      "language": "jsx",
+      "lines": 82,
+      "size_bytes": 3013,
+      "role": "asset",
+      "purpose": "Dev-only gallery of every ui component and state, with Paper/Lamplight and terracotta/sage switches, for the design-review checks."
+    },
+    {
+      "path": "frontend/src/gallery/gallery.css",
+      "language": "css",
+      "lines": 62,
+      "size_bytes": 1092,
+      "role": "asset",
+      "purpose": "Layout styles for the dev-only component gallery."
+    },
+    {
+      "path": "frontend/src/gallery/main.jsx",
+      "language": "jsx",
+      "lines": 14,
+      "size_bytes": 359,
+      "role": "asset",
+      "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, Gallery."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
@@ -1601,8 +1633,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 209,
-      "size_bytes": 47577,
+      "lines": 213,
+      "size_bytes": 48369,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

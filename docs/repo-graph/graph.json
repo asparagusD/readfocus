@@ -1776,6 +1776,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/demoDefinitions.json",
+      "type": "file",
+      "role": "page",
+      "language": "json"
+    },
+    {
       "id": "file:frontend/src/pages/landing/passages.js",
       "type": "file",
       "role": "page",
@@ -5066,6 +5078,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/WordDemo.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
       "to": "file:frontend/src/pages/landing/wake.js"
     },
     {
@@ -5332,6 +5349,41 @@
       "type": "imports",
       "from": "file:frontend/src/pages/landing/Contents.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/pages/landing/demoDefinitions.json"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/pages/landing/passages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/WordCard.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/useWordAtPoint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/useWordCard.js"
     },
     {
       "type": "imports",

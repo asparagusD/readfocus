@@ -6,6 +6,7 @@ import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { wakeBackend } from './landing/wake';
 import { BookSpread } from './landing/BookSpread';
 import { Contents } from './landing/Contents';
+import { WordDemo } from './landing/WordDemo';
 import { DuskWindow, ReadingLamp } from '../illustrations';
 import './Landing.css';
 
@@ -59,6 +60,7 @@ export function Landing() {
           </div>
         </section>
         <Contents />
+        <WordDemo />
       </main>
     </div>
   );

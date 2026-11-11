@@ -95,3 +95,67 @@ test.describe('hero and how it works', () => {
     });
   });
 });
+
+test.describe('word-lookup demo', () => {
+  test.use({ signedIn: false });
+
+  /** Every request that leaves the page's own origin after load. */
+  function outside(page) {
+    const urls = [];
+    page.on('request', (r) => { if (!r.url().startsWith('http://localhost:4174')) urls.push(r.url()); });
+    return urls;
+  }
+
+  test('hovering a word opens the real card under its line; leaving closes it; no lookup is sent', async ({ page }) => {
+    const urls = outside(page);
+    await page.goto('/');
+    const word = page.getByRole('button', { name: 'odious' });
+    await word.scrollIntoViewIfNeeded();
+    await word.hover();
+    const card = page.getByRole('dialog', { name: 'odious' });
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('Arousing or meriting strong dislike');
+    await expect(card).toContainText('Wiktionary, via Free Dictionary');
+    const w = await word.boundingBox();
+    const c = await card.boundingBox();
+    expect(c.y >= w.y + w.height || c.y + c.height <= w.y, 'the card never covers the line').toBe(true);
+    await page.mouse.move(5, 5);
+    await expect(card).toBeHidden();
+    expect(urls.filter((u) => !u.endsWith('/health'))).toEqual([]);
+  });
+
+  test('a name opens a Wikipedia summary with its link', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Quadi' }).hover();
+    const card = page.getByRole('dialog', { name: 'Quadi' });
+    await expect(card).toContainText('Germanic people');
+    await expect(card.getByRole('link', { name: /Wikipedia/ })).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Quadi');
+  });
+
+  test('keyboard: Enter opens and focuses the card, Esc closes it and returns to the word', async ({ page }) => {
+    await page.goto('/');
+    const word = page.getByRole('button', { name: 'kinsman' });
+    await word.focus();
+    await page.keyboard.press('Enter');
+    const card = page.getByRole('dialog', { name: 'kinsman' });
+    await expect(card).toBeFocused();
+    await expect(word).toHaveAttribute('aria-expanded', 'true');
+    await page.keyboard.press('Escape');
+    await expect(card).toBeHidden();
+    await expect(word).toBeFocused();
+  });
+
+  test('touch: press and hold opens the compact card', async ({ page }) => {
+    await page.goto('/');
+    const word = page.getByRole('button', { name: 'incur' });
+    await word.scrollIntoViewIfNeeded();
+    const box = await word.boundingBox();
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await word.dispatchEvent('pointerdown', { pointerType: 'touch', clientX: point.x, clientY: point.y, isPrimary: true });
+    await page.waitForTimeout(600);
+    await word.dispatchEvent('pointerup', { pointerType: 'touch', clientX: point.x, clientY: point.y, isPrimary: true });
+    const card = page.getByRole('dialog', { name: 'incur' });
+    await expect(card).toBeVisible();
+    await expect(card).toHaveAttribute('data-compact', 'true');
+  });
+});

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 421,
-    "inventoried": 357,
+    "tracked": 423,
+    "inventoried": 359,
     "excluded": 64
   },
   "files": [
@@ -961,8 +961,8 @@
     {
       "path": "docs/ASSETS.md",
       "language": "markdown",
-      "lines": 41,
-      "size_bytes": 3851,
+      "lines": 48,
+      "size_bytes": 5072,
       "role": "doc",
       "purpose": "Image and asset register: every shipped image with its source, author, licence, date and changes (allowed: original, CC0, Unsplash License)."
     },
@@ -1065,10 +1065,10 @@
     {
       "path": "frontend/e2e/landing.spec.js",
       "language": "javascript",
-      "lines": 97,
-      "size_bytes": 4620,
+      "lines": 161,
+      "size_bytes": 7589,
       "role": "config",
-      "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset."
+      "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset. Demo: hover opens the real card below the word's line and pointer-leave closes it with no lookup sent; Quadi shows the Wikipedia summary and link; Enter focuses the card and Esc returns to the word; a touch long-press opens the compact card."
     },
     {
       "path": "frontend/e2e/library.spec.js",
@@ -1977,18 +1977,18 @@
     {
       "path": "frontend/src/pages/Landing.css",
       "language": "css",
-      "lines": 355,
-      "size_bytes": 9293,
+      "lines": 454,
+      "size_bytes": 11710,
       "role": "page",
-      "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero grid and illustration scene, the book spread (pages, spine shade, flyleaf, caption, one page under 640 px), the contents page (numerals, leaders), on the project tokens."
+      "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero grid and illustration scene, the book spread (pages, spine shade, flyleaf, caption, one page under 640 px), the contents page (numerals, leaders), the word demo (marked words, page, pointer/touch hints), on the project tokens."
     },
     {
       "path": "frontend/src/pages/Landing.jsx",
       "language": "jsx",
-      "lines": 65,
-      "size_bytes": 2796,
+      "lines": 67,
+      "size_bytes": 2864,
       "role": "page",
-      "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount; masthead with Sign in; hero with headline, positioning lead, Start reading (to /login?tab=signup) and See how it works (scrolls and moves focus), DuskWindow and ReadingLamp behind the BookSpread; then the Contents section."
+      "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount; masthead with Sign in; hero with headline, positioning lead, Start reading (to /login?tab=signup) and See how it works (scrolls and moves focus), DuskWindow and ReadingLamp behind the BookSpread; then the Contents section and the WordDemo."
     },
     {
       "path": "frontend/src/pages/Library.css",
@@ -2077,6 +2077,22 @@
       "size_bytes": 2130,
       "role": "page",
       "purpose": "How it works as a book's contents page (C13.10b): four steps with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works."
+    },
+    {
+      "path": "frontend/src/pages/landing/WordDemo.jsx",
+      "language": "jsx",
+      "lines": 110,
+      "size_bytes": 5599,
+      "role": "page",
+      "purpose": "Landing's Try it section (C13.10c): Meditations Book I.XV with seven marked words (buttons) that open the reader's real WordCard through useWordCard and a bundled client; mouse hover after HOVER_MS, touch long-press (createLongPress), click or tap, Enter opens and focuses, Esc returns focus; polite live announcement; no network calls."
+    },
+    {
+      "path": "frontend/src/pages/landing/demoDefinitions.json",
+      "language": "json",
+      "lines": 143,
+      "size_bytes": 4423,
+      "role": "page",
+      "purpose": "Bundled GET /lookup answers for the landing demo (six Free Dictionary/Wiktionary entries, one Wikipedia summary), fetched once with backend/services/lookup.py; sources and licences in _sources."
     },
     {
       "path": "frontend/src/pages/landing/passages.js",
@@ -2801,8 +2817,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 359,
-      "size_bytes": 101083,
+      "lines": 361,
+      "size_bytes": 102034,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

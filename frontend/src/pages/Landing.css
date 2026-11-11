@@ -353,3 +353,102 @@
   .rf-toc__leader,
   .rf-toc__note { display: none; }
 }
+
+/* ── Try it: the word-lookup demo (C13.10c). ─────────────────────────── */
+.rf-demo {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) var(--space-9);
+}
+
+@media (min-width: 1024px) {
+  .rf-demo { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: var(--space-8); align-items: start; }
+}
+
+.rf-demo__title {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  font-weight: 500;
+  line-height: var(--text-section--line-height);
+}
+
+.rf-demo__hint {
+  max-width: 30em;
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  line-height: 1.6;
+}
+
+.rf-demo__hint-touch { display: none; }
+
+@media (hover: none) {
+  .rf-demo__hint-pointer { display: none; }
+  .rf-demo__hint-touch { display: inline; }
+}
+
+.rf-demo__page {
+  margin: 0;
+  padding: var(--space-7) var(--space-7) var(--space-6);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-page);
+  background: var(--page);
+  box-shadow: var(--elevation-page);
+}
+
+.rf-demo__text {
+  max-width: 34em;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+/* A marked word: still part of the sentence, with a dotted accent underline. */
+.rf-demo__word {
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-hair);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: help;
+  -webkit-touch-callout: none;
+  user-select: none;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-demo__word:hover,
+.rf-demo__word[aria-expanded="true"] { background-color: var(--accent-soft); }
+
+.rf-demo__caption {
+  margin-top: var(--space-5);
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-demo__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .rf-demo__page { padding: var(--space-5) var(--space-4); }
+  .rf-demo__text { font-size: 16px; }
+}

@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9555,
+      "size_bytes": 9572,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -977,8 +977,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1867,
-      "size_bytes": 83010,
+      "lines": 1913,
+      "size_bytes": 84870,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2281,
-      "size_bytes": 453151,
+      "size_bytes": 454503,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1057,10 +1057,10 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 184,
-      "size_bytes": 9711,
+      "lines": 204,
+      "size_bytes": 11140,
       "role": "config",
-      "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+      "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a mouse click on the last page's Start test finishing reading (C13.4 regression); a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
     },
     {
       "path": "frontend/e2e/shell.spec.js",
@@ -1993,8 +1993,8 @@
     {
       "path": "frontend/src/reader/reader.css",
       "language": "css",
-      "lines": 464,
-      "size_bytes": 11876,
+      "lines": 465,
+      "size_bytes": 11958,
       "role": "asset",
       "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b)."
     },
@@ -2506,7 +2506,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 322,
-      "size_bytes": 87616,
+      "size_bytes": 87698,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

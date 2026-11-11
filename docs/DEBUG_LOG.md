@@ -1865,3 +1865,49 @@ table holds `P:run` and `run` apart. Before: failed; after: 38 passed.
 
 ### Commit
 fix(lookup): keep Wikipedia-first answers apart in the shared cache
+
+## 2026-11-11 C13.4 — the last page's Start test cannot be clicked
+
+**Status:** fixed
+
+### Symptom
+Found while writing the C13.4 e2e for the closing page: a mouse click on
+"Start test" on the last page of today's reading never reached the button.
+Playwright: `locator.click: Timeout 3000ms exceeded`, "`<div
+class="rf-viewport">` intercepts pointer events". Keyboard (Tab, Enter) and
+the toolbar's Done reading still worked, so the C12 tests, which never
+clicked it, passed. Present on the committed code (`66cc26a`): probed with
+`document.elementFromPoint` at the button's centre, which returned
+`.rf-viewport`.
+
+### Reproduce
+`e2e/reader.spec.js` "the last page's Start test takes a mouse click and
+finishes reading": End to the closing page, click Start test with a 3 s
+timeout. 1 failed.
+
+### Upstream and downstream (repo graph)
+`reader/BookReader.jsx` renders each leaf's furniture (the closing page
+`.rf-end` on the last page), then `.rf-viewport` (the text window) as a later
+absolutely positioned sibling over the text block of every page; the turn
+overlay (z 2), edges (z 3) and ribbon (z 4) sit above.
+
+### Hypotheses
+1. `.rf-viewport` comes later in the DOM at the same stacking level and
+   covers `.rf-end`, which lies inside the text block. `.rf-leaf` sets no
+   z-index or transform, so a z-index on `.rf-end` would lift it. Result:
+   **confirmed**.
+
+### Root cause
+C12.5a placed the closing page "outside the flow" in the text block's box
+but under the viewport that shows the flow on every page.
+
+### Fix
+`reader/reader.css`: `.rf-end { z-index: 1 }`, above the viewport and
+below the turning leaf, edges and ribbon. One attempt.
+
+### Regression test
+The test above: failed before ("rf-viewport intercepts pointer events"),
+passes after; `e2e/reader.spec.js` 9 passed.
+
+### Commit
+fix(reader): let the last page's Start test take a click

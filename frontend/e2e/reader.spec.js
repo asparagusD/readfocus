@@ -77,6 +77,26 @@ test.describe('pagination and page turns', () => {
   });
 });
 
+test("the last page's Start test takes a mouse click and finishes reading", async ({ page }) => {
+  // Regression (docs/DEBUG_LOG.md, C13.4): the text viewport lay over the closing page, so the button
+  // could be reached by keyboard only.
+  const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
+  const answer = (route, body) => route.request().method() === 'OPTIONS'
+    ? route.fulfill({ status: 204, headers: cors })
+    : route.fulfill({ status: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  let finished = 0;
+  await page.route('http://localhost:8000/sessions/e2e-session/finish-reading', (route) => { if (route.request().method() === 'POST') finished += 1; return answer(route, {}); });
+  await page.route('http://localhost:8000/sessions/e2e-session', (route) => answer(route, { id: 'e2e-session', test_questions: [{ question: 'What did Thoreau build?', type: 'free_text' }] }));
+  await openReader(page);
+  await page.locator('.rf-book').focus();
+  await page.keyboard.press('End');
+  await expect(spoken(page)).toHaveText(/End of today's reading/);
+  await expect(page.locator('.rf-end')).toHaveCount(1);
+  await page.locator('.rf-end').getByRole('button', { name: 'Start test' }).click({ timeout: 3000 });
+  await expect(page).toHaveURL(/\/test\/e2e-session$/);
+  expect(finished).toBe(1);
+});
+
 test.describe('word lookup', () => {
   test('a known word shows its card within 600 ms once cached, and Esc closes it', async ({ page, api }) => {
     await openReader(page);

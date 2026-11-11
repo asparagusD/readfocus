@@ -1,7 +1,9 @@
 import uuid
+from datetime import UTC, datetime
 from typing import Any, cast
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException
-from backend.services.book_ingestor import ingest_book
+from backend.services import book_ingestor
+from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 from backend.dependencies import get_current_user
 
@@ -55,15 +57,11 @@ async def upload_book(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database insert failed: {str(e)}")
         
-    # 5. Launch ingest_book as BackgroundTask
-    background_tasks.add_task(
-        ingest_book,
-        file_bytes=file_bytes,
-        file_type=ext,
-        book_id=book_id,
-        user_id=user_id,
-        target_words=600
-    )
+    # 5. Record a durable job, then ingest after the response. If the process
+    # stops, the job row keeps the cursor and the sweep or /resume picks it up.
+    job = jobs.claim(jobs.create(book_id, user_id))
+    if job:
+        background_tasks.add_task(book_ingestor.run_job, job, file_bytes)
     
     # 6. Return immediately
     return {"book_id": book_id, "status": "processing"}
@@ -90,13 +88,41 @@ async def get_book_details(book_id: str, user_id: str = Depends(get_current_user
     
     return book
 
+JOB_FIELDS = ("status", "progress", "cursor", "attempts", "error", "updated_at")
+
+
+def public_job(job: dict | None) -> dict | None:
+    return {key: job.get(key) for key in JOB_FIELDS} if job else None
+
+
 @router.get("/{book_id}/status")
 async def get_book_status(book_id: str, user_id: str = Depends(get_current_user)):
     resp = supabase.table("books").select("status, total_chunks").eq("id", book_id).eq("user_id", user_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Book not found")
-        
-    return resp.data[0]
+
+    return {**resp.data[0], "ingestion": public_job(jobs.get(book_id))}
+
+
+@router.post("/{book_id}/resume")
+async def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+    """Run a book's ingestion again from its cursor: after a failure, or for a book left processing with no job."""
+    rows = supabase.table("books").select("id, status").eq("id", book_id).eq("user_id", user_id).execute().data
+    if not rows:
+        raise HTTPException(status_code=404, detail="Book not found")
+    job = jobs.get(book_id) or jobs.create(book_id, user_id)
+    ok, reason = jobs.claimable(job, datetime.now(UTC), jobs.stale_minutes(), manual=True)
+    if not ok:
+        raise HTTPException(status_code=409, detail=f"Ingestion is already {reason}.")
+    claimed = jobs.claim(job, manual=True)
+    if not claimed:
+        raise HTTPException(status_code=409, detail="Ingestion was resumed by another request.")
+    status = rows[0]["status"]
+    if status == "error":
+        supabase.table("books").update({"status": "processing"}).eq("id", book_id).execute()
+        status = "processing"
+    background_tasks.add_task(book_ingestor.run_job, claimed)
+    return {"book_id": book_id, "status": status, "ingestion": public_job(claimed)}
 
 @router.delete("/{book_id}")
 async def delete_book(book_id: str, user_id: str = Depends(get_current_user)):

@@ -26,6 +26,7 @@ DUMMY_ENV = {
     "SUPABASE_SERVICE_KEY": "offline-service-key",
     "SUPABASE_ANON_KEY": "offline-anon-key",
     "ENV": "test",
+    "INGEST_SWEEP": "0",  # no ingestion sweep on the fake database at startup
 }
 os.environ.update(DUMMY_ENV)
 

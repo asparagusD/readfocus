@@ -1,4 +1,6 @@
+import asyncio
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import FastAPI
@@ -6,10 +8,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from backend.routers import auth, books, sessions, agent, dashboard, mastery
+from backend.services import ingestion_worker
 
 load_dotenv()
 
-app = FastAPI(title="ReadFocus API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Resume ingestion jobs a stopped server left behind (processing_jobs).
+    sweep = asyncio.create_task(ingestion_worker.sweep_forever()) if ingestion_worker.sweep_enabled() else None
+    yield
+    if sweep:
+        sweep.cancel()
+
+
+app = FastAPI(title="ReadFocus API", lifespan=lifespan)
 
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 

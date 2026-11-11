@@ -79,6 +79,13 @@
       "handler": "upload_book"
     },
     {
+      "id": "endpoint:POST /books/{book_id}/resume",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/resume",
+      "handler": "resume_book"
+    },
+    {
       "id": "endpoint:POST /sessions/start",
       "type": "endpoint",
       "method": "POST",
@@ -131,6 +138,10 @@
     },
     {
       "id": "env:INGEST_STALE_MINUTES",
+      "type": "env"
+    },
+    {
+      "id": "env:INGEST_SWEEP",
       "type": "env"
     },
     {
@@ -502,6 +513,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/ingestion_worker.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/processing_jobs.py",
       "type": "file",
       "role": "service",
@@ -647,6 +664,12 @@
     },
     {
       "id": "file:backend/tests/test_ingest_embeddings.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_ingestion_worker.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1667,6 +1690,11 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:POST /books/{book_id}/resume"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/dashboard.py",
       "to": "endpoint:GET /dashboard"
     },
@@ -2173,6 +2201,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/nlp/concepts.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -2200,6 +2233,11 @@
       "type": "imports",
       "from": "file:backend/routers/books.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/processing_jobs.py"
     },
     {
       "type": "imports",
@@ -2264,6 +2302,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -2274,6 +2317,21 @@
     {
       "type": "imports",
       "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -2595,6 +2653,61 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -3303,6 +3416,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/concept_store.py",
       "to": "table:concepts"
     },
@@ -3360,6 +3478,11 @@
       "type": "uses_env",
       "from": "file:backend/nlp/embedder.py",
       "to": "env:FASTEMBED_CACHE"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "env:INGEST_SWEEP"
     },
     {
       "type": "uses_env",
@@ -3483,6 +3606,11 @@
     },
     {
       "type": "writes_table",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:question_bank"
     },
@@ -3490,6 +3618,11 @@
       "type": "writes_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "table:question_bank"
     },
     {
       "type": "writes_table",

@@ -10,14 +10,17 @@ from bs4 import BeautifulSoup
 
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
+from backend.services import processing_jobs
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
 
-# Chunks embedded and inserted together. The first batch is smaller so the
-# book unlocks for reading as soon as five chunks are stored.
+# Chunks embedded, stored and questioned together; the job's cursor is saved
+# after each batch. The first batch is smaller so the book unlocks for
+# reading as soon as five chunks are stored.
 FIRST_BATCH = 5
-EMBED_BATCH = 8
+INGEST_BATCH = 16
+TARGET_WORDS = 600
 
 def extract_text_from_pdf(file_bytes: bytes) -> list[str]:
     """Extract text from a PDF file, returning a list of page strings."""
@@ -139,78 +142,70 @@ async def generate_questions(book_id: str, stored_chunks) -> None:
         print(f"Question generation failed for book {book_id}: {e}")
 
 
-async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: str, target_words: int = 600) -> dict:
-    """
-    Coordinates extraction, chunking, embedding generation, and database inserts.
+def batches(total: int, cursor: int = 0):
+    """(start, end) chunk ranges from the cursor: five first, then INGEST_BATCH at a time."""
+    start = cursor
+    while start < total:
+        end = min(start + (FIRST_BATCH if start == 0 else INGEST_BATCH), total)
+        yield start, end
+        start = end
 
-    Chunks are embedded with the local model (backend/nlp/embedder.py) in
-    batches, off the event loop, and stored in chunks.embedding_local. The
-    1536-dimension `embedding` column is no longer written.
+
+def extract(file_type: str, file_bytes: bytes) -> list[str]:
+    if file_type.lower() == "pdf":
+        return extract_text_from_pdf(file_bytes)
+    if file_type.lower() == "epub":
+        return extract_text_from_epub(file_bytes)
+    raise ValueError("Unsupported file type. Must be 'pdf' or 'epub'.")
+
+
+def mark_ready(book_id: str, total: int, words: int) -> None:
+    supabase.table("books").update({"total_chunks": total, "total_words": words, "status": "ready"}).eq(
+        "id", book_id).execute()
+
+
+def download(storage_path: str) -> bytes:
+    return supabase.storage.from_("books").download(storage_path)
+
+
+async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
+    """Ingest a claimed job's book from its cursor, saving the cursor after every batch.
+
+    Safe to run again: chunks are upserted on (book_id, chunk_index) and
+    questions on their own unique key, so a batch that ran before the
+    process stopped is rewritten, not duplicated. Without `file_bytes` the
+    file is read from Storage. Extraction and chunking are deterministic,
+    so the chunk at an index is the same on every run.
     """
+    book_id, user_id = job["book_id"], job["user_id"]
+    book = supabase.table("books").select("id, file_type, storage_path, status").eq("id", book_id).execute().data[0]
+    ready = book.get("status") == "ready"
     try:
-        if file_type.lower() == 'pdf':
-            pages = extract_text_from_pdf(file_bytes)
-        elif file_type.lower() == 'epub':
-            pages = extract_text_from_epub(file_bytes)
-        else:
-            raise ValueError("Unsupported file type. Must be 'pdf' or 'epub'.")
-
-        chunks = chunk_text(pages, target_words)
-        total_chunks = len(chunks)
-        
-        # Pre-calculate total words to update DB early
-        total_words_estimated = sum(len(c.split()) for c in chunks)
-
-        start = 0
-        while start < total_chunks:
-            batch = chunks[start:start + (FIRST_BATCH if start == 0 else EMBED_BATCH)]
-
-            # 1) embed the batch locally, in a worker thread
+        if file_bytes is None:
+            file_bytes = await asyncio.to_thread(download, book["storage_path"])
+        chunks = chunk_text(extract(book["file_type"], file_bytes), TARGET_WORDS)
+        total, words = len(chunks), sum(len(c.split()) for c in chunks)
+        for start, end in batches(total, job["cursor"]):
+            batch = chunks[start:end]
             vectors = await asyncio.to_thread(embedder.embed, batch)
-
-            # 2) insert the batch into the chunks table in one call
-            stored = supabase.table("chunks").insert([
-                {
-                    "book_id": book_id,
-                    "user_id": user_id,
-                    "chunk_index": start + offset,
-                    "word_count": len(chunk.split()),
-                    "content": chunk,
-                    "embedding_local": [float(value) for value in vectors[offset]],
-                }
+            stored = supabase.table("chunks").upsert([
+                {"book_id": book_id, "user_id": user_id, "chunk_index": start + offset,
+                 "word_count": len(chunk.split()), "content": chunk,
+                 "embedding_local": [float(value) for value in vectors[offset]]}
                 for offset, chunk in enumerate(batch)
-            ]).execute()
-
-            # 3) after the first batch (five chunks, or the whole of a
-            # shorter book), unlock the book for reading
-            if start == 0:
-                supabase.table("books").update({
-                    "total_chunks": total_chunks,
-                    "total_words": total_words_estimated,
-                    "status": "ready"
-                }).eq("id", book_id).execute()
-
-            # 4) build the batch's questions; the book is already readable
+            ], on_conflict="book_id,chunk_index").execute()
+            if not ready:  # the first stored batch unlocks the book for reading
+                mark_ready(book_id, total, words)
+                ready = True
             await generate_questions(book_id, stored.data)
-            start += len(batch)
-
-        # A book with no text at all is still marked ready, as before
-        if total_chunks == 0:
-            supabase.table("books").update({
-                "total_chunks": 0,
-                "total_words": 0,
-                "status": "ready"
-            }).eq("id", book_id).execute()
-
-        return {
-            "total_chunks": total_chunks,
-            "total_words": total_words_estimated,
-            "status": "ready"
-        }
-    except Exception as e:
-        # If any step fails, mark the book as failed so it doesn't stay 'processing' forever
-        print(f"Failed to ingest book {book_id}: {e}")
-        supabase.table("books").update({
-            "status": "error"
-        }).eq("id", book_id).execute()
+            processing_jobs.advance(job["id"], end, total)
+        if not ready:  # a book with no text at all is still ready, as before
+            mark_ready(book_id, total, words)
+        processing_jobs.finish(job["id"], total)
+        return {"total_chunks": total, "total_words": words, "status": "ready"}
+    except Exception as e:  # noqa: BLE001 - recorded on the job, which can be resumed
+        print(f"Ingestion of book {book_id} stopped: {e}")
+        processing_jobs.fail(job["id"], str(e))
+        if not ready:  # a book with readable chunks stays readable
+            supabase.table("books").update({"status": "error"}).eq("id", book_id).execute()
         return {"status": "error", "error": str(e)}

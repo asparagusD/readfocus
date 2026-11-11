@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 200,
-    "inventoried": 188,
+    "tracked": 202,
+    "inventoried": 190,
     "excluded": 12
   },
   "files": [
@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 182,
-      "size_bytes": 7927,
+      "size_bytes": 7994,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -313,10 +313,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 49,
-      "size_bytes": 1337,
+      "lines": 62,
+      "size_bytes": 1753,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the six routers and /health. Starts no other process."
+      "purpose": "FastAPI app: CORS, the six routers and /health; its lifespan starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -385,10 +385,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 125,
-      "size_bytes": 4670,
+      "lines": 151,
+      "size_bytes": 6258,
       "role": "router",
-      "purpose": "Book endpoints: upload to Storage and start ingestion in the background, list, details with progress, status poll, delete."
+      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list; details with progress; status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -425,10 +425,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 216,
-      "size_bytes": 8196,
+      "lines": 211,
+      "size_bytes": 8654,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, embeds the chunks in batches with the local model into chunks.embedding_local, marks the book ready after the first five chunks, then has the question generation agent fill the question bank for each batch."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), marks the book ready after the first stored batch, has the question generation agent fill the bank for the batch, and saves the cursor; a failure is recorded on the job. Reads the file from Storage when resuming."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -437,6 +437,14 @@
       "size_bytes": 3686,
       "role": "service",
       "purpose": "The concepts of a book in the concepts table: save upserts one row per (user, book, concept key) for a batch of chunks, keeping the first label, growing chunk_indices and taking the highest weight; concepts_for_chunks reads the concepts some chunks mention; link_key_terms (pure) ties a question's key terms to concept keys."
+    },
+    {
+      "path": "backend/services/ingestion_worker.py",
+      "language": "python",
+      "lines": 61,
+      "size_bytes": 2426,
+      "role": "service",
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time, or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
     },
     {
       "path": "backend/services/processing_jobs.py",
@@ -481,10 +489,10 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 82,
-      "size_bytes": 2291,
+      "lines": 83,
+      "size_bytes": 2370,
       "role": "test",
-      "purpose": "Offline test setup: dummy environment, a fake Supabase client, and a guard that blocks non-loopback connections."
+      "purpose": "Offline test setup: dummy environment (with the ingestion sweep off), a fake Supabase client, and a guard that blocks non-loopback connections."
     },
     {
       "path": "backend/tests/fixtures/answers.json",
@@ -497,10 +505,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 119,
-      "size_bytes": 3984,
+      "lines": 123,
+      "size_bytes": 4125,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, Storage download) for the ingestion and job tests."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, Storage upload and download) for the ingestion and job tests."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -633,10 +641,18 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 147,
-      "size_bytes": 6080,
+      "lines": 179,
+      "size_bytes": 7313,
       "role": "test",
-      "purpose": "Pytest on the fake database: ingest_book stores every chunk once with a 384-value embedding_local, in batches, unlocks the book after the first five, marks it error if embedding fails, and does not use the Google client."
+      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready after the first batch and before its questions, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent."
+    },
+    {
+      "path": "backend/tests/test_ingestion_worker.py",
+      "language": "python",
+      "lines": 112,
+      "size_bytes": 5131,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
     },
     {
       "path": "backend/tests/test_ingestor.py",
@@ -785,8 +801,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1028,
-      "size_bytes": 44290,
+      "lines": 1071,
+      "size_bytes": 45924,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -801,8 +817,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 1551,
-      "size_bytes": 261377,
+      "lines": 1552,
+      "size_bytes": 263951,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1449,8 +1465,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 190,
-      "size_bytes": 40099,
+      "lines": 192,
+      "size_bytes": 41450,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -1482,7 +1498,7 @@
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
       "lines": 256,
-      "size_bytes": 10333,
+      "size_bytes": 10352,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

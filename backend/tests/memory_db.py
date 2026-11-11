@@ -100,6 +100,10 @@ class Bucket:
     def __init__(self, db):
         self.db = db
 
+    def upload(self, file, path, file_options=None):
+        self.db.calls.append(("storage", "upload"))
+        self.db.files[path] = file
+
     def download(self, path):
         self.db.calls.append(("storage", "download"))
         return self.db.files[path]

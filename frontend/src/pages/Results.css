@@ -34,6 +34,16 @@
   line-height: 1;
 }
 
+/* The score for assistive tech: the final figure, not the counting one. */
+.rf-results__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .rf-results__figure {
   font-size: 112px;
   letter-spacing: -0.02em;

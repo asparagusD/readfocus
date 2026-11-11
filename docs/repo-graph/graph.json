@@ -4874,6 +4874,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/motion/useCountUp.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/pages/Results.css"
     },
     {

@@ -34,7 +34,7 @@ test('from the test: score, verdict, each question with its evidence, chips and 
   await takeTest(page);
   await expect(page).toHaveTitle('Results · ReadFocus');
   await expect(page.getByRole('heading', { level: 1, name: 'Session results' })).toBeVisible();
-  await expect(page.getByLabel('Score: 70%')).toBeVisible();
+  await expect(page.getByText('Score: 70%')).toBeVisible();
   await expect(page.getByText('1 correct · 1 partial')).toBeVisible();
   await expect(page.getByText('A good session. Most of it is holding.')).toBeVisible();
   const items = page.getByRole('listitem').filter({ has: page.locator('.rf-results__question') });
@@ -77,7 +77,7 @@ test('opened fresh: rebuilt from the stored results and the book\'s pace', async
       test_results: { total_score: 14, max_score: 20, answers: GRADED.map((g, i) => ({ ...g, user_answer: ['(b) In life exchanged for it', 'To live simply.'][i], question: QUESTIONS[i] })) } });
   });
   await page.goto('/results/t1');
-  await expect(page.getByLabel('Score: 70%')).toBeVisible();
+  await expect(page.getByText('Score: 70%')).toBeVisible();
   await expect(page.getByText('You answered To live simply.')).toBeVisible();
   const nextCard = page.getByRole('region', { name: 'Next session' });
   await expect(nextCard).toContainText('A second look at today’s pages');
@@ -105,7 +105,7 @@ test('a failed load offers Try again', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('Your results didn’t load.');
   fail = false;
   await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(page.getByLabel('Score: 100%')).toBeVisible();
+  await expect(page.getByText('Score: 100%')).toBeVisible();
 });
 
 test.describe('at 375 px', () => {
@@ -113,8 +113,57 @@ test.describe('at 375 px', () => {
 
   test('one column, nothing wider than the screen', async ({ page }) => {
     await takeTest(page);
-    await expect(page.getByLabel('Score: 70%')).toBeVisible();
+    await expect(page.getByText('Score: 70%')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
     if (shots) await page.screenshot({ path: `${shots}/results-375.png`, fullPage: true });
   });
 });
+
+/** Every frame from the first paint: the score's figure and each chip's transform. */
+async function recordScore(page) {
+  await page.addInitScript(() => {
+    window.__score = [];
+    window.__chips = [];
+    const sample = () => {
+      const figure = document.querySelector('.rf-results__figure');
+      if (figure) window.__score.push(figure.textContent);
+      for (const chip of document.querySelectorAll('.rf-chip')) window.__chips.push(getComputedStyle(chip).transform);
+      if (window.__score.length < 90) requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  });
+}
+
+async function openFresh(page) {
+  await page.route(/localhost:8000\/(sessions\/t1|books\/e2e-book)$/, (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/books/e2e-book') return json(route, { id: 'e2e-book', reading_progress: null });
+    return json(route, { id: 't1', book_id: 'e2e-book', status: 'completed', test_questions: QUESTIONS,
+      test_results: { total_score: 14, max_score: 20, answers: GRADED.map((g, i) => ({ ...g, user_answer: 'x', question: QUESTIONS[i] })) } });
+  });
+  await page.goto('/results/t1');
+  await page.waitForFunction(() => window.__score.length >= 90);
+  return page.evaluate(() => ({ score: window.__score, chips: window.__chips }));
+}
+
+for (const reduced of [false, true]) {
+  test.describe(reduced ? 'results motion, reduced' : 'results motion', () => {
+    test.use({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+
+    test(`the score ${reduced ? 'shows at once and the chips stay still' : 'counts up and the chips pop in'}`, async ({ page }) => {
+      await recordScore(page);
+      const { score, chips } = await openFresh(page);
+      const values = [...new Set(score)].map(Number);
+      expect(values.at(-1)).toBe(70);
+      const moved = chips.filter((t) => t !== 'none');
+      if (reduced) {
+        expect(values).toEqual([70]);
+        expect(moved).toEqual([]);
+      } else {
+        expect(values.length).toBeGreaterThan(3); // passes through figures on the way up
+        expect(values).toEqual([...values].sort((a, b) => a - b));
+        expect(moved.length).toBeGreaterThan(0);
+      }
+    });
+  });
+}

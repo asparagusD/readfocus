@@ -74,7 +74,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 9784,
+      "size_bytes": 9817,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1002,7 +1002,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2285,
-      "size_bytes": 464852,
+      "size_bytes": 467241,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1073,10 +1073,10 @@
     {
       "path": "frontend/e2e/results.spec.js",
       "language": "javascript",
-      "lines": 120,
-      "size_bytes": 7834,
+      "lines": 169,
+      "size_bytes": 10038,
       "role": "config",
-      "purpose": "Playwright e2e for results (C13.6): from the test (score, summary, verdict, outcomes, answer without the letter, feedback and quote, chips, next session and Start next session), a low-confidence grade, opened fresh (rebuilt from GET /sessions/{id} and GET /books/{id}, in that order), not graded yet, a failed load with Try again, and 375 px."
+      "purpose": "Playwright e2e for results (C13.6): from the test (score, summary, verdict, outcomes, answer without the letter, feedback and quote, chips, next session and Start next session), a low-confidence grade, opened fresh (rebuilt from GET /sessions/{id} and GET /books/{id}, in that order), not graded yet, a failed load with Try again, and 375 px; with and without reduced motion, the count-up and the chips."
     },
     {
       "path": "frontend/e2e/shell.spec.js",
@@ -1873,18 +1873,18 @@
     {
       "path": "frontend/src/pages/Results.css",
       "language": "css",
-      "lines": 251,
-      "size_bytes": 4973,
+      "lines": 261,
+      "size_bytes": 5189,
       "role": "page",
       "purpose": "Results styles: two columns (one under 1024 px), the 112 px Playfair score, summary pill and verdict, the question list with outcome icons, the evidence quote on paper-2 (no side rule), the concept and next-session cards, the message and skeleton states."
     },
     {
       "path": "frontend/src/pages/Results.jsx",
       "language": "jsx",
-      "lines": 230,
-      "size_bytes": 10197,
+      "lines": 247,
+      "size_bytes": 10896,
       "role": "page",
-      "purpose": "Results (handoff screen 08): the score, summary and verdict, a note when answers were not judged confidently; each question with its outcome in words and an icon, the reader's answer (without the '(b) ' the grader reads), the feedback and its quoted passage; concept chips strengthened and to revisit; the next session (planner mode, minutes and reason, or the pace's re-read) with Start next session and the dashboard; from router state after the test (GET /sessions/{id} for the questions) or rebuilt after a refresh from GET /sessions/{id} and GET /books/{id}; skeleton, not-graded and failed (Try again) states."
+      "purpose": "Results (handoff screen 08): the score, summary and verdict, a note when answers were not judged confidently; each question with its outcome in words and an icon, the reader's answer (without the '(b) ' the grader reads), the feedback and its quoted passage; concept chips strengthened and to revisit; the next session (planner mode, minutes and reason, or the pace's re-read) with Start next session and the dashboard; from router state after the test (GET /sessions/{id} for the questions) or rebuilt after a refresh from GET /sessions/{id} and GET /books/{id}; skeleton, not-graded and failed (Try again) states. Motion (moment 5): the score counts up with useCountUp and the chips pop in 60 ms apart under their own AnimatePresence; the final score at once and no movement under reduced motion."
     },
     {
       "path": "frontend/src/reader/BookFlow.jsx",
@@ -2586,7 +2586,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 332,
-      "size_bytes": 92611,
+      "size_bytes": 92855,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

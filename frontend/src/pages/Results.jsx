@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'motion/react';
 import { Check, RotateCcw, Minus, HelpCircle } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { Button } from '../components/ui/Button';
@@ -7,6 +8,7 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { ConceptChip, ConceptChipGroup } from '../components/ui/ConceptChip';
 import { OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { useCountUp } from '../motion/useCountUp';
 import { OUTCOME_LABEL, conceptChips, outcome, splitFeedback, summary, verdict } from '../lib/results';
 import './Results.css';
 
@@ -21,6 +23,18 @@ const NEXT_TITLE = {
 /** A stored multiple-choice question lists its options after the prompt; an answer is "(b) <option>". */
 const promptOf = (q) => (q?.options?.length ? q.question.split('\n')[0] : q?.question);
 const shownAnswer = (answer) => (answer ?? '').replace(/^\([a-h]\)\s+/, '');
+
+/** Moment 5: the score counts up (ease-out cubic over --dur-6; the final figure at once under reduced motion). */
+function Score({ pct }) {
+  const shown = useCountUp(pct);
+  return (
+    <p className="rf-results__score">
+      <span className="rf-results__figure" aria-hidden="true">{Math.round(shown)}</span>
+      <span className="rf-results__pct" aria-hidden="true">%</span>
+      <span className="rf-results__sr">Score: {pct}%</span>
+    </p>
+  );
+}
 
 function ResultsSkeleton() {
   return (
@@ -140,9 +154,7 @@ export function Results() {
       <div className="rf-results__main">
         <h1 className="eyebrow rf-results__eyebrow">Session results</h1>
         <div className="rf-results__headline">
-          <p className="rf-results__score" aria-label={`Score: ${pct}%`}>
-            <span className="rf-results__figure">{pct}</span><span className="rf-results__pct">%</span>
-          </p>
+          <Score pct={pct} />
           <div className="rf-results__verdict">
             {grades.length > 0 && <p className="rf-results__summary">{summary(grades)}</p>}
             <p className="rf-results__line">{verdict(pct)}</p>
@@ -190,17 +202,22 @@ export function Results() {
             {chips.strengthened.length > 0 && (
               <>
                 <h3 className="rf-results__chips-title">Strengthened</h3>
-                <ConceptChipGroup label="Strengthened concepts">
-                  {chips.strengthened.map((c) => <ConceptChip key={c} kind="strengthened" quiet>{c}</ConceptChip>)}
-                </ConceptChipGroup>
+                {/* Its own AnimatePresence: the routes' starts with initial={false}, which would skip the chips' pop. */}
+                <AnimatePresence>
+                  <ConceptChipGroup key="strengthened" label="Strengthened concepts">
+                    {chips.strengthened.map((c) => <ConceptChip key={c} kind="strengthened" quiet>{c}</ConceptChip>)}
+                  </ConceptChipGroup>
+                </AnimatePresence>
               </>
             )}
             {chips.revisit.length > 0 && (
               <>
                 <h3 className="rf-results__chips-title">To revisit</h3>
-                <ConceptChipGroup label="Concepts to revisit">
-                  {chips.revisit.map((c) => <ConceptChip key={c} kind="revisit" quiet>{c}</ConceptChip>)}
-                </ConceptChipGroup>
+                <AnimatePresence>
+                  <ConceptChipGroup key="revisit" label="Concepts to revisit">
+                    {chips.revisit.map((c) => <ConceptChip key={c} kind="revisit" quiet>{c}</ConceptChip>)}
+                  </ConceptChipGroup>
+                </AnimatePresence>
               </>
             )}
           </section>

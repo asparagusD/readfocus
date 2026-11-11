@@ -58,6 +58,13 @@
       "handler": "health_check"
     },
     {
+      "id": "endpoint:GET /lookup",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/lookup",
+      "handler": "look_up"
+    },
+    {
       "id": "endpoint:GET /mastery",
       "type": "endpoint",
       "method": "GET",
@@ -509,6 +516,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/lookup.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/mastery.py",
       "type": "file",
       "role": "router",
@@ -552,6 +565,12 @@
     },
     {
       "id": "file:backend/services/ingestion_worker.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/lookup.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -762,6 +781,12 @@
     },
     {
       "id": "file:backend/tests/test_ingestor.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_lookup.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1841,6 +1866,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/015_term_lookups.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -2006,6 +2037,10 @@
     },
     {
       "id": "table:sessions",
+      "type": "table"
+    },
+    {
+      "id": "table:term_lookups",
       "type": "table"
     },
     {
@@ -2325,6 +2360,11 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/lookup.py",
+      "to": "endpoint:GET /lookup"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/mastery.py",
       "to": "endpoint:GET /mastery"
     },
@@ -2437,6 +2477,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/010_processing_jobs.sql",
       "to": "table:processing_jobs"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/015_term_lookups.sql",
+      "to": "table:term_lookups"
     },
     {
       "type": "graph_edge",
@@ -2832,6 +2877,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/lookup.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/mastery.py"
     },
     {
@@ -2893,6 +2943,16 @@
       "type": "imports",
       "from": "file:backend/routers/dashboard.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/lookup.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/lookup.py",
+      "to": "file:backend/services/lookup.py"
     },
     {
       "type": "imports",
@@ -2987,6 +3047,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/lookup.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -3503,6 +3568,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingestor.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/services/lookup.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -4676,6 +4761,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/lookup.py",
+      "to": "table:term_lookups"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:chunks"
     },
@@ -4918,6 +5008,11 @@
       "type": "writes_table",
       "from": "file:backend/services/ingestion_worker.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/lookup.py",
+      "to": "table:term_lookups"
     },
     {
       "type": "writes_table",

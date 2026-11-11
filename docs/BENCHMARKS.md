@@ -750,6 +750,34 @@ A session is one to four chunks of about 600 words, smaller than this
 fixture. Not measured: a real phone, Firefox or Safari (whose column
 layout differs), books with very long paragraphs.
 
+### C12.6: word and phrase lookup (2026-11-11)
+
+`GET /lookup` through FastAPI's TestClient on this machine, against the
+dev Supabase project and the live Free Dictionary API and Wikipedia
+(scratchpad `lookup_live.py`). "In-process" is a repeat answered by the
+LRU in front of the table; "table" clears that LRU before every call, so
+each repeat reads `term_lookups` on dev. 50 calls each.
+
+| Case | p50 | p95 |
+|---|---|---|
+| Cached, in-process | 2.7 ms | 2.9 ms |
+| Cached, `term_lookups` table only | 96.0 ms | 113.9 ms |
+
+Budget: cached p95 under 150 ms locally (C12.6 prompt). Met by both.
+
+First (uncached) lookups: `serendipity` 984 ms (dictionary), `wandered`
+1,048 ms (dictionary), `Henry David Thoreau` 398 ms and `Mercury` 500 ms
+(Wikipedia, the second a disambiguation page). Single calls: the Free
+Dictionary API answered in 190–1,430 ms and Wikipedia in 380–1,010 ms,
+but **4 of 12 dictionary lookups of made-up words hit the 2.5 s timeout**,
+so an unknown word is sometimes reported as "couldn't look this up"
+rather than "not found" (nothing is cached then).
+
+Memory: importing `backend/services/lookup.py` in a fresh process with
+httpx and the Supabase client already loaded: 55.8 → 57.1 MB RSS (+1.3
+MB). No new dependency (httpx was already pinned). The in-process LRU
+holds at most 2,000 compact answers.
+
 ## Frontend: Lighthouse and image budgets
 
 ### C11.5: image budgets and Lighthouse (2026-11-11)

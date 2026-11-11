@@ -359,3 +359,12 @@ def test_014_adds_reading_progress_position_as_nullable_jsonb():
     sql = sql_without_comments(MIGRATIONS / "014_reading_position.sql")
     assert re.search(r"ALTER\s+TABLE\s+public\.reading_progress\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+position\s+jsonb;", sql)
     assert "NOT NULL" not in sql.upper() and "POLICY" not in sql.upper() and "CREATE TABLE" not in sql.upper()
+
+
+def test_015_creates_a_shared_term_cache_readable_by_signed_in_users_only():
+    sql = sql_without_comments(MIGRATIONS / "015_term_lookups.sql")
+    assert re.search(r"CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+public\.term_lookups", sql)
+    assert re.search(r"PRIMARY\s+KEY\s*\(term,\s*lang\)", sql)
+    assert "ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(r"CREATE\s+POLICY\s+\w+\s+ON\s+public\.term_lookups\s+FOR\s+(\w+)\s+TO\s+(\w+)", sql)
+    assert policies == [("SELECT", "authenticated")]  # no write policy: only the service role writes

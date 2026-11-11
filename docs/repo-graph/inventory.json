@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 347,
-    "inventoried": 284,
+    "tracked": 351,
+    "inventoried": 288,
     "excluded": 63
   },
   "files": [
@@ -313,10 +313,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 69,
-      "size_bytes": 2126,
+      "lines": 70,
+      "size_bytes": 2203,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the six routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
+      "purpose": "FastAPI app: CORS, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -399,6 +399,14 @@
       "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found."
     },
     {
+      "path": "backend/routers/lookup.py",
+      "language": "python",
+      "lines": 28,
+      "size_bytes": 1042,
+      "role": "router",
+      "purpose": "GET /lookup?term=&lang=en&proper=: auth required; normalises the term (422 if it is not a word or a phrase of up to 5 words), applies the per-user rate limit (60 a minute, a friendly 429 with Retry-After) and answers with lookup.look_up's compact payload."
+    },
+    {
       "path": "backend/routers/mastery.py",
       "language": "python",
       "lines": 49,
@@ -461,6 +469,14 @@
       "size_bytes": 2426,
       "role": "service",
       "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time, or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
+    },
+    {
+      "path": "backend/services/lookup.py",
+      "language": "python",
+      "lines": 235,
+      "size_bytes": 9163,
+      "role": "service",
+      "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract; 2.5 s timeout, no retries, a failure is never cached and returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
     },
     {
       "path": "backend/services/processing_jobs.py",
@@ -743,6 +759,14 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_lookup.py",
+      "language": "python",
+      "lines": 236,
+      "size_bytes": 9495,
+      "role": "test",
+      "purpose": "Pytest with httpx.MockTransport and the in-memory database through TestClient: normalisation and base forms, dictionary hit payload and User-Agent, base-form retry, dictionary miss to Wikipedia, proper noun and phrase to Wikipedia, disambiguation, timeout answered gracefully and not cached, cache hit with no request, 90-day and 7-day expiry, a broken cache table, the per-user 429, 422 for non-terms, 401 without a user."
+    },
+    {
       "path": "backend/tests/test_mastery.py",
       "language": "python",
       "lines": 151,
@@ -753,8 +777,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 361,
-      "size_bytes": 14966,
+      "lines": 370,
+      "size_bytes": 15524,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb."
     },
@@ -945,8 +969,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 1793,
-      "size_bytes": 79723,
+      "lines": 1819,
+      "size_bytes": 80842,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -969,8 +993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2105,
-      "size_bytes": 394204,
+      "lines": 2106,
+      "size_bytes": 395195,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2175,6 +2199,14 @@
       "purpose": "Adds reading_progress.position (jsonb, nullable): the reader's place as {chunk_index, block_id, char_offset}. Additive; RLS unchanged."
     },
     {
+      "path": "supabase/migrations/015_term_lookups.sql",
+      "language": "sql",
+      "lines": 40,
+      "size_bytes": 1605,
+      "role": "migration",
+      "purpose": "Creates term_lookups (term, lang primary key; kind, payload jsonb, source, found, fetched_at): a shared, non-personal lookup cache. RLS on: signed-in users may read; no write policy, so only the service role writes. Additive."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -2217,8 +2249,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 286,
-      "size_bytes": 72147,
+      "lines": 290,
+      "size_bytes": 73754,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -2250,7 +2282,7 @@
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
       "lines": 263,
-      "size_bytes": 10920,
+      "size_bytes": 10936,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

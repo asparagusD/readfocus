@@ -228,7 +228,7 @@ def test_real_graph_has_the_schema_and_the_agents():
     graph = build.build_repo()
     tables = {
         "profiles", "books", "chunks", "sessions", "test_results", "reading_progress", "question_bank",
-        "concepts", "user_concept_mastery", "agent_decisions",
+        "concepts", "user_concept_mastery", "agent_decisions", "processing_jobs",
     }
     assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
     # The tooling and its fixtures must not leak into the graph.

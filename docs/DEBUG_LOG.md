@@ -1026,3 +1026,46 @@ fix: 3 of 3 sessions show the stored test.
 
 ### Commit
 fix(api): store a session's test once
+
+## 2026-11-11 C9.1a — repo-graph test does not know processing_jobs
+
+**Status:** fixed
+
+### Symptom
+After adding `supabase/migrations/010_processing_jobs.sql` and running
+`make graph`, the tooling check failed:
+
+    pytest tools/repo_graph/tests -q
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents
+    >       assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
+    E       AssertionError: assert {'table:agent...rofiles', ...} == {'table:agent...on_bank', ...}
+    E         Extra items in the left set:
+    E         'table:processing_jobs'
+    tools\repo_graph\tests\test_build.py:233: AssertionError
+    1 failed, 61 passed
+
+### Repro
+
+    pytest tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents -q
+
+### Hypotheses
+1. The test pins the set of tables defined by the migrations, and 010
+   adds one. Evidence: the only extra item is `table:processing_jobs`;
+   the same failure came with 008 (C7.1) and 009 (C8.6). Ruled out if:
+   the graph shows a table that no migration creates. Result: confirmed,
+   010 creates exactly that table.
+
+### Root cause
+`tools/repo_graph/tests/test_build.py:228` lists the expected tables by
+name; the list did not include the new `processing_jobs`.
+
+### Fix
+Added `processing_jobs` to the expected set. The graph builder is right;
+only the test's expectation was out of date.
+
+### Regression test
+The same test. Failed before the fix (above); passes after: `pytest
+tools/repo_graph/tests -q` 62 passed.
+
+### Commit
+feat(ingest): add processing_jobs and the job service (C9.1a)

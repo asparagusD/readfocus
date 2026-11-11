@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 196,
-    "inventoried": 184,
+    "tracked": 200,
+    "inventoried": 188,
     "excluded": 12
   },
   "files": [
@@ -439,6 +439,14 @@
       "purpose": "The concepts of a book in the concepts table: save upserts one row per (user, book, concept key) for a batch of chunks, keeping the first label, growing chunk_indices and taking the highest weight; concepts_for_chunks reads the concepts some chunks mention; link_key_terms (pure) ties a question's key terms to concept keys."
     },
     {
+      "path": "backend/services/processing_jobs.py",
+      "language": "python",
+      "lines": 100,
+      "size_bytes": 4429,
+      "role": "service",
+      "purpose": "processing_jobs rows for book ingestion: create one queued job per book, the pure claimable rule (done, fresh running, attempt cap), claim with an optimistic update on attempts and updated_at so only one caller runs a job, advance the cursor and progress after each batch, finish, fail, and list stale queued or running jobs for the startup sweep."
+    },
+    {
       "path": "backend/services/question_bank.py",
       "language": "python",
       "lines": 83,
@@ -485,6 +493,14 @@
       "size_bytes": 16853,
       "role": "test",
       "purpose": "Labelled answers for calibrating the grader: 34 cases over five questions, each with question, type, evidence, key terms, an answer, a category (correct, paraphrase, partial, wrong, off-topic, empty, copy of the question) and a hand-given human_score from 0 to 1."
+    },
+    {
+      "path": "backend/tests/memory_db.py",
+      "language": "python",
+      "lines": 119,
+      "size_bytes": 3984,
+      "role": "test",
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, Storage download) for the ingestion and job tests."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -641,10 +657,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 270,
-      "size_bytes": 10630,
+      "lines": 315,
+      "size_bytes": 12783,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index."
     },
     {
       "path": "backend/tests/test_no_paid_ai.py",
@@ -677,6 +693,14 @@
       "size_bytes": 9947,
       "role": "test",
       "purpose": "Pytest on hand-made chunks and concept states: cold start, a finished book, a weak concept brought back with its reason, re-read queue priority, the score formula and its boundaries, difficulty fit, the optimizer's multiplier and minutes, size and duration bounds, question mixes, and that decide is pure."
+    },
+    {
+      "path": "backend/tests/test_processing_jobs.py",
+      "language": "python",
+      "lines": 87,
+      "size_bytes": 3993,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: one queued job per book, the claimable rule at each boundary, a racing second claim gets nothing, advance records cursor and progress, finish and fail, which jobs the sweep sees as stale, and the stale window from INGEST_STALE_MINUTES."
     },
     {
       "path": "backend/tests/test_question_assembler.py",
@@ -778,7 +802,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 1551,
-      "size_bytes": 261358,
+      "size_bytes": 261377,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1375,6 +1399,14 @@
       "purpose": "Adds agent_decisions: one row per node of each agent workflow run (user, book, session, run id, event, step, agent, inputs and output summaries, reason, duration), unique per run and step, indexed by session and by user and book, readable only by its own user under RLS and written by the service role."
     },
     {
+      "path": "supabase/migrations/010_processing_jobs.sql",
+      "language": "sql",
+      "lines": 49,
+      "size_bytes": 2645,
+      "role": "migration",
+      "purpose": "Adds processing_jobs (user, book, kind, status queued/running/done/failed, progress, cursor, error, attempts, updated_at), unique per book and kind, indexed on (status, updated_at) for the sweep and readable only by its own user under RLS; adds a unique index on chunks (book_id, chunk_index) so re-run batches upsert."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -1417,8 +1449,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 186,
-      "size_bytes": 38633,
+      "lines": 190,
+      "size_bytes": 40099,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 445,
-    "inventoried": 380,
+    "tracked": 446,
+    "inventoried": 381,
     "excluded": 65
   },
   "files": [
@@ -81,8 +81,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 206,
-      "size_bytes": 11550,
+      "lines": 208,
+      "size_bytes": 11648,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -105,10 +105,10 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 137,
-      "size_bytes": 7896,
+      "lines": 207,
+      "size_bytes": 9348,
       "role": "doc",
-      "purpose": "Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour."
+      "purpose": "Product overview for 2.0 (C15.4): the honest positioning (policy-driven LangGraph agents, on-device embeddings, rule-based knowledge tracing, no generative AI, $0 API cost), live URL, how it works in seven steps, the architecture in brief with links to docs/ARCHITECTURE.md and the repo graph, local setup, the standard and live checks, and limitations."
     },
     {
       "path": "backend/__init__.py",
@@ -999,6 +999,14 @@
       "purpose": "Claude Design export, kept unchanged: React production build used by the dc-runtime viewer; not used by the app."
     },
     {
+      "path": "docs/ARCHITECTURE.md",
+      "language": "markdown",
+      "lines": 272,
+      "size_bytes": 15614,
+      "role": "doc",
+      "purpose": "Architecture of 2.0 (C15.4): the system, the five agents' pure decide() contracts (inputs, outputs, what each decides), the LangGraph diagram copied from docs/repo-graph/AGENT_GRAPH.md with its routing conditions, event flows per endpoint, ingestion, the data model by migration, the book reader and the word-lookup path, and the security layers."
+    },
+    {
       "path": "docs/ASSETS.md",
       "language": "markdown",
       "lines": 49,
@@ -1009,10 +1017,10 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1087,
-      "size_bytes": 60288,
+      "lines": 1151,
+      "size_bytes": 64081,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
+      "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
@@ -1058,7 +1066,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2682,
-      "size_bytes": 533701,
+      "size_bytes": 535472,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2985,8 +2993,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 382,
-      "size_bytes": 110727,
+      "lines": 383,
+      "size_bytes": 111446,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

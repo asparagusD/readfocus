@@ -970,6 +970,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:docs/ARCHITECTURE.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/ASSETS.md",
       "type": "file",
       "role": "doc",

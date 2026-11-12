@@ -201,6 +201,8 @@ fresh clone has to reinstall them.
 - `docs/DEBUG_LOG.md`: one entry per failure (added in C1.7).
 - `docs/repo-graph/`: generated repo graph (added in C2).
 - `docs/BENCHMARKS.md`: measured numbers with their commands (added in C3.4).
-- `README.md`: product overview. Its architecture, agent and "No Paid AI"
-  sections are current since C8.8; "How It Works" still describes pre-2.0 steps.
+- `README.md`: product overview, how it works, local setup, checks and
+  limitations; rewritten for 2.0 in C15.4.
+- `docs/ARCHITECTURE.md`: agents and their contracts, the agent graph,
+  event flows, data model, reader and word lookup (added in C15.4).
 - `progress.md` (repo root): the pre-2.0 tracker, kept for history only.

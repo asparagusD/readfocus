@@ -299,3 +299,14 @@ OPT_OUTCOME_HISTORY = 15
 # reading_progress.average_score is the mean of this many latest tests (this
 # one included); the value the evaluator used before C8 follow-up.
 ROLLING_AVERAGE_TESTS = 10
+
+# --- Original book files (backend/routers/books.py, C17.1) -------------------
+
+# Bytes of original files a reader may keep on our server (storage_mode
+# 'cloud'); device-only books do not count. Supabase Free storage is shared
+# by every reader, so this is a fairness cap, not a quota we sell.
+MAX_SHELF_BYTES_PER_USER = 300 * 1024 * 1024
+# One upload is read into memory on Render Free, so it stops here.
+MAX_BOOK_FILE_BYTES = 50 * 1024 * 1024
+# Lifetime of the signed URL GET /books/{id}/file returns.
+BOOK_FILE_URL_SECONDS = 300

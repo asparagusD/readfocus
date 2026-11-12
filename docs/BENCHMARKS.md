@@ -906,6 +906,114 @@ holds at most 2,000 compact answers.
 
 ## Frontend: Lighthouse and image budgets
 
+### C17.5: page turns on the original view (2026-11-12)
+
+`e2e/reader.spec.js` "page-turn frame rate", Playwright on Edge against the
+production build (`vite preview`), 1440 x 900, API mocked: four turns
+(two forward, two back, 800 ms apart) with the leaf animation, frames
+sampled with requestAnimationFrame; written to
+`frontend/test-results/reader-benchmarks-{pdf,epub}.json`.
+
+| Book | fps | worst frame | frames over 33 ms |
+|---|---|---|---|
+| `sample.pdf` (6 pages) | 75 | 13.7 ms | 0 |
+| `reflow.epub` (4 sections, 9 images) | 75 | 13.8 ms | 0 |
+
+A cached word's card opens within 600 ms of the pointer reaching the word
+on both (asserted, not recorded). Not measured: the 4x CPU throttle run of
+C12, a long PDF's text search for today's chunks, phones.
+
+### C17.3: EPUB renderer (2026-11-12)
+
+foliate-js vendored at `78914aef4466` (MIT; decision D-C17.3 in
+`docs/DECISIONS.md`) and `dompurify@3.4.17` (MPL-2.0 or Apache-2.0).
+Minified + `gzip -9`: foliate-js for a reflowable EPUB 37.2 KB (view, CFI,
+progress and overlayer 8.2, EPUB parser 8.1, paginator 7.1, zip 13.8;
+fixed layout +2.4), bundled with rolldown in the evaluation; DOMPurify
+`purify.min.js` 29,828 B raw, 11,757 B gzip. As with PDF.js, the production
+build has no EPUB chunk yet (only the dev gallery imports the renderer;
+`grep` finds neither in `dist/assets/*.js`).
+
+Checks: `/__epub` on the Vite dev server, Microsoft Edge through
+Playwright, on the generated fixtures (`tools/make_reader_fixtures.py`).
+Script in the scratchpad, not committed. Every image shown on any page is
+fetched and hashed (SHA-256) and matched against the package's image files.
+
+| Check | Result |
+|---|---|
+| `reflow.epub` images: packaged vs shown, 1440 px, DPR 1 (two pages side by side) | 9 packaged, 8 shown: `wide-2x.png` is the `srcset` 2x candidate of `wide.png`, so a DPR 1 screen shows `wide.png` |
+| Same, 800 px, DPR 2 (one page) | 9 packaged, 8 shown: `wide-2x.png` instead of `wide.png` |
+| `diagram.svg` | shown at 400 x 200 with its shapes; its bytes differ from the package because foliate loads SVG files as text and our sanitizer re-serialises them (no script inside) |
+| Kinds covered | `<img>` PNG and GIF, `<img>` of an SVG, inline `<svg>` `<image>` by `xlink:href` and by SVG 2 `href`, a CSS background, a `<figure>` with `<figcaption>`, a `srcset`, the cover |
+| Figure and caption | same column (left 77 px both), caption 7 px under the image; the image has `width="1200" height="800"` from its header before it decodes |
+| MathML | `<math>` is a `MathMLElement`, 53 px high; its `<mfrac>` 33 px |
+| Code | `<pre><code>` text identical to the source, indentation kept (`white-space: pre-wrap`) |
+| `fixed.epub` | both pages' images shown; page one alone on the right of the first spread, frame 535 x 713 |
+| `hostile.epub` | no script ran (top window and section), 0 scripts, 0 event handlers, 0 iframe/form/input/object/embed, 0 `javascript:` links, 0 `http-equiv` metas, 0 references to `example.invalid` left, the local image shown, no request off `localhost` |
+| CSP backstop (`vite preview` of the production build, a blob: iframe with an inline script, an `onerror` handler, a remote image and a remote background) | script and handler did not run; 4 CSP violations reported; the remote loads refused |
+| Style switch | Publisher: `Georgia, serif` (the book's CSS); ReadFocus: `"ReadFocus Lora", Georgia, serif` at 18 px, the font loaded inside the section |
+| CFI | a location's CFI, after going elsewhere, `goTo` it: the same CFI back |
+| Page turn (call to `relocate`) | 300 to 306 ms with foliate's slide animation (that is its duration); 0 to 1 ms with reduced motion |
+| JS heap (`performance.memory`) before and after paging the whole fixture | 18.9 to 22.7 MB (DPR 1), 18.8 to 22.9 MB (DPR 2) |
+
+Images load per section (foliate) and, inside a section, with
+`loading="lazy"` and `decoding="async"`, so the browser decodes the ones
+near the visible page; this was not measured page by page. Not measured: a
+real publisher EPUB, a phone, a production build of the renderer.
+
+### C17.2: PDF.js renderer (2026-11-12)
+
+`pdfjs-dist@6.4.299` (Apache-2.0, checked in the installed `package.json`
+and `LICENSE`; released 2026-10-03; its only optional dependency,
+`@napi-rs/canvas`, is for Node and is never bundled). Sizes of the files
+the browser loads, `gzip -9`:
+
+| File | Raw | Gzip | Loaded |
+|---|---|---|---|
+| `build/pdf.min.mjs` (library) | 458,904 B | 131,443 B | when a PDF opens |
+| `build/pdf.worker.min.mjs` (worker) | 1,264,342 B | 374,642 B | when a PDF opens |
+| `/pdfjs/wasm/*.wasm` (JPEG 2000, JBIG2, colour) and `/pdfjs/standard_fonts/*` | 1,249,437 B together | n/a | only when a page needs one |
+
+A production build has **no** PDF.js chunk yet: only the dev gallery
+(`/__pdf`) imports the renderer, and `grep -l "GlobalWorkerOptions\|pdfjs"
+dist/assets/*.js` finds nothing, so the first-load bundle is unchanged. The
+chunk sizes in the build are measured when the reader imports it (C17.4/5).
+`dist/pdfjs/` (1.4 MB with licences) is copied into every build and fetched
+on demand only. `quickjs-eval` (JavaScript inside PDFs) and the JS decoder
+fallbacks are not served.
+
+Timing: `/__pdf` on the Vite dev server (unminified app code; the worker is
+the minified file), Microsoft Edge through Playwright, 1440 x 1100, on the
+593-page "Digital Design And Computer Architecture" PDF (5,073,556 B) from a
+Supabase Storage signed URL, opening at page 40. Script in the scratchpad,
+not committed.
+
+| Measure | Result | Target |
+|---|---|---|
+| First page shown (canvas and text layer), new browser context each run | run 1: 3,135 ms (Vite still compiling `pdfjs-dist`), 1,312, 1,335 ms; run 2 (final code): 1,994 ms, 1,289, 1,289 ms | < 1.5 s |
+| First page, same context again (HTTP cache warm), DPR 2 | run 1: 1,276, 846 ms; run 2: 1,333, 854 ms | |
+| Signing the URL (`create_signed_url`, what `GET /books/{id}/file` calls), 6 calls from this machine | 180, 109, 112, 126, 105, 103 ms | |
+| Page turn, page already in the ±2 cache, DPR 2 (click to text layer rendered) | run 1: 7, 6, 4, 4, 4 ms; run 2: 8, 7, 5, 4, 3 ms | < 200 ms |
+
+The first new context of each run is the slowest (3.1 s and 2.0 s, over
+the target): the dev server's first transform and a cold connection to
+Storage; later contexts land at about 1.3 s.
+
+In the gallery the source is ready at once. For a book, `usePdfDocument`
+starts loading PDF.js and asks `GET /books/{id}/file` at the same moment,
+so the signing time overlaps the library download instead of adding to it;
+added in full it would make a cold first page 1.42 to 1.52 s, at the 1.5 s
+target rather than clearly under it. The endpoint was not timed through
+the backend (it needs a signed-in reader); its select and auth add to the
+signing time above. Not measured: a production build, a
+phone, Render's region.
+
+Checked by eye (screenshots): a selected line's highlight sits on its glyphs
+at 100 % (span 288.1 x 13.3 px) and 200 % (576.2 x 26.7 px, exactly double);
+the cover (raster), a photograph page (p. 31) and a vector figure with
+hatching (p. 52, Figure 1.29) render complete. The canvas is 1535 x 1728 at
+DPR 2 for a 767 px wide page. No pixel comparison with a second renderer.
+
 ### C13 close: every page (2026-11-11)
 
 Lighthouse 12.8.2 through its Node API on an Edge 157 headless page

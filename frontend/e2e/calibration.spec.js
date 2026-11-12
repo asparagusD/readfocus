@@ -28,7 +28,7 @@ test('the pace check: intro, passage, then the posted pace and today’s reading
   await expect(page.getByText(/^Reading is a complex cognitive process/)).toBeVisible();
   if (shots) await page.screenshot({ path: `${shots}/calibrate-passage-1440.png` });
   await page.getByRole('button', { name: 'I’ve finished reading' }).click();
-  await page.locator('.rf-viewport .rf-flow p').first().waitFor();
+  await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor();
   expect(posted).toHaveLength(1);
   expect(posted[0].wpm).toBeGreaterThanOrEqual(50);
   expect(posted[0].wpm).toBeLessThanOrEqual(1000);
@@ -42,7 +42,7 @@ test('a failed save says so in a toast, with no native dialog, and the session g
   await page.getByRole('button', { name: 'Start reading' }).click();
   await page.getByRole('button', { name: 'I’ve finished reading' }).click();
   await expect(page.getByText(/We couldn’t save your reading pace \(Profile store is down\), so we’ll plan at 200 words a minute for now\./)).toBeVisible();
-  await page.locator('.rf-viewport .rf-flow p').first().waitFor();
+  await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor();
   expect(dialogs).toBe(0);
 });
 

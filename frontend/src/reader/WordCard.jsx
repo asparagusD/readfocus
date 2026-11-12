@@ -3,6 +3,7 @@ import { autoUpdate, flip, FloatingPortal, inline, offset, shift, useFloating } 
 import { ArrowUpRight, X } from 'lucide-react';
 import { cardContent } from './lookup';
 import { sheetDrag } from './longPress';
+import { outerBox } from './highlight';
 import './WordCard.css';
 
 /** Swipe down to close (C12.9): the sheet follows the finger down and closes past the threshold. */
@@ -50,11 +51,7 @@ export function WordCard({ card, cardRef, onClose }) {
   });
   const { range } = card.target;
   useLayoutEffect(() => {
-    refs.setPositionReference({
-      getBoundingClientRect: () => range.getBoundingClientRect(),
-      getClientRects: () => range.getClientRects(),
-      contextElement: range.startContainer.parentElement ?? undefined,
-    });
+    refs.setPositionReference(outerBox(range)); // beside the word, in this page even when it is in a section's iframe
   }, [refs, range]);
   // Only a card asked for from the keyboard takes focus. The portal mounts a frame late, so focus
   // is moved when the element arrives (the ref is re-attached when byKey changes).

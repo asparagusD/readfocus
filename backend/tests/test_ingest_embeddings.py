@@ -258,9 +258,9 @@ def test_a_book_without_chapters_gets_an_empty_toc(env):
 
 
 def test_no_structure_never_fails_the_job(env, monkeypatch):
-    monkeypatch.setattr(book_ingestor.book_structure, "build", lambda *args: (None, None))
+    monkeypatch.setattr(book_ingestor.book_structure, "build_with_paths", lambda *args: (None, None, None))
     assert run(env["book"](3), b"%PDF")["status"] == "ready"
-    assert all(c["blocks"] is None for c in env["db"].tables["chunks"])
+    assert all(c["blocks"] is None and c["block_paths"] is None for c in env["db"].tables["chunks"])
     assert env["db"].tables["books"][0].get("toc") is None and jobs.get(BOOK)["status"] == "done"
 
 

@@ -227,7 +227,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         chunks = chunk_text(extract(book["file_type"], file_bytes), TARGET_WORDS)
         total, words = len(chunks), sum(len(c.split()) for c in chunks)
         # Reader structure beside the unchanged content (C12.1); (None, None) if it cannot be built.
-        blocks, toc = await asyncio.to_thread(book_structure.build, book["file_type"], file_bytes, chunks)
+        # C17.6: each EPUB block's spine index and element path, and the book's own contents.
+        blocks, toc, paths = await asyncio.to_thread(book_structure.build_with_paths, book["file_type"], file_bytes, chunks)
         for start, end in batches(total, job["cursor"]):
             batch = chunks[start:end]
             vectors = await asyncio.to_thread(embedder.embed, batch)
@@ -235,6 +236,7 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
                 {"book_id": book_id, "user_id": user_id, "chunk_index": start + offset,
                  "word_count": len(chunk.split()), "content": chunk,
                  "blocks": blocks[start + offset] if blocks else None,
+                 "block_paths": paths[start + offset] if paths else None,
                  "embedding_local": [float(value) for value in vectors[offset]]}
                 for offset, chunk in enumerate(batch)
             ], on_conflict="book_id,chunk_index").execute()

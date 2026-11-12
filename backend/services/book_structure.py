@@ -15,9 +15,18 @@ ordered list of {id, type, text, marks} per chunk, and the book gets
   (wrapped lines joined, hyphenation mended, page numbers dropped) and
   chapter headings are guessed from short lines.
 
-Pure apart from parsing the file; `build` never raises.
+C17.6 (docs/ANCHORS.md A6): `build_with_paths` also gives each EPUB block its
+spine index and element path ("/4/2": the CFI steps from the document's root
+to the block's element), stored in `chunks.block_paths` beside the unchanged
+blocks, so a CFI maps to a block (`block_for_cfi`); and `books.toc` comes from
+the book's own contents when it has them: the PDF outline ({title, page}) or
+the EPUB nav ({title, href, spine_index}), each with the chunk_index and
+block_id it starts in. Without them the chapter blocks stay the contents.
+
+Pure apart from parsing the file; `build` and `build_with_paths` never raise.
 """
 
+import io
 import os
 import re
 import statistics
@@ -74,29 +83,37 @@ class _Run:
                     self.marks.append({"start": start, "end": len(self.text), "kind": kind})
 
 
-def xhtml_blocks(markup) -> list[dict]:
-    """Blocks of one XHTML body, each with a heading `level` (None for other types)."""
+def xhtml_blocks(markup, root_path: list[int] | None = None) -> list[dict]:
+    """Blocks of one XHTML body, each with a heading `level` (None for other types).
+
+    With `root_path` (the body's CFI steps, C17.6) each block also gets `path`, the CFI
+    steps of the element it came from: every child element counts, as in the document.
+    """
     from bs4 import BeautifulSoup
     from bs4.element import CData, NavigableString, Tag
 
     out, run = [], [_Run()]
 
-    def flush(kind, level):
+    def flush(kind, level, path):
         if run[0].text:
             out.append({"type": kind, "level": level, "text": run[0].text,
-                        "marks": sorted(run[0].marks, key=lambda m: (m["start"], m["kind"]))})
+                        "marks": sorted(run[0].marks, key=lambda m: (m["start"], m["kind"])),
+                        **({"path": "".join(f"/{step}" for step in path)} if root_path is not None else {})})
         run[0] = _Run()
 
-    def walk(node, kind, level, kinds):
+    def walk(node, kind, level, kinds, block_path, steps):
+        seen = 0
         for child in node.children:
             if isinstance(child, Tag):
+                seen += 1
+                child_steps = [*steps, 2 * seen]
                 name = child.name.lower()
                 if name in SKIP_TAGS:
                     continue
                 if name == "br":
                     run[0].add(" ", kinds)
                 elif name in BLOCK_TAGS:
-                    flush(kind, level)
+                    flush(kind, level, block_path)
                     inner, inner_level = kind, level
                     if name in HEADINGS:
                         inner, inner_level = "heading", HEADINGS[name]
@@ -104,36 +121,56 @@ def xhtml_blocks(markup) -> list[dict]:
                         inner = "list_item"
                     elif name == "blockquote":
                         inner = "quote"
-                    walk(child, inner, inner_level, kinds)
-                    flush(inner, inner_level)
+                    walk(child, inner, inner_level, kinds, child_steps, child_steps)
+                    flush(inner, inner_level, child_steps)
                 else:
-                    walk(child, kind, level, kinds | ({MARK_TAGS[name]} if name in MARK_TAGS else set()))
+                    walk(child, kind, level, kinds | ({MARK_TAGS[name]} if name in MARK_TAGS else set()), block_path, child_steps)
             elif type(child) in (NavigableString, CData):  # what get_text() keeps, nothing else
                 run[0].add(str(child), kinds)
 
-    walk(BeautifulSoup(markup, "html.parser"), "paragraph", None, frozenset())
-    flush("paragraph", None)
+    root = list(root_path or [])
+    walk(BeautifulSoup(markup, "html.parser"), "paragraph", None, frozenset(), root, root)
+    flush("paragraph", None, root)
     return out
 
 
-def epub_documents(file_bytes: bytes) -> list:
-    """Body markup of each EPUB document, in the order `extract_text_from_epub` reads them."""
-    import ebooklib
+def _read_epub(file_bytes: bytes):
     from ebooklib import epub
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".epub") as temp_file:
         temp_file.write(file_bytes)
         path = temp_file.name
     try:
-        book = epub.read_epub(path)
-        return [item.get_body_content() for item in book.get_items() if item.get_type() == ebooklib.ITEM_DOCUMENT]
+        return epub.read_epub(path)
     finally:
         os.remove(path)
 
 
-def epub_blocks(file_bytes: bytes) -> list[dict]:
-    """The book's blocks; the top heading level used more than once is the chapter level."""
-    blocks = [block for markup in epub_documents(file_bytes) for block in xhtml_blocks(markup)]
+def _body_step(item) -> int:
+    """The body's CFI step under the document's root element (4 when <head> comes first)."""
+    from bs4 import BeautifulSoup
+
+    root = BeautifulSoup(item.get_content(), "html.parser").find("html")
+    children = [c.name for c in root.find_all(recursive=False)] if root else []
+    return 2 * (children.index("body") + 1) if "body" in children else 4
+
+
+def epub_documents(file_bytes: bytes, book=None) -> list:
+    """(body markup, spine index or None, body step) of each EPUB document, in the order
+    `extract_text_from_epub` reads them (the package's document order, not the spine's)."""
+    import ebooklib
+
+    book = book or _read_epub(file_bytes)
+    spine = {idref: n for n, (idref, _linear) in enumerate(book.spine)}
+    return [(item.get_body_content(), spine.get(item.get_id()), _body_step(item))
+            for item in book.get_items() if item.get_type() == ebooklib.ITEM_DOCUMENT]
+
+
+def epub_blocks(file_bytes: bytes, book=None) -> list[dict]:
+    """The book's blocks, each with its spine index and element path; the top heading
+    level used more than once is the chapter level."""
+    blocks = [{**block, "spine_index": spine} for markup, spine, body in epub_documents(file_bytes, book)
+              for block in xhtml_blocks(markup, [body])]
     levels = [b["level"] for b in blocks if b["type"] == "heading"]
     repeated = [level for level in set(levels) if levels.count(level) > 1]
     chapter_level = min(repeated or levels or [0])
@@ -176,7 +213,8 @@ def assign(blocks: list[dict], chunks: list[str]):
             if piece is None:
                 piece, (text, marks) = _cut(text, marks, room)
             out[index].append({"type": block["type"], "text": piece[0], "marks": piece[1],
-                               **({"continued": True} if continued else {})})
+                               **({"continued": True} if continued else {}),
+                               **{key: block[key] for key in ("path", "spine_index") if key in block}})
             pos += min(size, room)
             if size <= room:
                 break
@@ -341,23 +379,143 @@ def contents(blocks: list[list[dict]]) -> list[dict]:
     return toc
 
 
-def build(file_type: str, file_bytes: bytes, chunks: list[str]):
-    """(blocks per chunk, toc) for a book's chunks, or (None, None) if anything goes wrong."""
+def _chunk_ends(chunks: list[str]) -> list[int]:
+    ends, total = [], 0
+    for content in chunks:
+        total += len(skeleton(content))
+        ends.append(total)
+    return ends
+
+
+def _block_at(blocks: list[list[dict]], ends: list[int], pos: int):
+    """(chunk_index, block_id) holding non-space character `pos` of the book."""
+    chunk = next((i for i, end in enumerate(ends) if pos < end), len(ends) - 1)
+    seen = ends[chunk - 1] if chunk else 0
+    for block in blocks[chunk]:
+        seen += len(skeleton(block["text"]))
+        if pos < seen:
+            return chunk, block["id"]
+    return chunk, blocks[chunk][-1]["id"] if blocks[chunk] else f"{chunk}.0"
+
+
+def pdf_contents(file_bytes: bytes, blocks: list[list[dict]], chunks: list[str]) -> list[dict]:
+    """The PDF outline as [{title, page, chunk_index, block_id}]; [] when there is none."""
+    from pypdf import PdfReader
+
+    reader = PdfReader(io.BytesIO(file_bytes))
+    starts, total = [], 0  # each page's first non-space character in the joined text
+    for page in reader.pages:
+        starts.append(total)
+        total += len(skeleton((page.extract_text() or "").replace("\x00", "")))
+    ends, out = _chunk_ends(chunks), []
+
+    def walk(items):
+        for item in items:
+            if isinstance(item, list):
+                walk(item)
+                continue
+            try:
+                page = reader.get_destination_page_number(item)
+            except Exception:  # noqa: BLE001, S112 - a broken destination is skipped, as PDF.js skips it
+                continue
+            chunk_index, block_id = _block_at(blocks, ends, min(starts[page], max(ends[-1] - 1, 0)))
+            out.append({"title": str(item.title)[:TITLE_MAX], "page": page + 1, "chunk_index": chunk_index, "block_id": block_id})
+
+    walk(reader.outline or [])
+    return out
+
+
+def epub_contents(book, paths: list[list[dict]]) -> list[dict]:
+    """The EPUB nav (or NCX) as [{title, href, spine_index, chunk_index, block_id}]; [] when there is none.
+    An entry starts at the first block of its section or after it (a cover has no text)."""
+    spine = {item_id: n for n, (item_id, _linear) in enumerate(book.spine)}
+    by_name = {item.file_name: spine.get(item.get_id()) for item in book.get_items()}
+    flat = [(chunk_index, p) for chunk_index, chunk in enumerate(paths) for p in chunk if p["spine_index"] is not None]
+    out = []
+
+    def walk(items):
+        for item in items:
+            if isinstance(item, tuple):  # (Section, [children])
+                walk([item[0], *item[1]])
+                continue
+            href = getattr(item, "href", None)
+            index = by_name.get((href or "").split("#")[0])
+            if index is None:
+                continue
+            first = next(((c, p) for c, p in flat if p["spine_index"] >= index), None)
+            out.append({"title": str(item.title).strip()[:TITLE_MAX], "href": href, "spine_index": index,
+                        "chunk_index": first[0] if first else 0, "block_id": first[1]["block_id"] if first else "0.0"})
+
+    walk(book.toc or [])
+    return out
+
+
+def block_for_cfi(cfi: str, paths: list[list[dict]]):
+    """(chunk_index, block_id) of the block a CFI falls in (A6): the deepest block whose element
+    holds it, else the last block of its section before it, else the section's first; None when
+    the section has no blocks or the CFI does not parse. Mirrors frontend/src/anchors."""
+    match = re.match(r"^epubcfi\((.*)\)$", cfi or "")
+    if not match:
+        return None
+    parent, _, rest = re.sub(r"\[[^\]]*\]", "", match.group(1)).partition(",")
+    spine_path, _, doc_path = parent.partition("!")
     try:
-        blocks = None
+        spine = int(spine_path.split("/")[-1]) // 2 - 1
+        at = [int(s) for s in (doc_path + rest.split(",")[0]).split(":")[0].split("/") if s]
+    except ValueError:
+        return None
+    section = [(c, p) for c, chunk in enumerate(paths) for p in chunk if p["spine_index"] == spine]
+    if not section:
+        return None
+
+    def steps(p):
+        return [int(s) for s in p["path"].split("/") if s]
+
+    holding = [(c, p) for c, p in section if steps(p) == at[:len(steps(p))]]
+    if holding:
+        c, p = max(holding, key=lambda cp: len(steps(cp[1])))
+    else:
+        earlier = [(c, p) for c, p in section if steps(p) <= at]
+        c, p = earlier[-1] if earlier else section[0]
+    return c, p["block_id"]
+
+
+def build_with_paths(file_type: str, file_bytes: bytes, chunks: list[str]):
+    """(blocks per chunk, toc, block paths per chunk or None); (None, None, None) if anything goes wrong."""
+    try:
+        blocks, book = None, None
         if file_type.lower() == "epub":
             try:
-                blocks = assign(epub_blocks(file_bytes), chunks)
+                book = _read_epub(file_bytes)
+                blocks = assign(epub_blocks(file_bytes, book), chunks)
             except Exception as e:  # noqa: BLE001 - an EPUB we cannot walk still gets text blocks
                 print(f"EPUB structure not read: {e}")
         if blocks is None:
-            blocks, book = [], {"heads": running_heads(chunks), "seen": set()}
+            blocks, heads = [], {"heads": running_heads(chunks), "seen": set()}
             for content in chunks:
-                blocks.append(text_blocks(content, blocks[-1][-1] if blocks and blocks[-1] else None, book))
+                blocks.append(text_blocks(content, blocks[-1][-1] if blocks and blocks[-1] else None, heads))
+        paths = None
         for chunk_index, chunk in enumerate(blocks):
             for n, block in enumerate(chunk):
                 chunk[n] = {"id": f"{chunk_index}.{n}", **block}
-        return blocks, contents(blocks)
+        if any("path" in block for chunk in blocks for block in chunk):
+            paths = [[{"block_id": b["id"], "spine_index": b.pop("spine_index", None), "path": b.pop("path", None)}
+                      for b in chunk] for chunk in blocks]
+        toc = []
+        try:
+            if file_type.lower() == "pdf":
+                toc = pdf_contents(file_bytes, blocks, chunks)
+            elif book is not None and paths:
+                toc = epub_contents(book, paths)
+        except Exception as e:  # noqa: BLE001 - the chapter contents stand in
+            print(f"Book contents not read: {e}")
+        return blocks, toc or contents(blocks), paths
     except Exception as e:  # noqa: BLE001 - structure is for display; ingestion must not fail on it
         print(f"Book structure not built: {e}")
-        return None, None
+        return None, None, None
+
+
+def build(file_type: str, file_bytes: bytes, chunks: list[str]):
+    """(blocks per chunk, toc) for a book's chunks, or (None, None) if anything goes wrong."""
+    blocks, toc, _paths = build_with_paths(file_type, file_bytes, chunks)
+    return blocks, toc

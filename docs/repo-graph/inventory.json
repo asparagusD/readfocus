@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 530,
-    "inventoried": 390,
-    "excluded": 140
+    "tracked": 590,
+    "inventoried": 449,
+    "excluded": 141
   },
   "files": [
     {
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13324,
+      "size_bytes": 13699,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,10 +249,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 301,
-      "size_bytes": 11904,
+      "lines": 312,
+      "size_bytes": 12439,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -409,10 +409,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 179,
-      "size_bytes": 8168,
+      "lines": 244,
+      "size_bytes": 11628,
       "role": "router",
-      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
+      "purpose": "Book endpoints: upload (read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -441,10 +441,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 351,
-      "size_bytes": 17727,
+      "lines": 377,
+      "size_bytes": 19205,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author and toc and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -457,18 +457,18 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 259,
-      "size_bytes": 11579,
+      "lines": 261,
+      "size_bytes": 11765,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc."
     },
     {
       "path": "backend/services/book_structure.py",
       "language": "python",
-      "lines": 363,
-      "size_bytes": 16307,
+      "lines": 521,
+      "size_bytes": 23751,
       "role": "service",
-      "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure apart from parsing the file: EPUB documents (in ingestion's order) walked into chapter, heading, paragraph, quote and list_item blocks with em and strong marks, plain text only, the top repeated heading level as chapters, then cut at the chunk boundaries by counting non-space characters (a text mismatch falls back to text blocks); PDF and fallback text rebuilt into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, page and chunk breaks continued) with chapter headings guessed from short lines (\"Chapter N\", standard Roman numerals under 100, Latin ALL CAPS followed by prose), running heads found across the book dropped from the text (the first one naming an unseen chapter becomes it), each chapter listed once; blocks are {id, type, text, marks[, continued]}; the toc lists chapter blocks; build never raises. chunks.content is untouched."
+      "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure apart from parsing the file: EPUB documents (in ingestion's order) walked into chapter, heading, paragraph, quote and list_item blocks with em and strong marks, plain text only, the top repeated heading level as chapters, then cut at the chunk boundaries by counting non-space characters (a text mismatch falls back to text blocks); PDF and fallback text rebuilt into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, page and chunk breaks continued) with chapter headings guessed from short lines (\"Chapter N\", standard Roman numerals under 100, Latin ALL CAPS followed by prose), running heads found across the book dropped from the text (the first one naming an unseen chapter becomes it), each chapter listed once; blocks are {id, type, text, marks[, continued]}; the toc lists chapter blocks; build never raises. chunks.content is untouched. C17.6: build_with_paths also gives each EPUB block its spine index and element path (chunks.block_paths, blocks unchanged), block_for_cfi, and books.toc from the PDF outline (title, page) or the EPUB nav (title, href, spine_index), each with its chunk_index and block_id; the chapter blocks remain the contents without them."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -561,8 +561,8 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 140,
-      "size_bytes": 4963,
+      "lines": 145,
+      "size_bytes": 5232,
       "role": "test",
       "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
     },
@@ -593,8 +593,8 @@
     {
       "path": "backend/tests/test_api_books_list.py",
       "language": "python",
-      "lines": 67,
-      "size_bytes": 3110,
+      "lines": 68,
+      "size_bytes": 3215,
       "role": "test",
       "purpose": "GET /books (C13.3a) on the in-memory database: only the caller's books, the old fields plus cover_url and progress, progress the caller's own and null before a first session, the selected columns, an empty shelf."
     },
@@ -625,10 +625,10 @@
     {
       "path": "backend/tests/test_api_position.py",
       "language": "python",
-      "lines": 107,
-      "size_bytes": 4834,
+      "lines": 152,
+      "size_bytes": 7407,
       "role": "test",
-      "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start."
+      "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start. C17.5: PDF and EPUB anchors stored as sent and returned, a backfilled place keeps its C12 keys beside its anchor, malformed anchors 422, and start names the book's file format."
     },
     {
       "path": "backend/tests/test_api_sessions.py",
@@ -641,8 +641,8 @@
     {
       "path": "backend/tests/test_api_start_reader.py",
       "language": "python",
-      "lines": 58,
-      "size_bytes": 2641,
+      "lines": 59,
+      "size_bytes": 2760,
       "role": "test",
       "purpose": "Pytest on the in-memory database: /sessions/start sends each chunk's blocks, the book's title, author and contents (an empty list when none), the chapter in effect before the first chunk (from books.toc), copes with a book without toc or blocks, and still starts when the book read fails."
     },
@@ -663,12 +663,28 @@
       "purpose": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development."
     },
     {
+      "path": "backend/tests/test_backfill_book_files.py",
+      "language": "python",
+      "lines": 65,
+      "size_bytes": 2764,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_book_files.py on the in-memory database: pending books (no file_sha256) in id order, hash, size, format and pages stored, format only without a stored file, dry run writes nothing, the dev-only guard."
+    },
+    {
       "path": "backend/tests/test_backfill_covers.py",
       "language": "python",
       "lines": 84,
       "size_bytes": 3430,
       "role": "test",
       "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, the dev-only guard, a failing book not stopping the run, and a book without a readable file looked up by its typed title."
+    },
+    {
+      "path": "backend/tests/test_backfill_positions.py",
+      "language": "python",
+      "lines": 104,
+      "size_bytes": 5481,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_positions.py on the in-memory database and the reader fixture books: pending places, a PDF point on the right page with the C12 keys kept, an EPUB CFI at the right element and offset, CFI steps for elements and text chunks, no stored file or no match left alone, a dry run writes nothing and a second run finds nothing to do. A short block is found with the text after it, not by its chunk's start (C17.6 dry-run regression)."
     },
     {
       "path": "backend/tests/test_backfill_structure.py",
@@ -685,6 +701,22 @@
       "size_bytes": 4401,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+    },
+    {
+      "path": "backend/tests/test_block_paths.py",
+      "language": "python",
+      "lines": 82,
+      "size_bytes": 4375,
+      "role": "test",
+      "purpose": "Pytest on the reader fixture books (C17.6): every EPUB block's spine index and element path in block_paths, a CFI to its block, contents from the EPUB nav and the PDF outline with their chunks and blocks, the chapter contents without an outline, migration 017 additive, ingestion storing block_paths."
+    },
+    {
+      "path": "backend/tests/test_book_files.py",
+      "language": "python",
+      "lines": 115,
+      "size_bytes": 4661,
+      "role": "test",
+      "purpose": "Pytest for C17.1 original files: sha256, size, format and mode stored on upload; the per-reader cap (only the caller's cloud books count, 413 before any storage write); the per-file limit; device-only uploads never stored; signed URL only for the owner, none for device-only books; device-only books cannot be resumed."
     },
     {
       "path": "backend/tests/test_book_structure.py",
@@ -794,9 +826,9 @@
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
       "lines": 274,
-      "size_bytes": 11743,
+      "size_bytes": 11789,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume."
+      "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume. C17.6: no structure leaves block_paths empty too."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
@@ -1049,8 +1081,8 @@
     {
       "path": "docs/ANCHORS.md",
       "language": "markdown",
-      "lines": 119,
-      "size_bytes": 5246,
+      "lines": 130,
+      "size_bytes": 5963,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
     },
@@ -1073,18 +1105,26 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1151,
-      "size_bytes": 64081,
+      "lines": 1259,
+      "size_bytes": 71306,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2461,
-      "size_bytes": 108967,
+      "lines": 2894,
+      "size_bytes": 125391,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "language": "markdown",
+      "lines": 70,
+      "size_bytes": 6220,
+      "role": "doc",
+      "purpose": "Decisions with their evidence, newest first: D-C17.3, foliate-js over epub.js for EPUB (licence, maintenance, size, pagination, spreads, CFI, fixed layout, images, MathML, section documents, scripts), accepted, with how its gaps are covered."
     },
     {
       "path": "docs/DEPLOYMENT.md",
@@ -1137,8 +1177,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3061,
-      "size_bytes": 576386,
+      "lines": 3407,
+      "size_bytes": 638362,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1170,7 +1210,7 @@
       "path": "frontend/e2e/calibration.spec.js",
       "language": "javascript",
       "lines": 60,
-      "size_bytes": 3394,
+      "size_bytes": 3412,
       "role": "config",
       "purpose": "E2E: an uncalibrated reader gets the pace check (intro, passage, one POST with a clamped wpm, then today's reading); a failed save shows a toast and no native dialog; 375 without sideways scroll."
     },
@@ -1193,16 +1233,40 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 162,
-      "size_bytes": 8735,
+      "lines": 217,
+      "size_bytes": 12373,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page; /health answers ready."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/fixed.epub",
+      "language": "text",
+      "lines": 6,
+      "size_bytes": 2685,
+      "role": "config",
+      "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): pre-paginated, two full-page images, viewport metas, rendition:spread auto."
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/hostile.epub",
+      "language": "text",
+      "lines": 9,
+      "size_bytes": 2623,
+      "role": "config",
+      "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): a script, event handlers, a javascript: link, a form, an iframe, a meta refresh, remote images, stylesheets and imports, plus one local image that must still show."
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/reflow.epub",
+      "language": "text",
+      "lines": 20,
+      "size_bytes": 6306,
+      "role": "config",
+      "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): three chapters with every kind of image (img PNG/GIF/SVG, inline SVG image by xlink:href and href, CSS background, figure and caption, srcset, cover), MathML and a code block."
     },
     {
       "path": "frontend/e2e/journey.spec.js",
       "language": "javascript",
       "lines": 229,
-      "size_bytes": 13380,
+      "size_bytes": 13390,
       "role": "config",
       "purpose": "Live Playwright journey (C15.1), not in test:e2e: waits for /health model_ready, signs in as test user A from .env.test, uploads sample.pdf, waits for ready, turns pages (position PUT), opens a word card (real /lookup), takes the test with wrong answers, checks Results, the Dashboard's mastery for the book and that the next session's reason reacts to the test, then removes the book (API delete in finally if not); fails on any host outside the site, the API and the Supabase project."
     },
@@ -1217,8 +1281,8 @@
     {
       "path": "frontend/e2e/library.spec.js",
       "language": "javascript",
-      "lines": 286,
-      "size_bytes": 15956,
+      "lines": 322,
+      "size_bytes": 17950,
       "role": "config",
       "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs."
     },
@@ -1233,18 +1297,18 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 250,
-      "size_bytes": 13711,
+      "lines": 359,
+      "size_bytes": 19204,
       "role": "config",
-      "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a mouse click on the last page's Start test finishing reading (C13.4 regression); a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+      "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books."
     },
     {
       "path": "frontend/e2e/reading.spec.js",
       "language": "javascript",
-      "lines": 91,
-      "size_bytes": 5524,
+      "lines": 97,
+      "size_bytes": 5647,
       "role": "config",
-      "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion; a re-pagination (theme, resize) on the closing page keeps it (C15.1 regression)."
+      "purpose": "Playwright e2e for the reading page's polish (C13.4; on the original view since C17.5), on the PDF and the EPUB: the planner's note over today's first page with its 40 px lamp, hideable; the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test; a theme change or resize keeps the closing page and Home returns to today's start; once: the leave dialog and no pulse under reduced motion."
     },
     {
       "path": "frontend/e2e/results.spec.js",
@@ -1290,9 +1354,9 @@
       "path": "frontend/eslint.config.js",
       "language": "javascript",
       "lines": 27,
-      "size_bytes": 926,
+      "size_bytes": 940,
       "role": "config",
-      "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx."
+      "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx; skips src/vendor (vendored foliate-js)."
     },
     {
       "path": "frontend/gallery.html",
@@ -1313,8 +1377,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 47,
-      "size_bytes": 1521,
+      "lines": 49,
+      "size_bytes": 1577,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -1385,10 +1449,26 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 126,
-      "size_bytes": 5462,
+      "lines": 136,
+      "size_bytes": 6139,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4)."
+    },
+    {
+      "path": "frontend/src/anchors/anchors.test.js",
+      "language": "javascript",
+      "lines": 70,
+      "size_bytes": 4468,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): PDF quads the same at 100% and 200% and drawn back at any zoom, the A1 shapes, CFI parsing, ordering across pages and sections, CFI to block on a figure's paths."
+    },
+    {
+      "path": "frontend/src/anchors/index.js",
+      "language": "javascript",
+      "lines": 113,
+      "size_bytes": 5610,
+      "role": "asset",
+      "purpose": "Anchors (docs/ANCHORS.md, C17.6), no DOM, shared by both renderers: textOf; quadsFromRects (one quad per line in PDF points from the page's top-left, the zoom undone) and rectsFromQuads; pdfAnchor (a point without quads) and epubAnchor; parseCfi (spine index, steps, offset; a range's start) and compareCfi; pdfPosition (A4's integer) and compareAnchors; blockForCfi (a CFI to its C12 block through chunks.block_paths)."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -1799,6 +1879,22 @@
       "purpose": "ToastContext and useToast(), which returns { toast, dismiss } and throws without a ToastProvider."
     },
     {
+      "path": "frontend/src/deploy/csp.js",
+      "language": "javascript",
+      "lines": 49,
+      "size_bytes": 2297,
+      "role": "asset",
+      "purpose": "The app's Content-Security-Policy (C17.3): contentSecurityPolicy builds it from the API and Supabase origins (scripts from self, wasm and hashed inline scripts only; blob: frames, styles and fonts for EPUB pages; no objects); inlineScriptHashes hashes inline scripts as the browser parses them (CRLF to LF)."
+    },
+    {
+      "path": "frontend/src/deploy/csp.test.js",
+      "language": "javascript",
+      "lines": 48,
+      "size_bytes": 2604,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): script-src without unsafe-inline or eval, origins only for API and Supabase (plus wss), blob: frames and workers, object-src none, malformed URLs refused, inline script hashes, CRLF and CR hashed as LF."
+    },
+    {
       "path": "frontend/src/deploy/deployEnv.js",
       "language": "javascript",
       "lines": 54,
@@ -1813,6 +1909,22 @@
       "size_bytes": 3303,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): a complete env passes, missing and malformed variables are named, a secret or service-role key is refused, VITE_SITE_URL only warns, only Vercel builds are checked; vercel.json builds into dist and rewrites app routes but not /assets/ to index.html."
+    },
+    {
+      "path": "frontend/src/gallery/BookGallery.jsx",
+      "language": "jsx",
+      "lines": 40,
+      "size_bytes": 2330,
+      "role": "asset",
+      "purpose": "Dev-only /__book (C17.4): the shared book frame on a fixture (?kind=pdf|epub, ?file=) with the reader toolbar and the original view's controls; window.__book holds the reader, the last place and saved ribbons for the checks."
+    },
+    {
+      "path": "frontend/src/gallery/EpubGallery.jsx",
+      "language": "jsx",
+      "lines": 62,
+      "size_bytes": 3201,
+      "role": "asset",
+      "purpose": "Dev-only /__epub (C17.3): the EPUB renderer on a fixture (?book=reflow|fixed|hostile, served from e2e/fixtures/books by Vite dev) or a chosen file, with Previous/Next, Publisher / ReadFocus style and text size; window.__epub holds the engine and page-turn times for the checks."
     },
     {
       "path": "frontend/src/gallery/Gallery.jsx",
@@ -1839,20 +1951,12 @@
       "purpose": "Dev-only /__illustrations page: the illustration set (now with the candle) in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
     },
     {
-      "path": "frontend/src/gallery/ReaderGallery.css",
-      "language": "css",
-      "lines": 44,
-      "size_bytes": 1065,
-      "role": "asset",
-      "purpose": "Layout styles for the dev-only /__reader page."
-    },
-    {
-      "path": "frontend/src/gallery/ReaderGallery.jsx",
+      "path": "frontend/src/gallery/PdfGallery.jsx",
       "language": "jsx",
-      "lines": 70,
-      "size_bytes": 2937,
+      "lines": 60,
+      "size_bytes": 2713,
       "role": "asset",
-      "purpose": "Dev-only /__reader page: the paginated reader on the Walden fixture with text size, length (1x or 4x) and theme controls, the current anchor and page count, and what a hover or selection would look up (C12.7), with the word card over the real /lookup (C12.8); not in the production build."
+      "purpose": "Dev-only /__pdf (C17.2): the PDF renderer on a chosen file or ?url=, with Previous/Next, 100/150/200 % zoom and ?page=; first-page and page-turn times in window.__pdfTimings for the benchmark."
     },
     {
       "path": "frontend/src/gallery/gallery.css",
@@ -1869,14 +1973,6 @@
       "size_bytes": 462,
       "role": "asset",
       "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery."
-    },
-    {
-      "path": "frontend/src/gallery/readerFixture.js",
-      "language": "javascript",
-      "lines": 39,
-      "size_bytes": 6013,
-      "role": "asset",
-      "purpose": "Dev-only fixture for /__reader: three chunks of blocks in the chunks.blocks shape, from Thoreau's Walden (1854, public domain): two chapter openings, paragraphs with em and strong marks, a quote and list items."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
@@ -2143,6 +2239,254 @@
       "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
     },
     {
+      "path": "frontend/src/originalview/BookLookup.jsx",
+      "language": "jsx",
+      "lines": 41,
+      "size_bytes": 2244,
+      "role": "asset",
+      "purpose": "Word lookup in the original view (C17.5): useWordAtPoint over the book's surfaces, useWordCard, the WordCard and the Look up chip placed in the page beside the word, a polite announcement; closed on a new page and paused while a leaf turns; lookUpSelection and clear on its ref for the frame's Enter, ? and Escape."
+    },
+    {
+      "path": "frontend/src/originalview/Reader.jsx",
+      "language": "jsx",
+      "lines": 303,
+      "size_bytes": 16273,
+      "role": "asset",
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref."
+    },
+    {
+      "path": "frontend/src/originalview/ReaderControls.jsx",
+      "language": "jsx",
+      "lines": 67,
+      "size_bytes": 4256,
+      "role": "asset",
+      "purpose": "The original view's toolbar controls (C17.4): PDF zoom out, level (fit page / fit width) and in; EPUB smaller and larger text, line spacing, margins and Publisher / ReadFocus style; in lamplight the per-book Original colours switch."
+    },
+    {
+      "path": "frontend/src/originalview/bookFile.js",
+      "language": "javascript",
+      "lines": 9,
+      "size_bytes": 391,
+      "role": "asset",
+      "purpose": "fromBook(bookId) for both renderers (C17.3): the book's original file from this device's copy (IndexedDB) or the signed URL from GET /books/{id}/file."
+    },
+    {
+      "path": "frontend/src/originalview/documentSource.js",
+      "language": "javascript",
+      "lines": 12,
+      "size_bytes": 646,
+      "role": "asset",
+      "purpose": "Where a book's original file comes from (C17.2, shared with EPUB in C17.3): bookSource gives this device's copy as { data }, else the signed URL as { url } (byte ranges for PDF.js)."
+    },
+    {
+      "path": "frontend/src/originalview/documentSource.test.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1200,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the device copy first without asking the server, the signed URL otherwise, the server's message for a device-only book with no copy here."
+    },
+    {
+      "path": "frontend/src/originalview/epub/EpubBook.jsx",
+      "language": "jsx",
+      "lines": 120,
+      "size_bytes": 5717,
+      "role": "asset",
+      "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint."
+    },
+    {
+      "path": "frontend/src/originalview/epub/EpubView.jsx",
+      "language": "jsx",
+      "lines": 61,
+      "size_bytes": 2973,
+      "role": "asset",
+      "purpose": "An EPUB as published (C17.3): opens the book's file through engine.js into the box it fills (spread from 1024 px, one page below, fixed layout page by page); style prop 'publisher' or 'readfocus' with font size; ref gives next, prev, goTo, contents. C17.4: line height, margins, theme CSS, animated, wide and onError props; goToFraction, locations, lastLocation and toc on the ref. C17.5: find, goToChar, sectionOf and pointCfi on the ref."
+    },
+    {
+      "path": "frontend/src/originalview/epub/engine.js",
+      "language": "javascript",
+      "lines": 241,
+      "size_bytes": 11230,
+      "role": "asset",
+      "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made). C17.4: text size and line height in both styles, margins, theme CSS, animated off for the frame, wide from the frame, goToFraction, locations (character counts, cached per book), charStart and charEnd on relocate. C17.5: find(snippets) over each section's packaged text (squeezed, cached), goToChar({index, char}) in the shown section, sectionOf(href), pointCfi (a collapsed CFI); rangeAtChar exported. C17.6: cfiFor(doc, range), pointAt(index, char), goToPoint(cfi) aimed at the point's character."
+    },
+    {
+      "path": "frontend/src/originalview/epub/epub.css",
+      "language": "css",
+      "lines": 22,
+      "size_bytes": 443,
+      "role": "asset",
+      "purpose": "The EPUB box (C17.3): fills its parent on --page with --ink; the error line in --warn."
+    },
+    {
+      "path": "frontend/src/originalview/epub/imageSize.js",
+      "language": "javascript",
+      "lines": 61,
+      "size_bytes": 2879,
+      "role": "asset",
+      "purpose": "An image's natural size from its first bytes (C17.3): PNG, GIF, JPEG (SOF segments), WebP (VP8, VP8L, VP8X) and SVG (width/height, else viewBox); null otherwise."
+    },
+    {
+      "path": "frontend/src/originalview/epub/imageSize.test.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 2319,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): PNG, GIF, JPEG after other segments, WebP lossy and extended, SVG attributes and viewBox, unknown and truncated input."
+    },
+    {
+      "path": "frontend/src/originalview/epub/sanitize.js",
+      "language": "javascript",
+      "lines": 100,
+      "size_bytes": 5038,
+      "role": "asset",
+      "purpose": "Cleans an EPUB section before it renders (C17.3): DOMPurify in place on the parsed XHTML, HTML or SVG (no scripts, handlers, forms, iframes, objects, media, or URLs leaving the book; metas cut to viewport), CSS and srcset cleaned, SVG 2 image href loaded from the package, width and height from each image's header, lazy loading; BOOK_CSS keeps figures whole and images in proportion."
+    },
+    {
+      "path": "frontend/src/originalview/epub/urls.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 1972,
+      "role": "asset",
+      "purpose": "What an EPUB page may point at (C17.3): isAllowedUrl (blob:, data:image, #fragments and relative paths only, control characters ignored), cleanCss (remote @import and url() removed, expression() disabled), cleanSrcset."
+    },
+    {
+      "path": "frontend/src/originalview/epub/urls.test.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 2031,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): allowed and refused URLs (http, protocol-relative, javascript with tabs, data:text, file, vbscript), CSS imports and url() kept or removed, expression(), srcset."
+    },
+    {
+      "path": "frontend/src/originalview/frame.css",
+      "language": "css",
+      "lines": 423,
+      "size_bytes": 13101,
+      "role": "asset",
+      "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion. C17.5: the note card over the foot of today's first page, the closing page over the book with its lamp's single pulse, and the blank page over the renderer while a session opens. C17.5: the lookup mark (::highlight rf-lookup) and no iOS callout on a held word."
+    },
+    {
+      "path": "frontend/src/originalview/frame.js",
+      "language": "javascript",
+      "lines": 114,
+      "size_bytes": 5312,
+      "role": "asset",
+      "purpose": "The book frame's rules (C17.4), no DOM: PDF spreads (page 1 alone, then even-left pairs) and turns, zoom scale (fit-page, fit-width, 125-200 % of printed size) and steps, PDF folios with page labels, EPUB stable location numbers from character counts (buildLocations, locationAt), the key map, the contents entry for a page, lamplight CSS for EPUB that never touches images, and timeAtProgress for the leaf."
+    },
+    {
+      "path": "frontend/src/originalview/frame.test.js",
+      "language": "javascript",
+      "lines": 100,
+      "size_bytes": 4955,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): spreads and turns at the ends, zoom scale and steps, PDF folios with labels, EPUB locations, keys (modifiers left to the browser), contents entry, lamplight CSS without filters, the leaf's edge time."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/PdfBook.jsx",
+      "language": "jsx",
+      "lines": 167,
+      "size_bytes": 8158,
+      "role": "asset",
+      "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/PdfPage.jsx",
+      "language": "jsx",
+      "lines": 48,
+      "size_bytes": 2132,
+      "role": "asset",
+      "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen. C17.4: a side for spreads. C17.6: data-page and data-scale (CSS px per point) for anchors."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/pageCache.js",
+      "language": "javascript",
+      "lines": 61,
+      "size_bytes": 2272,
+      "role": "asset",
+      "purpose": "Rendered-page cache (C17.2), no PDF.js or DOM: pageWindow (current ±radius, clamped), createPageCache with focus (render the window nearest-first, release the rest), get, clear and held; a page dropped while rendering is released when it finishes."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/pageCache.test.js",
+      "language": "javascript",
+      "lines": 90,
+      "size_bytes": 3031,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the window at the ends of a book, nearest-first rendering and reuse, the page that leaves the window released, a jump, on-demand pages released at the next focus, clear, a page released mid-render."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/pdf.css",
+      "language": "css",
+      "lines": 84,
+      "size_bytes": 2088,
+      "role": "asset",
+      "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour. C17.4: the page paper follows --rf-pdf-paper (lamplight)."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/pdfjs.js",
+      "language": "javascript",
+      "lines": 83,
+      "size_bytes": 3648,
+      "role": "asset",
+      "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed). C17.4: renderPage recolours for lamplight (an alpha context, recorded image positions) and pdfOutline flattens the outline to pages."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/recolour.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2973,
+      "role": "asset",
+      "purpose": "Lamplight for a PDF page (C17.4) without touching images or coloured figures: hexRgb, recolourPixels (near-grey pixels remapped by luminance), imageRects (from PDF.js's recorded image corners), recolourCanvas (recolour, then put every image back)."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/recolour.test.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 1788,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): hex parsing, paper and ink remapped, greys mixed with alpha kept, coloured strokes untouched, image rectangles from corner points."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/usePdfDocument.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2448,
+      "role": "asset",
+      "purpose": "React hooks (C17.2): usePdfDocument(bookId, load) opens the book's PDF (loading PDF.js while the source is fetched) and destroys it on unmount; usePageCache(doc, scale, current) keeps current ±2 pages rendered and starts afresh on a new scale or pixel ratio. C17.4: the page cache starts afresh on new lamplight colours."
+    },
+    {
+      "path": "frontend/src/originalview/today.js",
+      "language": "javascript",
+      "lines": 55,
+      "size_bytes": 2653,
+      "role": "asset",
+      "purpose": "Today's reading inside a whole book (C17.5), no DOM: squeeze (lower case, no whitespace) and snippetsFor (a chunk's first 40 and 20 characters), compare locations ({pdf, page} or {epub, index, char}), a place's start and end, reached, shows and beyond for today's start and end, chunkAt for the chunk shown, folioShort for the ribbon's toast."
+    },
+    {
+      "path": "frontend/src/originalview/today.test.js",
+      "language": "javascript",
+      "lines": 54,
+      "size_bytes": 2766,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): squeezed snippets, location order, today's end reached or shown, pages beyond today, the chunk shown, the ribbon's short folio."
+    },
+    {
+      "path": "frontend/src/originalview/useBoxSize.js",
+      "language": "javascript",
+      "lines": 19,
+      "size_bytes": 681,
+      "role": "asset",
+      "purpose": "useBoxSize(ref): an element's rounded client size, kept current by a ResizeObserver (C17.4)."
+    },
+    {
+      "path": "frontend/src/originalview/useLamplight.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2893,
+      "role": "asset",
+      "purpose": "Theme hooks (C17.4): useTheme (theme and accent on <html>), useOriginalColours (per-book choice in localStorage, shared between hook users by an event), useLamplight (the lamplight page, text, link and code colours, or null in Paper or with original colours)."
+    },
+    {
       "path": "frontend/src/pages/ComprehensionTest.css",
       "language": "css",
       "lines": 194,
@@ -2193,18 +2537,18 @@
     {
       "path": "frontend/src/pages/Library.css",
       "language": "css",
-      "lines": 304,
-      "size_bytes": 5715,
+      "lines": 333,
+      "size_bytes": 6215,
       "role": "page",
       "purpose": "Library styles: header, the next-book card, 160 px cover grid (three across under 640 px with the remove button under the caption), captions, skeleton shapes, the error banner on warn-soft, the empty-state action row, the page-wide drop target, the upload and remove dialogs."
     },
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 380,
-      "size_bytes": 16542,
+      "lines": 398,
+      "size_bytes": 17697,
       "role": "page",
-      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion."
+      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book."
     },
     {
       "path": "frontend/src/pages/Login.css",
@@ -2241,10 +2585,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 319,
-      "size_bytes": 14213,
+      "lines": 348,
+      "size_bytes": 16014,
       "role": "page",
-      "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8); C13.4: the first-page note carries a small ReadingLamp, the closing page a larger one whose glow pulses once, failures are toasts, and leaving asks in a Modal (Leave / Keep reading)."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -2351,22 +2695,6 @@
       "purpose": "Build-time SSR entry (C13.10e): renderToString of the Landing page in a StaticRouter at / with a static theme context, so scripts/prerender.mjs can put the headline into dist/index.html before any script runs."
     },
     {
-      "path": "frontend/src/reader/BookFlow.jsx",
-      "language": "jsx",
-      "lines": 66,
-      "size_bytes": 2899,
-      "role": "asset",
-      "purpose": "Renders reader blocks (chunks.blocks) as book elements with data-b ids: chapter openings (label and italic title when a bare 'Chapter N' precedes a heading), headings, paragraphs with the drop cap and small-caps first line on a chapter's first paragraph, continued paragraphs without indent, quotes, list items; em and strong marks; an optional lead note before the first block, which no place points into."
-    },
-    {
-      "path": "frontend/src/reader/BookReader.jsx",
-      "language": "jsx",
-      "lines": 338,
-      "size_bytes": 16663,
-      "role": "asset",
-      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text); the word card when the caller passes a lookupClient (C12.8: opened on hover intent or a settled selection, Enter or ? on a selection opens it with focus, closed on a turn, page change or Esc, a polite live region announces each answer; hoverLookup turns hover off); the Look up chip for touch selections, kept to the page it was made on (C12.9)."
-    },
-    {
       "path": "frontend/src/reader/ContentsDrawer.css",
       "language": "css",
       "lines": 92,
@@ -2378,41 +2706,33 @@
       "path": "frontend/src/reader/ContentsDrawer.jsx",
       "language": "jsx",
       "lines": 86,
-      "size_bytes": 3679,
+      "size_bytes": 3666,
       "role": "asset",
-      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), chapters from books.toc with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
-    },
-    {
-      "path": "frontend/src/reader/PageTurn.jsx",
-      "language": "jsx",
-      "lines": 84,
-      "size_bytes": 3593,
-      "role": "asset",
-      "purpose": "One page turn over the book (C12.4): a leaf hinged at the spine (Motion pageTurn, rotateY with perspective) with front and back faces, each paper with its running head, folio and a window onto a copy of the flow at that page, plus a cover keeping the page underneath until the leaf lands and a travelling shadow (turnShade); spread forward and back, single page lifting away or swinging in; transform and opacity only; a timer also ends the turn; aria-hidden."
+      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
     },
     {
       "path": "frontend/src/reader/PhraseChip.jsx",
       "language": "jsx",
-      "lines": 43,
-      "size_bytes": 1613,
+      "lines": 40,
+      "size_bytes": 1543,
       "role": "asset",
-      "purpose": "The 'Look up' chip (C12.9): a 44 px pill placed by Floating UI below a 2-5 word touch selection (flipping above), keeping the selection on press; a tap opens the compact sheet."
+      "purpose": "The 'Look up' chip (C12.9): a 44 px pill placed by Floating UI below a 2-5 word touch selection (flipping above), keeping the selection on press; a tap opens the compact sheet. Placed through outerBox (C17.5), so a word in an EPUB section's iframe gets it beside the word in the page."
     },
     {
       "path": "frontend/src/reader/ReaderToolbar.css",
       "language": "css",
-      "lines": 123,
-      "size_bytes": 3643,
+      "lines": 138,
+      "size_bytes": 3999,
       "role": "asset",
-      "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px."
+      "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px. C17.4: .rf-tool-value and .rf-zoom-level, values hidden under 640 px."
     },
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 63,
-      "size_bytes": 3007,
+      "lines": 74,
+      "size_bytes": 3347,
       "role": "asset",
-      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8)."
+      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place."
     },
     {
       "path": "frontend/src/reader/WordCard.css",
@@ -2425,66 +2745,34 @@
     {
       "path": "frontend/src/reader/WordCard.jsx",
       "language": "jsx",
-      "lines": 157,
-      "size_bytes": 6195,
+      "lines": 154,
+      "size_bytes": 6125,
       "role": "asset",
-      "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard; opened by touch it is the compact sheet (grab handle, one sense, 'Tap outside to close', swipe down to close)."
+      "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard; opened by touch it is the compact sheet (grab handle, one sense, 'Tap outside to close', swipe down to close). Placed through outerBox (C17.5), so a word in an EPUB section's iframe gets it beside the word in the page."
     },
     {
-      "path": "frontend/src/reader/anchor.js",
+      "path": "frontend/src/reader/fileStore.js",
       "language": "javascript",
-      "lines": 88,
-      "size_bytes": 3403,
+      "lines": 57,
+      "size_bytes": 1885,
       "role": "asset",
-      "purpose": "DOM helpers for reader places {block_id, char_offset}: the first visible place on a page (binary search over character rects), the page showing an anchor, the page an element starts on, and an anchor's chunk; x measured from the flow, so the page translate does not matter."
+      "purpose": "Device-only book files in IndexedDB (C17.1): save, load and forget by book id; every call resolves (false or null) when IndexedDB is missing, blocked or failing."
     },
     {
-      "path": "frontend/src/reader/blocks.js",
+      "path": "frontend/src/reader/fileStore.test.js",
       "language": "javascript",
-      "lines": 23,
-      "size_bytes": 1025,
+      "lines": 28,
+      "size_bytes": 1208,
       "role": "asset",
-      "purpose": "blocksForChunks: the reader's blocks from /sessions/start chunks in chunk order, stored blocks as they are and paragraphs cut from the text (same '<chunk>.<n>' ids) for chunks without blocks; placeInChunks: the saved position as an anchor only when it is in today's chunks."
-    },
-    {
-      "path": "frontend/src/reader/blocks.test.js",
-      "language": "javascript",
-      "lines": 33,
-      "size_bytes": 1688,
-      "role": "asset",
-      "purpose": "Node test (npm run test:unit): stored blocks in chunk order, the text fallback and its ids, empty input, and resuming a saved place only inside today's chunks."
-    },
-    {
-      "path": "frontend/src/reader/geometry.js",
-      "language": "javascript",
-      "lines": 65,
-      "size_bytes": 2830,
-      "role": "asset",
-      "purpose": "Pure page geometry for the paginated reader: a spread from 1024 px, one page below (flush with the screen under 480 px); page width capped for a 60-70 character measure, equal margins so each column stride is one page, a text block of whole lines, the page count from scrollWidth, the page of an x, view and clamp helpers."
-    },
-    {
-      "path": "frontend/src/reader/geometry.test.js",
-      "language": "javascript",
-      "lines": 60,
-      "size_bytes": 2700,
-      "role": "asset",
-      "purpose": "Node test (npm run test:unit): spread threshold, one page per stride, book measure bounds, whole-line text blocks at 16.5/18/19.5 px, page count, page of a point, view start and clamping."
+      "purpose": "Node test (npm run test:unit): the file store never throws without IndexedDB, when opening throws, or when opening fails."
     },
     {
       "path": "frontend/src/reader/highlight.js",
       "language": "javascript",
-      "lines": 31,
-      "size_bytes": 1200,
+      "lines": 76,
+      "size_bytes": 3153,
       "role": "asset",
-      "purpose": "The soft lookup mark: CSS Custom Highlight API ('rf-lookup'), or positioned boxes in a layer under the text where the API is missing."
-    },
-    {
-      "path": "frontend/src/reader/index.js",
-      "language": "javascript",
-      "lines": 3,
-      "size_bytes": 176,
-      "role": "asset",
-      "purpose": "Barrel export of the reader: BookReader, anchor helpers and page geometry."
+      "purpose": "The soft lookup mark: CSS Custom Highlight API ('rf-lookup') in the word's own document (since C17.5 an EPUB section's iframe gets the rule in the page's --accent-soft), or positioned boxes in a layer under the text where the API is missing; outerBox(range) gives a range's boxes in this page's coordinates for the card and chip."
     },
     {
       "path": "frontend/src/reader/longPress.js",
@@ -2524,7 +2812,7 @@
       "lines": 35,
       "size_bytes": 1186,
       "role": "asset",
-      "purpose": "createReadAhead(fetcher): the chunk after today's reading from GET /books/{id}/pages, fetched once per book and chunk (null when there is none), a failed fetch forgotten so it is asked again; peek for what has arrived. Touches no session."
+      "purpose": "createReadAhead(fetcher): the chunk after today's reading from GET /books/{id}/pages, fetched once per book and chunk (null when there is none), a failed fetch forgotten so it is asked again; peek for what has arrived. Touches no session. Since C17.5 its chunk's text marks where today's reading ends in the original view."
     },
     {
       "path": "frontend/src/reader/readAhead.test.js",
@@ -2533,14 +2821,6 @@
       "size_bytes": 1466,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): the read-ahead fetches once and keeps the chunk, remembers that there is none, and asks again after a failure."
-    },
-    {
-      "path": "frontend/src/reader/reader.css",
-      "language": "css",
-      "lines": 491,
-      "size_bytes": 12713,
-      "role": "asset",
-      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b); the note's 40 px lamp and the closing page's 88 px lamp with a one-time 1.4 s glow pulse (scale only); the closing page above the text window (z-index 1)."
     },
     {
       "path": "frontend/src/reader/textSize.js",
@@ -2569,26 +2849,26 @@
     {
       "path": "frontend/src/reader/usePlaceSaver.js",
       "language": "javascript",
-      "lines": 56,
-      "size_bytes": 2017,
+      "lines": 52,
+      "size_bytes": 1941,
       "role": "asset",
-      "purpose": "usePlaceSaver(sessionId): saves the reader's place with PUT /sessions/{id}/position at most once a second while pages turn, and the last place with keepalive when the page is hidden, closed or left; failures are dropped; saveNow skips the wait (the ribbon bookmark)."
+      "purpose": "usePlaceSaver(sessionId): saves the reader's place (since C17.5 {chunk_index, anchor} in the PDF or EPUB) with PUT /sessions/{id}/position at most once a second while pages turn, and the last place with keepalive when the page is hidden, closed or left; failures are dropped; saveNow skips the wait (the ribbon bookmark)."
     },
     {
       "path": "frontend/src/reader/useWordAtPoint.js",
       "language": "javascript",
-      "lines": 219,
-      "size_bytes": 10335,
+      "lines": 252,
+      "size_bytes": 11744,
       "role": "asset",
-      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM: caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside the word's rects; 350 ms on the same word looks it up once; a 2-5 word selection (mouse or touch) looks up a phrase; marks the target via highlight.js; paused while a leaf turns; returns clear(); C12.8: hover can be turned off (selection still works), lookUpSelection() for Enter or ? on a selected word or phrase, clearMark() removes the mark without cancelling a hover under way; C12.9: a touch long-press (or the platform's touch contextmenu) on a lookable word opens it ('press') with the OS menu held off and the release swallowed, other long-presses keep native selection; a touch selection of 2-5 words goes to onChip instead of opening a card; lookUp(target, by)."
+      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM, over any number of surfaces {root, doc} since C17.5 (the PDF's text layers in the page, each EPUB section's body in its iframe): caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside its rects; math, code, pre, figures and SVG are never looked up (SKIP); 350 ms on the same word looks it up once; a 2-5 word selection looks up a phrase; marks it via highlight.js; paused while a leaf turns; C12.8: hover can be turned off, lookUpSelection() for Enter or ?, clearMark(); C12.9: a touch long-press opens it ('press') with the OS menu held off, a touch selection of 2-5 words goes to onChip; lookUp(target, by)."
     },
     {
       "path": "frontend/src/reader/useWordCard.js",
       "language": "javascript",
-      "lines": 72,
-      "size_bytes": 3093,
+      "lines": 73,
+      "size_bytes": 3138,
       "role": "asset",
-      "purpose": "The word card's state and closing rules (C12.8): open() shows a loading card and fetches through the lookup client; a hover-opened card closes 200 ms after the pointer leaves both word and card; any card closes on Esc, a press elsewhere or close(); closing from inside the card returns focus to the book."
+      "purpose": "The word card's state and closing rules (C12.8): open() shows a loading card and fetches through the lookup client; a hover-opened card closes 200 ms after the pointer leaves both word and card; any card closes on Esc, a press elsewhere or close(); closing from inside the card returns focus to the book. The pointer's distance to the word is measured through outerBox (C17.5)."
     },
     {
       "path": "frontend/src/reader/wordAt.js",
@@ -2663,6 +2943,158 @@
       "purpose": "ThemeContext and useTheme(), which returns choice, theme, accent, setChoice and setAccent."
     },
     {
+      "path": "frontend/src/vendor/foliate-js/LICENSE",
+      "language": "text",
+      "lines": 21,
+      "size_bytes": 1070,
+      "role": "asset",
+      "purpose": "foliate-js's MIT licence, vendored with it (C17.3)."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/README.md",
+      "language": "markdown",
+      "lines": 23,
+      "size_bytes": 1032,
+      "role": "asset",
+      "purpose": "Vendored foliate-js: source, commit 78914aef4466, licences (MIT; zip.js BSD-3-Clause), the files copied unchanged and the ReadFocus stubs, the one importer (engine.js), how to update."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/comic-book.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 174,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/epub.js",
+      "language": "javascript",
+      "lines": 1083,
+      "size_bytes": 43685,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the EPUB parser and resource loader (blob: URLs per section, reference-counted, transformTarget data events)."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/epubcfi.js",
+      "language": "javascript",
+      "lines": 349,
+      "size_bytes": 13233,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): EPUB CFI parse, compare and conversion to and from DOM ranges."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/fb2.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 167,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/fixed-layout.js",
+      "language": "javascript",
+      "lines": 319,
+      "size_bytes": 12008,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the pre-paginated renderer: pages and spreads sized from the viewport meta, zoom."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/mobi.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 168,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/overlayer.js",
+      "language": "javascript",
+      "lines": 175,
+      "size_bytes": 7051,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): SVG overlays for highlights and underlines over a section."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/paginator.js",
+      "language": "javascript",
+      "lines": 1130,
+      "size_bytes": 44222,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the reflowable renderer: one section per iframe in CSS columns, margins, gap, column count, image fitting, animation."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/pdf.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 167,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/progress.js",
+      "language": "javascript",
+      "lines": 113,
+      "size_bytes": 4255,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): section and TOC progress for a location."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/search.js",
+      "language": "javascript",
+      "lines": 130,
+      "size_bytes": 5651,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): text search within sections."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/text-walker.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 1531,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): walks text nodes in a range (used by search and CFIs)."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/tts.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 167,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/vendor/LICENSE-zip.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1501,
+      "role": "asset",
+      "purpose": "zip.js's BSD-3-Clause licence, fetched from the zip.js repository because foliate-js ships its build without it."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/vendor/fflate.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 177,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/vendor/zip.js",
+      "language": "javascript",
+      "lines": 1,
+      "size_bytes": 36512,
+      "role": "asset",
+      "purpose": "Vendored zip.js build shipped by foliate-js (BSD-3-Clause, vendor/LICENSE-zip.js): reads the EPUB's ZIP archive."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/view.js",
+      "language": "javascript",
+      "lines": 597,
+      "size_bytes": 22850,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the <foliate-view> element and makeBook: open a book, paginator or fixed layout, relocate and load events, CFIs, TOC progress, overlayer, links."
+    },
+    {
       "path": "frontend/vercel.json",
       "language": "json",
       "lines": 11,
@@ -2673,10 +3105,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 97,
-      "size_bytes": 3821,
+      "lines": 156,
+      "size_bytes": 6633,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings; pdfjsAssets serves PDF.js's standard fonts, wasm decoders and ICC profiles under /pdfjs/ in dev and copies them into the build (not quickjs-eval or the JS fallbacks); contentSecurityPolicyMeta puts the CSP (src/deploy/csp.js) first in the built page's head (C17.3)."
     },
     {
       "path": "package.json",
@@ -2735,6 +3167,14 @@
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
     {
+      "path": "scripts/backfill_book_files.py",
+      "language": "python",
+      "lines": 87,
+      "size_bytes": 3717,
+      "role": "script",
+      "purpose": "Backfill: file_sha256, file_bytes, file_format and page_count for books uploaded before C17.1 (file_format from file_type; the stored file downloaded once to hash); --dry-run, --limit, --book-id; refuses unless ENV=development; needs migration 016."
+    },
+    {
       "path": "scripts/backfill_covers.py",
       "language": "python",
       "lines": 113,
@@ -2749,6 +3189,14 @@
       "size_bytes": 4221,
       "role": "script",
       "purpose": "Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development."
+    },
+    {
+      "path": "scripts/backfill_positions.py",
+      "language": "python",
+      "lines": 224,
+      "size_bytes": 9732,
+      "role": "script",
+      "purpose": "Backfill (C17.5, ANCHORS A7): adds an original-view `anchor` beside each C12 reading_progress.position {chunk_index, block_id, char_offset}: the place's text (from the offset on through the blocks after it, else its chunk's start) is searched for, lower-case with no whitespace, in the book's stored file: a point on the PDF page holding it (pypdf), or a collapsed EPUB CFI computed from the spine document (ElementTree); places with an anchor, no stored file or no match are left alone; --dry-run, --limit, --book-id, dev-only guard."
     },
     {
       "path": "scripts/backfill_structure.py",
@@ -3023,12 +3471,36 @@
       "purpose": "Creates term_lookups (term, lang primary key; kind, payload jsonb, source, found, fetched_at): a shared, non-personal lookup cache. RLS on: signed-in users may read; no write policy, so only the service role writes. Additive."
     },
     {
+      "path": "supabase/migrations/016_book_files.sql",
+      "language": "sql",
+      "lines": 24,
+      "size_bytes": 1496,
+      "role": "migration",
+      "purpose": "Adds to books: file_sha256, file_bytes, file_format ('pdf'|'epub'), storage_mode ('cloud' default | 'device'), page_count, and an index on (user_id, storage_mode) for the per-reader cap. RLS and the private books bucket unchanged. Additive."
+    },
+    {
+      "path": "supabase/migrations/017_block_paths.sql",
+      "language": "sql",
+      "lines": 12,
+      "size_bytes": 739,
+      "role": "migration",
+      "purpose": "Migration (C17.6, additive, not applied): chunks.block_paths jsonb, one {block_id, spine_index, path} per chunks.blocks entry for EPUBs, so a CFI maps to a block (ANCHORS A6); null for PDFs and earlier books."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
       "size_bytes": 0,
       "role": "script",
       "purpose": "Package marker for tools."
+    },
+    {
+      "path": "tools/make_reader_fixtures.py",
+      "language": "python",
+      "lines": 247,
+      "size_bytes": 15502,
+      "role": "script",
+      "purpose": "Writes the fixtures for the original view (reflow, fixed and hostile EPUBs; sample.pdf since C17.4) into frontend/e2e/fixtures/books/ from the standard library only (generated PNG, GIF and SVG); deterministic, so a re-run changes nothing."
     },
     {
       "path": "tools/no_paid_ai.py",
@@ -3065,8 +3537,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 392,
-      "size_bytes": 113871,
+      "lines": 451,
+      "size_bytes": 134154,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -3619,6 +4091,10 @@
     {
       "path": "docs/repo-graph/inventory.json",
       "reason": "generated"
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/sample.pdf",
+      "reason": "binary"
     },
     {
       "path": "frontend/package-lock.json",

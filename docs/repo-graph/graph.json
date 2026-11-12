@@ -30,6 +30,13 @@
       "handler": "get_book_details"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/file",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/file",
+      "handler": "get_book_file"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/pages",
       "type": "endpoint",
       "method": "GET",
@@ -742,7 +749,19 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_book_files.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_backfill_covers.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_backfill_positions.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -755,6 +774,18 @@
     },
     {
       "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_block_paths.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_book_files.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1060,6 +1091,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:docs/DECISIONS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/DEPLOYMENT.md",
       "type": "file",
       "role": "doc",
@@ -1142,6 +1179,24 @@
       "type": "file",
       "role": "config",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/fixed.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/hostile.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/reflow.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
     },
     {
       "id": "file:frontend/e2e/journey.spec.js",
@@ -1286,6 +1341,18 @@
       "type": "file",
       "role": "entry",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/anchors/anchors.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/anchors/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/components/AccountMenu.css",
@@ -1594,6 +1661,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/deploy/csp.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/deploy/csp.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/deploy/deployEnv.js",
       "type": "file",
       "role": "asset",
@@ -1604,6 +1683,18 @@
       "type": "file",
       "role": "asset",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/gallery/BookGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/EpubGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
     },
     {
       "id": "file:frontend/src/gallery/Gallery.jsx",
@@ -1624,13 +1715,7 @@
       "language": "jsx"
     },
     {
-      "id": "file:frontend/src/gallery/ReaderGallery.css",
-      "type": "file",
-      "role": "asset",
-      "language": "css"
-    },
-    {
-      "id": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "id": "file:frontend/src/gallery/PdfGallery.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -1646,12 +1731,6 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/gallery/readerFixture.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
     },
     {
       "id": "file:frontend/src/hooks/useAuth.jsx",
@@ -1852,6 +1931,192 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/BookLookup.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/Reader.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/ReaderControls.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/bookFile.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/documentSource.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/documentSource.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/EpubView.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/engine.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/epub.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/imageSize.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/imageSize.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/sanitize.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/urls.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/urls.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/frame.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/originalview/frame.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/frame.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/pageCache.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/pageCache.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/pdf.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/pdfjs.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/recolour.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/recolour.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/today.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/today.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/useBoxSize.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/useLamplight.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/pages/ComprehensionTest.css",
       "type": "file",
       "role": "page",
@@ -2008,18 +2273,6 @@
       "language": "jsx"
     },
     {
-      "id": "file:frontend/src/reader/BookFlow.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/reader/BookReader.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
       "id": "file:frontend/src/reader/ContentsDrawer.css",
       "type": "file",
       "role": "asset",
@@ -2027,12 +2280,6 @@
     },
     {
       "id": "file:frontend/src/reader/ContentsDrawer.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/reader/PageTurn.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -2068,43 +2315,19 @@
       "language": "jsx"
     },
     {
-      "id": "file:frontend/src/reader/anchor.js",
+      "id": "file:frontend/src/reader/fileStore.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/reader/blocks.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/blocks.test.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/geometry.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/geometry.test.js",
+      "id": "file:frontend/src/reader/fileStore.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
       "id": "file:frontend/src/reader/highlight.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/index.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -2144,12 +2367,6 @@
       "type": "file",
       "role": "asset",
       "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/reader.css",
-      "type": "file",
-      "role": "asset",
-      "language": "css"
     },
     {
       "id": "file:frontend/src/reader/textSize.js",
@@ -2242,6 +2459,120 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/vendor/foliate-js/LICENSE",
+      "type": "file",
+      "role": "asset",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/README.md",
+      "type": "file",
+      "role": "asset",
+      "language": "markdown"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/comic-book.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/epub.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/epubcfi.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/fb2.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/fixed-layout.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/mobi.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/overlayer.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/paginator.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/pdf.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/progress.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/search.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/text-walker.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/tts.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/vendor/LICENSE-zip.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/vendor/fflate.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/vendor/zip.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/view.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/vercel.json",
       "type": "file",
       "role": "config",
@@ -2296,6 +2627,12 @@
       "language": "text"
     },
     {
+      "id": "file:scripts/backfill_book_files.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/backfill_covers.py",
       "type": "file",
       "role": "script",
@@ -2303,6 +2640,12 @@
     },
     {
       "id": "file:scripts/backfill_local_embeddings.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/backfill_positions.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -2512,7 +2855,25 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/016_book_files.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/017_block_paths.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/make_reader_fixtures.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -2734,6 +3095,16 @@
       "to": "table:reading_progress"
     },
     {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/016_book_files.sql",
+      "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/017_block_paths.sql",
+      "to": "table:chunks"
+    },
+    {
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "endpoint:POST /auth/profile/calibrate"
@@ -2742,6 +3113,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
       "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/originalview/bookFile.js",
+      "to": "endpoint:GET /books/{book_id}/file"
     },
     {
       "type": "calls_endpoint",
@@ -2787,11 +3163,6 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:GET /auth/profile"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:GET /books/{book_id}/pages"
     },
     {
       "type": "calls_endpoint",
@@ -3033,6 +3404,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/file"
     },
     {
       "type": "defines_endpoint",
@@ -3628,6 +4004,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/dependencies.py"
     },
     {
@@ -4047,6 +4428,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_backfill_book_files.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_book_files.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_book_files.py",
+      "to": "file:scripts/backfill_book_files.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_backfill_covers.py",
       "to": "file:backend/services/covers.py"
     },
@@ -4059,6 +4455,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_backfill_covers.py",
       "to": "file:scripts/backfill_covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_positions.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_positions.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_positions.py",
+      "to": "file:scripts/backfill_positions.py"
     },
     {
       "type": "imports",
@@ -4084,6 +4495,41 @@
       "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_block_paths.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_block_paths.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -4537,11 +4983,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/e2e/fixtures.js",
-      "to": "file:frontend/src/gallery/readerFixture.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/e2e/journey.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -4644,6 +5085,11 @@
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/theme/ThemeProvider.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/anchors/anchors.test.js",
+      "to": "file:frontend/src/anchors/index.js"
     },
     {
       "type": "imports",
@@ -4967,8 +5413,43 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/deploy/csp.test.js",
+      "to": "file:frontend/src/deploy/csp.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/deploy/deployEnv.test.js",
       "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/BookGallery.jsx",
+      "to": "file:frontend/src/originalview/Reader.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/BookGallery.jsx",
+      "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/BookGallery.jsx",
+      "to": "file:frontend/src/originalview/useLamplight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/BookGallery.jsx",
+      "to": "file:frontend/src/reader/ReaderToolbar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/EpubGallery.jsx",
+      "to": "file:frontend/src/gallery/gallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/EpubGallery.jsx",
+      "to": "file:frontend/src/originalview/epub/EpubView.jsx"
     },
     {
       "type": "imports",
@@ -5072,33 +5553,18 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
-      "to": "file:frontend/src/components/ThemeToggle.jsx"
+      "from": "file:frontend/src/gallery/PdfGallery.jsx",
+      "to": "file:frontend/src/gallery/gallery.css"
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
-      "to": "file:frontend/src/gallery/ReaderGallery.css"
+      "from": "file:frontend/src/gallery/PdfGallery.jsx",
+      "to": "file:frontend/src/originalview/pdf/PdfPage.jsx"
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
-      "to": "file:frontend/src/gallery/readerFixture.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
-      "to": "file:frontend/src/lib/api.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
-      "to": "file:frontend/src/reader/index.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
-      "to": "file:frontend/src/reader/lookup.js"
+      "from": "file:frontend/src/gallery/PdfGallery.jsx",
+      "to": "file:frontend/src/originalview/pdf/usePdfDocument.js"
     },
     {
       "type": "imports",
@@ -5224,6 +5690,251 @@
       "type": "imports",
       "from": "file:frontend/src/motion/useCountUp.js",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/PhraseChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/WordCard.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/useWordAtPoint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/useWordCard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/BookLookup.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/epub/EpubBook.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/frame.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/pdf/PdfBook.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/today.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/useLamplight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/ReaderControls.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/bookFile.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/bookFile.js",
+      "to": "file:frontend/src/originalview/documentSource.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/bookFile.js",
+      "to": "file:frontend/src/reader/fileStore.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/documentSource.test.js",
+      "to": "file:frontend/src/originalview/documentSource.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/originalview/epub/EpubView.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubView.jsx",
+      "to": "file:frontend/src/originalview/bookFile.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubView.jsx",
+      "to": "file:frontend/src/originalview/epub/epub.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/engine.js",
+      "to": "file:frontend/src/originalview/epub/sanitize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/engine.js",
+      "to": "file:frontend/src/originalview/epub/urls.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/engine.js",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/engine.js",
+      "to": "file:frontend/src/vendor/foliate-js/epubcfi.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/imageSize.test.js",
+      "to": "file:frontend/src/originalview/epub/imageSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/sanitize.js",
+      "to": "file:frontend/src/originalview/epub/imageSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/sanitize.js",
+      "to": "file:frontend/src/originalview/epub/urls.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/urls.test.js",
+      "to": "file:frontend/src/originalview/epub/urls.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/frame.test.js",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/pdf/PdfPage.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/pdf/usePdfDocument.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/today.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/useBoxSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/pdf.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/pageCache.test.js",
+      "to": "file:frontend/src/originalview/pdf/pageCache.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/pdfjs.js",
+      "to": "file:frontend/src/originalview/pdf/recolour.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/recolour.test.js",
+      "to": "file:frontend/src/originalview/pdf/recolour.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/originalview/bookFile.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/originalview/pdf/pageCache.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/today.test.js",
+      "to": "file:frontend/src/originalview/today.js"
     },
     {
       "type": "imports",
@@ -5452,6 +6163,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/fileStore.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/Login.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -5543,6 +6259,26 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/Reader.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/today.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/useLamplight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/pages/ReadingSession.css"
     },
     {
@@ -5558,27 +6294,12 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/reader/blocks.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/reader/index.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/lookup.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/readAhead.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/reader/textSize.js"
     },
     {
       "type": "imports",
@@ -5712,61 +6433,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/motion/presets.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/BookFlow.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/PageTurn.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/PhraseChip.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/WordCard.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/anchor.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/geometry.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/lookup.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/reader.css"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/useWordAtPoint.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/BookReader.jsx",
-      "to": "file:frontend/src/reader/useWordCard.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/reader/ContentsDrawer.jsx",
       "to": "file:frontend/src/motion/presets.js"
     },
@@ -5777,18 +6443,13 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/reader/PageTurn.jsx",
-      "to": "file:frontend/src/motion/presets.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/PageTurn.jsx",
-      "to": "file:frontend/src/reader/BookFlow.jsx"
+      "from": "file:frontend/src/reader/PhraseChip.jsx",
+      "to": "file:frontend/src/reader/WordCard.css"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/reader/PhraseChip.jsx",
-      "to": "file:frontend/src/reader/WordCard.css"
+      "to": "file:frontend/src/reader/highlight.js"
     },
     {
       "type": "imports",
@@ -5813,6 +6474,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
       "to": "file:frontend/src/reader/longPress.js"
     },
     {
@@ -5822,18 +6488,8 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/reader/anchor.js",
-      "to": "file:frontend/src/reader/geometry.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/blocks.test.js",
-      "to": "file:frontend/src/reader/blocks.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/geometry.test.js",
-      "to": "file:frontend/src/reader/geometry.js"
+      "from": "file:frontend/src/reader/fileStore.test.js",
+      "to": "file:frontend/src/reader/fileStore.js"
     },
     {
       "type": "imports",
@@ -5882,6 +6538,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/useWordCard.js",
+      "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/wordAt.test.js",
       "to": "file:frontend/src/reader/wordAt.js"
     },
@@ -5897,8 +6558,58 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/epub.js",
+      "to": "file:frontend/src/vendor/foliate-js/epubcfi.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/view.js",
+      "to": "file:frontend/src/vendor/foliate-js/epubcfi.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/view.js",
+      "to": "file:frontend/src/vendor/foliate-js/overlayer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/view.js",
+      "to": "file:frontend/src/vendor/foliate-js/progress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/view.js",
+      "to": "file:frontend/src/vendor/foliate-js/text-walker.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/vite.config.js",
+      "to": "file:frontend/src/deploy/csp.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/vite.config.js",
       "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_book_files.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_book_files.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_book_files.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_book_files.py",
+      "to": "file:scripts/backfill_structure.py"
     },
     {
       "type": "imports",
@@ -5924,6 +6635,21 @@
       "type": "imports",
       "from": "file:scripts/backfill_local_embeddings.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_positions.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_positions.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_positions.py",
+      "to": "file:scripts/backfill_structure.py"
     },
     {
       "type": "imports",
@@ -6302,6 +7028,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:scripts/backfill_book_files.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_covers.py",
       "to": "table:books"
     },
@@ -6309,6 +7040,21 @@
       "type": "reads_table",
       "from": "file:scripts/backfill_local_embeddings.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_positions.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_positions.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_positions.py",
+      "to": "table:reading_progress"
     },
     {
       "type": "reads_table",
@@ -6412,12 +7158,22 @@
     },
     {
       "type": "uses_env",
+      "from": "file:scripts/backfill_book_files.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
       "from": "file:scripts/backfill_covers.py",
       "to": "env:ENV"
     },
     {
       "type": "uses_env",
       "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_positions.py",
       "to": "env:ENV"
     },
     {
@@ -6547,8 +7303,18 @@
     },
     {
       "type": "writes_table",
+      "from": "file:scripts/backfill_book_files.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
       "from": "file:scripts/backfill_local_embeddings.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_positions.py",
+      "to": "table:reading_progress"
     },
     {
       "type": "writes_table",

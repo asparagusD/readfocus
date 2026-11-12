@@ -1,10 +1,10 @@
 import asyncio
 from datetime import datetime
-from typing import Any, cast
+from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from backend.agents.evaluator_agent import evaluate_single_answer, load_passage, warm_up
 from backend.agents.question_generation.assembler import public_question
@@ -75,16 +75,41 @@ class EvaluateSingleRequest(BaseModel):
     answer: str
 
 
+class PdfAnchor(BaseModel):
+    """A place in a PDF (docs/ANCHORS.md A1, A3): 1-based page, quads in points from the top-left, text."""
+
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["pdf"]
+    page: int = Field(ge=1, le=100_000)
+    quads: list[Annotated[list[float], Field(min_length=4, max_length=4)]] = Field(min_length=1, max_length=64)
+    text: str = Field(default="", max_length=2_000)
+
+
+class EpubAnchor(BaseModel):
+    """A place in an EPUB (ANCHORS A1, A3): an EPUB CFI and the text under it ("" for a point)."""
+
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["epub"]
+    cfi: str = Field(pattern=r"^epubcfi\(.+\)$", max_length=1_024)
+    text: str = Field(default="", max_length=2_000)
+
+
 class PositionRequest(BaseModel):
-    """A place in a book (C12.2): chunk, reader block ("<chunk>.<n>", chunks.blocks) and offset in its text."""
+    """A place in a book: its chunk, and either C12's reader block ("<chunk>.<n>", chunks.blocks) with the
+    offset in its text, or (C17.5) an original-view anchor in the PDF or EPUB itself."""
 
     chunk_index: int = Field(ge=0)
-    block_id: str = Field(pattern=r"^\d+\.\d+$", max_length=24)
-    char_offset: int = Field(ge=0, le=100_000)
+    block_id: str | None = Field(default=None, pattern=r"^\d+\.\d+$", max_length=24)
+    char_offset: int | None = Field(default=None, ge=0, le=100_000)
+    anchor: Annotated[PdfAnchor | EpubAnchor, Field(discriminator="kind")] | None = None
 
     @model_validator(mode="after")
-    def block_in_chunk(self):
-        if self.block_id.split(".")[0] != str(self.chunk_index):
+    def a_place(self):
+        if self.anchor is None and (self.block_id is None or self.char_offset is None):
+            raise ValueError("a place needs an anchor, or a block_id and char_offset")
+        if (self.block_id is None) != (self.char_offset is None):
+            raise ValueError("block_id and char_offset come together")
+        if self.block_id is not None and self.block_id.split(".")[0] != str(self.chunk_index):
             raise ValueError("block_id must be a block of chunk_index")
         return self
 
@@ -96,13 +121,14 @@ def read_book(user_id: str, book_id: str, first_chunk: int):
     the chapter the first pages belong to when they open mid-chapter. A failed read gives (None, None).
     """
     try:
-        rows = supabase.table("books").select("title, author, toc").eq("id", book_id).eq(
+        rows = supabase.table("books").select("title, author, toc, file_format, storage_mode").eq("id", book_id).eq(
             "user_id", user_id).execute().data
         if not rows:
             return None, None
         row = cast(dict[str, Any], rows[0])
         earlier = [entry for entry in row.get("toc") or [] if entry.get("chunk_index", 0) < first_chunk]
-        book = {"title": row.get("title"), "author": row.get("author"), "toc": row.get("toc") or []}  # toc: contents drawer
+        book = {"title": row.get("title"), "author": row.get("author"), "toc": row.get("toc") or [],  # toc: contents drawer
+                "format": row.get("file_format"), "storage_mode": row.get("storage_mode")}  # C17.5: which renderer
         return book, (earlier[-1]["title"] if earlier else None)
     except Exception as e:  # noqa: BLE001 - the running head shows less, the session still starts
         print(f"Book details not read: {e}")
@@ -198,7 +224,7 @@ async def save_position(session_id: str, req: PositionRequest, user_id: str = De
         "chunk_index", req.chunk_index).limit(1).execute)
     if not chunk.data:
         raise HTTPException(status_code=422, detail="No such chunk in this book.")
-    position = req.model_dump()
+    position = req.model_dump(exclude_none=True)
     # Update only: the planner creates this row on a first start, and a row made here would reset its cursor.
     updated = await run_in_threadpool(supabase.table("reading_progress").update({"position": position}).eq(
         "user_id", user_id).eq("book_id", book_id).execute)

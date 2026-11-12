@@ -1,7 +1,10 @@
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { checkDeployEnv, isVercelBuild } from './src/deploy/deployEnv.js'
+import { contentSecurityPolicy, inlineScriptHashes } from './src/deploy/csp.js'
 
 // D6: preload the Latin Lora and DM Sans files the first screen needs.
 // Their names are hashed, so the links are added after the bundle exists.
@@ -63,9 +66,65 @@ function deployEnv() {
   }
 }
 
+// C17.2: PDF.js fetches fonts a PDF does not embed and its JPEG 2000 / JBIG2 image
+// decoders (wasm) at run time. They are served from /pdfjs/ on our own origin: from
+// node_modules in dev, copied into the build otherwise. Only an open PDF asks for them.
+const PDFJS_DIRS = ['standard_fonts', 'wasm', 'iccs']
+const PDFJS_ROOT = join(import.meta.dirname, 'node_modules', 'pdfjs-dist')
+// Not served: the JS fallbacks (the wasm decoders are used) and quickjs-eval, which runs
+// JavaScript embedded in a PDF. Licence files ship with what they cover.
+const servable = (name) => !name.startsWith('quickjs') && !name.endsWith('.js')
+
+function pdfjsAssets() {
+  return {
+    name: 'readfocus-pdfjs-assets',
+    configureServer(server) {
+      server.middlewares.use('/pdfjs', (req, res, next) => {
+        const [dir, ...rest] = decodeURIComponent((req.url ?? '').split('?')[0]).split('/').filter(Boolean)
+        const file = join(PDFJS_ROOT, dir ?? '', ...rest)
+        if (!PDFJS_DIRS.includes(dir) || rest.length !== 1 || /^\.\.?$|\\/.test(rest[0]) || !servable(rest[0]) || !existsSync(file)) return next()
+        res.setHeader('Content-Type', file.endsWith('.wasm') ? 'application/wasm' : 'application/octet-stream')
+        res.end(readFileSync(file))
+      })
+    },
+    generateBundle() {
+      for (const dir of PDFJS_DIRS) {
+        for (const name of readdirSync(join(PDFJS_ROOT, dir))) {
+          if (!servable(name)) continue
+          this.emitFile({ type: 'asset', fileName: `pdfjs/${dir}/${name}`, source: readFileSync(join(PDFJS_ROOT, dir, name)) })
+        }
+      }
+      this.emitFile({ type: 'asset', fileName: 'pdfjs/LICENSE', source: readFileSync(join(PDFJS_ROOT, 'LICENSE')) })
+    },
+  }
+}
+
+// C17.3: the Content-Security-Policy as the first <meta> in the built page, with the
+// inline theme script allowed by its hash and the API and Supabase origins from the
+// build's own env (src/deploy/csp.js). Dev has none: Vite's HMR needs inline code.
+function contentSecurityPolicyMeta(env) {
+  return {
+    name: 'readfocus-csp',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const policy = contentSecurityPolicy({
+          apiUrl: env.VITE_API_URL || 'http://localhost:8000',
+          supabaseUrl: env.VITE_SUPABASE_URL || 'https://lvfhuszvuiowyeizstru.supabase.co',
+          scriptHashes: inlineScriptHashes(html),
+        })
+        return html.replace(/<head>/i, `<head>
+    <meta http-equiv="Content-Security-Policy" content="${policy}" />`)
+      },
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [deployEnv(), react(), tailwindcss(), preloadFonts(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL)],
+  plugins: [deployEnv(), react(), tailwindcss(), preloadFonts(), pdfjsAssets(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL),
+    contentSecurityPolicyMeta(loadEnv(mode, import.meta.dirname, 'VITE_'))],
   server: {
     proxy: {
       '/api': {

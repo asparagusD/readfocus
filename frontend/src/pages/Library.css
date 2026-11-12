@@ -291,6 +291,35 @@ a.rf-shelf__book:hover .rf-shelf__title {
   overflow-wrap: anywhere;
 }
 
+.rf-library__keep {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  color: var(--ink);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  cursor: pointer;
+}
+
+.rf-library__keep input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.rf-library__keep small {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--ink-2);
+  font-size: inherit;
+}
+
+.rf-shelf__device {
+  font-style: italic;
+}
+
 .rf-library__confirm {
   margin: 0 0 var(--space-5);
   color: var(--ink-2);

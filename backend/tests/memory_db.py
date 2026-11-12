@@ -124,6 +124,11 @@ class Bucket:
         self.db.calls.append(("storage", "download"))
         return self.db.files[path]
 
+    def create_signed_url(self, path, expires_in, options=None):
+        self.db.calls.append(("storage", "sign", path, expires_in))
+        url = f"https://storage.test/sign/{self.name}/{path}?expires={expires_in}"
+        return {"signedURL": url, "signedUrl": url}
+
 
 class MemoryDb:
     def __init__(self):

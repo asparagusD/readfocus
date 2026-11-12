@@ -2459,3 +2459,436 @@ Not applicable: an external service's availability. Steve's backend
 
 ### Commit
 C16.4 `chore(steve): add Gemini env names and phase-2 progress sections`
+
+## 2026-11-12 C17.2 — the new page-cache unit test hung
+
+### Failure
+`node --test src/originalview/pdf/*.test.js` did not finish within the
+tool's 120 s limit (stopped by hand). Written test first; the module under
+test (`pageCache.js`) had just been added.
+
+### Reproduce
+The last test, "a page released before its render finished is released
+once it does", with radius 0: `focus(1)`, `get(1)`, `focus(5)`, then
+`finish()`, then `await first`.
+
+### Hypotheses (most likely first)
+1. The test's fake `render` stored one `finish` callback, so rendering
+   page 5 replaced page 1's resolver and page 1's promise never settled.
+   Ruled out if: resolving page 1 by its own callback still hangs.
+   Result: confirmed; with one resolver per page the test passes.
+2. `createPageCache` never resolves a dropped slot. Ruled out by the same
+   run: page 1 resolves and is released.
+
+### Root cause
+A bug in the test's fake, not in `pageCache.js`.
+
+### Fix
+`pageCache.test.js`: resolvers kept per page in a `Map`; the test also
+checks nothing is released before the render finishes.
+
+### Regression test
+The fixed test itself; `timeout 60` used around the run afterwards.
+
+### Commit
+C17.2 `feat(pdf): lazy PDF.js renderer with aligned text layer and page cache`
+
+## 2026-11-12 C17.3 — the new CSP blocked the inline theme script
+
+### Failure
+`npm run test:e2e` after adding the Content-Security-Policy meta: 2 failed,
+102 passed. `landing.spec.js` "a deep link never shows the prerendered
+landing page" and "signed in, the prerendered landing page is hidden from
+the first paint": `[data-prerendered]` had no `hidden` attribute. Console:
+"Executing inline script violates the following Content Security Policy
+directive 'script-src ... 'sha256-/w41…''. Either ... a hash
+('sha256-1Me3…')".
+
+### Reproduce
+`npm run build`, then any page of `vite preview`: the theme script in
+`index.html` does not run.
+
+### Hypotheses (most likely first)
+1. The hash was taken over different bytes than the browser hashes.
+   Evidence: the browser names another hash. Ruled out if hashing the
+   script body from `dist/index.html` gives the browser's hash. Result:
+   it gives ours (`/w41…`), but the file has CRLF line endings; the HTML
+   parser turns CRLF into LF before hashing. Hashing the LF text gives
+   `1Me3…`. Confirmed.
+2. The prerender step changes the script after the hash is taken. Ruled
+   out: only one inline script, unchanged by `scripts/prerender.mjs`.
+
+### Root cause
+`inlineScriptHashes` hashed the raw file text; on a Windows checkout
+`index.html` has CRLF, which the browser normalises before hashing.
+
+### Fix
+`src/deploy/csp.js`: CRLF and CR become LF before hashing.
+
+### Regression test
+`csp.test.js` "line endings are hashed as the browser parses them". The
+two landing tests pass again (`landing.spec.js`: 20 passed).
+
+### Commit
+C17.3a `feat(ci): add a Content-Security-Policy to the built app`
+
+## 2026-11-12 C17.3 — fixed-layout EPUB pages rendered at 0 x 0
+
+### Failure
+The C17.3 check script on `/__epub?book=fixed`: blank screen; the page
+iframe was 0 x 0 although its image had loaded.
+
+### Reproduce
+Open `fixed.epub` in `/__epub`; `frameElement.getBoundingClientRect()` of
+the page's document is 0 x 0.
+
+### Hypotheses (most likely first)
+1. Our sanitizer removed `<meta name="viewport">`, from which foliate's
+   fixed-layout renderer takes the page size. Evidence: `meta` was in
+   `FORBID_TAGS`. Ruled out if the page body has no viewport meta and
+   restoring it gives a size. Result: confirmed; with viewport metas kept
+   the frame is 535 x 713.
+2. foliate needs `rendition:spread` set differently. Not tested; 1 fixed it.
+
+### Root cause
+`FORBID_TAGS` included `meta` to stop `http-equiv` refreshes, which also
+removed the viewport meta a fixed-layout page needs.
+
+### Fix
+`sanitize.js`: `meta` allowed through DOMPurify, then every meta except
+`name="viewport"` without `http-equiv` is removed.
+
+### Regression test
+`hostile.epub` gained a `<meta http-equiv="refresh">`; the check script
+asserts no `http-equiv` meta survives and the page does not navigate, and
+that both fixed-layout pages render with a non-zero frame.
+
+### Commit
+C17.3d `feat(epub): sanitize sections and open EPUBs through foliate-js`
+
+## 2026-11-12 C17.4 — lamplight PDF recoloured part of an image
+
+### Failure
+The C17.4 frame check: in Lamplight, page 4's raster image was half
+recoloured (its grey right part turned page-coloured), against the rule that
+images are never touched.
+
+### Reproduce
+`/__book?kind=pdf` in Lamplight, page 4; the image's low-chroma pixels change.
+
+### Hypotheses (most likely first)
+1. `imageRects` mis-reads PDF.js's corner points. Ruled out if the points it
+   gets are empty. Result: they were empty: `task.imageCoordinates` returned
+   `[]` (a scratchpad script on page 4).
+2. PDF.js stores the coordinates elsewhere. Evidence: in `pdf.mjs` the render
+   callback sets `this.imageCoordinates` on the page proxy, while the task's
+   getter reads the internal task. Result: confirmed; `page.imageCoordinates`
+   holds `[0.2385, 0.5454, 0.2385, 0.8486, 0.7612, 0.5454]`, the image's place.
+
+### Root cause
+PDF.js 6.4.299 records image positions on the page, not on the render task.
+
+### Fix
+`pdfjs.js`: `page.imageCoordinates ?? task.imageCoordinates`.
+
+### Regression test
+`recolour.test.js` covers the rectangles from corner points; the frame
+check reads a pixel inside the image in Paper, Lamplight and Lamplight with
+original colours: (80, 110, 134) in all three.
+
+### Commit
+C17.4 (PDF lamplight)
+
+## 2026-11-12 C17.4 — lamplight PDF text had coloured fringes
+
+### Failure
+Lamplight PDF text looked ragged (screenshot): letters with bright edges.
+
+### Reproduce
+Count the canvas's colours in Lamplight: (255, 255, 183), (183, 87, 0),
+(87, 183, 255)... among the text.
+
+### Hypotheses (most likely first)
+1. The canvas draws text with LCD (subpixel) antialiasing, whose fringes are
+   coloured, so the recolouring keeps them as "coloured ink". Ruled out if a
+   canvas with alpha (which Chrome antialiases in grey) still has them.
+   Result: confirmed; with `getContext('2d', { alpha: true })` every text
+   pixel lies between the page and text colours.
+
+### Root cause
+LCD antialiasing on an opaque canvas.
+
+### Fix
+`pdfjs.js`: Lamplight renders get a context with alpha.
+
+### Regression test
+The frame check's colour count and a close-up screenshot (scratchpad).
+
+### Commit
+C17.4 (PDF lamplight)
+
+## 2026-11-12 C17.4 — the page-turn leaf jumped to its end state
+
+### Failure
+Sampling the leaf every 60 ms during a turn: from the first sample it was
+at `rotateY(-180deg)`, opacity 0; no animation ran.
+
+### Reproduce
+`/__book?kind=pdf`, `__book.reader.next()`, read the leaf's inline style.
+
+### Hypotheses (most likely first)
+1. Reduced motion: the machine has it on and Playwright follows the system.
+   Ruled out with `reducedMotion: 'no-preference'` (matchMedia false): it
+   still jumped.
+2. The `m.div` with inline keyframes: tried the variants pattern C12 uses;
+   still jumped. Motion's `animate()` on a plain element in the same page
+   animated, so Motion itself works; the cause in the `m` component was not
+   found.
+
+### Root cause
+Not established (an `m.div` mounted inside the reader frame applied its
+`animate` values at once).
+
+### Fix
+`Reader.jsx` `TurnLeaf`: the leaf moves with the Web Animations API
+(`element.animate`), timed from the `--dur-5` and `--ease-settle` tokens;
+the page changes when the leaf stands on edge (`timeAtProgress`).
+
+### Regression test
+`frame.test.js` "the turn happens when the leaf stands on edge"; the
+sampling script shows opacity rising to 1 by 130 ms and falling to 0 at
+600 ms with two running animations.
+
+### Commit
+C17.4 (frame)
+
+## 2026-11-12 C17.5 — an EPUB session opened at the cover, not at today's chapter
+
+**Status:** fixed
+
+### Symptom
+The adapted e2e on reflow.epub: the planner's note never showed and a
+reload did not restore the place; the reader stood on the cover.
+
+    npx playwright test e2e/reader.spec.js e2e/reading.spec.js
+    epub › the first page of today's reading carries the note ...
+    Error: expect(locator).toContainText(expected) failed
+    Locator: locator('.rf-ov-note .rf-note') ... element(s) not found
+
+### Repro
+A throwaway spec printing the session's located bounds:
+`LOCATE {"start":null,"end":null,"starts":[]}`; logging inside
+`EpubBook.find`: `EB FIND false undefined` (no view handle yet).
+
+### Hypotheses
+1. The section text search misses (bad squeeze or `doc.body` null on
+   XHTML). Ruled out: `find` in the engine was never called.
+2. The session asks before the engine is handed over. Evidence: the
+   frame's onReady fires on the first relocate, which foliate sends
+   during `view.init()`, before EpubView's `setEngine` gives the ref its
+   handle. Result: confirmed (`view.current` null).
+
+### Root cause
+`EpubBook` reached the engine only through EpubView's imperative handle,
+which exists one render after the engine reports its first place
+(`frontend/src/originalview/epub/EpubBook.jsx`, the ref methods).
+
+### Fix
+`EpubBook` keeps the engine from `onReady` and a promise for it; `find`,
+`goTo`, `next`, `prev`, `first`, `last` wait for it.
+
+### Regression test
+`e2e/reader.spec.js` epub "the place is saved as an anchor ... restored
+after a reload" and `e2e/reading.spec.js` epub "the first page ...
+carries the note": failed before, pass after (30 passed).
+
+### Commit
+C17.5b feat(reader): open every book in its original form for today's reading
+
+## 2026-11-12 C17.5 — a turn asked for while the leaf turned was dropped
+
+**Status:** fixed
+
+### Symptom
+`e2e/reader.spec.js` "arrow keys, the turn buttons and the page edge":
+after ArrowRight, an immediate click on Next did nothing (the place
+stayed `{"start":"2","end":"3"}`) on both books.
+
+### Repro
+ArrowRight then Next within the leaf's 600 ms.
+
+### Hypotheses
+1. The Next button is disabled. Ruled out: enabled in the snapshot.
+2. `move()` returns early while `busy` (the leaf is turning). Confirmed:
+   C17.4's frame drops it; C12's reader queued it.
+
+### Root cause
+`Reader.jsx` `move`: `if (busy.current) return false`.
+
+### Fix
+The last turn asked for mid-turn is queued and run when the leaf lands.
+
+### Regression test
+The same e2e case: failed before, passes after.
+
+### Commit
+C17.5b feat(reader): open every book in its original form for today's reading
+
+## 2026-11-12 C17.5 — the lookup e2e found no words in the EPUB
+
+**Status:** fixed
+
+### Symptom
+Every EPUB lookup case failed before touching the reader:
+
+    npx playwright test e2e/reader.spec.js
+    epub › a known word shows its card ...
+    Error: expect(received).not.toBeNull()  Received: null
+    > expect(lamp).not.toBeNull();
+
+### Repro
+`wordPoint(page, 'lamp')` on reflow.epub returns null; on sample.pdf it
+finds the word and the card opens.
+
+### Hypotheses
+1. The section iframes are not reached: the helper walked open shadow
+   roots, but foliate's paginator keeps its iframe in a closed one
+   (`el.shadowRoot` is null). Confirmed: no frames found, so it searched
+   the page's own document.
+2. Lookup itself fails inside iframes. Not the cause: after the helper
+   fix the same cases pass.
+
+### Root cause
+`frontend/e2e/fixtures.js` `wordPoint` (a test helper, not app code).
+
+### Fix
+`wordPoint` reaches sections as Playwright frames (`page.frames()`),
+shifted by each frame element's box.
+
+### Regression test
+`e2e/reader.spec.js` epub lookup cases: failed before, pass after.
+
+### Commit
+C17.5c feat(reader): look up words inside PDF and EPUB pages
+
+## 2026-11-12 C17.6 — an EPUB reopened one page early after a text-size change
+
+**Status:** fixed
+
+### Symptom
+The new e2e "after a text-size change the saved anchor reopens the same
+place": after Larger text twice the page showed characters 1157-2685 of
+section 1; after a reload at that size it showed 0-1157.
+
+    npx playwright test e2e/reader.spec.js -g "text-size change"
+    Error: the same place after a reload at the new size
+    Expected: true  Received: false
+
+### Repro
+Traced relocates: the resume went to `epubcfi(/6/4!/4/8/1:435)` (the saved
+point, character 1157, the page's first) and foliate reported the visible
+range ending exactly there.
+
+### Hypotheses
+1. A collapsed range has no box on its own page. Tried: aim at its first
+   character (`goToPoint`). Ruled out: foliate already uncollapses, and the
+   result was the same.
+2. A point at a page's very first character is ambiguous: foliate can
+   place it at the end of the page before. Confirmed by the trace; the
+   saved point sat on the boundary.
+
+### Root cause
+`EpubBook.anchor()` saved the collapsed start of the visible range
+(`frontend/src/originalview/epub/EpubBook.jsx`), a page boundary.
+
+### Fix
+The reading position is a point a little inside the text shown (up to 40
+characters, a quarter of the page at most), `engine.pointAt`.
+
+### Regression test
+`e2e/reader.spec.js` "after a text-size change the saved anchor reopens the
+same place": failed before, passes after.
+
+### Commit
+C17.6 feat(reader): PDF and EPUB anchors, reading position and contents
+
+## 2026-11-12 C17.6 — the position backfill would move a short place to its chunk's start
+
+**Status:** fixed
+
+### Symptom
+`python scripts/backfill_positions.py --dry-run` on the project: the EPUB
+place (block `0.14`, "Chapter II", 10 characters) would get
+`epubcfi(/6/2!/4/2/1:0)`, the first element of the book, a chapter before
+the reader's place. Expected: Chapter II's heading.
+
+### Repro
+`backend/tests/test_backfill_positions.py::test_a_short_block_is_found_with_the_text_after_it_not_by_its_chunks_start`:
+a "Chapter 2" block mapped to `/6/4!` (chapter 1) instead of `/6/6!`.
+
+### Hypotheses
+1. The block's text is shorter than the shortest snippet (20 squeezed
+   characters), so only the chunk's start was searched. Confirmed: a
+   read-only query gave the block 10 characters; the second PDF place
+   had 17 left after its offset and took the same fallback.
+2. The spine order differs from ingestion's document order. Not the
+   cause: the fix alone moves the place to the right section.
+
+### Root cause
+`scripts/backfill_positions.py` `snippets`: the block's text from the
+offset, alone.
+
+### Fix
+The snippet runs from the offset through the blocks after it in the
+chunk; the chunk's start stays the last fallback.
+
+### Regression test
+The test above: failed before (`/6/4!`), passes after (7 passed). The dry
+run then gave `epubcfi(/6/4!/4/2/1:0)` for that place.
+
+### Commit
+fix(tooling): search past short blocks when backfilling reading positions
+
+## 2026-11-12 C17.6 — the EPUB page-turn e2e fails now and then
+
+**Status:** mitigated in the test on your call ("Harden the test"); the root cause is still not proven
+
+### Symptom
+`npm --prefix frontend run test:e2e` before the backfill-record commit: 123
+passed, 1 failed, `reader.spec.js:16` "epub: pages and turns › arrow keys,
+the turn buttons and the page edge turn the page". It had passed in the
+three full runs before, and only `docs/PROGRESS.md` had changed.
+
+    > 31 |       await expect.poll(() => shown(page)).toEqual(third);
+    Error: expect(received).toEqual(expected) // deep equality
+
+### Repro
+`npx playwright test e2e/reader.spec.js:16 --repeat-each=8`: 1 failure in
+16 runs, at the same line. Not reproduced since: 10 x 2, 24 and 40 runs on
+the EPUB (the last with every place change traced), and 15 runs at 4x CPU
+throttling all passed (79 in all).
+
+### Hypotheses
+1. The test records `third` at the first place change it sees after a
+   turn; if foliate reports an in-between place while moving into the next
+   section, that reading is not the page it settles on. Not confirmed (no
+   failure with the trace on).
+2. A page-edge click while a leaf is still turning is queued and runs
+   against a stale place. Not confirmed.
+
+### Root cause
+Not established.
+
+### Fix
+`frontend/e2e/fixtures.js` `settled(page, away)`: a place is read only
+once no leaf is turning and two reads 300 ms apart agree (and it differs
+from `away`); the turn test reads every place through it. No app code
+changed: hypothesis 1, if right, is a test race, not a reader bug.
+
+### Regression test
+`npx playwright test e2e/reader.spec.js:16 --repeat-each=40`: 80 passed
+(both books). Before the change the failure was 2 in about 100 runs, so
+this is evidence, not proof.
+
+### Commit
+test(reader): read each place in the turn test once its turn has landed

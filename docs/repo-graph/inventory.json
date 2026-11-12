@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 534,
-    "inventoried": 394,
+    "tracked": 536,
+    "inventoried": 396,
     "excluded": 140
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13394,
+      "size_bytes": 13412,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -663,6 +663,14 @@
       "purpose": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development."
     },
     {
+      "path": "backend/tests/test_backfill_book_files.py",
+      "language": "python",
+      "lines": 65,
+      "size_bytes": 2764,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_book_files.py on the in-memory database: pending books (no file_sha256) in id order, hash, size, format and pages stored, format only without a stored file, dry run writes nothing, the dev-only guard."
+    },
+    {
       "path": "backend/tests/test_backfill_covers.py",
       "language": "python",
       "lines": 84,
@@ -1146,7 +1154,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3384,
-      "size_bytes": 601312,
+      "size_bytes": 602355,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2759,6 +2767,14 @@
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
     {
+      "path": "scripts/backfill_book_files.py",
+      "language": "python",
+      "lines": 87,
+      "size_bytes": 3717,
+      "role": "script",
+      "purpose": "Backfill: file_sha256, file_bytes, file_format and page_count for books uploaded before C17.1 (file_format from file_type; the stored file downloaded once to hash); --dry-run, --limit, --book-id; refuses unless ENV=development; needs migration 016."
+    },
+    {
       "path": "scripts/backfill_covers.py",
       "language": "python",
       "lines": 113,
@@ -3097,8 +3113,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 396,
-      "size_bytes": 115452,
+      "lines": 398,
+      "size_bytes": 116019,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

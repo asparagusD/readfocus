@@ -7,15 +7,19 @@ import './epub.css';
  * paged by foliate-js into the box this component fills (two pages side by side from
  * 1024 px, one below; fixed-layout books page by page). `load(bookId)` gives the file
  * (default: this device's copy, else the signed URL). `ref` gets { next, prev, goTo, contents }.
- * `style` is 'publisher' or 'readfocus' (Lora at `fontSize`).
+ * `style` is 'publisher' or 'readfocus' (Lora); `fontSize`, `lineHeight` and `margins`
+ * (narrow, normal, wide) apply in both; `themeCss` recolours for lamplight (C17.4).
  */
-export function EpubView({ bookId, load = fromBook, style = 'publisher', fontSize = 18, onRelocate, onLoad, onReady, ref, label = 'Book' }) {
+export function EpubView({
+  bookId, load = fromBook, style = 'publisher', fontSize = 18, lineHeight = null, margins = 'normal', themeCss = '',
+  animated = true, wide, onRelocate, onLoad, onReady, onError, ref, label = 'Book',
+}) {
   const box = useRef(null);
   const [engine, setEngine] = useState(null);
   const [failure, setFailure] = useState(null);
-  const handlers = useRef({ onRelocate, onLoad, onReady });
-  useEffect(() => { handlers.current = { onRelocate, onLoad, onReady }; });
-  const initial = useRef({ style, fontSize });
+  const handlers = useRef({ onRelocate, onLoad, onReady, onError });
+  useEffect(() => { handlers.current = { onRelocate, onLoad, onReady, onError }; });
+  const initial = useRef({ style, fontSize, animated, wide });
 
   useEffect(() => {
     let opened = null;
@@ -32,16 +36,19 @@ export function EpubView({ bookId, load = fromBook, style = 'publisher', fontSiz
         setEngine(made);
         handlers.current.onReady?.(made);
       })
-      .catch((error) => !gone && setFailure(error));
+      .catch((error) => { if (!gone) { setFailure(error); handlers.current.onError?.(error); } });
     return () => {
       gone = true;
       opened?.close();
     };
   }, [bookId, load]);
 
-  useEffect(() => { engine?.setStyle(style, { fontSize }); }, [engine, style, fontSize]);
+  useEffect(() => { engine?.setStyle(style, { fontSize, lineHeight, themeCss }); }, [engine, style, fontSize, lineHeight, themeCss]);
+  useEffect(() => { engine?.setMargins(margins); }, [engine, margins]);
+  useEffect(() => { if (wide !== undefined) engine?.setWide(wide); }, [engine, wide]);
   useImperativeHandle(ref, () => engine && {
-    next: engine.next, prev: engine.prev, goTo: engine.goTo, contents: engine.contents, isFixedLayout: engine.isFixedLayout,
+    next: engine.next, prev: engine.prev, goTo: engine.goTo, goToFraction: engine.goToFraction, contents: engine.contents, isFixedLayout: engine.isFixedLayout,
+    locations: engine.locations, lastLocation: engine.lastLocation, toc: engine.book.toc ?? [],
   }, [engine]);
 
   return (

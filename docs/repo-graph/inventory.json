@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 586,
-    "inventoried": 445,
+    "tracked": 589,
+    "inventoried": 448,
     "excluded": 141
   },
   "files": [
@@ -1162,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3399,
-      "size_bytes": 620480,
+      "size_bytes": 621658,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2247,20 +2247,28 @@
       "purpose": "Node test (npm run test:unit): the device copy first without asking the server, the signed URL otherwise, the server's message for a device-only book with no copy here."
     },
     {
+      "path": "frontend/src/originalview/epub/EpubBook.jsx",
+      "language": "jsx",
+      "lines": 72,
+      "size_bytes": 3338,
+      "role": "asset",
+      "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls."
+    },
+    {
       "path": "frontend/src/originalview/epub/EpubView.jsx",
       "language": "jsx",
-      "lines": 53,
-      "size_bytes": 2252,
+      "lines": 60,
+      "size_bytes": 2867,
       "role": "asset",
-      "purpose": "An EPUB as published (C17.3): opens the book's file through engine.js into the box it fills (spread from 1024 px, one page below, fixed layout page by page); style prop 'publisher' or 'readfocus' with font size; ref gives next, prev, goTo, contents."
+      "purpose": "An EPUB as published (C17.3): opens the book's file through engine.js into the box it fills (spread from 1024 px, one page below, fixed layout page by page); style prop 'publisher' or 'readfocus' with font size; ref gives next, prev, goTo, contents. C17.4: line height, margins, theme CSS, animated, wide and onError props; goToFraction, locations, lastLocation and toc on the ref."
     },
     {
       "path": "frontend/src/originalview/epub/engine.js",
       "language": "javascript",
-      "lines": 91,
-      "size_bytes": 4510,
+      "lines": 159,
+      "size_bytes": 7708,
       "role": "asset",
-      "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made)."
+      "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made). C17.4: text size and line height in both styles, margins, theme CSS, animated off for the frame, wide from the frame, goToFraction, locations (character counts, cached per book), charStart and charEnd on relocate."
     },
     {
       "path": "frontend/src/originalview/epub/epub.css",
@@ -2389,6 +2397,22 @@
       "size_bytes": 2448,
       "role": "asset",
       "purpose": "React hooks (C17.2): usePdfDocument(bookId, load) opens the book's PDF (loading PDF.js while the source is fetched) and destroys it on unmount; usePageCache(doc, scale, current) keeps current ±2 pages rendered and starts afresh on a new scale or pixel ratio. C17.4: the page cache starts afresh on new lamplight colours."
+    },
+    {
+      "path": "frontend/src/originalview/useBoxSize.js",
+      "language": "javascript",
+      "lines": 19,
+      "size_bytes": 681,
+      "role": "asset",
+      "purpose": "useBoxSize(ref): an element's rounded client size, kept current by a ResizeObserver (C17.4)."
+    },
+    {
+      "path": "frontend/src/originalview/useLamplight.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2893,
+      "role": "asset",
+      "purpose": "Theme hooks (C17.4): useTheme (theme and accent on <html>), useOriginalColours (per-book choice in localStorage, shared between hook users by an event), useLamplight (the lamplight page, text, link and code colours, or null in Paper or with original colours)."
     },
     {
       "path": "frontend/src/pages/ComprehensionTest.css",
@@ -3505,8 +3529,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 447,
-      "size_bytes": 129034,
+      "lines": 450,
+      "size_bytes": 130101,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

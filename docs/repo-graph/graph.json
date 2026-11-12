@@ -1937,6 +1937,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/originalview/epub/EpubView.jsx",
       "type": "file",
       "role": "asset",
@@ -2040,6 +2046,18 @@
     },
     {
       "id": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/useBoxSize.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/useLamplight.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -5674,6 +5692,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/originalview/epub/EpubView.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubView.jsx",
       "to": "file:frontend/src/originalview/bookFile.js"
     },
@@ -5691,6 +5719,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/engine.js",
       "to": "file:frontend/src/originalview/epub/urls.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/engine.js",
+      "to": "file:frontend/src/originalview/frame.js"
     },
     {
       "type": "imports",

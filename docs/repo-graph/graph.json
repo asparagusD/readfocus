@@ -2027,6 +2027,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/recolour.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/recolour.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/usePdfDocument.js",
       "type": "file",
       "role": "asset",
@@ -5719,6 +5731,16 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/pageCache.test.js",
       "to": "file:frontend/src/originalview/pdf/pageCache.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/pdfjs.js",
+      "to": "file:frontend/src/originalview/pdf/recolour.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/recolour.test.js",
+      "to": "file:frontend/src/originalview/pdf/recolour.js"
     },
     {
       "type": "imports",

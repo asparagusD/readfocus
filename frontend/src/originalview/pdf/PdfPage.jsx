@@ -7,7 +7,7 @@ import './pdf.css';
  * ratio, with PDF.js's invisible text layer laid exactly over it for selection,
  * search and word lookup. `onShown(pageNumber)` fires once both are on screen.
  */
-export function PdfPage({ cache, pageNumber, label, onShown }) {
+export function PdfPage({ cache, pageNumber, label, onShown, side = 'single' }) {
   const root = useRef(null);
   const sheet = useRef(null);
   const text = useRef(null);
@@ -38,7 +38,7 @@ export function PdfPage({ cache, pageNumber, label, onShown }) {
   }, [cache, pageNumber]);
 
   return (
-    <div ref={root} className="rf-pdf-page" role="group" aria-label={label ?? `Page ${pageNumber}`}
+    <div ref={root} className="rf-pdf-page" data-side={side} role="group" aria-label={label ?? `Page ${pageNumber}`}
       style={size ? { width: size.width, height: size.height } : undefined}>
       <div ref={sheet} className="rf-pdf-page__canvas" />
       <div ref={text} className="textLayer" />

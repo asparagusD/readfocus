@@ -4,6 +4,8 @@
 // under /pdfjs/ (vite.config.js, pdfjsAssets), so every image and glyph renders
 // without a third-party request.
 
+import { recolourCanvas } from './recolour';
+
 const ASSETS = '/pdfjs/';
 let loading = null;
 
@@ -31,8 +33,12 @@ export async function openPdf(source) {
   }).promise;
 }
 
-/** Render page `pageNumber` of `doc` at `scale` CSS px per PDF point into a new canvas. */
-export async function renderPage(doc, pageNumber, scale, pixelRatio = globalThis.devicePixelRatio || 1) {
+/**
+ * Render page `pageNumber` of `doc` at `scale` CSS px per PDF point into a new canvas.
+ * With `colours` ({ foreground, background }) the page is recoloured for lamplight,
+ * images and coloured figures kept as published (recolour.js, C17.4).
+ */
+export async function renderPage(doc, pageNumber, scale, pixelRatio = globalThis.devicePixelRatio || 1, colours = null) {
   const page = await doc.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
@@ -41,11 +47,31 @@ export async function renderPage(doc, pageNumber, scale, pixelRatio = globalThis
   canvas.style.width = `${Math.floor(viewport.width)}px`;
   canvas.style.height = `${Math.floor(viewport.height)}px`;
   const transform = pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0];
-  const [, textContent] = await Promise.all([
-    page.render({ canvas, viewport, transform }).promise,
-    page.getTextContent({ includeMarkedContent: true }),
-  ]);
+  // Lamplight: a context with alpha, so text is antialiased in grey, not in LCD colour
+  // fringes that the recolouring would take for coloured ink.
+  const canvasContext = colours ? canvas.getContext('2d', { alpha: true, willReadFrequently: true }) : undefined;
+  const task = page.render({ canvas, canvasContext, viewport, transform, recordImages: Boolean(colours) });
+  const [, textContent] = await Promise.all([task.promise, page.getTextContent({ includeMarkedContent: true })]);
+  // PDF.js 6 keeps the coordinates on the page (recorded on its first render, as fractions,
+  // so they hold at every scale); the task's own getter stays empty.
+  if (colours) recolourCanvas(canvas, page.imageCoordinates ?? task.imageCoordinates, colours);
   return { page, canvas, viewport, textContent };
+}
+
+/** The outline flattened to [{ title, page }] (1-based), in order; entries without a page are left out. */
+export async function pdfOutline(doc) {
+  const out = [];
+  async function walk(items = []) {
+    for (const item of items) {
+      try {
+        const dest = typeof item.dest === 'string' ? await doc.getDestination(item.dest) : item.dest;
+        if (dest?.[0]) out.push({ title: item.title, page: (typeof dest[0] === 'number' ? dest[0] : await doc.getPageIndex(dest[0])) + 1 });
+      } catch { /* a broken destination: skip it */ }
+      await walk(item.items);
+    }
+  }
+  await walk((await doc.getOutline()) ?? []);
+  return out;
 }
 
 /** Free a rendered page: the canvas's pixels and PDF.js's per-page objects. */

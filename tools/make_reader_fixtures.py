@@ -12,6 +12,8 @@ Writes into frontend/e2e/fixtures/books/:
   by xlink:href and by SVG 2 href, a CSS background, a <figure> with a
   <figcaption>, a srcset, the cover), MathML, and a <pre><code> block.
 - fixed.epub: a pre-paginated book of two pages, each a full-page image.
+- sample.pdf (C17.4): six pages with page labels i, ii, 1-4, an outline, text in a
+  standard font, a vector figure and a coloured raster image.
 - hostile.epub: a script, an event handler, a javascript: link, a form, an
   iframe, a meta refresh, a remote image, a remote stylesheet and a remote
   CSS import.
@@ -184,6 +186,62 @@ def hostile() -> Path:
     return write("hostile.epub", files)
 
 
+def pdf() -> Path:
+    """Six US Letter pages: text in Times (a standard font, not embedded), a vector figure,
+    a coloured raster image, page labels i-ii then 1-4, and an outline of two entries."""
+    objects: list[bytes] = []
+
+    def add(body: bytes) -> int:
+        objects.append(body)
+        return len(objects)
+
+    def stream(data: bytes, extra: str = "") -> bytes:
+        packed = zlib.compress(data, 9)
+        return f"<< /Length {len(packed)} /Filter /FlateDecode {extra}>>\nstream\n".encode() + packed + b"\nendstream"
+
+    font = add(b"<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman >>")
+    pixels = bytes(v for y in range(120) for x in range(160) for v in (40 + x // 2, 90 + y // 3, 160 - x // 3))
+    image = add(stream(pixels, "/Type /XObject /Subtype /Image /Width 160 /Height 120 /ColorSpace /DeviceRGB /BitsPerComponent 8 "))
+    pages_id = 3 + 6 * 2  # filled below; objects are numbered in order
+    titles = ["Preface", "A second front page", "Chapter 1 Signals", "More on signals", "Chapter 2 Noise", "The end"]
+    page_ids = []
+    for n, title in enumerate(titles, start=1):
+        lines = [f"BT /F1 22 Tf 72 700 Td ({title}) Tj ET"]
+        for row in range(14):
+            lines.append(f"BT /F1 12 Tf 72 {650 - row * 18} Td (Line {row + 1} of page {n}: the lamp threw a small circle of light.) Tj ET")
+        if n == 3:  # a vector figure: axes and a red curve
+            lines += ["0 0 0 RG 1 w 72 200 m 540 200 l S 72 200 m 72 360 l S",
+                      "0.75 0.2 0.15 RG 2 w 72 280 m 150 360 230 200 306 280 c 380 360 460 200 540 280 c S"]
+        if n == 4:  # the raster image, 320 x 240 pt
+            lines.append("q 320 0 0 240 146 120 cm /Im1 Do Q")
+        content = add(stream("\n".join(lines).encode()))
+        page_ids.append(add(f"<< /Type /Page /Parent {pages_id} 0 R /MediaBox [0 0 612 792] /Contents {content} 0 R "
+                            f"/Resources << /Font << /F1 {font} 0 R >> /XObject << /Im1 {image} 0 R >> >> >>".encode()))
+    kids = " ".join(f"{p} 0 R" for p in page_ids)
+    assert add(f"<< /Type /Pages /Kids [{kids}] /Count {len(page_ids)} >>".encode()) == pages_id
+    outline_id = len(objects) + 1
+    first, second = outline_id + 1, outline_id + 2
+    add(f"<< /Type /Outlines /First {first} 0 R /Last {second} 0 R /Count 2 >>".encode())
+    add(f"<< /Title (Chapter 1 Signals) /Parent {outline_id} 0 R /Next {second} 0 R /Dest [{page_ids[2]} 0 R /Fit] >>".encode())
+    add(f"<< /Title (Chapter 2 Noise) /Parent {outline_id} 0 R /Prev {first} 0 R /Dest [{page_ids[4]} 0 R /Fit] >>".encode())
+    labels = "<< /Nums [0 << /S /r >> 2 << /S /D >>] >>"
+    catalog = add(f"<< /Type /Catalog /Pages {pages_id} 0 R /Outlines {outline_id} 0 R /PageLabels {labels} >>".encode())
+
+    out = bytearray(b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n")
+    offsets = []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out += f"{number} 0 obj\n".encode() + body + b"\nendobj\n"
+    xref = len(out)
+    out += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode()
+    out += b"".join(f"{o:010d} 00000 n \n".encode() for o in offsets)
+    out += f"trailer\n<< /Size {len(objects) + 1} /Root {catalog} 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    OUT.mkdir(parents=True, exist_ok=True)
+    path = OUT / "sample.pdf"
+    path.write_bytes(bytes(out))
+    return path
+
+
 if __name__ == "__main__":
-    for made in (reflow(), fixed(), hostile()):
+    for made in (reflow(), fixed(), hostile(), pdf()):
         print(f"{made.relative_to(OUT.parents[3])}: {made.stat().st_size} bytes")

@@ -7,7 +7,7 @@
   position: relative;
   --scale-round-x: 1px;
   --scale-round-y: 1px;
-  background: #fff; /* the page's own paper; a PDF draws on white */
+  background: var(--rf-pdf-paper, #fff); /* the page's own paper: white, or the lamplight page (C17.4) */
 }
 
 .rf-pdf-page__canvas,

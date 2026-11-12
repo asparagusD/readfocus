@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 583,
-    "inventoried": 443,
-    "excluded": 140
+    "tracked": 586,
+    "inventoried": 445,
+    "excluded": 141
   },
   "files": [
     {
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13481,
+      "size_bytes": 13499,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1097,8 +1097,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2567,
-      "size_bytes": 113210,
+      "lines": 2628,
+      "size_bytes": 115414,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1162,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3399,
-      "size_bytes": 619053,
+      "size_bytes": 620480,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2330,9 +2330,9 @@
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
       "language": "jsx",
       "lines": 47,
-      "size_bytes": 1943,
+      "size_bytes": 1977,
       "role": "asset",
-      "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen."
+      "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen. C17.4: a side for spreads."
     },
     {
       "path": "frontend/src/originalview/pdf/pageCache.js",
@@ -2354,25 +2354,41 @@
       "path": "frontend/src/originalview/pdf/pdf.css",
       "language": "css",
       "lines": 84,
-      "size_bytes": 2051,
+      "size_bytes": 2088,
       "role": "asset",
-      "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour."
+      "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour. C17.4: the page paper follows --rf-pdf-paper (lamplight)."
     },
     {
       "path": "frontend/src/originalview/pdf/pdfjs.js",
       "language": "javascript",
-      "lines": 57,
-      "size_bytes": 2201,
+      "lines": 83,
+      "size_bytes": 3648,
       "role": "asset",
-      "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed)."
+      "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed). C17.4: renderPage recolours for lamplight (an alpha context, recorded image positions) and pdfOutline flattens the outline to pages."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/recolour.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2973,
+      "role": "asset",
+      "purpose": "Lamplight for a PDF page (C17.4) without touching images or coloured figures: hexRgb, recolourPixels (near-grey pixels remapped by luminance), imageRects (from PDF.js's recorded image corners), recolourCanvas (recolour, then put every image back)."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/recolour.test.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 1788,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): hex parsing, paper and ink remapped, greys mixed with alpha kept, coloured strokes untouched, image rectangles from corner points."
     },
     {
       "path": "frontend/src/originalview/pdf/usePdfDocument.js",
       "language": "javascript",
-      "lines": 49,
-      "size_bytes": 2158,
+      "lines": 51,
+      "size_bytes": 2448,
       "role": "asset",
-      "purpose": "React hooks (C17.2): usePdfDocument(bookId, load) opens the book's PDF (loading PDF.js while the source is fetched) and destroys it on unmount; usePageCache(doc, scale, current) keeps current ±2 pages rendered and starts afresh on a new scale or pixel ratio."
+      "purpose": "React hooks (C17.2): usePdfDocument(bookId, load) opens the book's PDF (loading PDF.js while the source is fetched) and destroys it on unmount; usePageCache(doc, scale, current) keeps current ±2 pages rendered and starts afresh on a new scale or pixel ratio. C17.4: the page cache starts afresh on new lamplight colours."
     },
     {
       "path": "frontend/src/pages/ComprehensionTest.css",
@@ -3449,10 +3465,10 @@
     {
       "path": "tools/make_reader_fixtures.py",
       "language": "python",
-      "lines": 189,
-      "size_bytes": 11965,
+      "lines": 247,
+      "size_bytes": 15502,
       "role": "script",
-      "purpose": "Writes the EPUB fixtures for the original view (reflow, fixed, hostile) into frontend/e2e/fixtures/books/ from the standard library only (generated PNG, GIF and SVG); deterministic, so a re-run changes nothing."
+      "purpose": "Writes the fixtures for the original view (reflow, fixed and hostile EPUBs; sample.pdf since C17.4) into frontend/e2e/fixtures/books/ from the standard library only (generated PNG, GIF and SVG); deterministic, so a re-run changes nothing."
     },
     {
       "path": "tools/no_paid_ai.py",
@@ -3489,8 +3505,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 445,
-      "size_bytes": 128211,
+      "lines": 447,
+      "size_bytes": 129034,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -4043,6 +4059,10 @@
     {
       "path": "docs/repo-graph/inventory.json",
       "reason": "generated"
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/sample.pdf",
+      "reason": "binary"
     },
     {
       "path": "frontend/package-lock.json",

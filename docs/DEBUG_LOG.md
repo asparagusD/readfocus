@@ -2565,3 +2565,64 @@ that both fixed-layout pages render with a non-zero frame.
 
 ### Commit
 C17.3d `feat(epub): sanitize sections and open EPUBs through foliate-js`
+
+## 2026-11-12 C17.4 — lamplight PDF recoloured part of an image
+
+### Failure
+The C17.4 frame check: in Lamplight, page 4's raster image was half
+recoloured (its grey right part turned page-coloured), against the rule that
+images are never touched.
+
+### Reproduce
+`/__book?kind=pdf` in Lamplight, page 4; the image's low-chroma pixels change.
+
+### Hypotheses (most likely first)
+1. `imageRects` mis-reads PDF.js's corner points. Ruled out if the points it
+   gets are empty. Result: they were empty: `task.imageCoordinates` returned
+   `[]` (a scratchpad script on page 4).
+2. PDF.js stores the coordinates elsewhere. Evidence: in `pdf.mjs` the render
+   callback sets `this.imageCoordinates` on the page proxy, while the task's
+   getter reads the internal task. Result: confirmed; `page.imageCoordinates`
+   holds `[0.2385, 0.5454, 0.2385, 0.8486, 0.7612, 0.5454]`, the image's place.
+
+### Root cause
+PDF.js 6.4.299 records image positions on the page, not on the render task.
+
+### Fix
+`pdfjs.js`: `page.imageCoordinates ?? task.imageCoordinates`.
+
+### Regression test
+`recolour.test.js` covers the rectangles from corner points; the frame
+check reads a pixel inside the image in Paper, Lamplight and Lamplight with
+original colours: (80, 110, 134) in all three.
+
+### Commit
+C17.4 (PDF lamplight)
+
+## 2026-11-12 C17.4 — lamplight PDF text had coloured fringes
+
+### Failure
+Lamplight PDF text looked ragged (screenshot): letters with bright edges.
+
+### Reproduce
+Count the canvas's colours in Lamplight: (255, 255, 183), (183, 87, 0),
+(87, 183, 255)... among the text.
+
+### Hypotheses (most likely first)
+1. The canvas draws text with LCD (subpixel) antialiasing, whose fringes are
+   coloured, so the recolouring keeps them as "coloured ink". Ruled out if a
+   canvas with alpha (which Chrome antialiases in grey) still has them.
+   Result: confirmed; with `getContext('2d', { alpha: true })` every text
+   pixel lies between the page and text colours.
+
+### Root cause
+LCD antialiasing on an opaque canvas.
+
+### Fix
+`pdfjs.js`: Lamplight renders get a context with alpha.
+
+### Regression test
+The frame check's colour count and a close-up screenshot (scratchpad).
+
+### Commit
+C17.4 (PDF lamplight)

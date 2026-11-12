@@ -70,3 +70,22 @@ test('under reduced motion the closing lamp does not pulse', async ({ page }) =>
   const glow = page.locator('.rf-end [data-part="glow"]');
   await expect.poll(() => glow.evaluate((el) => getComputedStyle(el).animationDuration)).toBe('1e-05s'); // base.css: 0.01 ms
 });
+
+test('a re-pagination on the closing page keeps the closing page', async ({ page }) => {
+  // Regression (docs/DEBUG_LOG.md, C15.1): the closing page has no anchor in the text, so a font load,
+  // theme change or resize there put the reader back on the last anchored text page.
+  await openReader(page);
+  await page.locator('.rf-book').focus();
+  await page.keyboard.press('End');
+  await expect(spoken(page)).toHaveText(/End of today's reading/);
+  await page.waitForTimeout(800); // the leaf lands
+  await page.evaluate(() => { document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; });
+  await page.waitForTimeout(500);
+  await expect(spoken(page)).toHaveText(/End of today's reading/);
+  // A resize can make the text an odd number of pages: the closing page then shares the last spread.
+  await page.setViewportSize({ width: 1300, height: 860 });
+  await page.waitForTimeout(500);
+  await expect(page.locator('.rf-end').getByRole('button', { name: 'Start test' })).toBeVisible();
+  await page.keyboard.press('Home');
+  await expect(spoken(page)).toHaveText(/^Pages 1 and 2 of/); // leaving it still works
+});

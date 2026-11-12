@@ -2217,3 +2217,74 @@ fix: 2 failed, 3 passed. After: 5 passed. The repro with
 
 ### Commit
 fix(ci): declare test and script dependencies in requirements-dev.txt
+
+## 2026-11-12 C15.1 — the closing page jumps back to an earlier page
+
+**Status:** fixed
+
+### Symptom
+The first local runs of the live journey (`frontend/e2e/journey.spec.js`,
+real backend on :8000, test user A, `sample.pdf`, 4 text pages today) could
+not reach the closing page: End (and ArrowRight from the last spread) left
+the reader where it was, so Start test never showed. Expected: the closing
+page with Start test.
+
+    npm --prefix frontend run test:live
+    Error: expect(locator).toBeVisible() failed
+    Locator: locator('.rf-end').getByRole('button', { name: 'Start test' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+        at I:\readfocus\frontend\e2e\journey.spec.js:146:67
+
+Just before End: `{ active: 'rf-book', books: 1, turning: 'false', cards: 0 }`
+(focus on the book, no leaf turning, no word card). The page after End read
+"Pages 1 and 2 of 4". The first run, two ArrowRights: "Pages 3 and 4 of 4"
+stayed after the second press.
+
+### Repro
+Offline, mocked (the fixtures' Walden session): End, then a theme change.
+
+    npx playwright test e2e/<scratch>.spec.js
+    Expected pattern: /End of today's reading/
+    Received string:  "Pages 1 and 2 of 6"
+
+Now `frontend/e2e/reading.spec.js` › "a re-pagination on the closing page
+keeps the closing page".
+
+### Hypotheses
+1. A re-pagination while the closing page shows puts the reader back on the
+   anchor's page: `goTo` moves the anchor only when `anchorForPage` finds
+   text on the target page, and the closing page has none, so the anchor
+   stays on the last text page reached; the layout effect then sets the
+   page from the anchor. In the live session the closing page's fonts load
+   when it first shows (`document.fonts` `loadingdone` bumps the relayout
+   tick). Ruled out if a theme change (another tick) on the closing page
+   keeps it. Result: **confirmed**: the offline repro above, and both live
+   failures land exactly on the last anchored page (3-4, then 1-2).
+2. Keys are lost: focus leaves the book, or a word card swallows them.
+   Ruled out by the focus dump above (focus on `.rf-book`, no card).
+3. The closing page is missing from the layout (`count` = `text`). Ruled
+   out: the mocked End reaches it, and `count = text + 1` whenever there
+   is an `endPage` (`BookReader.jsx:84`).
+
+### Root cause
+`frontend/src/reader/BookReader.jsx`: the reader's place is only an anchor
+in the text, and the closing page (outside the flow) has no anchor, so any
+re-pagination there (font load, theme, accent, resize, text size) restored
+the last text page. In the live reader the font load happens the moment
+the closing page first shows, so the reader could never stay on it.
+
+### Fix
+A `atEnd` ref, set by `goTo` when the target is the closing page alone
+(`target >= layout.text` with an end page); the layout effect keeps the
+closing page while it is set. Any move to a text page clears it. One
+attempt.
+
+### Regression test
+`frontend/e2e/reading.spec.js` › "a re-pagination on the closing page keeps
+the closing page". Failed before the fix (received "Pages 1 and 2 of 6"),
+passes after.
+
+### Commit
+fix(reader): keep the closing page across re-pagination

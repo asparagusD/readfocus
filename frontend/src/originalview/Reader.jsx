@@ -1,0 +1,212 @@
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { easing, prefersReducedMotion, seconds } from '../motion/presets';
+import { Button } from '../components/ui/Button';
+import { EpubBook } from './epub/EpubBook';
+import { PdfBook } from './pdf/PdfBook';
+import { keyAction, SPREAD_MIN_WIDTH, timeAtProgress } from './frame';
+import { useLamplight } from './useLamplight';
+import './frame.css';
+
+const SWIPE_PX = 48;
+
+/** True from SPREAD_MIN_WIDTH up: two pages side by side (C12, handoff 11-12). */
+function useWide() {
+  const query = `(min-width: ${SPREAD_MIN_WIDTH}px)`;
+  const [wide, setWide] = useState(() => globalThis.matchMedia?.(query).matches ?? true);
+  useEffect(() => {
+    const list = globalThis.matchMedia?.(query);
+    const change = () => setWide(list.matches);
+    list?.addEventListener('change', change);
+    return () => list?.removeEventListener('change', change);
+  }, [query]);
+  return wide;
+}
+
+/**
+ * One leaf turning over the page (C17.4), the same for both renderers: a sheet of
+ * paper hinged at the spine fades in over the outgoing page, swings across, and
+ * fades onto the other side. The renderer moves at the halfway point, under the
+ * leaf, so neither renderer has to draw the next page early. Only transform and
+ * opacity move, with the --dur-5 and --ease-settle tokens, through the Web
+ * Animations API (an m.div leaf jumped to its end state here; DEBUG_LOG C17.4).
+ */
+function TurnLeaf({ turn, wide, onMiddle, onDone }) {
+  const leaf = useRef(null);
+  const shade = useRef(null);
+  const side = wide ? (turn.dir > 0 ? 'right' : 'left') : (turn.dir > 0 ? 'single' : 'single-back');
+  useEffect(() => {
+    const duration = seconds('--dur-5') * 1000;
+    const curve = easing('--ease-settle');
+    const edge = timeAtProgress(curve, 0.5); // the leaf stands on edge: the page changes under it
+    const to = turn.dir > 0 ? -180 : 180;
+    const swing = leaf.current?.animate([{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${to}deg)` }],
+      { duration, easing: `cubic-bezier(${curve.join(', ')})`, fill: 'forwards' });
+    const fade = leaf.current?.animate([{ opacity: 0 }, { opacity: 1, offset: edge * 0.6 }, { opacity: 1, offset: edge * 1.6 }, { opacity: 0 }],
+      { duration, easing: 'linear', fill: 'forwards' });
+    shade.current?.animate([{ opacity: 0 }, { opacity: 0.6, offset: edge }, { opacity: 0 }], { duration, easing: 'linear' });
+    const middle = setTimeout(onMiddle, duration * edge);
+    const done = setTimeout(onDone, duration + 60); // ends the turn even if the animation is cut short
+    return () => { clearTimeout(middle); clearTimeout(done); swing?.cancel(); fade?.cancel(); };
+  }, [turn.id]); // eslint-disable-line react-hooks/exhaustive-deps -- one leaf per turn
+  return (
+    <div ref={leaf} className="rf-ov-leaf" data-side={side} aria-hidden="true">
+      <div ref={shade} className="rf-ov-shade" data-side={side} />
+    </div>
+  );
+}
+
+/**
+ * A book shown as published, PDF or EPUB, in one frame (C17.4): a spread from
+ * 1024 px and one page below, the running header (title, contents entry) and the
+ * ribbon outside the page, a folio under it, page turns by keys, edge clicks and
+ * swipes, and lamplight colours that never touch images. `ref` gets
+ * { goTo(anchor), next(), prev(), visibleRange(), getSelection(), documents() }.
+ * onRelocate(place) on every move; onBookmark(anchor) from the ribbon or B.
+ */
+export function Reader({
+  kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
+  onRelocate, onBookmark, onReady, onBack, label, ref,
+}) {
+  const wide = useWide();
+  const { colours, theme, original } = useLamplight(bookId);
+  const book = useRef(null);
+  const [place, setPlace] = useState(null);
+  const [turn, setTurn] = useState(null);
+  const [failure, setFailure] = useState(null);
+  const [attempt, setAttempt] = useState(0); // Try again remounts the renderer
+  const [sheet, setSheet] = useState(null); // a PDF spread's width: header, footer and ribbon follow it
+  const swipe = useRef(null);
+  const stage = useRef(null);
+  const busy = useRef(false);
+
+  const relocate = useCallback((next) => {
+    setPlace(next);
+    onRelocate?.(next);
+  }, [onRelocate]);
+  useEffect(() => { if (place) onReady?.(); }, [Boolean(place)]); // eslint-disable-line react-hooks/exhaustive-deps -- first place only
+
+  const move = useCallback(async (dir) => {
+    const renderer = book.current;
+    if (!renderer || busy.current) return false;
+    if ((dir > 0 && place?.atEnd) || (dir < 0 && place?.atStart)) return false;
+    if (prefersReducedMotion()) return dir > 0 ? renderer.next() : renderer.prev();
+    busy.current = true;
+    setTurn({ id: Date.now(), dir });
+    return true;
+  }, [place]);
+
+  const act = useCallback((action) => {
+    const renderer = book.current;
+    if (!renderer) return;
+    if (action === 'next') move(1);
+    else if (action === 'prev') move(-1);
+    else if (action === 'first') renderer.first();
+    else if (action === 'last') renderer.last();
+    else if (action === 'ribbon' && onBookmark) onBookmark(renderer.anchor());
+  }, [move, onBookmark]);
+
+  const onKey = useCallback((event) => {
+    if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+    const action = keyAction(event);
+    if (!action || (action === 'ribbon' && !onBookmark)) return;
+    event.preventDefault();
+    act(action);
+  }, [act, onBookmark]);
+
+  const onKeyRef = useRef(null);
+  const swipeStart = useRef(null);
+  const swipeEnd = useRef(null);
+  useEffect(() => {
+    onKeyRef.current = onKey;
+    swipeStart.current = (event) => {
+      if (event.pointerType === 'mouse' || book.current?.panning()) return;
+      swipe.current = { x: event.clientX, y: event.clientY };
+    };
+    swipeEnd.current = (event) => {
+      const start = swipe.current;
+      swipe.current = null;
+      if (!start) return;
+      const dx = event.clientX - start.x;
+      if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(event.clientY - start.y) * 1.5) move(dx < 0 ? 1 : -1);
+    };
+  });
+
+  // Keys and swipes inside an EPUB section reach us too (it lives in an iframe).
+  const watched = useRef(new WeakSet());
+  const onDocument = useCallback((doc) => {
+    if (watched.current.has(doc)) return;
+    watched.current.add(doc);
+    doc.addEventListener('keydown', (e) => onKeyRef.current?.(e));
+    doc.addEventListener('pointerdown', (e) => swipeStart.current?.(e));
+    doc.addEventListener('pointerup', (e) => swipeEnd.current?.(e));
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    goTo: (anchor) => book.current?.goTo(anchor),
+    next: () => move(1),
+    prev: () => move(-1),
+    visibleRange: () => book.current?.visibleRange() ?? null,
+    getSelection: () => book.current?.getSelection() ?? null,
+    documents: () => book.current?.documents() ?? [],
+    anchor: () => book.current?.anchor() ?? null,
+  }), [move]);
+
+  const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book };
+  return (
+    <section className="rf-ov" aria-label={label ?? title} data-wide={wide} data-kind={kind}
+      data-original={theme === 'lamplight' && original ? 'true' : undefined} data-loading={!place && !failure}
+      style={{ ...(sheet ? { '--ov-sheet': `${sheet.width}px`, '--ov-sheet-h': `${sheet.height}px`, '--ov-sheet-pad': 'var(--space-4)' } : null), '--rf-leaf-paper': kind === 'pdf' ? (colours?.background ?? '#fff') : undefined }}>
+      <header className="rf-ov-head" aria-hidden="true" data-empty={!place?.entry}>
+        <span className="rf-ov-head-title">{title}</span>
+        <span className="rf-ov-head-entry">{place?.entry ?? ''}</span>
+      </header>
+      <div className="rf-ov-stage" ref={stage} tabIndex={0} onKeyDown={onKey} aria-roledescription="book"
+        aria-label={`${title}. Arrow keys, Page Up and Page Down, or Space turn the page.`}
+        onPointerDown={(e) => swipeStart.current?.(e)} onPointerUp={(e) => swipeEnd.current?.(e)}
+        onPointerCancel={() => { swipe.current = null; }}>
+        <div className="rf-ov-book" data-spread={wide}>
+          {kind === 'pdf'
+            ? <PdfBook key={attempt} {...shared} zoom={zoom} onSheet={setSheet} />
+            : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} />}
+          {turn && (
+            <TurnLeaf key={turn.id} turn={turn} wide={wide}
+              onMiddle={() => (turn.dir > 0 ? book.current?.next() : book.current?.prev())}
+              onDone={() => { busy.current = false; setTurn(null); }} />
+          )}
+          {/* The outer page edges turn the page for a pointer; keyboard users have the keys and buttons. */}
+          <button type="button" className="rf-ov-edge" data-edge="back" tabIndex={-1} aria-hidden="true"
+            onClick={() => move(-1)} disabled={place?.atStart} />
+          <button type="button" className="rf-ov-edge" data-edge="forward" tabIndex={-1} aria-hidden="true"
+            onClick={() => move(1)} disabled={place?.atEnd} />
+          {onBookmark && place && !failure && (
+            <button type="button" className="rf-ov-ribbon" onClick={() => act('ribbon')} aria-label="Save my place"
+              aria-keyshortcuts="B" title="Save my place (B)">
+              <span className="rf-ov-ribbon-tail" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+        {failure && (
+          <div className="rf-ov-error" role="alert">
+            <h2>This book could not be opened</h2>
+            <p>{failure.message || 'The file did not load.'}</p>
+            <div className="rf-ov-error-actions">
+              <Button onClick={() => { setFailure(null); setAttempt((n) => n + 1); }}>Try again</Button>
+              {onBack && <Button variant="secondary" onClick={onBack}>Back to the library</Button>}
+            </div>
+          </div>
+        )}
+      </div>
+      <footer className="rf-ov-foot">
+        <button type="button" className="rf-ov-turn" onClick={() => move(-1)} disabled={!place || place.atStart}>
+          <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" /><span>Previous</span>
+        </button>
+        <p className="rf-ov-folio">{place ? [place.folio, place.entry].filter(Boolean).join(' · ') : failure ? 'Not opened' : 'Opening the book…'}</p>
+        <button type="button" className="rf-ov-turn" onClick={() => move(1)} disabled={!place || place.atEnd}>
+          <span>Next</span><ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      </footer>
+      <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{place?.folio ?? ''}</p>
+    </section>
+  );
+}

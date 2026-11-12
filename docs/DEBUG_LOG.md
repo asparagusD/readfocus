@@ -2626,3 +2626,38 @@ The frame check's colour count and a close-up screenshot (scratchpad).
 
 ### Commit
 C17.4 (PDF lamplight)
+
+## 2026-11-12 C17.4 — the page-turn leaf jumped to its end state
+
+### Failure
+Sampling the leaf every 60 ms during a turn: from the first sample it was
+at `rotateY(-180deg)`, opacity 0; no animation ran.
+
+### Reproduce
+`/__book?kind=pdf`, `__book.reader.next()`, read the leaf's inline style.
+
+### Hypotheses (most likely first)
+1. Reduced motion: the machine has it on and Playwright follows the system.
+   Ruled out with `reducedMotion: 'no-preference'` (matchMedia false): it
+   still jumped.
+2. The `m.div` with inline keyframes: tried the variants pattern C12 uses;
+   still jumped. Motion's `animate()` on a plain element in the same page
+   animated, so Motion itself works; the cause in the `m` component was not
+   found.
+
+### Root cause
+Not established (an `m.div` mounted inside the reader frame applied its
+`animate` values at once).
+
+### Fix
+`Reader.jsx` `TurnLeaf`: the leaf moves with the Web Animations API
+(`element.animate`), timed from the `--dur-5` and `--ease-settle` tokens;
+the page changes when the leaf stands on edge (`timeAtProgress`).
+
+### Regression test
+`frame.test.js` "the turn happens when the leaf stands on edge"; the
+sampling script shows opacity rising to 1 by 130 ms and falling to 0 at
+600 ms with two running animations.
+
+### Commit
+C17.4 (frame)

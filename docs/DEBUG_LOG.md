@@ -2288,3 +2288,55 @@ passes after.
 
 ### Commit
 fix(reader): keep the closing page across re-pagination
+
+## 2026-11-12 C15.2 — /sessions/start serves another reader's book (issue 17)
+
+**Status:** fixed
+
+### Symptom
+Open since C2.5 (issue 17, from the code): `POST /sessions/start` never
+checks that `book_id` is the caller's. A reader who knows another reader's
+book id gets a session on it and that book's chunk text. Expected: 404,
+nothing created, nothing returned.
+
+    pytest backend/tests/test_api_sessions.py -q -k not_the_callers
+    >       assert response.status_code == 404
+    E       assert 200 == 404
+    backend\tests\test_api_sessions.py:618: AssertionError
+
+### Repro
+`backend/tests/test_api_sessions.py::test_start_refuses_a_book_that_is_not_the_callers`
+(in-memory database, a second user's book and chunks).
+
+### Hypotheses
+1. The handler filters the chunk read by `book_id` only and inserts the
+   session without a book check (`backend/routers/sessions.py`,
+   `start_session`: `chunks ... .eq("book_id", ...)`, no `books` read
+   before the planner). Ruled out if the test still fails with a
+   `books` ownership check in front. Result: **confirmed**: the three new
+   tests pass with the check.
+2. The service-role client bypasses RLS, so the database cannot stop it
+   either. Evidence: `backend/database.py` builds the client with the
+   service-role key. Not a separate cause: it is why the handler must check.
+
+### Root cause
+`backend/routers/sessions.py` `start_session`: the only endpoint taking a
+`book_id` that never read `books` with `.eq("user_id", ...)`; the backend
+uses the service-role key, so RLS does not apply.
+
+### Fix
+`owns_book(user_id, book_id)` reads `books` by id and user before the
+planner runs; not the caller's (or missing) is 404 "Book not found.", and
+a failed read is 503 (fail closed). The session fixtures now own their
+book (`books` row for `user-1`). The old test "a failed book read never
+fails the start" now expects 503: with `books` down, ownership cannot be
+checked, and starting anyway was the hole. One attempt.
+
+### Regression test
+`backend/tests/test_api_sessions.py::test_start_refuses_a_book_that_is_not_the_callers`,
+`::test_start_refuses_a_book_that_does_not_exist`,
+`::test_start_fails_closed_when_ownership_cannot_be_checked`. Before the
+fix: 3 failed (200 instead of 404 / 503). After: 3 passed.
+
+### Commit
+fix(api): check book ownership before starting a session

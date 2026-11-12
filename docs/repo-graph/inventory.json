@@ -82,7 +82,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 206,
-      "size_bytes": 11499,
+      "size_bytes": 11533,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -433,10 +433,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 337,
-      "size_bytes": 16938,
+      "lines": 351,
+      "size_bytes": 17727,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author and toc and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author and toc and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -625,16 +625,16 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 601,
-      "size_bytes": 29305,
+      "lines": 632,
+      "size_bytes": 30621,
       "role": "test",
       "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time."
     },
     {
       "path": "backend/tests/test_api_start_reader.py",
       "language": "python",
-      "lines": 57,
-      "size_bytes": 2556,
+      "lines": 58,
+      "size_bytes": 2641,
       "role": "test",
       "purpose": "Pytest on the in-memory database: /sessions/start sends each chunk's blocks, the book's title, author and contents (an empty list when none), the chapter in effect before the first chunk (from books.toc), copes with a book without toc or blocks, and still starts when the book read fails."
     },
@@ -1009,8 +1009,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2290,
-      "size_bytes": 101000,
+      "lines": 2342,
+      "size_bytes": 103337,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1050,7 +1050,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2682,
-      "size_bytes": 530582,
+      "size_bytes": 530777,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2962,7 +2962,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 379,
-      "size_bytes": 109201,
+      "size_bytes": 109300,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

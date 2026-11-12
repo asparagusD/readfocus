@@ -154,6 +154,7 @@ def bank_rows(chunk_index, chunk_id):
 @pytest.fixture
 def api(monkeypatch):
     db = FakeDb()
+    db.tables["books"] = [{"id": BOOK, "user_id": USER}]
     db.tables["chunks"] = [
         {"id": f"chunk-{i}", "book_id": BOOK, "user_id": USER, "chunk_index": i, "content": f"text {i}",
          "word_count": 2} for i in range(3)
@@ -599,3 +600,33 @@ def test_start_reads_the_chunks_and_creates_the_session_at_once(api, monkeypatch
     assert resp.status_code == 200 and [c["chunk_index"] for c in resp.json()["chunks"]] == [0]
     (read_start, read_end), (insert_start, insert_end) = spans[("chunks", "select")], spans[("sessions", "insert")]
     assert read_start < insert_end and insert_start < read_end  # the two calls overlap in time
+
+
+# Issue 17 (C15.2): /sessions/start served any book whose id the caller knew.
+OTHER_BOOK = "book-of-user-2"
+
+
+def other_users_book(api):
+    api.db.tables["books"].append({"id": OTHER_BOOK, "user_id": "user-2"})
+    api.db.tables["chunks"] += [{"id": f"secret-{i}", "book_id": OTHER_BOOK, "user_id": "user-2", "chunk_index": i,
+                                 "content": f"user 2's private text {i}", "word_count": 4} for i in range(3)]
+
+
+def test_start_refuses_a_book_that_is_not_the_callers(api):
+    other_users_book(api)
+    response = api.client.post("/sessions/start", json={"book_id": OTHER_BOOK})
+    assert response.status_code == 404
+    assert "private text" not in response.text
+    assert api.db.tables.get("sessions", []) == []  # no session row on someone else's book
+    assert ("chunks", "select") not in api.db.calls
+
+
+def test_start_refuses_a_book_that_does_not_exist(api):
+    assert api.client.post("/sessions/start", json={"book_id": "no-such-book"}).status_code == 404
+
+
+def test_start_fails_closed_when_ownership_cannot_be_checked(api):
+    api.db.broken.add("books")
+    response = api.client.post("/sessions/start", json={"book_id": BOOK})
+    assert response.status_code == 503
+    assert api.db.tables.get("sessions", []) == []

@@ -50,8 +50,9 @@ def test_a_book_without_a_toc_or_blocks_still_starts(api, book):  # noqa: F811
     assert body["book"]["toc"] == []  # contents drawer: an empty list, not null
 
 
-def test_a_failed_book_read_never_fails_the_start(api, book):  # noqa: F811
+def test_a_failed_book_read_stops_the_start(api, book):  # noqa: F811
+    # Was 200 with no title (C12.3b); since C15.2 the same read checks ownership, so it fails closed.
     api.db.broken.add("books")
     response = api.client.post("/sessions/start", json={"book_id": BOOK})
-    assert response.status_code == 200
-    assert response.json()["book"] is None and response.json()["chapter_before"] is None
+    assert response.status_code == 503
+    assert "sessions" not in api.db.tables or api.db.tables["sessions"] == []

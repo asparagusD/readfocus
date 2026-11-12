@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 542,
-    "inventoried": 402,
+    "tracked": 545,
+    "inventoried": 405,
     "excluded": 140
   },
   "files": [
@@ -1089,8 +1089,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1151,
-      "size_bytes": 64081,
+      "lines": 1204,
+      "size_bytes": 67240,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1154,7 +1154,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3389,
-      "size_bytes": 609042,
+      "size_bytes": 610728,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1401,10 +1401,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 126,
-      "size_bytes": 5462,
+      "lines": 131,
+      "size_bytes": 5802,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2)."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -1855,6 +1855,14 @@
       "purpose": "Dev-only /__illustrations page: the illustration set (now with the candle) in all four theme x accent panels, loop and steam switches, three sizes and a titled example; not in the production build."
     },
     {
+      "path": "frontend/src/gallery/PdfGallery.jsx",
+      "language": "jsx",
+      "lines": 60,
+      "size_bytes": 2713,
+      "role": "asset",
+      "purpose": "Dev-only /__pdf (C17.2): the PDF renderer on a chosen file or ?url=, with Previous/Next, 100/150/200 % zoom and ?page=; first-page and page-turn times in window.__pdfTimings for the benchmark."
+    },
+    {
       "path": "frontend/src/gallery/ReaderGallery.css",
       "language": "css",
       "lines": 44,
@@ -2159,6 +2167,14 @@
       "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
     },
     {
+      "path": "frontend/src/originalview/pdf/PdfPage.jsx",
+      "language": "jsx",
+      "lines": 47,
+      "size_bytes": 1943,
+      "role": "asset",
+      "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen."
+    },
+    {
       "path": "frontend/src/originalview/pdf/documentSource.js",
       "language": "javascript",
       "lines": 12,
@@ -2189,6 +2205,14 @@
       "size_bytes": 3031,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): the window at the ends of a book, nearest-first rendering and reuse, the page that leaves the window released, a jump, on-demand pages released at the next focus, clear, a page released mid-render."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/pdf.css",
+      "language": "css",
+      "lines": 84,
+      "size_bytes": 2051,
+      "role": "asset",
+      "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour."
     },
     {
       "path": "frontend/src/originalview/pdf/pdfjs.js",
@@ -3161,8 +3185,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 404,
-      "size_bytes": 117903,
+      "lines": 407,
+      "size_bytes": 118636,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

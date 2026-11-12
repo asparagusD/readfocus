@@ -906,6 +906,59 @@ holds at most 2,000 compact answers.
 
 ## Frontend: Lighthouse and image budgets
 
+### C17.2: PDF.js renderer (2026-11-12)
+
+`pdfjs-dist@6.4.299` (Apache-2.0, checked in the installed `package.json`
+and `LICENSE`; released 2026-10-03; its only optional dependency,
+`@napi-rs/canvas`, is for Node and is never bundled). Sizes of the files
+the browser loads, `gzip -9`:
+
+| File | Raw | Gzip | Loaded |
+|---|---|---|---|
+| `build/pdf.min.mjs` (library) | 458,904 B | 131,443 B | when a PDF opens |
+| `build/pdf.worker.min.mjs` (worker) | 1,264,342 B | 374,642 B | when a PDF opens |
+| `/pdfjs/wasm/*.wasm` (JPEG 2000, JBIG2, colour) and `/pdfjs/standard_fonts/*` | 1,249,437 B together | n/a | only when a page needs one |
+
+A production build has **no** PDF.js chunk yet: only the dev gallery
+(`/__pdf`) imports the renderer, and `grep -l "GlobalWorkerOptions\|pdfjs"
+dist/assets/*.js` finds nothing, so the first-load bundle is unchanged. The
+chunk sizes in the build are measured when the reader imports it (C17.4/5).
+`dist/pdfjs/` (1.4 MB with licences) is copied into every build and fetched
+on demand only. `quickjs-eval` (JavaScript inside PDFs) and the JS decoder
+fallbacks are not served.
+
+Timing: `/__pdf` on the Vite dev server (unminified app code; the worker is
+the minified file), Microsoft Edge through Playwright, 1440 x 1100, on the
+593-page "Digital Design And Computer Architecture" PDF (5,073,556 B) from a
+Supabase Storage signed URL, opening at page 40. Script in the scratchpad,
+not committed.
+
+| Measure | Result | Target |
+|---|---|---|
+| First page shown (canvas and text layer), new browser context each run | run 1: 3,135 ms (Vite still compiling `pdfjs-dist`), 1,312, 1,335 ms; run 2 (final code): 1,994 ms, 1,289, 1,289 ms | < 1.5 s |
+| First page, same context again (HTTP cache warm), DPR 2 | run 1: 1,276, 846 ms; run 2: 1,333, 854 ms | |
+| Signing the URL (`create_signed_url`, what `GET /books/{id}/file` calls), 6 calls from this machine | 180, 109, 112, 126, 105, 103 ms | |
+| Page turn, page already in the ±2 cache, DPR 2 (click to text layer rendered) | run 1: 7, 6, 4, 4, 4 ms; run 2: 8, 7, 5, 4, 3 ms | < 200 ms |
+
+The first new context of each run is the slowest (3.1 s and 2.0 s, over
+the target): the dev server's first transform and a cold connection to
+Storage; later contexts land at about 1.3 s.
+
+In the gallery the source is ready at once. For a book, `usePdfDocument`
+starts loading PDF.js and asks `GET /books/{id}/file` at the same moment,
+so the signing time overlaps the library download instead of adding to it;
+added in full it would make a cold first page 1.42 to 1.52 s, at the 1.5 s
+target rather than clearly under it. The endpoint was not timed through
+the backend (it needs a signed-in reader); its select and auth add to the
+signing time above. Not measured: a production build, a
+phone, Render's region.
+
+Checked by eye (screenshots): a selected line's highlight sits on its glyphs
+at 100 % (span 288.1 x 13.3 px) and 200 % (576.2 x 26.7 px, exactly double);
+the cover (raster), a photograph page (p. 31) and a vector figure with
+hatching (p. 52, Figure 1.29) render complete. The canvas is 1535 x 1728 at
+DPR 2 for a 767 px wide page. No pixel comparison with a second renderer.
+
 ### C13 close: every page (2026-11-11)
 
 Lighthouse 12.8.2 through its Node API on an Edge 157 headless page

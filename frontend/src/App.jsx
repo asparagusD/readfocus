@@ -33,6 +33,8 @@ const IllustrationGallery = import.meta.env.DEV
   : null;
 // Dev-only review page for the paginated reader (C12.3), dropped the same way.
 const ReaderGallery = import.meta.env.DEV ? lazy(() => import('./gallery/ReaderGallery.jsx')) : null;
+// Dev-only review page for the PDF renderer (C17.2), dropped the same way.
+const PdfGallery = import.meta.env.DEV ? lazy(() => import('./gallery/PdfGallery.jsx')) : null;
 
 /**
  * Signed-out visitors at "/" get the static landing page (C13.10a), outside
@@ -99,6 +101,9 @@ function App() {
                     )}
                     {ReaderGallery && (
                       <Route path="/__reader" element={<Suspense fallback={null}><ReaderGallery /></Suspense>} />
+                    )}
+                    {PdfGallery && (
+                      <Route path="/__pdf" element={<Suspense fallback={null}><PdfGallery /></Suspense>} />
                     )}
                     <Route path="/read/:bookId" element={<AuthGuard>{page(ReadingSession)}</AuthGuard>} />
                     <Route path="/test/:sessionId" element={<AuthGuard>{page(ComprehensionTest)}</AuthGuard>} />

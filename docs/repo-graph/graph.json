@@ -1643,6 +1643,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/gallery/PdfGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/gallery/ReaderGallery.css",
       "type": "file",
       "role": "asset",
@@ -1871,6 +1877,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/documentSource.js",
       "type": "file",
       "role": "asset",
@@ -1893,6 +1905,12 @@
       "type": "file",
       "role": "asset",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/pdf.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
     },
     {
       "id": "file:frontend/src/originalview/pdf/pdfjs.js",
@@ -5211,6 +5229,21 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gallery/PdfGallery.jsx",
+      "to": "file:frontend/src/gallery/gallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/PdfGallery.jsx",
+      "to": "file:frontend/src/originalview/pdf/PdfPage.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/PdfGallery.jsx",
+      "to": "file:frontend/src/originalview/pdf/usePdfDocument.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gallery/ReaderGallery.jsx",
       "to": "file:frontend/src/components/ThemeToggle.jsx"
     },
@@ -5363,6 +5396,16 @@
       "type": "imports",
       "from": "file:frontend/src/motion/useCountUp.js",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/pdf.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/pdfjs.js"
     },
     {
       "type": "imports",

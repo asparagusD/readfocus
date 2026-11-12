@@ -1871,6 +1871,30 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/documentSource.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/documentSource.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/pageCache.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/pageCache.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/pages/ComprehensionTest.css",
       "type": "file",
       "role": "page",
@@ -5322,6 +5346,16 @@
       "type": "imports",
       "from": "file:frontend/src/motion/useCountUp.js",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/documentSource.test.js",
+      "to": "file:frontend/src/originalview/pdf/documentSource.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/pageCache.test.js",
+      "to": "file:frontend/src/originalview/pdf/pageCache.js"
     },
     {
       "type": "imports",

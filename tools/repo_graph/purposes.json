@@ -394,5 +394,9 @@
   "backend/tests/test_backfill_book_files.py": "Pytest for scripts/backfill_book_files.py on the in-memory database: pending books (no file_sha256) in id order, hash, size, format and pages stored, format only without a stored file, dry run writes nothing, the dev-only guard.",
   "scripts/backfill_book_files.py": "Backfill: file_sha256, file_bytes, file_format and page_count for books uploaded before C17.1 (file_format from file_type; the stored file downloaded once to hash); --dry-run, --limit, --book-id; refuses unless ENV=development; needs migration 016.",
   "frontend/src/reader/fileStore.js": "Device-only book files in IndexedDB (C17.1): save, load and forget by book id; every call resolves (false or null) when IndexedDB is missing, blocked or failing.",
-  "frontend/src/reader/fileStore.test.js": "Node test (npm run test:unit): the file store never throws without IndexedDB, when opening throws, or when opening fails."
+  "frontend/src/reader/fileStore.test.js": "Node test (npm run test:unit): the file store never throws without IndexedDB, when opening throws, or when opening fails.",
+  "frontend/src/originalview/pdf/pageCache.js": "Rendered-page cache (C17.2), no PDF.js or DOM: pageWindow (current ±radius, clamped), createPageCache with focus (render the window nearest-first, release the rest), get, clear and held; a page dropped while rendering is released when it finishes.",
+  "frontend/src/originalview/pdf/pageCache.test.js": "Node test (npm run test:unit): the window at the ends of a book, nearest-first rendering and reuse, the page that leaves the window released, a jump, on-demand pages released at the next focus, clear, a page released mid-render.",
+  "frontend/src/originalview/pdf/documentSource.js": "Where a book's PDF comes from (C17.2): this device's copy (IndexedDB, C17.1b) as { data }, else the signed URL from GET /books/{id}/file as { url } so PDF.js can fetch byte ranges.",
+  "frontend/src/originalview/pdf/documentSource.test.js": "Node test (npm run test:unit): the device copy first without asking the server, the signed URL otherwise, the server's message for a device-only book with no copy here."
 }

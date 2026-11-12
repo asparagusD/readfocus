@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 536,
-    "inventoried": 396,
+    "tracked": 540,
+    "inventoried": 400,
     "excluded": 140
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13412,
+      "size_bytes": 13429,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1097,8 +1097,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2461,
-      "size_bytes": 108967,
+      "lines": 2494,
+      "size_bytes": 110223,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1153,8 +1153,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3384,
-      "size_bytes": 602355,
+      "lines": 3389,
+      "size_bytes": 607496,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2159,6 +2159,38 @@
       "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
     },
     {
+      "path": "frontend/src/originalview/pdf/documentSource.js",
+      "language": "javascript",
+      "lines": 12,
+      "size_bytes": 635,
+      "role": "asset",
+      "purpose": "Where a book's PDF comes from (C17.2): this device's copy (IndexedDB, C17.1b) as { data }, else the signed URL from GET /books/{id}/file as { url } so PDF.js can fetch byte ranges."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/documentSource.test.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1200,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the device copy first without asking the server, the signed URL otherwise, the server's message for a device-only book with no copy here."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/pageCache.js",
+      "language": "javascript",
+      "lines": 61,
+      "size_bytes": 2272,
+      "role": "asset",
+      "purpose": "Rendered-page cache (C17.2), no PDF.js or DOM: pageWindow (current ±radius, clamped), createPageCache with focus (render the window nearest-first, release the rest), get, clear and held; a page dropped while rendering is released when it finishes."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/pageCache.test.js",
+      "language": "javascript",
+      "lines": 90,
+      "size_bytes": 3031,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the window at the ends of a book, nearest-first rendering and reuse, the page that leaves the window released, a jump, on-demand pages released at the next focus, clear, a page released mid-render."
+    },
+    {
       "path": "frontend/src/pages/ComprehensionTest.css",
       "language": "css",
       "lines": 194,
@@ -3113,8 +3145,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 398,
-      "size_bytes": 116019,
+      "lines": 402,
+      "size_bytes": 117071,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

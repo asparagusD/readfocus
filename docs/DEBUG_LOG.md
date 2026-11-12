@@ -2459,3 +2459,36 @@ Not applicable: an external service's availability. Steve's backend
 
 ### Commit
 C16.4 `chore(steve): add Gemini env names and phase-2 progress sections`
+
+## 2026-11-12 C17.2 — the new page-cache unit test hung
+
+### Failure
+`node --test src/originalview/pdf/*.test.js` did not finish within the
+tool's 120 s limit (stopped by hand). Written test first; the module under
+test (`pageCache.js`) had just been added.
+
+### Reproduce
+The last test, "a page released before its render finished is released
+once it does", with radius 0: `focus(1)`, `get(1)`, `focus(5)`, then
+`finish()`, then `await first`.
+
+### Hypotheses (most likely first)
+1. The test's fake `render` stored one `finish` callback, so rendering
+   page 5 replaced page 1's resolver and page 1's promise never settled.
+   Ruled out if: resolving page 1 by its own callback still hangs.
+   Result: confirmed; with one resolver per page the test passes.
+2. `createPageCache` never resolves a dropped slot. Ruled out by the same
+   run: page 1 resolves and is released.
+
+### Root cause
+A bug in the test's fake, not in `pageCache.js`.
+
+### Fix
+`pageCache.test.js`: resolvers kept per page in a `Map`; the test also
+checks nothing is released before the render finishes.
+
+### Regression test
+The fixed test itself; `timeout 60` used around the run afterwards.
+
+### Commit
+C17.2 `feat(pdf): lazy PDF.js renderer with aligned text layer and page cache`

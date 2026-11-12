@@ -1,14 +1,13 @@
 import asyncio
-import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from fastapi import FastAPI
 
-from backend.routers import auth, books, sessions, agent, dashboard, mastery, lookup
+from backend.cors import add_cors
 from backend.nlp import embedder
+from backend.routers import agent, auth, books, dashboard, lookup, mastery, sessions
 from backend.services import ingestion_worker
 
 load_dotenv()
@@ -29,28 +28,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="ReadFocus API", lifespan=lifespan)
 
-frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-
-origins = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5175",
-    "http://localhost:5176",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-    "http://127.0.0.1:5175",
-]
-
-if frontend_url not in origins:
-    origins.append(frontend_url)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+add_cors(app)  # FRONTEND_URL only; localhost too when ENV=development (backend/cors.py)
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])

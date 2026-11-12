@@ -454,6 +454,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/cors.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/dependencies.py",
       "type": "file",
       "role": "lib",
@@ -737,6 +743,12 @@
     },
     {
       "id": "file:backend/tests/test_concepts.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_cors.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2925,6 +2937,11 @@
       "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "endpoint:GET /books"
+    },
+    {
       "type": "defines_function",
       "from": "file:supabase/migrations/001_initial.sql",
       "to": "function:handle_new_user"
@@ -3369,6 +3386,11 @@
       "type": "imports",
       "from": "file:backend/dependencies.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/cors.py"
     },
     {
       "type": "imports",
@@ -3919,6 +3941,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_concepts.py",
       "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "file:backend/cors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "file:backend/main.py"
     },
     {
       "type": "imports",
@@ -6094,11 +6126,6 @@
       "type": "uses_env",
       "from": "file:backend/dependencies.py",
       "to": "env:EMBED_WAIT_SECONDS"
-    },
-    {
-      "type": "uses_env",
-      "from": "file:backend/main.py",
-      "to": "env:FRONTEND_URL"
     },
     {
       "type": "uses_env",

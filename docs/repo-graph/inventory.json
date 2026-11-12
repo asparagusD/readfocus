@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 581,
-    "inventoried": 441,
+    "tracked": 583,
+    "inventoried": 443,
     "excluded": 140
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13463,
+      "size_bytes": 13481,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1161,8 +1161,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3393,
-      "size_bytes": 617795,
+      "lines": 3399,
+      "size_bytes": 619053,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2309,6 +2309,22 @@
       "size_bytes": 2031,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): allowed and refused URLs (http, protocol-relative, javascript with tabs, data:text, file, vbscript), CSS imports and url() kept or removed, expression(), srcset."
+    },
+    {
+      "path": "frontend/src/originalview/frame.js",
+      "language": "javascript",
+      "lines": 114,
+      "size_bytes": 5312,
+      "role": "asset",
+      "purpose": "The book frame's rules (C17.4), no DOM: PDF spreads (page 1 alone, then even-left pairs) and turns, zoom scale (fit-page, fit-width, 125-200 % of printed size) and steps, PDF folios with page labels, EPUB stable location numbers from character counts (buildLocations, locationAt), the key map, the contents entry for a page, lamplight CSS for EPUB that never touches images, and timeAtProgress for the leaf."
+    },
+    {
+      "path": "frontend/src/originalview/frame.test.js",
+      "language": "javascript",
+      "lines": 100,
+      "size_bytes": 4955,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): spreads and turns at the ends, zoom scale and steps, PDF folios with labels, EPUB locations, keys (modifiers left to the browser), contents entry, lamplight CSS without filters, the leaf's edge time."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
@@ -3473,8 +3489,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 443,
-      "size_bytes": 127481,
+      "lines": 445,
+      "size_bytes": 128211,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

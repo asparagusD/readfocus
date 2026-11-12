@@ -1985,6 +1985,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/frame.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/frame.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "type": "file",
       "role": "asset",
@@ -5687,6 +5699,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/urls.test.js",
       "to": "file:frontend/src/originalview/epub/urls.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/frame.test.js",
+      "to": "file:frontend/src/originalview/frame.js"
     },
     {
       "type": "imports",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 446,
-    "inventoried": 381,
+    "tracked": 447,
+    "inventoried": 382,
     "excluded": 65
   },
   "files": [
@@ -33,8 +33,8 @@
     {
       "path": ".claude/skills/free-intelligence/SKILL.md",
       "language": "markdown",
-      "lines": 209,
-      "size_bytes": 8413,
+      "lines": 226,
+      "size_bytes": 9656,
       "role": "doc",
       "purpose": "Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern."
     },
@@ -45,6 +45,14 @@
       "size_bytes": 4938,
       "role": "doc",
       "purpose": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see."
+    },
+    {
+      "path": ".claude/skills/steve-guardrails/SKILL.md",
+      "language": "markdown",
+      "lines": 130,
+      "size_bytes": 5552,
+      "role": "doc",
+      "purpose": "Project skill: the rules for Steve's Gemini calls: one provider module, consent, context budget, book text as data, grounding, quota, keys and logging."
     },
     {
       "path": ".dockerignore",
@@ -81,8 +89,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 218,
-      "size_bytes": 13188,
+      "lines": 219,
+      "size_bytes": 13324,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1066,7 +1074,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2969,
-      "size_bytes": 563815,
+      "size_bytes": 565464,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2993,8 +3001,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 383,
-      "size_bytes": 111446,
+      "lines": 384,
+      "size_bytes": 111647,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -196,7 +196,8 @@ Project skills live in `.claude/skills/<name>/SKILL.md`.
 | `atomic-commit` | Staging, commit size and the commit format above | added in C1.2 |
 | `debug-protocol` | The ten-step failure procedure and `docs/DEBUG_LOG.md` | added in C1.3 |
 | `repo-graph` | Looking up a file's neighbours before editing; regenerating the graph | added in C1.4, tooling in C2 |
-| `free-intelligence` | Any feature that needs "AI": enforces constraints 1 and 5 | added in C1.5 |
+| `free-intelligence` | Any feature that needs "AI": enforces constraints 1 and 5 | added in C1.5, Steve exception in C16.2 |
+| `steve-guardrails` | Any code that calls Gemini or builds Steve's prompts, context or UI | added in C16.2 |
 | `design-review` | The gate every frontend change passes | added in C1.6 |
 | `impeccable` | UI design, critique and polish | installed locally |
 | `design-taste-frontend` | UI work; this is the installed name of `taste-skill` | installed locally |

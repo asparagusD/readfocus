@@ -3,6 +3,7 @@
   ".claude/skills/debug-protocol/SKILL.md": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template.",
   ".claude/skills/design-review/SKILL.md": "Project skill: the gate for UI changes; chains the three design skills, then a checklist and a before/after commit note.",
   ".claude/skills/free-intelligence/SKILL.md": "Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern.",
+  ".claude/skills/steve-guardrails/SKILL.md": "Project skill: the rules for Steve's Gemini calls: one provider module, consent, context budget, book text as data, grounding, quota, keys and logging.",
   ".claude/skills/repo-graph/SKILL.md": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see.",
   ".env.example": "Backend environment template: Supabase keys, FRONTEND_URL (one or more comma-separated CORS origins), ENV (only development adds the localhost origins), FASTEMBED_CACHE and the optional EMBED_THREADS; no AI provider key (since C8.8).",
   ".github/workflows/ci.yml": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit.",

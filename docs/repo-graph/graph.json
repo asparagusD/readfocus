@@ -256,6 +256,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:.claude/skills/steve-guardrails/SKILL.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:.dockerignore",
       "type": "file",
       "role": "config",

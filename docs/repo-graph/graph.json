@@ -1079,6 +1079,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:docs/DECISIONS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/DEPLOYMENT.md",
       "type": "file",
       "role": "doc",
@@ -1161,6 +1167,24 @@
       "type": "file",
       "role": "config",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/fixed.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/hostile.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/reflow.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
     },
     {
       "id": "file:frontend/e2e/journey.spec.js",
@@ -2339,6 +2363,120 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/vendor/foliate-js/LICENSE",
+      "type": "file",
+      "role": "asset",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/README.md",
+      "type": "file",
+      "role": "asset",
+      "language": "markdown"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/comic-book.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/epub.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/epubcfi.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/fb2.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/fixed-layout.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/mobi.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/overlayer.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/paginator.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/pdf.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/progress.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/search.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/text-walker.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/tts.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/vendor/LICENSE-zip.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/vendor/fflate.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/vendor/zip.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/vendor/foliate-js/view.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/vercel.json",
       "type": "file",
       "role": "config",
@@ -2622,6 +2760,12 @@
     },
     {
       "id": "file:tools/__init__.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/make_reader_fixtures.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -6138,6 +6282,31 @@
       "type": "imports",
       "from": "file:frontend/src/theme/ThemeProvider.jsx",
       "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/epub.js",
+      "to": "file:frontend/src/vendor/foliate-js/epubcfi.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/view.js",
+      "to": "file:frontend/src/vendor/foliate-js/epubcfi.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/view.js",
+      "to": "file:frontend/src/vendor/foliate-js/overlayer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/view.js",
+      "to": "file:frontend/src/vendor/foliate-js/progress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/vendor/foliate-js/view.js",
+      "to": "file:frontend/src/vendor/foliate-js/text-walker.js"
     },
     {
       "type": "imports",

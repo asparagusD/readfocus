@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 547,
-    "inventoried": 407,
+    "tracked": 571,
+    "inventoried": 431,
     "excluded": 140
   },
   "files": [
@@ -1103,6 +1103,14 @@
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
     {
+      "path": "docs/DECISIONS.md",
+      "language": "markdown",
+      "lines": 70,
+      "size_bytes": 6220,
+      "role": "doc",
+      "purpose": "Decisions with their evidence, newest first: D-C17.3, foliate-js over epub.js for EPUB (licence, maintenance, size, pagination, spreads, CFI, fixed layout, images, MathML, section documents, scripts), accepted, with how its gaps are covered."
+    },
+    {
       "path": "docs/DEPLOYMENT.md",
       "language": "markdown",
       "lines": 218,
@@ -1154,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3393,
-      "size_bytes": 612522,
+      "size_bytes": 613857,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1213,6 +1221,30 @@
       "size_bytes": 8735,
       "role": "config",
       "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page; /health answers ready."
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/fixed.epub",
+      "language": "text",
+      "lines": 6,
+      "size_bytes": 2685,
+      "role": "config",
+      "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): pre-paginated, two full-page images, viewport metas, rendition:spread auto."
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/hostile.epub",
+      "language": "text",
+      "lines": 9,
+      "size_bytes": 2623,
+      "role": "config",
+      "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): a script, event handlers, a javascript: link, a form, an iframe, a meta refresh, remote images, stylesheets and imports, plus one local image that must still show."
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/reflow.epub",
+      "language": "text",
+      "lines": 20,
+      "size_bytes": 6306,
+      "role": "config",
+      "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): three chapters with every kind of image (img PNG/GIF/SVG, inline SVG image by xlink:href and href, CSS background, figure and caption, srcset, cover), MathML and a code block."
     },
     {
       "path": "frontend/e2e/journey.spec.js",
@@ -1306,9 +1338,9 @@
       "path": "frontend/eslint.config.js",
       "language": "javascript",
       "lines": 27,
-      "size_bytes": 926,
+      "size_bytes": 940,
       "role": "config",
-      "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx."
+      "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx; skips src/vendor (vendored foliate-js)."
     },
     {
       "path": "frontend/gallery.html",
@@ -2783,6 +2815,158 @@
       "purpose": "ThemeContext and useTheme(), which returns choice, theme, accent, setChoice and setAccent."
     },
     {
+      "path": "frontend/src/vendor/foliate-js/LICENSE",
+      "language": "text",
+      "lines": 21,
+      "size_bytes": 1070,
+      "role": "asset",
+      "purpose": "foliate-js's MIT licence, vendored with it (C17.3)."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/README.md",
+      "language": "markdown",
+      "lines": 23,
+      "size_bytes": 1032,
+      "role": "asset",
+      "purpose": "Vendored foliate-js: source, commit 78914aef4466, licences (MIT; zip.js BSD-3-Clause), the files copied unchanged and the ReadFocus stubs, the one importer (engine.js), how to update."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/comic-book.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 174,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/epub.js",
+      "language": "javascript",
+      "lines": 1083,
+      "size_bytes": 43685,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the EPUB parser and resource loader (blob: URLs per section, reference-counted, transformTarget data events)."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/epubcfi.js",
+      "language": "javascript",
+      "lines": 349,
+      "size_bytes": 13233,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): EPUB CFI parse, compare and conversion to and from DOM ranges."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/fb2.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 167,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/fixed-layout.js",
+      "language": "javascript",
+      "lines": 319,
+      "size_bytes": 12008,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the pre-paginated renderer: pages and spreads sized from the viewport meta, zoom."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/mobi.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 168,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/overlayer.js",
+      "language": "javascript",
+      "lines": 175,
+      "size_bytes": 7051,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): SVG overlays for highlights and underlines over a section."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/paginator.js",
+      "language": "javascript",
+      "lines": 1130,
+      "size_bytes": 44222,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the reflowable renderer: one section per iframe in CSS columns, margins, gap, column count, image fitting, animation."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/pdf.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 167,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/progress.js",
+      "language": "javascript",
+      "lines": 113,
+      "size_bytes": 4255,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): section and TOC progress for a location."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/search.js",
+      "language": "javascript",
+      "lines": 130,
+      "size_bytes": 5651,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): text search within sections."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/text-walker.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 1531,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): walks text nodes in a range (used by search and CFIs)."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/tts.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 167,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/vendor/LICENSE-zip.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1501,
+      "role": "asset",
+      "purpose": "zip.js's BSD-3-Clause licence, fetched from the zip.js repository because foliate-js ships its build without it."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/vendor/fflate.js",
+      "language": "javascript",
+      "lines": 2,
+      "size_bytes": 177,
+      "role": "asset",
+      "purpose": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/vendor/zip.js",
+      "language": "javascript",
+      "lines": 1,
+      "size_bytes": 36512,
+      "role": "asset",
+      "purpose": "Vendored zip.js build shipped by foliate-js (BSD-3-Clause, vendor/LICENSE-zip.js): reads the EPUB's ZIP archive."
+    },
+    {
+      "path": "frontend/src/vendor/foliate-js/view.js",
+      "language": "javascript",
+      "lines": 597,
+      "size_bytes": 22850,
+      "role": "asset",
+      "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the <foliate-view> element and makeBook: open a book, paginator or fixed layout, relocate and load events, CFIs, TOC progress, overlayer, links."
+    },
+    {
       "path": "frontend/vercel.json",
       "language": "json",
       "lines": 11,
@@ -3167,6 +3351,14 @@
       "purpose": "Package marker for tools."
     },
     {
+      "path": "tools/make_reader_fixtures.py",
+      "language": "python",
+      "lines": 189,
+      "size_bytes": 11965,
+      "role": "script",
+      "purpose": "Writes the EPUB fixtures for the original view (reflow, fixed, hostile) into frontend/e2e/fixtures/books/ from the standard library only (generated PNG, GIF and SVG); deterministic, so a re-run changes nothing."
+    },
+    {
       "path": "tools/no_paid_ai.py",
       "language": "python",
       "lines": 41,
@@ -3201,8 +3393,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 409,
-      "size_bytes": 119352,
+      "lines": 433,
+      "size_bytes": 124640,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

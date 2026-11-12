@@ -1895,6 +1895,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/pdfjs.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/pages/ComprehensionTest.css",
       "type": "file",
       "role": "page",
@@ -2814,6 +2826,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
       "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "endpoint:GET /books/{book_id}/file"
     },
     {
       "type": "calls_endpoint",
@@ -5356,6 +5373,31 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/pageCache.test.js",
       "to": "file:frontend/src/originalview/pdf/pageCache.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/originalview/pdf/documentSource.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/originalview/pdf/pageCache.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/reader/fileStore.js"
     },
     {
       "type": "imports",

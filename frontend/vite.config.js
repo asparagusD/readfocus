@@ -1,3 +1,5 @@
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -63,9 +65,42 @@ function deployEnv() {
   }
 }
 
+// C17.2: PDF.js fetches fonts a PDF does not embed and its JPEG 2000 / JBIG2 image
+// decoders (wasm) at run time. They are served from /pdfjs/ on our own origin: from
+// node_modules in dev, copied into the build otherwise. Only an open PDF asks for them.
+const PDFJS_DIRS = ['standard_fonts', 'wasm', 'iccs']
+const PDFJS_ROOT = join(import.meta.dirname, 'node_modules', 'pdfjs-dist')
+// Not served: the JS fallbacks (the wasm decoders are used) and quickjs-eval, which runs
+// JavaScript embedded in a PDF. Licence files ship with what they cover.
+const servable = (name) => !name.startsWith('quickjs') && !name.endsWith('.js')
+
+function pdfjsAssets() {
+  return {
+    name: 'readfocus-pdfjs-assets',
+    configureServer(server) {
+      server.middlewares.use('/pdfjs', (req, res, next) => {
+        const [dir, ...rest] = decodeURIComponent((req.url ?? '').split('?')[0]).split('/').filter(Boolean)
+        const file = join(PDFJS_ROOT, dir ?? '', ...rest)
+        if (!PDFJS_DIRS.includes(dir) || rest.length !== 1 || /^\.\.?$|\\/.test(rest[0]) || !servable(rest[0]) || !existsSync(file)) return next()
+        res.setHeader('Content-Type', file.endsWith('.wasm') ? 'application/wasm' : 'application/octet-stream')
+        res.end(readFileSync(file))
+      })
+    },
+    generateBundle() {
+      for (const dir of PDFJS_DIRS) {
+        for (const name of readdirSync(join(PDFJS_ROOT, dir))) {
+          if (!servable(name)) continue
+          this.emitFile({ type: 'asset', fileName: `pdfjs/${dir}/${name}`, source: readFileSync(join(PDFJS_ROOT, dir, name)) })
+        }
+      }
+      this.emitFile({ type: 'asset', fileName: 'pdfjs/LICENSE', source: readFileSync(join(PDFJS_ROOT, 'LICENSE')) })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [deployEnv(), react(), tailwindcss(), preloadFonts(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL)],
+  plugins: [deployEnv(), react(), tailwindcss(), preloadFonts(), pdfjsAssets(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL)],
   server: {
     proxy: {
       '/api': {

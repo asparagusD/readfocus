@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 540,
-    "inventoried": 400,
+    "tracked": 542,
+    "inventoried": 402,
     "excluded": 140
   },
   "files": [
@@ -1154,7 +1154,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3389,
-      "size_bytes": 607496,
+      "size_bytes": 609042,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1329,8 +1329,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 47,
-      "size_bytes": 1521,
+      "lines": 48,
+      "size_bytes": 1550,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -2191,6 +2191,22 @@
       "purpose": "Node test (npm run test:unit): the window at the ends of a book, nearest-first rendering and reuse, the page that leaves the window released, a jump, on-demand pages released at the next focus, clear, a page released mid-render."
     },
     {
+      "path": "frontend/src/originalview/pdf/pdfjs.js",
+      "language": "javascript",
+      "lines": 57,
+      "size_bytes": 2201,
+      "role": "asset",
+      "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed)."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/usePdfDocument.js",
+      "language": "javascript",
+      "lines": 56,
+      "size_bytes": 2401,
+      "role": "asset",
+      "purpose": "React hooks (C17.2): usePdfDocument(bookId, load) opens the book's PDF (loading PDF.js while the source is fetched) and destroys it on unmount; usePageCache(doc, scale, current) keeps current ±2 pages rendered and starts afresh on a new scale or pixel ratio."
+    },
+    {
       "path": "frontend/src/pages/ComprehensionTest.css",
       "language": "css",
       "lines": 194,
@@ -2737,10 +2753,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 97,
-      "size_bytes": 3821,
+      "lines": 132,
+      "size_bytes": 5648,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings; pdfjsAssets serves PDF.js's standard fonts, wasm decoders and ICC profiles under /pdfjs/ in dev and copies them into the build (not quickjs-eval or the JS fallbacks)."
     },
     {
       "path": "package.json",
@@ -3145,8 +3161,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 402,
-      "size_bytes": 117071,
+      "lines": 404,
+      "size_bytes": 117903,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

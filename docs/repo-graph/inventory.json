@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 440,
-    "inventoried": 375,
+    "tracked": 442,
+    "inventoried": 377,
     "excluded": 65
   },
   "files": [
@@ -1050,7 +1050,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2682,
-      "size_bytes": 527298,
+      "size_bytes": 530582,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1111,6 +1111,14 @@
       "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page; /health answers ready."
     },
     {
+      "path": "frontend/e2e/journey.spec.js",
+      "language": "javascript",
+      "lines": 229,
+      "size_bytes": 13380,
+      "role": "config",
+      "purpose": "Live Playwright journey (C15.1), not in test:e2e: waits for /health model_ready, signs in as test user A from .env.test, uploads sample.pdf, waits for ready, turns pages (position PUT), opens a word card (real /lookup), takes the test with wrong answers, checks Results, the Dashboard's mastery for the book and that the next session's reason reacts to the test, then removes the book (API delete in finally if not); fails on any host outside the site, the API and the Supabase project."
+    },
+    {
       "path": "frontend/e2e/landing.spec.js",
       "language": "javascript",
       "lines": 254,
@@ -1148,7 +1156,7 @@
       "lines": 91,
       "size_bytes": 5524,
       "role": "config",
-      "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion."
+      "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion; a re-pagination (theme, resize) on the closing page keeps it (C15.1 regression)."
     },
     {
       "path": "frontend/e2e/results.spec.js",
@@ -1228,7 +1236,15 @@
       "lines": 24,
       "size_bytes": 860,
       "role": "config",
-      "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker."
+      "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1)."
+    },
+    {
+      "path": "frontend/playwright.live.config.js",
+      "language": "javascript",
+      "lines": 39,
+      "size_bytes": 1512,
+      "role": "config",
+      "purpose": "Playwright config for the live journey (C15.1, npm run test:live): only journey.spec.js on Edge; BASE_URL unset starts Vite dev on 5175 (backend on 8000 started separately), set targets that site with the API on Render (API_URL overrides); action 60 s, navigation 120 s, test 20 min."
     },
     {
       "path": "frontend/public/robots.txt",
@@ -2945,8 +2961,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 377,
-      "size_bytes": 108222,
+      "lines": 379,
+      "size_bytes": 109201,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1054,6 +1054,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/journey.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/landing.spec.js",
       "type": "file",
       "role": "config",
@@ -1139,6 +1145,12 @@
     },
     {
       "id": "file:frontend/playwright.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/playwright.live.config.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -4374,6 +4386,11 @@
       "type": "imports",
       "from": "file:frontend/e2e/fixtures.js",
       "to": "file:frontend/src/gallery/readerFixture.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/journey.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",

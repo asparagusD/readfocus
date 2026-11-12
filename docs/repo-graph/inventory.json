@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 442,
-    "inventoried": 377,
+    "tracked": 443,
+    "inventoried": 378,
     "excluded": 65
   },
   "files": [
@@ -1225,8 +1225,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 46,
-      "size_bytes": 1458,
+      "lines": 47,
+      "size_bytes": 1521,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -1269,6 +1269,14 @@
       "size_bytes": 4533,
       "role": "config",
       "purpose": "Image budgets (npm run check:images, a standard check since C11.5): each raster under src/ and public/ at most 150 KB, all together at most 400 KB, illustration SVGs at most 8 KB, every <img> with width, height, decoding and loading (lazy, or eager with fetchPriority high for the LCP image), and the backend cover cap within budget; optional root argument for scratch trees; exit 1 on any failure."
+    },
+    {
+      "path": "frontend/scripts/live/check-isolation.mjs",
+      "language": "text",
+      "lines": 257,
+      "size_bytes": 17038,
+      "role": "config",
+      "purpose": "Live cross-user isolation check (C15.2, npm run test:isolation; writes to the shared project, approval only): test user A uploads sample.pdf and reads, finishes and submits a session through the API; test user B then probes every id-taking API endpoint and, with supabase-js and the anon key, selects, updates and deletes in every per-user table, inserts a book as A, calls both search RPCs and probes A's Storage folder; term_lookups is readable by signed-in users and writable by none; no token and a raw user id are 401. Rows of B's own are reported but only A's count; A's row counts are compared before and after; A deletes the book and the rows and PDF left are reported. Exit 1 on any probe not denied."
     },
     {
       "path": "frontend/scripts/make-og.mjs",
@@ -2961,8 +2969,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 379,
-      "size_bytes": 109300,
+      "lines": 380,
+      "size_bytes": 110060,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

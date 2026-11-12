@@ -1174,6 +1174,12 @@
       "language": "text"
     },
     {
+      "id": "file:frontend/scripts/live/check-isolation.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:frontend/scripts/make-og.mjs",
       "type": "file",
       "role": "config",

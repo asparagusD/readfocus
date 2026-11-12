@@ -102,6 +102,17 @@ The agents read `chunks.content` by `chunk_index` (and the C12 reader used
 - Steve's context builder, the bookmark quiz and focus scoring use this
   mapping to find "the session's text" and the questions that cover it.
 
+C17.6 (as built): EPUB blocks map through `chunks.block_paths` (migration
+017), one `{block_id, spine_index, path}` per block, `path` being the CFI
+steps from the document's root to the block's element; a CFI belongs to the
+deepest block whose path it starts with, else the last block of its section
+before it (`frontend/src/anchors` `blockForCfi`, `book_structure.block_for_cfi`).
+PDF page and character spans are not recorded yet. `books.toc` holds the
+PDF outline `{title, page}` or the EPUB nav `{title, href, spine_index}`,
+each with its `chunk_index` and `block_id`. The reading position is a point
+a little inside the text shown (an EPUB page's first character can fall on
+the page before after a re-layout).
+
 ## A7. The C12 reading positions
 
 `reading_progress.position` holds C12's flow position

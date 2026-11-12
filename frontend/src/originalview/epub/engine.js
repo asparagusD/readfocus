@@ -58,6 +58,15 @@ export function rangeAtChar(root, char) {
   return null;
 }
 
+/** A collapsed range in text widened over the character after it, so it has a box on its own page. */
+function around(range) {
+  const node = range?.startContainer;
+  if (!range?.collapsed || node?.nodeType !== Node.TEXT_NODE || range.startOffset >= node.length) return range;
+  const wide = range.cloneRange();
+  wide.setEnd(node, range.startOffset + 1);
+  return wide;
+}
+
 /** A section's text squeezed (today.js), with each kept character's offset in the body's text. */
 function squeezedText(body) {
   const text = body?.textContent ?? '';
@@ -192,9 +201,26 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
     book,
     isFixedLayout: view.isFixedLayout,
     find,
-    goToChar: ({ index, char }) => renderer.goTo({ index, anchor: (doc) => rangeAtChar(doc.body, char) ?? doc.body }),
+    goToChar: ({ index, char }) => renderer.goTo({ index, anchor: (doc) => around(rangeAtChar(doc.body, char)) ?? doc.body }),
+    // A saved point CFI (C17.6): aimed at its first character, as a collapsed range at a page's
+    // first character resolves to the page before it (DEBUG_LOG C17.6).
+    goToPoint: (cfi) => {
+      const { index, anchor } = view.resolveCFI(cfi);
+      return renderer.goTo({ index, anchor: (doc) => around(anchor(doc)) });
+    },
     sectionOf: (href) => { try { return book.resolveHref(href)?.index ?? null; } catch { return null; } },
     pointCfi: (cfi) => (cfi ? CFI.collapse(cfi) : cfi),
+    /** A point CFI at character `char` of shown section `index`'s text, or null when it is not shown. */
+    pointAt: (index, char) => {
+      const shown = (renderer.getContents?.() ?? []).find((c) => c.index === index);
+      const range = shown && rangeAtChar(shown.doc.body, char);
+      return range ? view.getCFI(index, range) : null;
+    },
+    /** The range CFI of a range in a shown section's document (C17.6 anchors), or null. */
+    cfiFor: (doc, range) => {
+      const shown = (renderer.getContents?.() ?? []).find((c) => c.doc === doc);
+      return shown ? view.getCFI(shown.index, range) : null;
+    },
     next: () => view.next(),
     prev: () => view.prev(),
     goTo: (target) => view.goTo(target),

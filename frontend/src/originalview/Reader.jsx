@@ -214,6 +214,8 @@ export function Reader({
     prev: () => move(-1),
     visibleRange: () => book.current?.visibleRange() ?? null,
     getSelection: () => book.current?.getSelection() ?? null,
+    // C17.6: the selection as anchors (docs/ANCHORS.md), one per PDF page it touches, or one EPUB range.
+    selectionAnchors: () => book.current?.selectionAnchors() ?? [],
     documents: () => book.current?.documents() ?? [],
     anchor: () => book.current?.anchor() ?? null,
   }), [move]);

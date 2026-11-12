@@ -1,6 +1,7 @@
 import { useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { epubThemeCss, locationAt } from '../frame';
 import { EpubView } from './EpubView';
+import { epubAnchor } from '../../anchors';
 
 /** "p. 34 of ~210" or "pp. 34–35 of ~210"; "~" because the numbers count characters, not printed pages. */
 function epubFolio(locations, place) {
@@ -68,10 +69,32 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
       first: () => later((e) => e.goToFraction(0)),
       last: () => later((e) => e.goToFraction(1)),
       // A located chunk start { index, char } (C17.5), a saved anchor { cfi }, a CFI or an href.
-      goTo: (target) => later((e) => (target?.char !== undefined ? e.goToChar(target) : e.goTo(target?.cfi ?? target))),
+      goTo: (target) => later((e) => {
+        if (target?.char !== undefined) return e.goToChar(target);
+        if (target?.cfi && !target.cfi.includes(',')) return e.goToPoint(target.cfi); // a saved point
+        return e.goTo(target?.cfi ?? target);
+      }),
       find: (snippets) => opened.promise.then((e) => e.find(snippets)),
       visibleRange: () => ({ kind: 'epub', cfi: last.current?.cfi ?? null }),
-      anchor: () => last.current && { kind: 'epub', cfi: now()?.pointCfi(last.current.cfi) ?? last.current.cfi, text: '' },
+      // The reading position, a point (A3) a little inside the text shown: a page's first character can
+      // fall on the page before after any re-layout, so it would reopen a page early (DEBUG_LOG C17.6).
+      anchor: () => {
+        const place = last.current;
+        if (!place) return null;
+        const inside = place.charStart + Math.min(40, Math.floor((place.charEnd - place.charStart) / 4));
+        return epubAnchor(now()?.pointAt(place.index, inside) ?? now()?.pointCfi(place.cfi) ?? place.cfi);
+      },
+      // The selection as an EPUB anchor (A1): a range CFI in its section, structural, so a new font size keeps it.
+      selectionAnchors: () => {
+        for (const { doc } of now()?.contents() ?? []) {
+          const selection = doc.getSelection();
+          if (!selection?.rangeCount || selection.isCollapsed) continue;
+          const range = selection.getRangeAt(0);
+          const cfi = now().cfiFor(doc, range);
+          return cfi ? [epubAnchor(cfi, range.toString())] : [];
+        }
+        return [];
+      },
       getSelection: () => {
         for (const { doc } of now()?.contents() ?? []) {
           const selection = doc.getSelection();

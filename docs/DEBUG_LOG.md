@@ -2770,3 +2770,44 @@ shifted by each frame element's box.
 
 ### Commit
 C17.5c feat(reader): look up words inside PDF and EPUB pages
+
+## 2026-11-12 C17.6 — an EPUB reopened one page early after a text-size change
+
+**Status:** fixed
+
+### Symptom
+The new e2e "after a text-size change the saved anchor reopens the same
+place": after Larger text twice the page showed characters 1157-2685 of
+section 1; after a reload at that size it showed 0-1157.
+
+    npx playwright test e2e/reader.spec.js -g "text-size change"
+    Error: the same place after a reload at the new size
+    Expected: true  Received: false
+
+### Repro
+Traced relocates: the resume went to `epubcfi(/6/4!/4/8/1:435)` (the saved
+point, character 1157, the page's first) and foliate reported the visible
+range ending exactly there.
+
+### Hypotheses
+1. A collapsed range has no box on its own page. Tried: aim at its first
+   character (`goToPoint`). Ruled out: foliate already uncollapses, and the
+   result was the same.
+2. A point at a page's very first character is ambiguous: foliate can
+   place it at the end of the page before. Confirmed by the trace; the
+   saved point sat on the boundary.
+
+### Root cause
+`EpubBook.anchor()` saved the collapsed start of the visible range
+(`frontend/src/originalview/epub/EpubBook.jsx`), a page boundary.
+
+### Fix
+The reading position is a point a little inside the text shown (up to 40
+characters, a quarter of the page at most), `engine.pointAt`.
+
+### Regression test
+`e2e/reader.spec.js` "after a text-size change the saved anchor reopens the
+same place": failed before, passes after.
+
+### Commit
+C17.6 feat(reader): PDF and EPUB anchors, reading position and contents

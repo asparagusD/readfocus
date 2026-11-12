@@ -11,7 +11,7 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single' }) 
   const root = useRef(null);
   const sheet = useRef(null);
   const text = useRef(null);
-  const [size, setSize] = useState(null);
+  const [size, setSize] = useState(null); // { width, height, scale }: CSS px, and CSS px per PDF point (C17.6 anchors)
   const shown = useRef(onShown);
   useEffect(() => { shown.current = onShown; });
 
@@ -22,7 +22,7 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single' }) 
     Promise.all([cache.get(pageNumber), loadPdfjs()]).then(([entry, pdfjs]) => {
       if (gone || !root.current || !sheet.current || !text.current) return null;
       const { canvas, viewport, textContent } = entry;
-      setSize({ width: Math.floor(viewport.width), height: Math.floor(viewport.height) });
+      setSize({ width: Math.floor(viewport.width), height: Math.floor(viewport.height), scale: viewport.scale });
       root.current.style.setProperty('--total-scale-factor', viewport.scale);
       sheet.current.replaceChildren(canvas);
       text.current.replaceChildren();
@@ -38,7 +38,8 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single' }) 
   }, [cache, pageNumber]);
 
   return (
-    <div ref={root} className="rf-pdf-page" data-side={side} role="group" aria-label={label ?? `Page ${pageNumber}`}
+    <div ref={root} className="rf-pdf-page" data-side={side} data-page={pageNumber} data-scale={size?.scale} role="group"
+      aria-label={label ?? `Page ${pageNumber}`}
       style={size ? { width: size.width, height: size.height } : undefined}>
       <div ref={sheet} className="rf-pdf-page__canvas" />
       <div ref={text} className="textLayer" />

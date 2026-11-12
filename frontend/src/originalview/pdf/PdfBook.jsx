@@ -1,6 +1,28 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
 import { squeeze } from '../today';
+import { pdfAnchor, quadsFromRects } from '../../anchors';
+
+/**
+ * PDF anchors for a selection (ANCHORS A1, A2): one per page it touches, each with a quad
+ * per line in points from the page's top-left (the page's own scale undone, so any zoom
+ * gives the same quads) and that page's part of the text.
+ */
+function selectionAnchors(range, box) {
+  const out = [];
+  for (const page of box.querySelectorAll('.rf-pdf-page[data-scale]')) {
+    if (!range.intersectsNode(page)) continue;
+    const part = range.cloneRange();
+    const layer = page.querySelector('.textLayer');
+    if (!layer) continue;
+    if (!page.contains(range.startContainer)) part.setStart(layer, 0);
+    if (!page.contains(range.endContainer)) part.setEnd(layer, layer.childNodes.length);
+    const at = page.getBoundingClientRect();
+    const quads = quadsFromRects(part.getClientRects(), at, Number(page.dataset.scale));
+    if (quads.length) out.push(pdfAnchor(Number(page.dataset.page), quads, part.toString()));
+  }
+  return out;
+}
 import { useBoxSize } from '../useBoxSize';
 import { PdfPage } from './PdfPage';
 import { pdfOutline } from './pdfjs';
@@ -97,7 +119,12 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
     last: () => { setPage(numPages); return true; },
     goTo: (anchor) => { setPage(Math.min(numPages, Math.max(1, anchor?.page ?? anchor ?? 1))); return true; },
     visibleRange: () => ({ kind: 'pdf', pages: [...pages] }),
-    anchor: () => ({ kind: 'pdf', page: pages[0], quads: [[0, 0, 0, 0]], text: '' }), // a point anchor (ANCHORS A3)
+    anchor: () => pdfAnchor(pages[0], []), // a point at the page's top-left (ANCHORS A3)
+    selectionAnchors: () => {
+      const selection = document.getSelection();
+      if (!selection?.rangeCount || selection.isCollapsed || !box.current?.contains(selection.anchorNode)) return [];
+      return selectionAnchors(selection.getRangeAt(0), box.current);
+    },
     getSelection: () => {
       const selection = document.getSelection();
       if (!selection?.rangeCount || !box.current?.contains(selection.anchorNode)) return null;

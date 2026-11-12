@@ -297,3 +297,46 @@ test('with hover lookup off, hovering shows nothing, and Enter on a selected wor
   await expect(card).toBeVisible();
   await expect(card).toBeFocused();
 });
+
+// C17.6: anchors survive re-layout. An EPUB CFI is structural, so a larger text size and a reload come
+// back to the same place; a PDF anchor is in points, so zooming changes nothing that is saved.
+test.describe('anchors across re-layout', () => {
+  test.describe('epub', () => {
+    test.use({ book: 'epub' });
+
+    test('after a text-size change the saved anchor reopens the same place', async ({ page, api }) => {
+      await openReader(page);
+      await book(page).focus();
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(800);
+      const { start } = await shown(page);
+      await page.getByRole('button', { name: 'Larger text' }).click();
+      await page.getByRole('button', { name: 'Larger text' }).click();
+      await page.waitForTimeout(800);
+      expect(holds(await shown(page), start), 'the same place after the new size').toBe(true);
+      await expect.poll(() => api.saves, { timeout: 4000 }).toBeGreaterThan(0);
+      const cfi = api.position.anchor.cfi;
+      await page.reload();
+      await openReader(page);
+      expect(holds(await shown(page), start), 'the same place after a reload at the new size').toBe(true);
+      expect(api.position.anchor.cfi).toBe(cfi);
+    });
+  });
+
+  test('zooming a PDF to 200% and back keeps the page and the saved anchor', async ({ page, api }) => {
+    await openReader(page);
+    await book(page).focus();
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(800);
+    const place = await shown(page);
+    await expect.poll(() => api.position?.anchor?.page, { timeout: 4000 }).toBe(Number(place.start));
+    const zoomIn = page.getByRole('button', { name: 'Zoom in' });
+    for (let i = 0; i < 5 && await zoomIn.isEnabled(); i += 1) await zoomIn.click();
+    await expect(page.getByRole('button', { name: /^Zoom: 200%/ })).toBeVisible();
+    expect(await shown(page)).toEqual(place);
+    await page.getByRole('button', { name: /^Zoom:/ }).click(); // back to a fit
+    await page.waitForTimeout(500);
+    expect(await shown(page)).toEqual(place);
+    expect(api.position.anchor).toEqual({ kind: 'pdf', page: Number(place.start), quads: [[0, 0, 0, 0]], text: '' });
+  });
+});

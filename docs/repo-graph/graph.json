@@ -779,6 +779,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_block_paths.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_book_files.py",
       "type": "file",
       "role": "test",
@@ -1335,6 +1341,18 @@
       "type": "file",
       "role": "entry",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/anchors/anchors.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/anchors/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/components/AccountMenu.css",
@@ -2843,6 +2861,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/017_block_paths.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3074,6 +3098,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/016_book_files.sql",
       "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/017_block_paths.sql",
+      "to": "table:chunks"
     },
     {
       "type": "calls_endpoint",
@@ -4469,6 +4498,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_block_paths.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_block_paths.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_book_files.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -5046,6 +5085,11 @@
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/theme/ThemeProvider.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/anchors/anchors.test.js",
+      "to": "file:frontend/src/anchors/index.js"
     },
     {
       "type": "imports",
@@ -5745,6 +5789,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
       "to": "file:frontend/src/originalview/epub/EpubView.jsx"
     },
     {
@@ -5806,6 +5855,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/frame.test.js",
       "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/anchors/index.js"
     },
     {
       "type": "imports",

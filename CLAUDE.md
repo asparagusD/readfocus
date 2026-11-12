@@ -82,8 +82,9 @@ your score.
 Since C8.8 no backend code, dependency or config uses an LLM or embedding
 API; `backend/tests/test_no_paid_ai.py` keeps it that way (constraint 1).
 
-Python versions disagree across the repo: `.venv` is 3.11, CI installs 3.12,
-`pyrightconfig.json` says 3.14. Write code that runs on 3.11.
+Python: `.venv`, the Docker image and CI are 3.11 (CI since C14.5);
+`pyrightconfig.json` still says 3.14. Write code that runs on 3.11. Dev and
+CI tools (pytest, ruff, psutil) are pinned in `requirements-dev.txt`.
 
 ## Branch model
 
@@ -144,7 +145,9 @@ Baseline when this file was written (C1.1; the last four rows were added in C10.
 
 Until a chunk brings ruff and ESLint to zero, "never commit failing checks"
 means: the eight passing checks stay green and the two error counts never go
-up. Update this table when a baseline changes.
+up. Update this table when a baseline changes, and the matching
+`RUFF_BASELINE` and `ESLINT_*_BASELINE` values in `.github/workflows/ci.yml`,
+which fails a push whose ruff or ESLint count rises above them.
 
 pytest runs offline (`backend/tests/conftest.py` blocks every non-loopback
 connection) and e2e mocks every API call and fakes or aborts every Supabase

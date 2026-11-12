@@ -526,7 +526,7 @@ Each use is the file and line of the first import of that service.
 |---|---|---|
 | `.dockerignore` | 8 | Docker build context allowlist: only requirements.txt and backend/ (without backend/tests/ and caches), so .env, .venv and frontend/ stay out of the image. |
 | `.env.example` | 22 | Backend environment template: Supabase keys, FRONTEND_URL (one or more comma-separated CORS origins), ENV (only development adds the localhost origins), FASTEMBED_CACHE and the optional EMBED_THREADS; no AI provider key (since C8.8). |
-| `.github/workflows/ci.yml` | 97 | CI on every push: ruff on backend/, pytest on backend/tests, frontend build, repo graph freshness and tooling tests; triggers the Render deploy hook on main. |
+| `.github/workflows/ci.yml` | 162 | CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit. |
 | `.gitignore` | 28 | Root ignore rules: env files, node_modules, Python caches and virtualenvs, .cache/, the Impeccable binary, OS files. |
 | `Dockerfile` | 39 | Backend image for Render Free: python:3.11-slim, pinned requirements, a non-root user, the embedding model baked into FASTEMBED_CACHE at build time (then HF_HUB_OFFLINE), runs uvicorn with one worker on ${PORT:-8000}. |
 | `Makefile` | 24 | Targets: dev-backend (uvicorn with reload), dev-frontend (Vite), dev (both via concurrently), graph (regenerate docs/repo-graph/), agent-graph (regenerate docs/repo-graph/AGENT_GRAPH.md from the compiled workflow; needs .env). |
@@ -641,7 +641,7 @@ Each use is the file and line of the first import of that service.
 | `.claude/skills/design-review/SKILL.md` | 157 | Project skill: the gate for UI changes; chains the three design skills, then a checklist and a before/after commit note. |
 | `.claude/skills/free-intelligence/SKILL.md` | 209 | Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern. |
 | `.claude/skills/repo-graph/SKILL.md` | 122 | Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see. |
-| `CLAUDE.md` | 203 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
+| `CLAUDE.md` | 206 | Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills. |
 | `README.md` | 137 | Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour. |
 | `design/HANDOFF_SUMMARY.md` | 469 | Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions. |
 | `design/handoff/foundations-style-guide/README.md` | 21 | Claude Design export note, kept unchanged: treat Main.dc.html as a reference mockup and replicate its values rather than copy its markup. |

@@ -5,7 +5,7 @@
   ".claude/skills/free-intelligence/SKILL.md": "Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern.",
   ".claude/skills/repo-graph/SKILL.md": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see.",
   ".env.example": "Backend environment template: Supabase keys, FRONTEND_URL (one or more comma-separated CORS origins), ENV (only development adds the localhost origins), FASTEMBED_CACHE and the optional EMBED_THREADS; no AI provider key (since C8.8).",
-  ".github/workflows/ci.yml": "CI on every push: ruff on backend/, pytest on backend/tests, frontend build, repo graph freshness and tooling tests; triggers the Render deploy hook on main.",
+  ".github/workflows/ci.yml": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit.",
   ".gitignore": "Root ignore rules: env files, node_modules, Python caches and virtualenvs, .cache/, the Impeccable binary, OS files.",
   "CLAUDE.md": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills.",
   "Dockerfile": "Backend image for Render Free: python:3.11-slim, pinned requirements, a non-root user, the embedding model baked into FASTEMBED_CACHE at build time (then HF_HUB_OFFLINE), runs uvicorn with one worker on ${PORT:-8000}.",

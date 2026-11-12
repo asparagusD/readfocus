@@ -65,10 +65,10 @@
     {
       "path": ".github/workflows/ci.yml",
       "language": "yaml",
-      "lines": 97,
-      "size_bytes": 2795,
+      "lines": 162,
+      "size_bytes": 5865,
       "role": "config",
-      "purpose": "CI on every push: ruff on backend/, pytest on backend/tests, frontend build, repo graph freshness and tooling tests; triggers the Render deploy hook on main."
+      "purpose": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit."
     },
     {
       "path": ".gitignore",
@@ -81,8 +81,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 203,
-      "size_bytes": 11227,
+      "lines": 206,
+      "size_bytes": 11461,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1042,7 +1042,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2516,
-      "size_bytes": 513763,
+      "size_bytes": 515669,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2938,7 +2938,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 376,
-      "size_bytes": 107693,
+      "size_bytes": 107883,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

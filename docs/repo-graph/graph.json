@@ -142,6 +142,10 @@
       "handler": "save_position"
     },
     {
+      "id": "env:CRON_SECRET",
+      "type": "env"
+    },
+    {
       "id": "env:DEV",
       "type": "env"
     },
@@ -170,11 +174,31 @@
       "type": "env"
     },
     {
+      "id": "env:GEMINI_API_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:GEMINI_MODEL_CHAT",
+      "type": "env"
+    },
+    {
+      "id": "env:GEMINI_MODEL_VISION",
+      "type": "env"
+    },
+    {
       "id": "env:INGEST_STALE_MINUTES",
       "type": "env"
     },
     {
       "id": "env:INGEST_SWEEP",
+      "type": "env"
+    },
+    {
+      "id": "env:KEY_ENCRYPTION_SECRET",
+      "type": "env"
+    },
+    {
+      "id": "env:STEVE_DAILY_LIMIT_PER_USER",
       "type": "env"
     },
     {
@@ -251,6 +275,12 @@
     },
     {
       "id": "file:.claude/skills/repo-graph/SKILL.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:.claude/skills/steve-guardrails/SKILL.md",
       "type": "file",
       "role": "doc",
       "language": "markdown"
@@ -970,6 +1000,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:docs/ANCHORS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/ARCHITECTURE.md",
       "type": "file",
       "role": "doc",
@@ -1006,7 +1042,19 @@
       "language": "markdown"
     },
     {
+      "id": "file:docs/FOCUS_RULES.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/G4_PRODUCTION_MIGRATIONS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/GAMIFICATION.md",
       "type": "file",
       "role": "doc",
       "language": "markdown"
@@ -2813,6 +2861,11 @@
     {
       "type": "declares_env",
       "from": "file:.env.example",
+      "to": "env:CRON_SECRET"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
       "to": "env:ENV"
     },
     {
@@ -2824,6 +2877,31 @@
       "type": "declares_env",
       "from": "file:.env.example",
       "to": "env:FRONTEND_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:GEMINI_API_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:GEMINI_MODEL_CHAT"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:GEMINI_MODEL_VISION"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:KEY_ENCRYPTION_SECRET"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:STEVE_DAILY_LIMIT_PER_USER"
     },
     {
       "type": "declares_env",

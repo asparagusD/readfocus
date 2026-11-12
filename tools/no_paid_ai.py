@@ -25,6 +25,16 @@ BANNED_PACKAGES = frozenset({
 # Environment variable names of provider keys.
 BANNED_KEYS = re.compile(r"GROQ|GOOGLE_AI_STUDIO|GEMINI|OPENAI|ANTHROPIC|CEREBRAS|SAMBANOVA|OPENROUTER")
 
+# Steve's env names (C16.4): the only provider names .env.example may declare. Backend code,
+# imports, requirements and render.yaml stay banned until Steve's backend chunk (C21).
+STEVE_ENV_NAMES = frozenset({"GEMINI_API_KEY", "GEMINI_MODEL_CHAT", "GEMINI_MODEL_VISION"})
+
+
+def provider_keys_outside_steve(text: str) -> set[str]:
+    """Upper-case names in text that match BANNED_KEYS and are not one of Steve's env names."""
+    return {name for name in re.findall(r"[A-Z][A-Z0-9_]*", text) if BANNED_KEYS.search(name)} - STEVE_ENV_NAMES
+
+
 # Gate G3's search, case-insensitive: none of these may appear anywhere under backend/.
 GATE_PATTERN = re.compile(
     r"groq|ChatGroq|google_genai|GoogleGenerativeAI|openai|cerebras|sambanova|openrouter", re.IGNORECASE

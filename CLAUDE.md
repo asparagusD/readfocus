@@ -8,17 +8,23 @@ your score.
 
 - **Intelligent**: planning, question generation, grading and pacing adapt to
   the reader.
-- **Blazing fast**: no waiting on remote model calls.
-- **$0 API cost**: all intelligence is algorithmic or runs on local models.
+- **Blazing fast**: reading, tests and grading never wait on a remote model.
+- **$0 API cost**: algorithmic or local; Steve uses Gemini's free tier or a reader's key.
 - **Cozy and sophisticated UI** that feels like reading a real book.
 - Built in a **27-hour sprint**, split into chunks (C0, C1, ...) and
   subchunks (C1.1, C1.2, ...).
 
 ## Hard constraints
 
-1. No LLM or embedding API calls of any kind (Groq, OpenAI, Anthropic,
-   Gemini/Google AI, Cerebras, SambaNova, OpenRouter). No paid services. No
-   payment methods.
+1. Gemini is the only generative AI allowed: only for Steve, only through
+   our backend, only after the reader's consent, on the free tier (no
+   billing account) or the reader's own key. Everything else stays
+   algorithmic and local: no other LLM or embedding API (Groq, OpenAI,
+   Anthropic, Cerebras, SambaNova, OpenRouter), no scraping, no paid APIs
+   or services, no payment methods. Free-tier prompts and responses may be
+   used by Google to improve its products, so Steve shows a consent notice
+   before first use and can be turned off. Never send more book text than
+   Steve's context builder allows.
 2. Supabase migrations are additive only. Never drop tables or columns.
    Dev and production share one Supabase project (`lvfhuszvuiowyeizstru`,
    decided at Gate G4): treat it as production. Reading it is allowed:
@@ -35,6 +41,20 @@ your score.
 5. Render Free has tight RAM/CPU: measure memory (psutil RSS) before adding
    any model or heavy dependency.
 
+## Phase 2 (C16–C25, 31-hour budget)
+
+Adds Steve, highlights and underlines, a notepad, focus mode, gamification
+and the original view. English only: Bengali/Bangla books are out of scope.
+
+- **Original view**: PDF and EPUB renderers show each book as published (images, figures, math, code); the book view is retired (C17).
+- **Region map**: each page split into prose, math, code, figure and table regions (`docs/ANCHORS.md`, written in C16.3).
+- **Anchors**: highlights, notes and drawings point at PDF quads or an EPUB CFI range, plus a text quote (`docs/ANCHORS.md`).
+- **Body start**: where the book's body (chapter 1) begins after front matter; focus mode unlocks there (`docs/FOCUS_RULES.md`, C16.3).
+- **Focus session**: a server-timed stopwatch with server-scored points, a bookmark quiz and a 3-hour cap (`docs/FOCUS_RULES.md`).
+- **Gamification** (`docs/GAMIFICATION.md`, C16.3): no dark patterns: streak freezes, no guilt notifications, no fake users, a leaderboard opt-out. Only the server writes points and XP.
+- **Readers' own Gemini keys** are stored encrypted on our server, never logged, never returned in full.
+- **New env vars** (names only): `GEMINI_API_KEY`, `GEMINI_MODEL_CHAT`, `GEMINI_MODEL_VISION`, `STEVE_DAILY_LIMIT_PER_USER`, `KEY_ENCRYPTION_SECRET`, `CRON_SECRET`.
+
 ## Working method
 
 - **Skills first.** Every prompt names the skills to load (see
@@ -49,17 +69,9 @@ your score.
   rewiring files, run `make graph` and include `docs/repo-graph/` in the same
   commit.
 - **Standard checks** before every commit (see [below](#standard-checks)).
-- **Debug protocol** on any failure:
-  1. Log the exact command, error and stack trace in `docs/DEBUG_LOG.md`.
-  2. Reproduce with the smallest failing command or test.
-  3. Read the failing file's upstream and downstream files via the repo graph.
-  4. Write 1–3 ranked hypotheses with evidence.
-  5. Test one at a time.
-  6. Make the minimal root-cause fix.
-  7. Add a regression test that fails before and passes after.
-  8. Re-run the standard checks.
-  9. Record the root cause; commit as `fix(<scope>): ...`.
-  10. After 3 failed attempts, stop, restore the last green state, and report.
+- **Debug protocol** on any failure: the ten steps of the `debug-protocol`
+  skill (log in `docs/DEBUG_LOG.md`, reproduce, ranked hypotheses, minimal
+  root-cause fix, regression test, `fix(<scope>): ...`; stop after 3 tries).
 - **Progress.** Tick each subchunk in `docs/PROGRESS.md`
   (Step | Commit | Change | Verified by | Time | Open issues).
 - **Ask, don't assume** before anything irreversible, writing to the
@@ -76,11 +88,13 @@ your score.
 | Data | Supabase: Postgres, pgvector, Storage, Auth, RLS (`supabase/migrations/`) |
 | Agents | LangGraph with five algorithmic agents: orchestrator, planner, test generator, evaluator, optimizer (`backend/agents/`) |
 | Embeddings | Local fastembed models, cached under `FASTEMBED_CACHE` |
+| Study assistant | Steve: Gemini through the backend, opt-in (from C21) |
 | Word lookup | Free Dictionary API and Wikipedia |
 | Hosting | Render Free (backend), Vercel (frontend) |
 
 Since C8.8 no backend code, dependency or config uses an LLM or embedding
-API; `backend/tests/test_no_paid_ai.py` keeps it that way (constraint 1).
+API. `backend/tests/test_no_paid_ai.py` still bans Gemini too; Steve's
+backend chunk narrows it to his module, test first (constraint 1).
 
 Python: `.venv`, the Docker image and CI are 3.11 (CI since C14.5);
 `pyrightconfig.json` still says 3.14. Write code that runs on 3.11. Dev and
@@ -96,12 +110,8 @@ CI tools (pytest, ruff, psutil) are pinned in `requirements-dev.txt`.
 
 ## Run commands
 
-Activate the virtualenv first; `uvicorn`, `ruff` and `pytest` live in `.venv`
-and are not on PATH otherwise.
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
+Activate the virtualenv first (`.\.venv\Scripts\Activate.ps1`); `uvicorn`,
+`ruff` and `pytest` live in `.venv` and are not on PATH otherwise.
 
 ```bash
 make dev-backend    # FastAPI on http://127.0.0.1:8000, health check at /health
@@ -186,7 +196,8 @@ Project skills live in `.claude/skills/<name>/SKILL.md`.
 | `atomic-commit` | Staging, commit size and the commit format above | added in C1.2 |
 | `debug-protocol` | The ten-step failure procedure and `docs/DEBUG_LOG.md` | added in C1.3 |
 | `repo-graph` | Looking up a file's neighbours before editing; regenerating the graph | added in C1.4, tooling in C2 |
-| `free-intelligence` | Any feature that needs "AI": enforces constraints 1 and 5 | added in C1.5 |
+| `free-intelligence` | Any feature that needs "AI": enforces constraints 1 and 5 | added in C1.5, Steve exception in C16.2 |
+| `steve-guardrails` | Any code that calls Gemini or builds Steve's prompts, context or UI | added in C16.2 |
 | `design-review` | The gate every frontend change passes | added in C1.6 |
 | `impeccable` | UI design, critique and polish | installed locally |
 | `design-taste-frontend` | UI work; this is the installed name of `taste-skill` | installed locally |

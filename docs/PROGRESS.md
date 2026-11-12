@@ -2762,3 +2762,294 @@ shared Supabase project; "production" is `readfocus-lake.vercel.app` and
 |---|---|---|
 | No payment method anywhere | Pass | `docs/DEPLOYMENT.md`: no payment method, billing account, paid plan or add-on on any provider (the user's accounts; not visible from the repo) |
 | Free-tier limits and cold-start behaviour documented | Pass | `docs/DEPLOYMENT.md`: limits table with doc links (Render, Vercel, Supabase, GitHub Actions) and the cold-start section; the full Render cold start was not timed |
+
+## C16 — phase 2 guardrails
+
+Branch `chunk/C16-phase2-guardrails`, created from `readfocus-2.0` at
+`33259d2`. Goal: write the rules, skills and specs that phase 2 (C16-C25)
+builds on before any phase 2 code exists. Phase 2 adds Steve, an AI study
+assistant (Gemini free tier through our backend, user consent required,
+users may add their own key); colour highlights and underlines with "Ask
+Steve"; a notepad with typed notes and Excalidraw drawings anchored to
+book passages; focus mode (stopwatch unlocking at chapter 1, server-scored
+points, bookmark quiz, 3-hour cap); XP, streaks, badges and weekly
+leagues; and an original view that shows every PDF and EPUB as published
+(images, figures, math and code intact) with a region map (prose, math,
+code, figure, table), which retires the book view. Bengali is out of
+scope. This chunk changes no application code: only `CLAUDE.md`,
+`.claude/skills/`, `docs/` and local configuration.
+
+### Plan (written at chunk start, 2026-11-12, before any code)
+
+What there is to build on (read from CLAUDE.md, the free-intelligence
+skill, `tools/no_paid_ai.py` and `backend/tests/test_no_paid_ai.py`):
+
+- **Hard constraint 1 bans Gemini today, in prose and in tests.**
+  CLAUDE.md lists Gemini/Google AI among the banned APIs; the
+  free-intelligence skill bans `google-generativeai`, `google-genai` and
+  "free tiers or trial credits of the above". `tools/no_paid_ai.py` puts
+  `google_genai`, `google.generativeai` and `google.genai` in the banned
+  modules, `google-genai` and `google-generativeai` in the banned
+  packages, and `GEMINI` in `BANNED_KEYS`, which
+  `test_config_declares_no_provider_key` checks in `.env.example` and
+  `render.yaml`. So a `GEMINI_API_KEY` line in either file fails pytest
+  today.
+- **The product goal says "no waiting on remote model calls" and "all
+  intelligence is algorithmic or runs on local models".** Steve is the
+  first exception, so the rule has to say where the exception ends.
+- **Five algorithmic agents** (`backend/agents/`, pure `decide()` with
+  `policy.py`) plan, generate tests, grade and pace. None of them calls a
+  model API, and `test_no_paid_ai.py` keeps it that way.
+- **The reader is the C12 book view** (`frontend/src/reader/`: reflowed
+  text in a two-page spread, page turns, word lookup). Phase 2 replaces it
+  with the original view: removing a user-facing feature, which CLAUDE.md
+  says to ask about; this prompt is that decision, and the removal itself
+  happens in its own phase 2 chunk.
+- **Release state.** The prompt says C0-C15 are not released, but
+  `origin/main` holds `f914389 merge(release): release verification into
+  main` and the C15 log records `main` pushed with CI deploying to
+  Render. To confirm with you (question 1).
+
+Design decisions that apply to every subchunk:
+
+- **Documents and skills only.** No file under `backend/`, `frontend/`
+  or `supabase/` changes in C16, and under `tools/` only the graph's
+  `purposes.json` (one line per new file). The deny-list and
+  `test_no_paid_ai.py` stay as they are: the narrow carve-out that lets
+  one Steve module name Gemini (and `.env.example` declare
+  `GEMINI_API_KEY`) lands test-first in the chunk that writes Steve's
+  backend, with that code. Until then the rules allow Steve and the tests
+  still forbid him, which is the safe order.
+- **Steve is the only exception to constraint 1, and a narrow one.**
+  Gemini free tier only, never a billed project or payment method; called
+  only from the backend; only after the reader consents; never on the
+  critical path of reading, testing, grading, planning or pacing (the five
+  agents stay algorithmic and never call Steve); every other provider on
+  the list stays banned.
+- **Specs before code.** Anchors, focus rules and gamification are
+  written as specs with numbered rules, so each later subchunk can cite
+  the rule it implements and its tests can name it.
+- **No Supabase writes** in C16 (constraint 2). C16.4 only reads.
+
+Subchunks:
+
+**C16.1 CLAUDE.md phase 2 rules** (about 0.5 h). `CLAUDE.md`: product
+goal amended (algorithmic core plus one opt-in assistant, Steve; $0 still
+holds because only the free tier and readers' own keys are used);
+constraint 1 rewritten as "no LLM or embedding API, except Steve under
+the steve-guardrails skill", naming what stays banned; a new "Phase 2"
+section: the scope list above, Bengali out of scope, the original view
+replaces the book view, server-scored points (the client never sends a
+score it computed), frontend weight rule (Excalidraw, PDF and EPUB
+renderers lazy-loaded and measured with `check:images`-style budgets in
+the build output), the specs in `docs/` as the source of truth; Docs and
+Project skills tables updated (steve-guardrails, ANCHORS, FOCUS_RULES,
+GAMIFICATION). Verified by: a read-through against this plan; standard
+checks unchanged. Cut: none (the other subchunks depend on it).
+
+**C16.2 free-intelligence update and steve-guardrails skill** (about
+0.75 h). `.claude/skills/free-intelligence/SKILL.md`: Gemini moves from
+"Banned" to "Allowed only for Steve, see steve-guardrails"; the agent
+rule ("nodes never call an LLM") stays and now also says the agents never
+call Steve. `.claude/skills/steve-guardrails/SKILL.md` (new): when it
+applies (anything that sends text to Gemini or stores a reader's key);
+consent (explicit, revocable, before the first call, saying what is sent
+and quoting Google's current terms for the unpaid tier, including whether
+Google may use the content); what is sent (the reader's selection and a
+bounded window of surrounding text, never the whole book, never other
+readers' data, no user ids or emails); keys (ours from the server env
+only; a reader's own key never in the bundle, logs or responses, shown
+back as the last four characters, stored only as question 3 decides);
+limits (per-reader daily quota and per-request token caps in a policy
+module, quota-exhausted and provider-down answers that never block
+reading); prompt injection (book text is data, Steve has no tools and no
+database access); not during a test (Steve is unavailable while a test is
+open); cost guard (no billing, ever; if Google asks for a payment method,
+stop and tell the user); tests (pytest stays offline: the Gemini client
+is faked, a test asserts no call without consent). The new skill gets
+a purpose line in `tools/repo_graph/purposes.json` (data, not code) and
+`make graph` runs, as for every new tracked file. Verified by: standard checks; `test_no_paid_ai.py` still
+passes unchanged. Cut: none.
+
+**C16.3 specs: ANCHORS, FOCUS_RULES, GAMIFICATION** (about 1.5 h; split
+into C16.3a, b and c if together they pass ~200 lines).
+- `docs/ANCHORS.md`: how a highlight, underline, note or drawing points
+  at a passage in the original view: PDF (page number, text-layer
+  offsets, quads for display, region id from the region map) and EPUB
+  (spine item, CFI range); a text quote with prefix and suffix on both,
+  for re-anchoring when offsets drift; colours and styles as a fixed
+  palette checked by `check:contrast`; what happens to an anchor whose
+  text cannot be found (kept, shown as orphaned, never deleted); regions
+  (prose, math, code, figure, table) and which actions each allows (for
+  example, a figure takes a drawing and a note, not an underline); the
+  data shape each later migration must store.
+- `docs/FOCUS_RULES.md`: the stopwatch (locked until the reader reaches
+  chapter 1, as found by the structure parser; what counts as chapter 1
+  when a book has none); what the server accepts as focused time
+  (heartbeats, idle and tab-hidden cut-offs, one active session per
+  reader); points computed only on the server from heartbeats and
+  results; the bookmark quiz (when it fires, how its questions come from
+  the existing question bank, how it scores); the 3-hour cap (per day or
+  per session, to be decided; what the reader sees at the cap); every
+  threshold named for `policy.py`.
+- `docs/GAMIFICATION.md`: XP sources and amounts (reading time, tests,
+  focus points, quiz), streak rules (the reader's time zone, what keeps
+  a streak, any grace day), badges as a fixed list with exact unlock
+  conditions, weekly leagues (cohort size, week start and time zone,
+  promotion and demotion, ties, readers with no XP), anti-abuse (all XP
+  written by the server, idempotent per event as mastery is since C7.4),
+  privacy (league names shown, never emails).
+Verified by: every rule numbered; every threshold listed once with its
+proposed value; open questions listed at the end of each spec for you;
+standard checks unchanged. Cut: leagues' detail (deferred to its chunk's
+plan).
+
+**C16.4 Gemini key setup and PROGRESS sections C17-C25** (about 0.5 h,
+plus your steps).
+- Your steps: create a Gemini API key in Google AI Studio in a project
+  with no billing account; put it in `.env` as `GEMINI_API_KEY`
+  (git-ignored) and in the Render service's environment (dashboard only,
+  not `render.yaml`, which the guard checks); tell me when it is done. I
+  never see the value.
+- My steps: one read-only check that the key works, a model list request
+  with no generation, printing only the status code and the model names;
+  read Google's current free-tier rate limits and data-use terms and
+  record them, with the date and links, in `docs/DEPLOYMENT.md` (or a
+  Steve section of `docs/ARCHITECTURE.md`); `.env.example` stays without
+  the key until the Steve backend chunk changes the guard.
+- PROGRESS: one stub section per phase 2 chunk with its goal and
+  dependencies, each to get a full plan at its own start. Proposed order
+  (the original view first, since anchors depend on it): C17 original
+  view (PDF and EPUB as published; book view retired), C18 region map,
+  C19 anchors, highlights and underlines, C20 notepad (typed notes and
+  Excalidraw), C21 Steve backend (Gemini client, consent, readers' keys,
+  quotas, the guard's carve-out), C22 Steve in the reader ("Ask Steve"
+  from a highlight), C23 focus mode, C24 XP, streaks, badges and
+  leagues, C25 phase 2 verification and release.
+Verified by: the key check's output (status and model names only); the
+stub sections read back; standard checks unchanged. Cut: the terms
+summary (links only).
+
+Questions for you:
+
+1. Release state: `origin/main` has the release merge (`f914389`) and
+   CI deploys `main` to Render. Is C0-C15 released after all, or does
+   "not released" mean something else (for example Vercel and Render
+   still tracking `readfocus-2.0`)?
+2. Gemini key (C16.4): you create it and set it in `.env` and on Render
+   as above. OK, and should Render get it now or only when Steve ships?
+3. Readers' own keys: stored server-side encrypted (works on every
+   device) or kept only in the reader's browser and sent per request
+   (never stored by us)?
+4. Phase 2 time budget: how many hours for C16-C25, so the 50%-over rule
+   has a number?
+
+Answers (2026-11-12): 1. C0-C15 are released (`main` at `f914389`).
+2. Render gets `GEMINI_API_KEY` only when Steve ships; C16.4 sets it in
+`.env` only. 3. Readers' own keys are stored encrypted on our server.
+4. Phase 2 has 31 hours.
+
+Risks: Google changing the free tier's limits or terms (recorded with a
+date in C16.4, re-checked in C21); the free tier's data-use terms may
+make consent copy stricter than planned; rules that allow Steve while the
+tests still forbid him confuse a later session (the CLAUDE.md text says
+the carve-out lands in C21); spec size (C16.3 split if needed).
+
+Estimated time: about 3.25 h (C16.1 0.5, C16.2 0.75, C16.3 1.5, C16.4
+0.5) plus your key setup. At 50% over (about 4.9 h) the cut order
+applies: the terms summary, the leagues detail.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C16.1 CLAUDE.md phase 2 rules | this commit (`docs(tooling): add phase-2 rules for Steve, original view and gamification`); plan `f3ca5ab` | `CLAUDE.md` (218 lines, under 220): product goal (no remote model on reading, tests or grading; $0 with Steve on Gemini's free tier or a reader's key); constraint 1 rewritten (Gemini the only generative AI, only for Steve, through the backend, after consent, free tier or own key; no other provider, scraping, paid API or payment method; consent notice because free-tier content may be used by Google; turn-off; context builder limit); new "Phase 2" section (English only, Bengali/Bangla out; original view, region map, anchors, body start, focus session, one line each pointing to `docs/`; gamification without dark patterns; readers' keys encrypted; six env var names); Stack row for Steve and a note that `test_no_paid_ai.py` still bans Gemini until Steve's backend chunk; debug protocol shortened to a pointer to its skill and the run commands' PowerShell block folded into one line, to stay under 220. Plan: the answers to the four questions recorded. | Read-through against the prompt's six points; `(Get-Content CLAUDE.md).Count`: 218. Standard checks: see commit. | 2026-11-12 | `docs/ANCHORS.md`, `docs/FOCUS_RULES.md` and `docs/GAMIFICATION.md` are referenced but written in C16.3; the steve-guardrails skill (C16.2) is not yet in the skills table; the env vars are not in `.env.example` (the guard rejects `GEMINI` there until Steve's backend chunk) |
+| [x] C16.2 free-intelligence update; steve-guardrails skill | this commit (`chore(tooling): add steve-guardrails skill and allow Gemini for Steve only`); C16.1 `25a80d5` | `.claude/skills/free-intelligence/SKILL.md`: Gemini allowed only for Steve through `backend/steve/provider.py` (banned elsewhere, as are Gemini embeddings and any fallback provider); agents, grading, questions and scores stay algorithmic and never call Steve; `pdfplumber` approved for the region map (memory rule still applies); Gemini added to the free APIs, Steve only; the guard still bans Gemini until C21; checklist items. `.claude/skills/steve-guardrails/SKILL.md` (new): one provider module, consent (`profiles.steve_consent_at`, checked on the server) and off switch, not during a test or quiz, context budget (session text, highlight, TOC, top-k, question; one builder; hard cap from policy), book text delimited as data, grounding (pages or sections, says when the book does not cover it, LaTeX, concise), quota (per-reader daily limit, 429 circuit breaker, cache by book, question and context hash, paused state, no fallback), keys (encrypted with `KEY_ENCRYPTION_SECRET`, last 4 only, never logged), no book text in production logs, model names from env, no hardcoded quotas, offline tests. `CLAUDE.md` skills table (219 lines); purpose line; `make graph`. | Read-through against the prompt's points; the skill is listed by the harness under its name and description; standard checks: see commit. | 2026-11-12 | `backend/steve/` (the prompt's path) is Steve's package from C21; `profiles.steve_consent_at` does not exist yet (Steve's migration); `pdfplumber` is approved but not installed, and its memory is measured when it is added |
+| [x] C16.3 specs: ANCHORS, FOCUS_RULES, GAMIFICATION | this commit (`docs: add anchor, focus-mode and gamification specs`); C16.2 `5d6f550` | `docs/ANCHORS.md` (new, A1-A8): PDF anchor `{kind, page, quads, text}` in points with a top-left origin and EPUB anchor `{kind, cfi, text}`; ranges (start and end, split per page or spine item); point anchors; the sortable position (PDF `page*1e6 + floor(y0)*1e2 + floor(99*x0/width)`, EPUB `spine_index*1e6 + order`); zoom, font size and re-pagination (points and structural CFIs, text verification, re-find, orphaned never deleted); chunk source spans added at ingestion and anchor-to-chunk mapping; C12 positions migrated in C17; fixed colour tokens. `docs/FOCUS_RULES.md` (new, F1-F14 and a defaults table): toggle, body start, server-timed heartbeats, 10 points per active minute, hidden-tab pause, 10-minute idle prompt with 60 s to answer, 30-minute page cap, 3-hour cap forcing the quiz, bookmark ends a session, quiz from start to bookmark with `clamp(round(words/400), 3, 15)` questions from the question bank, 20 per correct answer, below 40% the session earns 0, "Quiz me" with no points, server as source of truth. `docs/GAMIFICATION.md` (new, G1-G15): no dark patterns, server-only awards, privacy; XP = focus points; daily goal 50 (10-500, adjustable); local-day streaks; up to 2 earned freezes; 14 badges with exact conditions; six book-themed tiers, groups of about 30, top 7 up and bottom 5 down, Monday 00:00 UTC rollover by a `CRON_SECRET` call; opt-out; one neutral opt-in reminder. Purpose lines; `make graph`. | Read-through against the prompt's points; the chunk-mapping claims checked against migrations 013 and 014 and `book_ingestor.chunk_text` (pages joined, no page numbers stored). Standard checks: see commit. | 2026-11-12 | Open questions listed at the end of FOCUS_RULES (3) and GAMIFICATION (3) for you. Choices of mine beyond the prompt: freeze earning (one per 7 counted days), local-day streaks with UTC leagues, scaled promotion in small groups, 20% math or code for the technical-book badge, the daily-goal bounds, and the heartbeat interval. CLAUDE.md's Docs list does not name the three specs (it is at 219 of 220 lines; its Phase 2 section links them) |
+| [x] C16.4 Gemini key setup (needs you); PROGRESS sections C17-C25 | this commit (`chore(steve): add Gemini env names and phase-2 progress sections`); C16.3 `658f44e` | The user created a free-tier key in Google AI Studio (no billing) and put it in `.env` as `GEMINI_API_KEY` (never printed or committed; not on Render until Steve ships). Models checked against Google's docs (aistudio.google.com/docs/models, /pricing, /rate-limits; the ai.google.dev pages redirect there) on 2026-11-12: `gemini-3.8-flash`, `gemini-3.6-flash` and `gemini-3.5-flash-lite` are stable, free tier, text, image, video, audio and PDF in, text out, 1,048,576 input tokens; free-tier content is "used to improve our products"; `gemini-2.5-flash` and `gemini-2.5-pro` are deprecated and rerouted on 2026-12-01; Google lists per-model free limits only in AI Studio. The user chose 3.8 Flash for chat and 3.5 Flash-Lite for vision; 3.8 Flash and then 3.6 Flash answered 503 or timed out (DEBUG_LOG 2026-11-12 C16.4), so on the user's decision both are `gemini-3.5-flash-lite` for now. `.env`: `GEMINI_MODEL_CHAT` and `GEMINI_MODEL_VISION` = `gemini-3.5-flash-lite`, `STEVE_DAILY_LIMIT_PER_USER=15`, `KEY_ENCRYPTION_SECRET` and `CRON_SECRET` generated locally with `secrets.token_urlsafe(48)`. `.env.example`: the six names, empty, with comments. `tools/no_paid_ai.py`: `STEVE_ENV_NAMES` and `provider_keys_outside_steve`, so `.env.example` may declare only Steve's three `GEMINI_*` names (the user's decision; backend code, imports, requirements and `render.yaml` stay banned until C21); `test_no_paid_ai.py`: the config test uses it, and a new test checks other provider names still fail. Below: stub sections C17-C25 with goals, dependencies, estimates (27.75 h, 31 h with C16) and cuts. | Free-tier limits observed in AI Studio by the user on 2026-11-12: `gemini-3.8-flash` 5 RPM, 250k TPM, 20 RPD; `gemini-3.5-flash-lite` 15 RPM, 250k TPM, 500 RPD (RPD resets at midnight Pacific; Google: "not guaranteed"). Throwaway script (scratchpad, not committed), one "Reply with OK" per model: `gemini-3.5-flash-lite` HTTP 200 "OK" in 1,734 ms and 1,330 ms, 4 tokens, `modelVersion gemini-3.5-flash-lite`; `gemini-3.8-flash` 503 UNAVAILABLE (4,093 ms), ReadTimeout at 60 s, ReadTimeout at 120 s with thinking low; `GET models/gemini-3.8-flash` 200; `gemini-3.6-flash` 503 (3,830 ms). `pytest backend/tests/test_no_paid_ai.py`: failed at collection before `provider_keys_outside_steve` existed, passes after. Standard checks: see commit. | 2026-11-12 | Flash models unavailable on this key on 2026-11-12 (DEBUG_LOG, open); 3.6 Flash's limits not read. On Flash-Lite one key serves 500 Steve requests a day for all readers. `.env` still holds four unused pre-2.0 provider keys (the user's to remove) |
+
+## Phase 2 chunks (C17-C25)
+
+Stubs written in C16.4. Each chunk gets its full plan (what there is to
+build on, decisions, subchunks with verification and cuts, an estimate)
+at its own start, before any code. The phase 2 budget is 31 hours
+(C16 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
+CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
+`docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
+
+## C17 — original view
+
+Goal: every PDF and EPUB shown as published (images, figures, math and
+code intact) by a PDF renderer and an EPUB renderer, lazy-loaded; the
+C12 book view retired (the user's decision at C16); chunk source spans
+recorded at ingestion (ANCHORS A6); C12 reading positions migrated to
+point anchors (A7, additive, approved, after a fresh dump). Depends on:
+C16. Estimate: 4.0 h. Safe to cut: page thumbnails, the EPUB layout
+options beyond font size.
+
+## C18 — region map
+
+Goal: each page split into prose, math, code, figure and table regions
+(`pdfplumber` for PDF layout, the EPUB DOM for EPUB), stored per page,
+measured for memory before `pdfplumber` is added (constraint 5); which
+actions each region type allows (ANCHORS A8). Depends on: C17.
+Estimate: 3.0 h. Safe to cut: table detection (tables as figures).
+
+## C19 — anchors, highlights and underlines
+
+Goal: select text in the original view, highlight or underline it in a
+palette colour, see it again after zoom, font change and reload; anchors
+stored as ANCHORS A1-A5 with RLS; orphaned anchors listed. Depends on:
+C17, C18. Estimate: 3.5 h. Safe to cut: underline styles beyond one.
+
+## C20 — notepad
+
+Goal: typed notes and Excalidraw drawings anchored to passages or
+regions, in reading order by the sortable position (A4), with the
+drawing editor lazy-loaded and its bundle size recorded. Depends on: C19.
+Estimate: 3.0 h. Safe to cut: drawings on figures (notes only).
+
+## C21 — Steve backend
+
+Goal: `backend/steve/` with `provider.py` as the one door to Gemini, the
+consent column (`profiles.steve_consent_at`) and off switch, the context
+builder under a policy cap, readers' own keys encrypted with
+`KEY_ENCRYPTION_SECRET`, per-reader quota, the 429 circuit breaker and
+the response cache; the guard narrowed test first so only `backend/steve/`
+may import the SDK or read `GEMINI_*`; `GEMINI_API_KEY` added on Render
+when Steve ships (the user's decision at C16); re-test `gemini-3.8-flash`
+and `gemini-3.6-flash` for chat (both 503 on 2026-11-12, DEBUG_LOG) and
+size the global daily budget: on Flash-Lite's 500 requests a day, a
+per-reader limit of 15 serves about 33 readers. Depends on: C16 (and C19
+for highlighted passages). Estimate: 3.5 h. Safe to cut: the response
+cache.
+
+## C22 — Steve in the reader
+
+Goal: the consent notice, "Ask Steve" from a highlight, a side panel with
+grounded answers (page or section citations, LaTeX), the paused state,
+the own-key setting (last 4 shown). Depends on: C21. Estimate: 2.5 h.
+Safe to cut: image questions on figures (`GEMINI_MODEL_VISION`).
+
+## C23 — focus mode
+
+Goal: FOCUS_RULES F1-F14: body start, the server-timed stopwatch,
+idle and hidden-tab pauses, page and 3-hour caps, the bookmark quiz from
+the question bank, server-scored points; "Quiz me" outside focus mode.
+Depends on: C17 (C19 for bookmarks as anchors). Estimate: 3.5 h. Safe
+to cut: "Quiz me".
+
+## C24 — XP, streaks, badges and leagues
+
+Goal: GAMIFICATION G1-G15: XP from final focus points, the daily goal,
+streaks with earned freezes, the badge catalogue, weekly leagues with the
+`CRON_SECRET` rollover, leaderboard opt-out, no dark patterns. Depends
+on: C23. Estimate: 3.0 h. Safe to cut: leagues (XP, streaks and badges
+only).
+
+## C25 — phase 2 verification and release
+
+Goal: live journey and isolation checks extended to highlights, notes,
+Steve (consent, quota, no book text in logs) and focus scoring; docs and
+the acceptance checklist for phase 2; release only on the user's word.
+Depends on: C17-C24. Estimate: 1.75 h. Safe to cut: Lighthouse.

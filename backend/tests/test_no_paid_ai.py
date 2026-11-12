@@ -14,6 +14,7 @@ from tools.no_paid_ai import (
     BANNED_MODULES,
     BANNED_PACKAGES,
     GATE_PATTERN,
+    provider_keys_outside_steve,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -68,8 +69,18 @@ def test_requirements_list_no_banned_package_and_keep_langgraph():
 
 
 def test_config_declares_no_provider_key():
-    for name in (".env.example", "render.yaml"):
-        assert not BANNED_KEYS.search((ROOT / name).read_text(encoding="utf-8")), name
+    """render.yaml names no provider key; .env.example only Steve's Gemini names (C16.4)."""
+    assert not BANNED_KEYS.search((ROOT / "render.yaml").read_text(encoding="utf-8"))
+    assert not provider_keys_outside_steve((ROOT / ".env.example").read_text(encoding="utf-8"))
+
+
+def test_only_steves_gemini_names_are_allowed():
+    # Names are built from pieces: this file is under backend/, which the tests above keep free of them.
+    gem, oai, studio, grq = "GEM" + "INI", "OPEN" + "AI", "GOOGLE_AI_" + "STUDIO", "GR" + "OQ"
+    assert not provider_keys_outside_steve(f"{gem}_API_KEY=\n{gem}_MODEL_CHAT=a\n{gem}_MODEL_VISION=b\n")
+    assert provider_keys_outside_steve(f"{gem}_EMBED_MODEL=x") == {f"{gem}_EMBED_MODEL"}
+    assert provider_keys_outside_steve(f"{oai}_API_KEY=\n{studio}_KEY=") == {f"{oai}_API_KEY", f"{studio}_KEY"}
+    assert provider_keys_outside_steve(f"# {grq}_API_KEY is gone") == {f"{grq}_API_KEY"}
 
 
 def test_the_old_provider_clients_are_gone():

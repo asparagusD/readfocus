@@ -1,32 +1,40 @@
 ---
 name: free-intelligence
-description: "Use whenever a change adds or touches anything 'intelligent' in this repo: agents, LangGraph nodes, planning, question generation, grading, pacing, embeddings, search, keyword or summary extraction, word lookup, or any new dependency, model or external API. Enforces $0 API cost: no LLM or embedding APIs, approved local libraries and free APIs only, memory measured before and after, and the pure decide() agent pattern."
+description: "Use whenever a change adds or touches anything 'intelligent' in this repo: agents, LangGraph nodes, planning, question generation, grading, pacing, scoring, embeddings, search, region maps, keyword or summary extraction, word lookup, or any new dependency, model or external API. Enforces $0 API cost: no LLM or embedding APIs except Gemini for Steve, approved local libraries and free APIs only, memory measured before and after, and the pure decide() agent pattern."
 ---
 
 # Free intelligence
 
 ReadFocus 2.0 costs $0 to run. Every "smart" feature is an algorithm or a
-small local model running inside the backend on Render Free. This skill
-enforces hard constraints 1 and 5 from `CLAUDE.md`.
+small local model running inside the backend on Render Free. The one
+exception is Steve, the opt-in study assistant, who calls Gemini through
+`backend/steve/` under the `steve-guardrails` skill. This skill enforces
+hard constraints 1 and 5 from `CLAUDE.md`.
+
+**Agents, planning, question generation, grading, pacing and every score
+(test, focus, XP) stay algorithmic.** They never call Gemini or Steve, and
+nothing they decide depends on Steve's output.
 
 ## Banned
 
-Never call, import, install or add a key for any of these:
+Never call, import, install or add a key for any of these. Gemini is the
+only exception, and only for Steve (see below).
 
 | Banned | Includes |
 |---|---|
 | Groq | `groq`, `langchain-groq` |
 | OpenAI | `openai`, `langchain-openai` |
 | Anthropic | `anthropic`, `langchain-anthropic` |
-| Gemini / Google AI | `google-generativeai`, `google-genai`, `langchain-google-genai` |
+| Gemini outside Steve | any Gemini call outside `backend/steve/provider.py`; `langchain-google-genai` anywhere |
 | Cerebras | any SDK or endpoint |
 | SambaNova | any SDK or endpoint |
 | OpenRouter | any SDK or endpoint |
 | Google scraping | fetching or parsing Google search results in any way |
 | Paid search APIs | SerpAPI, Bing, Brave, Tavily, Exa and similar |
 
-Also banned: any other hosted LLM or embedding endpoint, any service that
-needs a payment method, and free tiers or trial credits of the above. A free
+Also banned: any other hosted LLM or embedding endpoint (including Gemini
+embeddings), any service that needs a payment method, free tiers or trial
+credits of the providers above, and a fallback provider for Steve. A free
 tier is still an API call, and it stops being free.
 
 If a task seems to need one of these, stop and tell the user. Propose an
@@ -35,7 +43,10 @@ algorithmic or local-model alternative instead of adding it.
 ### Existing violations
 
 None since C8.8: the Groq and Google AI Studio clients, their packages and
-their keys are gone. `backend/tests/test_no_paid_ai.py` fails if a banned
+their keys are gone. Until Steve's backend chunk (C21) the guard below
+still bans Gemini everywhere; that chunk narrows it, test first, so only
+`backend/steve/` may import the Gemini SDK or read `GEMINI_*` keys.
+`backend/tests/test_no_paid_ai.py` fails if a banned
 SDK is imported under `backend/`, a provider is named anywhere in
 `backend/`, a provider key is read or declared, or a banned package is
 added to `requirements.txt`. The deny-list itself is `tools/no_paid_ai.py`,
@@ -57,6 +68,7 @@ It prints nothing. Any file it prints is a violation.
 | `rapidfuzz` | Fuzzy string matching for grading answers |
 | `numpy` | Vector maths |
 | `langgraph` | Orchestrating the agent graph (no LLM nodes) |
+| `pdfplumber` | PDF layout (words, lines, rects, images) for the region map |
 
 Pydantic, httpx and the Python standard library are fine too. Anything else
 that does "intelligence" work needs the user's approval and a memory
@@ -69,8 +81,11 @@ measurement first.
 | Free Dictionary API | Word definitions |
 | Wikipedia REST API | Short summaries for names and terms |
 | Open Library | Book metadata and covers |
+| Gemini (free tier, or the reader's own key) | Steve only, through `backend/steve/provider.py`, under the `steve-guardrails` skill |
 
-Rules for every external call:
+Rules for every external call (for Gemini, `steve-guardrails` adds
+consent, context, quota and key rules on top, and its key is the one
+allowed exception to "no keys"):
 
 - **Backend only.** The frontend calls our FastAPI backend, never the
   external API directly.
@@ -198,7 +213,9 @@ def optimizer_node(state: AgentState) -> dict:
 ## Checklist before committing
 
 - [ ] No banned provider, SDK, key or endpoint added; the grep list did not
-  grow.
+  grow. Gemini appears only in `backend/steve/`, and that change also
+  follows `steve-guardrails`.
+- [ ] Agents, grading, questions and scores call neither Gemini nor Steve.
 - [ ] New libraries are on the approved list, or approved by the user.
 - [ ] External calls go through the backend, are cached, send the
   User-Agent, have a timeout, and fail gracefully.

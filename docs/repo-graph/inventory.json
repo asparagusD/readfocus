@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 446,
-    "inventoried": 381,
+    "tracked": 450,
+    "inventoried": 385,
     "excluded": 65
   },
   "files": [
@@ -33,8 +33,8 @@
     {
       "path": ".claude/skills/free-intelligence/SKILL.md",
       "language": "markdown",
-      "lines": 209,
-      "size_bytes": 8413,
+      "lines": 226,
+      "size_bytes": 9656,
       "role": "doc",
       "purpose": "Project skill: banned providers, approved local libraries and free APIs, the memory rule, and the pure decide() agent pattern."
     },
@@ -47,6 +47,14 @@
       "purpose": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see."
     },
     {
+      "path": ".claude/skills/steve-guardrails/SKILL.md",
+      "language": "markdown",
+      "lines": 130,
+      "size_bytes": 5552,
+      "role": "doc",
+      "purpose": "Project skill: the rules for Steve's Gemini calls: one provider module, consent, context budget, book text as data, grounding, quota, keys and logging."
+    },
+    {
       "path": ".dockerignore",
       "language": "text",
       "lines": 8,
@@ -57,8 +65,8 @@
     {
       "path": ".env.example",
       "language": "dotenv",
-      "lines": 22,
-      "size_bytes": 889,
+      "lines": 35,
+      "size_bytes": 1446,
       "role": "config",
       "purpose": "Backend environment template: Supabase keys, FRONTEND_URL (one or more comma-separated CORS origins), ENV (only development adds the localhost origins), FASTEMBED_CACHE and the optional EMBED_THREADS; no AI provider key (since C8.8)."
     },
@@ -81,8 +89,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 208,
-      "size_bytes": 11648,
+      "lines": 219,
+      "size_bytes": 13324,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -841,8 +849,8 @@
     {
       "path": "backend/tests/test_no_paid_ai.py",
       "language": "python",
-      "lines": 77,
-      "size_bytes": 2515,
+      "lines": 88,
+      "size_bytes": 3334,
       "role": "test",
       "purpose": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
     },
@@ -999,6 +1007,14 @@
       "purpose": "Claude Design export, kept unchanged: React production build used by the dc-runtime viewer; not used by the app."
     },
     {
+      "path": "docs/ANCHORS.md",
+      "language": "markdown",
+      "lines": 119,
+      "size_bytes": 5246,
+      "role": "doc",
+      "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
+    },
+    {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
       "lines": 272,
@@ -1025,8 +1041,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2398,
-      "size_bytes": 105991,
+      "lines": 2461,
+      "size_bytes": 108967,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1047,12 +1063,28 @@
       "purpose": "C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13."
     },
     {
+      "path": "docs/FOCUS_RULES.md",
+      "language": "markdown",
+      "lines": 97,
+      "size_bytes": 4310,
+      "role": "doc",
+      "purpose": "Phase 2 spec (C16.3): focus mode rules F1-F14: body start, server-timed stopwatch, points per active minute, hidden-tab and idle pauses, page and 3-hour caps, the bookmark quiz and its pass mark."
+    },
+    {
       "path": "docs/G4_PRODUCTION_MIGRATIONS.md",
       "language": "markdown",
       "lines": 706,
       "size_bytes": 33059,
       "role": "doc",
       "purpose": "Gate G4 (C14.4): outcome first (production is the dev project; 001-015 already applied, checked read-only; backfill dry runs found nothing; nothing written), then the review written before that was known: full SQL of 005-015 with sha256, read-only pre-checks, backup, apply and post-check steps, backfill plan."
+    },
+    {
+      "path": "docs/GAMIFICATION.md",
+      "language": "markdown",
+      "lines": 100,
+      "size_bytes": 4744,
+      "role": "doc",
+      "purpose": "Phase 2 spec (C16.3): XP from focus points, daily goal, streaks with earned freezes, the badge catalogue, weekly book-themed leagues, opt-out and no dark patterns."
     },
     {
       "path": "docs/MIGRATION_AUDIT.md",
@@ -1065,8 +1097,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2764,
-      "size_bytes": 550352,
+      "lines": 3055,
+      "size_bytes": 574365,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2961,8 +2993,8 @@
     {
       "path": "tools/no_paid_ai.py",
       "language": "python",
-      "lines": 31,
-      "size_bytes": 1495,
+      "lines": 41,
+      "size_bytes": 2036,
       "role": "script",
       "purpose": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
     },
@@ -2993,8 +3025,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 383,
-      "size_bytes": 111446,
+      "lines": 387,
+      "size_bytes": 112301,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

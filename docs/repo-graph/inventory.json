@@ -82,7 +82,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 206,
-      "size_bytes": 11461,
+      "size_bytes": 11499,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1009,8 +1009,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2219,
-      "size_bytes": 97819,
+      "lines": 2290,
+      "size_bytes": 101000,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1145,8 +1145,8 @@
     {
       "path": "frontend/e2e/reading.spec.js",
       "language": "javascript",
-      "lines": 72,
-      "size_bytes": 4351,
+      "lines": 91,
+      "size_bytes": 5524,
       "role": "config",
       "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion."
     },
@@ -1194,7 +1194,7 @@
       "path": "frontend/eslint.config.js",
       "language": "javascript",
       "lines": 27,
-      "size_bytes": 897,
+      "size_bytes": 926,
       "role": "config",
       "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx."
     },
@@ -1217,16 +1217,16 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 45,
-      "size_bytes": 1393,
+      "lines": 46,
+      "size_bytes": 1458,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
     {
       "path": "frontend/playwright.config.js",
       "language": "javascript",
-      "lines": 23,
-      "size_bytes": 762,
+      "lines": 24,
+      "size_bytes": 860,
       "role": "config",
       "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker."
     },
@@ -2249,8 +2249,8 @@
     {
       "path": "frontend/src/reader/BookReader.jsx",
       "language": "jsx",
-      "lines": 334,
-      "size_bytes": 16417,
+      "lines": 338,
+      "size_bytes": 16663,
       "role": "asset",
       "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text); the word card when the caller passes a lookupClient (C12.8: opened on hover intent or a settled selection, Enter or ? on a selection opens it with focus, closed on a turn, page change or Esc, a polite live region announces each answer; hoverLookup turns hover off); the Look up chip for touch selections, kept to the page it was made on (C12.9)."
     },

@@ -1025,8 +1025,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2342,
-      "size_bytes": 103337,
+      "lines": 2398,
+      "size_bytes": 105991,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1065,8 +1065,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2763,
-      "size_bytes": 549004,
+      "lines": 2764,
+      "size_bytes": 550352,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1289,8 +1289,8 @@
     {
       "path": "frontend/scripts/live/check-isolation.mjs",
       "language": "text",
-      "lines": 257,
-      "size_bytes": 17038,
+      "lines": 261,
+      "size_bytes": 17409,
       "role": "config",
       "purpose": "Live cross-user isolation check (C15.2, npm run test:isolation; writes to the shared project, approval only): test user A uploads sample.pdf and reads, finishes and submits a session through the API; test user B then probes every id-taking API endpoint and, with supabase-js and the anon key, selects, updates and deletes in every per-user table, inserts a book as A, calls both search RPCs and probes A's Storage folder; term_lookups is readable by signed-in users and writable by none; no token and a raw user id are 401. Rows of B's own are reported but only A's count; A's row counts are compared before and after; A deletes the book and the rows and PDF left are reported. Exit 1 on any probe not denied."
     },

@@ -4,6 +4,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { checkDeployEnv, isVercelBuild } from './src/deploy/deployEnv.js'
+import { contentSecurityPolicy, inlineScriptHashes } from './src/deploy/csp.js'
 
 // D6: preload the Latin Lora and DM Sans files the first screen needs.
 // Their names are hashed, so the links are added after the bundle exists.
@@ -98,9 +99,32 @@ function pdfjsAssets() {
   }
 }
 
+// C17.3: the Content-Security-Policy as the first <meta> in the built page, with the
+// inline theme script allowed by its hash and the API and Supabase origins from the
+// build's own env (src/deploy/csp.js). Dev has none: Vite's HMR needs inline code.
+function contentSecurityPolicyMeta(env) {
+  return {
+    name: 'readfocus-csp',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const policy = contentSecurityPolicy({
+          apiUrl: env.VITE_API_URL || 'http://localhost:8000',
+          supabaseUrl: env.VITE_SUPABASE_URL || 'https://lvfhuszvuiowyeizstru.supabase.co',
+          scriptHashes: inlineScriptHashes(html),
+        })
+        return html.replace(/<head>/i, `<head>
+    <meta http-equiv="Content-Security-Policy" content="${policy}" />`)
+      },
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [deployEnv(), react(), tailwindcss(), preloadFonts(), pdfjsAssets(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL)],
+  plugins: [deployEnv(), react(), tailwindcss(), preloadFonts(), pdfjsAssets(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL),
+    contentSecurityPolicyMeta(loadEnv(mode, import.meta.dirname, 'VITE_'))],
   server: {
     proxy: {
       '/api': {

@@ -2492,3 +2492,42 @@ The fixed test itself; `timeout 60` used around the run afterwards.
 
 ### Commit
 C17.2 `feat(pdf): lazy PDF.js renderer with aligned text layer and page cache`
+
+## 2026-11-12 C17.3 — the new CSP blocked the inline theme script
+
+### Failure
+`npm run test:e2e` after adding the Content-Security-Policy meta: 2 failed,
+102 passed. `landing.spec.js` "a deep link never shows the prerendered
+landing page" and "signed in, the prerendered landing page is hidden from
+the first paint": `[data-prerendered]` had no `hidden` attribute. Console:
+"Executing inline script violates the following Content Security Policy
+directive 'script-src ... 'sha256-/w41…''. Either ... a hash
+('sha256-1Me3…')".
+
+### Reproduce
+`npm run build`, then any page of `vite preview`: the theme script in
+`index.html` does not run.
+
+### Hypotheses (most likely first)
+1. The hash was taken over different bytes than the browser hashes.
+   Evidence: the browser names another hash. Ruled out if hashing the
+   script body from `dist/index.html` gives the browser's hash. Result:
+   it gives ours (`/w41…`), but the file has CRLF line endings; the HTML
+   parser turns CRLF into LF before hashing. Hashing the LF text gives
+   `1Me3…`. Confirmed.
+2. The prerender step changes the script after the hash is taken. Ruled
+   out: only one inline script, unchanged by `scripts/prerender.mjs`.
+
+### Root cause
+`inlineScriptHashes` hashed the raw file text; on a Windows checkout
+`index.html` has CRLF, which the browser normalises before hashing.
+
+### Fix
+`src/deploy/csp.js`: CRLF and CR become LF before hashing.
+
+### Regression test
+`csp.test.js` "line endings are hashed as the browser parses them". The
+two landing tests pass again (`landing.spec.js`: 20 passed).
+
+### Commit
+C17.3a `feat(ci): add a Content-Security-Policy to the built app`

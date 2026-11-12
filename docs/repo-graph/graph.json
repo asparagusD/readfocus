@@ -1613,6 +1613,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/deploy/csp.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/deploy/csp.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/deploy/deployEnv.js",
       "type": "file",
       "role": "asset",
@@ -5124,6 +5136,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/deploy/csp.test.js",
+      "to": "file:frontend/src/deploy/csp.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/deploy/deployEnv.test.js",
       "to": "file:frontend/src/deploy/deployEnv.js"
     },
@@ -6121,6 +6138,11 @@
       "type": "imports",
       "from": "file:frontend/src/theme/ThemeProvider.jsx",
       "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/vite.config.js",
+      "to": "file:frontend/src/deploy/csp.js"
     },
     {
       "type": "imports",

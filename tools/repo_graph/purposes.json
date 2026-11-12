@@ -166,6 +166,7 @@
   "pyrightconfig.json": "Pyright config pointing at .venv with pythonVersion 3.14.",
   "pytest.ini": "Limits a bare pytest run to backend/tests and tools/repo_graph/tests, so scripts/manual/ is never collected.",
   "render.yaml": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key.",
+  "requirements-dev.txt": "Development and CI dependencies: -r requirements.txt plus pinned pytest, ruff (its version fixes the rule set) and psutil (scripts/bench.py); not in the Docker image (C14.5 fix).",
   "requirements.txt": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8).",
   "scripts/backfill_local_embeddings.py": "Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development.",
   "scripts/bench.py": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md.",

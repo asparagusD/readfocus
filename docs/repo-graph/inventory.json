@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 438,
-    "inventoried": 373,
+    "tracked": 439,
+    "inventoried": 374,
     "excluded": 65
   },
   "files": [
@@ -82,7 +82,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 203,
-      "size_bytes": 11189,
+      "size_bytes": 11227,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -905,8 +905,8 @@
     {
       "path": "backend/tests/test_requirements.py",
       "language": "python",
-      "lines": 60,
-      "size_bytes": 2162,
+      "lines": 84,
+      "size_bytes": 3373,
       "role": "test",
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
     },
@@ -1009,8 +1009,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2145,
-      "size_bytes": 94294,
+      "lines": 2219,
+      "size_bytes": 97819,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2599,6 +2599,14 @@
       "purpose": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key."
     },
     {
+      "path": "requirements-dev.txt",
+      "language": "text",
+      "lines": 12,
+      "size_bytes": 556,
+      "role": "config",
+      "purpose": "Development and CI dependencies: -r requirements.txt plus pinned pytest, ruff (its version fixes the rule set) and psutil (scripts/bench.py); not in the Docker image (C14.5 fix)."
+    },
+    {
       "path": "requirements.txt",
       "language": "text",
       "lines": 36,
@@ -2929,8 +2937,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 375,
-      "size_bytes": 107485,
+      "lines": 376,
+      "size_bytes": 107693,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

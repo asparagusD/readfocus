@@ -2170,6 +2170,12 @@
       "language": "yaml"
     },
     {
+      "id": "file:requirements-dev.txt",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:requirements.txt",
       "type": "file",
       "role": "config",

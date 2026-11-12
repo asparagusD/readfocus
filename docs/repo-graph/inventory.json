@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 571,
-    "inventoried": 431,
+    "tracked": 575,
+    "inventoried": 435,
     "excluded": 140
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13446,
+      "size_bytes": 13463,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1162,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3393,
-      "size_bytes": 613857,
+      "size_bytes": 614682,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2213,6 +2213,38 @@
       "size_bytes": 1208,
       "role": "asset",
       "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
+    },
+    {
+      "path": "frontend/src/originalview/epub/imageSize.js",
+      "language": "javascript",
+      "lines": 61,
+      "size_bytes": 2879,
+      "role": "asset",
+      "purpose": "An image's natural size from its first bytes (C17.3): PNG, GIF, JPEG (SOF segments), WebP (VP8, VP8L, VP8X) and SVG (width/height, else viewBox); null otherwise."
+    },
+    {
+      "path": "frontend/src/originalview/epub/imageSize.test.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 2319,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): PNG, GIF, JPEG after other segments, WebP lossy and extended, SVG attributes and viewBox, unknown and truncated input."
+    },
+    {
+      "path": "frontend/src/originalview/epub/urls.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 1972,
+      "role": "asset",
+      "purpose": "What an EPUB page may point at (C17.3): isAllowedUrl (blob:, data:image, #fragments and relative paths only, control characters ignored), cleanCss (remote @import and url() removed, expression() disabled), cleanSrcset."
+    },
+    {
+      "path": "frontend/src/originalview/epub/urls.test.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 2031,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): allowed and refused URLs (http, protocol-relative, javascript with tabs, data:text, file, vbscript), CSS imports and url() kept or removed, expression(), srcset."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
@@ -3393,8 +3425,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 433,
-      "size_bytes": 124640,
+      "lines": 437,
+      "size_bytes": 125572,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

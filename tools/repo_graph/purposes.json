@@ -429,5 +429,9 @@
   "frontend/src/vendor/foliate-js/mobi.js": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded.",
   "frontend/src/vendor/foliate-js/pdf.js": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded.",
   "frontend/src/vendor/foliate-js/tts.js": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded.",
-  "frontend/src/vendor/foliate-js/vendor/fflate.js": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded."
+  "frontend/src/vendor/foliate-js/vendor/fflate.js": "ReadFocus stub in the vendored foliate-js folder: view.js imports it only for a format ReadFocus does not open (MOBI, FB2, comics, PDF through foliate, text to speech); it throws if loaded.",
+  "frontend/src/originalview/epub/urls.js": "What an EPUB page may point at (C17.3): isAllowedUrl (blob:, data:image, #fragments and relative paths only, control characters ignored), cleanCss (remote @import and url() removed, expression() disabled), cleanSrcset.",
+  "frontend/src/originalview/epub/urls.test.js": "Node test (npm run test:unit): allowed and refused URLs (http, protocol-relative, javascript with tabs, data:text, file, vbscript), CSS imports and url() kept or removed, expression(), srcset.",
+  "frontend/src/originalview/epub/imageSize.js": "An image's natural size from its first bytes (C17.3): PNG, GIF, JPEG (SOF segments), WebP (VP8, VP8L, VP8X) and SVG (width/height, else viewBox); null otherwise.",
+  "frontend/src/originalview/epub/imageSize.test.js": "Node test (npm run test:unit): PNG, GIF, JPEG after other segments, WebP lossy and extended, SVG attributes and viewBox, unknown and truncated input."
 }

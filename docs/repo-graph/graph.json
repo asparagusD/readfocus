@@ -1913,6 +1913,30 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/epub/imageSize.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/imageSize.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/urls.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/epub/urls.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "type": "file",
       "role": "asset",
@@ -5557,6 +5581,16 @@
       "type": "imports",
       "from": "file:frontend/src/motion/useCountUp.js",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/imageSize.test.js",
+      "to": "file:frontend/src/originalview/epub/imageSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/urls.test.js",
+      "to": "file:frontend/src/originalview/epub/urls.js"
     },
     {
       "type": "imports",

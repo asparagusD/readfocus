@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 575,
-    "inventoried": 435,
+    "tracked": 580,
+    "inventoried": 440,
     "excluded": 140
   },
   "files": [
@@ -1097,8 +1097,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2533,
-      "size_bytes": 111881,
+      "lines": 2567,
+      "size_bytes": 113210,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1162,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3393,
-      "size_bytes": 614682,
+      "size_bytes": 616475,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1361,8 +1361,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 48,
-      "size_bytes": 1550,
+      "lines": 49,
+      "size_bytes": 1577,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -2215,6 +2215,54 @@
       "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
     },
     {
+      "path": "frontend/src/originalview/bookFile.js",
+      "language": "javascript",
+      "lines": 9,
+      "size_bytes": 391,
+      "role": "asset",
+      "purpose": "fromBook(bookId) for both renderers (C17.3): the book's original file from this device's copy (IndexedDB) or the signed URL from GET /books/{id}/file."
+    },
+    {
+      "path": "frontend/src/originalview/documentSource.js",
+      "language": "javascript",
+      "lines": 12,
+      "size_bytes": 646,
+      "role": "asset",
+      "purpose": "Where a book's original file comes from (C17.2, shared with EPUB in C17.3): bookSource gives this device's copy as { data }, else the signed URL as { url } (byte ranges for PDF.js)."
+    },
+    {
+      "path": "frontend/src/originalview/documentSource.test.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1200,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): the device copy first without asking the server, the signed URL otherwise, the server's message for a device-only book with no copy here."
+    },
+    {
+      "path": "frontend/src/originalview/epub/EpubView.jsx",
+      "language": "jsx",
+      "lines": 53,
+      "size_bytes": 2252,
+      "role": "asset",
+      "purpose": "An EPUB as published (C17.3): opens the book's file through engine.js into the box it fills (spread from 1024 px, one page below, fixed layout page by page); style prop 'publisher' or 'readfocus' with font size; ref gives next, prev, goTo, contents."
+    },
+    {
+      "path": "frontend/src/originalview/epub/engine.js",
+      "language": "javascript",
+      "lines": 91,
+      "size_bytes": 4510,
+      "role": "asset",
+      "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made)."
+    },
+    {
+      "path": "frontend/src/originalview/epub/epub.css",
+      "language": "css",
+      "lines": 22,
+      "size_bytes": 443,
+      "role": "asset",
+      "purpose": "The EPUB box (C17.3): fills its parent on --page with --ink; the error line in --warn."
+    },
+    {
       "path": "frontend/src/originalview/epub/imageSize.js",
       "language": "javascript",
       "lines": 61,
@@ -2229,6 +2277,14 @@
       "size_bytes": 2319,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): PNG, GIF, JPEG after other segments, WebP lossy and extended, SVG attributes and viewBox, unknown and truncated input."
+    },
+    {
+      "path": "frontend/src/originalview/epub/sanitize.js",
+      "language": "javascript",
+      "lines": 100,
+      "size_bytes": 5038,
+      "role": "asset",
+      "purpose": "Cleans an EPUB section before it renders (C17.3): DOMPurify in place on the parsed XHTML, HTML or SVG (no scripts, handlers, forms, iframes, objects, media, or URLs leaving the book; metas cut to viewport), CSS and srcset cleaned, SVG 2 image href loaded from the package, width and height from each image's header, lazy loading; BOOK_CSS keeps figures whole and images in proportion."
     },
     {
       "path": "frontend/src/originalview/epub/urls.js",
@@ -2253,22 +2309,6 @@
       "size_bytes": 1943,
       "role": "asset",
       "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen."
-    },
-    {
-      "path": "frontend/src/originalview/pdf/documentSource.js",
-      "language": "javascript",
-      "lines": 12,
-      "size_bytes": 635,
-      "role": "asset",
-      "purpose": "Where a book's PDF comes from (C17.2): this device's copy (IndexedDB, C17.1b) as { data }, else the signed URL from GET /books/{id}/file as { url } so PDF.js can fetch byte ranges."
-    },
-    {
-      "path": "frontend/src/originalview/pdf/documentSource.test.js",
-      "language": "javascript",
-      "lines": 31,
-      "size_bytes": 1200,
-      "role": "asset",
-      "purpose": "Node test (npm run test:unit): the device copy first without asking the server, the signed URL otherwise, the server's message for a device-only book with no copy here."
     },
     {
       "path": "frontend/src/originalview/pdf/pageCache.js",
@@ -2305,8 +2345,8 @@
     {
       "path": "frontend/src/originalview/pdf/usePdfDocument.js",
       "language": "javascript",
-      "lines": 56,
-      "size_bytes": 2401,
+      "lines": 49,
+      "size_bytes": 2158,
       "role": "asset",
       "purpose": "React hooks (C17.2): usePdfDocument(bookId, load) opens the book's PDF (loading PDF.js while the source is fetched) and destroys it on unmount; usePageCache(doc, scale, current) keeps current ±2 pages rendered and starts afresh on a new scale or pixel ratio."
     },
@@ -3425,8 +3465,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 437,
-      "size_bytes": 125572,
+      "lines": 442,
+      "size_bytes": 127120,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

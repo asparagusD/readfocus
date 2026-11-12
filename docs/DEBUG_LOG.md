@@ -2531,3 +2531,37 @@ two landing tests pass again (`landing.spec.js`: 20 passed).
 
 ### Commit
 C17.3a `feat(ci): add a Content-Security-Policy to the built app`
+
+## 2026-11-12 C17.3 — fixed-layout EPUB pages rendered at 0 x 0
+
+### Failure
+The C17.3 check script on `/__epub?book=fixed`: blank screen; the page
+iframe was 0 x 0 although its image had loaded.
+
+### Reproduce
+Open `fixed.epub` in `/__epub`; `frameElement.getBoundingClientRect()` of
+the page's document is 0 x 0.
+
+### Hypotheses (most likely first)
+1. Our sanitizer removed `<meta name="viewport">`, from which foliate's
+   fixed-layout renderer takes the page size. Evidence: `meta` was in
+   `FORBID_TAGS`. Ruled out if the page body has no viewport meta and
+   restoring it gives a size. Result: confirmed; with viewport metas kept
+   the frame is 535 x 713.
+2. foliate needs `rendition:spread` set differently. Not tested; 1 fixed it.
+
+### Root cause
+`FORBID_TAGS` included `meta` to stop `http-equiv` refreshes, which also
+removed the viewport meta a fixed-layout page needs.
+
+### Fix
+`sanitize.js`: `meta` allowed through DOMPurify, then every meta except
+`name="viewport"` without `http-equiv` is removed.
+
+### Regression test
+`hostile.epub` gained a `<meta http-equiv="refresh">`; the check script
+asserts no `http-equiv` meta survives and the page does not navigate, and
+that both fixed-layout pages render with a non-zero frame.
+
+### Commit
+C17.3d `feat(epub): sanitize sections and open EPUBs through foliate-js`

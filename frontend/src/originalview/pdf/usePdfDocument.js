@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchApi } from '../../lib/api';
-import { loadBookFile } from '../../reader/fileStore';
-import { bookSource } from './documentSource';
+import { fromBook } from '../bookFile';
 import { createPageCache } from './pageCache';
 import { loadPdfjs, openPdf, releasePage, renderPage } from './pdfjs';
-
-const fromBook = (bookId) => bookSource(bookId, {
-  loadDeviceFile: loadBookFile,
-  fetchFile: (id) => fetchApi(`/books/${id}/file`),
-});
 
 /**
  * The book's original PDF (C17.2): { status: 'loading' | 'ready' | 'error', doc, numPages, error }.

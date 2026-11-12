@@ -1661,6 +1661,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/gallery/EpubGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/gallery/Gallery.jsx",
       "type": "file",
       "role": "asset",
@@ -5341,6 +5347,16 @@
       "type": "imports",
       "from": "file:frontend/src/deploy/deployEnv.test.js",
       "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/EpubGallery.jsx",
+      "to": "file:frontend/src/gallery/gallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/EpubGallery.jsx",
+      "to": "file:frontend/src/originalview/epub/EpubView.jsx"
     },
     {
       "type": "imports",

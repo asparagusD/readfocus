@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 580,
-    "inventoried": 440,
+    "tracked": 581,
+    "inventoried": 441,
     "excluded": 140
   },
   "files": [
@@ -1089,8 +1089,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1204,
-      "size_bytes": 67240,
+      "lines": 1242,
+      "size_bytes": 70544,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1162,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3393,
-      "size_bytes": 616475,
+      "size_bytes": 617795,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1433,10 +1433,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 131,
-      "size_bytes": 5802,
+      "lines": 136,
+      "size_bytes": 6148,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3)."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -1877,6 +1877,14 @@
       "size_bytes": 3303,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): a complete env passes, missing and malformed variables are named, a secret or service-role key is refused, VITE_SITE_URL only warns, only Vercel builds are checked; vercel.json builds into dist and rewrites app routes but not /assets/ to index.html."
+    },
+    {
+      "path": "frontend/src/gallery/EpubGallery.jsx",
+      "language": "jsx",
+      "lines": 62,
+      "size_bytes": 3201,
+      "role": "asset",
+      "purpose": "Dev-only /__epub (C17.3): the EPUB renderer on a fixture (?book=reflow|fixed|hostile, served from e2e/fixtures/books by Vite dev) or a chosen file, with Previous/Next, Publisher / ReadFocus style and text size; window.__epub holds the engine and page-turn times for the checks."
     },
     {
       "path": "frontend/src/gallery/Gallery.jsx",
@@ -3465,8 +3473,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 442,
-      "size_bytes": 127120,
+      "lines": 443,
+      "size_bytes": 127481,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

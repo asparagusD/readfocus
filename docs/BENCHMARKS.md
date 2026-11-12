@@ -906,6 +906,44 @@ holds at most 2,000 compact answers.
 
 ## Frontend: Lighthouse and image budgets
 
+### C17.3: EPUB renderer (2026-11-12)
+
+foliate-js vendored at `78914aef4466` (MIT; decision D-C17.3 in
+`docs/DECISIONS.md`) and `dompurify@3.4.17` (MPL-2.0 or Apache-2.0).
+Minified + `gzip -9`: foliate-js for a reflowable EPUB 37.2 KB (view, CFI,
+progress and overlayer 8.2, EPUB parser 8.1, paginator 7.1, zip 13.8;
+fixed layout +2.4), bundled with rolldown in the evaluation; DOMPurify
+`purify.min.js` 29,828 B raw, 11,757 B gzip. As with PDF.js, the production
+build has no EPUB chunk yet (only the dev gallery imports the renderer;
+`grep` finds neither in `dist/assets/*.js`).
+
+Checks: `/__epub` on the Vite dev server, Microsoft Edge through
+Playwright, on the generated fixtures (`tools/make_reader_fixtures.py`).
+Script in the scratchpad, not committed. Every image shown on any page is
+fetched and hashed (SHA-256) and matched against the package's image files.
+
+| Check | Result |
+|---|---|
+| `reflow.epub` images: packaged vs shown, 1440 px, DPR 1 (two pages side by side) | 9 packaged, 8 shown: `wide-2x.png` is the `srcset` 2x candidate of `wide.png`, so a DPR 1 screen shows `wide.png` |
+| Same, 800 px, DPR 2 (one page) | 9 packaged, 8 shown: `wide-2x.png` instead of `wide.png` |
+| `diagram.svg` | shown at 400 x 200 with its shapes; its bytes differ from the package because foliate loads SVG files as text and our sanitizer re-serialises them (no script inside) |
+| Kinds covered | `<img>` PNG and GIF, `<img>` of an SVG, inline `<svg>` `<image>` by `xlink:href` and by SVG 2 `href`, a CSS background, a `<figure>` with `<figcaption>`, a `srcset`, the cover |
+| Figure and caption | same column (left 77 px both), caption 7 px under the image; the image has `width="1200" height="800"` from its header before it decodes |
+| MathML | `<math>` is a `MathMLElement`, 53 px high; its `<mfrac>` 33 px |
+| Code | `<pre><code>` text identical to the source, indentation kept (`white-space: pre-wrap`) |
+| `fixed.epub` | both pages' images shown; page one alone on the right of the first spread, frame 535 x 713 |
+| `hostile.epub` | no script ran (top window and section), 0 scripts, 0 event handlers, 0 iframe/form/input/object/embed, 0 `javascript:` links, 0 `http-equiv` metas, 0 references to `example.invalid` left, the local image shown, no request off `localhost` |
+| CSP backstop (`vite preview` of the production build, a blob: iframe with an inline script, an `onerror` handler, a remote image and a remote background) | script and handler did not run; 4 CSP violations reported; the remote loads refused |
+| Style switch | Publisher: `Georgia, serif` (the book's CSS); ReadFocus: `"ReadFocus Lora", Georgia, serif` at 18 px, the font loaded inside the section |
+| CFI | a location's CFI, after going elsewhere, `goTo` it: the same CFI back |
+| Page turn (call to `relocate`) | 300 to 306 ms with foliate's slide animation (that is its duration); 0 to 1 ms with reduced motion |
+| JS heap (`performance.memory`) before and after paging the whole fixture | 18.9 to 22.7 MB (DPR 1), 18.8 to 22.9 MB (DPR 2) |
+
+Images load per section (foliate) and, inside a section, with
+`loading="lazy"` and `decoding="async"`, so the browser decodes the ones
+near the visible page; this was not measured page by page. Not measured: a
+real publisher EPUB, a phone, a production build of the renderer.
+
 ### C17.2: PDF.js renderer (2026-11-12)
 
 `pdfjs-dist@6.4.299` (Apache-2.0, checked in the installed `package.json`

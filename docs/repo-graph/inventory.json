@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 590,
-    "inventoried": 449,
+    "tracked": 591,
+    "inventoried": 450,
     "excluded": 141
   },
   "files": [
@@ -1162,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3399,
-      "size_bytes": 622337,
+      "size_bytes": 623074,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2317,6 +2317,14 @@
       "size_bytes": 2031,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): allowed and refused URLs (http, protocol-relative, javascript with tabs, data:text, file, vbscript), CSS imports and url() kept or removed, expression(), srcset."
+    },
+    {
+      "path": "frontend/src/originalview/frame.css",
+      "language": "css",
+      "lines": 324,
+      "size_bytes": 10169,
+      "role": "asset",
+      "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion."
     },
     {
       "path": "frontend/src/originalview/frame.js",
@@ -3537,8 +3545,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 451,
-      "size_bytes": 130420,
+      "lines": 452,
+      "size_bytes": 130864,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1991,6 +1991,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/frame.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
       "id": "file:frontend/src/originalview/frame.js",
       "type": "file",
       "role": "asset",

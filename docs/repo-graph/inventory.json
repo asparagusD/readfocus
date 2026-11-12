@@ -1018,7 +1018,7 @@
       "path": "docs/DEPLOYMENT.md",
       "language": "markdown",
       "lines": 218,
-      "size_bytes": 12896,
+      "size_bytes": 12952,
       "role": "doc",
       "purpose": "Deployment guide (C14.6): where each part runs (Vercel Hobby, Render Free readfocus-api, the shared Supabase Free project), env var names per provider, free-tier limits with doc links, cold start, Supabase pause, manual backups, the release step, redeploy, rollback, verification commands and what was verified."
     },

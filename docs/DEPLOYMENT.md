@@ -161,7 +161,7 @@ Until the release both services build `readfocus-2.0`. To release:
 
 | What | How |
 |---|---|
-| Backend | Render > `readfocus-api` > Events, a previous deploy > Rollback. Free services can roll back only to the two most recent previous deploys ([render.com/docs/free](https://render.com/docs/free)). Further back: Manual Deploy of an older commit, or the hook with `?ref=<sha>` |
+| Backend | Render > `readfocus-api` > Events, a previous deploy > Rollback. Free services can roll back only to the two most recent previous deploys ([render.com/docs/free](https://render.com/docs/free)). Further back: Manual Deploy of an older commit, or POST the deploy hook with `&ref=<sha>` appended (the hook URL already has `?key=`) |
 | Frontend | Vercel > Deployments > an older Ready production deployment > ⋯ > Promote to Production (or Instant Rollback where offered) |
 | Whole release | revert the merge on `main` (`git revert -m 1 <merge>`) and push: CI redeploys the previous code. Never force-push `main` |
 | Database | migrations are additive, so old code keeps working on the new schema. Data: restore from the last `db dump` |

@@ -1661,6 +1661,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/gallery/BookGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/gallery/EpubGallery.jsx",
       "type": "file",
       "role": "asset",
@@ -1920,6 +1926,12 @@
     },
     {
       "id": "file:frontend/src/originalview/Reader.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/ReaderControls.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -5410,6 +5422,26 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gallery/BookGallery.jsx",
+      "to": "file:frontend/src/originalview/Reader.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/BookGallery.jsx",
+      "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/BookGallery.jsx",
+      "to": "file:frontend/src/originalview/useLamplight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/BookGallery.jsx",
+      "to": "file:frontend/src/reader/ReaderToolbar.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gallery/EpubGallery.jsx",
       "to": "file:frontend/src/gallery/gallery.css"
     },
@@ -5722,6 +5754,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/useLamplight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/ReaderControls.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
     },
     {
       "type": "imports",

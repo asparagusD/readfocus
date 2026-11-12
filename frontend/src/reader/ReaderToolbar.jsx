@@ -8,11 +8,12 @@ import './ReaderToolbar.css';
  * chapter, smaller and larger text, theme, and the session's own controls
  * passed in as children. A floating pill that fades and lifts 8 px while
  * the reader reads; focus inside keeps it shown, so it is always reachable
- * by keyboard. Icons only on narrow screens.
+ * by keyboard. Icons only on narrow screens. Without `onSize` the text-size pair
+ * is left out and `controls` (the original view's, C17.4) take its place.
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
-  lookupOn, onLookupToggle, children,
+  lookupOn, onLookupToggle, controls, children,
 }) {
   const index = SIZES.indexOf(size);
   return (
@@ -33,13 +34,23 @@ export function ReaderToolbar({
         {[bookTitle, chapter].filter(Boolean).join(' · ')}
       </p>
       <span className="rf-toolbar-rule" aria-hidden="true" />
-      <div className="rf-toolbar-group" role="group" aria-label="Text size">
-        <button type="button" className="rf-tool rf-size rf-size--small" onClick={() => onSize(-1)} disabled={index <= 0}
-          aria-label="Smaller text">A</button>
-        <button type="button" className="rf-tool rf-size rf-size--large" onClick={() => onSize(1)} disabled={index >= SIZES.length - 1}
-          aria-label="Larger text">A</button>
-      </div>
-      <span className="rf-toolbar-rule" aria-hidden="true" />
+      {onSize && (
+        <>
+          <div className="rf-toolbar-group" role="group" aria-label="Text size">
+            <button type="button" className="rf-tool rf-size rf-size--small" onClick={() => onSize(-1)} disabled={index <= 0}
+              aria-label="Smaller text">A</button>
+            <button type="button" className="rf-tool rf-size rf-size--large" onClick={() => onSize(1)} disabled={index >= SIZES.length - 1}
+              aria-label="Larger text">A</button>
+          </div>
+          <span className="rf-toolbar-rule" aria-hidden="true" />
+        </>
+      )}
+      {controls && (
+        <>
+          {controls}
+          <span className="rf-toolbar-rule" aria-hidden="true" />
+        </>
+      )}
       {onContents && (
         <button type="button" className="rf-tool" ref={contentsRef} onClick={onContents}
           aria-haspopup="dialog" aria-expanded={contentsOpen} aria-label="Contents">

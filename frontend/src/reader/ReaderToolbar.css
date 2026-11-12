@@ -71,6 +71,20 @@
 .rf-size--small { font-size: 13px; }
 .rf-size--large { font-size: 20px; }
 
+/* C17.4: the original view's controls. The value beside an icon names the setting;
+   the zoom level keeps its width as it changes. */
+.rf-tool-value {
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  font-weight: 400;
+  text-transform: capitalize;
+}
+
+.rf-zoom-level {
+  min-width: 10ch;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Narrow screens: icons only, the title goes (the running head names the
    chapter). C13.9: the tools sit on one row as in the handoff's 375 frame
    (back, text size, Contents, Look up, theme: 44 px targets, no gaps), and
@@ -78,6 +92,7 @@
    wrapping into three rows over the page. */
 @media (width < 640px) {
   .rf-tool-label,
+  .rf-tool-value,
   .rf-toolbar-title,
   .rf-toolbar-rule { display: none; }
 

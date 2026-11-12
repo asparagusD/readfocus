@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 592,
-    "inventoried": 451,
+    "tracked": 594,
+    "inventoried": 453,
     "excluded": 141
   },
   "files": [
@@ -1162,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3399,
-      "size_bytes": 623864,
+      "size_bytes": 625244,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1433,10 +1433,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 136,
-      "size_bytes": 6148,
+      "lines": 141,
+      "size_bytes": 6498,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4)."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -1879,6 +1879,14 @@
       "purpose": "Node test (npm run test:unit): a complete env passes, missing and malformed variables are named, a secret or service-role key is refused, VITE_SITE_URL only warns, only Vercel builds are checked; vercel.json builds into dist and rewrites app routes but not /assets/ to index.html."
     },
     {
+      "path": "frontend/src/gallery/BookGallery.jsx",
+      "language": "jsx",
+      "lines": 40,
+      "size_bytes": 2330,
+      "role": "asset",
+      "purpose": "Dev-only /__book (C17.4): the shared book frame on a fixture (?kind=pdf|epub, ?file=) with the reader toolbar and the original view's controls; window.__book holds the reader, the last place and saved ribbons for the checks."
+    },
+    {
       "path": "frontend/src/gallery/EpubGallery.jsx",
       "language": "jsx",
       "lines": 62,
@@ -2229,6 +2237,14 @@
       "size_bytes": 10777,
       "role": "asset",
       "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure."
+    },
+    {
+      "path": "frontend/src/originalview/ReaderControls.jsx",
+      "language": "jsx",
+      "lines": 67,
+      "size_bytes": 4256,
+      "role": "asset",
+      "purpose": "The original view's toolbar controls (C17.4): PDF zoom out, level (fit page / fit width) and in; EPUB smaller and larger text, line spacing, margins and Publisher / ReadFocus style; in lamplight the per-book Original colours switch."
     },
     {
       "path": "frontend/src/originalview/bookFile.js",
@@ -2697,18 +2713,18 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.css",
       "language": "css",
-      "lines": 123,
-      "size_bytes": 3643,
+      "lines": 138,
+      "size_bytes": 3999,
       "role": "asset",
-      "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px."
+      "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px. C17.4: .rf-tool-value and .rf-zoom-level, values hidden under 640 px."
     },
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 63,
-      "size_bytes": 3007,
+      "lines": 74,
+      "size_bytes": 3347,
       "role": "asset",
-      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8)."
+      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place."
     },
     {
       "path": "frontend/src/reader/WordCard.css",
@@ -3553,8 +3569,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 453,
-      "size_bytes": 131301,
+      "lines": 455,
+      "size_bytes": 132049,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

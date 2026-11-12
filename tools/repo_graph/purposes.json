@@ -446,5 +446,6 @@
   "frontend/src/originalview/pdf/recolour.test.js": "Node test (npm run test:unit): hex parsing, paper and ink remapped, greys mixed with alpha kept, coloured strokes untouched, image rectangles from corner points.",
   "frontend/src/originalview/epub/EpubBook.jsx": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls.",
   "frontend/src/originalview/useLamplight.js": "Theme hooks (C17.4): useTheme (theme and accent on <html>), useOriginalColours (per-book choice in localStorage, shared between hook users by an event), useLamplight (the lamplight page, text, link and code colours, or null in Paper or with original colours).",
-  "frontend/src/originalview/useBoxSize.js": "useBoxSize(ref): an element's rounded client size, kept current by a ResizeObserver (C17.4)."
+  "frontend/src/originalview/useBoxSize.js": "useBoxSize(ref): an element's rounded client size, kept current by a ResizeObserver (C17.4).",
+  "frontend/src/originalview/pdf/PdfBook.jsx": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls."
 }

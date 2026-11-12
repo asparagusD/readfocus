@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 589,
-    "inventoried": 448,
+    "tracked": 590,
+    "inventoried": 449,
     "excluded": 141
   },
   "files": [
@@ -1162,7 +1162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3399,
-      "size_bytes": 621658,
+      "size_bytes": 622337,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2333,6 +2333,14 @@
       "size_bytes": 4955,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): spreads and turns at the ends, zoom scale and steps, PDF folios with labels, EPUB locations, keys (modifiers left to the browser), contents entry, lamplight CSS without filters, the leaf's edge time."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/PdfBook.jsx",
+      "language": "jsx",
+      "lines": 119,
+      "size_bytes": 5820,
+      "role": "asset",
+      "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
@@ -3529,8 +3537,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 450,
-      "size_bytes": 130101,
+      "lines": 451,
+      "size_bytes": 130420,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

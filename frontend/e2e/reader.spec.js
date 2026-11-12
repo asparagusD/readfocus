@@ -62,6 +62,25 @@ for (const kind of ['pdf', 'epub']) {
       }
     });
 
+    test('the ribbon and B save the place at once, with a toast naming the page', async ({ page, api }) => {
+      await openReader(page);
+      await book(page).focus();
+      await page.keyboard.press('ArrowRight');
+      const place = await settled(page);
+      await expect.poll(() => api.saves, { timeout: 4000 }).toBeGreaterThan(0); // the turn's own debounced save
+      await page.waitForTimeout(1200); // and nothing else pending
+      const before = api.saves;
+      await page.getByRole('button', { name: 'Save my place' }).click();
+      await expect(page.getByText(/^Place saved at p+\. /)).toBeVisible();
+      await expect.poll(() => api.saves, { timeout: 900 }).toBeGreaterThan(before); // no 1 s debounce for the ribbon
+      expect(api.position.anchor.kind).toBe(kind);
+      const saved = api.saves;
+      await book(page).focus();
+      await page.keyboard.press('b');
+      await expect.poll(() => api.saves, { timeout: 900 }).toBeGreaterThan(saved);
+      expect(await shown(page)).toEqual(place); // saving does not move the book
+    });
+
     test('reduced motion turns the page with no animated leaf', async ({ page }) => {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await openReader(page);

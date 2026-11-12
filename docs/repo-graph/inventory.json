@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 437,
-    "inventoried": 372,
+    "tracked": 438,
+    "inventoried": 373,
     "excluded": 65
   },
   "files": [
@@ -82,7 +82,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 190,
-      "size_bytes": 10271,
+      "size_bytes": 10304,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1023,6 +1023,14 @@
       "purpose": "C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13."
     },
     {
+      "path": "docs/G4_PRODUCTION_MIGRATIONS.md",
+      "language": "markdown",
+      "lines": 706,
+      "size_bytes": 33059,
+      "role": "doc",
+      "purpose": "Gate G4 (C14.4): outcome first (production is the dev project; 001-015 already applied, checked read-only; backfill dry runs found nothing; nothing written), then the review written before that was known: full SQL of 005-015 with sha256, read-only pre-checks, backup, apply and post-check steps, backfill plan."
+    },
+    {
       "path": "docs/MIGRATION_AUDIT.md",
       "language": "markdown",
       "lines": 364,
@@ -1033,8 +1041,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2515,
-      "size_bytes": 510803,
+      "lines": 2516,
+      "size_bytes": 513483,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2921,8 +2929,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 374,
-      "size_bytes": 107133,
+      "lines": 375,
+      "size_bytes": 107485,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -1,64 +1,48 @@
-import os
-import subprocess
-import sys
-from datetime import datetime
+import asyncio
 from contextlib import asynccontextmanager
+from datetime import datetime
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from fastapi import FastAPI
 
-from backend.routers import auth, books, sessions, agent, dashboard
+from backend.cors import add_cors
+from backend.nlp import embedder
+from backend.routers import agent, auth, books, dashboard, lookup, mastery, sessions
+from backend.services import ingestion_worker
 
 load_dotenv()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Start the MCP server subprocess on boot
-    mcp_process = subprocess.Popen(
-        [sys.executable, "backend/mcp_server.py"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    # Load the embedding model on a background thread: /health answers at once
+    # and reports model_ready; grading endpoints wait for it (require_model).
+    if embedder.preload_enabled():
+        embedder.preload()
+    # Resume ingestion jobs a stopped server left behind (processing_jobs).
+    sweep = asyncio.create_task(ingestion_worker.sweep_forever()) if ingestion_worker.sweep_enabled() else None
     yield
-    # Terminate the subprocess on shutdown
-    mcp_process.terminate()
+    if sweep:
+        sweep.cancel()
+
 
 app = FastAPI(title="ReadFocus API", lifespan=lifespan)
 
-frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-
-origins = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5175",
-    "http://localhost:5176",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-    "http://127.0.0.1:5175",
-]
-
-if frontend_url not in origins:
-    origins.append(frontend_url)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+add_cors(app)  # FRONTEND_URL only; localhost too when ENV=development (backend/cors.py)
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])
 app.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
 app.include_router(agent.router, prefix="/agent", tags=["Agent"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+app.include_router(mastery.router, prefix="/mastery", tags=["Mastery"])
+app.include_router(lookup.router, prefix="/lookup", tags=["Lookup"])
 
 @app.get("/health")
 def health_check():
+    # Never waits on the model: it only reads whether the load has finished.
     return {
         "status": "ok",
+        "model_ready": embedder.is_ready(),
         "timestamp": datetime.utcnow().isoformat()
     }

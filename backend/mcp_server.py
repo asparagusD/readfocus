@@ -1,10 +1,35 @@
+"""ReadFocus Context MCP server: three read-only Supabase tools over stdio.
+
+Not part of the running app. Until C3.4 `backend/main.py` started this file
+as a subprocess on every boot, but nothing ever connected to it: no agent
+imports `mcp` or `langchain_mcp_adapters`, and nothing wrote to its pipes.
+It cost about 74 MB of memory (docs/BENCHMARKS.md), so the backend no longer
+starts it. The file is kept for manual use.
+
+Manual use, from the repo root with the virtualenv active and `.env` in
+place (it reads SUPABASE_URL and SUPABASE_SERVICE_KEY, falling back to
+SUPABASE_ANON_KEY):
+
+    python backend/mcp_server.py
+
+The server then speaks MCP on stdin and stdout and waits for a client, so
+start it from an MCP client rather than by hand, for example the inspector:
+
+    npx @modelcontextprotocol/inspector python backend/mcp_server.py
+
+Tools: get_reading_history, get_comprehension_trend, get_chunk_context.
+The first two take a book_id and ignore it; they filter on user_id only.
+With the service-role key the tools bypass RLS, so treat any client as
+trusted.
+"""
+
 import os
 import json
 from mcp.server.fastmcp import FastMCP
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# Load env since this runs as a subprocess via stdio
+# Load env since this runs as its own process via stdio
 load_dotenv()
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")

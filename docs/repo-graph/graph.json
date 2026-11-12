@@ -1,0 +1,6466 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "id": "endpoint:DELETE /books/{book_id}",
+      "type": "endpoint",
+      "method": "DELETE",
+      "path": "/books/{book_id}",
+      "handler": "delete_book"
+    },
+    {
+      "id": "endpoint:GET /auth/profile",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/auth/profile",
+      "handler": "get_profile"
+    },
+    {
+      "id": "endpoint:GET /books",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books",
+      "handler": "get_books"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}",
+      "handler": "get_book_details"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/pages",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/pages",
+      "handler": "get_pages"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/status",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/status",
+      "handler": "get_book_status"
+    },
+    {
+      "id": "endpoint:GET /dashboard",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/dashboard",
+      "handler": "get_dashboard"
+    },
+    {
+      "id": "endpoint:GET /health",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/health",
+      "handler": "health_check"
+    },
+    {
+      "id": "endpoint:GET /lookup",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/lookup",
+      "handler": "look_up"
+    },
+    {
+      "id": "endpoint:GET /mastery",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/mastery",
+      "handler": "get_mastery"
+    },
+    {
+      "id": "endpoint:GET /sessions/{session_id}",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/sessions/{session_id}",
+      "handler": "get_session"
+    },
+    {
+      "id": "endpoint:POST /auth/profile/calibrate",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/auth/profile/calibrate",
+      "handler": "calibrate_profile"
+    },
+    {
+      "id": "endpoint:POST /books/upload",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/upload",
+      "handler": "upload_book"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/resume",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/resume",
+      "handler": "resume_book"
+    },
+    {
+      "id": "endpoint:POST /sessions/start",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/sessions/start",
+      "handler": "start_session"
+    },
+    {
+      "id": "endpoint:POST /sessions/{session_id}/abandon",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/sessions/{session_id}/abandon",
+      "handler": "abandon_session"
+    },
+    {
+      "id": "endpoint:POST /sessions/{session_id}/evaluate-single",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/sessions/{session_id}/evaluate-single",
+      "handler": "evaluate_single"
+    },
+    {
+      "id": "endpoint:POST /sessions/{session_id}/finish-reading",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/sessions/{session_id}/finish-reading",
+      "handler": "finish_reading"
+    },
+    {
+      "id": "endpoint:POST /sessions/{session_id}/submit-answers",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/sessions/{session_id}/submit-answers",
+      "handler": "submit_answers"
+    },
+    {
+      "id": "endpoint:PUT /sessions/{session_id}/position",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/sessions/{session_id}/position",
+      "handler": "save_position"
+    },
+    {
+      "id": "env:DEV",
+      "type": "env"
+    },
+    {
+      "id": "env:EMBED_PRELOAD",
+      "type": "env"
+    },
+    {
+      "id": "env:EMBED_THREADS",
+      "type": "env"
+    },
+    {
+      "id": "env:EMBED_WAIT_SECONDS",
+      "type": "env"
+    },
+    {
+      "id": "env:ENV",
+      "type": "env"
+    },
+    {
+      "id": "env:FASTEMBED_CACHE",
+      "type": "env"
+    },
+    {
+      "id": "env:FRONTEND_URL",
+      "type": "env"
+    },
+    {
+      "id": "env:INGEST_STALE_MINUTES",
+      "type": "env"
+    },
+    {
+      "id": "env:INGEST_SWEEP",
+      "type": "env"
+    },
+    {
+      "id": "env:SUPABASE_ANON_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:SUPABASE_SERVICE_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:SUPABASE_URL",
+      "type": "env"
+    },
+    {
+      "id": "env:VITE_API_URL",
+      "type": "env"
+    },
+    {
+      "id": "env:VITE_SITE_URL",
+      "type": "env"
+    },
+    {
+      "id": "env:VITE_SUPABASE_ANON_KEY",
+      "type": "env"
+    },
+    {
+      "id": "env:VITE_SUPABASE_URL",
+      "type": "env"
+    },
+    {
+      "id": "external:google_fonts",
+      "type": "external",
+      "banned": false
+    },
+    {
+      "id": "external:langgraph",
+      "type": "external",
+      "banned": false
+    },
+    {
+      "id": "external:mcp",
+      "type": "external",
+      "banned": false
+    },
+    {
+      "id": "external:supabase",
+      "type": "external",
+      "banned": false
+    },
+    {
+      "id": "file:.claude/skills/atomic-commit/SKILL.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:.claude/skills/debug-protocol/SKILL.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:.claude/skills/design-review/SKILL.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:.claude/skills/free-intelligence/SKILL.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:.claude/skills/repo-graph/SKILL.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:.dockerignore",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:.env.example",
+      "type": "file",
+      "role": "config",
+      "language": "dotenv"
+    },
+    {
+      "id": "file:.github/workflows/ci.yml",
+      "type": "file",
+      "role": "config",
+      "language": "yaml"
+    },
+    {
+      "id": "file:.gitignore",
+      "type": "file",
+      "role": "config",
+      "language": "gitignore"
+    },
+    {
+      "id": "file:CLAUDE.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:Dockerfile",
+      "type": "file",
+      "role": "config",
+      "language": "dockerfile"
+    },
+    {
+      "id": "file:Makefile",
+      "type": "file",
+      "role": "config",
+      "language": "makefile"
+    },
+    {
+      "id": "file:README.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:backend/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/evaluation/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/evaluation/feedback.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/evaluation/grader.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/evaluator_agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/graph.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/knowledge_state/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/knowledge_state/agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/knowledge_state/mastery.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/optimizer/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/optimizer/pace.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/optimizer_agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/planner/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/planner/strategy.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/planner_agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/policy.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/question_generation/__init__.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/question_generation/agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/question_generation/assembler.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/question_generation/quality.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/question_generation/strategies.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/state.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/test_generator_agent.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/agents/workflow.py",
+      "type": "file",
+      "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/cors.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/dependencies.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/main.py",
+      "type": "file",
+      "role": "entry",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/mcp_server.py",
+      "type": "file",
+      "role": "entry",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/nlp/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/nlp/concepts.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/nlp/embedder.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/nlp/text.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/__init__.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/agent.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/auth.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/books.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/dashboard.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/lookup.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/mastery.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/sessions.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/__init__.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/book_ingestor.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/book_structure.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/concept_store.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/covers.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/ingestion_worker.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/lookup.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/processing_jobs.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/question_bank.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/retriever.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/supabase_client.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/__init__.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/conftest.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/fixtures/answers.json",
+      "type": "file",
+      "role": "test",
+      "language": "json"
+    },
+    {
+      "id": "file:backend/tests/memory_db.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_agent_nodes.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_agent_state.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_answer_fixtures.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_books_list.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_dashboard.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_mastery.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_pages.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_position.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_sessions.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_start_reader.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_auth.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_backfill.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_backfill_covers.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_backfill_structure.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_book_structure.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_concept_store.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_concepts.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_cors.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_covers.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_deploy_config.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_embedder.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_eval_grader.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_feedback.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_grader.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_graph.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_graph_doc.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_health.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_ingest_embeddings.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_ingestion_worker.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_ingestor.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_lookup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_mastery.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_migrations.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_model_ready.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_no_paid_ai.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_offline.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_optimizer_pace.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_planner_strategy.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_processing_jobs.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_question_assembler.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_question_generation_agent.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_question_quality.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_question_strategies.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_requirements.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_retriever.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_startup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_supabase_client.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_text.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:design/HANDOFF_SUMMARY.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/Main.dc.html",
+      "type": "file",
+      "role": "config",
+      "language": "html"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/README.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/support.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/vendor/react-dom.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:design/handoff/foundations-style-guide/vendor/react.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:docs/ARCHITECTURE.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/ASSETS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/BENCHMARKS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/DEBUG_LOG.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/DEPLOYMENT.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/DESIGN_AUDIT.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/G4_PRODUCTION_MIGRATIONS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/MIGRATION_AUDIT.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/PROGRESS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:frontend/.env.example",
+      "type": "file",
+      "role": "config",
+      "language": "dotenv"
+    },
+    {
+      "id": "file:frontend/.gitignore",
+      "type": "file",
+      "role": "config",
+      "language": "gitignore"
+    },
+    {
+      "id": "file:frontend/README.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:frontend/e2e/calibration.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/dashboard.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/errors.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/journey.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/landing.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/library.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/login.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/reader.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/reading.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/results.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/shell.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/test.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/testSession.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/warmup.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/eslint.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/gallery.html",
+      "type": "file",
+      "role": "config",
+      "language": "html"
+    },
+    {
+      "id": "file:frontend/index.html",
+      "type": "file",
+      "role": "entry",
+      "language": "html"
+    },
+    {
+      "id": "file:frontend/package.json",
+      "type": "file",
+      "role": "config",
+      "language": "json"
+    },
+    {
+      "id": "file:frontend/playwright.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/playwright.live.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/public/robots.txt",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/check-contrast.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/check-images.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/live/check-isolation.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/make-og.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/prerender.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/src/App.jsx",
+      "type": "file",
+      "role": "entry",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/AccountMenu.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/AccountMenu.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/BackendGate.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/BookCover.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/BookCover.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/CalibrationFlow.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/CalibrationFlow.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ErrorScreen.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ErrorScreen.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/Layout.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/Layout.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/RouteErrorBoundary.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ThemeToggle.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ThemeToggle.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/WarmingUp.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/WarmingUp.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/MasteryList.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/test/OptionCards.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/test/OptionCards.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/test/TimerPill.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/test/TimerPill.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Button.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Button.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Card.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Card.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ConceptChip.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/EmptyState.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/EmptyState.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/MasteryBar.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/MasteryBar.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Modal.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Modal.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ProgressRing.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ProgressRing.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ScoreBadge.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/ScoreBadge.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/SegmentedTabs.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/SegmentedTabs.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Skeleton.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Skeleton.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/TextArea.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/TextInput.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/TextInput.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Toast.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Toast.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Tooltip.css",
+      "type": "file",
+      "role": "component",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Tooltip.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/tabIds.js",
+      "type": "file",
+      "role": "component",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/components/ui/toastContext.js",
+      "type": "file",
+      "role": "component",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/deploy/deployEnv.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/deploy/deployEnv.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/gallery/Gallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/IllustrationGallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/ReaderGallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/gallery.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gallery/main.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gallery/readerFixture.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/hooks/useAuth.jsx",
+      "type": "file",
+      "role": "hook",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/BookStack.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/Candle.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/CrescentMoon.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/DuskWindow.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/EmptyShelf.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/Illustration.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/OpenBook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/ReadingLamp.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/TeaCup.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/illustrations/illustrations.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/illustrations/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/illustrations/parts.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/illustrations/svgo.config.mjs",
+      "type": "file",
+      "role": "asset",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/src/index.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/lib/api.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/backendReady.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/backendReady.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/coverColor.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/dashboard.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/dashboard.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/initials.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/initials.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/results.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/results.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/supabase.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/useBackendReady.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/useDocumentTitle.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/main.jsx",
+      "type": "file",
+      "role": "entry",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/motion/MotionRoot.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/motion/features.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/motion/presets.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/motion/useCountUp.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/pages/ComprehensionTest.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/Dashboard.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/Dashboard.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/Landing.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/Landing.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/Library.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/Library.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/Login.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/Login.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/NotFound.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/ReadingSession.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/ReadingSession.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/Results.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/Results.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/BookSpread.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/Contents.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/Faq.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/Features.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/LandingFooter.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/demoDefinitions.json",
+      "type": "file",
+      "role": "page",
+      "language": "json"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/passages.js",
+      "type": "file",
+      "role": "page",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/wake.js",
+      "type": "file",
+      "role": "page",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/wake.test.js",
+      "type": "file",
+      "role": "page",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/prerender.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/BookFlow.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/BookReader.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/ContentsDrawer.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/PageTurn.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/PhraseChip.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/ReaderToolbar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/WordCard.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/WordCard.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/anchor.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/blocks.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/blocks.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/geometry.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/geometry.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/highlight.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/longPress.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/longPress.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/lookup.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/lookup.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAhead.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAhead.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/reader.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/textSize.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/textSize.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useChromeVisible.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/usePlaceSaver.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useWordAtPoint.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useWordCard.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/wordAt.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/wordAt.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/styles/base.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/styles/base.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/styles/fonts.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/styles/tokens.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/theme/ThemeProvider.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/theme/theme.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/theme/themeContext.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/vercel.json",
+      "type": "file",
+      "role": "config",
+      "language": "json"
+    },
+    {
+      "id": "file:frontend/vite.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:package.json",
+      "type": "file",
+      "role": "config",
+      "language": "json"
+    },
+    {
+      "id": "file:progress.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:pyrightconfig.json",
+      "type": "file",
+      "role": "config",
+      "language": "json"
+    },
+    {
+      "id": "file:pytest.ini",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:render.yaml",
+      "type": "file",
+      "role": "config",
+      "language": "yaml"
+    },
+    {
+      "id": "file:requirements-dev.txt",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:requirements.txt",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:scripts/backfill_covers.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/backfill_local_embeddings.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/backfill_structure.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/bench.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/check_retriever.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/create_test_users.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/measure_embedder.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/measure_rss.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/eval_grader.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/export_agent_graph.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/README.md",
+      "type": "file",
+      "role": "script",
+      "language": "markdown"
+    },
+    {
+      "id": "file:scripts/manual/test_evaluator.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_generator.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_graph.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_ingest.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_optimizer.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_orchestrator.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_planner.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/manual/test_sessions_api.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:supabase/.gitignore",
+      "type": "file",
+      "role": "config",
+      "language": "gitignore"
+    },
+    {
+      "id": "file:supabase/config.toml",
+      "type": "file",
+      "role": "config",
+      "language": "toml"
+    },
+    {
+      "id": "file:supabase/migrations/001_initial.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/002_add_pace.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/003_session_questions.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/004_add_is_calibrated.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/005_local_embeddings.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/006_chunk_text_search.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/007_question_bank.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/008_concept_mastery.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/009_agent_decisions.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/010_processing_jobs.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/011_query_indexes.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/012_book_covers.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/013_structured_content.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/014_reading_position.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/015_term_lookups.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:tools/__init__.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/no_paid_ai.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/__init__.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/build.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/inventory.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/purposes.json",
+      "type": "file",
+      "role": "script",
+      "language": "json"
+    },
+    {
+      "id": "file:tools/repo_graph/query.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/render.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/tests/__init__.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/tests/test_build.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/tests/test_inventory.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/tests/test_query.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/repo_graph/tests/test_render.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "function:handle_new_user",
+      "type": "function"
+    },
+    {
+      "id": "function:match_chunks",
+      "type": "function"
+    },
+    {
+      "id": "function:match_chunks_local",
+      "type": "function"
+    },
+    {
+      "id": "function:search_chunks_text",
+      "type": "function"
+    },
+    {
+      "id": "graph_node:__end__",
+      "type": "graph_node"
+    },
+    {
+      "id": "graph_node:__start__",
+      "type": "graph_node"
+    },
+    {
+      "id": "graph_node:evaluator",
+      "type": "graph_node",
+      "handler": "evaluator_node",
+      "handler_file": "backend/agents/evaluator_agent.py"
+    },
+    {
+      "id": "graph_node:knowledge_state",
+      "type": "graph_node",
+      "handler": "knowledge_state_node",
+      "handler_file": "backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "id": "graph_node:optimizer",
+      "type": "graph_node",
+      "handler": "optimizer_node",
+      "handler_file": "backend/agents/optimizer_agent.py"
+    },
+    {
+      "id": "graph_node:planner",
+      "type": "graph_node",
+      "handler": "planner_node",
+      "handler_file": "backend/agents/planner_agent.py"
+    },
+    {
+      "id": "graph_node:test_generator",
+      "type": "graph_node",
+      "handler": "test_generator_node",
+      "handler_file": "backend/agents/test_generator_agent.py"
+    },
+    {
+      "id": "table:agent_decisions",
+      "type": "table"
+    },
+    {
+      "id": "table:books",
+      "type": "table"
+    },
+    {
+      "id": "table:chunks",
+      "type": "table"
+    },
+    {
+      "id": "table:concepts",
+      "type": "table"
+    },
+    {
+      "id": "table:processing_jobs",
+      "type": "table"
+    },
+    {
+      "id": "table:profiles",
+      "type": "table"
+    },
+    {
+      "id": "table:question_bank",
+      "type": "table"
+    },
+    {
+      "id": "table:reading_progress",
+      "type": "table"
+    },
+    {
+      "id": "table:sessions",
+      "type": "table"
+    },
+    {
+      "id": "table:term_lookups",
+      "type": "table"
+    },
+    {
+      "id": "table:test_results",
+      "type": "table"
+    },
+    {
+      "id": "table:user_concept_mastery",
+      "type": "table"
+    }
+  ],
+  "edges": [
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/002_add_pace.sql",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/003_session_questions.sql",
+      "to": "table:sessions"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/004_add_is_calibrated.sql",
+      "to": "table:profiles"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/005_local_embeddings.sql",
+      "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/012_book_covers.sql",
+      "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/013_structured_content.sql",
+      "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/013_structured_content.sql",
+      "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/014_reading_position.sql",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "endpoint:POST /auth/profile/calibrate"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "endpoint:POST /sessions/{session_id}/evaluate-single"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "endpoint:POST /sessions/{session_id}/submit-answers"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "endpoint:GET /dashboard"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:DELETE /books/{book_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:GET /books"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:GET /books/{book_id}/status"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:POST /books/upload"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:GET /auth/profile"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:GET /books/{book_id}/pages"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:POST /sessions/start"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:POST /sessions/{session_id}/finish-reading"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "endpoint:GET /books/{book_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/reader/usePlaceSaver.js",
+      "to": "endpoint:PUT /sessions/{session_id}/position"
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/agents/graph.py",
+      "to": "external:langgraph",
+      "line": 14
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/mcp_server.py",
+      "to": "external:mcp",
+      "line": 28
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/mcp_server.py",
+      "to": "external:supabase",
+      "line": 29
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/services/supabase_client.py",
+      "to": "external:supabase",
+      "line": 16
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/tests/conftest.py",
+      "to": "external:supabase",
+      "line": 22
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/tests/test_agent_state.py",
+      "to": "external:langgraph",
+      "line": 9
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "external:langgraph",
+      "line": 6
+    },
+    {
+      "type": "calls_external",
+      "from": "file:design/handoff/foundations-style-guide/Main.dc.html",
+      "to": "external:google_fonts",
+      "line": 13
+    },
+    {
+      "type": "calls_external",
+      "from": "file:frontend/src/lib/supabase.js",
+      "to": "external:supabase",
+      "line": 1
+    },
+    {
+      "type": "calls_external",
+      "from": "file:scripts/dev/create_test_users.py",
+      "to": "external:supabase",
+      "line": 23
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/services/retriever.py",
+      "to": "function:match_chunks_local"
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/services/retriever.py",
+      "to": "function:search_chunks_text"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:ENV"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:FASTEMBED_CACHE"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:FRONTEND_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:.env.example",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:frontend/.env.example",
+      "to": "env:VITE_API_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:frontend/.env.example",
+      "to": "env:VITE_SITE_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:frontend/.env.example",
+      "to": "env:VITE_SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:frontend/.env.example",
+      "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:ENV"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:FASTEMBED_CACHE"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:FRONTEND_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/main.py",
+      "to": "endpoint:GET /health"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/auth.py",
+      "to": "endpoint:GET /auth/profile"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/auth.py",
+      "to": "endpoint:POST /auth/profile/calibrate"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:DELETE /books/{book_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/pages"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/status"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:POST /books/upload"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:POST /books/{book_id}/resume"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "endpoint:GET /dashboard"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/lookup.py",
+      "to": "endpoint:GET /lookup"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/mastery.py",
+      "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:POST /sessions/start"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:POST /sessions/{session_id}/abandon"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:POST /sessions/{session_id}/evaluate-single"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:POST /sessions/{session_id}/finish-reading"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:POST /sessions/{session_id}/submit-answers"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/sessions.py",
+      "to": "endpoint:PUT /sessions/{session_id}/position"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "endpoint:GET /books"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "function:handle_new_user"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "function:match_chunks"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/005_local_embeddings.sql",
+      "to": "function:match_chunks_local"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/006_chunk_text_search.sql",
+      "to": "function:search_chunks_text"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:books"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:chunks"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:profiles"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:sessions"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/001_initial.sql",
+      "to": "table:test_results"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/007_question_bank.sql",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/008_concept_mastery.sql",
+      "to": "table:concepts"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/008_concept_mastery.sql",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/009_agent_decisions.sql",
+      "to": "table:agent_decisions"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/010_processing_jobs.sql",
+      "to": "table:processing_jobs"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/015_term_lookups.sql",
+      "to": "table:term_lookups"
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:__end__",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:evaluator",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:optimizer",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:planner",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:__start__",
+      "to": "graph_node:test_generator",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:evaluator",
+      "to": "graph_node:__end__",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:evaluator",
+      "to": "graph_node:knowledge_state",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:knowledge_state",
+      "to": "graph_node:optimizer",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:knowledge_state",
+      "to": "graph_node:planner",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:optimizer",
+      "to": "graph_node:__end__",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:optimizer",
+      "to": "graph_node:planner",
+      "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:planner",
+      "to": "graph_node:__end__"
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:test_generator",
+      "to": "graph_node:__end__"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:evaluator"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:knowledge_state"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:optimizer"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:planner"
+    },
+    {
+      "type": "graph_node",
+      "from": "file:backend/agents/graph.py",
+      "to": "graph_node:test_generator"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluation/feedback.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluation/feedback.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluation/grader.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluation/grader.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluation/grader.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/agents/evaluation/feedback.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/graph.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/graph.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/graph.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/graph.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/graph.py",
+      "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/graph.py",
+      "to": "file:backend/agents/test_generator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/agents/knowledge_state/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/knowledge_state/mastery.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/optimizer/pace.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "file:backend/agents/optimizer/pace.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/planner/strategy.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "file:backend/agents/planner/strategy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/agents/question_generation/quality.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/agents/question_generation/strategies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/assembler.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/quality.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/quality.py",
+      "to": "file:backend/agents/question_generation/strategies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/quality.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/strategies.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/strategies.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/strategies.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/test_generator_agent.py",
+      "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/test_generator_agent.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/workflow.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/workflow.py",
+      "to": "file:backend/agents/planner/strategy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/workflow.py",
+      "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/workflow.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/dependencies.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/dependencies.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/cors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/auth.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/dashboard.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/lookup.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/nlp/concepts.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/nlp/concepts.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/auth.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/auth.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/lookup.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/lookup.py",
+      "to": "file:backend/services/lookup.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/mastery.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/mastery.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/sessions.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/sessions.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/sessions.py",
+      "to": "file:backend/agents/workflow.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/sessions.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/sessions.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/concept_store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/covers.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/lookup.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/processing_jobs.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/retriever.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/retriever.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/retriever.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/conftest.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/agents/test_generator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_nodes.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_state.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_agent_state.py",
+      "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_books_list.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_books_list.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_books_list.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_books_list.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/routers/dashboard.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/routers/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_mastery.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_pages.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_position.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/evaluation/feedback.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/test_generator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/agents/workflow.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_sessions.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_start_reader.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_auth.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill.py",
+      "to": "file:scripts/backfill_local_embeddings.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_covers.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_covers.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_covers.py",
+      "to": "file:scripts/backfill_covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_structure.py",
+      "to": "file:scripts/backfill_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_bench.py",
+      "to": "file:scripts/bench.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_structure.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_structure.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concept_store.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concept_store.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_concepts.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "file:backend/cors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_covers.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:tools/no_paid_ai.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_embedder.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_eval_grader.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_eval_grader.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_eval_grader.py",
+      "to": "file:scripts/eval_grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_feedback.py",
+      "to": "file:backend/agents/evaluation/feedback.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_feedback.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_feedback.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_grader.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_grader.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_grader.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/agents/workflow.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph.py",
+      "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph_doc.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_graph_doc.py",
+      "to": "file:scripts/export_agent_graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_health.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_health.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestor.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/services/lookup.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_lookup.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_mastery.py",
+      "to": "file:backend/agents/knowledge_state/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_mastery.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_migrations.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_model_ready.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_model_ready.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_model_ready.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_no_paid_ai.py",
+      "to": "file:tools/no_paid_ai.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_offline.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_offline.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_offline.py",
+      "to": "file:backend/tests/conftest.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_optimizer_pace.py",
+      "to": "file:backend/agents/optimizer/pace.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_optimizer_pace.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_planner_strategy.py",
+      "to": "file:backend/agents/planner/strategy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_planner_strategy.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_processing_jobs.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_processing_jobs.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_assembler.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_assembler.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_generation_agent.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_generation_agent.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_generation_agent.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_quality.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_quality.py",
+      "to": "file:backend/agents/question_generation/quality.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_quality.py",
+      "to": "file:backend/agents/question_generation/strategies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_strategies.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_strategies.py",
+      "to": "file:backend/agents/question_generation/strategies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_question_strategies.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_retriever.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_retriever.py",
+      "to": "file:backend/services/retriever.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_startup.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_supabase_client.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_text.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/calibration.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/dashboard.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/errors.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/fixtures.js",
+      "to": "file:frontend/src/gallery/readerFixture.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/journey.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/landing.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/library.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/login.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/reader.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/reading.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/results.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/results.spec.js",
+      "to": "file:frontend/e2e/testSession.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/shell.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/test.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/test.spec.js",
+      "to": "file:frontend/e2e/testSession.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/warmup.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/BackendGate.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/Layout.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/RouteErrorBoundary.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/ui/Toast.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/motion/MotionRoot.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/pages/Landing.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/theme/ThemeProvider.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/components/AccountMenu.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/lib/initials.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BackendGate.jsx",
+      "to": "file:frontend/src/components/ErrorScreen.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BackendGate.jsx",
+      "to": "file:frontend/src/components/WarmingUp.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BackendGate.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BackendGate.jsx",
+      "to": "file:frontend/src/lib/backendReady.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BackendGate.jsx",
+      "to": "file:frontend/src/lib/useBackendReady.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BookCover.jsx",
+      "to": "file:frontend/src/components/BookCover.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/BookCover.jsx",
+      "to": "file:frontend/src/lib/coverColor.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "file:frontend/src/components/CalibrationFlow.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/CalibrationFlow.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ErrorScreen.jsx",
+      "to": "file:frontend/src/components/ErrorScreen.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ErrorScreen.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ErrorScreen.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/components/AccountMenu.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/components/Layout.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/RouteErrorBoundary.jsx",
+      "to": "file:frontend/src/components/ErrorScreen.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/RouteErrorBoundary.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ThemeToggle.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ThemeToggle.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/WarmingUp.jsx",
+      "to": "file:frontend/src/components/WarmingUp.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/WarmingUp.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/WarmingUp.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/dashboard/MasteryList.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/MasteryBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/SegmentedTabs.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/components/ui/tabIds.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/lib/dashboard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/test/OptionCards.jsx",
+      "to": "file:frontend/src/components/test/OptionCards.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/test/TimerPill.jsx",
+      "to": "file:frontend/src/components/test/TimerPill.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Button.jsx",
+      "to": "file:frontend/src/components/ui/Button.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Card.jsx",
+      "to": "file:frontend/src/components/ui/Card.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "to": "file:frontend/src/components/ui/ConceptChip.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ConceptChip.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/EmptyState.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/MasteryBar.jsx",
+      "to": "file:frontend/src/components/ui/MasteryBar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Modal.jsx",
+      "to": "file:frontend/src/components/ui/Modal.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Modal.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ProgressRing.jsx",
+      "to": "file:frontend/src/components/ui/ProgressRing.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ProgressRing.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/ScoreBadge.jsx",
+      "to": "file:frontend/src/components/ui/ScoreBadge.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/SegmentedTabs.jsx",
+      "to": "file:frontend/src/components/ui/SegmentedTabs.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/SegmentedTabs.jsx",
+      "to": "file:frontend/src/components/ui/tabIds.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Skeleton.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/TextArea.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/TextInput.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/components/ui/Toast.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Toast.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Tooltip.jsx",
+      "to": "file:frontend/src/components/ui/Tooltip.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/Tooltip.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/deploy/deployEnv.test.js",
+      "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/BookCover.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/test/OptionCards.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/test/TimerPill.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Card.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ConceptChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/MasteryBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ProgressRing.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/ScoreBadge.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/SegmentedTabs.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/TextArea.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/Tooltip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/tabIds.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "file:frontend/src/gallery/IllustrationGallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/gallery/ReaderGallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/gallery/readerFixture.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/reader/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/ReaderGallery.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/components/ui/Toast.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/gallery/Gallery.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/gallery/gallery.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/index.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gallery/main.jsx",
+      "to": "file:frontend/src/motion/MotionRoot.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/hooks/useAuth.jsx",
+      "to": "file:frontend/src/lib/supabase.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/BookStack.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/Candle.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/CrescentMoon.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/DuskWindow.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/EmptyShelf.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/Illustration.jsx",
+      "to": "file:frontend/src/illustrations/illustrations.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/OpenBook.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/ReadingLamp.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/illustrations/TeaCup.jsx",
+      "to": "file:frontend/src/illustrations/Illustration.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/api.js",
+      "to": "file:frontend/src/lib/supabase.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/backendReady.test.js",
+      "to": "file:frontend/src/lib/backendReady.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/dashboard.test.js",
+      "to": "file:frontend/src/lib/dashboard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/initials.test.js",
+      "to": "file:frontend/src/lib/initials.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/results.test.js",
+      "to": "file:frontend/src/lib/results.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/useBackendReady.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/useBackendReady.js",
+      "to": "file:frontend/src/lib/backendReady.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/main.jsx",
+      "to": "file:frontend/src/App.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/main.jsx",
+      "to": "file:frontend/src/index.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/motion/useCountUp.js",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/test/OptionCards.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/test/TimerPill.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/ui/TextArea.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ComprehensionTest.jsx",
+      "to": "file:frontend/src/pages/ComprehensionTest.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/dashboard/MasteryList.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/ui/MasteryBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/lib/dashboard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/lib/results.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/pages/Dashboard.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/Landing.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/BookSpread.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/Contents.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/Faq.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/Features.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/LandingFooter.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/WordDemo.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Landing.jsx",
+      "to": "file:frontend/src/pages/landing/wake.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/BookCover.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/EmptyState.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/MasteryBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/pages/Library.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/components/ui/SegmentedTabs.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/components/ui/tabIds.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Login.jsx",
+      "to": "file:frontend/src/pages/Login.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/NotFound.jsx",
+      "to": "file:frontend/src/components/ErrorScreen.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/components/CalibrationFlow.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/hooks/useAuth.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/pages/ReadingSession.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/ContentsDrawer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/ReaderToolbar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/readAhead.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useChromeVisible.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/usePlaceSaver.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/components/ui/ConceptChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/lib/results.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/motion/useCountUp.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/pages/Results.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/BookSpread.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/BookSpread.jsx",
+      "to": "file:frontend/src/pages/landing/passages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/Contents.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/Features.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/LandingFooter.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/pages/landing/demoDefinitions.json"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/pages/landing/passages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/WordCard.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/useWordAtPoint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/WordDemo.jsx",
+      "to": "file:frontend/src/reader/useWordCard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/landing/wake.test.js",
+      "to": "file:frontend/src/pages/landing/wake.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/prerender.jsx",
+      "to": "file:frontend/src/pages/Landing.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/prerender.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/BookFlow.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/PageTurn.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/PhraseChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/WordCard.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/anchor.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/reader.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/useWordAtPoint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/BookReader.jsx",
+      "to": "file:frontend/src/reader/useWordCard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/reader/ContentsDrawer.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/PageTurn.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/PageTurn.jsx",
+      "to": "file:frontend/src/reader/BookFlow.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/PhraseChip.jsx",
+      "to": "file:frontend/src/reader/WordCard.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/reader/ReaderToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/WordCard.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/anchor.js",
+      "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/blocks.test.js",
+      "to": "file:frontend/src/reader/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/geometry.test.js",
+      "to": "file:frontend/src/reader/geometry.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/longPress.test.js",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/lookup.js",
+      "to": "file:frontend/src/reader/wordAt.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/lookup.test.js",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/readAhead.test.js",
+      "to": "file:frontend/src/reader/readAhead.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/textSize.test.js",
+      "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/usePlaceSaver.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useWordAtPoint.js",
+      "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useWordAtPoint.js",
+      "to": "file:frontend/src/reader/longPress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useWordAtPoint.js",
+      "to": "file:frontend/src/reader/wordAt.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/wordAt.test.js",
+      "to": "file:frontend/src/reader/wordAt.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/theme/ThemeProvider.jsx",
+      "to": "file:frontend/src/theme/theme.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/theme/ThemeProvider.jsx",
+      "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/vite.config.js",
+      "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/retriever.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_embedder.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/eval_grader.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/eval_grader.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/eval_grader.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/export_agent_graph.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_evaluator.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_evaluator.py",
+      "to": "file:backend/agents/test_generator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_generator.py",
+      "to": "file:backend/agents/test_generator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_graph.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_ingest.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_ingest.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_optimizer.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_orchestrator.py",
+      "to": "file:backend/agents/graph.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_planner.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/manual/test_sessions_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/build.py",
+      "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/query.py",
+      "to": "file:tools/repo_graph/build.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/query.py",
+      "to": "file:tools/repo_graph/render.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/render.py",
+      "to": "file:tools/repo_graph/build.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/render.py",
+      "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_build.py",
+      "to": "file:tools/repo_graph/build.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_build.py",
+      "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_inventory.py",
+      "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_query.py",
+      "to": "file:tools/repo_graph/query.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_query.py",
+      "to": "file:tools/repo_graph/render.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_query.py",
+      "to": "file:tools/repo_graph/tests/test_build.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_render.py",
+      "to": "file:tools/repo_graph/build.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_render.py",
+      "to": "file:tools/repo_graph/inventory.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_render.py",
+      "to": "file:tools/repo_graph/render.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/repo_graph/tests/test_render.py",
+      "to": "file:tools/repo_graph/tests/test_build.py"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:concepts"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/mcp_server.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/mcp_server.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/auth.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/mastery.py",
+      "to": "table:concepts"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/mastery.py",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/concept_store.py",
+      "to": "table:concepts"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/lookup.py",
+      "to": "table:term_lookups"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/question_bank.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/question_bank.py",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/question_bank.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/dependencies.py",
+      "to": "env:EMBED_WAIT_SECONDS"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/mcp_server.py",
+      "to": "env:SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/mcp_server.py",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/mcp_server.py",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/nlp/embedder.py",
+      "to": "env:EMBED_PRELOAD"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/nlp/embedder.py",
+      "to": "env:EMBED_THREADS"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/nlp/embedder.py",
+      "to": "env:FASTEMBED_CACHE"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "env:INGEST_SWEEP"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/processing_jobs.py",
+      "to": "env:INGEST_STALE_MINUTES"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/supabase_client.py",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/services/supabase_client.py",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/App.jsx",
+      "to": "env:DEV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/gallery/Gallery.jsx",
+      "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/gallery/IllustrationGallery.jsx",
+      "to": "env:DEV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/lib/api.js",
+      "to": "env:VITE_API_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/lib/supabase.js",
+      "to": "env:VITE_SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/lib/supabase.js",
+      "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_covers.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/dev/create_test_users.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/dev/create_test_users.py",
+      "to": "env:SUPABASE_SERVICE_KEY"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/dev/create_test_users.py",
+      "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "table:test_results"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/knowledge_state/agent.py",
+      "to": "table:user_concept_mastery"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/optimizer_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/planner_agent.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/agents/workflow.py",
+      "to": "table:agent_decisions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/auth.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/sessions.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/concept_store.py",
+      "to": "table:concepts"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/covers.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/lookup.py",
+      "to": "table:term_lookups"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/question_bank.py",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/question_bank.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_structure.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/dev/check_retriever.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/manual/test_ingest.py",
+      "to": "table:books"
+    }
+  ],
+  "unresolved": []
+}

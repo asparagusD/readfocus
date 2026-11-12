@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ReadFocus foundations</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;family=Lora:ital,wght@0,400;0,500;0,600;1,400&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#A64B2A}a:hover{color:#7E3820}
+.rf{--ease:cubic-bezier(.22,.61,.36,1);--arrive:cubic-bezier(.16,1,.3,1);--breathe:cubic-bezier(.45,0,.55,1);background:var(--paper);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif}
+.rf *{box-sizing:border-box}
+.t-paper{--paper:#FAF7F2;--paper-2:#F3EDE3;--surface:#FFFDF9;--page:#FBF8F2;--ink:#2A2420;--ink-2:#5C534A;--ink-3:#756A5F;--line:#E6DED2;--line-2:#D6CBBB;--warn:#8C5A00;--warn-soft:#F6E9CF}
+.t-lamplight{--paper:#1D1915;--paper-2:#161310;--surface:#25201B;--page:#231E19;--ink:#EEE5D5;--ink-2:#C4B8A5;--ink-3:#A09481;--line:#383029;--line-2:#4A4037;--warn:#E9B65E;--warn-soft:#3A2E1C}
+.t-paper.a-terracotta{--accent:#A64B2A;--accent-ink:#FFFDF9;--accent-soft:#F3E2D7;--accent-text:#9A4526;--glow:rgba(166,75,42,0)}
+.t-paper.a-sage{--accent:#506A4A;--accent-ink:#FFFDF9;--accent-soft:#E3EADD;--accent-text:#4A6244;--glow:rgba(80,106,74,0)}
+.t-lamplight.a-terracotta{--accent:#E59A6C;--accent-ink:#1D1915;--accent-soft:#3A271C;--accent-text:#EDA77B;--glow:rgba(229,154,108,.28)}
+.t-lamplight.a-sage{--accent:#A8C198;--accent-ink:#1D1915;--accent-soft:#26301F;--accent-text:#B3CBA3;--glow:rgba(168,193,152,.24)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.h-sec{font-family:'Playfair Display',Georgia,serif;font-weight:500;font-size:34px;line-height:1.15;margin:0}
+.sec{padding:72px 96px;border-top:1px solid var(--line)}
+.sec-head{display:grid;grid-template-columns:320px 1fr;gap:48px;margin-bottom:40px;align-items:end}
+.note{font-size:14px;line-height:1.6;color:var(--ink-2);margin:0;max-width:640px}
+.mini{border-radius:16px;border:1px solid var(--line);background:var(--paper);padding:28px;display:flex;flex-direction:column;gap:16px}
+.mini-page{position:relative;background:var(--page);border:1px solid var(--line);border-radius:4px;padding:28px 36px 28px;display:flex;flex-direction:column;gap:18px}
+.t-lamplight .mini-page{box-shadow:0 0 60px -24px var(--glow)}
+.rh{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.ribbon{position:absolute;top:-6px;right:44px;width:16px;height:86px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 84%,0 100%)}
+.txt{font-family:'Lora',Georgia,serif;font-size:18px;line-height:1.72;text-align:justify;hyphens:auto;margin:0;color:var(--ink)}
+.drop::first-letter{font-family:'Playfair Display',Georgia,serif;float:left;font-size:4.1em;line-height:.82;padding:6px 10px 0 0;color:var(--accent-text)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.btn{font:500 15px/1 'DM Sans',system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:10px;border:1px solid transparent;cursor:pointer}
+.btn-p{background:var(--accent);color:var(--accent-ink)}
+.t-lamplight .btn-p{box-shadow:0 0 24px var(--glow)}
+.btn-s{background:var(--surface);color:var(--ink);border-color:var(--line-2)}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500}
+.chip.str{background:var(--accent-soft);color:var(--ink)}
+.chip.rev{border:1px dashed var(--ink-3);color:var(--ink-2)}
+.chip svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pace{width:120px;height:2px;background:var(--line-2);border-radius:2px;overflow:hidden;display:block}
+.pace i{display:block;height:100%;background:var(--accent);transform-origin:left;transform:scaleX(.62)}
+.small{font-size:13px;color:var(--ink-3)}
+.cap{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--ink-2)}
+.cap code,.sw code{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink-3)}
+.sw{display:grid;grid-template-columns:44px 140px 90px 1fr 64px;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.sw-c{width:44px;height:44px;border-radius:10px;border:1px solid var(--line-2)}
+.sw-n{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.sw-r{color:var(--ink-2)}
+.sw-k{font-size:12px;font-weight:600;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.tpanel{border:1px solid var(--line);border-radius:16px;padding:28px 32px;background:var(--paper)}
+.ty{display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--line)}
+.ty-spec{font-size:13px;color:var(--ink-3);line-height:1.5}
+.ty-spec b{color:var(--ink);font-weight:600;display:block;font-size:14px}
+.pd{font-family:'Playfair Display',Georgia,serif}
+.lo{font-family:'Lora',Georgia,serif}
+.bar-s{height:16px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:2px}
+.rad{width:88px;height:88px;border:1px solid var(--ink-3);background:var(--surface)}
+.mt{display:grid;grid-template-columns:200px 90px 1fr 260px;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px}
+.track{position:relative;height:28px;border-radius:999px;background:var(--paper-2);border:1px solid var(--line)}
+.track i{position:absolute;top:5px;left:6px;width:16px;height:16px;border-radius:50%;background:var(--accent)}
+.e1 i{animation:slide 2.4s var(--ease) infinite alternate}
+.e2 i{animation:slide 2.4s var(--arrive) infinite alternate}
+.e3 i{animation:slide 2.4s var(--breathe) infinite alternate}
+@keyframes slide{0%,15%{transform:translateX(0)}85%,100%{transform:translateX(220px)}}
+.sig{display:grid;grid-template-columns:40px 1fr 160px;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.5}
+.sig-n{font-family:'Playfair Display',Georgia,serif;font-size:22px;color:var(--accent-text)}
+.sig-t b{display:block;font-weight:600;margin-bottom:2px}
+.sig-t span{color:var(--ink-2)}
+.sig-d{font-size:13px;color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){.track i{animation:none !important}}
+</style>
+</helmet>
+<div class="rf t-paper a-terracotta" style="width: 1440px; min-height: 3700px; position: relative">
+<header style="padding: 96px 96px 72px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 64px; align-items: end">
+<div style="display: flex; flex-direction: column; gap: 20px">
+<span class="eyebrow">ReadFocus · Foundations</span>
+<h1 style="margin: 0; font-family: 'Playfair Display', Georgia, serif; font-weight: 500; font-size: 64px; line-height: 1.05; letter-spacing: -0.01em">A quiet, warm reading room at dusk.</h1>
+</div>
+<p class="note" style="font-size: 16px">Paper by day, lamplight by night. Editorial type, one muted accent, hairlines instead of shadows. Every value below is a CSS variable, ready to map onto Tailwind v4 theme tokens.</p>
+</header>
+
+<section class="sec">
+<div class="sec-head">
+<div style="display: flex; flex-direction: column; gap: 10px"><span class="eyebrow">01 · Accent</span><h2 class="h-sec">Terracotta or sage</h2></div>
+<p class="note">The same page in both accents and both themes. Terracotta is the default across the canvas; switch any screen artboard to sage from its Accent tweak.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+<sc-for list="{{accents}}" as="c" hint-placeholder-count="4">
+<div class="mini rf {{c.cls}}">
+<div class="mini-page">
+<div class="rh"><span>Walden</span><span>Economy</span></div>
+<span class="ribbon" aria-hidden="true"></span>
+<p class="txt drop">When I wrote the following pages, or rather the bulk of them, I lived alone, in the woods, a mile from any neighbor, in a house which I had built myself, on the shore of Walden Pond.</p>
+<div class="row">
+<span class="chip str"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Opportunity cost</span>
+<span class="chip rev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Necessaries vs. luxuries</span>
+</div>
+<div class="row" style="justify-content: space-between">
+<div class="row"><button class="btn btn-p" type="button">Start test</button><button class="btn btn-s" type="button">Contents</button></div>
+<div class="row" style="gap: 10px"><span class="pace"><i></i></span><span class="small">2 pages left</span></div>
+</div>
+</div>
+<div class="cap"><span><b style="color: var(--ink)">{{c.name}}</b> · {{c.theme}}</span><code>{{c.hex}}</code></div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section class="sec">
+<div class="sec-head">
+<div style="display: flex; flex-direction: column; gap: 10px"><span class="eyebrow">02 · Color</span><h2 class="h-sec">Paper and lamplight</h2></div>
+<p class="note">Lamplight is a warm charcoal room, not an inversion: cream ink, softer hairlines, and the accent lifted so it glows. Ratios are against each theme’s ground; every text pairing passes WCAG AA.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+<sc-for list="{{palettes}}" as="p" hint-placeholder-count="2">
+<div class="tpanel rf {{p.cls}}">
+<div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px"><h3 class="pd" style="margin: 0; font-weight: 500; font-size: 24px">{{p.name}}</h3><span class="small">{{p.sub}}</span></div>
+<sc-for list="{{p.sw}}" as="s" hint-placeholder-count="12">
+<div class="sw"><span class="sw-c" style="background: {{s.hex}}"></span><span class="sw-n">{{s.tok}}</span><code>{{s.hex}}</code><span class="sw-r">{{s.role}}</span><span class="sw-k">{{s.cr}}</span></div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<div style="margin-top: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="eyebrow">Typographic cover palette · cream title #F6EFE3</span>
+<div style="display: flex; gap: 16px">
+<sc-for list="{{covers}}" as="v" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; gap: 8px; width: 150px">
+<div style="height: 96px; border-radius: 3px 6px 6px 3px; background: {{v.hex}}; color: #F6EFE3; padding: 14px; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 18px; display: flex; align-items: flex-end">{{v.name}}</div>
+<span class="small">{{v.hex}} · {{v.cr}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<section class="sec">
+<div class="sec-head">
+<div style="display: flex; flex-direction: column; gap: 10px"><span class="eyebrow">03 · Type</span><h2 class="h-sec">Three voices</h2></div>
+<p class="note">Playfair Display speaks in headings, Lora carries the reading, DM Sans handles everything you click or count. Reading text is justified with hyphenation and a 60–70 character measure.</p>
+</div>
+<div class="tpanel">
+<div class="ty"><div class="ty-spec"><b>Display</b>Playfair Display 500 · 56/60 · −1%</div><div class="pd" style="font-size: 56px; line-height: 1.07; font-weight: 500; letter-spacing: -0.01em">Read slowly. Keep what you read.</div></div>
+<div class="ty"><div class="ty-spec"><b>Heading 1</b>Playfair Display 500 · 44/48</div><div class="pd" style="font-size: 44px; line-height: 1.1; font-weight: 500">Your shelf</div></div>
+<div class="ty"><div class="ty-spec"><b>Heading 2</b>Playfair Display 500 · 28/36</div><div class="pd" style="font-size: 28px; line-height: 1.3; font-weight: 500">Concept mastery</div></div>
+<div class="ty"><div class="ty-spec"><b>Chapter title</b>Playfair Display italic 400 · 44/52</div><div class="pd" style="font-size: 44px; line-height: 1.2; font-style: italic">Economy</div></div>
+<div class="ty"><div class="ty-spec"><b>Reading</b>Lora 400 · 18/31 · justified · hyphens auto · 16.5 / 18 / 19.5 user sizes</div><p class="txt" style="max-width: 620px">I see young men, my townsmen, whose misfortune it is to have inherited farms, houses, barns, cattle, and farming tools; for these are more easily acquired than got rid of.</p></div>
+<div class="ty"><div class="ty-spec"><b>Question</b>Lora 500 · 26/36</div><div class="lo" style="font-size: 26px; line-height: 1.4; font-weight: 500">In “Economy”, how does Thoreau measure the cost of a thing?</div></div>
+<div class="ty"><div class="ty-spec"><b>Quote, small reading</b>Lora italic 400 · 15/24</div><div class="lo" style="font-size: 15px; line-height: 1.6; font-style: italic; color: var(--ink-2)">“What is called resignation is confirmed desperation.” — p. 14</div></div>
+<div class="ty"><div class="ty-spec"><b>UI</b>DM Sans 500 · 15/20</div><div style="font-size: 15px; font-weight: 500">Start test · Library · Dashboard</div></div>
+<div class="ty"><div class="ty-spec"><b>Label</b>DM Sans 400–500 · 13/18</div><div style="font-size: 13px; color: var(--ink-2)">4 pages left in today’s reading</div></div>
+<div class="ty"><div class="ty-spec"><b>Eyebrow</b>DM Sans 600 · 12/16 · +12% · caps</div><div class="eyebrow">Today’s reading</div></div>
+<div class="ty" style="border-bottom: 0"><div class="ty-spec"><b>Figures</b>Playfair Display 500 · 40 · lining, tabular</div><div class="pd" style="font-size: 40px; font-weight: 500; font-variant-numeric: lining-nums tabular-nums">18,420 <span style="font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink-2); font-weight: 400">words this week</span></div></div>
+</div>
+</section>
+
+<section class="sec">
+<div class="sec-head">
+<div style="display: flex; flex-direction: column; gap: 10px"><span class="eyebrow">04 · Space, radii, surfaces</span><h2 class="h-sec">Room to breathe</h2></div>
+<p class="note">A 4-based scale that leans generous. Surfaces separate with 1 px hairlines; the only real shadows sit under book covers and the open book.</p>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px">
+<div class="tpanel" style="display: flex; flex-direction: column; gap: 14px">
+<span class="eyebrow">Spacing · --space-*</span>
+<sc-for list="{{space}}" as="s" hint-placeholder-count="9">
+<div style="display: grid; grid-template-columns: 56px 1fr; gap: 16px; align-items: center"><span class="small" style="font-variant-numeric: tabular-nums">{{s.v}}</span><span class="bar-s" style="width: {{s.w}}px"></span></div>
+</sc-for>
+</div>
+<div class="tpanel" style="display: flex; flex-direction: column; gap: 24px">
+<span class="eyebrow">Radii · --radius-*</span>
+<div style="display: flex; flex-wrap: wrap; gap: 20px">
+<sc-for list="{{radii}}" as="r" hint-placeholder-count="7">
+<div style="display: flex; flex-direction: column; gap: 8px"><span class="rad" style="border-radius: {{r.v}}px"></span><span class="small"><b style="color: var(--ink)">{{r.v}}</b> {{r.use}}</span></div>
+</sc-for>
+</div>
+<span class="eyebrow" style="margin-top: 8px">Surfaces</span>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+<div style="height: 96px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); padding: 14px; font-size: 13px; color: var(--ink-2)">Raised · hairline</div>
+<div style="height: 96px; border-radius: 14px; background: var(--paper-2); padding: 14px; font-size: 13px; color: var(--ink-2)">Sunken · no line</div>
+<div style="height: 96px; border-radius: 4px; background: var(--page); border: 1px solid var(--line); box-shadow: 0 24px 48px -32px rgba(40, 25, 10, 0.35); padding: 14px; font-size: 13px; color: var(--ink-2)">Book page · one soft drop</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="sec">
+<div class="sec-head">
+<div style="display: flex; flex-direction: column; gap: 10px"><span class="eyebrow">05 · Motion</span><h2 class="h-sec">Deliberate and calm</h2></div>
+<p class="note">Only transform and opacity move. Micro-interactions take 150–250 ms; signature moments 400–800 ms. With reduced motion, everything becomes an instant cross-fade and loops stop.</p>
+</div>
+<div class="tpanel">
+<div class="mt" style="font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .12em; font-weight: 600"><span>Token</span><span>Value</span><span>Used for</span><span>Curve</span></div>
+<div class="mt"><code class="sw-n">--dur-1</code><span>150 ms</span><span>Hover, press scale (0.98)</span><span></span></div>
+<div class="mt"><code class="sw-n">--dur-2</code><span>200 ms</span><span>Focus ring, word card in, option settle</span><span></span></div>
+<div class="mt"><code class="sw-n">--dur-3</code><span>250 ms</span><span>Theme toggle knob, toolbar, toast</span><span></span></div>
+<div class="mt"><code class="sw-n">--dur-4</code><span>400 ms</span><span>Question slide, chip stagger (60 ms apart)</span><span></span></div>
+<div class="mt"><code class="sw-n">--dur-5</code><span>600 ms</span><span>Page turn, book arrives, library → reading</span><span></span></div>
+<div class="mt"><code class="sw-n">--dur-6</code><span>800 ms</span><span>Score count-up, chart draw, lamp pulse</span><span></span></div>
+<div class="mt"><code class="sw-n">--ease-settle</code><span class="small">.22 .61 .36 1</span><span>Default ease-out for UI</span><span class="track e1"><i></i></span></div>
+<div class="mt"><code class="sw-n">--ease-arrive</code><span class="small">.16 1 .3 1</span><span>Things arriving: books, questions, chips</span><span class="track e2"><i></i></span></div>
+<div class="mt" style="border-bottom: 0"><code class="sw-n">--ease-breathe</code><span class="small">.45 0 .55 1</span><span>Slow loops only: steam, candle, lamp</span><span class="track e3"><i></i></span></div>
+</div>
+<div class="tpanel" style="margin-top: 32px">
+<span class="eyebrow">Signature moments · see them in the prototype</span>
+<div style="margin-top: 8px">
+<sc-for list="{{moments}}" as="m" hint-placeholder-count="7">
+<div class="sig"><span class="sig-n">{{m.n}}</span><div class="sig-t"><b>{{m.t}}</b><span>{{m.d}}</span></div><span class="sig-d">{{m.ms}}</span></div>
+</sc-for>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const paper = [
+      ['--paper', '#FAF7F2', 'Ground', ''],
+      ['--paper-2', '#F3EDE3', 'Sunken, skeletons', ''],
+      ['--surface', '#FFFDF9', 'Raised surfaces', ''],
+      ['--page', '#FBF8F2', 'Book page', ''],
+      ['--ink', '#2A2420', 'Text', '14.3:1'],
+      ['--ink-2', '#5C534A', 'Secondary text', '7.0:1'],
+      ['--ink-3', '#756A5F', 'Captions, folios', '4.9:1'],
+      ['--line', '#E6DED2', 'Hairline', ''],
+      ['--line-2', '#D6CBBB', 'Strong hairline, inputs', ''],
+      ['--accent', '#A64B2A', 'Terracotta', '5.4:1'],
+      ['--accent-soft', '#F3E2D7', 'Terracotta wash', ''],
+      ['--accent · sage', '#506A4A', 'Sage alternative', '5.6:1'],
+      ['--warn', '#8C5A00', 'Timer, last 30 s', '5.5:1']
+    ];
+    const lamp = [
+      ['--paper', '#1D1915', 'Ground', ''],
+      ['--paper-2', '#161310', 'Sunken, skeletons', ''],
+      ['--surface', '#25201B', 'Raised surfaces', ''],
+      ['--page', '#231E19', 'Book page', ''],
+      ['--ink', '#EEE5D5', 'Text', '14.0:1'],
+      ['--ink-2', '#C4B8A5', 'Secondary text', '8.9:1'],
+      ['--ink-3', '#A09481', 'Captions, folios', '5.9:1'],
+      ['--line', '#383029', 'Hairline', ''],
+      ['--line-2', '#4A4037', 'Strong hairline, inputs', ''],
+      ['--accent', '#E59A6C', 'Terracotta, glowing', '7.6:1'],
+      ['--accent-soft', '#3A271C', 'Terracotta wash', ''],
+      ['--accent · sage', '#A8C198', 'Sage alternative', '8.9:1'],
+      ['--warn', '#E9B65E', 'Timer, last 30 s', '9.4:1']
+    ];
+    const sw = (rows) => rows.map((r) => ({ tok: r[0], hex: r[1], role: r[2], cr: r[3] }));
+    return {
+      accents: [
+        { cls: 't-paper a-terracotta', name: 'Terracotta', theme: 'Paper', hex: '#A64B2A' },
+        { cls: 't-paper a-sage', name: 'Sage', theme: 'Paper', hex: '#506A4A' },
+        { cls: 't-lamplight a-terracotta', name: 'Terracotta', theme: 'Lamplight', hex: '#E59A6C' },
+        { cls: 't-lamplight a-sage', name: 'Sage', theme: 'Lamplight', hex: '#A8C198' }
+      ],
+      palettes: [
+        { cls: 't-paper a-terracotta', name: 'Paper', sub: 'Light theme', sw: sw(paper) },
+        { cls: 't-lamplight a-terracotta', name: 'Lamplight', sub: 'Dark theme', sw: sw(lamp) }
+      ],
+      covers: [
+        { name: 'Moss', hex: '#3F4B3B', cr: '8.1:1' },
+        { name: 'Oxblood', hex: '#5C2F27', cr: '9.7:1' },
+        { name: 'Ink', hex: '#2E2A27', cr: '12.4:1' },
+        { name: 'Ochre', hex: '#7A5C2E', cr: '5.4:1' },
+        { name: 'Slate', hex: '#38434A', cr: '8.9:1' }
+      ],
+      space: [4, 8, 12, 16, 24, 32, 48, 64, 96].map((v) => ({ v: v + ' px', w: v * 4 })),
+      radii: [
+        { v: 3, use: 'covers' }, { v: 6, use: 'skeletons' }, { v: 8, use: 'inputs' }, { v: 10, use: 'buttons' },
+        { v: 12, use: 'options, cards' }, { v: 14, use: 'surfaces' }, { v: 999, use: 'chips, toggle' }
+      ],
+      moments: [
+        { n: '1', t: 'A book arrives on the shelf', d: 'Spine shimmer while pages are read; then it slides up 28 px, overshoots 3 px and settles.', ms: '600 ms · arrive' },
+        { n: '2', t: 'Library opens into the book', d: 'The reader swings in from a slight 10° turn; each later page turns on a leaf hinged at the spine.', ms: '650 ms · settle' },
+        { n: '3', t: 'Pacing and the lamp', d: 'A hairline pacing bar fills as pages turn; on the last page the lamp glow pulses once.', ms: '800 ms · 1.2 s pulse' },
+        { n: '4', t: 'Questions, one at a time', d: 'Each question slides in 32 px from the right; a chosen option settles with a 0.985 → 1 scale.', ms: '450 ms · 260 ms' },
+        { n: '5', t: 'The score reveal', d: 'The score counts up with an ease-out cubic, then concept chips appear 60 ms apart.', ms: '900 ms · 400 ms' },
+        { n: '6', t: 'Dashboard draws itself', d: 'The trend line draws left to right; mastery bars grow from zero; the streak candle flickers slowly.', ms: '900 ms · 3 s loop' },
+        { n: '7', t: 'Warming up the room', d: 'Lamp brightens over 6 s, steam rises from the tea, copy rotates every 2.6 s.', ms: '6 s · 3.2 s loop' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

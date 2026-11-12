@@ -4,10 +4,53 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ReadFocus</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&family=DM+Sans:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <meta name="color-scheme" content="light dark" />
+    <title>ReadFocus — read deeply, remember more</title>
+    <meta name="description" content="Read any PDF or EPUB in focused sessions that feel like a real book, with words explained where you read them, a short test, and a next session planned around what you missed. Free." />
+    <meta name="theme-color" content="#faf7f2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1d1915" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ReadFocus" />
+    <meta property="og:title" content="ReadFocus — read deeply, remember more" />
+    <meta property="og:description" content="Focused reading sessions that feel like a real book, words explained where you read them, and a next session planned around what you missed. Free, no ads, no generative AI." />
+    <meta property="og:image" content="/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ReadFocus: Read deeply, remember more. An open book before a window at dusk, beside a reading lamp." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ReadFocus — read deeply, remember more" />
+    <meta name="twitter:description" content="Focused reading sessions that feel like a real book, with words explained where you read them." />
+    <meta name="twitter:image" content="/og.png" />
+    <script>
+      // C10.6: apply the stored theme before first paint (no flash).
+      // Mirrors resolve() in src/theme/theme.js; keep the keys in step.
+      (function () {
+        var theme = 'system';
+        var accent = 'terracotta';
+        try {
+          theme = localStorage.getItem('rf-theme') || theme;
+          accent = localStorage.getItem('rf-accent') || accent;
+        } catch (e) {}
+        if (theme !== 'paper' && theme !== 'lamplight') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'lamplight' : 'paper';
+        }
+        if (accent !== 'sage') accent = 'terracotta';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.accent = accent;
+        // C13.10e: #root holds the prerendered landing page. Hide it anywhere but "/" and for a
+        // visitor with a stored session, who never sees the landing page; the app replaces it.
+        var hide = location.pathname !== '/';
+        try {
+          for (var i = 0; i < localStorage.length; i++) {
+            if (/^sb-.+-auth-token$/.test(localStorage.key(i))) hide = true;
+          }
+        } catch (e) {}
+        if (hide) document.documentElement.dataset.prerender = 'hidden';
+      })();
+    </script>
+    <style>html[data-prerender="hidden"] [data-prerendered] { display: none; }</style>
+    <!-- Without scripts, the prerendered steps would keep their pre-animation state. -->
+    <noscript><style>.rf-toc__item { opacity: 1 !important; transform: none !important; }</style></noscript>
   </head>
   <body>
     <div id="root"></div>

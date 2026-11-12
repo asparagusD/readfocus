@@ -1,0 +1,80 @@
+/* Original illustration set (C11.1), drawn to the handoff's style: one
+   1.6 px line in --ink-2, palette fills only. Every colour is a token, so
+   Paper/Lamplight and terracotta/sage need no second set of files. */
+.rf-illustration {
+  --illustration-glow: 0.16;
+  display: inline-block;
+  flex: none;
+  inline-size: var(--illustration-size, 160px);
+  max-inline-size: 100%;
+  color: var(--ink-2);
+  line-height: 0;
+}
+
+[data-theme="lamplight"] .rf-illustration,
+.rf-illustration[data-theme="lamplight"] {
+  --illustration-glow: 0.26;
+}
+
+.rf-illustration svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The line stays 1.6 px at any rendered size. */
+.rf-illustration svg * {
+  vector-effect: non-scaling-stroke;
+}
+
+.rf-illustration .ill-surface { fill: var(--surface); }
+.rf-illustration .ill-soft { fill: var(--accent-soft); }
+.rf-illustration .ill-faint { stroke: var(--ink-3); }
+
+.rf-illustration :is(.ill-accent, .ill-ribbon, .ill-star, .ill-sun, .ill-glow, .ill-cone, .ill-hill) {
+  stroke: none;
+}
+
+.rf-illustration :is(.ill-accent, .ill-ribbon, .ill-star) { fill: var(--accent); }
+.rf-illustration .ill-hill { fill: var(--accent-soft); }
+.rf-illustration .ill-sun { fill: var(--accent); opacity: 0.7; }
+.rf-illustration .ill-glow { fill: var(--accent); opacity: var(--illustration-glow); }
+.rf-illustration .ill-cone { fill: var(--accent); opacity: calc(var(--illustration-glow) * 0.6); }
+
+/* TeaCup steam={false}: the cooled cup on the error screen. */
+.rf-illustration[data-steam="off"] [data-part="steam"] {
+  display: none;
+}
+
+/* Ambient loops (handoff moment 7), opt-in through `animated`. Transform
+   and opacity only; base.css stops them under reduced motion. */
+.rf-illustration[data-animated="on"] [data-steam] {
+  transform-box: fill-box;
+  animation: ill-steam 3.2s var(--ease-breathe) infinite;
+}
+
+.rf-illustration[data-animated="on"] [data-steam="2"] { animation-delay: -1.07s; }
+.rf-illustration[data-animated="on"] [data-steam="3"] { animation-delay: -2.13s; }
+
+.rf-illustration[data-animated="on"] [data-part="glow"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ill-breathe 4s var(--ease-breathe) infinite;
+}
+
+@keyframes ill-steam {
+  0% { opacity: 0; transform: translateY(4px); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+@keyframes ill-breathe {
+  0%, 100% { transform: scale(0.96); }
+  50% { transform: scale(1.03); }
+}

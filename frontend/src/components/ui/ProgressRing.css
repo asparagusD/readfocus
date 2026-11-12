@@ -1,0 +1,35 @@
+/* Progress ring (C10.5c). The arc starts at the top. */
+.rf-ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+
+.rf-ring svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.rf-ring__track,
+.rf-ring__arc {
+  fill: none;
+}
+
+.rf-ring__track {
+  stroke: var(--line);
+}
+
+/* --accent on the grounds is 5.37:1 or more, above the 3:1 for graphics. */
+.rf-ring__arc {
+  stroke: var(--accent);
+  stroke-linecap: round;
+}
+
+.rf-ring__value {
+  color: var(--ink);
+  font-size: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

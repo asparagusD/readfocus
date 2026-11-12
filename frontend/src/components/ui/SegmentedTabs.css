@@ -1,0 +1,64 @@
+/* Segmented tabs (C13.1a): a sunken track, the selected tab a raised
+   surface with a field border, so selection shows without colour; corners
+   as on screen 01 (track 10 px, tab 8 px). */
+.rf-segmented {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-control);
+  background-color: var(--paper-2);
+}
+
+.rf-segmented__tab {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: var(--border-hair) solid transparent;
+  border-radius: var(--radius-input);
+  background-color: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-2) var(--ease-settle),
+    border-color var(--dur-2) var(--ease-settle),
+    color var(--dur-2) var(--ease-settle);
+}
+
+.rf-segmented__tab:hover:not([aria-selected='true']) {
+  color: var(--ink);
+}
+
+.rf-segmented__tab[aria-selected='true'] {
+  background-color: var(--surface);
+  border-color: var(--line-field);
+  color: var(--ink);
+}
+
+/* Underline tabs (C13.7b, handoff screen 09): text tabs on a hairline,
+   the selected one in ink over a 2 px accent rule (not colour alone). */
+.rf-segmented--underline {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0;
+  border-bottom: var(--border-hair) solid var(--line);
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.rf-segmented--underline .rf-segmented__tab {
+  flex: 0 0 auto;
+  margin-bottom: -1px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+}
+
+.rf-segmented--underline .rf-segmented__tab[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  background-color: transparent;
+}

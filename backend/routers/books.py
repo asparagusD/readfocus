@@ -1,7 +1,9 @@
 import uuid
+from datetime import UTC, datetime
 from typing import Any, cast
-from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException
-from backend.services.book_ingestor import ingest_book
+from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException, Query
+from backend.services import book_ingestor
+from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 from backend.dependencies import get_current_user
 
@@ -55,26 +57,27 @@ async def upload_book(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database insert failed: {str(e)}")
         
-    # 5. Launch ingest_book as BackgroundTask
-    background_tasks.add_task(
-        ingest_book,
-        file_bytes=file_bytes,
-        file_type=ext,
-        book_id=book_id,
-        user_id=user_id,
-        target_words=600
-    )
+    # 5. Record a durable job, then ingest after the response. If the process
+    # stops, the job row keeps the cursor and the sweep or /resume picks it up.
+    job = jobs.claim(jobs.create(book_id, user_id))
+    if job:
+        background_tasks.add_task(book_ingestor.run_job, job, file_bytes)
     
     # 6. Return immediately
     return {"book_id": book_id, "status": "processing"}
 
+BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url"
+PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")
+
+
 @router.get("")
 async def get_books(user_id: str = Depends(get_current_user)):
-    resp = supabase.table("books").select(
-        "id, status, title, author, total_chunks, total_words, created_at"
-    ).eq("user_id", user_id).execute()
-    
-    return resp.data
+    """The caller's books for the shelf, each with its cover and reading progress (null before a first session)."""
+    books = supabase.table("books").select(BOOK_LIST_FIELDS).eq("user_id", user_id).execute().data or []
+    rows = supabase.table("reading_progress").select(
+        "book_id, " + ", ".join(PROGRESS_FIELDS)).eq("user_id", user_id).execute().data or []
+    progress = {row["book_id"]: {key: row.get(key) for key in PROGRESS_FIELDS} for row in cast(list[dict[str, Any]], rows)}
+    return [{**book, "progress": progress.get(book["id"])} for book in cast(list[dict[str, Any]], books)]
 
 @router.get("/{book_id}")
 async def get_book_details(book_id: str, user_id: str = Depends(get_current_user)):
@@ -90,13 +93,64 @@ async def get_book_details(book_id: str, user_id: str = Depends(get_current_user
     
     return book
 
+PAGES_MAX_CHUNKS = 4  # reading ahead is a few chunks at a time
+PAGE_FIELDS = ("chunk_index", "content", "word_count", "blocks")
+
+
+@router.get("/{book_id}/pages")
+async def get_pages(book_id: str, start: int = Query(ge=0), end: int | None = Query(default=None, ge=0),
+                    user_id: str = Depends(get_current_user)):
+    """Chunks start..end (inclusive, at most four) of the caller's book, for reading ahead (C12.4, C12.5b).
+
+    Read-only: no session, timer, pacing or test is touched; the planner decides what a session reads.
+    """
+    end = start if end is None else end
+    if end < start or end - start + 1 > PAGES_MAX_CHUNKS:
+        raise HTTPException(status_code=422, detail=f"Ask for 1 to {PAGES_MAX_CHUNKS} chunks, start to end.")
+    owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
+    if not owned.data:
+        raise HTTPException(status_code=404, detail="Book not found")
+    rows = supabase.table("chunks").select(", ".join(PAGE_FIELDS)).eq("book_id", book_id).in_(
+        "chunk_index", list(range(start, end + 1))).execute().data or []
+    chunks = sorted((cast(dict[str, Any], row) for row in rows), key=lambda row: row["chunk_index"])
+    return {"chunks": [{field: row.get(field) for field in PAGE_FIELDS} for row in chunks]}
+
+
+JOB_FIELDS = ("status", "progress", "cursor", "attempts", "error", "updated_at")
+
+
+def public_job(job: dict | None) -> dict | None:
+    return {key: job.get(key) for key in JOB_FIELDS} if job else None
+
+
 @router.get("/{book_id}/status")
 async def get_book_status(book_id: str, user_id: str = Depends(get_current_user)):
     resp = supabase.table("books").select("status, total_chunks").eq("id", book_id).eq("user_id", user_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Book not found")
-        
-    return resp.data[0]
+
+    return {**resp.data[0], "ingestion": public_job(jobs.get(book_id))}
+
+
+@router.post("/{book_id}/resume")
+async def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+    """Run a book's ingestion again from its cursor: after a failure, or for a book left processing with no job."""
+    rows = supabase.table("books").select("id, status").eq("id", book_id).eq("user_id", user_id).execute().data
+    if not rows:
+        raise HTTPException(status_code=404, detail="Book not found")
+    job = jobs.get(book_id) or jobs.create(book_id, user_id)
+    ok, reason = jobs.claimable(job, datetime.now(UTC), jobs.stale_minutes(), manual=True)
+    if not ok:
+        raise HTTPException(status_code=409, detail=f"Ingestion is already {reason}.")
+    claimed = jobs.claim(job, manual=True)
+    if not claimed:
+        raise HTTPException(status_code=409, detail="Ingestion was resumed by another request.")
+    status = rows[0]["status"]
+    if status == "error":
+        supabase.table("books").update({"status": "processing"}).eq("id", book_id).execute()
+        status = "processing"
+    background_tasks.add_task(book_ingestor.run_job, claimed)
+    return {"book_id": book_id, "status": status, "ingestion": public_job(claimed)}
 
 @router.delete("/{book_id}")
 async def delete_book(book_id: str, user_id: str = Depends(get_current_user)):

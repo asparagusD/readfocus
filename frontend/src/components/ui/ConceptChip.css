@@ -1,0 +1,53 @@
+/* Concept chips (C10.5c). */
+.rf-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.rf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-hair) solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-chip__icon {
+  flex: none;
+}
+
+.rf-chip--strengthened {
+  background-color: var(--accent-soft);
+}
+
+.rf-chip--strengthened .rf-chip__icon {
+  color: var(--accent-text);
+}
+
+/* A1: the dashed edge is part of what tells the kinds apart: --line-field. */
+.rf-chip--revisit {
+  border-style: dashed;
+  border-color: var(--line-field);
+}
+
+.rf-chip--revisit .rf-chip__icon {
+  color: var(--ink-2);
+}
+
+/* The kind's word, kept for assistive tech where a heading already says it. */
+.rf-chip__kind--quiet {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,15 +1,30 @@
+/* Skeleton (C10.5b): --paper-2, radius 6, shimmer 1.6 s. The highlight
+   moves by transform only (D3); base.css stops it under reduced motion. */
 .rf-skeleton {
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--paper-dark) 0%, var(--paper-mid) 50%, var(--paper-dark) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite linear;
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  height: 16px;
+  border-radius: var(--radius-skeleton);
+  background-color: var(--paper-2);
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+.rf-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--line), transparent);
+  opacity: 0.6;
+  transform: translateX(-100%);
+  animation: rf-shimmer 1.6s var(--ease-breathe) infinite;
+}
+
+@keyframes rf-shimmer {
+  to { transform: translateX(100%); }
+}
+
+.rf-skeleton-lines {
+  display: grid;
+  gap: var(--space-3);
 }

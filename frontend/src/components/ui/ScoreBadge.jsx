@@ -1,26 +1,18 @@
-
 import './ScoreBadge.css';
 
-export function ScoreBadge({ percentage, className = '' }) {
-  let colorVar = '--red-soft';
-  if (percentage >= 75) {
-    colorVar = '--green-soft';
-  } else if (percentage >= 50) {
-    colorVar = '--amber';
-  }
-
+/**
+ * Score pill from the handoff ("86% Session 5"): a Playfair figure and a
+ * DM Sans label. `filled` (accent wash) for an earlier session, `outlined`
+ * for the current one. The number carries the meaning, not a colour.
+ */
+export function ScoreBadge({ percentage, label, variant = 'filled', className = '' }) {
+  const value = Math.round(percentage);
   return (
-    <div className={`rf-score-badge ${className}`}>
-      <span 
-        className="rf-score-dot" 
-        style={{ backgroundColor: `var(${colorVar})` }} 
-      />
-      <span 
-        className="rf-score-text"
-        style={{ color: `var(${colorVar})` }}
-      >
-        {percentage}%
+    <span className={`rf-score rf-score--${variant} ${className}`}>
+      <span className="rf-score__figure figure">
+        {value}<span className="rf-score__unit">%</span>
       </span>
-    </div>
+      {label && <span className="rf-score__label">{label}</span>}
+    </span>
   );
 }

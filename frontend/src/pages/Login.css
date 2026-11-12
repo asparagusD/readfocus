@@ -1,172 +1,174 @@
-.rf-login-page {
-  display: flex;
-  min-height: 100vh;
-  width: 100%;
+/* Sign in (C13.1b, handoff screen 01): split 50/50, the scene on a sunken
+   panel at left, the form at right; one column under 1024 px with the
+   scene above. */
+.rf-login {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100dvh;
+  background-color: var(--paper);
 }
 
-.rf-login-left {
-  width: 55%;
-  background-color: var(--ink);
+.rf-login__scene {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 64px;
+  justify-content: space-between;
+  gap: var(--space-7);
+  padding: var(--space-7) var(--space-8);
+  background-color: var(--paper-2);
+  border-right: var(--border-hair) solid var(--line);
 }
 
-.rf-login-quote-container {
+.rf-login__mark {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.rf-login__mark svg {
+  color: var(--accent-text);
+}
+
+.rf-login__art {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   max-width: 560px;
   margin: 0 auto;
+  border-bottom: 1.6px solid var(--ink-2);
 }
 
-.rf-login-quote {
+/* The four drawings as one scene (screen 01): sizes, and a negative
+   margin that takes up the empty edge of each 120-unit viewBox. */
+.rf-login__art .rf-illustration {
+  margin-inline: calc(var(--illustration-size) * -0.1);
+  margin-bottom: calc(var(--illustration-size) * -0.06);
+}
+
+.rf-login__books { --illustration-size: 130px; }
+.rf-login__window { --illustration-size: 260px; }
+.rf-login__tea { --illustration-size: 84px; }
+.rf-login__lamp { --illustration-size: 220px; }
+
+.rf-login__tagline {
+  margin: 0 0 var(--space-4);
   font-family: var(--font-display);
-  font-style: italic;
-  font-size: clamp(22px, 3vw, 32px);
-  color: var(--paper);
-  line-height: 1.4;
-  margin: 0 0 16px 0;
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+  font-weight: 500;
+  color: var(--ink);
 }
 
-.rf-login-quote-author {
-  font-family: var(--font-display);
-  font-size: 18px;
-  color: var(--paper-mid);
-  margin-bottom: 64px;
+.rf-login__sub {
+  max-width: 44ch;
+  margin: 0;
+  font-family: var(--font-reading);
+  /* Upright, not the handoff's italic: the italic Lora file is a fourth font on
+     this first screen and cost 4 Lighthouse points (83 against 87). */
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-2);
 }
 
-.rf-login-tagline {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 13px;
-  color: var(--ink-faint);
-}
-
-.rf-login-right {
-  width: 45%;
-  background-color: var(--paper);
+.rf-login__panel {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--space-7) var(--space-5);
 }
 
-.rf-auth-container {
-  width: 100%;
-  max-width: 360px;
-  padding: 32px;
+.rf-login__card {
+  width: min(400px, 100%);
 }
 
-.rf-auth-wordmark {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 24px;
-  color: var(--ink);
-  margin-bottom: 40px;
-  text-align: center;
+.rf-login__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-section);
+  line-height: var(--text-section--line-height);
 }
 
-.rf-auth-tabs {
-  display: flex;
-  gap: 8px; /* Using gap to visually separate if needed, or flush if desired. Spec says side by side 50% width */
-  margin-bottom: 32px;
+.rf-login__lead {
+  margin: 0 0 var(--space-5);
+  color: var(--ink-2);
 }
 
-.rf-tab-pill {
-  width: 50%;
-  height: 36px;
-  border-radius: 18px;
-  font-family: var(--font-ui);
-  font-weight: 500;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background: transparent;
-  color: var(--ink-light);
-  border: 1px solid var(--paper-mid);
-}
-
-.rf-tab-pill.active {
-  background-color: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink);
-}
-
-.rf-auth-form {
+.rf-login__form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
 }
 
-.rf-form-group {
-  display: flex;
-  flex-direction: column;
+.rf-login__error {
+  margin: 0;
+  color: var(--warn);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
 }
 
-.rf-label {
-  font-family: var(--font-ui);
-  font-weight: 500;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-light);
-  margin-bottom: 6px;
+.rf-login__error:empty {
+  display: none;
 }
 
-.rf-input {
+.rf-login__submit {
   width: 100%;
-  padding: 10px 12px;
-  background-color: var(--paper-dark);
-  border: 1px solid var(--paper-mid);
-  border-radius: 4px;
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 15px;
-  color: var(--ink);
-  outline: none;
-  transition: border-color 150ms ease-out;
+  margin-top: var(--space-2);
 }
 
-.rf-input:focus {
-  border-color: var(--amber);
+.rf-login__note {
+  margin: var(--space-5) 0 0;
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
 }
 
-.rf-auth-error {
-  font-family: var(--font-ui);
-  font-weight: 300;
-  font-size: 13px;
-  color: var(--red-soft);
-  margin-top: 6px;
+.rf-login__done .rf-btn {
+  margin-top: var(--space-2);
 }
 
-.rf-auth-success {
-  text-align: center;
-}
-
-.rf-success-message {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 18px;
-  color: var(--ink);
-  margin-bottom: 24px;
-}
-
-.rf-back-btn {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--amber);
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-@media (max-width: 767px) {
-  .rf-login-left {
-    display: none;
+@media (max-width: 1023px) {
+  .rf-login {
+    grid-template-columns: 1fr;
   }
-  
-  .rf-login-right {
-    width: 100%;
+
+  .rf-login__scene {
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4) var(--space-6);
+    border-right: 0;
+    border-bottom: var(--border-hair) solid var(--line);
+  }
+
+  .rf-login__panel {
+    align-items: flex-start;
+    padding: var(--space-6) var(--space-4) var(--space-7);
+  }
+}
+
+@media (max-width: 639px) {
+  .rf-login__mark span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .rf-login__books { --illustration-size: 78px; }
+  .rf-login__window { --illustration-size: 156px; }
+  .rf-login__tea { --illustration-size: 50px; }
+  .rf-login__lamp { --illustration-size: 132px; }
+
+  .rf-login__tagline {
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+  }
+
+  .rf-login__sub {
+    font-size: 16px;
   }
 }

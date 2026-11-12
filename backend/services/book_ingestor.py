@@ -1,14 +1,28 @@
+import asyncio
 import io
 import os
 import re
 import tempfile
+import zipfile
+from xml.etree import ElementTree
 from pypdf import PdfReader
 import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
 
-from backend.services.embeddings import generate_embedding
+from backend.agents.question_generation.agent import QuestionGenerationAgent
+from backend.nlp import embedder
+from backend.services import book_structure, covers, processing_jobs
 from backend.services.supabase_client import supabase
+
+question_agent = QuestionGenerationAgent()
+
+# Chunks embedded, stored and questioned together; the job's cursor is saved
+# after each batch. The first batch is smaller so the book unlocks as soon
+# as five chunks and their questions are stored.
+FIRST_BATCH = 5
+INGEST_BATCH = 16
+TARGET_WORDS = 600
 
 def extract_text_from_pdf(file_bytes: bytes) -> list[str]:
     """Extract text from a PDF file, returning a list of page strings."""
@@ -116,67 +130,130 @@ def chunk_text(pages: list[str], target_words: int = 600) -> list[str]:
 
     return chunks
 
-async def ingest_book(file_bytes: bytes, file_type: str, book_id: str, user_id: str, target_words: int = 600) -> dict:
-    """
-    Coordinates extraction, chunking, embedding generation, and database inserts.
+async def generate_questions(book_id: str, stored_chunks) -> None:
+    """Fill the question bank for chunks that were just stored, off the event loop.
+
+    A failure here is logged and nothing more: the chunks are stored and the
+    book stays readable; its questions can be generated again later.
     """
     try:
-        if file_type.lower() == 'pdf':
-            pages = extract_text_from_pdf(file_bytes)
-        elif file_type.lower() == 'epub':
-            pages = extract_text_from_epub(file_bytes)
-        else:
-            raise ValueError("Unsupported file type. Must be 'pdf' or 'epub'.")
+        chunk_ids = [row["id"] for row in stored_chunks or []]
+        if chunk_ids:
+            await asyncio.to_thread(question_agent.run, book_id, chunk_ids)
+    except Exception as e:  # noqa: BLE001 - whatever goes wrong here must not fail the ingestion
+        print(f"Question generation failed for book {book_id}: {e}")
 
-        chunks = chunk_text(pages, target_words)
-        total_chunks = len(chunks)
-        
-        # Pre-calculate total words to update DB early
-        total_words_estimated = sum(len(c.split()) for c in chunks)
-        total_words = 0
 
-        for i, chunk in enumerate(chunks):
-            wc = len(chunk.split())
-            total_words += wc
-            
-            # 1) generate an embedding asynchronously
-            embedding = await generate_embedding(chunk)
-            
-            # 2) insert a row into the chunks table
-            supabase.table("chunks").insert({
-                "book_id": book_id,
-                "user_id": user_id,
-                "chunk_index": i,
-                "word_count": wc,
-                "content": chunk,
-                "embedding": embedding
-            }).execute()
-            
-            # 3) Check if we reached 5 chunks, if so, unlock the book for reading
-            if i == 4:
-                supabase.table("books").update({
-                    "total_chunks": total_chunks,
-                    "total_words": total_words_estimated,
-                    "status": "ready"
-                }).eq("id", book_id).execute()
-            
-        # If the book was short (<= 5 chunks), we still need to set it to ready at the end
-        if total_chunks <= 5:
-            supabase.table("books").update({
-                "total_chunks": total_chunks,
-                "total_words": total_words_estimated,
-                "status": "ready"
-            }).eq("id", book_id).execute()
+def batches(total: int, cursor: int = 0):
+    """(start, end) chunk ranges from the cursor: five first, then INGEST_BATCH at a time."""
+    start = cursor
+    while start < total:
+        end = min(start + (FIRST_BATCH if start == 0 else INGEST_BATCH), total)
+        yield start, end
+        start = end
 
-        return {
-            "total_chunks": total_chunks,
-            "total_words": total_words_estimated,
-            "status": "ready"
-        }
-    except Exception as e:
-        # If any step fails, mark the book as failed so it doesn't stay 'processing' forever
-        print(f"Failed to ingest book {book_id}: {e}")
-        supabase.table("books").update({
-            "status": "error"
-        }).eq("id", book_id).execute()
+
+def _epub_metadata(file_bytes: bytes) -> tuple[str | None, str | None]:
+    """dc:title and the first dc:creator from the EPUB's OPF package file."""
+    with zipfile.ZipFile(io.BytesIO(file_bytes)) as archive:
+        container = ElementTree.fromstring(archive.read("META-INF/container.xml"))
+        rootfile = container.find(".//{*}rootfile")
+        package = ElementTree.fromstring(archive.read(rootfile.get("full-path")))
+    title = package.find(".//{http://purl.org/dc/elements/1.1/}title")
+    creator = package.find(".//{http://purl.org/dc/elements/1.1/}creator")
+    return (title.text if title is not None else None), (creator.text if creator is not None else None)
+
+
+def extract_metadata(file_type: str, file_bytes: bytes) -> tuple[str | None, str | None]:
+    """The title and author the file itself carries (PDF info, EPUB OPF), or None; never raises."""
+    try:
+        if file_type.lower() == "pdf":
+            info = PdfReader(io.BytesIO(file_bytes)).metadata
+            return (info.title or None, info.author or None) if info else (None, None)
+        if file_type.lower() == "epub":
+            return _epub_metadata(file_bytes)
+    except Exception as e:  # noqa: BLE001 - metadata only feeds the optional cover lookup
+        print(f"No metadata read from the {file_type} file: {e}")
+    return None, None
+
+
+def look_up_cover(book: dict, file_bytes: bytes) -> None:
+    """Find the book's cover once it is ingested (C11.2); a failure never touches the job."""
+    if book.get("cover_source"):  # already looked up (a resumed job, or the backfill)
+        return
+    try:
+        title, author = covers.lookup_terms(*extract_metadata(book["file_type"], file_bytes),
+                                            book.get("title"), book.get("author"))
+        covers.ensure_cover(book["id"], title, author)
+    except Exception as e:  # noqa: BLE001
+        print(f"Cover lookup for book {book['id']} failed: {e}")
+
+
+def extract(file_type: str, file_bytes: bytes) -> list[str]:
+    if file_type.lower() == "pdf":
+        return extract_text_from_pdf(file_bytes)
+    if file_type.lower() == "epub":
+        return extract_text_from_epub(file_bytes)
+    raise ValueError("Unsupported file type. Must be 'pdf' or 'epub'.")
+
+
+def mark_ready(book_id: str, total: int, words: int, toc: list | None = None) -> None:
+    values = {"total_chunks": total, "total_words": words, "status": "ready"}
+    if toc is not None:  # the contents are known before the first batch, so the reader has them at once
+        values["toc"] = toc
+    supabase.table("books").update(values).eq("id", book_id).execute()
+
+
+def download(storage_path: str) -> bytes:
+    return supabase.storage.from_("books").download(storage_path)
+
+
+async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
+    """Ingest a claimed job's book from its cursor, saving the cursor after every batch.
+
+    Safe to run again: chunks are upserted on (book_id, chunk_index) and
+    questions on their own unique key, so a batch that ran before the
+    process stopped is rewritten, not duplicated. Without `file_bytes` the
+    file is read from Storage. Extraction and chunking are deterministic,
+    so the chunk at an index is the same on every run.
+    """
+    book_id, user_id = job["book_id"], job["user_id"]
+    book = supabase.table("books").select(
+        "id, file_type, storage_path, status, title, author, cover_source").eq("id", book_id).execute().data[0]
+    ready = book.get("status") == "ready"
+    try:
+        if file_bytes is None:
+            file_bytes = await asyncio.to_thread(download, book["storage_path"])
+        chunks = chunk_text(extract(book["file_type"], file_bytes), TARGET_WORDS)
+        total, words = len(chunks), sum(len(c.split()) for c in chunks)
+        # Reader structure beside the unchanged content (C12.1); (None, None) if it cannot be built.
+        blocks, toc = await asyncio.to_thread(book_structure.build, book["file_type"], file_bytes, chunks)
+        for start, end in batches(total, job["cursor"]):
+            batch = chunks[start:end]
+            vectors = await asyncio.to_thread(embedder.embed, batch)
+            stored = supabase.table("chunks").upsert([
+                {"book_id": book_id, "user_id": user_id, "chunk_index": start + offset,
+                 "word_count": len(chunk.split()), "content": chunk,
+                 "blocks": blocks[start + offset] if blocks else None,
+                 "embedding_local": [float(value) for value in vectors[offset]]}
+                for offset, chunk in enumerate(batch)
+            ], on_conflict="book_id,chunk_index").execute()
+            await generate_questions(book_id, stored.data)  # questions and concepts of the batch
+            if not ready:  # the first batch is stored with its questions: the first session can start
+                mark_ready(book_id, total, words, toc)
+                ready = True
+            processing_jobs.advance(job["id"], end, total)
+        if not ready:  # a book with no text at all is still ready, as before
+            mark_ready(book_id, total, words, toc)
+        elif toc is not None and book.get("status") == "ready":  # resumed after the book was ready
+            supabase.table("books").update({"toc": toc}).eq("id", book_id).execute()
+        processing_jobs.finish(job["id"], total)
+        # The book is readable and its job done; the cover (at most two 3 s requests) comes last.
+        await asyncio.to_thread(look_up_cover, book, file_bytes)
+        return {"total_chunks": total, "total_words": words, "status": "ready"}
+    except Exception as e:  # noqa: BLE001 - recorded on the job, which can be resumed
+        print(f"Ingestion of book {book_id} stopped: {e}")
+        processing_jobs.fail(job["id"], str(e))
+        if not ready:  # a book with readable chunks stays readable
+            supabase.table("books").update({"status": "error"}).eq("id", book_id).execute()
         return {"status": "error", "error": str(e)}

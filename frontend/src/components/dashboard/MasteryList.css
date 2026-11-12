@@ -1,0 +1,79 @@
+/* Concept mastery (C13.7b): a heading row, underline book tabs, then rows
+   of concept, bar and percentage on hairlines. */
+.rf-mastery-list__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.rf-mastery-list__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.rf-mastery-list__rows {
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rf-mastery-list__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 180px) 4ch;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+  border-bottom: var(--border-hair) solid var(--line);
+}
+
+.rf-mastery-list__label {
+  margin: 0;
+  font-family: var(--font-reading);
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.rf-mastery-list__weak {
+  margin: var(--space-1) 0 0;
+  color: var(--accent-text);
+  font-size: var(--text-label);
+}
+
+.rf-mastery-list__pct {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.rf-mastery-list__note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rf-mastery-list__note p {
+  margin: 0;
+}
+
+@media (max-width: 639px) {
+  .rf-mastery-list__row {
+    grid-template-columns: minmax(0, 1fr) 4ch;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .rf-mastery-list__bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

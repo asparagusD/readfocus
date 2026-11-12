@@ -1,0 +1,90 @@
+/* Text input and text area (C13.1a): label above, field border --line-field
+   (A1, the only edge of an empty field), radius 8, focus ring from base.css,
+   error in --warn with an icon, so it is not told by colour alone. */
+.rf-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rf-field__label {
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.rf-field__hint {
+  margin: 0;
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
+}
+
+.rf-input {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-input);
+  background-color: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui--line-height);
+  transition: border-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-input::placeholder {
+  color: var(--ink-3);
+}
+
+.rf-input:hover:not(:disabled, :read-only) {
+  border-color: var(--ink-2);
+}
+
+.rf-input:focus-visible {
+  border-color: var(--accent);
+}
+
+.rf-input:disabled {
+  background-color: var(--paper-2);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.rf-input:read-only:not(:disabled) {
+  background-color: var(--paper-2);
+}
+
+.rf-input--area {
+  min-height: calc(var(--text-reading) * var(--text-reading--line-height) * 3 + var(--space-5));
+  resize: vertical;
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+.rf-field--error .rf-input {
+  border-color: var(--warn);
+}
+
+.rf-field__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--warn);
+}
+
+.rf-field__error:empty {
+  display: none;
+}
+
+.rf-field__error svg {
+  flex: none;
+  margin-top: 1px;
+}

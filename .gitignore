@@ -17,6 +17,12 @@ env/
 dist/
 build/
 
+# Local model caches (FASTEMBED_CACHE)
+.cache/
+
+# Agent skills: platform-specific binaries (reinstall with `npx impeccable skills install`)
+.claude/skills/impeccable/scripts/bin/
+
 # OS generated files
 .DS_Store
 Thumbs.db

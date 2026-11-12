@@ -1,28 +1,35 @@
-.rf-modal-backdrop {
+/* Modal (C10.5b): scrim, raised panel, width capped to the screen (A13). */
+.rf-modal-scrim {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(26, 23, 20, 0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  inset: 0;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 24px;
+  padding: var(--space-4);
+  background-color: var(--scrim);
 }
 
 .rf-modal-panel {
-  background-color: var(--paper);
-  border: 1px solid var(--paper-mid);
-  border-radius: 6px;
-  box-shadow: 0 8px 40px rgba(26, 23, 20, 0.12);
-  padding: 32px;
-  max-width: 480px;
   width: 100%;
-  outline: none; /* Focus trap outline removal */
-  max-height: 90vh;
+  max-width: var(--modal-width, 480px);
+  max-height: calc(100dvh - 2 * var(--space-4));
   overflow-y: auto;
+  padding: var(--space-6);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background-color: var(--surface);
+  box-shadow: var(--elevation-lift);
+  color: var(--ink);
+}
+
+/* The panel takes focus only when it has nothing focusable inside. */
+.rf-modal-panel:focus-visible {
+  outline: none;
+}
+
+.rf-modal-title {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
 }

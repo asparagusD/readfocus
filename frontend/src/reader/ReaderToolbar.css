@@ -1,0 +1,123 @@
+/* Reader toolbar (C12.5a, handoff screen 06): a floating pill above the book. */
+.rf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1) var(--space-2);
+  width: fit-content;
+  max-width: calc(100% - 2 * var(--space-4));
+  margin-inline: auto;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  box-shadow: var(--elevation-lift);
+  transition:
+    opacity var(--dur-3) var(--ease-settle),
+    transform var(--dur-3) var(--ease-settle);
+}
+
+/* While reading it fades and lifts 8 px; keyboard focus inside brings it back (data-visible). */
+.rf-toolbar[data-visible="false"] {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+.rf-toolbar-rule {
+  width: var(--border-hair);
+  height: 24px;
+  background: var(--line);
+}
+
+.rf-toolbar-title {
+  max-width: 32ch;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-label);
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rf-toolbar-group { display: flex; align-items: center; }
+
+.rf-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-tool:hover:not(:disabled) { background: var(--paper-2); }
+.rf-tool:disabled { opacity: 0.4; cursor: default; }
+
+.rf-size { font-family: var(--font-reading); font-weight: 400; }
+.rf-size--small { font-size: 13px; }
+.rf-size--large { font-size: 20px; }
+
+/* Narrow screens: icons only, the title goes (the running head names the
+   chapter). C13.9: the tools sit on one row as in the handoff's 375 frame
+   (back, text size, Contents, Look up, theme: 44 px targets, no gaps), and
+   the session's own controls take one row under them, instead of the pill
+   wrapping into three rows over the page. */
+@media (width < 640px) {
+  .rf-tool-label,
+  .rf-toolbar-title,
+  .rf-toolbar-rule { display: none; }
+
+  .rf-toolbar {
+    column-gap: 0;
+    max-width: calc(100% - 2 * var(--space-2));
+    padding: 0 var(--space-1);
+  }
+
+  .rf-switch { padding-inline: 6px; }
+
+  .rf-toolbar-session {
+    flex-basis: 100%;
+    justify-content: center;
+    gap: var(--space-2);
+    border-top: var(--border-hair) solid var(--line);
+  }
+}
+
+
+/* "Look up" switch (C12.8, handoff): hover lookup on or off for this reader on this device. */
+.rf-switch-track {
+  position: relative;
+  display: inline-block;
+  inline-size: 32px;
+  block-size: 18px;
+  border: var(--border-hair) solid var(--line-2);
+  border-radius: var(--radius-pill);
+  background: var(--paper-2);
+  transition: background-color var(--dur-3) var(--ease-settle), border-color var(--dur-3) var(--ease-settle);
+}
+.rf-switch-knob {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-2);
+  transition: transform var(--dur-3) var(--ease-settle), background-color var(--dur-3) var(--ease-settle);
+}
+.rf-switch[aria-checked="true"] .rf-switch-track { border-color: var(--accent); background: var(--accent); }
+.rf-switch[aria-checked="true"] .rf-switch-knob { background: var(--accent-ink); transform: translateX(14px); }

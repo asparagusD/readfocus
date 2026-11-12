@@ -1,70 +1,24 @@
-:root {
-  /* Color Palette */
-  --ink: #1a1714;
-  --ink-light: #4a4540;
-  --ink-faint: #9a918a;
-  --paper: #faf8f4;
-  --paper-dark: #f0ece4;
-  --paper-mid: #e8e2d8;
-  --amber: #c8832a;
-  --amber-pale: #f5e9d6;
-  --red-soft: #c0392b;
-  --green-soft: #2d7a4f;
+/*
+ * Global stylesheet. Tailwind v4 without preflight; the reset and base
+ * styles sit in the base layer so Tailwind utilities and page CSS both
+ * override them.
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./styles/tokens.css";
+@import "./styles/fonts.css";
+@import "./styles/base.css" layer(base);
 
-  /* Typography */
-  --font-display: 'Playfair Display', serif;
-  --font-ui: 'DM Sans', sans-serif;
-  --font-reading: 'Lora', serif;
-  --font-mono: 'DM Mono', monospace;
-
-  /* Spacing Base */
-  --grid: 8px;
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background-color: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-ui);
-  font-weight: 300;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Typography defaults */
-h1, h2, h3, h4, h5, h6 {
-  color: var(--ink);
-  font-weight: normal;
-}
-
-a {
-  color: var(--amber);
-  text-decoration: none;
-  transition: opacity 150ms ease-out;
-}
-
-a:hover {
-  opacity: 0.75;
-}
-
-/* Global Interactive States */
-*:focus-visible {
-  outline: 2px solid var(--amber);
-  outline-offset: 2px;
-}
-
-/* Page Transition Classes */
-.page {
-  opacity: 0;
-  transition: opacity 150ms ease-out;
-}
-
-.page.visible {
-  opacity: 1;
-}
-
+/* The pre-2.0 `.page` fade and usePageTransition are gone (C11.5, removed
+   in C13.8b): Chrome ignores text painted at opacity 0, so no page had a
+   first contentful paint (docs/DEBUG_LOG.md). The route transition in
+   App.jsx fades pages in. The A4 colour aliases went in C13.8b too. */

@@ -2340,3 +2340,59 @@ fix: 3 failed (200 instead of 404 / 503). After: 3 passed.
 
 ### Commit
 fix(api): check book ownership before starting a session
+
+## 2026-11-12 C15 release — isolation check: A's question count moved during the probes
+
+**Status:** fixed
+
+### Symptom
+Production re-run after the release (`main` at `b9fd808`). Every probe by
+B was denied, but the closing count check failed:
+
+    API_URL=https://readfocus-api.onrender.com npm --prefix frontend run test:isolation
+    FAIL after    A's row counts unchanged -> {..."question_bank":55,...}
+    92 probes, 91 denied as expected, 1 failed; 65 s against https://readfocus-api.onrender.com
+    failed:
+      after A's row counts unchanged: expected {"books":1,"chunks":7,"question_bank":47,...}, got {...,"question_bank":55,...}
+
+No stack trace (a check, not an exception). Every other table was unchanged.
+
+### Repro
+Not every time: it depends on when the second ingestion batch finishes
+on Render. The three earlier runs (local and production) passed. Any run in
+which the "before" count is taken while the ingestion job is still running
+fails this way.
+
+### Hypotheses
+1. A's own ingestion was still running. `books.status` becomes `ready`
+   after the first batch (`backend/services/book_ingestor.py`, `mark_ready`
+   inside the batch loop). Later batches keep storing questions through
+   `QuestionGenerationAgent.run` (`question_bank` upsert), and the script
+   stopped waiting at `ready`. Evidence: chunks were 7 in both counts
+   (chunks are stored before a batch's questions); only `question_bank`
+   grew; every B write probe was refused. Ruled out if the count still
+   moves once the script waits for the job to be `done`. Result:
+   **confirmed**. With the wait, A's own count is 55 before the probes and
+   55 after, 92 of 92.
+2. One of B's probes wrote to A's bank. Evidence against: B's
+   `finish-reading` and `start` on A's ids returned 404 before any work, and
+   the RLS inserts were refused. It would show up again with the wait in
+   place. Result: ruled out by the re-run.
+
+### Root cause
+`frontend/scripts/live/check-isolation.mjs` took A's "before" counts once
+the book was `ready`, which is the first batch, not the end of ingestion.
+This is a race in the check, not a leak.
+
+### Fix
+The wait loop also requires the status endpoint's `ingestion.status` to be
+`done` (or no job). A `failed` job stops the run. One attempt.
+
+### Regression test
+None automated: the script is a live check against the shared project and
+is not part of the offline standard checks. Manual check: the production
+re-run with the fix passed (92 of 92, A's counts unchanged at
+`question_bank` 55, exit 0, 72 s). The run before the fix failed as above.
+
+### Commit
+fix(tooling): wait for ingestion to finish before the isolation baseline

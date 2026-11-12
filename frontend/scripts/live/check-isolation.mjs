@@ -91,7 +91,11 @@ async function main() {
   try {
     for (let i = 0; ; i += 1) {
       const status = await api('GET', `/books/${ids.book}/status`, A.token);
-      if (status.json?.status === 'ready') break;
+      // "ready" comes after the first batch; later batches keep adding questions, so wait for the
+      // job to finish or A's row counts move during the probes (DEBUG_LOG 2026-11-12).
+      const job = status.json?.ingestion?.status;
+      if (status.json?.status === 'ready' && (job === 'done' || job == null)) break;
+      if (job === 'failed') throw new Error(`ingestion job failed: ${status.text.slice(0, 200)}`);
       if (status.json?.status === 'error' || i > 120) throw new Error(`ingestion: ${status.text.slice(0, 200)}`);
       await sleep(5000);
     }

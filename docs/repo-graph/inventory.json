@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 443,
-    "inventoried": 378,
+    "tracked": 445,
+    "inventoried": 380,
     "excluded": 65
   },
   "files": [
@@ -82,7 +82,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 206,
-      "size_bytes": 11533,
+      "size_bytes": 11550,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -241,8 +241,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 294,
-      "size_bytes": 11406,
+      "lines": 301,
+      "size_bytes": 11904,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer."
     },
@@ -735,6 +735,14 @@
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
+      "path": "backend/tests/test_eval_grader.py",
+      "language": "python",
+      "lines": 29,
+      "size_bytes": 1489,
+      "role": "test",
+      "purpose": "Tests for scripts/eval_grader.py's pure helpers (C15.3): candidate constants apply to one grading call only, and the best combination is chosen by agreements, then error."
+    },
+    {
       "path": "backend/tests/test_feedback.py",
       "language": "python",
       "lines": 141,
@@ -1050,7 +1058,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2682,
-      "size_bytes": 530777,
+      "size_bytes": 533701,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2711,6 +2719,14 @@
       "purpose": "Starts uvicorn on a spare port, waits for /health, then prints the psutil RSS of the server and every child process."
     },
     {
+      "path": "scripts/eval_grader.py",
+      "language": "python",
+      "lines": 141,
+      "size_bytes": 6270,
+      "role": "script",
+      "purpose": "Grader agreement with backend/tests/fixtures/answers.json (C15.3), offline with the local model: embeds once, re-grades through grader.decide() under the current or candidate policy constants, prints agreement overall, per category, mean error, high-confidence misses and each disagreement; --search grades a grid of weights and cosine/relevance bounds and estimates with leave-one-out whether a fitted choice generalises."
+    },
+    {
       "path": "scripts/export_agent_graph.py",
       "language": "python",
       "lines": 53,
@@ -2969,8 +2985,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 380,
-      "size_bytes": 110060,
+      "lines": 382,
+      "size_bytes": 110727,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

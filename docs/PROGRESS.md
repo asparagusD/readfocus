@@ -2985,13 +2985,334 @@ CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 
 ## C17 — original view
 
-Goal: every PDF and EPUB shown as published (images, figures, math and
-code intact) by a PDF renderer and an EPUB renderer, lazy-loaded; the
-C12 book view retired (the user's decision at C16); chunk source spans
-recorded at ingestion (ANCHORS A6); C12 reading positions migrated to
-point anchors (A7, additive, approved, after a fresh dump). Depends on:
-C16. Estimate: 4.0 h. Safe to cut: page thumbnails, the EPUB layout
-options beyond font size.
+Branch `chunk/C17-original-view`, created from `readfocus-2.0` at
+`73e0e55`. Goal: never retype a book. Every PDF and EPUB is shown as
+published (images, figures, math and code intact) inside our book frame
+(spread, page turns, ribbon, paper edges, lamplight), by PDF.js for PDF
+and an EPUB engine for EPUB, both lazy-loaded; the C12 block-based book
+view is retired as a reading surface (its blocks keep feeding the
+agents); every C12 reader feature works on both renderers; chunk source
+spans recorded at ingestion (ANCHORS A6); C12 reading positions become
+point anchors (A7). Depends on: C16. Stub estimate: 4.0 h.
+
+### Plan (written at chunk start, 2026-11-12, before any code)
+
+What there is to build on (read from the code, `docs/ANCHORS.md` and
+`design/HANDOFF_PHASE2_SUMMARY.md`):
+
+- **The original file is already kept.** `POST /books/upload`
+  (`backend/routers/books.py`) stores the bytes in the private bucket
+  `books` at `{user_id}/{book_id}.{ext}` (`books.storage_path`); resume
+  and the sweep download them again; `DELETE /books/{id}` removes the
+  object. Missing: any size limit (the endpoint reads the whole upload,
+  the frontend only sets `accept`), any hash, any per-user cap, and any
+  way for the browser to fetch the file.
+- **Ingestion loses positions.** `book_ingestor.py` (pypdf, ebooklib,
+  BeautifulSoup): `chunk_text` joins all pages with `\n\n`, so no chunk
+  knows its page or spine item; EPUB documents are read in **manifest
+  order, not spine order** (a spine-ordered EPUB with a different
+  manifest order would map chunks to the wrong section). `chunks.content`
+  must not change (question evidence quotes it); spans are new fields.
+- **The C12 reader** (`frontend/src/reader/`, about 2,300 lines):
+  block-coupled and replaced: `BookReader.jsx` (CSS-column pagination,
+  keys, swipe, edge clicks, ribbon), `BookFlow.jsx`, `PageTurn.jsx`,
+  `geometry.js`, `anchor.js`, `blocks.js`, `readAhead.js`, the position
+  `{chunk_index, block_id, char_offset}` (migration 014). Reusable over
+  any DOM: `useWordAtPoint`, `wordAt`, `highlight`, `longPress`,
+  `lookup`, `useWordCard`, `WordCard`, `PhraseChip`, `useChromeVisible`,
+  `textSize`, `ReaderToolbar`, `ContentsDrawer` (needs a toc adapter).
+  The caret calls use the global `document`; an EPUB section lives in an
+  iframe, so they must take a document.
+- **Endpoints:** `POST /sessions/start` returns the session's chunks
+  (with blocks), `position`, `book.toc` (from migration 013) and
+  `chapter_before`; `PUT /sessions/{id}/position`; `GET /books/{id}/pages`
+  (contents jumps, read-ahead).
+- **Tests:** `reader.spec.js` (12) and `reading.spec.js` (5) select
+  `.rf-flow [data-b]` and are rewritten; 7 reader unit test files, of
+  which `geometry`, `blocks` and `readAhead` go with their modules.
+- **No Content-Security-Policy** anywhere (`vercel.json` has only the SPA
+  rewrite). Migrations end at 015; the next is 016.
+
+Library check (2026-11-12, npm registry and GitHub API):
+
+| | pdfjs-dist | foliate-js | epub.js (`epubjs`) |
+|---|---|---|---|
+| Licence | Apache-2.0 | MIT (vendored zip.js BSD-3, fflate MIT: re-checked at C17.3) | BSD-2-Clause on npm; GitHub reports NOASSERTION |
+| Maintenance | Mozilla; commits daily; 6.4.299 (2026-10-03) is the newest release over two weeks old, so it is the pin; Node >=22.13 (local 24.14) | one maintainer; last commit 2026-05-01 (`78914aef4466`); README: "not stable … API may change", no npm release by the author (the npm `foliate-js` 1.0.1 is a third party's upload, not used) | last npm release 0.3.93 in 2023; last commit 2026-03-24; 518 open issues |
+| Size | `pdf.min.mjs` 474 KB (136 KB gzip) + worker 1.27 MB (378 KB gzip, its own file, loaded only for PDFs) | about 260 KB of the modules we need, unminified | 6.4 MB unpacked, bundles its own zip and pulls `core-js`-era code |
+| CFI | n/a (PDF anchors are page + quads) | `epubcfi.js`: parse, compare, range to and from CFI, a node filter so our injected nodes do not shift CFIs | `EpubCFI`, mature |
+| Fixed layout | n/a (pages are fixed) | `fixed-layout.js`: pre-paginated EPUBs with spreads | partial; long-standing open bugs |
+| Images | canvas renders everything on the page | every resource (img, SVG `<image>`, CSS `url()`, fonts) rewritten to `blob:` URLs on load; `transformTarget` hook lets us sanitize each document | resources replaced with blob URLs; SVG and CSS edge cases in open issues |
+| Security | `isEvalSupported: false`, no scripting | README: no scripted content; **requires a CSP** that blocks scripts | same-origin iframes, same CSP need |
+
+Decisions that apply to every subchunk:
+
+- **Engines: pdfjs-dist 6.4.299 for PDF, foliate-js for EPUB**, vendored
+  at commit `78914aef4466` under `frontend/src/vendor/foliate-js/` (only
+  the modules used, its LICENSE, a README with the commit and how to
+  update; excluded from ESLint). Reasons: active, small, CFI and fixed
+  layout built in, an overlayer for C19 highlights, a sanitizing hook.
+  The risk (unstable API) is contained by pinning and by one adapter
+  file, `reader/epub/engine.js`; epub.js is the fallback if the spike in
+  C17.3 fails. foliate's own PDF adapter is not used: we own the PDF
+  renderer so text layer, quads and zoom follow ANCHORS A1.
+- **Both renderers are lazy:** `import()` inside the reader route; the
+  PDF.js worker and the foliate modules each land in their own chunk,
+  never in `vendor` or the landing page; sizes recorded in
+  `docs/BENCHMARKS.md`. A PDF reader never downloads foliate, and the
+  reverse.
+- **The file reaches the browser once.** `GET /books/{id}/file` returns
+  a short-lived signed URL (5 min) for the owner's object (service role,
+  ownership checked like every book endpoint); the browser caches the
+  bytes in IndexedDB keyed by `sha256`, so a reopened book is not
+  downloaded again (cache evicts least recently opened past 300 MB of
+  quota). No book bytes pass through Render's memory on reads.
+- **EPUB content is sanitized and cannot reach the network.** Every
+  section goes through DOMPurify (MPL-2.0 or Apache-2.0, about 22 KB
+  gzip) in foliate's `transformTarget`: scripts, event handlers,
+  `<iframe>`, `<object>`, `<embed>`, `<form>`, `javascript:` and remote
+  `http(s):` references removed; images, SVG, MathML, `<pre>`/`<code>`,
+  tables, styles and fonts kept. A CSP header in `vercel.json` (and the
+  same in `vite preview` for e2e) backs it up: `script-src 'self'
+  'wasm-unsafe-eval'` (PDF.js decoders), `worker-src 'self' blob:`,
+  `frame-src blob:`, `img-src 'self' blob: data:` plus the covers host,
+  `connect-src 'self'` plus the API and Supabase hosts, `object-src
+  'none'`. A blob iframe inherits the page's policy, so a missed script
+  still does not run and a missed remote image still does not load.
+  The whole app gets this CSP, so C17.3 checks every page (login,
+  landing prerender, fonts, covers) under it.
+- **No image is dropped.** A unit test over fixture EPUBs counts every
+  image referenced by a spine document (`<img>`, SVG `<image>`, CSS
+  `url()`, `<picture>` sources) and asserts each is a non-empty `blob:`
+  after loading; an e2e test asserts every `<img>` in the rendered
+  section has `naturalWidth > 0`. Sanitizing never removes a local image.
+- **Fixtures are ours.** `tools/make_reader_fixtures.py` (stdlib only)
+  writes a small PDF (3 pages, text, a vector figure) and three EPUBs
+  (reflowable with images, SVG, MathML, code and a CSS background;
+  fixed-layout with two pages; a hostile one with a script, an `onload`,
+  a remote image and an iframe) into `frontend/e2e/fixtures/books/`, each
+  under 50 KB. No third-party books are committed.
+- **The frame is ours, the page is the publisher's.** Spread over 1024
+  px, one page under it (C12's `SPREAD_MIN_WIDTH`); paper edges, gutter
+  shadow, ribbon, running header and folio in our type; inside a page,
+  the PDF's own rendering or the EPUB's own CSS. Lamplight: PDF pages
+  keep their paper but sit under a warm overlay at reduced brightness
+  (`filter` on the canvas, text layer unchanged); EPUBs get our `--page`
+  and `--ink` only where the book sets no colour (foliate's style
+  injection, publisher colours win). Zoom 90–150 % in steps of 10 plus
+  fit-width for PDF; text size steps for EPUB (C12's `textSize.js`).
+- **The "Reading view" toggle from the mock is not built** (the book
+  view is retired; handoff question 6). Answered here unless you say
+  otherwise.
+- **Upload limits are policy values** in `backend/agents/policy.py`:
+  proposed 40 MB per file and 200 MB of server-kept books per reader;
+  question 1 below. Supabase Free's limits (1 GB storage, 50 MB per
+  file, as I remember them) are re-read on the dashboard in C17.1 before
+  the numbers are fixed.
+- **Device-only books:** the reader can choose "Keep the file on this
+  device only". The server still receives the bytes once (ingestion
+  needs them), parses them in memory and never stores them
+  (`storage_path` null, `file_kept = 'device'`); the browser keeps the
+  file in IndexedDB. Such a book does not count toward the cap, cannot
+  be resumed by the sweep after a crash (the reader re-uploads), and
+  opens on another device only after the same file is picked there (the
+  `sha256` must match).
+- **Migrations:** one additive migration, `016_original_files.sql`
+  (books: `file_sha256 text`, `file_size_bytes bigint`, `file_kept text
+  check in ('server','device') default 'server'`, `page_count int`;
+  chunks: `source_span jsonb`; reading_progress: `anchor jsonb`; a
+  per-user index on `(user_id, file_sha256)`). Dev and production share
+  one Supabase project (CLAUDE.md constraint 2), so "dev only" is not
+  possible: applying it needs your approval and a fresh `supabase db
+  dump` first. Until it is applied, code reads the new fields as
+  optional (and pytest and e2e never touch the project).
+- **Positions without a backfill.** Books ingested before C17 have no
+  spans. The reader then finds a chunk by searching for the first 12
+  words of its `content` in the PDF text layer or the EPUB section text
+  (whitespace-collapsed, the same text verification as ANCHORS A5); the
+  first hit becomes the anchor and is saved. A backfill of old books'
+  spans and positions (A7) is offered at the end of C17.6 as a separate,
+  approved run, not required for the reader to work.
+- **Verification per commit:** the ten standard checks (ruff stays at
+  27, ESLint at 4 errors), `make graph`, `design-review` for every UI
+  commit (1440 and 375 px, both themes, keyboard, reduced motion), and
+  screenshots of a real PDF and EPUB from the local dev server.
+
+Subchunks (each at most ~200 changed lines; tests in the same commit;
+split into a/b where marked):
+
+**C17.1 keep the original file: storage, sha256, size cap, device-only
+option** (about 1.0 h; a backend, b frontend).
+- a: `backend/routers/books.py` (+60): read the upload in 1 MB chunks up
+  to `MAX_BOOK_BYTES + 1` (413 past it, before anything is stored),
+  hash with `hashlib.sha256` while reading, sum the reader's server-kept
+  `file_size_bytes` (413 with "Your shelf is full" past the cap), a
+  `keep` form field (`server`|`device`), reuse the existing book when the
+  same reader uploads the same `sha256` again; `GET /books/{id}/file`
+  (signed URL, 404 for device-only); `backend/agents/policy.py` (+6) the
+  two limits; `backend/services/book_ingestor.py` (+10) device-only jobs
+  skip storage. `supabase/migrations/016_original_files.sql` (new,
+  ~25). Tests: `backend/tests/test_upload_limits.py` (new, ~120: over
+  the file cap, over the shelf cap, device-only never uploads, duplicate
+  hash returns the existing book, signed URL only for the owner) with
+  the Supabase client faked.
+- b: `frontend/src/pages/Library.jsx` (+40): size checked before upload
+  with the same numbers (from a `/books/limits` field on `GET /books`),
+  the "Keep on this device only" choice, shelf usage line ("120 of 200
+  MB"); `frontend/src/reader/fileStore.js` (new, ~80): IndexedDB cache by
+  `sha256` with eviction, wrapped in try/catch (private windows). Tests:
+  `fileStore.test.js` (unit, fake IndexedDB), one e2e upload-too-large
+  case.
+- Verified by: pytest, unit, e2e; a local upload of a 45 MB file refused
+  without a storage write (dev server, mocked Supabase). Cut: duplicate
+  detection by hash (keep the hash).
+
+**C17.2 PDF.js renderer: canvas + text layer, lazy, page cache** (about
+1.0 h).
+- `frontend/package.json`: `pdfjs-dist@6.4.299`. `frontend/src/reader/pdf/
+  loadPdf.js` (new, ~50): lazy import, worker URL via Vite `?url`,
+  `isEvalSupported: false`, open from the cached bytes;
+  `PdfPage.jsx` (new, ~110): one page = canvas at device pixel ratio
+  plus PDF.js `TextLayer` (transparent, selectable, same box), in page
+  points so zoom only rescales; `pageCache.js` (new, ~50): renders the
+  visible spread and one spread either side, keeps at most 6 rendered
+  pages, cancels render tasks on turn; `pdfOutline.js` (new, ~40): the
+  outline to `[{title, page}]`. Tests: `pageCache.test.js` (eviction,
+  cancel), `pdfOutline.test.js` (nested outline, named dests).
+- Verified by: unit tests; the fixture PDF and one real technical PDF
+  (math, figures) at 1440 and 375 px, text selectable and searchable
+  with Ctrl+F in the text layer; build output shows the PDF chunk and
+  worker outside `vendor` (sizes into `docs/BENCHMARKS.md`). Cut: the
+  outline (contents falls back to the stored toc).
+
+**C17.3 EPUB renderer: choose the engine, render with all images**
+(about 1.25 h; a spike and CSP, b renderer).
+- a: a scratchpad spike first (not committed): foliate-js at the pinned
+  commit opening the three fixture EPUBs and one real EPUB with figures,
+  MathML and code; pass = every image shown, MathML rendered by the
+  browser, fixed layout paged, CFI round-trips. Fail = switch to epub.js
+  and say so here before writing code. Then `frontend/vercel.json` (+15)
+  the CSP header, the same in `vite.config.js` `preview.headers` (+10),
+  `tools/make_reader_fixtures.py` (new, ~120) and its fixtures.
+- b: `frontend/src/vendor/foliate-js/` (vendored, excluded from the
+  ~200-line count like lockfiles, LICENSE and README); `reader/epub/
+  engine.js` (new, ~90): the only file that imports foliate (open, next,
+  prev, goTo, CFI, toc, layout settings, the document of each section);
+  `reader/epub/sanitize.js` (new, ~60): DOMPurify config used by
+  `transformTarget`; `package.json`: `dompurify`. Tests:
+  `sanitize.test.js` (hostile fixture: script, handlers, remote image,
+  iframe gone; local images, SVG, MathML, `<pre>` kept),
+  `epubImages.test.js` (every referenced image becomes a blob URL),
+  e2e `epub.spec.js` (all `<img>` loaded, no request leaves `localhost`
+  for the hostile EPUB, fixed layout shows two pages).
+- Verified by: the tests above; the CSP checked on every route with no
+  console violations; real EPUB screenshots in both themes. Cut: EPUB
+  layout options beyond text size.
+
+**C17.4 one reader frame for both (spread, turns, zoom/font,
+lamplight)** (about 1.0 h).
+- `frontend/src/reader/BookFrame.jsx` (new, ~150): the paper frame,
+  spread or single page, gutter, running header, folio ("p. 44 of 380"),
+  paper edges that thin as the book advances, ribbon slot; takes a
+  `renderer` with one interface (`pageCount`, `page`, `next`, `prev`,
+  `goTo`, `zoom` or `textSize`, `toc`, `documents` for lookup) from
+  `reader/renderers.js` (new, ~60) that wraps PDF and EPUB; page-turn
+  motion from `motion/presets.js` (a cross-fade under reduced motion);
+  `reader/frame.css` (new, ~120, tokens only); `ReaderToolbar.jsx` (+20)
+  zoom −/+ and fit-width for PDF, "A" smaller/larger for EPUB.
+  Tests: `renderers.test.js` (both adapters satisfy the interface,
+  page clamp, spread pairing for odd page counts); e2e frame cases.
+- Verified by: `design-review` against screens 11 and 12 (1440 and 375,
+  Paper and Lamplight), `check:contrast` for any new pair. Cut: paper
+  edges that thin with progress (static edges).
+
+**C17.5 retire book view: move every C12 reader feature onto both
+renderers** (about 1.25 h; a session wiring, b lookup and tests).
+- a: `ReadingSession.jsx` (rewritten parts, ~120): opens the book file
+  (cache or signed URL), starts at the session's first chunk (span, or
+  the text search fallback), shows the first-page note as an overlay
+  card on the first page (never injected into the book), ends at the
+  span's last page with the closing page and Start test, keeps the
+  timer, calibration, abandon and leave dialogs; keyboard (arrows,
+  PageUp/Down, Space, B), edge clicks and swipe move into `BookFrame`;
+  contents drawer fed by the PDF outline or EPUB nav with C12's "today"
+  label. Removed: `BookFlow.jsx`, `PageTurn.jsx`, `geometry.js`,
+  `blocks.js`, `readAhead.js` and their tests; `GET /books/{id}/pages`
+  stays (no endpoint removed).
+- b: `useWordAtPoint.js`, `highlight.js` (+30): take a `document`, so
+  lookup works in the PDF text layer and inside each EPUB section
+  iframe (hover, long-press, phrase selection, the card positioned in
+  the outer page); `gallery/ReaderGallery.jsx` on the fixture PDF.
+  Tests: `reader.spec.js` and `reading.spec.js` rewritten for both
+  renderers (every one of the 17 C12 cases kept, parametrised per
+  renderer), `wordAt` unit tests unchanged.
+- Verified by: the e2e list read back against the C12 feature list
+  (page turns, keyboard/click/swipe, ribbon, contents, toolbar, first
+  note, closing page, lookup, position); `design-review`. Cut: swipe on
+  the EPUB iframe (buttons and keys only on touch).
+
+**C17.6 anchors (PDF quads, EPUB CFI), reading position, TOC** (about
+1.0 h, plus the approved steps).
+- `backend/services/book_ingestor.py` (+50): PDF pages and EPUB spine
+  items keep their boundaries through `chunk_text` (same `content`,
+  asserted), EPUB read in spine order for spans; each chunk gets
+  `source_span` (ANCHORS A6). `frontend/src/reader/anchors.js` (new,
+  ~120): point anchors (A3) and sortable positions (A4) for both kinds,
+  selection to PDF quads (top-left origin, crop box) and to EPUB range
+  CFI, text verification and re-find (A5), chunk of an anchor (A6);
+  `usePlaceSaver.js` (+15) saves `{anchor}` beside the old position;
+  `sessions.py` (+20) returns and accepts `anchor`; toc entries map to
+  chunks through spans for the "today" label. Tests:
+  `anchors.test.js` (position formula, quad normalisation, CFI ordering,
+  re-find nearest), `test_source_spans.py` (spans cover every chunk,
+  content unchanged byte for byte, spine order), e2e reopen at the
+  saved place after a text-size change.
+- Your steps: approve and dump, then apply 016; optionally approve the
+  backfill (`tools/backfill_spans.py --dry-run` first, then the write).
+- Verified by: tests; a PDF and an EPUB reopened at the same sentence
+  after zoom, text size and window changes. Cut: the backfill (old
+  books use the text search fallback).
+
+Questions for you:
+
+1. Upload limits: 40 MB per file and 200 MB of server-kept books per
+   reader? (If Supabase Free storage is 1 GB for the whole project, to
+   be confirmed in C17.1, these numbers fill it at five full shelves;
+   device-only books do not count.)
+2. Migration 016 needs to go to the one shared project: OK to plan its
+   apply (after a fresh dump you confirm) at the end of C17.1?
+3. Engine: foliate-js vendored at a pinned commit (recommended) or
+   epub.js from npm (older, larger, weaker fixed-layout support)?
+4. "Reading view" toggle: not built, as above?
+5. CSP: it applies to the whole app, not just the reader. OK?
+
+Risks: foliate's unstable API (pinned, one adapter); the CSP breaking a
+page we forget (every route checked in C17.3); large PDFs on phones
+(page cache capped at 6, canvases freed); text-layer search for old
+books' positions failing on PDFs with no text layer (scanned books then
+open at the first page of the chunk's best guess, said in the open
+issues); the reader lookup in iframes on Safari (tested on Edge only, as
+e2e is).
+
+Estimated time: about 6.5 h (C17.1 1.0, C17.2 1.0, C17.3 1.25, C17.4
+1.0, C17.5 1.25, C17.6 1.0). That is 63% over the 4.0 h stub, above the
+50% rule, so I propose cuts before starting: duplicate detection by hash,
+paper edges that thin with progress, EPUB layout options beyond text
+size, and the A7 backfill (together about 1.0 h, bringing C17 to about
+5.5 h, 38% over); taking the extra 1.5 h from the phase-2 budget means
+C25's Lighthouse cut. Order if time runs short: the cuts listed under
+each subchunk.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [ ] C17.1 keep the original file: storage, sha256, size cap, device-only option | | | | | |
+| [ ] C17.2 PDF.js renderer: canvas + text layer, lazy, page cache | | | | | |
+| [ ] C17.3 EPUB renderer: choose the engine, render with all images | | | | | |
+| [ ] C17.4 one reader frame for both (spread, turns, zoom/font, lamplight) | | | | | |
+| [ ] C17.5 retire book view: move every C12 reader feature onto both renderers | | | | | |
+| [ ] C17.6 anchors (PDF quads, EPUB CFI), reading position, TOC | | | | | |
 
 ## C18 — region map
 

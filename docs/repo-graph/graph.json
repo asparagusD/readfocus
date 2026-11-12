@@ -2099,6 +2099,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/fileStore.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/fileStore.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/geometry.js",
       "type": "file",
       "role": "asset",
@@ -5511,6 +5523,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/fileStore.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/Login.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -5888,6 +5905,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/blocks.test.js",
       "to": "file:frontend/src/reader/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/fileStore.test.js",
+      "to": "file:frontend/src/reader/fileStore.js"
     },
     {
       "type": "imports",

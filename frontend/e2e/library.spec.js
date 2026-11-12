@@ -129,7 +129,7 @@ async function mockWrites(page, shelf, { progress = 0.64, failUpload = false } =
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
     const body = req.postDataBuffer()?.toString('latin1') ?? '';
     const field = (name) => new RegExp(`name="${name}"\\r\\n\\r\\n([^\\r]*)`).exec(body)?.[1];
-    calls.uploads.push({ title: field('title'), author: field('author'), file: /filename="([^"]+)"/.exec(body)?.[1] });
+    calls.uploads.push({ title: field('title'), author: field('author'), mode: field('storage_mode'), file: /filename="([^"]+)"/.exec(body)?.[1] });
     if (failUpload) return json(route, { detail: 'That file is too large' }, 400);
     return json(route, { book_id: 'new-book', status: 'processing' });
   });
@@ -153,9 +153,45 @@ test('adding a book: picker, inline errors, the same form fields, a toast and a 
   await dialog.getByLabel('Author').fill('Edith Wharton');
   await dialog.getByLabel('Author').press('Enter');
   await expect(dialog).toBeHidden();
-  expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: 'Edith Wharton', file: 'the_age_of_innocence.pdf' }]);
+  expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: 'Edith Wharton', mode: 'cloud', file: 'the_age_of_innocence.pdf' }]);
   await expect(page.getByText('The Age Of Innocence is on your shelf. We’re reading its pages now.')).toBeVisible();
   await expect(page.locator('.rf-shelf__item').first()).toContainText('Reading the pages…');
+});
+
+test('a device-only book: the choice is sent, the file stays in this browser, the shelf says so (C17.1)', async ({ page }) => {
+  const calls = await mockWrites(page, () => SHELF.slice(0, 3));
+  await page.goto('/');
+  await page.getByRole('list').waitFor();
+  await page.locator('input[type=file]').setInputFiles(PDF);
+  const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
+  const keep = dialog.getByRole('checkbox', { name: /Keep the file on this device only/ });
+  await expect(keep).not.toBeChecked();
+  await dialog.getByLabel('Author').fill('Edith Wharton');
+  await keep.check();
+  if (shots) await page.screenshot({ path: `${shots}/library-device-only-dialog.png` });
+  await dialog.getByRole('button', { name: 'Add book' }).click();
+  await expect(dialog).toBeHidden();
+  expect(calls.uploads.map((u) => u.mode)).toEqual(['device']);
+  await expect(page.locator('.rf-shelf__item').first()).toContainText('This book is only on this device');
+  const kept = await page.evaluate(() => new Promise((resolve) => {
+    const open = indexedDB.open('readfocus-books', 1);
+    open.onsuccess = () => {
+      const get = open.result.transaction('files').objectStore('files').get('new-book');
+      get.onsuccess = () => resolve(get.result?.size ?? null);
+    };
+    open.onerror = () => resolve(null);
+  }));
+  expect(kept).toBe(PDF.buffer.length);
+  if (shots) {
+    await page.getByRole('button', { name: 'Dismiss notification' }).click();
+    await page.getByRole('button', { name: 'Dismiss notification' }).waitFor({ state: 'detached' });
+    const tile = page.locator('.rf-shelf__item').first();
+    for (const [width, scheme] of [[1440, 'light'], [1440, 'dark'], [375, 'light'], [375, 'dark']]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.emulateMedia({ colorScheme: scheme });
+      await tile.screenshot({ path: `${shots}/library-device-only-tile-${width}-${scheme}.png` });
+    }
+  }
 });
 
 test('a failed upload keeps the dialog open and says why', async ({ page }) => {

@@ -14,6 +14,7 @@ import { MasteryBar } from '../components/ui/MasteryBar';
 import { BookCover } from '../components/BookCover';
 import { EmptyShelf, OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { forgetBookFile, saveBookFile } from '../reader/fileStore';
 import './Library.css';
 
 /** Share of the book read so far, 0-100, from GET /books's progress. */
@@ -77,6 +78,7 @@ export function Library() {
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadAuthor, setUploadAuthor] = useState('');
   const [uploadErrors, setUploadErrors] = useState({});
+  const [deviceOnly, setDeviceOnly] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   const loadBooks = useCallback(async () => {
@@ -106,6 +108,7 @@ export function Library() {
     setIsRemoving(true);
     try {
       await fetchApi(`/books/${book.id}`, { method: 'DELETE' });
+      forgetBookFile(book.id);
       setBooks(prev => prev.filter(b => b.id !== book.id));
       setRemoving(null);
       toast({ kind: 'neutral', message: `${book.title} is off your shelf.` });
@@ -198,6 +201,7 @@ export function Library() {
     setUploadTitle(cleanTitle);
     setUploadAuthor('');
     setUploadErrors({});
+    setDeviceOnly(false);
     setUploadModalOpen(true);
     // Reset file input so same file can be selected again if cancelled
     if (fileInputRef.current) fileInputRef.current.value = null;
@@ -221,6 +225,7 @@ export function Library() {
     formData.append('file', selectedFile);
     formData.append('title', uploadTitle.trim());
     formData.append('author', uploadAuthor.trim());
+    formData.append('storage_mode', deviceOnly ? 'device' : 'cloud');
 
     try {
       const resp = await fetchApi('/books/upload', {
@@ -235,7 +240,12 @@ export function Library() {
         author: uploadAuthor.trim(),
         status: 'processing',
         file_type: selectedFile.name.split('.').pop().toLowerCase(),
+        storage_mode: deviceOnly ? 'device' : 'cloud',
       };
+      // A device-only book's original exists nowhere else, so it is kept in this browser (C17.1).
+      if (deviceOnly && !(await saveBookFile(resp.book_id, selectedFile))) {
+        toast({ kind: 'warning', message: 'This browser couldn’t keep the file. Add it again before you read.' });
+      }
       setBooks(prev => [optimbook, ...prev]);
       setUploadModalOpen(false);
       toast({ kind: 'success', message: `${optimbook.title} is on your shelf. We’re reading its pages now.` });
@@ -346,6 +356,7 @@ export function Library() {
                       <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />
                     </button>
                   </div>
+                  {book.storage_mode === 'device' && <p className="rf-shelf__caption rf-shelf__device">This book is only on this device</p>}
                 </m.li>
               );
             })}
@@ -361,6 +372,13 @@ export function Library() {
           <p className="rf-library__file">{selectedFile?.name}</p>
           <TextInput label="Title" name="title" value={uploadTitle} error={uploadErrors.title} onChange={(e) => setUploadTitle(e.target.value)} />
           <TextInput label="Author" name="author" value={uploadAuthor} error={uploadErrors.author} onChange={(e) => setUploadAuthor(e.target.value)} />
+          <label className="rf-library__keep">
+            <input type="checkbox" name="device_only" checked={deviceOnly} onChange={(e) => setDeviceOnly(e.target.checked)} />
+            <span>
+              Keep the file on this device only
+              <small>We read it once to plan your sessions and don’t store it. You can open it only in this browser.</small>
+            </span>
+          </label>
           <div className="rf-library__form-actions">
             <Button variant="secondary" onClick={() => setUploadModalOpen(false)} disabled={isUploading}>Cancel</Button>
             <Button type="submit" loading={isUploading} loadingLabel="Uploading…">Add book</Button>

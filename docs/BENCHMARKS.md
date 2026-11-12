@@ -4,6 +4,70 @@ Measured numbers only. Each entry says what was run, on what, and when, so
 it can be repeated. Numbers from this machine are not Render's: use them to
 compare before and after, not as absolute limits.
 
+## Summary at the end of the sprint (C15, 2026-11-12)
+
+The headline numbers, each from the section named; that section has the
+command and the conditions. Desktop numbers are this machine's (below);
+container numbers are Docker at 0.1 CPU and 512 MB, the Render Free size.
+
+| Measure | Value | Section |
+|---|---|---|
+| Embedding model | all-MiniLM-L6-v2, ONNX, 384 dims, 86 MB on disk; about 5x faster than bge-small-en-v1.5 on chunk-sized texts | C4.1, Gate G2 |
+| Backend idle memory, model loaded | 267 MB desktop; 251-255 MiB in the container | C9.3, C14.1 |
+| Peak memory while ingesting `sample.pdf` | 301-308 MiB in the container (512 MB limit) | C14.1 |
+| Docker image | 885 MB (model layer 91.3 MB) | C14.1 |
+| Container start to `model_ready` | 20.0-21.0 s, no download | C14.1 |
+| `sample.pdf` (13 pages) upload to ready | 5.1 s desktop p50; 39.9 s container p50 | C9.5, C14.1 |
+| Pride and Prejudice (EPUB) upload to ready / done | 5.3 s / 133.7 s desktop p50 | C9.5 |
+| `POST /sessions/start`, local | 625 ms p50, 815 ms p95 | C9.5 |
+| `POST /sessions/{id}/submit-answers` (5 grades, then the optimizer) | 1.08 s p50 | C9.5 |
+| `GET /dashboard` | 193 ms p50 | C9.5 |
+| Word lookup, cached in process / in `term_lookups` | 2.7 ms / 96 ms p50 | C12.6 |
+| Hover to word card, cached | 356-366 ms (350 ms of it is the hover intent) | C12.10 |
+| Page turns | 75 fps, worst frame 13.7-14.0 ms; 74.3 fps at 4x CPU slowdown | C12.10 |
+| Lighthouse, mobile performance | 81-90 across eight pages; accessibility 95-100 | C13 close |
+| Grader agreement with 34 labelled answers | 26 of 34 (76.5%) within 0.25; leave-one-out after a 3,060-setting search: 26 | C15.3 |
+| Full reading journey in a browser, local stack | 30.0 s end to end | C15 |
+| Cross-user isolation, 92 probes | local 30 s, all denied; production 66 s, all denied but issue 17 (fix not deployed) | C15 |
+
+Not measured in the sprint: API latency on Render (no `scripts/bench.py`
+run against production), a timed Render cold start after 15 idle minutes,
+Render's own memory graph, Lighthouse on the live site, and a long book
+ingested in the container or on Render.
+
+### C15: live runs on the real stack (2026-11-12)
+
+The journey (`npm --prefix frontend run test:live`, C15.1) and the
+isolation check (`npm --prefix frontend run test:isolation`, C15.2) run
+against a real backend and the shared Supabase project as test users, and
+delete what they create. Local: backend on this machine
+(`uvicorn backend.main:app --port 8000`), frontend on Vite dev. Production:
+`readfocus-lake.vercel.app` and `readfocus-api.onrender.com`, which at the
+time did not have the C15 fixes. Times are seconds per step, as the spec
+prints them; one run each, so no percentiles.
+
+| Journey step | Local (final run) | Production (one run) |
+|---|---|---|
+| Wait for `/health` `model_ready` | 0.0 | 35.1 (the API had been idle; not a controlled cold start) |
+| Sign in | 2.0 | 3.1 |
+| Upload `sample.pdf` | 3.1 | 3.3 |
+| Upload to ready (shelf toast) | 6.9 | 36.3 |
+| Session open | 1.7 | 2.6 |
+| Turn pages, position saved | 2.0 | 2.3 |
+| Hover to a definition card (real `/lookup`) | 0.5 | 0.8 |
+| Test (5 questions) answered | 2.3 | not reached: the closing-page bug, fixed in `73ffa25` |
+| Submit to Results | 3.1 | not reached |
+| Dashboard with the book's mastery | 1.8 | not reached |
+| Next session open | 2.9 | not reached |
+| Book removed | 3.1 | not reached (deleted by id afterwards) |
+| Hosts the page contacted | the site, the API, the Supabase project | the same three |
+
+| Isolation check | Local | Production |
+|---|---|---|
+| Probes denied | 92 of 92 | 91 of 92 (issue 17, fixed in `cf5e877`, not deployed) |
+| Run time, including A's upload, session and cleanup | 30-31 s | 66 s |
+| Rows and PDF left afterwards | none | none |
+
 ## Machine
 
 | | |

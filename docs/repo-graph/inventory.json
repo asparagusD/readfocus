@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 440,
-    "inventoried": 375,
+    "tracked": 446,
+    "inventoried": 381,
     "excluded": 65
   },
   "files": [
@@ -81,8 +81,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 206,
-      "size_bytes": 11461,
+      "lines": 208,
+      "size_bytes": 11648,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -105,10 +105,10 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 137,
-      "size_bytes": 7896,
+      "lines": 207,
+      "size_bytes": 9348,
       "role": "doc",
-      "purpose": "Product overview and architecture: the five LangGraph agents by event, no paid AI, the database tables; the How It Works steps still describe pre-2.0 behaviour."
+      "purpose": "Product overview for 2.0 (C15.4): the honest positioning (policy-driven LangGraph agents, on-device embeddings, rule-based knowledge tracing, no generative AI, $0 API cost), live URL, how it works in seven steps, the architecture in brief with links to docs/ARCHITECTURE.md and the repo graph, local setup, the standard and live checks, and limitations."
     },
     {
       "path": "backend/__init__.py",
@@ -241,8 +241,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 294,
-      "size_bytes": 11406,
+      "lines": 301,
+      "size_bytes": 11904,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer."
     },
@@ -433,10 +433,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 337,
-      "size_bytes": 16938,
+      "lines": 351,
+      "size_bytes": 17727,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author and toc and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author and toc and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -625,16 +625,16 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 601,
-      "size_bytes": 29305,
+      "lines": 632,
+      "size_bytes": 30621,
       "role": "test",
       "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time."
     },
     {
       "path": "backend/tests/test_api_start_reader.py",
       "language": "python",
-      "lines": 57,
-      "size_bytes": 2556,
+      "lines": 58,
+      "size_bytes": 2641,
       "role": "test",
       "purpose": "Pytest on the in-memory database: /sessions/start sends each chunk's blocks, the book's title, author and contents (an empty list when none), the chapter in effect before the first chunk (from books.toc), copes with a book without toc or blocks, and still starts when the book read fails."
     },
@@ -733,6 +733,14 @@
       "size_bytes": 7314,
       "role": "test",
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
+    },
+    {
+      "path": "backend/tests/test_eval_grader.py",
+      "language": "python",
+      "lines": 29,
+      "size_bytes": 1489,
+      "role": "test",
+      "purpose": "Tests for scripts/eval_grader.py's pure helpers (C15.3): candidate constants apply to one grading call only, and the best combination is chosen by agreements, then error."
     },
     {
       "path": "backend/tests/test_feedback.py",
@@ -991,6 +999,14 @@
       "purpose": "Claude Design export, kept unchanged: React production build used by the dc-runtime viewer; not used by the app."
     },
     {
+      "path": "docs/ARCHITECTURE.md",
+      "language": "markdown",
+      "lines": 272,
+      "size_bytes": 15614,
+      "role": "doc",
+      "purpose": "Architecture of 2.0 (C15.4): the system, the five agents' pure decide() contracts (inputs, outputs, what each decides), the LangGraph diagram copied from docs/repo-graph/AGENT_GRAPH.md with its routing conditions, event flows per endpoint, ingestion, the data model by migration, the book reader and the word-lookup path, and the security layers."
+    },
+    {
       "path": "docs/ASSETS.md",
       "language": "markdown",
       "lines": 49,
@@ -1001,16 +1017,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1087,
-      "size_bytes": 60288,
+      "lines": 1151,
+      "size_bytes": 64081,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
+      "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2219,
-      "size_bytes": 97819,
+      "lines": 2342,
+      "size_bytes": 103337,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1049,8 +1065,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2516,
-      "size_bytes": 517607,
+      "lines": 2762,
+      "size_bytes": 547527,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1111,6 +1127,14 @@
       "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page; /health answers ready."
     },
     {
+      "path": "frontend/e2e/journey.spec.js",
+      "language": "javascript",
+      "lines": 229,
+      "size_bytes": 13380,
+      "role": "config",
+      "purpose": "Live Playwright journey (C15.1), not in test:e2e: waits for /health model_ready, signs in as test user A from .env.test, uploads sample.pdf, waits for ready, turns pages (position PUT), opens a word card (real /lookup), takes the test with wrong answers, checks Results, the Dashboard's mastery for the book and that the next session's reason reacts to the test, then removes the book (API delete in finally if not); fails on any host outside the site, the API and the Supabase project."
+    },
+    {
       "path": "frontend/e2e/landing.spec.js",
       "language": "javascript",
       "lines": 254,
@@ -1145,10 +1169,10 @@
     {
       "path": "frontend/e2e/reading.spec.js",
       "language": "javascript",
-      "lines": 72,
-      "size_bytes": 4351,
+      "lines": 91,
+      "size_bytes": 5524,
       "role": "config",
-      "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion."
+      "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion; a re-pagination (theme, resize) on the closing page keeps it (C15.1 regression)."
     },
     {
       "path": "frontend/e2e/results.spec.js",
@@ -1194,7 +1218,7 @@
       "path": "frontend/eslint.config.js",
       "language": "javascript",
       "lines": 27,
-      "size_bytes": 897,
+      "size_bytes": 926,
       "role": "config",
       "purpose": "ESLint flat config: JS recommended, react-hooks and react-refresh rules for .js and .jsx."
     },
@@ -1217,18 +1241,26 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 45,
-      "size_bytes": 1393,
+      "lines": 47,
+      "size_bytes": 1521,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
     {
       "path": "frontend/playwright.config.js",
       "language": "javascript",
-      "lines": 23,
-      "size_bytes": 762,
+      "lines": 24,
+      "size_bytes": 860,
       "role": "config",
-      "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker."
+      "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1)."
+    },
+    {
+      "path": "frontend/playwright.live.config.js",
+      "language": "javascript",
+      "lines": 39,
+      "size_bytes": 1512,
+      "role": "config",
+      "purpose": "Playwright config for the live journey (C15.1, npm run test:live): only journey.spec.js on Edge; BASE_URL unset starts Vite dev on 5175 (backend on 8000 started separately), set targets that site with the API on Render (API_URL overrides); action 60 s, navigation 120 s, test 20 min."
     },
     {
       "path": "frontend/public/robots.txt",
@@ -1253,6 +1285,14 @@
       "size_bytes": 4533,
       "role": "config",
       "purpose": "Image budgets (npm run check:images, a standard check since C11.5): each raster under src/ and public/ at most 150 KB, all together at most 400 KB, illustration SVGs at most 8 KB, every <img> with width, height, decoding and loading (lazy, or eager with fetchPriority high for the LCP image), and the backend cover cap within budget; optional root argument for scratch trees; exit 1 on any failure."
+    },
+    {
+      "path": "frontend/scripts/live/check-isolation.mjs",
+      "language": "text",
+      "lines": 257,
+      "size_bytes": 17038,
+      "role": "config",
+      "purpose": "Live cross-user isolation check (C15.2, npm run test:isolation; writes to the shared project, approval only): test user A uploads sample.pdf and reads, finishes and submits a session through the API; test user B then probes every id-taking API endpoint and, with supabase-js and the anon key, selects, updates and deletes in every per-user table, inserts a book as A, calls both search RPCs and probes A's Storage folder; term_lookups is readable by signed-in users and writable by none; no token and a raw user id are 401. Rows of B's own are reported but only A's count; A's row counts are compared before and after; A deletes the book and the rows and PDF left are reported. Exit 1 on any probe not denied."
     },
     {
       "path": "frontend/scripts/make-og.mjs",
@@ -2249,8 +2289,8 @@
     {
       "path": "frontend/src/reader/BookReader.jsx",
       "language": "jsx",
-      "lines": 334,
-      "size_bytes": 16417,
+      "lines": 338,
+      "size_bytes": 16663,
       "role": "asset",
       "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text); the word card when the caller passes a lookupClient (C12.8: opened on hover intent or a settled selection, Enter or ? on a selection opens it with focus, closed on a turn, page change or Esc, a polite live region announces each answer; hoverLookup turns hover off); the Look up chip for touch selections, kept to the page it was made on (C12.9)."
     },
@@ -2687,6 +2727,14 @@
       "purpose": "Starts uvicorn on a spare port, waits for /health, then prints the psutil RSS of the server and every child process."
     },
     {
+      "path": "scripts/eval_grader.py",
+      "language": "python",
+      "lines": 141,
+      "size_bytes": 6270,
+      "role": "script",
+      "purpose": "Grader agreement with backend/tests/fixtures/answers.json (C15.3), offline with the local model: embeds once, re-grades through grader.decide() under the current or candidate policy constants, prints agreement overall, per category, mean error, high-confidence misses and each disagreement; --search grades a grid of weights and cosine/relevance bounds and estimates with leave-one-out whether a fitted choice generalises."
+    },
+    {
       "path": "scripts/export_agent_graph.py",
       "language": "python",
       "lines": 53,
@@ -2945,8 +2993,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 377,
-      "size_bytes": 108222,
+      "lines": 383,
+      "size_bytes": 111446,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

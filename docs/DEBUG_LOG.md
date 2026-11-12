@@ -2217,3 +2217,126 @@ fix: 2 failed, 3 passed. After: 5 passed. The repro with
 
 ### Commit
 fix(ci): declare test and script dependencies in requirements-dev.txt
+
+## 2026-11-12 C15.1 — the closing page jumps back to an earlier page
+
+**Status:** fixed
+
+### Symptom
+The first local runs of the live journey (`frontend/e2e/journey.spec.js`,
+real backend on :8000, test user A, `sample.pdf`, 4 text pages today) could
+not reach the closing page: End (and ArrowRight from the last spread) left
+the reader where it was, so Start test never showed. Expected: the closing
+page with Start test.
+
+    npm --prefix frontend run test:live
+    Error: expect(locator).toBeVisible() failed
+    Locator: locator('.rf-end').getByRole('button', { name: 'Start test' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+        at I:\readfocus\frontend\e2e\journey.spec.js:146:67
+
+Just before End: `{ active: 'rf-book', books: 1, turning: 'false', cards: 0 }`
+(focus on the book, no leaf turning, no word card). The page after End read
+"Pages 1 and 2 of 4". The first run, two ArrowRights: "Pages 3 and 4 of 4"
+stayed after the second press.
+
+### Repro
+Offline, mocked (the fixtures' Walden session): End, then a theme change.
+
+    npx playwright test e2e/<scratch>.spec.js
+    Expected pattern: /End of today's reading/
+    Received string:  "Pages 1 and 2 of 6"
+
+Now `frontend/e2e/reading.spec.js` › "a re-pagination on the closing page
+keeps the closing page".
+
+### Hypotheses
+1. A re-pagination while the closing page shows puts the reader back on the
+   anchor's page: `goTo` moves the anchor only when `anchorForPage` finds
+   text on the target page, and the closing page has none, so the anchor
+   stays on the last text page reached; the layout effect then sets the
+   page from the anchor. In the live session the closing page's fonts load
+   when it first shows (`document.fonts` `loadingdone` bumps the relayout
+   tick). Ruled out if a theme change (another tick) on the closing page
+   keeps it. Result: **confirmed**: the offline repro above, and both live
+   failures land exactly on the last anchored page (3-4, then 1-2).
+2. Keys are lost: focus leaves the book, or a word card swallows them.
+   Ruled out by the focus dump above (focus on `.rf-book`, no card).
+3. The closing page is missing from the layout (`count` = `text`). Ruled
+   out: the mocked End reaches it, and `count = text + 1` whenever there
+   is an `endPage` (`BookReader.jsx:84`).
+
+### Root cause
+`frontend/src/reader/BookReader.jsx`: the reader's place is only an anchor
+in the text, and the closing page (outside the flow) has no anchor, so any
+re-pagination there (font load, theme, accent, resize, text size) restored
+the last text page. In the live reader the font load happens the moment
+the closing page first shows, so the reader could never stay on it.
+
+### Fix
+A `atEnd` ref, set by `goTo` when the target is the closing page alone
+(`target >= layout.text` with an end page); the layout effect keeps the
+closing page while it is set. Any move to a text page clears it. One
+attempt.
+
+### Regression test
+`frontend/e2e/reading.spec.js` › "a re-pagination on the closing page keeps
+the closing page". Failed before the fix (received "Pages 1 and 2 of 6"),
+passes after.
+
+### Commit
+fix(reader): keep the closing page across re-pagination
+
+## 2026-11-12 C15.2 — /sessions/start serves another reader's book (issue 17)
+
+**Status:** fixed
+
+### Symptom
+Open since C2.5 (issue 17, from the code): `POST /sessions/start` never
+checks that `book_id` is the caller's. A reader who knows another reader's
+book id gets a session on it and that book's chunk text. Expected: 404,
+nothing created, nothing returned.
+
+    pytest backend/tests/test_api_sessions.py -q -k not_the_callers
+    >       assert response.status_code == 404
+    E       assert 200 == 404
+    backend\tests\test_api_sessions.py:618: AssertionError
+
+### Repro
+`backend/tests/test_api_sessions.py::test_start_refuses_a_book_that_is_not_the_callers`
+(in-memory database, a second user's book and chunks).
+
+### Hypotheses
+1. The handler filters the chunk read by `book_id` only and inserts the
+   session without a book check (`backend/routers/sessions.py`,
+   `start_session`: `chunks ... .eq("book_id", ...)`, no `books` read
+   before the planner). Ruled out if the test still fails with a
+   `books` ownership check in front. Result: **confirmed**: the three new
+   tests pass with the check.
+2. The service-role client bypasses RLS, so the database cannot stop it
+   either. Evidence: `backend/database.py` builds the client with the
+   service-role key. Not a separate cause: it is why the handler must check.
+
+### Root cause
+`backend/routers/sessions.py` `start_session`: the only endpoint taking a
+`book_id` that never read `books` with `.eq("user_id", ...)`; the backend
+uses the service-role key, so RLS does not apply.
+
+### Fix
+`owns_book(user_id, book_id)` reads `books` by id and user before the
+planner runs; not the caller's (or missing) is 404 "Book not found.", and
+a failed read is 503 (fail closed). The session fixtures now own their
+book (`books` row for `user-1`). The old test "a failed book read never
+fails the start" now expects 503: with `books` down, ownership cannot be
+checked, and starting anyway was the hole. One attempt.
+
+### Regression test
+`backend/tests/test_api_sessions.py::test_start_refuses_a_book_that_is_not_the_callers`,
+`::test_start_refuses_a_book_that_does_not_exist`,
+`::test_start_fails_closed_when_ownership_cannot_be_checked`. Before the
+fix: 3 failed (200 instead of 404 / 503). After: 3 passed.
+
+### Commit
+fix(api): check book ownership before starting a session

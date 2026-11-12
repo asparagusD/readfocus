@@ -772,6 +772,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_eval_grader.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_feedback.py",
       "type": "file",
       "role": "test",
@@ -964,6 +970,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:docs/ARCHITECTURE.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/ASSETS.md",
       "type": "file",
       "role": "doc",
@@ -1049,6 +1061,12 @@
     },
     {
       "id": "file:frontend/e2e/fixtures.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/journey.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -1144,6 +1162,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/playwright.live.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/public/robots.txt",
       "type": "file",
       "role": "config",
@@ -1157,6 +1181,12 @@
     },
     {
       "id": "file:frontend/scripts/check-images.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/live/check-isolation.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -2231,6 +2261,12 @@
     },
     {
       "id": "file:scripts/dev/measure_rss.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/eval_grader.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -4007,6 +4043,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_eval_grader.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_eval_grader.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_eval_grader.py",
+      "to": "file:scripts/eval_grader.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_feedback.py",
       "to": "file:backend/agents/evaluation/feedback.py"
     },
@@ -4374,6 +4425,11 @@
       "type": "imports",
       "from": "file:frontend/e2e/fixtures.js",
       "to": "file:frontend/src/gallery/readerFixture.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/journey.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",
@@ -5798,6 +5854,21 @@
     {
       "type": "imports",
       "from": "file:scripts/dev/measure_embedder.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/eval_grader.py",
+      "to": "file:backend/agents/evaluation/grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/eval_grader.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/eval_grader.py",
       "to": "file:backend/nlp/embedder.py"
     },
     {

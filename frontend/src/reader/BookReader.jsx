@@ -73,6 +73,7 @@ export function BookReader({
   const [page, setPage] = useState(0);
   const [turn, setTurn] = useState(null); // { id, from, to, dir } while a leaf is turning (C12.4)
   const queued = useRef(null); // the page asked for while a leaf was turning; the latest wins
+  const atEnd = useRef(false); // on the closing page alone, which has no anchor in the text
   const swipe = useRef(null);
   const hasEnd = Boolean(endPage);
 
@@ -85,7 +86,9 @@ export function BookReader({
     const chapters = [...flow.querySelectorAll('.rf-chapter')].map((el) => ({
       page: pageOfElement(flow, el, g), title: el.querySelector('.rf-chapter-title')?.textContent ?? '',
     }));
-    const target = clampPage(pageForAnchor(flow, anchor.current, g), count, g.perView);
+    const target = atEnd.current && hasEnd
+      ? clampPage(count - 1, count, g.perView)
+      : clampPage(pageForAnchor(flow, anchor.current, g), count, g.perView);
     setLayout({ count, text, chapters, ms: performance.now() - started });
     setPage(target);
   }, [g, blocks, tick, lead, hasEnd]); // lead is memoised by the caller; the closing page only adds a page
@@ -107,6 +110,7 @@ export function BookReader({
       return;
     }
     if (target === page) return;
+    atEnd.current = hasEnd && target >= layout.text;
     if (!prefersReducedMotion()) setTurn({ id: Date.now(), from: page, to: target, dir: target > page ? 1 : -1 });
     setPage(target); // reduced motion: an instant swap
     const place = anchorForPage(flow, target, g); // x is measured from the flow, so the old translate does not matter
@@ -114,7 +118,7 @@ export function BookReader({
       anchor.current = place;
       onPlaceChange?.(place, target);
     }
-  }, [g, layout.count, onPlaceChange, page, turn]);
+  }, [g, hasEnd, layout.count, layout.text, onPlaceChange, page, turn]);
 
   const onTurnDone = useCallback(() => setTurn(null), []);
   // In-place lookup (C12.7): only when the page asks for it; off until the flow is laid out and while a leaf turns.

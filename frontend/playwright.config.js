@@ -5,6 +5,7 @@ import { defineConfig } from '@playwright/test';
 // answered by e2e/fixtures.js: offline, $0, no account. Not a standard check yet.
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: ['journey.spec.js'], // live, opt-in: npm run test:live (playwright.live.config.js)
   timeout: 30_000,
   workers: 1,
   reporter: [['list']],

@@ -119,8 +119,22 @@ def read_position(user_id: str, book_id: str):
         print(f"Reading position not read: {e}")
         return None
 
+def owns_book(user_id: str, book_id: str) -> bool:
+    """True when the book is the caller's; the service-role client bypasses RLS, so this is the check (issue 17)."""
+    return bool(supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute().data)
+
+
 @router.post("/start")
 async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+    # 0. Only the caller's own book: nothing is planned, created or read for anyone else's
+    try:
+        owned = await run_in_threadpool(owns_book, user_id, req.book_id)
+    except Exception as e:  # noqa: BLE001 - fail closed: a book we cannot check is not served
+        print(f"Book ownership not checked: {e}")
+        raise HTTPException(status_code=503, detail="Could not open this book just now; try again.")
+    if not owned:
+        raise HTTPException(status_code=404, detail="Book not found.")
+
     # 1. Run the start_session flow: the planner
     plan, run = await run_start(user_id, req.book_id)
     if not plan:

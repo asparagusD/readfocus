@@ -20,7 +20,7 @@ export default defineConfig([
   },
   {
     // Playwright specs and config run in Node and hand code to the browser (C12.10).
-    files: ['e2e/**/*.js', 'playwright.config.js'],
+    files: ['e2e/**/*.js', 'playwright.config.js', 'playwright.live.config.js'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
     rules: { 'react-hooks/rules-of-hooks': 'off' }, // Playwright fixtures call use(), which is not a hook
   },

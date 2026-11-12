@@ -117,6 +117,13 @@ GRADE_NEAR_MISS_RATIO = 80.0
 GRADE_NEAR_MISS_SCORE = 0.5
 
 # Free text: score = sum of weight * component, each component 0..1.
+# Re-measured in C15.3 (scripts/eval_grader.py --search): over 3,060
+# combinations of these weights and the four cosine/relevance bounds below,
+# the best fit on answers.json is 28 of 34 (cosine 0.35, coverage 0.25,
+# relevance 0.40), but leave-one-out gives 26 of 34, the same as these
+# values, and the mean error does not improve; kept. The misses are answers
+# that reverse the evidence (cosine 0.78-1.0) and paraphrases that use few
+# key terms: no weighting of these signals separates them.
 GRADE_WEIGHTS = {
     "cosine": 0.55,     # meaning: cosine(answer, evidence), rescaled
     "coverage": 0.35,   # share of the question's key terms in the answer

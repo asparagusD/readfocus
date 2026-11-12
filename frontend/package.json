@@ -12,6 +12,8 @@
     "preview": "vite preview",
     "test:unit": "node --test \"src/**/*.test.js\"",
     "test:e2e": "playwright test",
+    "test:live": "playwright test -c playwright.live.config.js",
+    "test:isolation": "node scripts/live/check-isolation.mjs",
     "make:og": "node scripts/make-og.mjs"
   },
   "dependencies": {

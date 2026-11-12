@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13589,
+      "size_bytes": 13674,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -681,10 +681,10 @@
     {
       "path": "backend/tests/test_backfill_positions.py",
       "language": "python",
-      "lines": 94,
-      "size_bytes": 4742,
+      "lines": 104,
+      "size_bytes": 5481,
       "role": "test",
-      "purpose": "Pytest for scripts/backfill_positions.py on the in-memory database and the reader fixture books: pending places, a PDF point on the right page with the C12 keys kept, an EPUB CFI at the right element and offset, CFI steps for elements and text chunks, no stored file or no match left alone, a dry run writes nothing and a second run finds nothing to do."
+      "purpose": "Pytest for scripts/backfill_positions.py on the in-memory database and the reader fixture books: pending places, a PDF point on the right page with the C12 keys kept, an EPUB CFI at the right element and offset, CFI steps for elements and text chunks, no stored file or no match left alone, a dry run writes nothing and a second run finds nothing to do. A short block is found with the text after it, not by its chunk's start (C17.6 dry-run regression)."
     },
     {
       "path": "backend/tests/test_backfill_structure.py",
@@ -1113,8 +1113,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2813,
-      "size_bytes": 122071,
+      "lines": 2850,
+      "size_bytes": 123536,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1177,8 +1177,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3403,
-      "size_bytes": 632417,
+      "lines": 3405,
+      "size_bytes": 636659,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3193,10 +3193,10 @@
     {
       "path": "scripts/backfill_positions.py",
       "language": "python",
-      "lines": 223,
-      "size_bytes": 9611,
+      "lines": 224,
+      "size_bytes": 9732,
       "role": "script",
-      "purpose": "Backfill (C17.5, ANCHORS A7): adds an original-view `anchor` beside each C12 reading_progress.position {chunk_index, block_id, char_offset}: the place's text (its block from the offset, else its chunk's start) is searched for, lower-case with no whitespace, in the book's stored file: a point on the PDF page holding it (pypdf), or a collapsed EPUB CFI computed from the spine document (ElementTree); places with an anchor, no stored file or no match are left alone; --dry-run, --limit, --book-id, dev-only guard."
+      "purpose": "Backfill (C17.5, ANCHORS A7): adds an original-view `anchor` beside each C12 reading_progress.position {chunk_index, block_id, char_offset}: the place's text (from the offset on through the blocks after it, else its chunk's start) is searched for, lower-case with no whitespace, in the book's stored file: a point on the PDF page holding it (pypdf), or a collapsed EPUB CFI computed from the spine document (ElementTree); places with an anchor, no stored file or no match are left alone; --dry-run, --limit, --book-id, dev-only guard."
     },
     {
       "path": "scripts/backfill_structure.py",
@@ -3538,7 +3538,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 451,
-      "size_bytes": 133885,
+      "size_bytes": 134006,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -92,3 +92,13 @@ def test_a_dry_run_writes_nothing_and_a_second_run_finds_nothing_to_do(db):
     assert db.tables["reading_progress"] == before
     handle(db)
     assert [row["id"] for row in backfill.pending_rows(db)] == ["p3"]  # no file: stays pending, nothing else
+
+
+def test_a_short_block_is_found_with_the_text_after_it_not_by_its_chunks_start(db):
+    # Regression (docs/DEBUG_LOG.md, C17.6 dry run): "Chapter II" (10 characters) was shorter than the
+    # shortest snippet, so the place fell back to its chunk's start, a chapter earlier.
+    db.tables["chunks"][1].update(content=f"Chapter 1\n\n{LAMP}\n\nChapter 2\n\n{LAMP}", blocks=[
+        {"id": "0.0", "text": "Chapter 1"}, {"id": "0.1", "text": LAMP}, {"id": "0.2", "text": "Chapter 2"}, {"id": "0.3", "text": LAMP}])
+    db.tables["reading_progress"][1]["position"] = {"chunk_index": 0, "block_id": "0.2", "char_offset": 0}
+    handle(db)
+    assert position(db, "p2")["anchor"]["cfi"] == "epubcfi(/6/6!/4/2/1:0)"  # ch2's heading, not ch1's

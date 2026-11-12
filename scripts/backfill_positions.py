@@ -54,19 +54,20 @@ def squeeze(text: str) -> str:
     return re.sub(r"\s+", "", text).lower()
 
 
-def block_text(chunk: dict, block_id: str) -> str:
-    """A C12 block's text: chunks.blocks, else the content's paragraphs (as frontend blocks.js split them)."""
-    for block in chunk.get("blocks") or []:
-        if block.get("id") == block_id:
-            return block.get("text") or ""
-    paragraphs = [p for p in (re.sub(r"\s+", " ", part).strip() for part in re.split(r"\n\s*\n", chunk.get("content") or "")) if p]
-    n = int(block_id.split(".")[1])
-    return paragraphs[n] if n < len(paragraphs) else ""
+def block_texts(chunk: dict) -> list[str]:
+    """A chunk's C12 block texts in order: chunks.blocks, else the content's paragraphs (as C12's blocks.js split them)."""
+    if chunk.get("blocks"):
+        return [block.get("text") or "" for block in chunk["blocks"]]
+    return [p for p in (re.sub(r"\s+", " ", part).strip() for part in re.split(r"\n\s*\n", chunk.get("content") or "")) if p]
 
 
 def snippets(position: dict, chunk: dict) -> list[str]:
-    """What to search for: the block from the saved offset, then the chunk's start."""
-    texts = [block_text(chunk, position["block_id"])[position.get("char_offset") or 0:], chunk.get("content") or ""]
+    """What to search for: the text from the saved offset in its block on through the blocks after it
+    (a short block such as "Chapter II" alone is too short to search for), then the chunk's start."""
+    blocks = block_texts(chunk)
+    n = int(position["block_id"].split(".")[1])
+    here = blocks[n][position.get("char_offset") or 0:] + " " + " ".join(blocks[n + 1:]) if n < len(blocks) else ""
+    texts = [here, chunk.get("content") or ""]
     found = []
     for text in texts:
         flat = squeeze(text)

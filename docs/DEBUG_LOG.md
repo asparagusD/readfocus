@@ -2811,3 +2811,40 @@ same place": failed before, passes after.
 
 ### Commit
 C17.6 feat(reader): PDF and EPUB anchors, reading position and contents
+
+## 2026-11-12 C17.6 — the position backfill would move a short place to its chunk's start
+
+**Status:** fixed
+
+### Symptom
+`python scripts/backfill_positions.py --dry-run` on the project: the EPUB
+place (block `0.14`, "Chapter II", 10 characters) would get
+`epubcfi(/6/2!/4/2/1:0)`, the first element of the book, a chapter before
+the reader's place. Expected: Chapter II's heading.
+
+### Repro
+`backend/tests/test_backfill_positions.py::test_a_short_block_is_found_with_the_text_after_it_not_by_its_chunks_start`:
+a "Chapter 2" block mapped to `/6/4!` (chapter 1) instead of `/6/6!`.
+
+### Hypotheses
+1. The block's text is shorter than the shortest snippet (20 squeezed
+   characters), so only the chunk's start was searched. Confirmed: a
+   read-only query gave the block 10 characters; the second PDF place
+   had 17 left after its offset and took the same fallback.
+2. The spine order differs from ingestion's document order. Not the
+   cause: the fix alone moves the place to the right section.
+
+### Root cause
+`scripts/backfill_positions.py` `snippets`: the block's text from the
+offset, alone.
+
+### Fix
+The snippet runs from the offset through the blocks after it in the
+chunk; the chunk's start stays the last fallback.
+
+### Regression test
+The test above: failed before (`/6/4!`), passes after (7 passed). The dry
+run then gave `epubcfi(/6/4!/4/2/1:0)` for that place.
+
+### Commit
+fix(tooling): search past short blocks when backfilling reading positions

@@ -964,10 +964,40 @@
       "language": "python"
     },
     {
+      "id": "file:design/HANDOFF_PHASE2_SUMMARY.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:design/HANDOFF_SUMMARY.md",
       "type": "file",
       "role": "doc",
       "language": "markdown"
+    },
+    {
+      "id": "file:design/handoff-phase2/design_phase_2.html",
+      "type": "file",
+      "role": "config",
+      "language": "html"
+    },
+    {
+      "id": "file:design/handoff-phase2/extracted/PhaseTwoComponents.dc.html",
+      "type": "file",
+      "role": "config",
+      "language": "html"
+    },
+    {
+      "id": "file:design/handoff-phase2/extracted/README.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:design/handoff-phase2/extracted/Study.dc.html",
+      "type": "file",
+      "role": "config",
+      "language": "html"
     },
     {
       "id": "file:design/handoff/foundations-style-guide/Main.dc.html",
@@ -2829,6 +2859,12 @@
       "from": "file:backend/tests/test_graph.py",
       "to": "external:langgraph",
       "line": 6
+    },
+    {
+      "type": "calls_external",
+      "from": "file:design/handoff-phase2/extracted/Study.dc.html",
+      "to": "external:google_fonts",
+      "line": 11
     },
     {
       "type": "calls_external",

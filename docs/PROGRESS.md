@@ -2679,4 +2679,84 @@ issue sweep, the grader code change.
 | [x] C15.2 data isolation test (production clean only after the issue 17 fix is deployed) | this commit (`test(security): verify cross-user data isolation`); fix `cf5e877` (issue 17) | `frontend/scripts/live/check-isolation.mjs` (new; `npm --prefix frontend run test:isolation`; supabase-js with the anon key, as the prompt asks, instead of the plan's Python script). Test user A uploads `sample.pdf` and starts, finishes and submits one session through the API, so A owns rows in `books`, `chunks`, `question_bank`, `concepts`, `user_concept_mastery`, `sessions`, `test_results`, `reading_progress`, `agent_decisions`, `processing_jobs` (and `profiles`). Test user B then: every API endpoint taking A's book or session id (12, including DELETE, resume, position, evaluate, submit, abandon and `POST /sessions/start`) must be 403/404 without A's text or id; `/books`, `/dashboard`, `/mastery?book_id=A` 200 without A's data; no token and A's raw user id as bearer 401. Through Supabase with B's session: select by A's ids and by `user_id = A`, a no-op update and a delete on each table, a book inserted as A, both search RPCs on A's book, Storage (download, list, upload into, remove from A's folder); the token-less client selects. `term_lookups`: A, B read; neither inserts, updates or deletes; anon reads nothing. Rows of B's own are reported, only rows of others count. A's book, session status and row counts are compared before and after; A deletes the book and the run reports rows and PDF left (a listing: a download right after the remove could still succeed, seen once). | Local (approved; backend with `cf5e877`): 92 probes, 92 denied, exit 0, 30 s; A's rows before: books 1, chunks 7, question_bank 55, concepts 57, mastery 8, sessions 1, test_results 1, reading_progress 1, agent_decisions 6, processing_jobs 1; rows left after: 0 everywhere, PDF gone. Negative control, local backend with `cf5e877` reverted: `B POST /sessions/start -> 200 + A's data`, 91 of 92, exit 1 (fix restored after). Production (`readfocus-api`, without the fix): 92 probes, 91 denied, exit 1, 66 s: the one failure is issue 17 (`B POST /sessions/start -> 200`); every RLS, RPC, Storage and cache probe denied; B's select and delete on `sessions` and `reading_progress` found only B's own rows made by that 200, deleted by the probe; rows left 0. Standard checks: see commit. | 2026-11-12 | Production is clean only once `cf5e877` is deployed; re-run with `API_URL=https://readfocus-api.onrender.com npm --prefix frontend run test:isolation` after the C15 merge. Not probed: the `covers` bucket (public by design, C12) and Supabase Auth admin endpoints. A's Storage folder holds 4 `.epub` files from 2026-11-11 with no book row (older test books; untouched, the user's call). The first production run counted B's own rows as RLS failures (4); the script was changed to separate them and re-run. Five local runs, two production runs and the control, each deleting its own book |
 | [x] C15.3 grader calibration (measured; constants kept) | this commit (`test(agents): measure grader agreement and keep the calibrated weights`) | `scripts/eval_grader.py` (new; the agreement script C6.2 did not keep): embeds `answers.json` once with the local model, re-grades through `grader.decide()`, prints agreement overall, per category, mean error, high-confidence misses and each disagreement; `--search` grades 3,060 combinations of `GRADE_WEIGHTS`, `GRADE_COSINE_FLOOR`/`FULL`, `GRADE_RELEVANCE_FLOOR`/`FULL` and estimates with leave-one-out whether the fitted choice generalises. `backend/tests/test_eval_grader.py` (2 tests, no model). `backend/agents/policy.py`: a comment with the C15.3 result, no constant changed. The prompt names `backend/agents/evaluation/policy.py`, which does not exist; the grader's constants are in `backend/agents/policy.py`. | `python scripts/eval_grader.py`: 26 of 34 (76.5%), mean error 0.157; correct 5/5, empty 4/4, off_topic 5/5, partial 5/5, question_copy 5/5, paraphrase 1/5, wrong 1/5; no high-confidence miss (same 26 as C6.2). `--search`: in-sample best 28 of 34 (82.4%, mean error 0.158) with cosine 0.35, coverage 0.25, relevance 0.40, relevance 0.2-0.3; leave-one-out 26 of 34, the same as the current constants. Kept on the user's decision (2026-11-12). `pytest backend/tests/test_grader.py -k agreement` (real model): passed. Standard checks: see commit. | 2026-11-12 | The plan's held-out set (about 30 new labelled answers on another text) was not made: the user chose to keep the constants. Reversed-evidence answers (cosine 0.78-1.0) and low-coverage paraphrases stay the grader's known misses (issue 27); no weighting fixes them, a reversal or negation check would be grader code, out of this prompt's scope |
 | [x] C15.4 docs | this commit (`docs: update README, architecture, benchmarks and repo graph`) | `README.md` rewritten for 2.0: the positioning line as given (LangGraph-orchestrated, policy-driven agents + on-device transformer embeddings + knowledge tracing; no generative AI, $0 API cost), live URL, how it works in seven steps, architecture in brief, local setup, standard and live checks, limitations (grader reversals and paraphrases with the C15.3 numbers, extractive questions, 256-token embeddings, rule-based mastery not BKT, no OCR, English lookup, free-tier sleep and limits, C15 fixes not yet deployed). `docs/ARCHITECTURE.md` (new): system, the five agents' decide() contracts, the agent graph (Mermaid identical to `AGENT_GRAPH.md`) with its routing table, event flows per endpoint, ingestion, data model by migration, reader, word lookup, security. `docs/BENCHMARKS.md`: an end-of-sprint summary of headline numbers with their sections, a C15 section with the live journey and isolation timings, and what was never measured. `CLAUDE.md` Docs list; issue 5 closed; purposes and `make graph`. | Every relative link in README and ARCHITECTURE resolves and every backticked repo path in the three files exists (script check), except `scripts/prerender.mjs` in an older BENCHMARKS section (it is `frontend/scripts/`; untouched). The Mermaid block in ARCHITECTURE is byte-identical to `AGENT_GRAPH.md` (`diff`). Facts read from the code: `graph.py` routing, agent docstrings and models, `book_ingestor.run_job`, migrations 001-015, `services/lookup.py`, reader modules; numbers copied from their BENCHMARKS sections and the C15 runs. `make graph`: 443 nodes, 765 edges, 0 unresolved. Standard checks: see commit. | 2026-11-12 | `render.yaml` still names the service `readfocus-backend` and `docs/DEPLOYMENT.md` still says the region is to be confirmed (both in the C15 plan for this step, not in this prompt; left for C15.5 or after). Chunk titles C4-C7, C9-C13 (issue 9) and the open-issue sweep were in the plan, not in the prompt; not done |
-| [ ] C15.5 final acceptance checklist + final report | | | | | |
+| [x] C15.5 final acceptance checklist + final report | this commit (`docs(progress): record final acceptance checklist`) | The checklist below: 37 items, each Pass or Fail with its evidence; 32 pass, 5 fail. `make graph` run last (C15.4 had left `PROGRESS.md`'s size stale in `inventory.json`). | Fresh in C15.5: provider grep over `backend/`, `frontend/src/`, requirements and `package.json` (no match); `pytest backend/tests/test_no_paid_ai.py` (6 passed); `git ls-files` (only the two `.env.example` files); `git grep` for secret patterns (one fake test value, `sb_secret_abc`, in `deployEnv.test.js`); a fresh `frontend/dist` (no `service_role`, `SUPABASE_SERVICE`, `sb_secret_` or AI host; its URLs are attribution and docs links and the Supabase project); commit statistics since the C1 base (198 commits, all with a `Chunk:` line, median 186 changed lines, 82 over 250, lockfiles, migrations, graph files and images excluded); DEBUG_LOG 44 entries; the rest from the records cited per item. Standard checks: see commit. | 2026-11-12 | Five fails: commit size, Lighthouse mobile performance (Dashboard 81, Reading 82), an unrecorded design deviation (candle loop), the licence file name and the Vite favicon, the production isolation check (until `cf5e877` is deployed). Production is not re-verified after the C15 fixes: that waits for the release |
+
+### C15.5 final acceptance checklist (2026-11-12)
+
+Each item was checked against the record named or, where it says "fresh",
+re-run in C15.5. Pass means the evidence shows it; anything only partly
+shown is a Fail with the gap stated. "Local" is this machine against the
+shared Supabase project; "production" is `readfocus-lake.vercel.app` and
+`readfocus-api.onrender.com`, which do not have the C15 fixes yet.
+
+**Reader**
+
+| Item | Result | Evidence |
+|---|---|---|
+| Two-page spread on desktop, one page on mobile | Pass | `geometry.test.js` ("a spread from 1024 px, one page below"); C12.3a headless check at 1440, 1024, 1023 and 375; e2e at 1440 reads "Pages 1 and 2 of N" (`reader.spec.js`). No e2e asserts the single page at 375 |
+| Animated page turns | Pass | `reader.spec.js` (keys, buttons, page edge; reduced motion: no leaf); 75 fps, worst frame 13.7-14.0 ms (C12.10) |
+| Running header (book left, chapter right) and folios | Pass | C12.3a row: running heads and folios, "p. n of m", contrast 4.97 and 5.54; checked by headless script. No automated test. Folios count today's pages, not the book's |
+| Bookmark | Pass | C12.5b: ribbon in the outer margin, click or B saves with a toast; scripted headless check. No e2e; no list of bookmarks |
+| Position restored | Pass | `reader.spec.js` "the place is saved and restored after a reload" (mocked API); live, `PUT /sessions/{id}/position` 2xx on local and production (C15.1). Restore after a reload not checked live |
+| Hover or long-press shows the dictionary meaning in place | Pass | `reader.spec.js` hover card (within 600 ms once cached, Esc closes) and long-press sheet at 375; live definition card through `/lookup` on local and production (C15.1) |
+| Proper nouns and phrases show a Wikipedia summary with a link | Pass | `reader.spec.js` (Concord: summary, link to en.wikipedia.org, `_blank`, `noopener noreferrer`); phrases of 2-5 words go to Wikipedia (C12.6, `services/lookup.py` `wiki_first`). No e2e for phrases |
+| No Google, scraping or LLM for lookups | Pass | fresh: provider grep empty, `test_no_paid_ai.py` 6 passed; `services/lookup.py` calls only the Free Dictionary API and the Wikipedia REST summary, from the backend; Google Fonts removed under D6 |
+| Sources attributed | Pass | `WordCard.jsx`: "Wiktionary, via Free Dictionary", "Summary from Wikipedia", a "Wikipedia" link; covers credited "Cover image · Open Library" |
+
+**Product**
+
+| Item | Result | Evidence |
+|---|---|---|
+| Sign in | Pass | `login.spec.js`; live sign-in on local and production (C15.1) |
+| PDF and EPUB ingest | Pass | PDF: `sample.pdf` on local and production (C15.1, C15.2); EPUB: Pride and Prejudice, 204 chunks, 1,760 questions (C9.1b), benched in C9.5; a Walden EPUB (C12.3b). Not run on production in C15 |
+| Ingestion resumes after a restart | Pass | C9.1b: process hard-killed at cursor 53, the sweep finished it with 0 duplicates; `test_ingest_embeddings.py` and `test_ingestion_worker.py` |
+| Tests load instantly, with source evidence | Pass | `finish-reading` 199 ms p50 with the test pre-assembled (BENCHMARKS); Results quotes the evidence (`results.spec.js`); live test of 5 questions (C15.1) |
+| Grading: score, confidence, grounded feedback | Pass | `test_api_sessions.py` (grades inline with confidence and feedback), `test_feedback.py`, `results.spec.js`; live Results with score and feedback (C15.1). Accuracy limits: issue 27 |
+| Mastery updates and shows on the dashboard | Pass | live: 8 concepts with attempts for the journey book, shown in its tab (C15.1); `dashboard.spec.js`, `test_api_mastery.py` |
+| Next session adapts and explains why | Pass | live: plan 2 "Re-reading section 1 before moving on — your last test on it was low.", equal to what Results promised (C15.1); `test_planner_strategy.py` |
+
+**Intelligence and cost**
+
+| Item | Result | Evidence |
+|---|---|---|
+| Zero LLM or embedding API calls (grep and network) | Pass | fresh: provider grep empty, `test_no_paid_ai.py` passed, fresh bundle has no AI host; network: the journey's request log on local and production lists only the site, the API and the Supabase project (C15.1); the backend's outbound calls are the dictionary, Wikipedia and Open Library only (C14.6) |
+| Five agents as LangGraph nodes; submit chains evaluator -> knowledge_state -> optimizer -> planner | Pass | `backend/agents/graph.py`; `test_graph.py::test_submit_chains_evaluator_knowledge_state_optimizer_then_planner`; `test_api_sessions.py` (agents per event) |
+| Model fits Render Free memory (measured) | Pass | container at 512 MB and 0.1 CPU: idle 251-255 MiB, ingestion peak 301-308 MiB (C14.1). Render's own memory graph not checked |
+| Grader agreement recorded | Pass | 26 of 34 (76.5%); leave-one-out 26 after the C15.3 search (`scripts/eval_grader.py`) |
+
+**Quality**
+
+| Item | Result | Evidence |
+|---|---|---|
+| Commits small and well described | **Fail** | fresh: 198 commits since the C1 base, every one with `Chunk:` and What/Why/How verified; but 82 are over 250 changed lines (median 186), against the ~200 guide |
+| Repo graph current | Pass | `make graph` run last in this commit; `pytest tools/repo_graph/tests` 62 passed. It had been stale since C15.4 (`PROGRESS.md` size) |
+| DEBUG_LOG covers non-trivial bugs | Pass | 44 entries, 43 marked fixed, each with repro and regression test; C15 added the closing page and issue 17 |
+| Lighthouse accessibility >= 95 and performance >= 85 per page | **Fail** | C13 close: accessibility 95-100 on every page and desktop performance 99-100, but mobile performance Dashboard 81 and Reading 82; not run on the live site |
+| 375 px works | Pass | 11 e2e tests at 375 (no sideways scroll, layouts) across calibration, dashboard, library, reader, results, shell, test and warm-up |
+| Lamplight theme complete | Pass | `check:contrast`: 204 pairs over Paper and Lamplight with both accents, 0 failing; per-feature Lamplight checks in C12. Only one e2e runs in Lamplight |
+
+**Design**
+
+| Item | Result | Evidence |
+|---|---|---|
+| Pages match the Claude Design handoff, deviations documented | **Fail** | decisions D1-D6 (`design/HANDOFF_SUMMARY.md`) and accessibility changes A1-A3 (`docs/DESIGN_AUDIT.md`) are documented, but the candle runs 2.4 s twice where D3 keeps "candle 3.2 s", and no record says why; no single deviations list; pages not re-compared to the handoff in C15 |
+| Signature animations work and stop under reduced motion | Pass | lamp pulse (`reading.spec.js`), page turn (`reader.spec.js`), candle (`dashboard.spec.js`), steam (`warmup.spec.js`), each with a reduced-motion test; also landing, library, login, results, shell and test |
+| Illustrations render in both themes | Pass | C11.1 gallery: every picture in all four theme and accent panels, compared by eye with the component sheets. No automated check (`check:images` is size budgets) |
+| Real or typographic cover on every book | Pass | `BookCover` always draws the typographic face, a stored Open Library cover over it (C11.3; `library.spec.js`) |
+| Every third-party image licensed and logged in `docs/ASSET_LICENSES.md` | **Fail** | `docs/ASSET_LICENSES.md` does not exist; the register is `docs/ASSETS.md` (illustrations original, Gutenberg text public domain, Wiktionary and Wikipedia CC BY-SA, Open Library covers credited, Vite files MIT). `public/favicon.svg` is still the Vite logo (a trademark), planned for replacement in C11 and not done; the fonts (OFL) are named in the handoff, not in the register |
+
+**Security**
+
+| Item | Result | Evidence |
+|---|---|---|
+| No auth bypass | Pass | issue 10 closed in C3.1 (`test_auth.py`); live: no token and a raw user id as bearer both 401 on local and production (C15.2) |
+| RLS on every new table | Pass | 007-010 and 015 enable RLS (`test_migrations.py`); live: B saw none of A's rows in 11 tables, the RPCs and Storage on local and production (C15.2) |
+| Isolation test passes | **Fail** (production) | local 92 of 92; production 91 of 92, the failure is issue 17, fixed in `cf5e877` and not deployed. Passes once released |
+| No secrets in git or the bundle | Pass | fresh: only `.env.example` files tracked, one fake test value, fresh bundle clean; C14.6: 24 live JS chunks clean; `deployEnv.js` stops a Vercel build with a secret key |
+
+**Deployment**
+
+| Item | Result | Evidence |
+|---|---|---|
+| No payment method anywhere | Pass | `docs/DEPLOYMENT.md`: no payment method, billing account, paid plan or add-on on any provider (the user's accounts; not visible from the repo) |
+| Free-tier limits and cold-start behaviour documented | Pass | `docs/DEPLOYMENT.md`: limits table with doc links (Render, Vercel, Supabase, GitHub Actions) and the cold-start section; the full Render cold start was not timed |

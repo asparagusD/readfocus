@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 447,
-    "inventoried": 382,
+    "tracked": 450,
+    "inventoried": 385,
     "excluded": 65
   },
   "files": [
@@ -1007,6 +1007,14 @@
       "purpose": "Claude Design export, kept unchanged: React production build used by the dc-runtime viewer; not used by the app."
     },
     {
+      "path": "docs/ANCHORS.md",
+      "language": "markdown",
+      "lines": 119,
+      "size_bytes": 5246,
+      "role": "doc",
+      "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
+    },
+    {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
       "lines": 272,
@@ -1055,12 +1063,28 @@
       "purpose": "C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13."
     },
     {
+      "path": "docs/FOCUS_RULES.md",
+      "language": "markdown",
+      "lines": 97,
+      "size_bytes": 4310,
+      "role": "doc",
+      "purpose": "Phase 2 spec (C16.3): focus mode rules F1-F14: body start, server-timed stopwatch, points per active minute, hidden-tab and idle pauses, page and 3-hour caps, the bookmark quiz and its pass mark."
+    },
+    {
       "path": "docs/G4_PRODUCTION_MIGRATIONS.md",
       "language": "markdown",
       "lines": 706,
       "size_bytes": 33059,
       "role": "doc",
       "purpose": "Gate G4 (C14.4): outcome first (production is the dev project; 001-015 already applied, checked read-only; backfill dry runs found nothing; nothing written), then the review written before that was known: full SQL of 005-015 with sha256, read-only pre-checks, backup, apply and post-check steps, backfill plan."
+    },
+    {
+      "path": "docs/GAMIFICATION.md",
+      "language": "markdown",
+      "lines": 100,
+      "size_bytes": 4744,
+      "role": "doc",
+      "purpose": "Phase 2 spec (C16.3): XP from focus points, daily goal, streaks with earned freezes, the badge catalogue, weekly book-themed leagues, opt-out and no dark patterns."
     },
     {
       "path": "docs/MIGRATION_AUDIT.md",
@@ -1074,7 +1098,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2969,
-      "size_bytes": 565464,
+      "size_bytes": 567637,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3001,8 +3025,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 384,
-      "size_bytes": 111647,
+      "lines": 387,
+      "size_bytes": 112301,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

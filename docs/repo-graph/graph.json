@@ -976,6 +976,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:docs/ANCHORS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/ARCHITECTURE.md",
       "type": "file",
       "role": "doc",
@@ -1012,7 +1018,19 @@
       "language": "markdown"
     },
     {
+      "id": "file:docs/FOCUS_RULES.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:docs/G4_PRODUCTION_MIGRATIONS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/GAMIFICATION.md",
       "type": "file",
       "role": "doc",
       "language": "markdown"

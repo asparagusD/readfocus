@@ -135,6 +135,23 @@ export const book = (page) => page.locator('.rf-ov-stage');
 /** The place shown: { start, end } as the frame reports them ("5", or "2:340" for an EPUB). */
 export const shown = (page) => page.locator('.rf-ov').evaluate((el) => ({ start: el.dataset.start, end: el.dataset.end }));
 
+/**
+ * The place shown once a turn has landed (DEBUG_LOG C17.6): no leaf turning and the same place on two
+ * reads 300 ms apart, different from `away` when given. A place read at the first change can be one
+ * the renderer moves past a moment later.
+ */
+export async function settled(page, away = null) {
+  let last = null;
+  await expect.poll(async () => {
+    const leaves = await page.locator('.rf-ov-leaf').count();
+    const now = JSON.stringify(await shown(page));
+    const ok = leaves === 0 && now === last && now !== JSON.stringify(away);
+    last = now;
+    return ok;
+  }, { intervals: [300], timeout: 10_000 }).toBe(true);
+  return JSON.parse(last);
+}
+
 /** The boxes of every whole-word occurrence of `w` in a document's book text (the PDF's spread, or a section's body). */
 function wordBoxes(w) {
   const root = document.querySelector('.rf-pdf-spread') ?? (document.querySelector('.rf-ov') ? null : document.body);

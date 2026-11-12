@@ -1,7 +1,7 @@
 // The reader end to end (C12.10; on the original view since C17.5), on the real /read page with the
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { test, expect, book, openReader, shown, spoken, timeToCard, wordPoint } from './fixtures.js';
+import { test, expect, book, openReader, settled, shown, spoken, timeToCard, wordPoint } from './fixtures.js';
 
 /** "5" -> 5; "2:340" -> [2, 340]. */
 const at = (spot) => (spot.includes(':') ? spot.split(':').map(Number) : Number(spot));
@@ -15,20 +15,18 @@ for (const kind of ['pdf', 'epub']) {
 
     test('arrow keys, the turn buttons and the page edge turn the page', async ({ page, api }) => {
       await openReader(page);
-      const first = await shown(page);
+      const first = await settled(page);
       await book(page).focus();
       await page.keyboard.press('ArrowRight');
-      await expect.poll(() => shown(page)).not.toEqual(first);
-      const second = await shown(page);
+      const second = await settled(page, first); // each place read once its turn has landed (DEBUG_LOG C17.6)
       expect(before(at(first.start), at(second.start))).toBe(true);
       await page.getByRole('button', { name: 'Next', exact: true }).click();
-      await expect.poll(() => shown(page)).not.toEqual(second);
-      const third = await shown(page);
+      const third = await settled(page, second);
       await book(page).focus(); // the arrow keys belong to the book; the button keeps focus after a click
       await page.keyboard.press('ArrowLeft');
-      await expect.poll(() => shown(page)).toEqual(second);
+      expect(await settled(page, third)).toEqual(second);
       await page.locator('.rf-ov-edge[data-edge="forward"]').click({ force: true }); // a pointer-only target
-      await expect.poll(() => shown(page)).toEqual(third);
+      expect(await settled(page, second)).toEqual(third);
       expect(api.starts).toBe(1);
       expect(api.fileLoads).toBe(1);
     });

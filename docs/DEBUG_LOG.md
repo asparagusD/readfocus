@@ -2848,3 +2848,47 @@ run then gave `epubcfi(/6/4!/4/2/1:0)` for that place.
 
 ### Commit
 fix(tooling): search past short blocks when backfilling reading positions
+
+## 2026-11-12 C17.6 — the EPUB page-turn e2e fails now and then
+
+**Status:** mitigated in the test on your call ("Harden the test"); the root cause is still not proven
+
+### Symptom
+`npm --prefix frontend run test:e2e` before the backfill-record commit: 123
+passed, 1 failed, `reader.spec.js:16` "epub: pages and turns › arrow keys,
+the turn buttons and the page edge turn the page". It had passed in the
+three full runs before, and only `docs/PROGRESS.md` had changed.
+
+    > 31 |       await expect.poll(() => shown(page)).toEqual(third);
+    Error: expect(received).toEqual(expected) // deep equality
+
+### Repro
+`npx playwright test e2e/reader.spec.js:16 --repeat-each=8`: 1 failure in
+16 runs, at the same line. Not reproduced since: 10 x 2, 24 and 40 runs on
+the EPUB (the last with every place change traced), and 15 runs at 4x CPU
+throttling all passed (79 in all).
+
+### Hypotheses
+1. The test records `third` at the first place change it sees after a
+   turn; if foliate reports an in-between place while moving into the next
+   section, that reading is not the page it settles on. Not confirmed (no
+   failure with the trace on).
+2. A page-edge click while a leaf is still turning is queued and runs
+   against a stale place. Not confirmed.
+
+### Root cause
+Not established.
+
+### Fix
+`frontend/e2e/fixtures.js` `settled(page, away)`: a place is read only
+once no leaf is turning and two reads 300 ms apart agree (and it differs
+from `away`); the turn test reads every place through it. No app code
+changed: hypothesis 1, if right, is a test race, not a reader bug.
+
+### Regression test
+`npx playwright test e2e/reader.spec.js:16 --repeat-each=40`: 80 passed
+(both books). Before the change the failure was 2 in about 100 runs, so
+this is evidence, not proof.
+
+### Commit
+test(reader): read each place in the turn test once its turn has landed

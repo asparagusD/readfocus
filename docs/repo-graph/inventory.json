@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 439,
-    "inventoried": 374,
+    "tracked": 440,
+    "inventoried": 375,
     "excluded": 65
   },
   "files": [
@@ -1015,6 +1015,14 @@
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
     {
+      "path": "docs/DEPLOYMENT.md",
+      "language": "markdown",
+      "lines": 218,
+      "size_bytes": 12952,
+      "role": "doc",
+      "purpose": "Deployment guide (C14.6): where each part runs (Vercel Hobby, Render Free readfocus-api, the shared Supabase Free project), env var names per provider, free-tier limits with doc links, cold start, Supabase pause, manual backups, the release step, redeploy, rollback, verification commands and what was verified."
+    },
+    {
       "path": "docs/DESIGN_AUDIT.md",
       "language": "markdown",
       "lines": 437,
@@ -1042,7 +1050,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 2516,
-      "size_bytes": 515669,
+      "size_bytes": 517607,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2937,8 +2945,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 376,
-      "size_bytes": 107883,
+      "lines": 377,
+      "size_bytes": 108222,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

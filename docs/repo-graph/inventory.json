@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 594,
-    "inventoried": 453,
+    "tracked": 596,
+    "inventoried": 455,
     "excluded": 141
   },
   "files": [
@@ -441,10 +441,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 351,
-      "size_bytes": 17727,
+      "lines": 377,
+      "size_bytes": 19205,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author and toc and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place {chunk_index, block_id, char_offset}, validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
       "path": "backend/services/__init__.py",
@@ -625,10 +625,10 @@
     {
       "path": "backend/tests/test_api_position.py",
       "language": "python",
-      "lines": 107,
-      "size_bytes": 4834,
+      "lines": 152,
+      "size_bytes": 7407,
       "role": "test",
-      "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start."
+      "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start. C17.5: PDF and EPUB anchors stored as sent and returned, a backfilled place keeps its C12 keys beside its anchor, malformed anchors 422, and start names the book's file format."
     },
     {
       "path": "backend/tests/test_api_sessions.py",
@@ -641,8 +641,8 @@
     {
       "path": "backend/tests/test_api_start_reader.py",
       "language": "python",
-      "lines": 58,
-      "size_bytes": 2641,
+      "lines": 59,
+      "size_bytes": 2760,
       "role": "test",
       "purpose": "Pytest on the in-memory database: /sessions/start sends each chunk's blocks, the book's title, author and contents (an empty list when none), the chapter in effect before the first chunk (from books.toc), copes with a book without toc or blocks, and still starts when the book read fails."
     },
@@ -677,6 +677,14 @@
       "size_bytes": 3430,
       "role": "test",
       "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, the dev-only guard, a failing book not stopping the run, and a book without a readable file looked up by its typed title."
+    },
+    {
+      "path": "backend/tests/test_backfill_positions.py",
+      "language": "python",
+      "lines": 94,
+      "size_bytes": 4742,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_positions.py on the in-memory database and the reader fixture books: pending places, a PDF point on the right page with the C12 keys kept, an EPUB CFI at the right element and offset, CFI steps for elements and text chunks, no stored file or no match left alone, a dry run writes nothing and a second run finds nothing to do."
     },
     {
       "path": "backend/tests/test_backfill_structure.py",
@@ -3239,6 +3247,14 @@
       "purpose": "Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development."
     },
     {
+      "path": "scripts/backfill_positions.py",
+      "language": "python",
+      "lines": 223,
+      "size_bytes": 9611,
+      "role": "script",
+      "purpose": "Backfill (C17.5, ANCHORS A7): adds an original-view `anchor` beside each C12 reading_progress.position {chunk_index, block_id, char_offset}: the place's text (its block from the offset, else its chunk's start) is searched for, lower-case with no whitespace, in the book's stored file: a point on the PDF page holding it (pypdf), or a collapsed EPUB CFI computed from the spine document (ElementTree); places with an anchor, no stored file or no match are left alone; --dry-run, --limit, --book-id, dev-only guard."
+    },
+    {
       "path": "scripts/backfill_structure.py",
       "language": "python",
       "lines": 110,
@@ -3569,8 +3585,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 455,
-      "size_bytes": 132049,
+      "lines": 457,
+      "size_bytes": 133343,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

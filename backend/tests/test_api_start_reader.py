@@ -29,7 +29,8 @@ def test_each_chunk_comes_with_its_blocks(api, book):  # noqa: F811
 
 
 def test_the_book_title_author_and_contents_come_with_the_session(api, book):  # noqa: F811
-    assert start(api, [0])["book"] == {"title": "Walden", "author": "Henry David Thoreau", "toc": TOC}
+    assert start(api, [0])["book"] == {"title": "Walden", "author": "Henry David Thoreau", "toc": TOC,
+                                       "format": None, "storage_mode": None}  # C17.5: none stored on this fixture row
 
 
 @pytest.mark.parametrize("chunks, chapter", [

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 599,
-    "inventoried": 458,
+    "tracked": 586,
+    "inventoried": 445,
     "excluded": 141
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13553,
+      "size_bytes": 13571,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1169,8 +1169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3401,
-      "size_bytes": 629643,
+      "lines": 3402,
+      "size_bytes": 630925,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1441,10 +1441,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 141,
-      "size_bytes": 6498,
+      "lines": 136,
+      "size_bytes": 6139,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); dev-only /__illustrations and /__reader routes (import.meta.env.DEV, lazy) for the illustration gallery and the paginated reader; BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4)."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -1935,22 +1935,6 @@
       "purpose": "Dev-only /__pdf (C17.2): the PDF renderer on a chosen file or ?url=, with Previous/Next, 100/150/200 % zoom and ?page=; first-page and page-turn times in window.__pdfTimings for the benchmark."
     },
     {
-      "path": "frontend/src/gallery/ReaderGallery.css",
-      "language": "css",
-      "lines": 44,
-      "size_bytes": 1065,
-      "role": "asset",
-      "purpose": "Layout styles for the dev-only /__reader page."
-    },
-    {
-      "path": "frontend/src/gallery/ReaderGallery.jsx",
-      "language": "jsx",
-      "lines": 70,
-      "size_bytes": 2937,
-      "role": "asset",
-      "purpose": "Dev-only /__reader page: the paginated reader on the Walden fixture with text size, length (1x or 4x) and theme controls, the current anchor and page count, and what a hover or selection would look up (C12.7), with the word card over the real /lookup (C12.8); not in the production build."
-    },
-    {
       "path": "frontend/src/gallery/gallery.css",
       "language": "css",
       "lines": 121,
@@ -1965,14 +1949,6 @@
       "size_bytes": 462,
       "role": "asset",
       "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery."
-    },
-    {
-      "path": "frontend/src/gallery/readerFixture.js",
-      "language": "javascript",
-      "lines": 39,
-      "size_bytes": 6013,
-      "role": "asset",
-      "purpose": "Dev-only fixture for /__reader: three chunks of blocks in the chunks.blocks shape, from Thoreau's Walden (1854, public domain): two chapter openings, paragraphs with em and strong marks, a quote and list items."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
@@ -2695,22 +2671,6 @@
       "purpose": "Build-time SSR entry (C13.10e): renderToString of the Landing page in a StaticRouter at / with a static theme context, so scripts/prerender.mjs can put the headline into dist/index.html before any script runs."
     },
     {
-      "path": "frontend/src/reader/BookFlow.jsx",
-      "language": "jsx",
-      "lines": 66,
-      "size_bytes": 2899,
-      "role": "asset",
-      "purpose": "Renders reader blocks (chunks.blocks) as book elements with data-b ids: chapter openings (label and italic title when a bare 'Chapter N' precedes a heading), headings, paragraphs with the drop cap and small-caps first line on a chapter's first paragraph, continued paragraphs without indent, quotes, list items; em and strong marks; an optional lead note before the first block, which no place points into."
-    },
-    {
-      "path": "frontend/src/reader/BookReader.jsx",
-      "language": "jsx",
-      "lines": 338,
-      "size_bytes": 16663,
-      "role": "asset",
-      "purpose": "The paginated reader: CSS multi-column flow (one column a page) moved by translateX, two leaves on a spread or one page, running heads (book left, chapter right; 'Book · Chapter' on one page; hidden on chapter openings), folios and 'p. n of m'; re-paginates on resize, text size, theme and font loading while keeping the anchored place; animated page turns (PageTurn in its own AnimatePresence, an instant swap under reduced motion, turns asked for mid-turn queued and counted from the queued page); arrows, Page Up/Down, Space, Home, End, labelled turn buttons, clickable outer page edges and touch swipes; a hidden live region ('Page 3 of 14'); focus kept in the reader; onNearEnd within the last two views; reports places and pages to the caller; records the pagination time on data-paginate-ms; a lead note before the text (C12.5a), a closing page after it drawn outside the flow (its button never off-screen), pacing ('N pages left in today's reading' and a hairline that fills) and the current chapter reported to the caller; the ribbon bookmark in the outer margin of the right-hand page (D2; click or B saves the place now and it drops in again), goToPlace through its ref for the contents, and a status note for reading beyond today (C12.5b); in-place lookup when the caller passes onLookup (C12.7: useWordAtPoint on the flow, paused until laid out and while a leaf turns, the mark cleared on a page change or Escape, a fallback mark layer under the text); the word card when the caller passes a lookupClient (C12.8: opened on hover intent or a settled selection, Enter or ? on a selection opens it with focus, closed on a turn, page change or Esc, a polite live region announces each answer; hoverLookup turns hover off); the Look up chip for touch selections, kept to the page it was made on (C12.9)."
-    },
-    {
       "path": "frontend/src/reader/ContentsDrawer.css",
       "language": "css",
       "lines": 92,
@@ -2725,14 +2685,6 @@
       "size_bytes": 3666,
       "role": "asset",
       "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
-    },
-    {
-      "path": "frontend/src/reader/PageTurn.jsx",
-      "language": "jsx",
-      "lines": 84,
-      "size_bytes": 3593,
-      "role": "asset",
-      "purpose": "One page turn over the book (C12.4): a leaf hinged at the spine (Motion pageTurn, rotateY with perspective) with front and back faces, each paper with its running head, folio and a window onto a copy of the flow at that page, plus a cover keeping the page underneath until the leaf lands and a travelling shadow (turnShade); spread forward and back, single page lifting away or swinging in; transform and opacity only; a timer also ends the turn; aria-hidden."
     },
     {
       "path": "frontend/src/reader/PhraseChip.jsx",
@@ -2775,30 +2727,6 @@
       "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard; opened by touch it is the compact sheet (grab handle, one sense, 'Tap outside to close', swipe down to close). Placed through outerBox (C17.5), so a word in an EPUB section's iframe gets it beside the word in the page."
     },
     {
-      "path": "frontend/src/reader/anchor.js",
-      "language": "javascript",
-      "lines": 88,
-      "size_bytes": 3403,
-      "role": "asset",
-      "purpose": "DOM helpers for reader places {block_id, char_offset}: the first visible place on a page (binary search over character rects), the page showing an anchor, the page an element starts on, and an anchor's chunk; x measured from the flow, so the page translate does not matter."
-    },
-    {
-      "path": "frontend/src/reader/blocks.js",
-      "language": "javascript",
-      "lines": 23,
-      "size_bytes": 1025,
-      "role": "asset",
-      "purpose": "blocksForChunks: the reader's blocks from /sessions/start chunks in chunk order, stored blocks as they are and paragraphs cut from the text (same '<chunk>.<n>' ids) for chunks without blocks; placeInChunks: the saved position as an anchor only when it is in today's chunks."
-    },
-    {
-      "path": "frontend/src/reader/blocks.test.js",
-      "language": "javascript",
-      "lines": 33,
-      "size_bytes": 1688,
-      "role": "asset",
-      "purpose": "Node test (npm run test:unit): stored blocks in chunk order, the text fallback and its ids, empty input, and resuming a saved place only inside today's chunks."
-    },
-    {
       "path": "frontend/src/reader/fileStore.js",
       "language": "javascript",
       "lines": 57,
@@ -2815,36 +2743,12 @@
       "purpose": "Node test (npm run test:unit): the file store never throws without IndexedDB, when opening throws, or when opening fails."
     },
     {
-      "path": "frontend/src/reader/geometry.js",
-      "language": "javascript",
-      "lines": 65,
-      "size_bytes": 2830,
-      "role": "asset",
-      "purpose": "Pure page geometry for the paginated reader: a spread from 1024 px, one page below (flush with the screen under 480 px); page width capped for a 60-70 character measure, equal margins so each column stride is one page, a text block of whole lines, the page count from scrollWidth, the page of an x, view and clamp helpers."
-    },
-    {
-      "path": "frontend/src/reader/geometry.test.js",
-      "language": "javascript",
-      "lines": 60,
-      "size_bytes": 2700,
-      "role": "asset",
-      "purpose": "Node test (npm run test:unit): spread threshold, one page per stride, book measure bounds, whole-line text blocks at 16.5/18/19.5 px, page count, page of a point, view start and clamping."
-    },
-    {
       "path": "frontend/src/reader/highlight.js",
       "language": "javascript",
       "lines": 76,
       "size_bytes": 3153,
       "role": "asset",
       "purpose": "The soft lookup mark: CSS Custom Highlight API ('rf-lookup') in the word's own document (since C17.5 an EPUB section's iframe gets the rule in the page's --accent-soft), or positioned boxes in a layer under the text where the API is missing; outerBox(range) gives a range's boxes in this page's coordinates for the card and chip."
-    },
-    {
-      "path": "frontend/src/reader/index.js",
-      "language": "javascript",
-      "lines": 3,
-      "size_bytes": 176,
-      "role": "asset",
-      "purpose": "Barrel export of the reader: BookReader, anchor helpers and page geometry."
     },
     {
       "path": "frontend/src/reader/longPress.js",
@@ -2893,14 +2797,6 @@
       "size_bytes": 1466,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): the read-ahead fetches once and keeps the chunk, remembers that there is none, and asks again after a failure."
-    },
-    {
-      "path": "frontend/src/reader/reader.css",
-      "language": "css",
-      "lines": 491,
-      "size_bytes": 12713,
-      "role": "asset",
-      "purpose": "Reader styles on tokens: page leaves with a tonal edge and spine shade per theme, flat full-screen page on phones, running head and folio bands, the column flow (Lora, justified, hyphens, orphans and widows 2), chapter openings on a new page with title and accent rule, drop cap and small-caps first line, headings, quotes, list items, turn buttons and page status; page-turn leaf, faces, text windows, travelling shade, outer-edge hit areas and the hidden live region (C12.4); the first-page note (the opening chapter shares its page), the closing page and the pacing hairline (C12.5a); the ribbon bookmark (D2) and the running head's room for it (C12.5b); the note's 40 px lamp and the closing page's 88 px lamp with a one-time 1.4 s glow pulse (scale only); the closing page above the text window (z-index 1)."
     },
     {
       "path": "frontend/src/reader/textSize.js",
@@ -3609,8 +3505,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 460,
-      "size_bytes": 137342,
+      "lines": 447,
+      "size_bytes": 131494,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -906,6 +906,23 @@ holds at most 2,000 compact answers.
 
 ## Frontend: Lighthouse and image budgets
 
+### C17.5: page turns on the original view (2026-11-12)
+
+`e2e/reader.spec.js` "page-turn frame rate", Playwright on Edge against the
+production build (`vite preview`), 1440 x 900, API mocked: four turns
+(two forward, two back, 800 ms apart) with the leaf animation, frames
+sampled with requestAnimationFrame; written to
+`frontend/test-results/reader-benchmarks-{pdf,epub}.json`.
+
+| Book | fps | worst frame | frames over 33 ms |
+|---|---|---|---|
+| `sample.pdf` (6 pages) | 75 | 13.7 ms | 0 |
+| `reflow.epub` (4 sections, 9 images) | 75 | 13.8 ms | 0 |
+
+A cached word's card opens within 600 ms of the pointer reaching the word
+on both (asserted, not recorded). Not measured: the 4x CPU throttle run of
+C12, a long PDF's text search for today's chunks, phones.
+
 ### C17.3: EPUB renderer (2026-11-12)
 
 foliate-js vendored at `78914aef4466` (MIT; decision D-C17.3 in

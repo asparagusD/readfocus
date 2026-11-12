@@ -2944,6 +2944,11 @@ Questions for you:
 4. Phase 2 time budget: how many hours for C16-C25, so the 50%-over rule
    has a number?
 
+Answers (2026-11-12): 1. C0-C15 are released (`main` at `f914389`).
+2. Render gets `GEMINI_API_KEY` only when Steve ships; C16.4 sets it in
+`.env` only. 3. Readers' own keys are stored encrypted on our server.
+4. Phase 2 has 31 hours.
+
 Risks: Google changing the free tier's limits or terms (recorded with a
 date in C16.4, re-checked in C21); the free tier's data-use terms may
 make consent copy stricter than planned; rules that allow Steve while the
@@ -2958,7 +2963,7 @@ applies: the terms summary, the leagues detail.
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
-| [ ] C16.1 CLAUDE.md phase 2 rules | | | | | |
+| [x] C16.1 CLAUDE.md phase 2 rules | this commit (`docs(tooling): add phase-2 rules for Steve, original view and gamification`); plan `f3ca5ab` | `CLAUDE.md` (218 lines, under 220): product goal (no remote model on reading, tests or grading; $0 with Steve on Gemini's free tier or a reader's key); constraint 1 rewritten (Gemini the only generative AI, only for Steve, through the backend, after consent, free tier or own key; no other provider, scraping, paid API or payment method; consent notice because free-tier content may be used by Google; turn-off; context builder limit); new "Phase 2" section (English only, Bengali/Bangla out; original view, region map, anchors, body start, focus session, one line each pointing to `docs/`; gamification without dark patterns; readers' keys encrypted; six env var names); Stack row for Steve and a note that `test_no_paid_ai.py` still bans Gemini until Steve's backend chunk; debug protocol shortened to a pointer to its skill and the run commands' PowerShell block folded into one line, to stay under 220. Plan: the answers to the four questions recorded. | Read-through against the prompt's six points; `(Get-Content CLAUDE.md).Count`: 218. Standard checks: see commit. | 2026-11-12 | `docs/ANCHORS.md`, `docs/FOCUS_RULES.md` and `docs/GAMIFICATION.md` are referenced but written in C16.3; the steve-guardrails skill (C16.2) is not yet in the skills table; the env vars are not in `.env.example` (the guard rejects `GEMINI` there until Steve's backend chunk) |
 | [ ] C16.2 free-intelligence update; steve-guardrails skill | | | | | |
 | [ ] C16.3 specs: ANCHORS, FOCUS_RULES, GAMIFICATION | | | | | |
 | [ ] C16.4 Gemini key setup (needs you); PROGRESS sections C17-C25 | | | | | |

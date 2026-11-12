@@ -19,8 +19,16 @@ your score.
 1. No LLM or embedding API calls of any kind (Groq, OpenAI, Anthropic,
    Gemini/Google AI, Cerebras, SambaNova, OpenRouter). No paid services. No
    payment methods.
-2. Supabase migrations are additive only. Never drop tables or columns. Work
-   on the dev database; never touch production without explicit approval.
+2. Supabase migrations are additive only. Never drop tables or columns.
+   Dev and production share one Supabase project (`lvfhuszvuiowyeizstru`,
+   decided at Gate G4): treat it as production. Reading it is allowed:
+   selects, `--dry-run`, `migration list`, a script's `--dry-run`. Writing
+   to it needs explicit approval for that specific action: a migration, a
+   backfill, a bench or script run that uploads or deletes, creating or
+   resetting test users. The database has no automatic backup (Supabase
+   Free), so a write that changes the schema or existing rows also needs a
+   fresh `supabase db dump` first, confirmed by the user. Anything a run
+   creates (books, sessions, users) is deleted by that same run.
 3. Never claim something works unless it was run. Never invent file paths.
 4. Secrets never go in git or the frontend bundle. The service-role key stays
    server-side.
@@ -54,8 +62,8 @@ your score.
   10. After 3 failed attempts, stop, restore the last green state, and report.
 - **Progress.** Tick each subchunk in `docs/PROGRESS.md`
   (Step | Commit | Change | Verified by | Time | Open issues).
-- **Ask, don't assume** before anything irreversible, touching production
-  data, or removing user-facing features.
+- **Ask, don't assume** before anything irreversible, writing to the
+  Supabase project (see constraint 2), or removing user-facing features.
 - **Scope.** If a chunk runs more than 50% over its hours, stop and propose
   cuts. Each chunk lists what is safe to cut.
 
@@ -137,6 +145,11 @@ Baseline when this file was written (C1.1; the last four rows were added in C10.
 Until a chunk brings ruff and ESLint to zero, "never commit failing checks"
 means: the eight passing checks stay green and the two error counts never go
 up. Update this table when a baseline changes.
+
+pytest runs offline (`backend/tests/conftest.py` blocks every non-loopback
+connection) and e2e mocks every API call and fakes or aborts every Supabase
+request (`frontend/e2e/fixtures.js`), so the standard checks never touch
+the Supabase project and need no approval under constraint 2.
 
 ## Commit format
 

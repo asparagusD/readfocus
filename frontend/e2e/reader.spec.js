@@ -1,7 +1,7 @@
 // The reader end to end (C12.10; on the original view since C17.5), on the real /read page with the
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { test, expect, book, openReader, shown, spoken } from './fixtures.js';
+import { test, expect, book, openReader, shown, spoken, timeToCard, wordPoint } from './fixtures.js';
 
 /** "5" -> 5; "2:340" -> [2, 340]. */
 const at = (spot) => (spot.includes(':') ? spot.split(':').map(Number) : Number(spot));
@@ -110,6 +110,65 @@ for (const kind of ['pdf', 'epub']) {
       expect(await shown(page)).toEqual(last); // the closing page lay over the book; the book did not move
     });
 
+    test('a known word shows its card within 600 ms once cached, beside the word, and Esc closes it', async ({ page, api }) => {
+      await openReader(page);
+      const lamp = await wordPoint(page, 'lamp');
+      expect(lamp).not.toBeNull();
+      await page.mouse.move(5, 5);
+      await page.mouse.move(lamp.x, lamp.y);
+      const card = page.locator('.rf-wordcard[data-kind="definition"]');
+      await expect(card).toBeVisible();
+      await expect(card).toContainText('A device for giving light.');
+      const box = await card.boundingBox();
+      expect(box.y >= lamp.bottom || box.y + box.height <= lamp.top, 'the card leaves the line uncovered').toBe(true);
+      await page.keyboard.press('Escape');
+      await expect(card).toHaveCount(0);
+      // Again: the answer is in the client's cache, so only the hover intent stands between.
+      await page.mouse.move(5, 5);
+      await page.waitForTimeout(300);
+      const elapsed = await timeToCard(page, lamp);
+      expect(elapsed).toBeLessThan(600);
+      await expect(card).toBeVisible();
+      expect(api.lookups.filter((l) => l.term === 'lamp')).toHaveLength(1);
+      // Moving off the word closes a hover card, inside an EPUB section's iframe as well: here, into the gutter.
+      const middle = await page.locator('.rf-ov-book').boundingBox();
+      await page.mouse.move(middle.x + middle.width / 2, lamp.y, { steps: 4 });
+      await expect(card).toHaveCount(0);
+    });
+
+    test('two to five selected words are looked up as a phrase', async ({ page, api }) => {
+      await openReader(page);
+      const lamp = await wordPoint(page, 'lamp');
+      const threw = await wordPoint(page, 'threw');
+      await page.mouse.move(lamp.left + 1, lamp.y);
+      await page.mouse.down();
+      await page.mouse.move(threw.right - 1, threw.y, { steps: 8 });
+      await page.mouse.up();
+      await expect(page.locator('.rf-wordcard')).toBeVisible();
+      await expect.poll(() => api.lookups.map((l) => l.term)).toContainEqual(expect.stringMatching(/^lamp.*threw$/));
+    });
+
+    test.describe('on a phone', () => {
+      test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+
+      test('a long-press opens the compact sheet below or above the word, with no page turn', async ({ page }) => {
+        await openReader(page);
+        const lamp = await wordPoint(page, 'lamp');
+        const cdp = await page.context().newCDPSession(page);
+        const touch = (type) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: lamp.x, y: lamp.y }] });
+        const before = await shown(page);
+        await touch('touchStart');
+        await page.waitForTimeout(600);
+        await touch('touchEnd');
+        const sheet = page.locator('.rf-wordcard[data-compact]');
+        await expect(sheet).toBeVisible();
+        await expect(sheet).toContainText('Tap outside to close');
+        const box = await sheet.boundingBox();
+        expect(box.y >= lamp.bottom || box.y + box.height <= lamp.top, 'the sheet leaves the word uncovered').toBe(true);
+        expect(await shown(page)).toEqual(before); // no page turn
+      });
+    });
+
     test('page-turn frame rate (recorded in docs/BENCHMARKS.md)', async ({ page }, info) => {
       await openReader(page);
       await book(page).focus();
@@ -187,4 +246,54 @@ test('the contents list the PDF outline with today labelled, and an entry opens 
   await expect(items).toHaveText([/^Chapter 1 Signals\s*today$/, /^Chapter 2 Noise\s*today$/]);
   await items.nth(1).click();
   await expect.poll(() => shown(page)).toEqual({ start: '4', end: '5' }); // page 5 on the 4-5 spread
+});
+
+test('a proper noun shows a Wikipedia summary with a link', async ({ page, api }) => {
+  await openReader(page);
+  await book(page).focus();
+  await page.keyboard.press('ArrowRight'); // pages 2-3: "Chapter 1 Signals"
+  await page.waitForTimeout(800);
+  const signals = await wordPoint(page, 'Signals');
+  await page.mouse.move(5, 5);
+  await page.mouse.move(signals.x, signals.y);
+  const card = page.locator('.rf-wordcard[data-kind="summary"]');
+  await expect(card).toBeVisible();
+  await expect(card.getByRole('heading')).toHaveText('Signal');
+  const link = card.getByRole('link', { name: /Wikipedia/ });
+  await expect(link).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Signal');
+  await expect(link).toHaveAttribute('target', '_blank');
+  await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  expect(api.lookups).toContainEqual({ term: 'Signals', proper: true });
+});
+
+test.describe('epub', () => {
+  test.use({ book: 'epub' });
+
+  test('words in a figure are not looked up; the text around it is', async ({ page, api }) => {
+    await openReader(page);
+    const plate = await wordPoint(page, 'plate'); // only in the figure's caption
+    expect(plate).not.toBeNull();
+    await page.mouse.move(5, 5);
+    await page.mouse.move(plate.x, plate.y);
+    await page.waitForTimeout(900);
+    await expect(page.locator('.rf-wordcard')).toHaveCount(0);
+    expect(api.lookups).toEqual([]);
+  });
+});
+
+test('with hover lookup off, hovering shows nothing, and Enter on a selected word still opens its card', async ({ page }) => {
+  await openReader(page);
+  await page.getByRole('switch', { name: 'Look up words on hover' }).click();
+  await expect(page.getByRole('switch', { name: 'Look up words on hover' })).toHaveAttribute('aria-checked', 'false');
+  const lamp = await wordPoint(page, 'lamp');
+  await page.mouse.move(5, 5);
+  await page.mouse.move(lamp.x, lamp.y);
+  await page.waitForTimeout(900);
+  await expect(page.locator('.rf-wordcard')).toHaveCount(0);
+  await page.mouse.dblclick(lamp.x, lamp.y);
+  await book(page).focus();
+  await page.keyboard.press('Enter');
+  const card = page.locator('.rf-wordcard[data-kind="definition"]');
+  await expect(card).toBeVisible();
+  await expect(card).toBeFocused();
 });

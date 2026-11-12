@@ -2733,3 +2733,40 @@ The same e2e case: failed before, passes after.
 
 ### Commit
 C17.5b feat(reader): open every book in its original form for today's reading
+
+## 2026-11-12 C17.5 — the lookup e2e found no words in the EPUB
+
+**Status:** fixed
+
+### Symptom
+Every EPUB lookup case failed before touching the reader:
+
+    npx playwright test e2e/reader.spec.js
+    epub › a known word shows its card ...
+    Error: expect(received).not.toBeNull()  Received: null
+    > expect(lamp).not.toBeNull();
+
+### Repro
+`wordPoint(page, 'lamp')` on reflow.epub returns null; on sample.pdf it
+finds the word and the card opens.
+
+### Hypotheses
+1. The section iframes are not reached: the helper walked open shadow
+   roots, but foliate's paginator keeps its iframe in a closed one
+   (`el.shadowRoot` is null). Confirmed: no frames found, so it searched
+   the page's own document.
+2. Lookup itself fails inside iframes. Not the cause: after the helper
+   fix the same cases pass.
+
+### Root cause
+`frontend/e2e/fixtures.js` `wordPoint` (a test helper, not app code).
+
+### Fix
+`wordPoint` reaches sections as Playwright frames (`page.frames()`),
+shifted by each frame element's box.
+
+### Regression test
+`e2e/reader.spec.js` epub lookup cases: failed before, pass after.
+
+### Commit
+C17.5c feat(reader): look up words inside PDF and EPUB pages

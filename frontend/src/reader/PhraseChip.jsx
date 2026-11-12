@@ -1,5 +1,6 @@
 import { useCallback, useLayoutEffect } from 'react';
 import { autoUpdate, flip, FloatingPortal, inline, offset, shift, useFloating } from '@floating-ui/react';
+import { outerBox } from './highlight';
 import './WordCard.css';
 
 /**
@@ -18,11 +19,7 @@ export function PhraseChip({ target, onLookUp }) {
   const setFloating = useCallback((el) => refs.setFloating(el), [refs]);
   const { range } = target;
   useLayoutEffect(() => {
-    refs.setPositionReference({
-      getBoundingClientRect: () => range.getBoundingClientRect(),
-      getClientRects: () => range.getClientRects(),
-      contextElement: range.startContainer.parentElement ?? undefined,
-    });
+    refs.setPositionReference(outerBox(range)); // beside the word, in this page even when it is in a section's iframe
   }, [refs, range]);
   return (
     <FloatingPortal>

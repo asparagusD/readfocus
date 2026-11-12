@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 598,
-    "inventoried": 457,
+    "tracked": 599,
+    "inventoried": 458,
     "excluded": 141
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13517,
+      "size_bytes": 13553,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1105,8 +1105,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2735,
-      "size_bytes": 119354,
+      "lines": 2772,
+      "size_bytes": 120527,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1169,8 +1169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3400,
-      "size_bytes": 627256,
+      "lines": 3401,
+      "size_bytes": 629643,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1289,10 +1289,10 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 190,
-      "size_bytes": 10559,
+      "lines": 299,
+      "size_bytes": 15991,
       "role": "config",
-      "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled."
+      "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card."
     },
     {
       "path": "frontend/e2e/reading.spec.js",
@@ -2239,12 +2239,20 @@
       "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
     },
     {
+      "path": "frontend/src/originalview/BookLookup.jsx",
+      "language": "jsx",
+      "lines": 41,
+      "size_bytes": 2244,
+      "role": "asset",
+      "purpose": "Word lookup in the original view (C17.5): useWordAtPoint over the book's surfaces, useWordCard, the WordCard and the Look up chip placed in the page beside the word, a polite announcement; closed on a new page and paused while a leaf turns; lookUpSelection and clear on its ref for the frame's Enter, ? and Escape."
+    },
+    {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 266,
-      "size_bytes": 13746,
+      "lines": 301,
+      "size_bytes": 16099,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -2353,10 +2361,10 @@
     {
       "path": "frontend/src/originalview/frame.css",
       "language": "css",
-      "lines": 416,
-      "size_bytes": 12649,
+      "lines": 423,
+      "size_bytes": 13101,
       "role": "asset",
-      "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion. C17.5: the note card over the foot of today's first page, the closing page over the book with its lamp's single pulse, and the blank page over the renderer while a session opens."
+      "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion. C17.5: the note card over the foot of today's first page, the closing page over the book with its lamp's single pulse, and the blank page over the renderer while a session opens. C17.5: the lookup mark (::highlight rf-lookup) and no iOS callout on a held word."
     },
     {
       "path": "frontend/src/originalview/frame.js",
@@ -2729,10 +2737,10 @@
     {
       "path": "frontend/src/reader/PhraseChip.jsx",
       "language": "jsx",
-      "lines": 43,
-      "size_bytes": 1613,
+      "lines": 40,
+      "size_bytes": 1543,
       "role": "asset",
-      "purpose": "The 'Look up' chip (C12.9): a 44 px pill placed by Floating UI below a 2-5 word touch selection (flipping above), keeping the selection on press; a tap opens the compact sheet."
+      "purpose": "The 'Look up' chip (C12.9): a 44 px pill placed by Floating UI below a 2-5 word touch selection (flipping above), keeping the selection on press; a tap opens the compact sheet. Placed through outerBox (C17.5), so a word in an EPUB section's iframe gets it beside the word in the page."
     },
     {
       "path": "frontend/src/reader/ReaderToolbar.css",
@@ -2761,10 +2769,10 @@
     {
       "path": "frontend/src/reader/WordCard.jsx",
       "language": "jsx",
-      "lines": 157,
-      "size_bytes": 6195,
+      "lines": 154,
+      "size_bytes": 6125,
       "role": "asset",
-      "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard; opened by touch it is the compact sheet (grab handle, one sense, 'Tap outside to close', swipe down to close)."
+      "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard; opened by touch it is the compact sheet (grab handle, one sense, 'Tap outside to close', swipe down to close). Placed through outerBox (C17.5), so a word in an EPUB section's iframe gets it beside the word in the page."
     },
     {
       "path": "frontend/src/reader/anchor.js",
@@ -2825,10 +2833,10 @@
     {
       "path": "frontend/src/reader/highlight.js",
       "language": "javascript",
-      "lines": 31,
-      "size_bytes": 1200,
+      "lines": 76,
+      "size_bytes": 3153,
       "role": "asset",
-      "purpose": "The soft lookup mark: CSS Custom Highlight API ('rf-lookup'), or positioned boxes in a layer under the text where the API is missing."
+      "purpose": "The soft lookup mark: CSS Custom Highlight API ('rf-lookup') in the word's own document (since C17.5 an EPUB section's iframe gets the rule in the page's --accent-soft), or positioned boxes in a layer under the text where the API is missing; outerBox(range) gives a range's boxes in this page's coordinates for the card and chip."
     },
     {
       "path": "frontend/src/reader/index.js",
@@ -2929,18 +2937,18 @@
     {
       "path": "frontend/src/reader/useWordAtPoint.js",
       "language": "javascript",
-      "lines": 219,
-      "size_bytes": 10335,
+      "lines": 252,
+      "size_bytes": 11744,
       "role": "asset",
-      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM: caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside the word's rects; 350 ms on the same word looks it up once; a 2-5 word selection (mouse or touch) looks up a phrase; marks the target via highlight.js; paused while a leaf turns; returns clear(); C12.8: hover can be turned off (selection still works), lookUpSelection() for Enter or ? on a selected word or phrase, clearMark() removes the mark without cancelling a hover under way; C12.9: a touch long-press (or the platform's touch contextmenu) on a lookable word opens it ('press') with the OS menu held off and the release swallowed, other long-presses keep native selection; a touch selection of 2-5 words goes to onChip instead of opening a card; lookUp(target, by)."
+      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM, over any number of surfaces {root, doc} since C17.5 (the PDF's text layers in the page, each EPUB section's body in its iframe): caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside its rects; math, code, pre, figures and SVG are never looked up (SKIP); 350 ms on the same word looks it up once; a 2-5 word selection looks up a phrase; marks it via highlight.js; paused while a leaf turns; C12.8: hover can be turned off, lookUpSelection() for Enter or ?, clearMark(); C12.9: a touch long-press opens it ('press') with the OS menu held off, a touch selection of 2-5 words goes to onChip; lookUp(target, by)."
     },
     {
       "path": "frontend/src/reader/useWordCard.js",
       "language": "javascript",
-      "lines": 72,
-      "size_bytes": 3093,
+      "lines": 73,
+      "size_bytes": 3138,
       "role": "asset",
-      "purpose": "The word card's state and closing rules (C12.8): open() shows a loading card and fetches through the lookup client; a hover-opened card closes 200 ms after the pointer leaves both word and card; any card closes on Esc, a press elsewhere or close(); closing from inside the card returns focus to the book."
+      "purpose": "The word card's state and closing rules (C12.8): open() shows a loading card and fetches through the lookup client; a hover-opened card closes 200 ms after the pointer leaves both word and card; any card closes on Esc, a press elsewhere or close(); closing from inside the card returns focus to the book. The pointer's distance to the word is measured through outerBox (C17.5)."
     },
     {
       "path": "frontend/src/reader/wordAt.js",
@@ -3601,8 +3609,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 459,
-      "size_bytes": 135880,
+      "lines": 460,
+      "size_bytes": 137342,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

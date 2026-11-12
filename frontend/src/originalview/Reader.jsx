@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { easing, prefersReducedMotion, seconds } from '../motion/presets';
 import { Button } from '../components/ui/Button';
+import { BookLookup } from './BookLookup';
 import { EpubBook } from './epub/EpubBook';
 import { PdfBook } from './pdf/PdfBook';
 import { keyAction, SPREAD_MIN_WIDTH, timeAtProgress } from './frame';
@@ -73,10 +74,12 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * the `closing` page covers the book and Previous comes back; Home goes to the start.
  * `opening` keeps the blank page up while the session finds and opens its place; `status`
  * joins the folio ("Beyond today's reading"). `ref` also gets find(snippets, from) and toc().
+ * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
+ * `hoverLookup` false leaves selection, long-press and Enter).
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null,
+  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -93,6 +96,14 @@ export function Reader({
   const moveRef = useRef(null);
   const [ending, setEnding] = useState(false); // the closing page is shown
   const [noteHidden, setNoteHidden] = useState(false);
+  // Lookup (C17.5): where the book is drawn. A PDF is drawn in this page (its text layers in the
+  // book box); an EPUB in one iframe per section shown, added as each loads.
+  const [bookBox, setBookBox] = useState(null);
+  const [sections, setSections] = useState([]);
+  const lookup = useRef(null);
+  const surfaces = useMemo(() => (kind === 'pdf'
+    ? (bookBox ? [{ root: bookBox, doc: document }] : [])
+    : sections.filter((doc) => doc.defaultView && doc.body).map((doc) => ({ root: doc.body, doc }))), [kind, bookBox, sections]);
 
   const relocate = useCallback((next) => {
     setPlace(next);
@@ -142,11 +153,16 @@ export function Reader({
 
   const onKey = useCallback((event) => {
     if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+    if (lookupClient && (event.key === 'Enter' || event.key === '?') && lookup.current?.lookUpSelection()) {
+      event.preventDefault(); // the card opens with focus
+      return;
+    }
+    if (event.key === 'Escape') lookup.current?.clear();
     const action = keyAction(event);
     if (!action || (action === 'ribbon' && !onBookmark)) return;
     event.preventDefault();
     act(action);
-  }, [act, onBookmark]);
+  }, [act, onBookmark, lookupClient]);
 
   const onKeyRef = useRef(null);
   const swipeStart = useRef(null);
@@ -173,6 +189,20 @@ export function Reader({
     watched.current.add(doc);
     doc.addEventListener('keydown', (e) => onKeyRef.current?.(e));
     doc.addEventListener('pointerdown', (e) => swipeStart.current?.(e));
+    // The page hears what happens in the section too, in its own coordinates: the word card closes
+    // on a press or when the pointer leaves the word, Esc closes it, and the toolbar wakes on movement.
+    const relay = (e) => {
+      const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+      if (!frame) return;
+      document.dispatchEvent(new PointerEvent(e.type, {
+        bubbles: true, clientX: e.clientX + frame.left, clientY: e.clientY + frame.top,
+        pointerType: e.pointerType, buttons: e.buttons, movementX: e.movementX, movementY: e.movementY,
+      }));
+    };
+    doc.addEventListener('pointermove', relay);
+    doc.addEventListener('pointerdown', relay);
+    doc.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); });
+    setSections((list) => [...list.filter((d) => d.defaultView && d !== doc), doc]);
     doc.addEventListener('pointerup', (e) => swipeEnd.current?.(e));
   }, []);
 
@@ -203,7 +233,7 @@ export function Reader({
         aria-label={`${title}. Arrow keys, Page Up and Page Down, or Space turn the page.`}
         onPointerDown={(e) => swipeStart.current?.(e)} onPointerUp={(e) => swipeEnd.current?.(e)}
         onPointerCancel={() => { swipe.current = null; }}>
-        <div className="rf-ov-book" data-spread={wide}>
+        <div className="rf-ov-book" data-spread={wide} ref={setBookBox}>
           {kind === 'pdf'
             ? <PdfBook key={attempt} {...shared} zoom={zoom} onSheet={setSheet} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} />}
@@ -224,14 +254,14 @@ export function Reader({
           <button type="button" className="rf-ov-edge" data-edge="forward" tabIndex={-1} aria-hidden="true"
             onClick={() => move(1)} disabled={ending || (place?.atEnd && !closing)} />
           {note && !noteHidden && !ending && !opening && shows(place, bounds?.start) && (
-            <aside className="rf-ov-note" aria-label="Today">
+            <aside className="rf-ov-note" aria-label="Today" data-no-lookup>
               <div className="rf-note">{note}</div>
               <button type="button" className="rf-tool" onClick={() => setNoteHidden(true)} aria-label="Hide this note">
                 <X size={16} strokeWidth={1.75} aria-hidden="true" />
               </button>
             </aside>
           )}
-          {ending && <div className="rf-ov-end"><div className="rf-end">{closing}</div></div>}
+          {ending && <div className="rf-ov-end" data-no-lookup><div className="rf-end">{closing}</div></div>}
           {onBookmark && place && !failure && !ending && (
             <button type="button" className="rf-ov-ribbon" onClick={() => act('ribbon')} aria-label="Save my place"
               aria-keyshortcuts="B" title="Save my place (B)">
@@ -260,6 +290,11 @@ export function Reader({
           <span>Next</span><ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </footer>
+      {lookupClient && (
+        <BookLookup ref={lookup} surfaces={surfaces} client={lookupClient} hover={hoverLookup} returnFocusTo={stage}
+          paused={!place || opening || ending || Boolean(turn) || Boolean(failure)}
+          page={place ? `${spot(placeStart(place))}-${spot(placeEnd(place))}` : ''} />
+      )}
       <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{ending ? "End of today's reading" : opening ? '' : place?.folio ?? ''}</p>
     </section>
   );

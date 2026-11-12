@@ -290,7 +290,8 @@
   box-shadow: var(--elevation-page);
 }
 
-.rf-ov-live {
+.rf-ov-live,
+.rf-ov-said {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -414,3 +415,9 @@
 
 /* While the session finds its place, the blank page lies over the renderer. */
 .rf-ov[data-loading="true"] .rf-ov-book::before { z-index: 6; }
+
+/* In-place lookup (C12.7; both renderers since C17.5): a soft wash on the word or phrase being
+   looked up, painted by the Custom Highlight API without changing the text's DOM. An EPUB
+   section gets the same rule in its own document (highlight.js). No motion. */
+::highlight(rf-lookup) { background-color: var(--accent-soft); }
+.rf-ov-book { -webkit-touch-callout: none; } /* C12.9: a held word opens its card, not the iOS callout */

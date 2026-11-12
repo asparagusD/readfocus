@@ -1931,6 +1931,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/BookLookup.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/originalview/Reader.jsx",
       "type": "file",
       "role": "asset",
@@ -5751,6 +5757,31 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/PhraseChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/WordCard.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/useWordAtPoint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/BookLookup.jsx",
+      "to": "file:frontend/src/reader/useWordCard.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -5758,6 +5789,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/BookLookup.jsx"
     },
     {
       "type": "imports",
@@ -6531,6 +6567,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/PhraseChip.jsx",
+      "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/ReaderToolbar.jsx",
       "to": "file:frontend/src/components/ThemeToggle.jsx"
     },
@@ -6548,6 +6589,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/WordCard.jsx",
       "to": "file:frontend/src/reader/WordCard.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/WordCard.jsx",
+      "to": "file:frontend/src/reader/highlight.js"
     },
     {
       "type": "imports",
@@ -6623,6 +6669,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/useWordAtPoint.js",
       "to": "file:frontend/src/reader/wordAt.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useWordCard.js",
+      "to": "file:frontend/src/reader/highlight.js"
     },
     {
       "type": "imports",

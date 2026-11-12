@@ -65,8 +65,8 @@
     {
       "path": ".env.example",
       "language": "dotenv",
-      "lines": 22,
-      "size_bytes": 889,
+      "lines": 35,
+      "size_bytes": 1446,
       "role": "config",
       "purpose": "Backend environment template: Supabase keys, FRONTEND_URL (one or more comma-separated CORS origins), ENV (only development adds the localhost origins), FASTEMBED_CACHE and the optional EMBED_THREADS; no AI provider key (since C8.8)."
     },
@@ -849,8 +849,8 @@
     {
       "path": "backend/tests/test_no_paid_ai.py",
       "language": "python",
-      "lines": 77,
-      "size_bytes": 2515,
+      "lines": 88,
+      "size_bytes": 3334,
       "role": "test",
       "purpose": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
     },
@@ -1041,8 +1041,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2398,
-      "size_bytes": 105991,
+      "lines": 2461,
+      "size_bytes": 108967,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1097,8 +1097,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2969,
-      "size_bytes": 567637,
+      "lines": 3055,
+      "size_bytes": 574365,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2993,8 +2993,8 @@
     {
       "path": "tools/no_paid_ai.py",
       "language": "python",
-      "lines": 31,
-      "size_bytes": 1495,
+      "lines": 41,
+      "size_bytes": 2036,
       "role": "script",
       "purpose": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
     },

@@ -2396,3 +2396,66 @@ re-run with the fix passed (92 of 92, A's counts unchanged at
 
 ### Commit
 fix(tooling): wait for ingestion to finish before the isolation baseline
+
+## 2026-11-12 C16.4 — gemini-3.8-flash does not answer on the free tier
+
+**Status:** open (outside the repo: Google's side; no code involved yet)
+
+### Symptom
+The C16.4 throwaway check (one "Reply with OK" request per configured
+model, through the v1beta `generateContent` REST endpoint with the key in
+the `x-goog-api-key` header; script in the session scratchpad, not
+committed) got no answer from the chat model. Expected HTTP 200 and "OK"
+from both models. The key is redacted from every output.
+
+    python <scratchpad>/gemini_ping.py .env
+    GEMINI_MODEL_CHAT=gemini-3.8-flash: HTTP 503, 4093 ms, reply 'UNAVAILABLE'
+    GEMINI_MODEL_VISION=gemini-3.5-flash-lite: HTTP 200, 1734 ms, reply 'OK', tokens 4
+
+    (retry, same command)
+    GEMINI_MODEL_CHAT=gemini-3.8-flash: request failed (ReadTimeout)   # 60 s timeout
+    GEMINI_MODEL_VISION=gemini-3.5-flash-lite: HTTP 200, 1330 ms, reply 'OK', tokens 4
+
+No stack trace: the script catches `httpx.HTTPError` and prints its type.
+
+### Repro
+One `generateContent` request to `gemini-3.8-flash` with this key. Seen 3
+times in 3 calls within a few minutes; not known whether it persists.
+
+### Hypotheses
+1. Google is short of capacity for `gemini-3.8-flash` on the free tier.
+   Evidence: `503 UNAVAILABLE` is Google's overload status; the same key
+   and endpoint work for `gemini-3.5-flash-lite`. Ruled out if: the model
+   answers later in the day. Result: not ruled out; consistent with all
+   three calls.
+2. The model is not served for this key or project. Evidence: none
+   beyond the failure. Ruled out if: `GET v1beta/models/gemini-3.8-flash`
+   answers 200. Result: ruled out, 200 with `generateContent` among the
+   supported methods and `thinking: true`.
+3. Default thinking makes a reply slower than the timeout. Evidence: the
+   model thinks by default and cannot be set to `minimal`. Ruled out if:
+   a call with `thinkingConfig.thinkingLevel = "low"` and a 120 s timeout
+   also fails. Result: ruled out, it timed out at 120 s.
+
+Further experiment (the user chose to try another Flash model): one call
+to `gemini-3.6-flash` with the same key, `HTTP 503, 3830 ms, UNAVAILABLE`.
+Both Flash models refuse while Flash-Lite answers, which fits hypothesis 1.
+
+### Root cause
+Not established; hypothesis 1 stands. Further calls were stopped to keep
+the key's 20-requests-a-day allowance for this model (observed in AI
+Studio by the user, 2026-11-12).
+
+### Fix
+None in code (no Steve code exists). The user chose
+`GEMINI_MODEL_CHAT=gemini-3.5-flash-lite`, the one model verified on this
+key (200 "OK" twice, 1.3-1.7 s), for both variables; C21 re-tests
+`gemini-3.8-flash` and `gemini-3.6-flash` and may switch chat back.
+
+### Regression test
+Not applicable: an external service's availability. Steve's backend
+(C21) must treat 503 and timeouts as the paused state
+(`steve-guardrails` section 6) and get offline tests for both.
+
+### Commit
+C16.4 `chore(steve): add Gemini env names and phase-2 progress sections`

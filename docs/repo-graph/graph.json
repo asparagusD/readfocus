@@ -2087,6 +2087,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/today.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/today.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/useBoxSize.js",
       "type": "file",
       "role": "asset",
@@ -3194,11 +3206,6 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:GET /auth/profile"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:GET /books/{book_id}/pages"
     },
     {
       "type": "calls_endpoint",
@@ -5009,11 +5016,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/e2e/fixtures.js",
-      "to": "file:frontend/src/gallery/readerFixture.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/e2e/journey.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -5780,6 +5782,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/today.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/useLamplight.js"
     },
     {
@@ -5844,6 +5851,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/epub/engine.js",
+      "to": "file:frontend/src/vendor/foliate-js/epubcfi.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/epub/imageSize.test.js",
       "to": "file:frontend/src/originalview/epub/imageSize.js"
     },
@@ -5890,6 +5902,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/today.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/useBoxSize.js"
     },
     {
@@ -5931,6 +5948,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
       "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/today.test.js",
+      "to": "file:frontend/src/originalview/today.js"
     },
     {
       "type": "imports",
@@ -6255,6 +6277,26 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/Reader.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/today.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/useLamplight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/pages/ReadingSession.css"
     },
     {
@@ -6270,27 +6312,12 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/reader/blocks.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/reader/index.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/lookup.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/readAhead.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/reader/textSize.js"
     },
     {
       "type": "imports",

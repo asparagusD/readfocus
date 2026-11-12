@@ -9,11 +9,12 @@ const narrow = () => typeof window !== 'undefined' && window.matchMedia('(width 
 /**
  * The book's contents (C12.5b, D4): a drawer that slides in from the left
  * (a sheet from the bottom on phones) over the reader without leaving the
- * page. Chapters come from books.toc; today's carry a quiet "today" label
+ * page. Since C17.5 the entries are the book's own (the PDF outline or the
+ * EPUB nav), each { key, title, today }; today's carry a quiet "today" label
  * and the current one is marked. Picking one calls onPick; Esc, the close
  * button or a click outside closes it, and focus returns to `returnTo`.
  */
-export function ContentsDrawer({ open, onClose, toc, todayChunks, current, onPick, returnTo }) {
+export function ContentsDrawer({ open, onClose, entries, current, onPick, returnTo }) {
   const panel = useRef(null);
   const sheet = narrow();
   useEffect(() => {
@@ -61,16 +62,15 @@ export function ContentsDrawer({ open, onClose, toc, todayChunks, current, onPic
               <X size={18} strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
-          {toc.length ? (
+          {entries.length ? (
             <ol className="rf-contents-list">
-              {toc.map((entry) => {
-                const today = todayChunks.has(entry.chunk_index);
+              {entries.map((entry) => {
                 const here = entry.title === current;
                 return (
-                  <li key={`${entry.chunk_index}-${entry.block_id}`}>
+                  <li key={entry.key}>
                     <button type="button" className="rf-contents-item" aria-current={here ? 'true' : undefined} onClick={() => onPick(entry)}>
                       <span className="rf-contents-name">{entry.title}</span>
-                      {today && <span className="rf-contents-today">today</span>}
+                      {entry.today && <span className="rf-contents-today">today</span>}
                     </button>
                   </li>
                 );

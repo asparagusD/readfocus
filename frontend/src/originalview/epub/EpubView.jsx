@@ -49,6 +49,7 @@ export function EpubView({
   useImperativeHandle(ref, () => engine && {
     next: engine.next, prev: engine.prev, goTo: engine.goTo, goToFraction: engine.goToFraction, contents: engine.contents, isFixedLayout: engine.isFixedLayout,
     locations: engine.locations, lastLocation: engine.lastLocation, toc: engine.book.toc ?? [],
+    find: engine.find, goToChar: engine.goToChar, sectionOf: engine.sectionOf, pointCfi: engine.pointCfi,
   }, [engine]);
 
   return (

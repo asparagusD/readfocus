@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 596,
-    "inventoried": 455,
+    "tracked": 598,
+    "inventoried": 457,
     "excluded": 141
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13499,
+      "size_bytes": 13517,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1105,8 +1105,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2663,
-      "size_bytes": 116704,
+      "lines": 2735,
+      "size_bytes": 119354,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1169,8 +1169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3399,
-      "size_bytes": 625244,
+      "lines": 3400,
+      "size_bytes": 627256,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1202,7 +1202,7 @@
       "path": "frontend/e2e/calibration.spec.js",
       "language": "javascript",
       "lines": 60,
-      "size_bytes": 3394,
+      "size_bytes": 3412,
       "role": "config",
       "purpose": "E2E: an uncalibrated reader gets the pace check (intro, passage, one POST with a clamped wpm, then today's reading); a failed save shows a toast and no native dialog; 375 without sideways scroll."
     },
@@ -1225,10 +1225,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 162,
-      "size_bytes": 8735,
+      "lines": 200,
+      "size_bytes": 11707,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from the Walden fixture (profile, an empty book list and dashboard, session start with the saved position, position saves, contents, pages, lookup), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the page announcement, find a word on screen and time hover-to-card inside the page; /health answers ready."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready."
     },
     {
       "path": "frontend/e2e/fixtures/books/fixed.epub",
@@ -1258,7 +1258,7 @@
       "path": "frontend/e2e/journey.spec.js",
       "language": "javascript",
       "lines": 229,
-      "size_bytes": 13380,
+      "size_bytes": 13390,
       "role": "config",
       "purpose": "Live Playwright journey (C15.1), not in test:e2e: waits for /health model_ready, signs in as test user A from .env.test, uploads sample.pdf, waits for ready, turns pages (position PUT), opens a word card (real /lookup), takes the test with wrong answers, checks Results, the Dashboard's mastery for the book and that the next session's reason reacts to the test, then removes the book (API delete in finally if not); fails on any host outside the site, the API and the Supabase project."
     },
@@ -1289,18 +1289,18 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 250,
-      "size_bytes": 13711,
+      "lines": 190,
+      "size_bytes": 10559,
       "role": "config",
-      "purpose": "Playwright e2e for the reader (C12.10): page turns by keys, button and edge; place saved and restored after reload; the same paragraph in view across resizes; no animated leaf under reduced motion; a mouse click on the last page's Start test finishing reading (C13.4 regression); a cached word's card within 600 ms and Esc; a proper noun's Wikipedia summary and link; the compact sheet from a long-press at 375; page-turn frame rate (also at 4x CPU) and lookup timings written to test-results."
+      "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled."
     },
     {
       "path": "frontend/e2e/reading.spec.js",
       "language": "javascript",
-      "lines": 91,
-      "size_bytes": 5524,
+      "lines": 97,
+      "size_bytes": 5647,
       "role": "config",
-      "purpose": "Playwright e2e for the reading page's polish (C13.4): the first-page note with its 40 px lamp, the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test, the leave dialog (Leave, Keep reading; Leave to the shelf), and no pulse under reduced motion; a re-pagination (theme, resize) on the closing page keeps it (C15.1 regression)."
+      "purpose": "Playwright e2e for the reading page's polish (C13.4; on the original view since C17.5), on the PDF and the EPUB: the planner's note over today's first page with its 40 px lamp, hideable; the closing page's lamp pulse (rf-lamp-pulse, 1.4 s, once) and Start test calling finish-reading once before /test; a theme change or resize keeps the closing page and Home returns to today's start; once: the leave dialog and no pulse under reduced motion."
     },
     {
       "path": "frontend/e2e/results.spec.js",
@@ -2241,10 +2241,10 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 212,
-      "size_bytes": 10777,
+      "lines": 266,
+      "size_bytes": 13746,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -2281,26 +2281,26 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 72,
-      "size_bytes": 3338,
+      "lines": 97,
+      "size_bytes": 4604,
       "role": "asset",
-      "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls."
+      "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section."
     },
     {
       "path": "frontend/src/originalview/epub/EpubView.jsx",
       "language": "jsx",
-      "lines": 60,
-      "size_bytes": 2867,
+      "lines": 61,
+      "size_bytes": 2973,
       "role": "asset",
-      "purpose": "An EPUB as published (C17.3): opens the book's file through engine.js into the box it fills (spread from 1024 px, one page below, fixed layout page by page); style prop 'publisher' or 'readfocus' with font size; ref gives next, prev, goTo, contents. C17.4: line height, margins, theme CSS, animated, wide and onError props; goToFraction, locations, lastLocation and toc on the ref."
+      "purpose": "An EPUB as published (C17.3): opens the book's file through engine.js into the box it fills (spread from 1024 px, one page below, fixed layout page by page); style prop 'publisher' or 'readfocus' with font size; ref gives next, prev, goTo, contents. C17.4: line height, margins, theme CSS, animated, wide and onError props; goToFraction, locations, lastLocation and toc on the ref. C17.5: find, goToChar, sectionOf and pointCfi on the ref."
     },
     {
       "path": "frontend/src/originalview/epub/engine.js",
       "language": "javascript",
-      "lines": 159,
-      "size_bytes": 7708,
+      "lines": 215,
+      "size_bytes": 9893,
       "role": "asset",
-      "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made). C17.4: text size and line height in both styles, margins, theme CSS, animated off for the frame, wide from the frame, goToFraction, locations (character counts, cached per book), charStart and charEnd on relocate."
+      "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made). C17.4: text size and line height in both styles, margins, theme CSS, animated off for the frame, wide from the frame, goToFraction, locations (character counts, cached per book), charStart and charEnd on relocate. C17.5: find(snippets) over each section's packaged text (squeezed, cached), goToChar({index, char}) in the shown section, sectionOf(href), pointCfi (a collapsed CFI); rangeAtChar exported."
     },
     {
       "path": "frontend/src/originalview/epub/epub.css",
@@ -2353,10 +2353,10 @@
     {
       "path": "frontend/src/originalview/frame.css",
       "language": "css",
-      "lines": 324,
-      "size_bytes": 10169,
+      "lines": 416,
+      "size_bytes": 12649,
       "role": "asset",
-      "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion."
+      "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion. C17.5: the note card over the foot of today's first page, the closing page over the book with its lamp's single pulse, and the blank page over the renderer while a session opens."
     },
     {
       "path": "frontend/src/originalview/frame.js",
@@ -2377,10 +2377,10 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 119,
-      "size_bytes": 5820,
+      "lines": 140,
+      "size_bytes": 6904,
       "role": "asset",
-      "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls."
+      "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
@@ -2445,6 +2445,22 @@
       "size_bytes": 2448,
       "role": "asset",
       "purpose": "React hooks (C17.2): usePdfDocument(bookId, load) opens the book's PDF (loading PDF.js while the source is fetched) and destroys it on unmount; usePageCache(doc, scale, current) keeps current ±2 pages rendered and starts afresh on a new scale or pixel ratio. C17.4: the page cache starts afresh on new lamplight colours."
+    },
+    {
+      "path": "frontend/src/originalview/today.js",
+      "language": "javascript",
+      "lines": 55,
+      "size_bytes": 2653,
+      "role": "asset",
+      "purpose": "Today's reading inside a whole book (C17.5), no DOM: squeeze (lower case, no whitespace) and snippetsFor (a chunk's first 40 and 20 characters), compare locations ({pdf, page} or {epub, index, char}), a place's start and end, reached, shows and beyond for today's start and end, chunkAt for the chunk shown, folioShort for the ribbon's toast."
+    },
+    {
+      "path": "frontend/src/originalview/today.test.js",
+      "language": "javascript",
+      "lines": 54,
+      "size_bytes": 2766,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): squeezed snippets, location order, today's end reached or shown, pages beyond today, the chunk shown, the ribbon's short folio."
     },
     {
       "path": "frontend/src/originalview/useBoxSize.js",
@@ -2561,10 +2577,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 319,
-      "size_bytes": 14213,
+      "lines": 348,
+      "size_bytes": 16014,
       "role": "page",
-      "purpose": "Reading page: checks calibration, starts a session and shows today's text as the paginated book under the fading reader toolbar (back, book and chapter, text size kept in localStorage, theme, and the session's countdown with start/pause, Done reading and abandon); the planner's reason as a note on the first page, a closing 'That's today's reading' page with Start test, pacing by pages left; the contents drawer (today's chapters jump in place, a later chapter opens read-only beyond today with a way back) and the ribbon bookmark with its 'Place saved at page N.' toast; resumes and saves the place, reads the next chunk ahead; timing (auto-pause at zero, minutes sent at finish) and the abandon modal as before; one lookup client for the visit and the per-user hover lookup setting behind the toolbar's 'Look up' switch (C12.8); C13.4: the first-page note carries a small ReadingLamp, the closing page a larger one whose glow pulses once, failures are toasts, and leaving asks in a Modal (Leave / Keep reading)."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -2698,9 +2714,9 @@
       "path": "frontend/src/reader/ContentsDrawer.jsx",
       "language": "jsx",
       "lines": 86,
-      "size_bytes": 3679,
+      "size_bytes": 3666,
       "role": "asset",
-      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), chapters from books.toc with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
+      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
     },
     {
       "path": "frontend/src/reader/PageTurn.jsx",
@@ -2860,7 +2876,7 @@
       "lines": 35,
       "size_bytes": 1186,
       "role": "asset",
-      "purpose": "createReadAhead(fetcher): the chunk after today's reading from GET /books/{id}/pages, fetched once per book and chunk (null when there is none), a failed fetch forgotten so it is asked again; peek for what has arrived. Touches no session."
+      "purpose": "createReadAhead(fetcher): the chunk after today's reading from GET /books/{id}/pages, fetched once per book and chunk (null when there is none), a failed fetch forgotten so it is asked again; peek for what has arrived. Touches no session. Since C17.5 its chunk's text marks where today's reading ends in the original view."
     },
     {
       "path": "frontend/src/reader/readAhead.test.js",
@@ -2905,10 +2921,10 @@
     {
       "path": "frontend/src/reader/usePlaceSaver.js",
       "language": "javascript",
-      "lines": 56,
-      "size_bytes": 2017,
+      "lines": 52,
+      "size_bytes": 1941,
       "role": "asset",
-      "purpose": "usePlaceSaver(sessionId): saves the reader's place with PUT /sessions/{id}/position at most once a second while pages turn, and the last place with keepalive when the page is hidden, closed or left; failures are dropped; saveNow skips the wait (the ribbon bookmark)."
+      "purpose": "usePlaceSaver(sessionId): saves the reader's place (since C17.5 {chunk_index, anchor} in the PDF or EPUB) with PUT /sessions/{id}/position at most once a second while pages turn, and the last place with keepalive when the page is hidden, closed or left; failures are dropped; saveNow skips the wait (the ribbon bookmark)."
     },
     {
       "path": "frontend/src/reader/useWordAtPoint.js",
@@ -3585,8 +3601,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 457,
-      "size_bytes": 133343,
+      "lines": 459,
+      "size_bytes": 135880,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

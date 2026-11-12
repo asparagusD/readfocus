@@ -2661,3 +2661,75 @@ sampling script shows opacity rising to 1 by 130 ms and falling to 0 at
 
 ### Commit
 C17.4 (frame)
+
+## 2026-11-12 C17.5 — an EPUB session opened at the cover, not at today's chapter
+
+**Status:** fixed
+
+### Symptom
+The adapted e2e on reflow.epub: the planner's note never showed and a
+reload did not restore the place; the reader stood on the cover.
+
+    npx playwright test e2e/reader.spec.js e2e/reading.spec.js
+    epub › the first page of today's reading carries the note ...
+    Error: expect(locator).toContainText(expected) failed
+    Locator: locator('.rf-ov-note .rf-note') ... element(s) not found
+
+### Repro
+A throwaway spec printing the session's located bounds:
+`LOCATE {"start":null,"end":null,"starts":[]}`; logging inside
+`EpubBook.find`: `EB FIND false undefined` (no view handle yet).
+
+### Hypotheses
+1. The section text search misses (bad squeeze or `doc.body` null on
+   XHTML). Ruled out: `find` in the engine was never called.
+2. The session asks before the engine is handed over. Evidence: the
+   frame's onReady fires on the first relocate, which foliate sends
+   during `view.init()`, before EpubView's `setEngine` gives the ref its
+   handle. Result: confirmed (`view.current` null).
+
+### Root cause
+`EpubBook` reached the engine only through EpubView's imperative handle,
+which exists one render after the engine reports its first place
+(`frontend/src/originalview/epub/EpubBook.jsx`, the ref methods).
+
+### Fix
+`EpubBook` keeps the engine from `onReady` and a promise for it; `find`,
+`goTo`, `next`, `prev`, `first`, `last` wait for it.
+
+### Regression test
+`e2e/reader.spec.js` epub "the place is saved as an anchor ... restored
+after a reload" and `e2e/reading.spec.js` epub "the first page ...
+carries the note": failed before, pass after (30 passed).
+
+### Commit
+C17.5b feat(reader): open every book in its original form for today's reading
+
+## 2026-11-12 C17.5 — a turn asked for while the leaf turned was dropped
+
+**Status:** fixed
+
+### Symptom
+`e2e/reader.spec.js` "arrow keys, the turn buttons and the page edge":
+after ArrowRight, an immediate click on Next did nothing (the place
+stayed `{"start":"2","end":"3"}`) on both books.
+
+### Repro
+ArrowRight then Next within the leaf's 600 ms.
+
+### Hypotheses
+1. The Next button is disabled. Ruled out: enabled in the snapshot.
+2. `move()` returns early while `busy` (the leaf is turning). Confirmed:
+   C17.4's frame drops it; C12's reader queued it.
+
+### Root cause
+`Reader.jsx` `move`: `if (busy.current) return false`.
+
+### Fix
+The last turn asked for mid-turn is queued and run when the leaf lands.
+
+### Regression test
+The same e2e case: failed before, passes after.
+
+### Commit
+C17.5b feat(reader): open every book in its original form for today's reading

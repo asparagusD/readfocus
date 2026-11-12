@@ -322,3 +322,95 @@
   .rf-ov-ribbon-tail { transition: none; }
   .rf-ov-turn { transition: none; }
 }
+
+/* A reading session (C17.5). The planner's note lies over the foot of the first page of
+   today's reading, never inside the book's own text, and can be hidden. */
+.rf-ov-note {
+  position: absolute;
+  z-index: 4;
+  bottom: var(--space-5);
+  left: 50%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: min(calc(100% - var(--space-6)), 34rem);
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--page);
+  box-shadow: var(--elevation-page);
+  transform: translateX(-50%);
+}
+
+.rf-note {
+  display: flex;
+  flex: 1;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: 1.55;
+}
+
+.rf-note p { margin: 0; }
+.rf-note strong { color: var(--ink); font-weight: 600; }
+.rf-note .rf-note-lamp { --illustration-size: 40px; flex: none; margin-top: -6px; }
+
+/* The closing page covers the book (the paper's width for a PDF spread) until Previous. */
+.rf-ov-end {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.rf-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-4);
+  width: min(100%, var(--ov-sheet, 100%));
+  padding: var(--space-7);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-page);
+  background: var(--page);
+  box-shadow: var(--elevation-page);
+}
+
+.rf-end-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-style: italic;
+  font-weight: 400;
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-end-text {
+  max-width: 34ch;
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-reading);
+  font-size: var(--text-reading);
+  line-height: var(--text-reading--line-height);
+}
+
+/* C13.4: the closing lamp's glow pulses once as the page appears (near-instant under reduced motion). */
+.rf-end-lamp { --illustration-size: 88px; margin-bottom: calc(var(--space-2) * -1); }
+.rf-end-lamp [data-part="glow"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rf-lamp-pulse 1.4s var(--ease-breathe) 1;
+}
+
+@keyframes rf-lamp-pulse {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.18); }
+}
+
+/* While the session finds its place, the blank page lies over the renderer. */
+.rf-ov[data-loading="true"] .rf-ov-book::before { z-index: 6; }

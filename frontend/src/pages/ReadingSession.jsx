@@ -5,25 +5,40 @@ import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { CalibrationFlow } from '../components/CalibrationFlow';
-import { BookReader } from '../reader';
-import { blocksForChunks, placeInChunks } from '../reader/blocks';
+import { Reader } from '../originalview/Reader';
+import { ReaderControls } from '../originalview/ReaderControls';
+import { useLamplight } from '../originalview/useLamplight';
+import { beyond, chunkAt, compare, folioShort, snippetsFor } from '../originalview/today';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { createReadAhead } from '../reader/readAhead';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
 import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
 import { useToast } from '../components/ui/toastContext';
-import { readSize, stepSize, storeSize } from '../reader/textSize';
 import { createLookupClient, readLookupOn, storeLookupOn } from '../reader/lookup';
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { ReadingLamp } from '../illustrations';
 import './ReadingSession.css';
 
-// One read-ahead cache for the app: the chunk after today's reading, fetched before the last page (C12.4).
+// One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
 const readAhead = createReadAhead(fetchApi);
 // One lookup client for the app: its LRU of recent answers lasts the visit (C12.8).
 const lookupClient = createLookupClient(fetchApi);
+
+const EPUB_SETTINGS = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' };
+
+/** A per-browser reader setting, read and kept with try/catch (private windows, blocked storage). */
+function useStored(key, fallback) {
+  const [value, setValue] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+  });
+  const set = useCallback((next) => {
+    setValue(next);
+    try { localStorage.setItem(key, JSON.stringify(next)); } catch { /* kept for this visit only */ }
+  }, [key]);
+  return [value, set];
+}
 
 const formatTime = (seconds) => {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -32,12 +47,14 @@ const formatTime = (seconds) => {
 };
 
 /**
- * The reading page (C12.5a): today's session as a paginated book under a
- * toolbar that fades while reading. The planner's reason is a note on the
- * first page, the last page says "That's today's reading" with Start test,
- * and the pacing line counts the pages left. Calibration, the countdown
- * (Start, Pause, Resume, auto-pause at zero), Done reading and the abandon
- * modal behave as before.
+ * The reading page (C12.5a; the original view since C17.5): the whole book as
+ * published, PDF or EPUB, opened at today's reading under a toolbar that fades
+ * while reading. Today's chunks are found in the book by their text; the
+ * planner's reason lies over the first page of them, and past their end the
+ * closing page says "That's today's reading" with Start test. The place is
+ * saved as an anchor in the file while inside today's reading. Calibration, the
+ * countdown (Start, Pause, Resume, auto-pause at zero), Done reading and the
+ * abandon modal behave as before.
  */
 export function ReadingSession() {
   const { bookId } = useParams();
@@ -55,7 +72,8 @@ export function ReadingSession() {
 
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
-  const [textSize, setTextSize] = useState(readSize);
+  const [zoom, setZoom] = useStored('rf-pdf-zoom', 'fit-page');
+  const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
   // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
   const [switched, setSwitched] = useState(null); // { userId, on }
@@ -63,58 +81,82 @@ export function ReadingSession() {
   const [chapter, setChapter] = useState('');
   const [toolbarFocused, setToolbarFocused] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
-  // A chapter outside today's chunks, opened from the contents (D4): read-only, it counts for nothing.
-  const [aside, setAside] = useState(null); // { entry, chunks }
-  const [backTo, setBackTo] = useState(null); // the place in today's pages to reopen when coming back
+  const [entries, setEntries] = useState([]);
   const chromeVisible = useChromeVisible(toolbarFocused || showAbandonModal || contentsOpen);
   const contentsButton = useRef(null);
   const reader = useRef(null);
-  const todayPlace = useRef(null); // where the reader was in today's pages, to come back to
   const { toast } = useToast();
+  const kind = sessionData?.book?.format === 'epub' ? 'epub' : 'pdf';
+  const { theme, original, toggleOriginal } = useLamplight(bookId);
 
-  // The book (C12.3b): today's blocks, the saved place if it is in today's chunks, saved again as pages turn.
-  const blocks = useMemo(() => blocksForChunks(sessionData?.chunks), [sessionData]);
-  const resumeAt = useMemo(() => placeInChunks(sessionData?.position, sessionData?.chunks), [sessionData]);
+  // Today's reading in the book (C17.5): where its chunks start and where the next chunk begins.
+  const [bounds, setBounds] = useState(null); // { start, end, starts: [{ chunk_index, loc }] }
+  const [place, setPlace] = useState(null);
+  const ready = useRef(null); // the bounds once the reader stands at its first place; moves before that are not saved
+  const todayAnchor = useRef(null); // the last place inside today's reading, to come back to
   const { save, saveNow } = usePlaceSaver(sessionData?.session_id);
-  const savePlace = useCallback((place) => { todayPlace.current = place; save(place); }, [save]);
-  const onBookmark = useCallback((place, pageNumber) => {
-    todayPlace.current = place;
-    saveNow(place);
-    toast({ kind: 'neutral', message: `Place saved at page ${pageNumber}.` });
-  }, [saveNow, toast]);
   const todayChunks = useMemo(() => new Set(sessionData?.chunk_indices ?? []), [sessionData]);
-  const closeContents = useCallback(() => setContentsOpen(false), []);
-  const onPick = useCallback(async (entry) => {
-    setContentsOpen(false);
-    if (todayChunks.has(entry.chunk_index)) {
-      if (aside) { setBackTo({ block_id: entry.block_id, char_offset: 0 }); setAside(null); }
-      else reader.current?.goToPlace({ block_id: entry.block_id, char_offset: 0 });
-      return;
-    }
-    try {
-      const data = await fetchApi(`/books/${bookId}/pages?start=${entry.chunk_index}&end=${entry.chunk_index + 1}`);
-      if (!data.chunks?.length) return;
-      if (!aside) setBackTo(todayPlace.current);
-      setAside({ entry, chunks: data.chunks });
-    } catch {
-      toast({ kind: 'warning', message: "That chapter couldn't be opened just now." });
-    }
-  }, [aside, bookId, todayChunks, toast]);
   const lastChunk = sessionData?.chunk_indices?.length ? Math.max(...sessionData.chunk_indices) : null;
-  const preloadNext = useCallback(() => {
-    if (lastChunk !== null) readAhead.load(bookId, lastChunk + 1);
-  }, [bookId, lastChunk]);
-  const onPagesChange = useCallback((pages) => setChapter(pages.chapter || ''), []);
-  const asideBlocks = useMemo(() => (aside ? blocksForChunks(aside.chunks) : null), [aside]);
+
+  // Once the book is open: find today's chunks and the next one, then stand at the saved place or today's start.
+  const locate = useCallback(async () => {
+    const book = reader.current;
+    if (!book || !sessionData || ready.current) return;
+    const saved = sessionData.position;
+    const resume = saved?.anchor?.kind === kind && todayChunks.has(saved.chunk_index) ? saved.anchor : null;
+    let from = resume?.page ?? 1;
+    const starts = [];
+    for (const chunk of [...(sessionData.chunks ?? [])].sort((a, b) => a.chunk_index - b.chunk_index)) {
+      const loc = await book.find(snippetsFor(chunk.content), from);
+      if (loc) starts.push({ chunk_index: chunk.chunk_index, loc });
+      if (loc?.page) from = loc.page;
+    }
+    const start = starts[0]?.loc ?? null;
+    const next = lastChunk === null ? null : await readAhead.load(bookId, lastChunk + 1);
+    let end = next ? await book.find(snippetsFor(next.content), from) : null;
+    if (end && start && compare(end, start) < 0) end = null; // the next chunk's text found earlier: no end
+    if (resume ?? start) await book.goTo(resume ?? start);
+    const found = { start, end, starts };
+    ready.current = found;
+    setBounds(found);
+  }, [sessionData, kind, todayChunks, lastChunk, bookId]);
+
+  const outside = beyond(place, bounds ?? {});
+  const placeFor = useCallback((at, anchor) => ({
+    chunk_index: chunkAt(at, ready.current?.starts) ?? sessionData.chunk_indices[0], anchor,
+  }), [sessionData]);
+  const onRelocate = useCallback((next) => {
+    setPlace(next);
+    setChapter(next.entry || '');
+    if (!ready.current || beyond(next, ready.current)) return; // only today's reading is saved
+    const anchor = reader.current?.anchor();
+    if (!anchor) return;
+    todayAnchor.current = anchor;
+    save(placeFor(next, anchor));
+  }, [save, placeFor]);
+  const onBookmark = useCallback((anchor) => {
+    if (!anchor) return;
+    saveNow(placeFor(place, anchor));
+    if (!beyond(place, ready.current ?? {})) todayAnchor.current = anchor;
+    toast({ kind: 'neutral', message: `Place saved at ${folioShort(place?.folio) || 'this page'}.` });
+  }, [saveNow, placeFor, toast, place]);
+
+  // The contents (D4): the book's own outline or nav, today's entries labelled.
+  const closeContents = useCallback(() => setContentsOpen(false), []);
+  const openContents = () => {
+    const today = (loc) => Boolean(bounds?.start && compare(loc, bounds.start) >= 0 && (!bounds.end || compare(loc, bounds.end) <= 0));
+    setEntries((reader.current?.toc() ?? []).map((entry, i) => ({ ...entry, key: `${i}-${entry.title}`, today: today(entry.loc) })));
+    setContentsOpen((open) => !open);
+  };
+  const onPick = useCallback((entry) => {
+    setContentsOpen(false);
+    reader.current?.goTo(entry.target);
+  }, []);
+  const backToToday = () => reader.current?.goTo(todayAnchor.current ?? bounds?.start);
   const onLookupToggle = () => {
     storeLookupOn(user?.id, !hoverLookup);
     setSwitched({ userId: user?.id, on: !hoverLookup });
   };
-  const onSize = (direction) => setTextSize((size) => {
-    const next = stepSize(size, direction);
-    storeSize(next);
-    return next;
-  });
 
   // 1. Check profile calibration
   useEffect(() => {
@@ -181,7 +223,7 @@ export function ReadingSession() {
 
   const handleAbandon = () => navigate('/');
 
-  // The planner's reason, once, as a note on the first page; the closing page with the test.
+  // The planner's reason, as a note over the first page of today's reading; the closing page with the test.
   const note = useMemo(() => sessionData && (
     <>
       <ReadingLamp className="rf-note-lamp" />
@@ -223,19 +265,21 @@ export function ReadingSession() {
         <ReaderToolbar
           bookTitle={bookTitle}
           chapter={chapter}
-          size={textSize}
-          onSize={onSize}
           onBack={() => navigate('/')}
           visible={chromeVisible}
           onFocusChange={setToolbarFocused}
-          onContents={() => setContentsOpen((open) => !open)}
+          controls={(
+            <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
+              lamplight={theme === 'lamplight'} original={original} onOriginal={toggleOriginal} />
+          )}
+          onContents={openContents}
           contentsOpen={contentsOpen}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
         >
-          {aside && (
-            <button type="button" className="rf-tool" onClick={() => setAside(null)}>
+          {outside && (
+            <button type="button" className="rf-tool" onClick={backToToday}>
               <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
               <span>Today's reading</span>
             </button>
@@ -259,49 +303,34 @@ export function ReadingSession() {
       </div>
 
       <main className="rf-reading-area">
-        {/* C13.9: the page's one h1 for assistive tech; the book page itself shows chapter headings (h2). */}
+        {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
         <h1 className="sr-only">{bookTitle}: today's reading</h1>
-        {aside ? (
-          <BookReader
-            key={`aside-${aside.entry.block_id}`}
-            blocks={asideBlocks}
-            bookTitle={bookTitle}
-            fontSize={textSize}
-            initialAnchor={{ block_id: aside.entry.block_id, char_offset: 0 }}
-            onPagesChange={onPagesChange}
-            statusNote="Beyond today's reading"
-            lookupClient={lookupClient}
-            hoverLookup={hoverLookup}
-            label={`${aside.entry.title}: beyond today's reading, it does not count toward today's session`}
-          />
-        ) : (
-          <BookReader
-            key="today"
-            ref={reader}
-            blocks={blocks}
-            bookTitle={bookTitle}
-            chapterBefore={sessionData.chapter_before || ''}
-            fontSize={textSize}
-            initialAnchor={backTo || resumeAt}
-            onPlaceChange={savePlace}
-            onPagesChange={onPagesChange}
-            onNearEnd={preloadNext}
-            onBookmark={onBookmark}
-            lead={note}
-            endPage={closing}
-            pacing
-            lookupClient={lookupClient}
-            hoverLookup={hoverLookup}
-            label={`Today's reading from ${bookTitle}`}
-          />
-        )}
+        <Reader
+          ref={reader}
+          kind={kind}
+          bookId={bookId}
+          title={bookTitle}
+          zoom={zoom}
+          settings={settings}
+          onReady={locate}
+          onRelocate={onRelocate}
+          onBookmark={onBookmark}
+          onBack={() => navigate('/')}
+          bounds={bounds}
+          opening={!bounds}
+          note={note}
+          closing={closing}
+          status={outside ? "Beyond today's reading" : null}
+          label={outside ? `${bookTitle}: beyond today's reading, it does not count toward today's session` : `Today's reading from ${bookTitle}`}
+          lookupClient={lookupClient}
+          hoverLookup={hoverLookup}
+        />
       </main>
 
       <ContentsDrawer
         open={contentsOpen}
         onClose={closeContents}
-        toc={sessionData.book?.toc ?? []}
-        todayChunks={todayChunks}
+        entries={entries}
         current={chapter}
         onPick={onPick}
         returnTo={contentsButton}

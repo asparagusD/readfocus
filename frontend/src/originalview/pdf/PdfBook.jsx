@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
+import { squeeze } from '../today';
 import { useBoxSize } from '../useBoxSize';
 import { PdfPage } from './PdfPage';
 import { pdfOutline } from './pdfjs';
@@ -62,6 +63,25 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
     });
   }, [doc, pages.join(), numPages, meta]); // eslint-disable-line react-hooks/exhaustive-deps -- pages by value
 
+  // Today's chunks are found by their text (C17.5): each page's text layer, squeezed, read once.
+  const texts = useRef(new Map());
+  useEffect(() => { texts.current = new Map(); }, [doc]);
+  const pageText = (n) => {
+    if (!texts.current.has(n)) {
+      texts.current.set(n, doc.getPage(n).then((p) => p.getTextContent())
+        .then((content) => squeeze(content.items.map((item) => item.str ?? '').join(''))).catch(() => ''));
+    }
+    return texts.current.get(n);
+  };
+  /** { kind: 'pdf', page } for the first page holding a snippet (longest first), from page `from` on, then before it. */
+  const find = async (snippets, from = 1) => {
+    const order = [...Array(numPages).keys()].map((i) => ((i + from - 1) % numPages) + 1);
+    for (const snippet of snippets) {
+      for (const n of order) if (snippet && (await pageText(n)).includes(snippet)) return { kind: 'pdf', page: n };
+    }
+    return null;
+  };
+
   const turn = (dir) => {
     const to = stepSpread(pages[0], numPages, wide, dir);
     if (to === pages[0]) return false;
@@ -85,7 +105,8 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
     },
     documents: () => [document],
     panning: () => Boolean(box.current && (box.current.scrollWidth > box.current.clientWidth + 1 || box.current.scrollHeight > box.current.clientHeight + 1)),
-    toc: meta.outline,
+    find,
+    toc: () => meta.outline.map((entry) => ({ title: entry.title, target: { page: entry.page }, loc: { kind: 'pdf', page: entry.page } })),
   });
 
   // A mouse drag pans a page larger than the frame; touch scrolls natively.

@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { easing, prefersReducedMotion, seconds } from '../motion/presets';
 import { Button } from '../components/ui/Button';
 import { EpubBook } from './epub/EpubBook';
 import { PdfBook } from './pdf/PdfBook';
 import { keyAction, SPREAD_MIN_WIDTH, timeAtProgress } from './frame';
+import { placeEnd, placeStart, reached, shows } from './today';
+
+/** "5" for a PDF page, "2:340" for an EPUB section and character: the place's ends, for tests and tools. */
+const spot = (loc) => (loc.kind === 'pdf' ? String(loc.page) : `${loc.index}:${loc.char}`);
 import { useLamplight } from './useLamplight';
 import './frame.css';
 
@@ -63,10 +67,16 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * swipes, and lamplight colours that never touch images. `ref` gets
  * { goTo(anchor), next(), prev(), visibleRange(), getSelection(), documents() }.
  * onRelocate(place) on every move; onBookmark(anchor) from the ribbon or B.
+ *
+ * A reading session (C17.5) passes `bounds` ({ start, end } locations, today.js): `note`
+ * shows over the pages holding the start until hidden; past the end (Next, Space, End)
+ * the `closing` page covers the book and Previous comes back; Home goes to the start.
+ * `opening` keeps the blank page up while the session finds and opens its place; `status`
+ * joins the folio ("Beyond today's reading"). `ref` also gets find(snippets, from) and toc().
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref,
+  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -79,6 +89,10 @@ export function Reader({
   const swipe = useRef(null);
   const stage = useRef(null);
   const busy = useRef(false);
+  const queued = useRef(0); // a turn asked for mid-turn runs when the leaf lands (C12)
+  const moveRef = useRef(null);
+  const [ending, setEnding] = useState(false); // the closing page is shown
+  const [noteHidden, setNoteHidden] = useState(false);
 
   const relocate = useCallback((next) => {
     setPlace(next);
@@ -88,23 +102,43 @@ export function Reader({
 
   const move = useCallback(async (dir) => {
     const renderer = book.current;
-    if (!renderer || busy.current) return false;
+    if (!renderer) return false;
+    if (busy.current) {
+      queued.current = dir;
+      return true;
+    }
+    if (ending) {
+      if (dir < 0) setEnding(false);
+      return dir < 0;
+    }
+    if (dir > 0 && closing && (reached(place, bounds?.end) || place?.atEnd)) {
+      setEnding(true);
+      return true;
+    }
     if ((dir > 0 && place?.atEnd) || (dir < 0 && place?.atStart)) return false;
     if (prefersReducedMotion()) return dir > 0 ? renderer.next() : renderer.prev();
     busy.current = true;
     setTurn({ id: Date.now(), dir });
     return true;
-  }, [place]);
+  }, [place, ending, closing, bounds]);
+  useEffect(() => { moveRef.current = move; });
 
   const act = useCallback((action) => {
     const renderer = book.current;
     if (!renderer) return;
     if (action === 'next') move(1);
     else if (action === 'prev') move(-1);
-    else if (action === 'first') renderer.first();
-    else if (action === 'last') renderer.last();
+    else if (action === 'first') {
+      setEnding(false);
+      if (bounds?.start) renderer.goTo(bounds.start);
+      else renderer.first();
+    } else if (action === 'last' && closing) {
+      if (bounds?.end) renderer.goTo(bounds.end);
+      else renderer.last();
+      setEnding(true);
+    } else if (action === 'last') renderer.last();
     else if (action === 'ribbon' && onBookmark) onBookmark(renderer.anchor());
-  }, [move, onBookmark]);
+  }, [move, onBookmark, bounds, closing]);
 
   const onKey = useCallback((event) => {
     if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
@@ -143,7 +177,9 @@ export function Reader({
   }, []);
 
   useImperativeHandle(ref, () => ({
-    goTo: (anchor) => book.current?.goTo(anchor),
+    goTo: (anchor) => { setEnding(false); return book.current?.goTo(anchor); },
+    find: (snippets, from) => book.current?.find(snippets, from) ?? Promise.resolve(null),
+    toc: () => book.current?.toc() ?? [],
     next: () => move(1),
     prev: () => move(-1),
     visibleRange: () => book.current?.visibleRange() ?? null,
@@ -155,7 +191,9 @@ export function Reader({
   const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book };
   return (
     <section className="rf-ov" aria-label={label ?? title} data-wide={wide} data-kind={kind}
-      data-original={theme === 'lamplight' && original ? 'true' : undefined} data-loading={!place && !failure}
+      data-original={theme === 'lamplight' && original ? 'true' : undefined} data-loading={(!place || opening) && !failure}
+      data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
+      data-ending={ending || undefined}
       style={{ ...(sheet ? { '--ov-sheet': `${sheet.width}px`, '--ov-sheet-h': `${sheet.height}px`, '--ov-sheet-pad': 'var(--space-4)' } : null), '--rf-leaf-paper': kind === 'pdf' ? (colours?.background ?? '#fff') : undefined }}>
       <header className="rf-ov-head" aria-hidden="true" data-empty={!place?.entry}>
         <span className="rf-ov-head-title">{title}</span>
@@ -172,14 +210,29 @@ export function Reader({
           {turn && (
             <TurnLeaf key={turn.id} turn={turn} wide={wide}
               onMiddle={() => (turn.dir > 0 ? book.current?.next() : book.current?.prev())}
-              onDone={() => { busy.current = false; setTurn(null); }} />
+              onDone={() => {
+                busy.current = false;
+                setTurn(null);
+                const next = queued.current;
+                queued.current = 0;
+                if (next) setTimeout(() => moveRef.current?.(next), 0); // after the renderer has reported its new place
+              }} />
           )}
           {/* The outer page edges turn the page for a pointer; keyboard users have the keys and buttons. */}
           <button type="button" className="rf-ov-edge" data-edge="back" tabIndex={-1} aria-hidden="true"
             onClick={() => move(-1)} disabled={place?.atStart} />
           <button type="button" className="rf-ov-edge" data-edge="forward" tabIndex={-1} aria-hidden="true"
-            onClick={() => move(1)} disabled={place?.atEnd} />
-          {onBookmark && place && !failure && (
+            onClick={() => move(1)} disabled={ending || (place?.atEnd && !closing)} />
+          {note && !noteHidden && !ending && !opening && shows(place, bounds?.start) && (
+            <aside className="rf-ov-note" aria-label="Today">
+              <div className="rf-note">{note}</div>
+              <button type="button" className="rf-tool" onClick={() => setNoteHidden(true)} aria-label="Hide this note">
+                <X size={16} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            </aside>
+          )}
+          {ending && <div className="rf-ov-end"><div className="rf-end">{closing}</div></div>}
+          {onBookmark && place && !failure && !ending && (
             <button type="button" className="rf-ov-ribbon" onClick={() => act('ribbon')} aria-label="Save my place"
               aria-keyshortcuts="B" title="Save my place (B)">
               <span className="rf-ov-ribbon-tail" aria-hidden="true" />
@@ -198,15 +251,16 @@ export function Reader({
         )}
       </div>
       <footer className="rf-ov-foot">
-        <button type="button" className="rf-ov-turn" onClick={() => move(-1)} disabled={!place || place.atStart}>
+        <button type="button" className="rf-ov-turn" onClick={() => move(-1)} disabled={!place || (place.atStart && !ending)}>
           <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" /><span>Previous</span>
         </button>
-        <p className="rf-ov-folio">{place ? [place.folio, place.entry].filter(Boolean).join(' · ') : failure ? 'Not opened' : 'Opening the book…'}</p>
-        <button type="button" className="rf-ov-turn" onClick={() => move(1)} disabled={!place || place.atEnd}>
+        <p className="rf-ov-folio">{ending ? "End of today's reading"
+          : place && !opening ? [place.folio, place.entry, status].filter(Boolean).join(' · ') : failure ? 'Not opened' : 'Opening the book…'}</p>
+        <button type="button" className="rf-ov-turn" onClick={() => move(1)} disabled={!place || ending || (place.atEnd && !closing)}>
           <span>Next</span><ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </footer>
-      <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{place?.folio ?? ''}</p>
+      <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{ending ? "End of today's reading" : opening ? '' : place?.folio ?? ''}</p>
     </section>
   );
 }

@@ -3,6 +3,7 @@
 // change in this file only. The vendored code loads lazily, with this module.
 import loraUrl from '@fontsource-variable/lora/files/lora-latin-wght-normal.woff2?url';
 import { buildLocations } from '../frame';
+import * as CFI from '../../vendor/foliate-js/epubcfi.js';
 import { BOOK_CSS, sanitizeSection } from './sanitize';
 import { cleanCss } from './urls';
 
@@ -39,6 +40,35 @@ export function charOffset(root, node, offset) {
     count += text.length;
   }
   return count;
+}
+
+/** A collapsed range at character `char` of root's text (textContent order), or null past its end. */
+export function rangeAtChar(root, char) {
+  const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let count = 0;
+  for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+    if (count + text.length > char) {
+      const range = root.ownerDocument.createRange();
+      range.setStart(text, char - count);
+      range.collapse(true);
+      return range;
+    }
+    count += text.length;
+  }
+  return null;
+}
+
+/** A section's text squeezed (today.js), with each kept character's offset in the body's text. */
+function squeezedText(body) {
+  const text = body?.textContent ?? '';
+  const at = [];
+  let flat = '';
+  for (let i = 0; i < text.length; i++) {
+    if (/\s/.test(text[i])) continue;
+    flat += text[i].toLowerCase();
+    at.push(i);
+  }
+  return { flat, at };
 }
 
 /** Text length of every spine section, read once (C17.4 locations); the body's textContent. */
@@ -136,9 +166,35 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
     return buildLocations(chars);
   }
 
+  // Today's chunks are found by their text (C17.5) in the sections as packaged; the reader then
+  // goes to the same character in the shown (sanitized) section.
+  const texts = new Map();
+  const sectionText = (index) => {
+    if (!texts.has(index)) {
+      texts.set(index, Promise.resolve(book.sections[index].createDocument())
+        .then((doc) => squeezedText(doc.body)).catch(() => ({ flat: '', at: [] })));
+    }
+    return texts.get(index);
+  };
+  /** { kind: 'epub', index, char } for the first section holding a snippet (longest first), or null. */
+  async function find(snippets) {
+    for (const snippet of snippets) {
+      for (let index = 0; index < book.sections.length; index++) {
+        const { flat, at } = await sectionText(index);
+        const hit = snippet ? flat.indexOf(snippet) : -1;
+        if (hit >= 0) return { kind: 'epub', index, char: at[hit] };
+      }
+    }
+    return null;
+  }
+
   return {
     book,
     isFixedLayout: view.isFixedLayout,
+    find,
+    goToChar: ({ index, char }) => renderer.goTo({ index, anchor: (doc) => rangeAtChar(doc.body, char) ?? doc.body }),
+    sectionOf: (href) => { try { return book.resolveHref(href)?.index ?? null; } catch { return null; } },
+    pointCfi: (cfi) => (cfi ? CFI.collapse(cfi) : cfi),
     next: () => view.next(),
     prev: () => view.prev(),
     goTo: (target) => view.goTo(target),

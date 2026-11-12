@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 450,
-    "inventoried": 385,
-    "excluded": 65
+    "tracked": 530,
+    "inventoried": 390,
+    "excluded": 140
   },
   "files": [
     {
@@ -959,12 +959,52 @@
       "purpose": "Pytest, table-driven: sentence splitting (abbreviations, quotes, lists, hyphenated line breaks), normalisation, tokens, stopwords, and informativeness rankings."
     },
     {
+      "path": "design/HANDOFF_PHASE2_SUMMARY.md",
+      "language": "markdown",
+      "lines": 300,
+      "size_bytes": 22246,
+      "role": "doc",
+      "purpose": "Summary of the phase-2 Claude Design handoff (reference only, not imported by the app): bundle contents, the 75 cropped screen images, new tokens with contrast, new components with states, screen notes, mapping to chunks C17-C24, gaps and conflicts with the phase-2 specs, and open questions."
+    },
+    {
       "path": "design/HANDOFF_SUMMARY.md",
       "language": "markdown",
       "lines": 469,
       "size_bytes": 32665,
       "role": "doc",
       "purpose": "Summary of the Claude Design handoff (reference only, not imported by the app): design tokens for Paper and Lamplight and both accents, type, spacing, radii, surfaces and motion; component inventory; per-screen notes; mapping to frontend pages and components; gaps and open questions."
+    },
+    {
+      "path": "design/handoff-phase2/design_phase_2.html",
+      "language": "html",
+      "lines": 683,
+      "size_bytes": 7607201,
+      "role": "config",
+      "purpose": "Claude Design export, kept unchanged: one self-contained page that unpacks the phase-1 and phase-2 boards (original view, Steve, highlights, notes, focus, quiz, points, progress, league; components; prototype) from an embedded gzipped manifest; reference mockup, not app code."
+    },
+    {
+      "path": "design/handoff-phase2/extracted/PhaseTwoComponents.dc.html",
+      "language": "html",
+      "lines": 984,
+      "size_bytes": 71960,
+      "role": "config",
+      "purpose": "Decoded byte for byte from design_phase_2.html: the phase-2 components board (highlight tokens, selection toolbar, block affordances, Steve states, note blocks, focus stopwatch and ribbon, points, badges, league rows) for Paper and Lamplight; reference mockup, not app code."
+    },
+    {
+      "path": "design/handoff-phase2/extracted/README.md",
+      "language": "markdown",
+      "lines": 19,
+      "size_bytes": 1009,
+      "role": "doc",
+      "purpose": "Note on the two pages decoded from design_phase_2.html: where each comes from in the bundle and that they are reference mockups that need the bundle's runtime to render."
+    },
+    {
+      "path": "design/handoff-phase2/extracted/Study.dc.html",
+      "language": "html",
+      "lines": 1254,
+      "size_bytes": 113075,
+      "role": "config",
+      "purpose": "Decoded byte for byte from design_phase_2.html: the phase-2 Design Component behind the prototype and screen boards, whose stage prop picks one of 18 screens (original view, Steve, highlight, notes, focus, bookmark, quiz, results, progress, league, celebrate); reference mockup, not app code."
     },
     {
       "path": "design/handoff/foundations-style-guide/Main.dc.html",
@@ -1097,8 +1137,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3055,
-      "size_bytes": 574365,
+      "lines": 3061,
+      "size_bytes": 576386,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3025,8 +3065,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 387,
-      "size_bytes": 112301,
+      "lines": 392,
+      "size_bytes": 113871,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -3178,6 +3218,306 @@
     },
     {
       "path": "design/screens/library-processing-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/bookmark-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/bookmark-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/bookmark-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/bookmark-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/celebrate-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/celebrate-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/celebrate-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/celebrate-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/components-phase2-lamplight-sheet.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/components-phase2-paper-sheet.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/focus-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/focus-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/focus-locked-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/focus-locked-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/focus-locked-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/focus-locked-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/focus-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/focus-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/highlight-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/highlight-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/highlight-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/highlight-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/league-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/league-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/league-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/league-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/notes-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/notes-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/notes-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/notes-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/original-epub-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/original-epub-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/original-epub-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/original-epub-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/original-pdf-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/original-pdf-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/original-pdf-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/original-pdf-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/progress-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/progress-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/progress-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/progress-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/prototype-phase2-original-pdf-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/quiz-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/quiz-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/quiz-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/quiz-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/results-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/results-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/results-low-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/results-low-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/results-low-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/results-low-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/results-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/results-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-answer-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-answer-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-answer-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-answer-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-consent-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-consent-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-consent-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-consent-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-empty-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-empty-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-empty-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-empty-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-key-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-key-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-key-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-key-paper-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-paused-lamplight-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-paused-lamplight-375.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-paused-paper-1440.png",
+      "reason": "binary"
+    },
+    {
+      "path": "design/screens/phase2/steve-paused-paper-375.png",
       "reason": "binary"
     },
     {

@@ -4,43 +4,70 @@ on:
   push:
     branches: ["**"]
 
+# A newer push to the same branch cancels the older run; a main run that is
+# deploying is left to finish (see deploy-render).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  # The Docker image is python:3.11-slim (Dockerfile); CI matches it.
+  PYTHON_VERSION: "3.11"
+  # test:unit uses `node --test` with a glob, which needs Node 22 or later.
+  NODE_VERSION: "22"
+  # Lint baselines from CLAUDE.md ("Standard checks"). Existing code still has
+  # errors, so CI fails only when a count goes UP. Lower these numbers in the
+  # same commit that lowers the CLAUDE.md table.
+  RUFF_BASELINE: 27
+  ESLINT_ERROR_BASELINE: 4
+  ESLINT_WARNING_BASELINE: 0
+
 jobs:
-  # ── Backend lint ──────────────────────────────────────────────
-  lint:
+  # ── Backend: ruff, offline tests, import ──────────────────────
+  backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
 
-      - name: Install ruff
-        run: pip install ruff
-
-      - name: Ruff check
-        run: ruff check backend/
-
-  # ── Backend tests ─────────────────────────────────────────────
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
+      # The app's requirements plus pytest, ruff (pinned: with no config file
+      # its rule set comes from its version) and psutil for scripts/.
       - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Ruff (no more than the baseline)
         run: |
-          pip install -r requirements.txt
-          pip install pytest httpx
+          ruff check backend/ --output-format concise --exit-zero
+          count=$(ruff check backend/ --output-format json --exit-zero | python -c "import json, sys; print(len(json.load(sys.stdin)))")
+          echo "ruff: $count errors (baseline $RUFF_BASELINE)"
+          if [ "$count" -gt "$RUFF_BASELINE" ]; then
+            echo "::error::ruff found $count errors, above the baseline of $RUFF_BASELINE"
+            exit 1
+          fi
 
-      - name: Run pytest
-        run: pytest backend/tests/ -v
+      # backend/tests/conftest.py sets dummy Supabase settings and blocks every
+      # non-loopback socket, so no test reaches Supabase or any other host.
+      # Tests that need the embedding model skip when it is not cached.
+      - name: Pytest (offline)
+        run: pytest backend/tests -q
 
-  # ── Frontend build ────────────────────────────────────────────
-  build-frontend:
+      - name: Import the app
+        env:
+          SUPABASE_URL: https://offline.invalid
+          SUPABASE_SERVICE_KEY: offline-service-key
+          EMBED_PRELOAD: "0"
+          INGEST_SWEEP: "0"
+        run: python -c "import backend.main"
+
+  # ── Frontend: ESLint, build, unit and asset checks ────────────
+  frontend:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,15 +77,41 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
+      - name: ESLint (no more than the baseline)
+        run: |
+          npx eslint . --format json --output-file eslint.json || true
+          npx eslint . || true
+          node -e '
+            const r = require("./eslint.json");
+            const errors = r.reduce((n, f) => n + f.errorCount, 0);
+            const warnings = r.reduce((n, f) => n + f.warningCount, 0);
+            const [eb, wb] = [process.env.ESLINT_ERROR_BASELINE, process.env.ESLINT_WARNING_BASELINE].map(Number);
+            console.log(`eslint: ${errors} errors (baseline ${eb}), ${warnings} warnings (baseline ${wb})`);
+            if (errors > eb || warnings > wb) {
+              console.log(`::error::eslint is above the baseline`);
+              process.exit(1);
+            }'
+
+      # No VITE_ variables and no VERCEL here: the build is the local one, and
+      # the Vercel env check (src/deploy/deployEnv.js) does not run.
       - name: Build
         run: npm run build
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Contrast check
+        run: npm run check:contrast
+
+      - name: Image budget check
+        run: npm run check:images
 
   # ── Repo graph is up to date ──────────────────────────────────
   # The graph tooling uses only the standard library, so nothing is installed
@@ -70,7 +123,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Regenerate the repo graph
         run: make graph
@@ -84,14 +137,26 @@ jobs:
 
       - name: Test the graph tooling
         run: |
-          pip install pytest
+          pip install pytest==9.2.0
           pytest tools/repo_graph/tests -q
 
-  # ── Deploy to Render (main only) ──────────────────────────────
+  # ── Deploy to Render (main only, after every check) ───────────
+  # render.yaml sets autoDeployTrigger: "off", so this hook is the only way a
+  # push deploys. `ref` pins the deploy to the commit that was just checked.
   deploy-render:
-    if: github.ref == 'refs/heads/main'
-    needs: [lint, test, build-frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [backend, frontend, graph]
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-render
+      cancel-in-progress: false
     steps:
-      - name: Trigger Render deploy
-        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK }}"
+      - name: Trigger Render deploy of this commit
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::The RENDER_DEPLOY_HOOK secret is not set (GitHub, Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK&ref=$GITHUB_SHA" -o /dev/null -w "Render answered %{http_code}\n"

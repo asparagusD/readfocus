@@ -1,0 +1,12 @@
+# Development and CI dependencies: the app's requirements plus what the
+# tests, the lint gate and scripts/ need. Not installed in the Docker image.
+# backend/tests/test_requirements.py checks that every package the tests and
+# scripts/*.py import is listed here or in requirements.txt.
+-r requirements.txt
+
+pytest==9.2.0
+# ruff has no config file in this repo, so its rules depend on its version:
+# the CLAUDE.md baseline was counted with this one.
+ruff==0.17.4
+# scripts/bench.py and scripts/dev/measure_rss.py (imported by test_bench.py).
+psutil==7.2.2

@@ -256,6 +256,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:.dockerignore",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:.env.example",
       "type": "file",
       "role": "config",
@@ -445,6 +451,12 @@
       "id": "file:backend/agents/workflow.py",
       "type": "file",
       "role": "agent",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/cors.py",
+      "type": "file",
+      "role": "lib",
       "language": "python"
     },
     {
@@ -736,7 +748,19 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_cors.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_covers.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_deploy_config.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -959,6 +983,12 @@
     },
     {
       "id": "file:docs/DESIGN_AUDIT.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/G4_PRODUCTION_MIGRATIONS.md",
       "type": "file",
       "role": "doc",
       "language": "markdown"
@@ -1447,6 +1477,18 @@
       "id": "file:frontend/src/components/ui/toastContext.js",
       "type": "file",
       "role": "component",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/deploy/deployEnv.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/deploy/deployEnv.test.js",
+      "type": "file",
+      "role": "asset",
       "language": "javascript"
     },
     {
@@ -2128,6 +2170,12 @@
       "language": "yaml"
     },
     {
+      "id": "file:requirements-dev.txt",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:requirements.txt",
       "type": "file",
       "role": "config",
@@ -2773,6 +2821,16 @@
     {
       "type": "declares_env",
       "from": "file:render.yaml",
+      "to": "env:ENV"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:FASTEMBED_CACHE"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
       "to": "env:FRONTEND_URL"
     },
     {
@@ -2889,6 +2947,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:PUT /sessions/{session_id}/position"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "endpoint:GET /books"
     },
     {
       "type": "defines_function",
@@ -3335,6 +3398,11 @@
       "type": "imports",
       "from": "file:backend/dependencies.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/cors.py"
     },
     {
       "type": "imports",
@@ -3888,6 +3956,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "file:backend/cors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_cors.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_covers.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -3900,6 +3978,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_covers.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_deploy_config.py",
+      "to": "file:tools/no_paid_ai.py"
     },
     {
       "type": "imports",
@@ -4695,6 +4788,11 @@
       "type": "imports",
       "from": "file:frontend/src/components/ui/Tooltip.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/deploy/deployEnv.test.js",
+      "to": "file:frontend/src/deploy/deployEnv.js"
     },
     {
       "type": "imports",
@@ -5623,6 +5721,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/vite.config.js",
+      "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/backfill_covers.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -6035,11 +6138,6 @@
       "type": "uses_env",
       "from": "file:backend/dependencies.py",
       "to": "env:EMBED_WAIT_SECONDS"
-    },
-    {
-      "type": "uses_env",
-      "from": "file:backend/main.py",
-      "to": "env:FRONTEND_URL"
     },
     {
       "type": "uses_env",

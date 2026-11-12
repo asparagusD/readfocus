@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { checkDeployEnv, isVercelBuild } from './src/deploy/deployEnv.js'
 
 // D6: preload the Latin Lora and DM Sans files the first screen needs.
 // Their names are hashed, so the links are added after the bundle exists.
@@ -46,9 +47,25 @@ function siteUrls(site) {
   }
 }
 
+// C14.2: a Vercel build stops when a VITE_ variable is missing or wrong, instead of
+// shipping a bundle that talks to localhost or the dev Supabase project.
+function deployEnv() {
+  return {
+    name: 'readfocus-deploy-env',
+    apply: 'build',
+    config(_config, { mode }) {
+      const env = loadEnv(mode, import.meta.dirname, '') // '' = every variable, VERCEL included
+      if (mode !== 'production' || !isVercelBuild(env)) return
+      const { errors, warnings } = checkDeployEnv(env)
+      warnings.forEach((line) => console.warn(`deploy env: ${line}`))
+      if (errors.length) throw new Error(`deploy env:\n- ${errors.join('\n- ')}\nSet them in Vercel, Settings > Environment Variables.`)
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), preloadFonts(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL)],
+  plugins: [deployEnv(), react(), tailwindcss(), preloadFonts(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL)],
   server: {
     proxy: {
       '/api': {

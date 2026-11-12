@@ -23,7 +23,7 @@ kept for history only.
 | 1 | `ruff check backend/` fails with 84 errors in pre-2.0 code. CI runs it on every push, so the lint job is presumably red. | C1.1 | unassigned |
 | 2 | `npm --prefix frontend run lint` fails with 22 errors and 2 warnings in pre-2.0 code. | C1.1 | unassigned |
 | 3 | The three design skills, `.claude/agents/` and `skills-lock.json` are untracked; a fresh clone does not have them, and `design-review` depends on them. `skills-lock.json` lists only `design-taste-frontend`. | C1 start | unassigned |
-| 4 | Python versions disagree: `.venv` 3.11, CI 3.12, `pyrightconfig.json` 3.14. | C1.1 | unassigned |
+| 4 | Python versions disagree: `.venv` 3.11, CI 3.12, `pyrightconfig.json` 3.14. **C14.5: CI is 3.11 like `.venv` and the Docker image; only `pyrightconfig.json` (3.14) still differs.** | C1.1 | unassigned |
 | 5 | `README.md` still describes the Groq and Google AI Studio setup. **C8.8: the architecture, agent graph, "No Paid AI" and database sections describe 2.0; "How It Works" still describes pre-2.0 steps.** | C1.1 | unassigned |
 | 6 | `backend/services/llm.py`, `backend/services/embeddings.py` and three packages in `requirements.txt` use banned providers (hard constraint 1). `.env.example` marks the two keys "to be removed in C8". **Closed in C8.8: both files deleted, the packages and keys removed; `backend/tests/test_no_paid_ai.py` guards it.** | C0.4, C1.5 | C8 |
 | 7 | `CLAUDE.md` lists commit types without `perf` and `merge`, which the `atomic-commit` skill adds. | C1.2 | unassigned |
@@ -38,7 +38,7 @@ kept for history only.
 | 16 | `reading_progress` is never populated: no code inserts a row, and the dev database has 0 rows against 21 completed sessions. Every session plans from chunk 0; re-read, averages and pacing are never stored. `docs/MIGRATION_AUDIT.md` section 5. **Closed in C8.4a: the planner node creates the row on a first session with `last_chunk_index = -1`; seen on dev in C8.6 and the G3 journey.** | C2.5 | unassigned |
 | 17 | `POST /sessions/start` does not check that the book belongs to the caller, so it returns another user's chunk text for a known `book_id`. From the code; not exercised. Audit section 8. | C2.5 | unassigned |
 | 18 | **C6.4: a failed grade is no longer 10/10 (no LLM grades; a failed embedding is graded on key terms at low confidence), and the recorded test time is the one the page sends.** A failed LLM grade is recorded as 10/10; auto-submit at zero sends blank answers (from the code, not reproduced); `GET /sessions/{id}` returns the hidden `guidance`; recorded test time is always 180 s. Audit section 9. **C5.5: `GET /sessions/{id}` now returns only `question`, `type` and `options`; the other three points stand.** | C2.5 | unassigned |
-| 19 | The CI test job presumably fails on every push: `backend.main` cannot be imported without Supabase config and the workflow supplies none. Not confirmed on GitHub. Audit section 8. **C3.3: the suite now runs with no config (`backend/tests/conftest.py`); still not observed on GitHub.** | C2.5 | C3 |
+| 19 | The CI test job presumably fails on every push: `backend.main` cannot be imported without Supabase config and the workflow supplies none. Not confirmed on GitHub. Audit section 8. **C3.3: the suite now runs with no config (`backend/tests/conftest.py`); still not observed on GitHub.** **C14.5: it did fail, at collection, for a different reason: psutil was in no requirements file (`1dd6c30`). The new workflow's three jobs pass when run verbatim in clean `python:3.11` and `node:22` containers; still not observed on GitHub.** | C2.5 | C3 |
 | 20 | Stuck rows in the dev database: 1 of 8 books `processing`, 39 of 72 sessions `reading`, 12 `testing`, none `abandoned`. Audit section 6. | C2.5 | unassigned |
 | 21 | `make graph` reads `git ls-files` and the working tree, so the two must agree. A tracked file deleted without `git rm` makes `inventory.py` stop with a `FileNotFoundError` traceback, and a new file that is not yet `git add`-ed is silently left out of the graph. Workaround: stage additions and deletions before `make graph`. CI is unaffected (clean checkout). Found in the C2 close review; not blocking. | C2 close | unassigned |
 | 22 | Every Groq call fails with `404 model_not_found` for `llama-3.3-70b-versatile` using the key in `.env`, and the app hides it: canned plan, generic questions, 10/10 for every answer, fallback pace. Readers on this configuration get no real planning or grading today. Whether production has the same key or model access is not known. Not fixed: the code is removed in C8 (issue 6). `docs/BENCHMARKS.md`, Baseline. **Closed in C8.8: no code calls Groq (the planner and optimizer are algorithmic since C8.4, the client is deleted).** | C3.5 | C8 |
@@ -55,6 +55,7 @@ kept for history only.
 | 33 | Submitting the same session twice moves mastery once (`last_event_id`, C7.4; tested in C8.7), but the evaluator inserts a second `test_results` row and the optimizer adapts the pace and queue again, since `submit-answers` does not check the session is already `completed`. From the code; the page does not resubmit. **Closed after C8.G: the session is claimed before grading and a resubmit gets the stored result; nothing runs twice.** | C8.7 | C8 follow-up |
 | 30 | Mastery moves once per question that names a concept, and the key-term link is broad, so one test can move a concept several times: on `sample.pdf`, `antenna-design` was named by 4 of 5 questions and went 0.3 to 0.83 after one good test, then to 0.26 after one blank test. Boilerplate concepts (`licensee-mdpi`, `basel`, `switzerland`) get mastery rows too (issue 25). | C7.4 | unassigned |
 | 35 | Session work after the response is still a FastAPI background task: saving a run's `agent_decisions`, assembling the test at start (finish-reading has an inline fallback) and the abandon flow (one pace update). A restart or spin-down in that window loses them; only ingestion became durable in C9.1. | C9 plan, C9.5 | unassigned |
+| 36 | Dev and production are one Supabase project (`lvfhuszvuiowyeizstru`, the user's decision at G4, 2026-11-12). Every dev run (bench uploads, test users, `scripts/dev/`, backfills, the CLI's `db push --linked`) touches production data, and CLAUDE.md hard constraint 2 ("work on the dev database; never touch production without explicit approval") can no longer be met as written. The project has no automatic backup (Free). Test data and stuck rows (issue 20) are in production. **Rule addressed after G4: CLAUDE.md constraint 2 now treats the one project as production (reads allowed; each write approved, a `supabase db dump` before schema or existing-row changes, runs clean up what they create). The shared-data risk itself stays, as a known trade-off.** | C14.4 | user |
 
 ## C0 — setup
 
@@ -2284,12 +2285,228 @@ Estimated time: about 9.0 h (C13.1a 0.5, C13.1b 0.6, C13.2a 0.6, C13.2b
 | [x] C13.10e SEO, sharing, performance; C13.10 done | this commit (`perf(ui): landing page SEO, share image and performance budget`) | Title, description, theme-color (both), Open Graph and Twitter tags; canonical and absolute share URLs from `VITE_SITE_URL`; `public/og.png` (1200 x 630, 23.2 KB, `scripts/make-og.mjs`, sharp); `public/robots.txt`; every page but the landing `React.lazy`; vendor chunk trimmed (initial JS about 285 to 175 KB gzip); the landing page prerendered into `index.html`; Playfair preloaded. Critique (impeccable A + detector, ui-ux-pro-max): fixed link underlines (high), no-JS steps, a sideways scroll at 1024-1120 px, the note's axis, the FAQ marker. | Lighthouse 12.8.2 `/` signed out: mobile 88/100/100/100, desktop 99/100/100/100, mobile with applied throttling 95; CLS 0 (docs/BENCHMARKS.md). 5 e2e tests; standard checks: see commit. | 2026-11-11 | Mobile performance (simulated) 88, under the 90 target: the Supabase client on the first load is the lever left; `VITE_SITE_URL` must be set on Vercel for the canonical link |
 | [x] C13 close | this commit (`docs(progress): record the C13 close review`) | Standard checks (ten) green: ruff 28 and ESLint 4 (unchanged), pytest 787, repo graph 62, contrast 204 pairs, images 2 rasters 36.3 KB, unit 62, e2e 102. `make graph` was one file stale (the last C13.10e debug-log entry): refreshed in `0d41f4a`, then no diff. C13.1-C13.10 ticked, nothing cut. Self-review of `git diff readfocus-2.0...HEAD` (114 files) with an independent read: no blocking findings. Lighthouse on every page, API mocked as in e2e (docs/BENCHMARKS.md, "C13 close"): accessibility 95-100 and CLS under 0.1 everywhere; desktop performance 99-100. | Lighthouse per page, both presets; independent diff read; standard checks. | 2026-11-11 | Time: about 5 h 50 min from the C12 merge (16:40) to the close, against 3.0 h (about 95% over; C13.1-C13.9 4 h 14 min, C13.10 1 h 16 min). Not met: mobile performance 81 on the dashboard and 82 on the reader, under the plan's 85; 88 on the landing page, under the C13.10 target of 90. Carried, non-blocking: the sign-up name is collected and never sent; Results shows an in-page problem state where it used to send the reader home; signed-out deep links wait for the backend gate before going to sign in; the landing page sits outside the route error boundary; a blank frame between the prerendered landing and the live one while auth loads; the remaining P2/P3 items in `docs/DESIGN_AUDIT.md` |
 
-## C14
+## C14 — deploy
 
-Title to be filled from the promptbook.
+Branch `chunk/C14-deploy`, created from `readfocus-2.0` at `b74dccc`.
+Goal: ReadFocus 2.0 live on Render Free (backend, Docker), Vercel Hobby
+(frontend) and the existing Supabase Free project, with no payment method,
+billing account, paid plan or add-on anywhere. Production schema changes go
+through Gate G4 (explicit approval and a confirmed backup). Nothing is
+called deployed until it is checked on the production URL. Secrets live
+only in provider env settings; no LLM or embedding key exists anywhere.
+
+### Plan (written at chunk start, 2026-11-12, before any code)
+
+Free-tier limits, read from the official docs on 2026-11-12:
+
+| Provider | What the docs say | What it means here |
+|---|---|---|
+| Render Free (render.com/docs/free, /docs/blueprint-spec, /docs/web-services, /docs/build-pipeline, /docs/deploy-hooks) | `plan: free` is 0.1 CPU and 512 MB. Spins down after 15 min with no inbound traffic; spin-up about 1 min. 750 instance hours per workspace per month, then every Free service is suspended until next month. Ephemeral filesystem, no persistent disk, no shell or SSH, no one-off jobs, one instance, may be restarted at any time. Hobby workspace: 500 build pipeline minutes per month, builds time out at 120 min. Bandwidth or build-minute overage **with no payment method** suspends the services (bandwidth) or disables new builds (minutes) for the rest of the month instead of billing. Default `PORT` is `10000`. Deploy hooks take a plain GET or POST and accept `?ref=<sha>`. `runtime` replaces the deprecated `env`; `autoDeployTrigger` (`commit`, `checksPass`, `off`) replaces `autoDeploy`. | Fits with no card: one service, at most 744 h in a month. The model must be **in the image**, since the disk is wiped on every spin-down. A cold start costs about 1 min plus model load. The included Hobby bandwidth figure did not render on render.com/pricing: not verified, to be read in the dashboard in C14.6. Whether deploy hooks are offered on Free services is not stated: checked in the dashboard in C14.6, with a fallback (below). |
+| Vercel Hobby (vercel.com/docs/plans/hobby, last updated 2026-09-14) | Free; 100 GB Fast Data Transfer, 1,000,000 CDN requests, 100 deployments per day, 2 build vCPUs and 8 GB. Over a limit: the feature waits 30 days, no billing cycle. **Non-commercial, personal use only.** Vercel Authentication on preview deployments. | A static Vite build uses no functions. The personal-use rule is yours to accept; ReadFocus has no payments, so it fits as a personal project. |
+| Supabase Free (supabase.com/pricing, /docs/guides/platform/backups) | 2 active projects; paused after 1 week of inactivity; 500 MB database, 5 GB egress, 1 GB file storage, 50 MB max upload, 50,000 MAU, 1-day logs. **Automatic backups and PITR are not included on Free**; the docs recommend exporting with the Supabase CLI `db dump`. | Gate G4's backup is a manual `npx supabase db dump` you run (it needs Docker, which is installed; the CLI is not, `npx` fetches it). The 50 MB upload cap applies to books in Storage. A week with no use pauses the project. |
+
+No required feature needs billing. One note on the Supabase backups page
+was addressed to AI agents (asking to file docs feedback); it was not acted
+on.
+
+What there is to build on (read from the code):
+
+- `Dockerfile`: `python:3.11-slim`, installs `requirements.txt`, copies
+  `backend/`, runs uvicorn on a **hard-coded port 8000** (Render expects
+  `$PORT`, default 10000; audit item 7). It does **not** ship the embedding
+  model and sets no `FASTEMBED_CACHE`, so every Render cold start downloads
+  the model from Hugging Face (C9.0: about 29 s to `model_ready` in the
+  0.1-CPU container, download included). Runs as root. No `.dockerignore`,
+  so the build context is the whole repo (`.env`, `.venv`, `frontend/`,
+  `.cache/`).
+- **Model name**: the C14 prompt says `BAAI/bge-small-en-v1.5`, but
+  `backend/nlp/embedder.py` uses `sentence-transformers/all-MiniLM-L6-v2`
+  (384 dimensions), chosen over bge-small at Gate G2 (five times faster on
+  chunks). The image ships the model the code loads, MiniLM, unless you
+  decide otherwise.
+- `render.yaml`: deprecated `env: docker`; no `plan`, `healthCheckPath`,
+  `region` or auto-deploy setting (a new service would default to the paid
+  `0.5c-512mb` plan if `plan` is left out); declares `SUPABASE_ANON_KEY`,
+  read only by the unused `backend/mcp_server.py`; no `ENV` or
+  `FASTEMBED_CACHE`.
+- `backend/main.py`: CORS allows seven localhost origins in every
+  environment plus one `FRONTEND_URL`, with credentials, all methods and
+  headers. A trailing slash in `FRONTEND_URL` would silently block the site.
+- `frontend/vercel.json`: `npm run build`, `dist`, every path rewritten to
+  `index.html` (static files are served first). No cache headers.
+  `frontend/src/lib/supabase.js` falls back to a hard-coded project URL and
+  publishable key when the env vars are unset (issue 11): it is the dev
+  project, the same one `.env` uses, so a production build with a missing
+  variable would silently talk to dev. `VITE_SITE_URL` must be set on
+  Vercel for the canonical link (C13.10e).
+- Supabase: `.env` and `frontend/.env` point at one project, the dev
+  project. Migrations 005-015 are on dev only. All are additive
+  (`IF NOT EXISTS` tables, columns and indexes, `CREATE OR REPLACE`
+  functions, one `storage.buckets` insert for `covers` in 012). Two risks:
+  **010 adds a unique index on `chunks (book_id, chunk_index)`**, which
+  fails if production has duplicate chunks; and `CREATE POLICY` in 007-009
+  and 015 is not idempotent, so a half-applied migration cannot simply be
+  re-run. Existing production chunks have no `embedding_local`, `blocks` or
+  covers until a backfill (`scripts/backfill_local_embeddings.py`,
+  `backfill_structure.py`, `backfill_covers.py`).
+- `.github/workflows/ci.yml`: runs on every push; Python **3.12** (the image
+  is 3.11), Node **20** (`test:unit` needs 22); no ESLint, unit, contrast,
+  images or e2e step. `ruff check backend/` fails with 28 errors, and
+  `deploy-render` `needs: [lint, ...]`, so **the deploy job can never run
+  today**. The hook is called with `curl -s` (a failed call still passes)
+  and no `ref`, so Render deploys its branch head, not the tested commit.
+
+Design decisions that apply to every subchunk:
+
+- **Bake, don't download.** The model is fetched once at image build time
+  into `FASTEMBED_CACHE=/app/.cache/fastembed`; a cold start loads it from
+  the image. Memory is measured in a 0.1-CPU, 512 MB container before and
+  after (constraint 5), with the C9.3 numbers as the baseline.
+- **One deploy path.** `render.yaml` sets `autoDeployTrigger: off`; only CI
+  deploys, through the hook, with `ref=${{ github.sha }}`, after every
+  gating job passes on `main`. Fallback if hooks are unavailable on Free:
+  `autoDeployTrigger: checksPass` and no hook.
+- **Fail closed in production.** With `ENV=production`, the backend allows
+  only the origins in `FRONTEND_URL`, and a production frontend build
+  refuses to build without its `VITE_` variables, instead of falling back
+  to dev.
+- **Gates follow the CLAUDE.md baseline.** CI fails when a passing check
+  fails or when the ruff or ESLint error count goes above the baseline (28
+  and 4), rather than skipping lint.
+- **You click, I write the steps.** Every dashboard action is a numbered
+  list in `docs/DEPLOYMENT.md` and in the chat; I wait for your "done"
+  before checking it from outside.
+
+Subchunks:
+
+**C14.1 Render-ready Docker image** (about 1.0 h). `Dockerfile`:
+`python:3.11-slim`; install `requirements.txt`; a build step that runs
+`backend.nlp.embedder` once to download MiniLM into
+`/app/.cache/fastembed`; `ENV FASTEMBED_CACHE=/app/.cache/fastembed
+EMBED_THREADS=1 PYTHONUNBUFFERED=1`; a non-root user; shell-form `CMD`
+binding `0.0.0.0:${PORT:-10000}` with one worker; `HEALTHCHECK` left to
+Render. New `.dockerignore` (`.env*`, `.venv`, `frontend/`, `.cache/`,
+`docs/`, `.git`, tests data). `render.yaml`: `runtime: docker`,
+`plan: free`, `region` (your choice), `healthCheckPath: /health`,
+`autoDeployTrigger: off`, env vars `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`,
+`FRONTEND_URL` (`sync: false`), `ENV=production`; `SUPABASE_ANON_KEY`
+dropped from the blueprint (only `mcp_server.py` reads it). A test
+(`backend/tests/test_deploy_config.py`) checks the blueprint and Dockerfile
+for these fields and that no secret value or AI key is in them.
+Verified by: `docker build`, image size; `docker run --cpus=0.1
+--memory=512m` with the dev env file and **no network for Hugging Face**
+(model already in the image), time to `model_ready`, idle and ingestion
+RSS against C9.3 (275 MB idle, 335 MB peak); one upload of `sample.pdf`
+through it; `docs/BENCHMARKS.md` row. Cut: the non-root user.
+
+**C14.2 Frontend production config** (about 0.5 h). `lib/supabase.js`:
+no hard-coded fallback in a production build (fails at build time with a
+named missing variable; dev keeps working); `vite.config.js` or a small
+prebuild check for `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+`VITE_API_URL`, `VITE_SITE_URL` when `mode === 'production'` and not the
+e2e build. `vercel.json`: keep the SPA rewrite; add immutable cache headers
+for `/assets/*` and basic security headers (`X-Content-Type-Options`,
+`Referrer-Policy`). `frontend/.env.example`: production notes. Closes
+issue 11. Verified by: production build with the variables unset (fails
+with a clear message) and set (passes); e2e suite unchanged; `vite
+preview` serving `/`, a deep link and `/og.png`. Cut: security headers.
+
+**C14.3 CORS** (about 0.5 h). `backend/main.py`: `FRONTEND_URL` read as a
+comma-separated list of exact origins, trailing slashes stripped; the
+localhost origins only when `ENV` is not `production`; methods and headers
+narrowed to what `lib/api.js` sends (and `allow_credentials` dropped if no
+call sends cookies, checked first). Tests: preflight and simple request
+from an allowed origin get the headers; a disallowed origin and a
+localhost origin under `ENV=production` do not. Verified by: pytest, and
+`curl -i -X OPTIONS` against a local server in both modes. Cut: narrowing
+methods and headers.
+
+**C14.4 🚦 Gate G4: production migrations** (about 1.0 h, mostly waiting;
+**your approval required, nothing runs on production before it**).
+1. You confirm which Supabase project is production (its project ref; it
+   must differ from the dev ref in `.env`) and that it is on Free.
+2. I write `docs/G4_PRODUCTION_MIGRATIONS.md`: read-only pre-checks
+   (applied tables and columns, `vector` extension, duplicates on
+   `chunks (book_id, chunk_index)`, existing policies and the `covers`
+   bucket, database size against 500 MB) and the exact SQL of 005-015.
+3. You run the pre-checks in the SQL editor and paste the results; if 010
+   would fail on duplicates, I stop and propose an additive fix before
+   going on.
+4. **Backup**: you run `npx supabase db dump` (roles, schema, data) to a
+   folder outside the repo with your database password, and confirm the
+   three files and their sizes. I never handle the password.
+5. You approve in chat; you paste and run 005 to 015, one at a time, each
+   in a transaction, in the SQL editor; after each I give a read-only
+   check and you paste its result.
+6. Backfills of existing production rows (local embeddings, structure,
+   covers) are a separate approval: they write production data.
+Verified by: the post-checks show every new table, column, index, function,
+policy and the bucket; row counts unchanged. Rollback: restore from the
+dump (documented, not rehearsed on production). Cut: the backfills (old
+books can be re-uploaded).
+
+**C14.5 CI alignment** (about 0.75 h). `ci.yml`: Python 3.11 (matches the
+image), Node 22; ruff and ESLint as baseline gates (fail only if the count
+rises above 28 and 4) through a small script; add `test:unit`,
+`check:contrast`, `check:images` and `python -c "import backend.main"`; a
+`docker build` job on `main` and `readfocus-2.0` only; `deploy-render`
+`needs` every gating job, calls the hook with `curl -fsS` and
+`ref=${{ github.sha }}`. e2e on CI only if the hosted Ubuntu runner has
+Microsoft Edge (checked, not assumed); otherwise it stays local and the
+reason is noted. Updates CLAUDE.md's Python note. Verified by: a push of
+the chunk branch and green checks on GitHub (read through the API or your
+screenshot, since `gh` is not installed here). Cut: e2e on CI, the docker
+build job.
+
+**C14.6 Deploy, verify, `docs/DEPLOYMENT.md`** (about 1.5 h). Numbered
+dashboard steps, one provider at a time, waiting on you after each:
+Render (new Blueprint from the repo, Free plan confirmed, env vars, deploy
+hook copied into the GitHub secret `RENDER_DEPLOY_HOOK`); Vercel (import,
+Root Directory `frontend`, Hobby, `VITE_` variables for Production);
+Supabase Auth (Site URL and redirect URLs set to the Vercel URL); then
+`FRONTEND_URL` on Render. Merges: `chunk/C14-deploy` into `readfocus-2.0`
+(`--no-ff`), then `readfocus-2.0` into `main` **only after you approve the
+release**, since the push to `main` deploys. Verified on the production
+URLs only: `/health` 200 with `model_ready: true`; time from a cold
+spin-down to `model_ready`; CORS preflight from the Vercel origin; sign
+up, sign in, upload `sample.pdf`, ready, read, test, results, dashboard,
+word lookup; Render memory from its metrics during ingestion; the landing
+page's canonical link and share image; Lighthouse on the production
+landing page. `docs/DEPLOYMENT.md`: architecture, env var table per
+provider (names only), the numbered steps, deploy and rollback (Render
+keeps the two previous deploys), free-tier limits and what happens at each,
+the Supabase weekly pause and manual backups. Cut: Lighthouse, the cold
+start timing.
+
+Questions for you before the gated steps (none blocks C14.1-C14.3):
+
+1. Is there already a Render service and a Vercel project from pre-2.0
+   (the CI references a `RENDER_DEPLOY_HOOK` secret), or are both new?
+2. Which Supabase project is production, and is it the second of your two
+   Free projects?
+3. Render region (`oregon` default; it cannot change later). Best placed
+   next to the Supabase project's region.
+
+Risks: the image's model download at build time counts toward the 500
+build minutes (a few minutes per build); a Free project paused after a week
+of no use wakes on the next request only after you resume it in the
+dashboard; Render may restart the service at any time (ingestion resumes,
+C9; session background work does not, issue 35).
+
+Estimated time: about 5.25 h (C14.1 1.0, C14.2 0.5, C14.3 0.5, C14.4 1.0,
+C14.5 0.75, C14.6 1.5). At 50% over (7.9 h) the cut order applies: e2e on
+CI, Lighthouse, security headers, the backfills, the docker build job.
+
+### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+| [x] C14.1 Render-ready Docker image | this commit (`build(deploy): Render-ready Docker image with baked embedding model`) | `Dockerfile`: python:3.11-slim, pinned requirements, non-root user, MiniLM baked into `FASTEMBED_CACHE=/app/.cache/fastembed` at build time through the app's embedder, then `HF_HUB_OFFLINE=1`; uvicorn on `${PORT:-8000}`, one worker. `.dockerignore` (new): allowlist of `requirements.txt` and `backend/` without tests. `render.yaml`: `runtime: docker`, `plan: free`, `healthCheckPath: /health`, `autoDeployTrigger: "off"`; four secrets `sync: false`, `FASTEMBED_CACHE` and `ENV=production` fixed; no AI key. `backend/tests/test_deploy_config.py` (new, 8 tests). | `docker build -t readfocus-api .` 74 s, image 885 MB (728 before, model layer 91.3 MB). At `--memory=512m --cpus=0.1`: model ready 20.0-21.0 s after start (29.8-32.3 s before, download included), no download in the log, idle 251-255 MiB. `sample.pdf` ingested 3 times through it (`scripts/bench.py --ingest --cold --docker`): ready p50 39.89 s, done 46.39 s, 7 chunks and 55 questions each, peak 301-308 MiB (docs/BENCHMARKS.md, C14.1). Standard checks: see commit. | 2026-11-12 | First `/health` 2-4 s later than before (model load competes for the 0.1 CPU; not separated). Region left at Render's default until C14.6. Not run on Render yet |
+| [x] C14.2 frontend production config | this commit (`build(deploy): configure frontend production build and SPA routing`) | Vercel Hobby kept. `frontend/vercel.json`: confirmed `npm run build` into `dist`; the SPA rewrite now skips `/assets/`, so a missing hashed chunk after a redeploy is a 404, not `index.html` served as JavaScript; `$schema` added. `frontend/src/deploy/deployEnv.js` (new) + `vite.config.js` plugin `deployEnv()`: a Vercel build (`VERCEL=1`, production mode) stops when `VITE_API_URL`, `VITE_SUPABASE_URL` or `VITE_SUPABASE_ANON_KEY` is missing, not https, local, ends in `/`, or the key is a secret or service-role key; a missing `VITE_SITE_URL` warns. `frontend/.env.example`: the production variables, the check, Root Directory `frontend`. 8 unit tests (`deployEnv.test.js`, including the rewrite against app routes and `/assets/`). | `VERCEL=1` builds: no variables -> stops naming `VITE_API_URL`; `sb_secret_` key -> stops; `http://` API URL -> stops; example valid values -> builds, prerenders, the API host is in the bundle, warns on `VITE_SITE_URL`. Local build without `VERCEL` unchanged. Standard checks: see commit. | 2026-11-12 | Not run on Vercel yet (C14.6). The hard-coded dev fallback in `lib/supabase.js` (issue 11) stays for local builds; a Vercel build can no longer reach it. A local ignored `frontend/.env.production` (pre-2.0, dev project, empty API URL) feeds local production builds; left untouched |
+| [x] C14.3 CORS | this commit (`security(api): restrict CORS to configured frontend origin`) | `backend/cors.py` (new): allowed origins are `FRONTEND_URL` (one or several, comma-separated, trimmed, no trailing slash), plus the seven local Vite origins only when `ENV` is exactly `development`; `FRONTEND_URL` unset in production allows no origin and logs a warning; credentials off (the frontend sends a bearer token, no cookies). `backend/main.py` calls `add_cors(app)`; its unused `os` import removed and imports sorted. `.env.example` documents both. 9 tests written first (`test_cors.py`). | `pytest backend/tests/test_cors.py` failed at collection before `cors.py` existed, 9 passed after. Local uvicorn, curl preflights with `FRONTEND_URL=https://readfocus.vercel.app`: `ENV=production` -> the site 200 with its allow-origin, `localhost:5173` and `evil.example` 400 with none; `ENV=development` -> the site and `localhost:5173` 200, `evil.example` 400. Standard checks: see commit. | 2026-11-12 | Not run on Render yet (C14.6). Methods and headers stay `*`. The repo graph no longer sees `FRONTEND_URL` being read (`env.get` in `cors.py` is not matched by its regex) |
+| [x] C14.4 🚦 Gate G4: production migrations (approval required) | this commit (`docs(progress): record gate G4 production migration approval`) | **G4: PASS (2026-11-12; no migration to apply, nothing written, no backup taken).** Production is the dev project `lvfhuszvuiowyeizstru`; kept as one shared project by the user's decision (2026-11-12). `docs/G4_PRODUCTION_MIGRATIONS.md` (new): the outcome, then the review written before the project was known (full SQL of 005-015 with sha256, pre-checks, backup and apply steps, backfill plan). | `npx supabase migration list --linked`: 001-015 on both sides. `npx supabase db push --linked --dry-run`: "Remote database is up to date." Service-role selects of every table and column 005-015 add and both RPCs: all answered; buckets `books`, `covers`. Backfill dry runs: embeddings 0 of 645 chunks pending, structure 0 books, covers 0 books. | 2026-11-12 | The prompt's record line says "backup confirmed"; none was taken because nothing was written, so it is not claimed. No question/concept backfill script exists (old books get questions on demand). Issue 36 |
+| [x] C14.5 CI alignment | this commit (`ci: align pipeline with new stack and graph checks`); fix `1dd6c30` | `.github/workflows/ci.yml` rewritten: `backend` on Python 3.11 (as the image) from `requirements-dev.txt`: ruff gated at the baseline (27), offline pytest, `import backend.main`; `frontend` on Node 22: ESLint gated at the baseline (4 errors, 0 warnings), build, unit tests, contrast and image checks; `graph` on 3.11 (freshness and tooling tests); `deploy-render` only on a push to `main`, after all three, POSTs the hook with `ref=<sha>` (`curl -fsS`), fails clearly without the secret; stale non-main runs cancelled. Found and fixed first: psutil was in no requirements file, so pytest failed at collection in a clean install (`1dd6c30`, DEBUG_LOG). CLAUDE.md: Python note, baselines kept in step with `ci.yml`. | Each job's `run:` steps executed verbatim from the parsed YAML (scratchpad runner) on a fresh clone: `python:3.11` backend (ruff 27 of 27, 804 passed and 2 skipped, import ok), graph (fresh, 62 passed; it failed as intended before `make graph`); `node:22` frontend (ESLint 4/0 of 4/0, build, unit, contrast 204 pairs, images 0 failing). Deploy step against a local fake hook: `POST /deploy/srv-test?key=abc&ref=<sha>`, 200; no secret: exit 1 with the message; unreachable hook: exit 7. Standard checks: see commit. | 2026-11-12 | Not run on GitHub yet (needs a push). e2e is not in CI: it needs Microsoft Edge on the runner, not checked; it stays a local check. No docker build job (Render builds the image). The hook URL is assumed to carry `?key=`, as Render's do |
+| [ ] C14.6 deploy + verify + DEPLOYMENT.md (includes merging to main) | | | | | |
 
 ## C15
 

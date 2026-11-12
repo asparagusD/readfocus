@@ -2115,3 +2115,105 @@ The repo-graph check itself (`make graph` fails on an orphan purpose);
 
 ### Commit
 Folded into C13.10e (the failure never reached a commit).
+
+## 2026-11-12 C14.1 — ruff count rose from 28 to 34
+
+**Status:** fixed
+
+### Symptom
+Standard checks before committing C14.1: `ruff check backend/` printed
+`Found 34 errors.` against the baseline of 28. Every other check passed.
+
+### Hypotheses
+1. The new `backend/tests/test_deploy_config.py` adds the 6 errors.
+   Result: **confirmed** (`ruff check backend/tests/test_deploy_config.py`:
+   6 x FURB167, "Use of regular expression alias `re.M`").
+
+### Root cause
+The new test passed `re.M` to `re.search`; the project's ruff rules
+require the full name `re.MULTILINE`.
+
+### Fix
+`backend/tests/test_deploy_config.py`: `re.M` replaced by
+`re.MULTILINE` in all six calls. One attempt.
+
+### Regression test
+The ruff check itself: `ruff check backend/` back to `Found 28 errors.`;
+`pytest backend/tests/test_deploy_config.py -q`: 8 passed.
+
+### Commit
+Folded into C14.1 (the failure never reached a commit).
+
+## 2026-11-12 C14.5 — pytest stops at collection on a clean Linux checkout
+
+**Status:** fixed
+
+### Symptom
+Running the new CI backend job's commands on a fresh clone of `f1abfb2`
+in a clean `python:3.11` container (no `.env`, no model cache), after
+`pip install -r requirements.txt pytest==9.2.0 ruff==0.17.4`, pytest
+stops before running anything. Locally (the `.venv`) the same suite
+passes, 804 tests.
+
+    pytest backend/tests -q
+
+    ==================================== ERRORS ====================================
+    _________________ ERROR collecting backend/tests/test_bench.py _________________
+    ImportError while importing test module '/work/backend/tests/test_bench.py'.
+    Hint: make sure your test modules/packages have valid Python names.
+    Traceback:
+    /usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+        return _bootstrap._gcd_import(name[level:], package, level)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    backend/tests/test_bench.py:5: in <module>
+        from scripts import bench
+    scripts/bench.py:44: in <module>
+        import psutil
+    E   ModuleNotFoundError: No module named 'psutil'
+    =========================== short test summary info ============================
+    ERROR backend/tests/test_bench.py
+    !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+    1 error in 1.73s
+
+### Repro
+
+    docker run --rm -v "I:/readfocus:/src:ro" python:3.11 bash -c 'git clone -q /src /work && cd /work && pip install -q -r requirements.txt pytest==9.2.0 && pytest backend/tests -q'
+
+### Hypotheses
+1. `psutil` is in no requirements file: `scripts/bench.py` imports it,
+   `backend/tests/test_bench.py` imports `scripts.bench`, and the local
+   `.venv` has psutil 7.2.2 installed by hand (C3.4,
+   `scripts/dev/measure_rss.py`). Ruled out if the clean install still
+   fails with psutil added. Result: **confirmed**: with
+   `psutil==7.2.2` added to the same install, `pytest backend/tests -q`
+   gave 802 passed, 2 skipped (the two model tests skip when the model is
+   not cached, as designed).
+2. Other packages the tests or scripts import are also undeclared.
+   Ruled out if an AST scan of `backend/tests/**/*.py` and `scripts/*.py`
+   finds no third-party import outside `requirements.txt` except psutil
+   and pytest. Result: **ruled out**: only `psutil` and `pytest`.
+
+### Root cause
+Test-time dependencies were declared nowhere: `requirements.txt` holds the
+app's packages (checked by `test_requirements.py` for `backend/` only), and
+`pytest` and `psutil` were installed by hand locally and by name in CI
+(`scripts/bench.py:44`, imported by `backend/tests/test_bench.py:5`). CI
+never had psutil, so its test job has failed at collection since
+`bench.py` began importing psutil (`db14228`, C9.0a; `test_bench.py`
+itself dates from C3.5). CI results on GitHub were never checked
+(issue 19).
+
+### Fix
+`requirements-dev.txt` (new): `-r requirements.txt`, `pytest==9.2.0`,
+`ruff==0.17.4`, `psutil==7.2.2`, not installed in the Docker image. One
+attempt. The C14.5 workflow installs it.
+
+### Regression test
+`backend/tests/test_requirements.py::test_tests_and_scripts_dependencies_are_declared`
+and `::test_dev_requirements_include_the_app_and_are_pinned`. Before the
+fix: 2 failed, 3 passed. After: 5 passed. The repro with
+`pip install -r requirements-dev.txt` in the clean container: 804 passed,
+2 skipped; ruff 27.
+
+### Commit
+fix(ci): declare test and script dependencies in requirements-dev.txt

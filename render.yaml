@@ -1,9 +1,19 @@
+# Render blueprint for the backend: one Docker web service on the Free plan
+# (0.1 CPU, 512 MB, spins down after 15 min idle). No payment method needed.
+# Secrets are entered in the Render dashboard (sync: false), never here.
+# No LLM or embedding API key: all intelligence runs in the image.
 services:
   - type: web
     name: readfocus-backend
-    env: docker
+    runtime: docker
+    plan: free
+    # region is left at Render's default (oregon) until it is chosen in
+    # C14.6; it cannot be changed after the service is created.
     dockerfilePath: ./Dockerfile
     dockerContext: .
+    healthCheckPath: /health
+    # Deploys come only from CI after the checks pass on main (C14.5).
+    autoDeployTrigger: "off"
     envVars:
       - key: SUPABASE_URL
         sync: false
@@ -13,3 +23,7 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      - key: FASTEMBED_CACHE
+        value: /app/.cache/fastembed
+      - key: ENV
+        value: production

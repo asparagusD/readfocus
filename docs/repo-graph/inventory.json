@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 431,
-    "inventoried": 366,
+    "tracked": 439,
+    "inventoried": 374,
     "excluded": 65
   },
   "files": [
@@ -47,20 +47,28 @@
       "purpose": "Project skill: query the repo graph before an edit, regenerate it after a structural change, and what the graph does not see."
     },
     {
+      "path": ".dockerignore",
+      "language": "text",
+      "lines": 8,
+      "size_bytes": 219,
+      "role": "config",
+      "purpose": "Docker build context allowlist: only requirements.txt and backend/ (without backend/tests/ and caches), so .env, .venv and frontend/ stay out of the image."
+    },
+    {
       "path": ".env.example",
       "language": "dotenv",
-      "lines": 20,
-      "size_bytes": 670,
+      "lines": 22,
+      "size_bytes": 889,
       "role": "config",
-      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL, ENV, FASTEMBED_CACHE and the optional EMBED_THREADS; no AI provider key (since C8.8)."
+      "purpose": "Backend environment template: Supabase keys, FRONTEND_URL (one or more comma-separated CORS origins), ENV (only development adds the localhost origins), FASTEMBED_CACHE and the optional EMBED_THREADS; no AI provider key (since C8.8)."
     },
     {
       "path": ".github/workflows/ci.yml",
       "language": "yaml",
-      "lines": 97,
-      "size_bytes": 2795,
+      "lines": 162,
+      "size_bytes": 5865,
       "role": "config",
-      "purpose": "CI on every push: ruff on backend/, pytest on backend/tests, frontend build, repo graph freshness and tooling tests; triggers the Render deploy hook on main."
+      "purpose": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit."
     },
     {
       "path": ".gitignore",
@@ -73,18 +81,18 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 190,
-      "size_bytes": 10238,
+      "lines": 206,
+      "size_bytes": 11461,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
     {
       "path": "Dockerfile",
       "language": "dockerfile",
-      "lines": 15,
-      "size_bytes": 303,
+      "lines": 39,
+      "size_bytes": 1454,
       "role": "config",
-      "purpose": "Backend image for Render: python:3.11-slim, installs root requirements.txt, copies backend/, runs uvicorn on port 8000."
+      "purpose": "Backend image for Render Free: python:3.11-slim, pinned requirements, a non-root user, the embedding model baked into FASTEMBED_CACHE at build time (then HF_HUB_OFFLINE), runs uvicorn with one worker on ${PORT:-8000}."
     },
     {
       "path": "Makefile",
@@ -303,6 +311,14 @@
       "purpose": "The only callers of the compiled graph: run_start, run_finish, run_submit and run_abandon invoke one event flow each with a recursion limit of 10 and return the final state; save_decisions stores a run's decisions entries in agent_decisions in one insert, numbered under one run id, logging any failure."
     },
     {
+      "path": "backend/cors.py",
+      "language": "python",
+      "lines": 52,
+      "size_bytes": 1698,
+      "role": "lib",
+      "purpose": "CORS policy (C14.3): allowed_origins() is FRONTEND_URL (comma-separated, trimmed, trailing slash dropped), plus the local Vite origins only when ENV is exactly development; add_cors() installs CORSMiddleware with no credentials (bearer tokens) and warns when no origin is allowed."
+    },
+    {
       "path": "backend/dependencies.py",
       "language": "python",
       "lines": 45,
@@ -313,10 +329,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 70,
-      "size_bytes": 2203,
+      "lines": 48,
+      "size_bytes": 1767,
       "role": "entry",
-      "purpose": "FastAPI app: CORS, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
+      "purpose": "FastAPI app: CORS through backend/cors.py, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -687,12 +703,28 @@
       "purpose": "Pytest: plural reduction, phrase normalisation, concept key slugs, merging of identical, fuzzy, overlapping and embedding-close phrases, and extract_concepts on a fixed passage without the real model."
     },
     {
+      "path": "backend/tests/test_cors.py",
+      "language": "python",
+      "lines": 85,
+      "size_bytes": 3261,
+      "role": "test",
+      "purpose": "Pytest, C14.3: production allows only FRONTEND_URL, localhost only under ENV=development, trimming and several origins, none when unset; preflights from the frontend pass without credentials, localhost and other sites get no allow-origin in production; the app installs this policy."
+    },
+    {
       "path": "backend/tests/test_covers.py",
       "language": "python",
       "lines": 230,
       "size_bytes": 10374,
       "role": "test",
       "purpose": "Pytest with httpx.MockTransport and the in-memory database: cover hit stored in the bucket with its URL, misses, missing or non-image covers, timeouts and network, server and storage errors stored as null, archive.org redirects followed and others refused, the client's 3 s timeout and User-Agent, lookup terms, and title/author metadata from PDF info and EPUB OPF."
+    },
+    {
+      "path": "backend/tests/test_deploy_config.py",
+      "language": "python",
+      "lines": 89,
+      "size_bytes": 3357,
+      "role": "test",
+      "purpose": "Pytest, C14.1: the Dockerfile is python:3.11-slim, bakes the model through the app's embedder before going offline, binds ${PORT:-8000} with one worker; .dockerignore is an allowlist; render.yaml is a free Docker service with /health, auto-deploy off, secrets unset and no AI key; /health exists."
     },
     {
       "path": "backend/tests/test_embedder.py",
@@ -873,8 +905,8 @@
     {
       "path": "backend/tests/test_requirements.py",
       "language": "python",
-      "lines": 60,
-      "size_bytes": 2162,
+      "lines": 84,
+      "size_bytes": 3373,
       "role": "test",
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
     },
@@ -969,16 +1001,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1000,
-      "size_bytes": 55036,
+      "lines": 1087,
+      "size_bytes": 60288,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2117,
-      "size_bytes": 93388,
+      "lines": 2219,
+      "size_bytes": 97819,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -991,6 +1023,14 @@
       "purpose": "C10.1 design audit: impeccable critique and ui-ux-pro-max checks of the current pages, contrast and missing states in the Claude Design handoff, decisions A1-A16 that resolve them, and the handoff-to-code mapping for C10-C13."
     },
     {
+      "path": "docs/G4_PRODUCTION_MIGRATIONS.md",
+      "language": "markdown",
+      "lines": 706,
+      "size_bytes": 33059,
+      "role": "doc",
+      "purpose": "Gate G4 (C14.4): outcome first (production is the dev project; 001-015 already applied, checked read-only; backfill dry runs found nothing; nothing written), then the review written before that was known: full SQL of 005-015 with sha256, read-only pre-checks, backup, apply and post-check steps, backfill plan."
+    },
+    {
       "path": "docs/MIGRATION_AUDIT.md",
       "language": "markdown",
       "lines": 364,
@@ -1001,18 +1041,18 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2298,
-      "size_bytes": 491671,
+      "lines": 2516,
+      "size_bytes": 515669,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "frontend/.env.example",
       "language": "dotenv",
-      "lines": 10,
-      "size_bytes": 398,
+      "lines": 25,
+      "size_bytes": 1560,
       "role": "config",
-      "purpose": "Frontend environment template: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL."
+      "purpose": "Frontend environment template: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL, VITE_SITE_URL; C14.2: the production variables for Vercel (required and optional, format rules), the Vercel build check, Root Directory and the rewrite."
     },
     {
       "path": "frontend/.gitignore",
@@ -1637,6 +1677,22 @@
       "size_bytes": 463,
       "role": "component",
       "purpose": "ToastContext and useToast(), which returns { toast, dismiss } and throws without a ToastProvider."
+    },
+    {
+      "path": "frontend/src/deploy/deployEnv.js",
+      "language": "javascript",
+      "lines": 54,
+      "size_bytes": 2418,
+      "role": "asset",
+      "purpose": "Build-time check of a deploy's VITE_ variables (C14.2): the three required ones set, API and Supabase URLs https, not local, no trailing slash, the browser key not a secret or service-role key; a missing VITE_SITE_URL is a warning; isVercelBuild reads VERCEL=1."
+    },
+    {
+      "path": "frontend/src/deploy/deployEnv.test.js",
+      "language": "javascript",
+      "lines": 65,
+      "size_bytes": 3303,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit): a complete env passes, missing and malformed variables are named, a secret or service-role key is refused, VITE_SITE_URL only warns, only Vercel builds are checked; vercel.json builds into dist and rewrites app routes but not /assets/ to index.html."
     },
     {
       "path": "frontend/src/gallery/Gallery.jsx",
@@ -2489,18 +2545,18 @@
     {
       "path": "frontend/vercel.json",
       "language": "json",
-      "lines": 10,
-      "size_bytes": 160,
+      "lines": 11,
+      "size_bytes": 225,
       "role": "config",
-      "purpose": "Vercel config: build command, dist output, and a rewrite of every path to index.html."
+      "purpose": "Vercel config: npm run build into dist, and a rewrite of every path except /assets/ to index.html (C14.2: a missing hashed chunk 404s instead of returning HTML)."
     },
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 80,
-      "size_bytes": 3019,
+      "lines": 97,
+      "size_bytes": 3821,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings."
     },
     {
       "path": "package.json",
@@ -2537,10 +2593,18 @@
     {
       "path": "render.yaml",
       "language": "yaml",
-      "lines": 15,
-      "size_bytes": 332,
+      "lines": 29,
+      "size_bytes": 1018,
       "role": "config",
-      "purpose": "Render blueprint for the Docker backend; declares the Supabase keys and FRONTEND_URL, and no AI provider key (since C8.8)."
+      "purpose": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key."
+    },
+    {
+      "path": "requirements-dev.txt",
+      "language": "text",
+      "lines": 12,
+      "size_bytes": 556,
+      "role": "config",
+      "purpose": "Development and CI dependencies: -r requirements.txt plus pinned pytest, ruff (its version fixes the rule set) and psutil (scripts/bench.py); not in the Docker image (C14.5 fix)."
     },
     {
       "path": "requirements.txt",
@@ -2873,8 +2937,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 368,
-      "size_bytes": 104655,
+      "lines": 376,
+      "size_bytes": 107883,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

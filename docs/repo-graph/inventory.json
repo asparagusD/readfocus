@@ -1065,8 +1065,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 2762,
-      "size_bytes": 547527,
+      "lines": 2763,
+      "size_bytes": 549004,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

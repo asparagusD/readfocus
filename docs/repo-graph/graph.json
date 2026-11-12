@@ -30,6 +30,13 @@
       "handler": "get_book_details"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/file",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/file",
+      "handler": "get_book_file"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/pages",
       "type": "endpoint",
       "method": "GET",
@@ -755,6 +762,12 @@
     },
     {
       "id": "file:backend/tests/test_bench.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_book_files.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2512,6 +2525,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/016_book_files.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -2732,6 +2751,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/014_reading_position.sql",
       "to": "table:reading_progress"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/016_book_files.sql",
+      "to": "table:books"
     },
     {
       "type": "calls_endpoint",
@@ -3033,6 +3057,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/file"
     },
     {
       "type": "defines_endpoint",
@@ -3628,6 +3657,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/dependencies.py"
     },
     {
@@ -4084,6 +4118,31 @@
       "type": "imports",
       "from": "file:backend/tests/test_bench.py",
       "to": "file:scripts/bench.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_files.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",

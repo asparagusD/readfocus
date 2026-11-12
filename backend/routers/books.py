@@ -1,7 +1,11 @@
+import hashlib
+import io
 import uuid
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any, Literal, cast
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException, Query
+from pypdf import PdfReader
+from backend.agents import policy
 from backend.services import book_ingestor
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
@@ -9,40 +13,79 @@ from backend.dependencies import get_current_user
 
 router = APIRouter()
 
+def megabytes(size: int) -> str:
+    return f"{size / (1024 * 1024):.0f} MB"
+
+
+async def read_capped(file: UploadFile, limit: int) -> tuple[bytes, str]:
+    """The upload's bytes and hex SHA-256, read 1 MB at a time; 413 as soon as it passes `limit`."""
+    digest, parts, size = hashlib.sha256(), [], 0
+    while part := await file.read(1024 * 1024):
+        size += len(part)
+        if size > limit:
+            raise HTTPException(status_code=413, detail=f"This file is over {megabytes(limit)}, the most one book can be.")
+        digest.update(part)
+        parts.append(part)
+    return b"".join(parts), digest.hexdigest()
+
+
+def shelf_bytes(user_id: str) -> int:
+    """Bytes of the reader's originals kept on our server (device-only books do not count)."""
+    rows = supabase.table("books").select("file_bytes").eq("user_id", user_id).eq("storage_mode", "cloud").execute().data
+    return sum(int(cast(dict[str, Any], row).get("file_bytes") or 0) for row in rows or [])
+
+
+def pdf_page_count(ext: str, file_bytes: bytes) -> int | None:
+    if ext != "pdf":
+        return None
+    try:
+        return len(PdfReader(io.BytesIO(file_bytes)).pages)
+    except Exception:  # noqa: BLE001 - any pypdf failure: ingestion reports unreadable files
+        return None  # the count is optional
+
+
 @router.post("/upload")
 async def upload_book(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     title: str = Form(...),
     author: str = Form(...),
+    storage_mode: Literal["cloud", "device"] = Form("cloud"),
     user_id: str = Depends(get_current_user)
 ):
     # 1. Validate file type
     filename = file.filename or ""
     ext = filename.split(".")[-1].lower()
-    
+
     if ext not in ['pdf', 'epub']:
         raise HTTPException(status_code=400, detail="Only .pdf and .epub files are supported.")
-        
+
     mime_type = file.content_type
-    
-    # Read bytes
-    file_bytes = await file.read()
-    
+
+    # Read bytes, hash them, and stop at the per-file limit (C17.1)
+    file_bytes, sha256 = await read_capped(file, policy.MAX_BOOK_FILE_BYTES)
+    if storage_mode == "cloud":
+        used = shelf_bytes(user_id)
+        if used + len(file_bytes) > policy.MAX_SHELF_BYTES_PER_USER:
+            raise HTTPException(status_code=413, detail=(
+                f"Your shelf is full: {megabytes(used)} of {megabytes(policy.MAX_SHELF_BYTES_PER_USER)} kept on our "
+                "server. Remove a book, or keep this one on this device only."))
+
     # 2. Generate UUID for the book
     book_id = str(uuid.uuid4())
-    
-    # 3. Upload to Supabase Storage
-    storage_path = f"{user_id}/{book_id}.{ext}"
-    try:
-        supabase.storage.from_("books").upload(
-            file=file_bytes,
-            path=storage_path,
-            file_options={"content-type": mime_type or "application/octet-stream"}
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Storage upload failed: {str(e)}")
-        
+
+    # 3. Upload to Supabase Storage, unless the original stays on the reader's device
+    storage_path = f"{user_id}/{book_id}.{ext}" if storage_mode == "cloud" else None
+    if storage_path:
+        try:
+            supabase.storage.from_("books").upload(
+                file=file_bytes,
+                path=storage_path,
+                file_options={"content-type": mime_type or "application/octet-stream"}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Storage upload failed: {str(e)}")
+
     # 4. Insert row into books table
     try:
         supabase.table("books").insert({
@@ -52,7 +95,12 @@ async def upload_book(
             "author": author,
             "file_type": ext,
             "storage_path": storage_path,
-            "status": "processing"
+            "status": "processing",
+            "file_sha256": sha256,
+            "file_bytes": len(file_bytes),
+            "file_format": ext,
+            "storage_mode": storage_mode,
+            "page_count": pdf_page_count(ext, file_bytes),
         }).execute()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database insert failed: {str(e)}")
@@ -66,7 +114,7 @@ async def upload_book(
     # 6. Return immediately
     return {"book_id": book_id, "status": "processing"}
 
-BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url"
+BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url, storage_mode"
 PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")
 
 
@@ -78,6 +126,21 @@ async def get_books(user_id: str = Depends(get_current_user)):
         "book_id, " + ", ".join(PROGRESS_FIELDS)).eq("user_id", user_id).execute().data or []
     progress = {row["book_id"]: {key: row.get(key) for key in PROGRESS_FIELDS} for row in cast(list[dict[str, Any]], rows)}
     return [{**book, "progress": progress.get(book["id"])} for book in cast(list[dict[str, Any]], books)]
+
+@router.get("/{book_id}/file")
+async def get_book_file(book_id: str, user_id: str = Depends(get_current_user)):
+    """A short-lived signed URL for the owner's original file; 404 for other readers and device-only books."""
+    rows = supabase.table("books").select("storage_path, storage_mode, file_sha256").eq(
+        "id", book_id).eq("user_id", user_id).execute().data
+    if not rows:
+        raise HTTPException(status_code=404, detail="Book not found")
+    book = cast(dict[str, Any], rows[0])
+    if book.get("storage_mode") == "device" or not book.get("storage_path"):
+        raise HTTPException(status_code=404, detail="This book is only on the device it was added from.")
+    signed = supabase.storage.from_("books").create_signed_url(book["storage_path"], policy.BOOK_FILE_URL_SECONDS)
+    return {"url": signed.get("signedURL") or signed.get("signedUrl"), "expires_in": policy.BOOK_FILE_URL_SECONDS,
+            "sha256": book.get("file_sha256")}
+
 
 @router.get("/{book_id}")
 async def get_book_details(book_id: str, user_id: str = Depends(get_current_user)):
@@ -135,9 +198,11 @@ async def get_book_status(book_id: str, user_id: str = Depends(get_current_user)
 @router.post("/{book_id}/resume")
 async def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     """Run a book's ingestion again from its cursor: after a failure, or for a book left processing with no job."""
-    rows = supabase.table("books").select("id, status").eq("id", book_id).eq("user_id", user_id).execute().data
+    rows = supabase.table("books").select("id, status, storage_path").eq("id", book_id).eq("user_id", user_id).execute().data
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
+    if not rows[0].get("storage_path"):  # a device-only book: the server never kept its file
+        raise HTTPException(status_code=409, detail="This book's file is only on your device: add the file again.")
     job = jobs.get(book_id) or jobs.create(book_id, user_id)
     ok, reason = jobs.claimable(job, datetime.now(UTC), jobs.stale_minutes(), manual=True)
     if not ok:

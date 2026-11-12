@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 530,
-    "inventoried": 390,
+    "tracked": 532,
+    "inventoried": 392,
     "excluded": 140
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13324,
+      "size_bytes": 13359,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,10 +249,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 301,
-      "size_bytes": 11904,
+      "lines": 312,
+      "size_bytes": 12439,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -409,10 +409,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 179,
-      "size_bytes": 8168,
+      "lines": 244,
+      "size_bytes": 11628,
       "role": "router",
-      "purpose": "Book endpoints: upload to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete."
+      "purpose": "Book endpoints: upload (read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -561,8 +561,8 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 140,
-      "size_bytes": 4963,
+      "lines": 145,
+      "size_bytes": 5232,
       "role": "test",
       "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
     },
@@ -593,8 +593,8 @@
     {
       "path": "backend/tests/test_api_books_list.py",
       "language": "python",
-      "lines": 67,
-      "size_bytes": 3110,
+      "lines": 68,
+      "size_bytes": 3215,
       "role": "test",
       "purpose": "GET /books (C13.3a) on the in-memory database: only the caller's books, the old fields plus cover_url and progress, progress the caller's own and null before a first session, the selected columns, an empty shelf."
     },
@@ -685,6 +685,14 @@
       "size_bytes": 4401,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+    },
+    {
+      "path": "backend/tests/test_book_files.py",
+      "language": "python",
+      "lines": 115,
+      "size_bytes": 4661,
+      "role": "test",
+      "purpose": "Pytest for C17.1 original files: sha256, size, format and mode stored on upload; the per-reader cap (only the caller's cloud books count, 413 before any storage write); the per-file limit; device-only uploads never stored; signed URL only for the owner, none for device-only books; device-only books cannot be resumed."
     },
     {
       "path": "backend/tests/test_book_structure.py",
@@ -1137,8 +1145,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3061,
-      "size_bytes": 576386,
+      "lines": 3384,
+      "size_bytes": 599616,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3023,6 +3031,14 @@
       "purpose": "Creates term_lookups (term, lang primary key; kind, payload jsonb, source, found, fetched_at): a shared, non-personal lookup cache. RLS on: signed-in users may read; no write policy, so only the service role writes. Additive."
     },
     {
+      "path": "supabase/migrations/016_book_files.sql",
+      "language": "sql",
+      "lines": 24,
+      "size_bytes": 1496,
+      "role": "migration",
+      "purpose": "Adds to books: file_sha256, file_bytes, file_format ('pdf'|'epub'), storage_mode ('cloud' default | 'device'), page_count, and an index on (user_id, storage_mode) for the per-reader cap. RLS and the private books bucket unchanged. Additive."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -3065,8 +3081,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 392,
-      "size_bytes": 113871,
+      "lines": 394,
+      "size_bytes": 114900,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

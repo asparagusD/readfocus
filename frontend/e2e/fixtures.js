@@ -55,7 +55,7 @@ async function mockBackend(page, api, book) {
       return json(route, {
         session_id: 'e2e-session', chunks: today.map((i) => chunk(book, i)), chunk_indices: today, position: api.position,
         focus_duration_minutes: 20, reason: 'A steady pace for this book.', chapter_before: '',
-        book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: book, storage_mode: 'cloud' },
+        book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' },
       });
     }
     if (path === '/sessions/e2e-session/position') {
@@ -71,7 +71,7 @@ async function mockBackend(page, api, book) {
     if (path === `/books/${BOOK}/file`) return json(route, { url: `${API}/e2e-files/${file}` });
     if (path === `/e2e-files/${file}`) {
       api.fileLoads += 1;
-      return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': type }, body: readFileSync(new URL(file, FILES)) });
+      return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': type }, body: readFileSync(BOOKS[book].source ?? new URL(file, FILES)) });
     }
     if (path === `/books/${BOOK}/regions`) { // C18.6d: boxes word lookup skips; none unless a test sets them
       api.regionAsks += 1;

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 629,
-    "inventoried": 487,
+    "tracked": 635,
+    "inventoried": 493,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13936,
+      "size_bytes": 14085,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -162,7 +162,7 @@
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
       "lines": 180,
-      "size_bytes": 9510,
+      "size_bytes": 9528,
       "role": "agent",
       "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence; the passage is each chunk's prose when it has one, and sentences with a placeholder or garbled text are never reference evidence (C18.6b)."
     },
@@ -265,8 +265,8 @@
     {
       "path": "backend/agents/question_generation/agent.py",
       "language": "python",
-      "lines": 155,
-      "size_bytes": 7696,
+      "lines": 161,
+      "size_bytes": 7982,
       "role": "agent",
       "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); hands each chunk's concepts to the concept store; returns a GenerationReport. Since C18.6b it reads a chunk's prose when set and leaves out sentences with a placeholder or garbled text, counted in the report's dropped."
     },
@@ -449,8 +449,8 @@
     {
       "path": "backend/regions/prose.py",
       "language": "python",
-      "lines": 307,
-      "size_bytes": 14664,
+      "lines": 364,
+      "size_bytes": 17632,
       "role": "lib",
       "purpose": "Prose-only agent text (C18.6): placeholder() writes '[Equation 3.2, p. 45]', '[Code listing, p. 46]', '[Figure 3.4: caption, p. 47]' ('sec. N' for EPUB); page_spans finds a PDF page's non-prose pypdf lines and inline math by text; pdf_prose and epub_prose (by element path) give each chunk {prose, anchors} (PDF pages and per-page character spans, EPUB start and end CFIs with A4 locations, the placeholders it holds); apply replaces spans once per region; sentence_counts counts garbled and placeholder sentences. Pure."
     },
@@ -586,7 +586,7 @@
       "path": "backend/services/prose_job.py",
       "language": "python",
       "lines": 111,
-      "size_bytes": 5300,
+      "size_bytes": 5364,
       "role": "service",
       "purpose": "Prose-only text per chunk after the regions job (C18.6b): load() reads the book's page_regions and chunks (paged by 1000), plan() builds prose and anchors without writing, rebuild(book, file_bytes) applies it: through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises."
     },
@@ -801,8 +801,8 @@
     {
       "path": "backend/tests/test_backfill_prose.py",
       "language": "python",
-      "lines": 112,
-      "size_bytes": 5123,
+      "lines": 113,
+      "size_bytes": 5181,
       "role": "test",
       "purpose": "Pytest for scripts/backfill_prose.py on the in-memory database: pending books, a dry run that only reads, a book without regions getting its regions job and prose, a second run changing nothing, a regions job running elsewhere left alone, one failing book not stopping the run, the environment guard."
     },
@@ -1089,16 +1089,16 @@
     {
       "path": "backend/tests/test_prose.py",
       "language": "python",
-      "lines": 182,
-      "size_bytes": 9903,
+      "lines": 225,
+      "size_bytes": 12306,
       "role": "test",
       "purpose": "Pytest for backend/regions/prose.py: placeholder wording for math, code, figures and tables, caption cutting, span replacement written once per region, PDF chunks with display and inline math, code and a labelled figure across an empty page, short labels, page spans per chunk, EPUB code, figure and inline math by path with CFI anchors, placeholders never garbled, garbled and placeholder sentence counts."
     },
     {
       "path": "backend/tests/test_prose_job.py",
       "language": "python",
-      "lines": 100,
-      "size_bytes": 4559,
+      "lines": 135,
+      "size_bytes": 5901,
       "role": "test",
       "purpose": "Pytest for backend/services/prose_job.py and the evaluator's passage: prose, anchors and garbled counts stored, only changed chunks embedded again and re-questioned (unused questions deleted, used kept), idempotent second run, a book without regions left alone, after_regions never raising, load_passage reading prose, reference sentences without placeholders or garbled text."
     },
@@ -1113,8 +1113,8 @@
     {
       "path": "backend/tests/test_question_generation_agent.py",
       "language": "python",
-      "lines": 228,
-      "size_bytes": 10429,
+      "lines": 238,
+      "size_bytes": 10939,
       "role": "test",
       "purpose": "Pytest on an in-memory database and a fake embedder: stored rows are grounded in their chunk, the report matches them, a second run adds nothing, questions per chunk are capped, each chunk's concepts go to the concept store (whose failure loses no question), and no LLM is used."
     },
@@ -1305,8 +1305,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2957,
-      "size_bytes": 127580,
+      "lines": 3159,
+      "size_bytes": 137179,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1369,8 +1369,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3725,
-      "size_bytes": 684863,
+      "lines": 3728,
+      "size_bytes": 690907,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1426,7 +1426,7 @@
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
       "lines": 221,
-      "size_bytes": 12596,
+      "size_bytes": 12640,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -1453,6 +1453,14 @@
       "size_bytes": 6306,
       "role": "config",
       "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): three chapters with every kind of image (img PNG/GIF/SVG, inline SVG image by xlink:href and href, CSS background, figure and caption, srcset, cover), MathML and a code block."
+    },
+    {
+      "path": "frontend/e2e/gate-g5.spec.js",
+      "language": "javascript",
+      "lines": 73,
+      "size_bytes": 4196,
+      "role": "config",
+      "purpose": "Gate G5 renderer walk (playwright.gate.config.js, not a standard check): pages through each test EPUB in the original view with all API calls mocked and checks every packaged image loads (no remote one), captions, figcaptions and MathML boxes against g5_epub_expect.py."
     },
     {
       "path": "frontend/e2e/journey.spec.js",
@@ -1577,10 +1585,18 @@
     {
       "path": "frontend/playwright.config.js",
       "language": "javascript",
-      "lines": 24,
-      "size_bytes": 860,
+      "lines": 25,
+      "size_bytes": 934,
       "role": "config",
       "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1)."
+    },
+    {
+      "path": "frontend/playwright.gate.config.js",
+      "language": "javascript",
+      "lines": 8,
+      "size_bytes": 581,
+      "role": "config",
+      "purpose": "Playwright config for Gate G5's EPUB renderer walk: the e2e config with only gate-g5.spec.js and a 10-minute timeout."
     },
     {
       "path": "frontend/playwright.live.config.js",
@@ -3479,6 +3495,38 @@
       "purpose": "Measures prose-only text on the technical shelf (C18.6): for pages spread through each PDF, regions as the job stores them and pypdf's text through prose.page_spans; prints the share of prose lines kept, non-prose lines removed and garbled sentences left. Local files only."
     },
     {
+      "path": "scripts/dev/g5_epub_expect.py",
+      "language": "python",
+      "lines": 75,
+      "size_bytes": 3356,
+      "role": "script",
+      "purpose": "Gate G5: counts each test EPUB's spine images (packaged and remote), figcaptions and MathML from the markup, plus package and spine images, into JSON for the renderer walk."
+    },
+    {
+      "path": "scripts/dev/g5_page_diff.py",
+      "language": "python",
+      "lines": 108,
+      "size_bytes": 5624,
+      "role": "script",
+      "purpose": "Gate G5: compares PDF.js page renders with pypdfium2 (PDFium) renders: ink one render lacks within 1 px, raster image areas left out, connected blobs of at least 3 x 3 px and over 9 px fail; writes diff images."
+    },
+    {
+      "path": "scripts/dev/g5_render_pages.mjs",
+      "language": "text",
+      "lines": 51,
+      "size_bytes": 2876,
+      "role": "script",
+      "purpose": "Gate G5: renders shelf PDF pages with PDF.js (frontend's pdfjs-dist, its fonts and wasm) in Edge through Playwright from a made-up origin and saves PNGs; local files only."
+    },
+    {
+      "path": "scripts/dev/gate_g5.py",
+      "language": "python",
+      "lines": 165,
+      "size_bytes": 6765,
+      "role": "script",
+      "purpose": "Gate G5 (C18.G): ingests shelf books offline through book_ingestor.run_job on MemoryDb (embeddings, questions, regions job, prose rebuild; no cover lookup, no Supabase), samples RSS per phase (ingest, regions, prose), then runs is_garbled over every prose sentence and every question's prompt, answer, evidence and options; content scanned apart; --book, --out."
+    },
+    {
       "path": "scripts/dev/make_code_fixture.py",
       "language": "python",
       "lines": 104,
@@ -3841,8 +3889,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 489,
-      "size_bytes": 150227,
+      "lines": 495,
+      "size_bytes": 151758,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

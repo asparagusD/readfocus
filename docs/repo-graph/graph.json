@@ -1350,6 +1350,12 @@
       "language": "text"
     },
     {
+      "id": "file:frontend/e2e/gate-g5.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/journey.spec.js",
       "type": "file",
       "role": "config",
@@ -1441,6 +1447,12 @@
     },
     {
       "id": "file:frontend/playwright.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/playwright.gate.config.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2863,6 +2875,30 @@
     },
     {
       "id": "file:scripts/dev/eval_prose.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/g5_epub_expect.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/g5_page_diff.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/g5_render_pages.mjs",
+      "type": "file",
+      "role": "script",
+      "language": "text"
+    },
+    {
+      "id": "file:scripts/dev/gate_g5.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -5597,6 +5633,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/gate-g5.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/journey.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -5654,6 +5695,11 @@
       "type": "imports",
       "from": "file:frontend/e2e/warmup.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/playwright.gate.config.js",
+      "to": "file:frontend/playwright.config.js"
     },
     {
       "type": "imports",
@@ -7384,6 +7430,66 @@
       "type": "imports",
       "from": "file:scripts/dev/eval_prose.py",
       "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/g5_epub_expect.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/g5_epub_expect.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",

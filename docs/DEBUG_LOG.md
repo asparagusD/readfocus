@@ -3013,4 +3013,7 @@ approval). The 9 chunks without prose belong to two device-only books (no
 file on the server, so no regions job): expected, not this bug.
 
 ### Commit
-fix(ingest): page regions by a unique order when rebuilding prose
+`b6f596d` fix(ingest): page regions by a unique order when rebuilding prose
+
+Rerun after the fix (approved): the 32 chunks were stored, and a dry run straight
+after would store 0 chunks in every book.

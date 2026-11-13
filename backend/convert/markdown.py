@@ -21,7 +21,7 @@ from markdown_it import MarkdownIt
 from markdown_it.common.utils import escapeHtml
 from mdit_py_plugins.dollarmath import dollarmath_plugin
 
-from backend.convert.assets import Converted, ImageStore, resolve
+from backend.convert.assets import Converted, ImageStore, clean, resolve
 from backend.convert.epub_builder import Chapter
 from backend.convert.texmath import tex_to_mathml
 
@@ -117,7 +117,7 @@ def convert_markdown(text: str, name: str, resources: dict[str, bytes] | None = 
     """A Markdown document as chapters and images; `name` (the file's stem) titles a book with no heading."""
     store, notes = ImageStore(), []
     env = environment(store, notes, resources, base)
-    parts = sections(text, env)
+    parts = sections(clean(text), env)
     title = next((label for label, _ in parts if label), None) or name
     chapters = [Chapter(label or title, body) for label, body in parts]
     return Converted(title, chapters, store.images, notes)

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 650,
-    "inventoried": 508,
+    "tracked": 654,
+    "inventoried": 512,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14193,
+      "size_bytes": 14231,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -329,16 +329,16 @@
     {
       "path": "backend/convert/assets.py",
       "language": "python",
-      "lines": 68,
-      "size_bytes": 2660,
+      "lines": 76,
+      "size_bytes": 2799,
       "role": "lib",
-      "purpose": "What converters share (C19.2): the Converted result (title, chapters, images, notes), sniff (image type from magic bytes), ImageStore (packs each image once, named by content hash; broken SVG refused) and resolve (a relative src inside the upload, None when it escapes)."
+      "purpose": "What converters share (C19.2): the Converted result (title, chapters, images, notes), sniff (image type from magic bytes), ImageStore (packs each image once, named by content hash; broken SVG refused) resolve (a relative src inside the upload, None when it escapes) and clean (drops ANSI codes and characters XML forbids)."
     },
     {
       "path": "backend/convert/epub_builder.py",
       "language": "python",
-      "lines": 255,
-      "size_bytes": 13762,
+      "lines": 256,
+      "size_bytes": 13889,
       "role": "lib",
       "purpose": "Shared EPUB 3 builder (C19.1): build_epub(title, author, chapters, images) packages XHTML body fragments and images as mimetype (first, stored), container.xml, an EPUB 3 OPF (manifest with mathml/svg/nav properties, spine), nav.xhtml from h1-h3 headings, one XHTML per chapter and a small stylesheet; every img gets width/height and alt ('Figure N'); deterministic output. check_epub(bytes) lists structural problems."
     },
@@ -354,9 +354,17 @@
       "path": "backend/convert/markdown.py",
       "language": "python",
       "lines": 123,
-      "size_bytes": 5749,
+      "size_bytes": 5763,
       "role": "lib",
       "purpose": "Markdown to EPUB chapters (C19.2a) with markdown-it-py + dollarmath: CommonMark and tables, raw HTML escaped, $..$/$$..$$ to MathML (money like $5 stays text), fenced code exact with language-x class, data-URI/upload/attachment images packed, remote and missing images listed in notes, only http(s)/mailto links kept, chapters at h1 when there are two or more. environment() and sections() are reused by the notebook converter."
+    },
+    {
+      "path": "backend/convert/notebook.py",
+      "language": "python",
+      "lines": 116,
+      "size_bytes": 5866,
+      "role": "lib",
+      "purpose": "Jupyter notebooks (nbformat 4) to EPUB chapters (C19.2b): markdown cells through the Markdown converter (attachments packed), code cells as code in the kernel language, image outputs (PNG, JPEG, SVG; plots) as figures captioned 'Output of cell N', text/latex as MathML, text/plain/stream/error as small rf-output blocks without ANSI codes, text/html never used; chapters at h1 when there are two or more; non-JSON or other formats refused with a reason."
     },
     {
       "path": "backend/convert/texmath.py",
@@ -719,6 +727,14 @@
       "purpose": "Generated C18.5b fixture (scripts/dev/make_epub_fixture.py): two chapters with headings, prose with inline code and MathML, display MathML with LaTeX, Python and Scheme code, a figure, bare images with and without alt, an inline SVG and a captioned table; our own content."
     },
     {
+      "path": "backend/tests/fixtures/sources/sample.ipynb",
+      "language": "text",
+      "lines": 183,
+      "size_bytes": 12478,
+      "role": "test",
+      "purpose": "Notebook fixture (C19.2b, tools/make_notebook_fixture.py): math, a table, an attachment image, a stream, a matplotlib-shaped PNG plot output, an SVG output, an ANSI traceback, a text/html + text/plain result, a cell never run."
+    },
+    {
       "path": "backend/tests/fixtures/sources/sample.md",
       "language": "markdown",
       "lines": 41,
@@ -949,6 +965,14 @@
       "size_bytes": 5548,
       "role": "test",
       "purpose": "Pytest for backend/convert/markdown.py and texmath.py on fixtures/sources/sample.md: MathML with LaTeX annotation, TeX errors kept as code, title and chapters, lists/quotes/tables, money not math, raw HTML escaped, exact fenced code, local images packed (count in source == in EPUB) and remote ones listed, data URIs, links, path escape refused, sound EPUB with math/code/table/figure regions."
+    },
+    {
+      "path": "backend/tests/test_convert_notebook.py",
+      "language": "python",
+      "lines": 107,
+      "size_bytes": 4917,
+      "role": "test",
+      "purpose": "Pytest for backend/convert/notebook.py on fixtures/sources/sample.ipynb: title and chapters, image count in source == in EPUB (3), captioned output figures, code in the kernel language, output blocks without ANSI and text/plain over text/html, math and tables, sound EPUB with 3 figure regions, refusals, XML-forbidden characters dropped (notebook and Markdown)."
     },
     {
       "path": "backend/tests/test_cors.py",
@@ -1465,8 +1489,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4010,
-      "size_bytes": 721146,
+      "lines": 4012,
+      "size_bytes": 725376,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3967,6 +3991,14 @@
       "purpose": "Writes frontend/e2e/fixtures/books/converted.epub with backend/convert/epub_builder.py (C19.1b): two chapters with h1/h2 headings, a PNG plot with alt, an SVG without, display MathML with its TeX, and an indented Python block; deterministic."
     },
     {
+      "path": "tools/make_notebook_fixture.py",
+      "language": "python",
+      "lines": 59,
+      "size_bytes": 4027,
+      "role": "script",
+      "purpose": "Writes backend/tests/fixtures/sources/sample.ipynb byte for byte (C19.2b); no Jupyter or matplotlib needed, generated gradient PNGs; deterministic."
+    },
+    {
       "path": "tools/make_reader_fixtures.py",
       "language": "python",
       "lines": 247,
@@ -4009,8 +4041,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 510,
-      "size_bytes": 156498,
+      "lines": 514,
+      "size_bytes": 157916,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

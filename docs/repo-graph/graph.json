@@ -528,6 +528,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/convert/notebook.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/convert/texmath.py",
       "type": "file",
       "role": "lib",
@@ -798,6 +804,12 @@
       "language": "text"
     },
     {
+      "id": "file:backend/tests/fixtures/sources/sample.ipynb",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
       "id": "file:backend/tests/fixtures/sources/sample.md",
       "type": "file",
       "role": "test",
@@ -967,6 +979,12 @@
     },
     {
       "id": "file:backend/tests/test_convert_markdown.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_convert_notebook.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -3234,6 +3252,12 @@
       "language": "python"
     },
     {
+      "id": "file:tools/make_notebook_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:tools/make_reader_fixtures.py",
       "type": "file",
       "role": "script",
@@ -4353,6 +4377,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/convert/notebook.py",
+      "to": "file:backend/convert/assets.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/notebook.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/notebook.py",
+      "to": "file:backend/convert/markdown.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/notebook.py",
+      "to": "file:backend/convert/texmath.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/dependencies.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -5245,6 +5289,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_convert_markdown.py",
       "to": "file:backend/tests/test_epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_notebook.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_notebook.py",
+      "to": "file:backend/convert/markdown.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_notebook.py",
+      "to": "file:backend/convert/notebook.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_notebook.py",
+      "to": "file:backend/regions/epub.py"
     },
     {
       "type": "imports",

@@ -2,12 +2,11 @@
 
 import hashlib
 import posixpath
+import re
 from dataclasses import dataclass, field
 
 from backend.convert.epub_builder import Chapter, Image
 
-EXTENSIONS = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "gif": "image/gif",
-              "webp": "image/webp", "svg": "image/svg+xml"}
 SUFFIX = {"image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/webp": "webp", "image/svg+xml": "svg"}
 
 
@@ -17,6 +16,15 @@ class Converted:
     chapters: list[Chapter]
     images: list[Image]
     notes: list[str] = field(default_factory=list)  # told to the reader at upload: images not included
+
+
+NOT_XML = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f￾￿]")
+ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+
+
+def clean(text: str) -> str:
+    """Text without ANSI colour codes or characters XML 1.0 forbids (a bell, a form feed, NUL)."""
+    return NOT_XML.sub("", ANSI.sub("", text))
 
 
 def sniff(data: bytes) -> str | None:

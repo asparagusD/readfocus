@@ -38,6 +38,7 @@ STYLE = """body { font-family: "Lora", Georgia, serif; line-height: 1.6; }
 h1, h2, h3 { font-family: "Playfair Display", Georgia, serif; line-height: 1.25; break-after: avoid; }
 code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
 pre { white-space: pre; overflow-x: auto; tab-size: 4; font-size: 0.875em; line-height: 1.45; padding: 0.75em 1em; }
+pre.rf-output { font-size: 0.8em; margin-top: -0.5em; padding-left: 1em; border-left: 2px solid currentColor; opacity: 0.85; }
 figure { margin: 1.5em auto; text-align: center; break-inside: avoid; page-break-inside: avoid; }
 img, svg { max-width: 100%; height: auto; }
 figcaption { font-size: 0.875em; font-style: italic; margin-top: 0.5em; }

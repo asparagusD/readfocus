@@ -247,13 +247,14 @@ def epub_prose(chunks: list[str], blocks, paths, regions: list[dict]) -> list[di
         by_spine.setdefault(region.get("spine_index"), []).append(region)
     spans, places, pos, done = [], [], 0, {}  # done: skeleton characters already seen in each spine document
     for chunk_blocks, chunk_paths in zip(blocks, paths):
-        first = None
+        first = last = None
         for block, place in zip(chunk_blocks, chunk_paths):
             spine, path, text = place["spine_index"], place["path"], skeleton(block["text"])
-            location = (spine or 0) * 1_000_000 + min(done.get(spine, 0), 999_999)
-            first = first or {"spine_index": spine, "cfi": _cfi(spine, path), "location": location}
-            last = {"spine_index": spine, "cfi": _cfi(spine, path), "location": location}
-            done[spine] = done.get(spine, 0) + len(text)
+            if spine is not None:  # a document outside the spine has text but no place to anchor to
+                location = spine * 1_000_000 + min(done.get(spine, 0), 999_999)
+                last = {"spine_index": spine, "cfi": _cfi(spine, path), "location": location}
+                first = first or last
+                done[spine] = done.get(spine, 0) + len(text)
             here = by_spine.get(spine, []) if spine is not None and path else []
             mine, prose_here = None, [r for r in here if r["kind"] in PROSE_KINDS]
             for region in here:
@@ -276,7 +277,7 @@ def epub_prose(chunks: list[str], blocks, paths, regions: list[dict]) -> list[di
                         spans.append({"start": pos + s, "end": pos + e, "region": inline,
                                       "text": placeholder(inline, where)})
             pos += len(text)
-        places.append((first, last if first else None))
+        places.append((first, last))
     spans = _merge(spans)
     out = []
     for content, (start, _end), (first, last) in zip(chunks, _ranges(chunks), places):

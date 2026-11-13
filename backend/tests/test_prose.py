@@ -180,3 +180,13 @@ def test_placeholders_are_never_garbled_and_are_found_by_the_pattern():
 def test_garbled_and_placeholder_sentences_are_counted():
     counts = prose.sentence_counts("A clean sentence here. Th ugly one. See [Equation, p. 2] now.")
     assert counts == {"garbled": 1, "placeholder": 1}
+
+
+def test_epub_blocks_outside_the_spine_get_no_anchor():
+    chunks, blocks, paths, regions = epub_book()
+    chunks, blocks = chunks + ["Colophon text."], blocks + [[{"id": "1.0", "type": "paragraph", "text": "Colophon text."}]]
+    paths = paths + [[{"block_id": "1.0", "spine_index": None, "path": "/4/2"}]]
+    built = prose.epub_prose(chunks, blocks, paths, regions)
+    assert built[1]["prose"] == "Colophon text."
+    assert built[1]["anchors"]["start"] is None and built[1]["anchors"]["end"] is None
+    assert built[0]["anchors"]["end"]["spine_index"] == 2

@@ -3017,3 +3017,53 @@ file on the server, so no regions job): expected, not this bug.
 
 Rerun after the fix (approved): the 32 chunks were stored, and a dry run straight
 after would store 0 chunks in every book.
+
+## 2026-11-13 C18.G — EPUB prose rebuild fails on blocks outside the spine
+
+**Status:** fixed
+
+### Symptom
+Gate G5's offline ingestion of the shelf's Alice EPUB stored no prose
+(`with_prose: 0`); expected every chunk to get prose. The job printed:
+
+    python scripts/dev/gate_g5.py --book alices-adventures-in-wonderland.epub
+    Prose of book alices-adventures-in-wonderland not rebuilt: unsupported operand type(s) for +: 'NoneType' and 'int'
+
+    Traceback (most recent call last):
+      File "I:\readfocus\backend\services\prose_job.py", line 86, in rebuild
+        writes, report = plan(book, file_bytes, *load(book["id"]))
+      File "I:\readfocus\backend\services\prose_job.py", line 68, in plan
+        built = prose.epub_prose(contents, blocks if all(blocks) else None, paths if all(paths) else None, regions)
+      File "I:\readfocus\backend\regions\prose.py", line 254, in epub_prose
+        first = first or {"spine_index": spine, "cfi": _cfi(spine, path), "location": location}
+      File "I:\readfocus\backend\regions\prose.py", line 238, in _cfi
+        return f"epubcfi(/6/{2 * (spine + 1)}!{path})"
+    TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+
+### Repro
+`book_structure.build_with_paths` on Alice: 25 of 913 blocks (chunk 45) have
+`spine_index: None` (a document read by ingestion but not in the spine);
+`prose.epub_prose` on those paths raises every time. None of the seven books
+in the Supabase project is an EPUB, so the C18.6c backfill never met it.
+
+### Hypotheses
+1. `epub_prose` builds a CFI for every block, and a block outside the spine
+   has no spine index. Evidence: the trace and the 25 blocks. Ruled out if
+   the first chunk with such a block does not raise. Result: confirmed.
+
+### Root cause
+`backend/regions/prose.py` `epub_prose`: anchors are built for blocks with
+no spine index (`_cfi(None, path)`).
+
+### Fix
+Blocks without a spine index still count toward the skeleton position but
+give no anchor place; a chunk with no spine block has `start` and `end` null.
+
+### Regression test
+`backend/tests/test_prose.py::test_epub_blocks_outside_the_spine_get_no_anchor`. Failed
+with the fix stashed (1 failed, 13 passed), passes with it (14 passed). The
+repro after the fix: Alice's offline ingestion stores prose on 46 of 46
+chunks, no garbled item. Standard checks: see the commit.
+
+### Commit
+fix(regions): skip blocks outside the spine when anchoring EPUB prose

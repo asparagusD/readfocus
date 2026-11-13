@@ -5,7 +5,8 @@ book's ingestion has finished, so reading never waits for it. It reads the
 file PAGES_PER_BATCH pages at a time through backend.regions.extract,
 reopening it for each batch (opened once, pdfminer keeps every object and a
 long book reaches 280 MB; docs/BENCHMARKS.md, C18.2), writes each page's
-blocks as regions of kind 'block' (classified later, C18.3 to C18.5), and
+regions (display math as kind 'math' since C18.3, the rest as 'block' with
+their inline math in meta until C18.4 and C18.5 classify them), and
 saves the cursor (pages done) after every batch. A batch run again first
 deletes its pages' rows, so a resumed job rewrites and never duplicates.
 
@@ -18,6 +19,7 @@ import asyncio
 from collections import Counter
 from statistics import median
 
+from backend.regions.classify import classify_page
 from backend.regions.garble import garble_score
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
@@ -28,17 +30,20 @@ TOP_FONTS = 5
 
 
 def block_rows(book: dict, page) -> list[dict]:
-    """One page_regions row per block of an extract.Page, in reading order. Pure."""
+    """One page_regions row per region of an extract.Page, in reading order. Pure.
+
+    Display math is kind 'math' (C18.3); the rest stays 'block' until code, figures and tables are
+    told apart (C18.4, C18.5), with its inline math as character ranges in meta.inline_math.
+    """
     rows = []
-    for order, block in enumerate(page.blocks):
-        text = "\n".join(line.text for line in block.lines)
-        fonts = Counter(char.font for line in block.lines for char in line.chars)
-        score = garble_score(text)
+    for order, region in enumerate(classify_page(page)):
+        fonts = Counter(char.font for line in region.lines for char in line.chars)
+        score = garble_score(region.text)
         rows.append({
-            "user_id": book["user_id"], "book_id": book["id"], "page": page.page, "kind": "block",
-            "bbox": [block.x0, block.top, block.x1, block.bottom], "text": text, "order_in_page": order,
-            "meta": {"lines": len(block.lines), "size": median(line.size for line in block.lines),
-                     "upright": block.lines[0].upright, "fonts": dict(fonts.most_common(TOP_FONTS)),
+            "user_id": book["user_id"], "book_id": book["id"], "page": page.page, "kind": region.kind,
+            "bbox": [round(v, 2) for v in region.bbox], "text": region.text, "order_in_page": order,
+            "meta": {**region.meta, "lines": len(region.lines), "size": median(line.size for line in region.lines),
+                     "upright": region.lines[0].upright, "fonts": dict(fonts.most_common(TOP_FONTS)),
                      "garble": {"ratio": round(score["ratio"], 4), "reasons": score["reasons"]}},
         })
     return rows

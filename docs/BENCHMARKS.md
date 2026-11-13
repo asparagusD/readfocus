@@ -209,6 +209,12 @@ does not give the memory back after the job (231 MB at the end): Gate G5
 measures the server in the container, and running the job in a child
 process or with smaller batches is the fallback if it is too close.
 
+C18.3, the same job with math classification (`backend/regions/classify.py`)
+on every page, same harness: Calculus 0.256 s/page (was 0.253), peak
+247.7 MB; SICP 0.137 s/page (was 0.132), peak 176.2 MB; Interactive Linear
+Algebra 455 pages 0.132 s/page, peak 173.7 MB. Classification costs about
+3 to 5 ms a page; reading the PDF is the rest.
+
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 
 The model is downloaded at build time into `FASTEMBED_CACHE`

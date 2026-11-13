@@ -4,8 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from backend.agents import policy
-from backend.regions import extract
+from backend.regions import extract, policy
 
 ROOT = Path(__file__).resolve().parents[2]
 SAMPLE = ROOT / "frontend" / "e2e" / "fixtures" / "books" / "sample.pdf"
@@ -38,6 +37,13 @@ def test_chars_on_one_baseline_make_one_line_with_word_gaps():
     line = result.lines[0]
     assert (line.x0, line.top, line.x1, line.bottom) == (100, 100, 140 + 5 * 5, 110)
     assert line.chars[0].font == "Body" and line.chars[0].fontname == "ABCDEF+Body"
+
+
+def test_each_character_knows_its_offset_in_the_line_text():
+    line = page(word("ab", 100, 100) + word("cd", 120, 100)).lines[0]
+    assert line.text == "ab cd"
+    assert [(c.text, c.offset) for c in line.chars] == [("a", 0), ("b", 1), ("c", 3), ("d", 4)]
+    assert all(line.text[c.offset:c.offset + len(c.text)] == c.text for c in line.chars)
 
 
 def test_space_characters_from_the_pdf_are_not_doubled():

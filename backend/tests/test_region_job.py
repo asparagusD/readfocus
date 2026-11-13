@@ -59,6 +59,17 @@ def test_block_rows_turn_each_block_into_an_unclassified_region():
     assert first["meta"]["garble"] == {"ratio": 0.0, "reasons": []}
 
 
+def test_display_math_is_stored_as_a_math_row_and_inline_math_as_meta():
+    prose = "the reader finds that x = 2 here and keeps on reading the long line"
+    page = extract.build_page(word(prose, 72, 100) + word("a=b+c", 250, 140) + word(prose, 72, 170),
+                              page_no=1, bbox=(0, 0, 600, 800))
+    rows = region_job.block_rows({"id": BOOK, "user_id": USER}, page)
+    assert [r["kind"] for r in rows] == ["block", "math", "block"]
+    assert rows[1]["text"] == "a=b+c" and rows[1]["meta"]["display"] is True
+    start, end = rows[0]["meta"]["inline_math"][0]
+    assert rows[0]["text"][start:end] == "x = 2"
+
+
 def test_batches_are_page_ranges_from_the_cursor():
     assert list(region_job.batches(5, 0, 2)) == [(1, 2), (3, 4), (5, 5)]
     assert list(region_job.batches(5, 2, 2)) == [(3, 4), (5, 5)]

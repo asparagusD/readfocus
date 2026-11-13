@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 601,
-    "inventoried": 460,
+    "tracked": 607,
+    "inventoried": 466,
     "excluded": 141
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13752,
+      "size_bytes": 13769,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,10 +249,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 342,
-      "size_bytes": 13919,
+      "lines": 312,
+      "size_bytes": 12439,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime); and the region map's garble thresholds (C18.1) and line and block grouping (C18.2)."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -391,20 +391,36 @@
       "purpose": "Package marker for backend.regions, the region map (C18): prose, math, code, figure, table and unreadable regions of a book's pages; pure functions, no I/O."
     },
     {
+      "path": "backend/regions/classify.py",
+      "language": "python",
+      "lines": 371,
+      "size_bytes": 16682,
+      "role": "lib",
+      "purpose": "Pure math classification of an extract.Page (C18.3): per-character evidence (math fonts, Unicode math symbols, sub- and superscripts; monospace, footnote marks, ordinals and units excluded), display-math regions (lines with enough evidence and an operator, or set off from the column; grouped, with fragments, stacked fractions and right-margin equation numbers), inline math spans as char ranges and boxes in the remaining blocks; iou()."
+    },
+    {
       "path": "backend/regions/extract.py",
       "language": "python",
-      "lines": 207,
-      "size_bytes": 7189,
+      "lines": 210,
+      "size_bytes": 7312,
       "role": "lib",
-      "purpose": "PDF page characters with font name, size, box and uprightness via pdfplumber, grouped by the pure build_page into lines (sub- and superscripts joined with their baseline offset, split at column gutters, word gaps from positions) and blocks, in points from the crop box's top-left; page_chars, iter_pages (file opened once per range, pages closed) and page_count."
+      "purpose": "PDF page characters with font name, size, box and uprightness via pdfplumber, grouped by the pure build_page into lines (each character's offset in the line text, sub- and superscripts joined with their baseline offset, split at column gutters, word gaps from positions) and blocks, in points from the crop box's top-left; page_chars, iter_pages (file opened once per range, pages closed) and page_count."
     },
     {
       "path": "backend/regions/garble.py",
       "language": "python",
       "lines": 96,
-      "size_bytes": 4515,
+      "size_bytes": 4516,
       "role": "lib",
-      "purpose": "Garble detector: garble_score(text) gives the share of visible characters in broken-extraction artefacts (U+FFFD, Private Use Area, (cid:NN), control characters, a math symbol inside a word, long runs of spaced single letters, dropped-ligature gaps) and the reasons; is_garbled applies the policy thresholds."
+      "purpose": "Garble detector: garble_score(text) gives the share of visible characters in broken-extraction artefacts (U+FFFD, Private Use Area, (cid:NN), control characters, a math symbol inside a word, long runs of spaced single letters, dropped-ligature gaps) and the reasons; is_garbled applies the thresholds in backend/regions/policy.py."
+    },
+    {
+      "path": "backend/regions/policy.py",
+      "language": "python",
+      "lines": 90,
+      "size_bytes": 4705,
+      "role": "lib",
+      "purpose": "Region-map constants in one place: garble thresholds (C18.1), line and block grouping (C18.2), math fonts, monospace fonts, script offsets, display and inline rules, equation numbers and the evaluation IoU (C18.3)."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -545,10 +561,10 @@
     {
       "path": "backend/services/region_job.py",
       "language": "python",
-      "lines": 107,
-      "size_bytes": 4888,
+      "lines": 112,
+      "size_bytes": 5182,
       "role": "service",
-      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows as unclassified 'block' regions with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; skips EPUBs and device-only books."
+      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; skips EPUBs and device-only books."
     },
     {
       "path": "backend/services/retriever.py",
@@ -589,6 +605,14 @@
       "size_bytes": 16853,
       "role": "test",
       "purpose": "Labelled answers for calibrating the grader: 34 cases over five questions, each with question, type, evidence, key terms, an answer, a category (correct, paraphrase, partial, wrong, off-topic, empty, copy of the question) and a hand-given human_score from 0 to 1."
+    },
+    {
+      "path": "backend/tests/fixtures/math_labels.json",
+      "language": "json",
+      "lines": 1499,
+      "size_bytes": 20041,
+      "role": "test",
+      "purpose": "Hand labels for C18.3 on 10 technical-shelf pages (SICP, Interactive Linear Algebra, Lessons in Electric Circuits): display regions (line ids, box, equation number) and inline math boxes, with each book's sha256; no book text. Built by scripts/dev/build_math_labels.py."
     },
     {
       "path": "backend/tests/memory_db.py",
@@ -759,6 +783,14 @@
       "purpose": "Pytest on EPUBs built in memory, text snippets and sample.pdf: EPUB tags to typed blocks and marks with scripts and styles skipped, blocks cut at chunk boundaries covering each chunk exactly with marks kept, the chapter level, fallbacks for a mismatched or unreadable EPUB; PDF line joining, hyphenation, page numbers, paragraph breaks, chapter detection and its false positives, title lines, continuation across chunks, the stored block shape and toc, build never raising; regressions for running heads, print slugs, formulas, maths letters, Roman-looking variables, repeated chapter numbers and an opener after a page ending mid-sentence."
     },
     {
+      "path": "backend/tests/test_classify.py",
+      "language": "python",
+      "lines": 234,
+      "size_bytes": 10133,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/classify.py: math fonts and symbols, display lines (fonts, symbols alone, operator needed, monospace never), side-by-side systems, fragments, stacked fractions, equation numbers, inline spans (char ranges, scripts, footnotes and units, glued words, commas, small subscripts, ordinals, monospace lines), determinism, the label fixture, and precision/recall on the 10 hand-labelled shelf pages when the shelf is present."
+    },
+    {
       "path": "backend/tests/test_concept_store.py",
       "language": "python",
       "lines": 150,
@@ -817,8 +849,8 @@
     {
       "path": "backend/tests/test_extract.py",
       "language": "python",
-      "lines": 145,
-      "size_bytes": 5743,
+      "lines": 151,
+      "size_bytes": 6067,
       "role": "test",
       "purpose": "Pytest for backend/regions/extract.py: font subset prefixes, word gaps with and without space characters, line order, raised and lowered characters, column gutters, paragraph blocks, rotated characters, crop-box coordinates, determinism, the e2e sample.pdf from a path and from bytes, and SICP's word gaps when the shelf is present."
     },
@@ -834,7 +866,7 @@
       "path": "backend/tests/test_garble.py",
       "language": "python",
       "lines": 102,
-      "size_bytes": 4286,
+      "size_bytes": 4287,
       "role": "test",
       "purpose": "Pytest for backend/regions/garble.py: clean prose, math, code and ligature characters not flagged; cid artefacts, replacement and private-use characters, a garbled TeX equation extraction, symbols inside words, spaced-letter runs at the threshold, dropped-ligature gaps and control characters flagged."
     },
@@ -1001,10 +1033,10 @@
     {
       "path": "backend/tests/test_region_job.py",
       "language": "python",
-      "lines": 164,
-      "size_bytes": 7018,
+      "lines": 175,
+      "size_bytes": 7654,
       "role": "test",
-      "purpose": "Pytest for backend/services/region_job.py on the in-memory database with sample.pdf: block rows, page batches from the cursor, one regions job beside the ingest job, EPUB and device-only books skipped, a full run, a resumed run that never duplicates, a failure that leaves the book readable, bytes passed in, the sweep's dispatch by kind, giving up without touching the book, and after_ingest."
+      "purpose": "Pytest for backend/services/region_job.py on the in-memory database with sample.pdf: block rows, math rows and inline math meta, page batches from the cursor, one regions job beside the ingest job, EPUB and device-only books skipped, a full run, a resumed run that never duplicates, a failure that leaves the book readable, bytes passed in, the sweep's dispatch by kind, giving up without touching the book, and after_ingest."
     },
     {
       "path": "backend/tests/test_requirements.py",
@@ -1161,8 +1193,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1316,
-      "size_bytes": 74972,
+      "lines": 1322,
+      "size_bytes": 75315,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1233,8 +1265,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3719,
-      "size_bytes": 663375,
+      "lines": 3720,
+      "size_bytes": 667702,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3279,6 +3311,14 @@
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
     },
     {
+      "path": "scripts/dev/build_math_labels.py",
+      "language": "python",
+      "lines": 118,
+      "size_bytes": 6411,
+      "role": "script",
+      "purpose": "Holds the C18.3 hand labels (display line groups, inline stretches, equation numbers, with the labelling rules) and writes backend/tests/fixtures/math_labels.json with boxes from the extracted lines and each book's sha256; needs the shelf."
+    },
+    {
       "path": "scripts/dev/check_retriever.py",
       "language": "python",
       "lines": 91,
@@ -3293,6 +3333,14 @@
       "size_bytes": 3514,
       "role": "script",
       "purpose": "Creates or resets two confirmed dev test users and writes .env.test; refuses to run unless ENV=development."
+    },
+    {
+      "path": "scripts/dev/eval_math_regions.py",
+      "language": "python",
+      "lines": 90,
+      "size_bytes": 3715,
+      "role": "script",
+      "purpose": "Scores backend/regions/classify on the hand-labelled shelf pages: one-to-one matching at IoU >= MATH_MATCH_IOU, precision and recall for display and inline math, optionally per page; evaluate() is reused by test_classify.py."
     },
     {
       "path": "scripts/dev/measure_embedder.py",
@@ -3625,8 +3673,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 462,
-      "size_bytes": 138254,
+      "lines": 468,
+      "size_bytes": 140408,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

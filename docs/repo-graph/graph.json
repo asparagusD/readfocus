@@ -545,6 +545,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/regions/classify.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/regions/extract.py",
       "type": "file",
       "role": "lib",
@@ -552,6 +558,12 @@
     },
     {
       "id": "file:backend/regions/garble.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/policy.py",
       "type": "file",
       "role": "lib",
       "language": "python"
@@ -695,6 +707,12 @@
       "language": "json"
     },
     {
+      "id": "file:backend/tests/fixtures/math_labels.json",
+      "type": "file",
+      "role": "test",
+      "language": "json"
+    },
+    {
       "id": "file:backend/tests/memory_db.py",
       "type": "file",
       "role": "test",
@@ -816,6 +834,12 @@
     },
     {
       "id": "file:backend/tests/test_book_structure.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_classify.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2711,6 +2735,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/build_math_labels.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/check_retriever.py",
       "type": "file",
       "role": "script",
@@ -2718,6 +2748,12 @@
     },
     {
       "id": "file:scripts/dev/create_test_users.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/eval_math_regions.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -4068,13 +4104,18 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/regions/classify.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/regions/extract.py",
-      "to": "file:backend/agents/policy.py"
+      "to": "file:backend/regions/policy.py"
     },
     {
       "type": "imports",
       "from": "file:backend/regions/garble.py",
-      "to": "file:backend/agents/policy.py"
+      "to": "file:backend/regions/policy.py"
     },
     {
       "type": "imports",
@@ -4265,6 +4306,11 @@
       "type": "imports",
       "from": "file:backend/services/question_bank.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/regions/classify.py"
     },
     {
       "type": "imports",
@@ -4658,6 +4704,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_classify.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_classify.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_classify.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_classify.py",
+      "to": "file:scripts/dev/eval_math_regions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_concept_store.py",
       "to": "file:backend/nlp/concepts.py"
     },
@@ -4734,12 +4800,12 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_extract.py",
-      "to": "file:backend/agents/policy.py"
+      "to": "file:backend/regions/extract.py"
     },
     {
       "type": "imports",
       "from": "file:backend/tests/test_extract.py",
-      "to": "file:backend/regions/extract.py"
+      "to": "file:backend/regions/policy.py"
     },
     {
       "type": "imports",
@@ -4759,12 +4825,12 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_garble.py",
-      "to": "file:backend/agents/policy.py"
+      "to": "file:backend/regions/garble.py"
     },
     {
       "type": "imports",
       "from": "file:backend/tests/test_garble.py",
-      "to": "file:backend/regions/garble.py"
+      "to": "file:backend/regions/policy.py"
     },
     {
       "type": "imports",
@@ -6843,6 +6909,11 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/dev/build_math_labels.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/dev/check_retriever.py",
       "to": "file:backend/nlp/concepts.py"
     },
@@ -6865,6 +6936,21 @@
       "type": "imports",
       "from": "file:scripts/dev/check_retriever.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_math_regions.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_math_regions.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_math_regions.py",
+      "to": "file:backend/regions/policy.py"
     },
     {
       "type": "imports",

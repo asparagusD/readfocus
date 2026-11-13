@@ -19,7 +19,7 @@ and the reasons found; is_garbled applies the thresholds in policy.py.
 
 import re
 
-from backend.agents import policy
+from backend.regions import policy
 
 REASONS = ("replacement", "private_use", "cid", "control", "symbol_in_word", "spaced_letters", "ligature")
 

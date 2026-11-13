@@ -2,7 +2,7 @@
 
 import pytest
 
-from backend.agents import policy
+from backend.regions import policy
 from backend.regions.garble import garble_score, is_garbled
 
 CLEAN = [

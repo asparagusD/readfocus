@@ -20,7 +20,7 @@ from statistics import median
 
 import pdfplumber
 
-from backend.agents import policy
+from backend.regions import policy
 
 
 @dataclass
@@ -35,6 +35,7 @@ class Char:
     bottom: float
     upright: bool
     baseline_offset: float = 0.0
+    offset: int = 0  # index of this character in its line's text
 
 
 @dataclass
@@ -119,9 +120,11 @@ def _line(chars: list[Char], normal: float) -> Line:
     full = [c for c in chars if c.size >= policy.REGION_SMALL_CHAR * normal] or chars
     baseline = round(median(c.bottom for c in full), 2)
     text = chars[0].text
+    chars[0].offset = 0
     for before, char in pairwise(chars):
         if char.x0 - before.x1 > policy.REGION_WORD_GAP_EM * size:
             text += " "
+        char.offset = len(text)
         text += char.text
     for char in chars:
         char.baseline_offset = round(baseline - char.bottom, 2)

@@ -310,3 +310,10 @@ MAX_SHELF_BYTES_PER_USER = 300 * 1024 * 1024
 MAX_BOOK_FILE_BYTES = 50 * 1024 * 1024
 # Lifetime of the signed URL GET /books/{id}/file returns.
 BOOK_FILE_URL_SECONDS = 300
+
+# --- Converted sources (backend/convert/sources.py, C19.2c) ------------------
+
+# A .zip of Markdown and images is unpacked in memory on Render Free: at most
+# this many entries and this many bytes once unpacked (a zip bomb stops here).
+MAX_CONVERT_ZIP_ENTRIES = 2000
+MAX_CONVERT_UNPACKED_BYTES = 100 * 1024 * 1024

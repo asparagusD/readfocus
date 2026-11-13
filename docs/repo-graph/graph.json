@@ -534,6 +534,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/convert/sources.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/convert/texmath.py",
       "type": "file",
       "role": "lib",
@@ -1231,6 +1237,12 @@
     },
     {
       "id": "file:backend/tests/test_text.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_upload_converted.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -3240,6 +3252,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/021_source_format.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3502,6 +3520,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/020_chunk_prose.sql",
       "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/021_source_format.sql",
+      "to": "table:books"
     },
     {
       "type": "calls_endpoint",
@@ -4397,6 +4420,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/convert/sources.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/sources.py",
+      "to": "file:backend/convert/assets.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/sources.py",
+      "to": "file:backend/convert/markdown.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/sources.py",
+      "to": "file:backend/convert/notebook.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/dependencies.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -4539,6 +4582,16 @@
       "type": "imports",
       "from": "file:backend/routers/books.py",
       "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/convert/sources.py"
     },
     {
       "type": "imports",
@@ -5879,6 +5932,31 @@
       "type": "imports",
       "from": "file:backend/tests/test_text.py",
       "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/convert/sources.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/tests/test_book_files.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/tests/test_epub_builder.py"
     },
     {
       "type": "imports",

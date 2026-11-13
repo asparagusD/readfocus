@@ -309,6 +309,13 @@ a.rf-shelf__book:hover .rf-shelf__title {
   accent-color: var(--accent);
 }
 
+.rf-library__convert {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
 .rf-library__keep small {
   display: block;
   margin-top: var(--space-1);

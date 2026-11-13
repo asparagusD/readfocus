@@ -4,8 +4,11 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any, Literal, cast
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException, Query
+from fastapi.concurrency import run_in_threadpool
 from pypdf import PdfReader
 from backend.agents import policy
+from backend.convert.epub_builder import build_epub
+from backend.convert.sources import FORMATS as CONVERTED, convert_upload
 from backend.services import book_ingestor
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
@@ -44,6 +47,24 @@ def pdf_page_count(ext: str, file_bytes: bytes) -> int | None:
         return None  # the count is optional
 
 
+def record_source_format(book_id: str, source_format: str) -> None:
+    """books.source_format (migration 021); a project without the column keeps the book, untagged."""
+    try:
+        supabase.table("books").update({"source_format": source_format}).eq("id", book_id).execute()
+    except Exception as e:  # noqa: BLE001 - only the label is lost; the book and its EPUB are stored
+        print(f"source_format not recorded for book {book_id}: {e}")
+
+
+async def convert_source(filename: str, data: bytes, title: str, author: str) -> tuple[bytes, str, list[str]]:
+    """A Markdown, .zip or notebook upload as EPUB bytes, its source format and notes for the reader (C19.2c)."""
+    try:
+        source_format, converted = await run_in_threadpool(convert_upload, filename, data)
+        epub = await run_in_threadpool(build_epub, title, author, converted.chapters, converted.images)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"We couldn't convert this file: {e}") from e
+    return epub, source_format, converted.notes
+
+
 @router.post("/upload")
 async def upload_book(
     background_tasks: BackgroundTasks,
@@ -57,13 +78,24 @@ async def upload_book(
     filename = file.filename or ""
     ext = filename.split(".")[-1].lower()
 
-    if ext not in ['pdf', 'epub']:
-        raise HTTPException(status_code=400, detail="Only .pdf and .epub files are supported.")
+    if ext not in ['pdf', 'epub', *CONVERTED]:
+        raise HTTPException(status_code=400, detail="Only .pdf, .epub, .md, .zip (Markdown with its images) and .ipynb files are supported.")
+    if ext in CONVERTED and storage_mode == "device":
+        raise HTTPException(status_code=400, detail=(
+            "A Markdown or notebook book is converted and kept on our server so it can open as a book; "
+            "untick \"keep on this device\" to add it."))
 
     mime_type = file.content_type
 
     # Read bytes, hash them, and stop at the per-file limit (C17.1)
     file_bytes, sha256 = await read_capped(file, policy.MAX_BOOK_FILE_BYTES)
+    # Markdown, a Markdown .zip or a notebook becomes the book's EPUB (C19.2c): that is the file kept and read.
+    source_format, notes = None, []
+    if ext in CONVERTED:
+        file_bytes, source_format, notes = await convert_source(filename, file_bytes, title, author)
+        if len(file_bytes) > policy.MAX_BOOK_FILE_BYTES:
+            raise HTTPException(status_code=413, detail=f"Converted, this book is over {megabytes(policy.MAX_BOOK_FILE_BYTES)}.")
+        sha256, ext, mime_type = hashlib.sha256(file_bytes).hexdigest(), "epub", "application/epub+zip"
     if storage_mode == "cloud":
         used = shelf_bytes(user_id)
         if used + len(file_bytes) > policy.MAX_SHELF_BYTES_PER_USER:
@@ -104,6 +136,8 @@ async def upload_book(
         }).execute()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database insert failed: {str(e)}")
+    if source_format:
+        record_source_format(book_id, source_format)
         
     # 5. Record a durable job, then ingest after the response. If the process
     # stops, the job row keeps the cursor and the sweep or /resume picks it up.
@@ -112,7 +146,7 @@ async def upload_book(
         background_tasks.add_task(book_ingestor.run_job, job, file_bytes)
     
     # 6. Return immediately
-    return {"book_id": book_id, "status": "processing"}
+    return {"book_id": book_id, "status": "processing", "source_format": source_format, "notes": notes}
 
 BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url, storage_mode"
 PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")

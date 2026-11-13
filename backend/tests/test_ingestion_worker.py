@@ -80,7 +80,7 @@ def client(db):
 def test_upload_creates_a_job_and_ingests_the_book(client, db):
     resp = client.post("/books/upload", files={"file": ("b.pdf", b"%PDF", "application/pdf")},
                        data={"title": "t", "author": "a"})
-    assert resp.status_code == 200 and set(resp.json()) == {"book_id", "status"}
+    assert resp.status_code == 200 and set(resp.json()) == {"book_id", "status", "source_format", "notes"}  # the last two since C19.2c
     book_id = resp.json()["book_id"]
     status = client.get(f"/books/{book_id}/status").json()
     assert status["status"] == "ready" and status["total_chunks"] == 9

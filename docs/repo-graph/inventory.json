@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 654,
-    "inventoried": 512,
+    "tracked": 657,
+    "inventoried": 515,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14231,
+      "size_bytes": 14268,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 312,
-      "size_bytes": 12439,
+      "lines": 319,
+      "size_bytes": 12756,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -365,6 +365,14 @@
       "size_bytes": 5866,
       "role": "lib",
       "purpose": "Jupyter notebooks (nbformat 4) to EPUB chapters (C19.2b): markdown cells through the Markdown converter (attachments packed), code cells as code in the kernel language, image outputs (PNG, JPEG, SVG; plots) as figures captioned 'Output of cell N', text/latex as MathML, text/plain/stream/error as small rf-output blocks without ANSI codes, text/html never used; chapters at h1 when there are two or more; non-JSON or other formats refused with a reason."
+    },
+    {
+      "path": "backend/convert/sources.py",
+      "language": "python",
+      "lines": 79,
+      "size_bytes": 3608,
+      "role": "lib",
+      "purpose": "Which converter an upload goes to (C19.2c): .md/.markdown, a .zip holding Markdown (unpacked in memory within policy entry and byte caps; the shallowest .md, README/index first; two at one depth refused; paths leaving the archive ignored) or a Jupyter .ipynb; convert_upload returns (source_format 'md'|'ipynb', Converted); every refusal is a ValueError shown to the reader."
     },
     {
       "path": "backend/convert/texmath.py",
@@ -537,10 +545,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 270,
-      "size_bytes": 13199,
+      "lines": 304,
+      "size_bytes": 15449,
       "role": "router",
-      "purpose": "Book endpoints: upload (read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -1114,7 +1122,7 @@
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
       "lines": 125,
-      "size_bytes": 5785,
+      "size_bytes": 5840,
       "role": "test",
       "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
     },
@@ -1301,6 +1309,14 @@
       "size_bytes": 5336,
       "role": "test",
       "purpose": "Pytest, table-driven: sentence splitting (abbreviations, quotes, lists, hyphenated line breaks), normalisation, tokens, stopwords, and informativeness rankings."
+    },
+    {
+      "path": "backend/tests/test_upload_converted.py",
+      "language": "python",
+      "lines": 124,
+      "size_bytes": 5094,
+      "role": "test",
+      "purpose": "Pytest for converted uploads (C19.2c): .md, .ipynb and a Markdown .zip stored as a sound EPUB (file_type/file_format epub, source_format set, sha256 of the EPUB, image counts), remote/missing images in the response notes, the typed title and author in the OPF, device mode refused, unconvertible files refused with a reason, other types still refused, upload kept when migration 021 is missing, zip rules and the unpacked-size cap."
     },
     {
       "path": "design/HANDOFF_PHASE2_SUMMARY.md",
@@ -1490,7 +1506,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4012,
-      "size_bytes": 725376,
+      "size_bytes": 727802,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1617,8 +1633,8 @@
     {
       "path": "frontend/e2e/library.spec.js",
       "language": "javascript",
-      "lines": 322,
-      "size_bytes": 17950,
+      "lines": 341,
+      "size_bytes": 19629,
       "role": "config",
       "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs."
     },
@@ -2897,16 +2913,16 @@
     {
       "path": "frontend/src/pages/Library.css",
       "language": "css",
-      "lines": 333,
-      "size_bytes": 6215,
+      "lines": 340,
+      "size_bytes": 6356,
       "role": "page",
       "purpose": "Library styles: header, the next-book card, 160 px cover grid (three across under 640 px with the remove button under the caption), captions, skeleton shapes, the error banner on warn-soft, the empty-state action row, the page-wide drop target, the upload and remove dialogs."
     },
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 398,
-      "size_bytes": 17697,
+      "lines": 418,
+      "size_bytes": 18989,
       "role": "page",
       "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book."
     },
@@ -3975,6 +3991,14 @@
       "purpose": "Migration 020 (C18.6b, additive): chunks.prose (content with placeholders for math, code, figures and tables), chunks.anchors (PDF pages and spans or EPUB CFIs, and the placeholders), chunks.garbled_sentences (non-negative)."
     },
     {
+      "path": "supabase/migrations/021_source_format.sql",
+      "language": "sql",
+      "lines": 12,
+      "size_bytes": 729,
+      "role": "migration",
+      "purpose": "Migration 021 (C19.2c, additive): books.source_format text, 'md' or 'ipynb' for a book converted to EPUB on upload, null otherwise."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -4041,8 +4065,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 514,
-      "size_bytes": 157916,
+      "lines": 517,
+      "size_bytes": 159150,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

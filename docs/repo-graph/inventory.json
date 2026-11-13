@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 637,
-    "inventoried": 495,
+    "tracked": 642,
+    "inventoried": 500,
     "excluded": 142
   },
   "files": [
@@ -317,6 +317,30 @@
       "size_bytes": 4415,
       "role": "agent",
       "purpose": "The only callers of the compiled graph: run_start, run_finish, run_submit and run_abandon invoke one event flow each with a recursion limit of 10 and return the final state; save_decisions stores a run's decisions entries in agent_decisions in one insert, numbered under one run id, logging any failure."
+    },
+    {
+      "path": "backend/convert/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 66,
+      "role": "lib",
+      "purpose": "Package marker for backend.convert, the converters that turn other sources (Markdown, Jupyter, LaTeX) into EPUB 3 books (C19)."
+    },
+    {
+      "path": "backend/convert/epub_builder.py",
+      "language": "python",
+      "lines": 252,
+      "size_bytes": 13468,
+      "role": "lib",
+      "purpose": "Shared EPUB 3 builder (C19.1): build_epub(title, author, chapters, images) packages XHTML body fragments and images as mimetype (first, stored), container.xml, an EPUB 3 OPF (manifest with mathml/svg/nav properties, spine), nav.xhtml from h1-h3 headings, one XHTML per chapter and a small stylesheet; every img gets width/height and alt ('Figure N'); deterministic output. check_epub(bytes) lists structural problems."
+    },
+    {
+      "path": "backend/convert/image_size.py",
+      "language": "python",
+      "lines": 89,
+      "size_bytes": 3185,
+      "role": "lib",
+      "purpose": "Image pixel size from header bytes (C19.1): PNG, JPEG, GIF, WebP and SVG (width/height or viewBox, else 300x150); None when unreadable. Standard library only."
     },
     {
       "path": "backend/cors.py",
@@ -919,6 +943,14 @@
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
+      "path": "backend/tests/test_epub_builder.py",
+      "language": "python",
+      "lines": 182,
+      "size_bytes": 8439,
+      "role": "test",
+      "purpose": "Pytest for backend/convert/epub_builder.py: mimetype first and stored, well-formed XML, EPUB 3 metadata escaped, spine order and mathml property, images in the manifest with width/height/alt, missing images and bad bodies refused, nav nested from headings with working links, code whitespace and MathML namespace kept, determinism, ingestion and regions reading the result, check_epub's findings."
+    },
+    {
       "path": "backend/tests/test_epub_regions.py",
       "language": "python",
       "lines": 125,
@@ -997,6 +1029,14 @@
       "size_bytes": 894,
       "role": "test",
       "purpose": "Pytest: /health returns 200 with exactly status, model_ready and timestamp, and answers at once while the model is still loading."
+    },
+    {
+      "path": "backend/tests/test_image_size.py",
+      "language": "python",
+      "lines": 36,
+      "size_bytes": 1653,
+      "role": "test",
+      "purpose": "Pytest for backend/convert/image_size.py: sizes from PNG, JPEG, GIF, WebP (VP8, VP8X) and SVG headers; truncated, invalid or unknown images give None."
     },
     {
       "path": "backend/tests/test_ingest_embeddings.py",
@@ -3905,8 +3945,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 497,
-      "size_bytes": 152381,
+      "lines": 502,
+      "size_bytes": 153831,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

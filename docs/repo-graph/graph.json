@@ -498,6 +498,24 @@
       "language": "python"
     },
     {
+      "id": "file:backend/convert/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/epub_builder.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/image_size.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/cors.py",
       "type": "file",
       "role": "lib",
@@ -948,6 +966,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_epub_builder.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_epub_regions.py",
       "type": "file",
       "role": "test",
@@ -1003,6 +1027,12 @@
     },
     {
       "id": "file:backend/tests/test_health.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_image_size.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -4250,6 +4280,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/convert/epub_builder.py",
+      "to": "file:backend/convert/image_size.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/dependencies.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -5165,6 +5200,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_epub_builder.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_epub_builder.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_epub_builder.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_epub_regions.py",
       "to": "file:backend/regions/epub.py"
     },
@@ -5312,6 +5362,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_health.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_image_size.py",
+      "to": "file:backend/convert/image_size.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_image_size.py",
+      "to": "file:backend/tests/test_epub_builder.py"
     },
     {
       "type": "imports",

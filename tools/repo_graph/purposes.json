@@ -1,4 +1,9 @@
 {
+  "backend/convert/__init__.py": "Package marker for backend.convert, the converters that turn other sources (Markdown, Jupyter, LaTeX) into EPUB 3 books (C19).",
+  "backend/convert/epub_builder.py": "Shared EPUB 3 builder (C19.1): build_epub(title, author, chapters, images) packages XHTML body fragments and images as mimetype (first, stored), container.xml, an EPUB 3 OPF (manifest with mathml/svg/nav properties, spine), nav.xhtml from h1-h3 headings, one XHTML per chapter and a small stylesheet; every img gets width/height and alt ('Figure N'); deterministic output. check_epub(bytes) lists structural problems.",
+  "backend/convert/image_size.py": "Image pixel size from header bytes (C19.1): PNG, JPEG, GIF, WebP and SVG (width/height or viewBox, else 300x150); None when unreadable. Standard library only.",
+  "backend/tests/test_epub_builder.py": "Pytest for backend/convert/epub_builder.py: mimetype first and stored, well-formed XML, EPUB 3 metadata escaped, spine order and mathml property, images in the manifest with width/height/alt, missing images and bad bodies refused, nav nested from headings with working links, code whitespace and MathML namespace kept, determinism, ingestion and regions reading the result, check_epub's findings.",
+  "backend/tests/test_image_size.py": "Pytest for backend/convert/image_size.py: sizes from PNG, JPEG, GIF, WebP (VP8, VP8X) and SVG headers; truncated, invalid or unknown images give None.",
   ".claude/skills/atomic-commit/SKILL.md": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes.",
   ".claude/skills/debug-protocol/SKILL.md": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template.",
   ".claude/skills/design-review/SKILL.md": "Project skill: the gate for UI changes; chains the three design skills, then a checklist and a before/after commit note.",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 645,
-    "inventoried": 503,
+    "tracked": 650,
+    "inventoried": 508,
     "excluded": 142
   },
   "files": [
@@ -327,6 +327,14 @@
       "purpose": "Package marker for backend.convert, the converters that turn other sources (Markdown, Jupyter, LaTeX) into EPUB 3 books (C19)."
     },
     {
+      "path": "backend/convert/assets.py",
+      "language": "python",
+      "lines": 68,
+      "size_bytes": 2660,
+      "role": "lib",
+      "purpose": "What converters share (C19.2): the Converted result (title, chapters, images, notes), sniff (image type from magic bytes), ImageStore (packs each image once, named by content hash; broken SVG refused) and resolve (a relative src inside the upload, None when it escapes)."
+    },
+    {
       "path": "backend/convert/epub_builder.py",
       "language": "python",
       "lines": 255,
@@ -341,6 +349,22 @@
       "size_bytes": 3185,
       "role": "lib",
       "purpose": "Image pixel size from header bytes (C19.1): PNG, JPEG, GIF, WebP and SVG (width/height or viewBox, else 300x150); None when unreadable. Standard library only."
+    },
+    {
+      "path": "backend/convert/markdown.py",
+      "language": "python",
+      "lines": 123,
+      "size_bytes": 5749,
+      "role": "lib",
+      "purpose": "Markdown to EPUB chapters (C19.2a) with markdown-it-py + dollarmath: CommonMark and tables, raw HTML escaped, $..$/$$..$$ to MathML (money like $5 stays text), fenced code exact with language-x class, data-URI/upload/attachment images packed, remote and missing images listed in notes, only http(s)/mailto links kept, chapters at h1 when there are two or more. environment() and sections() are reused by the notebook converter."
+    },
+    {
+      "path": "backend/convert/texmath.py",
+      "language": "python",
+      "lines": 35,
+      "size_bytes": 1728,
+      "role": "lib",
+      "purpose": "LaTeX to MathML (C19.2) with latex2mathml: <math><semantics><mrow>...</mrow><annotation encoding=application/x-tex> as KaTeX writes it; TeX that fails or uses an unknown command becomes <code class=tex-error> with its source."
     },
     {
       "path": "backend/cors.py",
@@ -695,6 +719,14 @@
       "purpose": "Generated C18.5b fixture (scripts/dev/make_epub_fixture.py): two chapters with headings, prose with inline code and MathML, display MathML with LaTeX, Python and Scheme code, a figure, bare images with and without alt, an inline SVG and a captioned table; our own content."
     },
     {
+      "path": "backend/tests/fixtures/sources/sample.md",
+      "language": "markdown",
+      "lines": 41,
+      "size_bytes": 799,
+      "role": "test",
+      "purpose": "Markdown fixture (C19.2a, written for the tests): two h1 chapters, inline and display math, money that is not math, a quote, lists, a table, fenced Python, two local images, one remote image, a relative and a remote link, raw HTML."
+    },
+    {
       "path": "backend/tests/memory_db.py",
       "language": "python",
       "lines": 160,
@@ -909,6 +941,14 @@
       "size_bytes": 5271,
       "role": "test",
       "purpose": "Pytest: plural reduction, phrase normalisation, concept key slugs, merging of identical, fuzzy, overlapping and embedding-close phrases, and extract_concepts on a fixed passage without the real model."
+    },
+    {
+      "path": "backend/tests/test_convert_markdown.py",
+      "language": "python",
+      "lines": 123,
+      "size_bytes": 5548,
+      "role": "test",
+      "purpose": "Pytest for backend/convert/markdown.py and texmath.py on fixtures/sources/sample.md: MathML with LaTeX annotation, TeX errors kept as code, title and chapters, lists/quotes/tables, money not math, raw HTML escaped, exact fenced code, local images packed (count in source == in EPUB) and remote ones listed, data URIs, links, path escape refused, sound EPUB with math/code/table/figure regions."
     },
     {
       "path": "backend/tests/test_cors.py",
@@ -1202,7 +1242,7 @@
       "path": "backend/tests/test_requirements.py",
       "language": "python",
       "lines": 84,
-      "size_bytes": 3373,
+      "size_bytes": 3406,
       "role": "test",
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
     },
@@ -1353,8 +1393,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1405,
-      "size_bytes": 80101,
+      "lines": 1421,
+      "size_bytes": 80806,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -3457,8 +3497,8 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 42,
-      "size_bytes": 1241,
+      "lines": 49,
+      "size_bytes": 1506,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
@@ -3969,8 +4009,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 505,
-      "size_bytes": 154746,
+      "lines": 510,
+      "size_bytes": 156498,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

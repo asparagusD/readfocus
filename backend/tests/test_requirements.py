@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 REQUIREMENTS = ROOT / "requirements.txt"
 
 # Import name -> distribution name, where they differ.
-DISTRIBUTION = {"bs4": "beautifulsoup4", "dotenv": "python-dotenv"}
+DISTRIBUTION = {"bs4": "beautifulsoup4", "dotenv": "python-dotenv", "markdown_it": "markdown-it-py"}
 
 
 def normalise(name):

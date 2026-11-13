@@ -1050,6 +1050,22 @@ httpx and the Supabase client already loaded: 55.8 → 57.1 MB RSS (+1.3
 MB). No new dependency (httpx was already pinned). The in-process LRU
 holds at most 2,000 compact answers.
 
+### Markdown and notebook conversion (C19.2a, 2026-11-13)
+
+New: `markdown-it-py==4.2.0`, `mdurl==0.1.2`, `mdit-py-plugins==0.6.1`
+(MIT, licence files read after install) and `latex2mathml==3.81.1` (MIT in
+its metadata); pure Python, about 250 KB of wheels. Windows, Python 3.11,
+fresh process, measured with psutil:
+
+| Step | RSS |
+|---|---|
+| `import backend.main` (the app as served) | 129.1 MB |
+| + `backend.convert.markdown` and the EPUB builder | +2.5 MB |
+| converting `sample.md` x 40 (31,960 characters, 80 chapters, 67 KB EPUB) | +2.6 MB more, 108 ms |
+
+Command: the inline script recorded in the C19.2a PROGRESS row. Not
+measured in the Linux container; well inside the 450 MB bar either way.
+
 ## Frontend: Lighthouse and image budgets
 
 ### C17.5: page turns on the original view (2026-11-12)

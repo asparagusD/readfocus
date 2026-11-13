@@ -25,6 +25,13 @@ beautifulsoup4==4.15.0
 pdfplumber==0.11.10
 pdfminer.six==20260107
 pypdfium2==5.14.0
+# Converted sources (C19.2): Markdown and notebook text to XHTML, LaTeX to
+# MathML. All MIT, pure Python, releases at least two weeks old; +2.6 MB RSS
+# on import (docs/BENCHMARKS.md).
+markdown-it-py==4.2.0
+mdurl==0.1.2
+mdit-py-plugins==0.6.1
+latex2mathml==3.81.1
 
 # Local NLP (backend/nlp/). No API calls.
 fastembed==0.9.1

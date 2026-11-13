@@ -504,6 +504,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/convert/assets.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/convert/epub_builder.py",
       "type": "file",
       "role": "lib",
@@ -511,6 +517,18 @@
     },
     {
       "id": "file:backend/convert/image_size.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/markdown.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/texmath.py",
       "type": "file",
       "role": "lib",
       "language": "python"
@@ -780,6 +798,12 @@
       "language": "text"
     },
     {
+      "id": "file:backend/tests/fixtures/sources/sample.md",
+      "type": "file",
+      "role": "test",
+      "language": "markdown"
+    },
+    {
       "id": "file:backend/tests/memory_db.py",
       "type": "file",
       "role": "test",
@@ -937,6 +961,12 @@
     },
     {
       "id": "file:backend/tests/test_concepts.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_convert_markdown.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -4298,8 +4328,28 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/convert/assets.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/convert/epub_builder.py",
       "to": "file:backend/convert/image_size.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/markdown.py",
+      "to": "file:backend/convert/assets.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/markdown.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/markdown.py",
+      "to": "file:backend/convert/texmath.py"
     },
     {
       "type": "imports",
@@ -5170,6 +5220,31 @@
       "type": "imports",
       "from": "file:backend/tests/test_concepts.py",
       "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/convert/markdown.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/convert/texmath.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/tests/test_epub_builder.py"
     },
     {
       "type": "imports",

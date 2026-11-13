@@ -46,6 +46,12 @@ class GenerationReport(BaseModel):
     dropped: dict[str, int] = {}  # sentences left out: "garbled", "placeholder" (C18.6b)
 
 
+def garbled(span: str) -> bool:
+    """The garble detector on a sentence as printed and as a question shows it (lines joined: a run of
+    single letters one per line, such as figure labels, only shows once they are)."""
+    return is_garbled(span) or is_garbled(" ".join(span.split()))
+
+
 def body_sentences(chunk: str, dropped: dict | None = None) -> list[Sentence]:
     """The chunk's sentences without front matter, reference entries and page furniture, renumbered.
 
@@ -54,7 +60,7 @@ def body_sentences(chunk: str, dropped: dict | None = None) -> list[Sentence]:
     """
     kept = []
     for sentence in strategies.sentences_of(prose.mask(chunk)):
-        reason = "placeholder" if prose.MASK in sentence.span else "garbled" if is_garbled(sentence.span) else None
+        reason = "placeholder" if prose.MASK in sentence.span else "garbled" if garbled(sentence.span) else None
         if reason and dropped is not None:
             dropped[reason] = dropped.get(reason, 0) + 1
         if reason is None and quality.boilerplate_reason(sentence.span) is None:

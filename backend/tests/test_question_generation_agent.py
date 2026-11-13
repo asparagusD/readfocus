@@ -226,3 +226,13 @@ def test_body_sentences_counts_what_it_drops():
     assert dropped == {"garbled": 1, "placeholder": 2}
     assert all("[" not in s.span and "" not in s.span for s in kept)
     assert [s.index for s in kept] == list(range(len(kept)))
+
+
+def test_a_garbled_run_split_across_lines_is_still_dropped():
+    # Figure labels one per line: harmless line by line, a run of single letters once the lines are joined.
+    text = (BODY_A + " D\nE\nA\nB\nS\nC Figure 3.25 shows that the half adder circuit consists of an or-gate, "
+            "two and-gates and an inverter.")
+    dropped = {}
+    kept = agent_module.body_sentences(text, dropped)
+    assert dropped.get("garbled") == 1
+    assert not any("D E A" in " ".join(s.span.split()) for s in kept)

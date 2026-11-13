@@ -32,7 +32,7 @@ def reference_from_passage(passage: str) -> str:
     """The passage's most informative sentences, in reading order: what an ungrounded question is graded against.
     Sentences with a placeholder or garbled text are never evidence (C18.6b)."""
     sentences = [sentence for sentence in text.split_sentences(prose.mask(passage))
-                 if prose.MASK not in sentence and not is_garbled(sentence)]
+                 if prose.MASK not in sentence and not is_garbled(" ".join(sentence.split()))]
     best = set(sorted(sentences, key=text.informativeness, reverse=True)[:policy.GRADE_FALLBACK_SENTENCES])
     return "\n\n".join(sentence for sentence in sentences if sentence in best)
 

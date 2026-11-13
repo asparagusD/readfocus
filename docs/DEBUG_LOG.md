@@ -3228,3 +3228,39 @@ raises; `test_prose_job.py::test_regions_are_loaded_with_only_the_meta_prose_nee
 
 ### Commit
 fix(ingest): read PDF text a few pages at a time and hand memory back
+
+## 2026-11-13 C18.G — `make graph` leaves a diff at the chunk close
+
+**Status:** fixed
+
+### Symptom
+Closing C18, `make graph` on a clean tree changed `docs/repo-graph/inventory.json`
+and `REPO_MAP.md`; expected no diff:
+
+    make graph && git status --short docs/repo-graph
+     M docs/repo-graph/REPO_MAP.md
+     M docs/repo-graph/inventory.json
+    (docs/BENCHMARKS.md lines 1386 -> 1405, size 79000 -> 80101;
+     docs/PROGRESS.md lines 3729 -> 3731, size 695554 -> 699295)
+
+### Repro
+`make graph && git diff --stat docs/repo-graph` at `2556493`.
+
+### Hypotheses
+1. The last docs-only commits (`f9b0f96`, `30b4bc8`, `2556493`) changed
+   `docs/BENCHMARKS.md` and `docs/PROGRESS.md` without regenerating the
+   graph, whose inventory records every tracked file's lines and size.
+   Ruled out if other entries differ. Result: confirmed (only those two).
+
+### Root cause
+Docs commits were made without `make graph`; the inventory tracks docs too.
+
+### Fix
+Regenerate and commit the graph. No code change.
+
+### Regression test
+None automated: the check is `make graph` leaving no diff, re-run after this
+commit (clean).
+
+### Commit
+fix(graph): refresh the inventory after the C18.G docs commits

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 642,
-    "inventoried": 500,
+    "tracked": 645,
+    "inventoried": 503,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14120,
+      "size_bytes": 14157,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1425,8 +1425,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4008,
-      "size_bytes": 715825,
+      "lines": 4009,
+      "size_bytes": 719978,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1463,6 +1463,14 @@
       "purpose": "E2E: an uncalibrated reader gets the pace check (intro, passage, one POST with a clamped wpm, then today's reading); a failed save shows a toast and no native dialog; 375 without sideways scroll."
     },
     {
+      "path": "frontend/e2e/converted.spec.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 3334,
+      "role": "config",
+      "purpose": "E2E for the shared EPUB 3 builder (C19.1b): converted.epub opens in the original view's EPUB renderer with the API mocked; the contents are the builder's nav from the headings, both images load with the builder's width, height and alt ('Figure 2'), display MathML gets a box, and code keeps every space."
+    },
+    {
       "path": "frontend/e2e/dashboard.spec.js",
       "language": "javascript",
       "lines": 168,
@@ -1485,6 +1493,14 @@
       "size_bytes": 12640,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/converted.epub",
+      "language": "text",
+      "lines": 16,
+      "size_bytes": 3647,
+      "role": "config",
+      "purpose": "Generated EPUB 3 fixture (tools/make_converted_fixture.py, C19.1b), made by backend/convert/epub_builder.py; opened by frontend/e2e/converted.spec.js."
     },
     {
       "path": "frontend/e2e/fixtures/books/fixed.epub",
@@ -3903,6 +3919,14 @@
       "purpose": "Package marker for tools."
     },
     {
+      "path": "tools/make_converted_fixture.py",
+      "language": "python",
+      "lines": 45,
+      "size_bytes": 2196,
+      "role": "script",
+      "purpose": "Writes frontend/e2e/fixtures/books/converted.epub with backend/convert/epub_builder.py (C19.1b): two chapters with h1/h2 headings, a PNG plot with alt, an SVG without, display MathML with its TeX, and an indented Python block; deterministic."
+    },
+    {
       "path": "tools/make_reader_fixtures.py",
       "language": "python",
       "lines": 247,
@@ -3945,8 +3969,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 502,
-      "size_bytes": 153831,
+      "lines": 505,
+      "size_bytes": 154658,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

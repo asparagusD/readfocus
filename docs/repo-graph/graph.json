@@ -1356,6 +1356,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/converted.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/dashboard.spec.js",
       "type": "file",
       "role": "config",
@@ -1372,6 +1378,12 @@
       "type": "file",
       "role": "config",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/converted.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
     },
     {
       "id": "file:frontend/e2e/fixtures/books/fixed.epub",
@@ -3181,6 +3193,12 @@
     },
     {
       "id": "file:tools/__init__.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/make_converted_fixture.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -5730,6 +5748,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/converted.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/dashboard.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -7682,6 +7705,16 @@
       "type": "imports",
       "from": "file:scripts/manual/test_sessions_api.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/make_converted_fixture.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/make_converted_fixture.py",
+      "to": "file:tools/make_reader_fixtures.py"
     },
     {
       "type": "imports",

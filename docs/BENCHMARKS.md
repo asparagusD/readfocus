@@ -1066,6 +1066,24 @@ fresh process, measured with psutil:
 Command: the inline script recorded in the C19.2a PROGRESS row. Not
 measured in the Linux container; well inside the 450 MB bar either way.
 
+### pandoc for LaTeX sources (C19.3, measured, not adopted; 2026-11-13)
+
+A throwaway image: `readfocus-c18g-measure` (the C18.G container, 917 MB)
+plus `apt-get install --no-install-recommends pandoc` (Debian's pandoc
+3.1.11.1, GPL-2.0-or-later). In a `--memory=512m` container, psutil polling
+the pandoc process every 10 ms, `pandoc <file> -f latex -t epub3 --mathml`:
+
+| What | Result |
+|---|---|
+| Image | 917 MB -> 1.16 GB (+243 MB; `/usr/bin/pandoc` is 189 MB) |
+| A 1.4 KB LaTeX source (sections, math, align, 3 figures, a table) | 0.05 s, peak RSS 71 MB |
+| The same body 40 times (41 KB, a long paper) | 0.31 s, peak RSS 119 MB |
+
+Against Gate G5's container peaks (Calculus Volume 1: 399 MB ingesting,
+475 MB in the regions job, 502 MB in the prose rebuild, under the 512 MB
+limit), a 70-120 MB pandoc process during another book's ingestion would
+pass the limit, so pandoc was not added and C19.3 was skipped.
+
 ## Frontend: Lighthouse and image budgets
 
 ### C17.5: page turns on the original view (2026-11-12)

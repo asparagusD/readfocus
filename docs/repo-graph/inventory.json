@@ -1433,8 +1433,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1421,
-      "size_bytes": 80806,
+      "lines": 1439,
+      "size_bytes": 81727,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1506,7 +1506,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4013,
-      "size_bytes": 728783,
+      "size_bytes": 730213,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

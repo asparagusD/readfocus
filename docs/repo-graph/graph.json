@@ -557,6 +557,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/regions/epub.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/regions/extract.py",
       "type": "file",
       "role": "lib",
@@ -723,6 +729,12 @@
       "type": "file",
       "role": "test",
       "language": "json"
+    },
+    {
+      "id": "file:backend/tests/fixtures/regions_sample.epub",
+      "type": "file",
+      "role": "test",
+      "language": "text"
     },
     {
       "id": "file:backend/tests/memory_db.py",
@@ -894,6 +906,12 @@
     },
     {
       "id": "file:backend/tests/test_embedder.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_epub_regions.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2789,6 +2807,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/make_epub_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/measure_embedder.py",
       "type": "file",
       "role": "script",
@@ -2994,6 +3018,12 @@
     },
     {
       "id": "file:supabase/migrations/018_page_regions.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/019_epub_regions.sql",
       "type": "file",
       "role": "migration",
       "language": "sql"
@@ -3239,6 +3269,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/017_block_paths.sql",
       "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/019_epub_regions.sql",
+      "to": "table:page_regions"
     },
     {
       "type": "calls_endpoint",
@@ -4154,6 +4189,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/regions/epub.py",
+      "to": "file:backend/regions/code.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/epub.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/epub.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/regions/extract.py",
       "to": "file:backend/regions/policy.py"
     },
@@ -4361,6 +4411,11 @@
       "type": "imports",
       "from": "file:backend/services/region_job.py",
       "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/regions/epub.py"
     },
     {
       "type": "imports",
@@ -4851,6 +4906,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_embedder.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_epub_regions.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_epub_regions.py",
+      "to": "file:scripts/dev/make_epub_fixture.py"
     },
     {
       "type": "imports",

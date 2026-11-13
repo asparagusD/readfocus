@@ -12,6 +12,7 @@ from backend.services import processing_jobs as jobs
 from backend.tests.memory_db import MemoryDb
 
 SAMPLE = Path(__file__).resolve().parents[2] / "frontend" / "e2e" / "fixtures" / "books" / "sample.pdf"
+EPUB = Path(__file__).resolve().parents[2] / "backend" / "tests" / "fixtures" / "regions_sample.epub"
 USER, BOOK = "user-1", "book-1"
 LONG_AGO = jobs.iso(datetime.now(UTC) - timedelta(hours=1))
 
@@ -85,10 +86,33 @@ def test_queue_makes_one_regions_job_beside_the_ingest_job(db):
     assert jobs.get(BOOK)["kind"] == "ingest" and jobs.get(BOOK, kind="regions")["id"] == claimed["id"]
 
 
-def test_queue_skips_device_only_books_and_epubs(db):
+def test_queue_skips_device_only_books(db):
     assert region_job.queue({"id": BOOK, "user_id": USER, "storage_path": None, "file_type": "pdf"}) is None
-    assert region_job.queue({"id": BOOK, "user_id": USER, "storage_path": "x.epub", "file_type": "epub"}) is None
+    assert region_job.queue({"id": BOOK, "user_id": USER, "storage_path": None, "file_type": "epub"}) is None
     assert "processing_jobs" not in db.tables
+
+
+def test_an_epub_job_stores_anchored_regions_by_spine_document(db):
+    add_book(db, file_type="epub", data=EPUB.read_bytes())
+    result = run(region_job.queue(db.tables["books"][0]))
+    assert result == {"status": "done", "pages": 2}  # two spine documents
+    rows = regions(db)
+    assert {r["spine_index"] for r in rows} == {0, 1}
+    assert all(r["page"] is None and r["bbox"] is None and r["anchor"]["cfi"].startswith("epubcfi(/6/") for r in rows)
+    assert [r["kind"] for r in rows if r["spine_index"] == 0][:3] == ["prose", "prose", "math"]
+    assert [r["order_in_page"] for r in rows if r["spine_index"] == 0] == list(range(8))
+    stored = jobs.get(BOOK, kind="regions")
+    assert (stored["status"], stored["cursor"]) == ("done", 2)
+
+
+def test_an_epub_job_resumed_mid_book_never_duplicates(db, monkeypatch):
+    monkeypatch.setattr(region_job, "PAGES_PER_BATCH", 1)
+    add_book(db, file_type="epub", data=EPUB.read_bytes())
+    run(region_job.queue(db.tables["books"][0]))
+    before = sorted((r["spine_index"], r["order_in_page"]) for r in regions(db))
+    db.tables["processing_jobs"][-1].update(status="running", cursor=1, updated_at=LONG_AGO)
+    run(jobs.claim(jobs.get(BOOK, kind="regions")))
+    assert sorted((r["spine_index"], r["order_in_page"]) for r in regions(db)) == before
 
 
 def test_run_job_reads_every_page_in_batches_and_finishes(db):

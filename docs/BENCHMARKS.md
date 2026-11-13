@@ -226,6 +226,11 @@ classification of every page, Windows: Calculus 0.275 s/page, Circuits
 0.174, ILA 0.129, SICP 0.135 (`fig_survey`-style loop over
 `extract.iter_pages` and `classify.classify_page`, 20-page batches).
 
+C18.5b, EPUB regions from structure (`backend/regions/epub.py`), Windows, fresh
+process: Alice (18.4 MB, 20 spine documents, 927 regions) in 0.25 s, about
+13 ms a document, RSS 18 to 72 MB with ebooklib, BeautifulSoup and the
+book's bytes loaded. EPUBs need no pdfplumber.
+
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 
 The model is downloaded at build time into `FASTEMBED_CACHE`

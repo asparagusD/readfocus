@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 613,
-    "inventoried": 471,
+    "tracked": 618,
+    "inventoried": 476,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13805,
+      "size_bytes": 13824,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -407,6 +407,14 @@
       "purpose": "Pure code-block detection and exact rebuilding (C18.4): monospace lines (font names, unnamed fonts with one advance for narrow and wide letters, template lines with no prose word), blocks ended by prose, rows by baseline, text rebuilt by column = round((x0 - left) / mean char width) with blank lines from the line pitch, line-number gutters stripped into meta.line_numbers, and a keyword-based language_guess (python, scheme, c, java, javascript, matlab, unknown)."
     },
     {
+      "path": "backend/regions/epub.py",
+      "language": "python",
+      "lines": 271,
+      "size_bytes": 11908,
+      "role": "lib",
+      "purpose": "EPUB regions from structure with CFI anchors (C18.5b): each spine document walked in order with CFI steps; block MathML -> math (MathML, LaTeX from an x-tex annotation), pre and block code -> code (exact text, language from class else guessed), figure/img/svg/object -> figure (figcaption, alt, or a following 'Figure N' paragraph; every image rendition as a package path), table -> table (caption, rows), text blocks -> prose with inline_math and inline_code ranges; package_images, spine_images, spine_count."
+    },
+    {
       "path": "backend/regions/extract.py",
       "language": "python",
       "lines": 247,
@@ -577,10 +585,10 @@
     {
       "path": "backend/services/region_job.py",
       "language": "python",
-      "lines": 114,
-      "size_bytes": 5276,
+      "lines": 149,
+      "size_bytes": 7107,
       "role": "service",
-      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; skips EPUBs and device-only books."
+      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books."
     },
     {
       "path": "backend/services/retriever.py",
@@ -629,6 +637,14 @@
       "size_bytes": 20041,
       "role": "test",
       "purpose": "Hand labels for C18.3 on 10 technical-shelf pages (SICP, Interactive Linear Algebra, Lessons in Electric Circuits): display regions (line ids, box, equation number) and inline math boxes, with each book's sha256; no book text. Built by scripts/dev/build_math_labels.py."
+    },
+    {
+      "path": "backend/tests/fixtures/regions_sample.epub",
+      "language": "text",
+      "lines": 14,
+      "size_bytes": 3117,
+      "role": "test",
+      "purpose": "Generated C18.5b fixture (scripts/dev/make_epub_fixture.py): two chapters with headings, prose with inline code and MathML, display MathML with LaTeX, Python and Scheme code, a figure, bare images with and without alt, an inline SVG and a captioned table; our own content."
     },
     {
       "path": "backend/tests/memory_db.py",
@@ -863,6 +879,14 @@
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
+      "path": "backend/tests/test_epub_regions.py",
+      "language": "python",
+      "lines": 125,
+      "size_bytes": 5865,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/epub.py: the generated fixture's kinds in order, inline math and code ranges, display MathML and LaTeX, exact code with language, figures from figcaption, alt and a following caption paragraph, srcset renditions, tables, every package image in a figure, CFI anchors, determinism, a non-EPUB raising, the e2e EPUBs, and Alice's 45 figures when the shelf is present."
+    },
+    {
       "path": "backend/tests/test_eval_grader.py",
       "language": "python",
       "lines": 29,
@@ -977,10 +1001,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 421,
-      "size_bytes": 17765,
+      "lines": 454,
+      "size_bytes": 19446,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
     {
       "path": "backend/tests/test_model_ready.py",
@@ -1065,10 +1089,10 @@
     {
       "path": "backend/tests/test_region_job.py",
       "language": "python",
-      "lines": 175,
-      "size_bytes": 7654,
+      "lines": 199,
+      "size_bytes": 9048,
       "role": "test",
-      "purpose": "Pytest for backend/services/region_job.py on the in-memory database with sample.pdf: block rows, math rows and inline math meta, page batches from the cursor, one regions job beside the ingest job, EPUB and device-only books skipped, a full run, a resumed run that never duplicates, a failure that leaves the book readable, bytes passed in, the sweep's dispatch by kind, giving up without touching the book, and after_ingest."
+      "purpose": "Pytest for backend/services/region_job.py on the in-memory database with sample.pdf: block rows, math rows and inline math meta, page batches from the cursor, one regions job beside the ingest job, device-only books skipped, EPUB jobs storing anchored rows and resuming without duplicates, a full run, a resumed run that never duplicates, a failure that leaves the book readable, bytes passed in, the sweep's dispatch by kind, giving up without touching the book, and after_ingest."
     },
     {
       "path": "backend/tests/test_requirements.py",
@@ -1201,8 +1225,8 @@
     {
       "path": "docs/ANCHORS.md",
       "language": "markdown",
-      "lines": 130,
-      "size_bytes": 5963,
+      "lines": 163,
+      "size_bytes": 7683,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
     },
@@ -1225,8 +1249,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1333,
-      "size_bytes": 75919,
+      "lines": 1338,
+      "size_bytes": 76193,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1298,7 +1322,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3721,
-      "size_bytes": 673461,
+      "size_bytes": 676016,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3383,6 +3407,14 @@
       "purpose": "Draws backend/tests/fixtures/code_sample.pdf with pypdfium2's raw API and standard fonts: prose, the PYTHON listing (nested indentation, a blank line, aligned comment) and the C listing with a right-aligned line-number gutter; the tests import PYTHON and C to compare."
     },
     {
+      "path": "scripts/dev/make_epub_fixture.py",
+      "language": "python",
+      "lines": 91,
+      "size_bytes": 5082,
+      "role": "script",
+      "purpose": "Writes backend/tests/fixtures/regions_sample.epub with zipfile: an EPUB 3 with every region kind and four images all used by the spine; the tests import its PYTHON and SCHEME listings."
+    },
+    {
       "path": "scripts/dev/measure_embedder.py",
       "language": "python",
       "lines": 86,
@@ -3663,6 +3695,14 @@
       "purpose": "Migration 018 (C18.2b): page_regions (user, book, page, kind block/prose/math/code/figure/table/unreadable, bbox float8[4], text, meta, order_in_page; unique per book, page and order; index on book and page; readers select their own) and processing_jobs' kind check widened to 'ingest' and 'regions' (the one approved DROP CONSTRAINT)."
     },
     {
+      "path": "supabase/migrations/019_epub_regions.sql",
+      "language": "sql",
+      "lines": 28,
+      "size_bytes": 1627,
+      "role": "migration",
+      "purpose": "Migration 019 (C18.5b): page_regions.anchor jsonb and spine_index; page and bbox may be null (the one approved exception); a check that each row has a page and box or an anchor and spine item; a unique index on (book_id, spine_index, order_in_page) for EPUB rows."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -3713,8 +3753,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 473,
-      "size_bytes": 143120,
+      "lines": 478,
+      "size_bytes": 145227,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

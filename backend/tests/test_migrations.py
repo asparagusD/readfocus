@@ -31,11 +31,21 @@ def migration_005() -> str:
 KIND_CHECK_SWAP = "EXECUTE format('ALTER TABLE public.processing_jobs DROP CONSTRAINT %I', name);"
 
 
+# 019 lets an EPUB region have no page and no box (it has an anchor instead): the user's decision at
+# C18.5b. No column is dropped and no row changes.
+PLACE_NULLABLE = ("ALTER TABLE public.page_regions ALTER COLUMN page DROP NOT NULL;",
+                  "ALTER TABLE public.page_regions ALTER COLUMN bbox DROP NOT NULL;")
+
+
 @pytest.mark.parametrize("path", sorted(MIGRATIONS.glob("*.sql")), ids=lambda p: p.name)
 def test_migrations_are_additive(path):
     sql = sql_without_comments(path)
     if path.name == "018_page_regions.sql":
         sql = re.sub(r"\s+", " ", sql).replace(KIND_CHECK_SWAP, "")
+    if path.name == "019_epub_regions.sql":
+        sql = re.sub(r"\s+", " ", sql)
+        for statement in PLACE_NULLABLE:
+            sql = sql.replace(statement, "")
     found = DESTRUCTIVE.findall(sql)
     assert not found, f"{path.name} has destructive statements: {found}"
 
@@ -419,3 +429,26 @@ def test_018_widens_the_job_kind_check_and_drops_nothing_else():
     assert KIND_CHECK_SWAP in sql
     assert re.search(r"ADD CONSTRAINT processing_jobs_kind_check CHECK \(kind IN \('ingest', 'regions'\)\)", sql)
     assert sql.count("DROP") == 1
+
+
+# --- 019: EPUB regions anchored by CFI (C18.5b) -------------------------------------------------
+
+def migration_019() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "019_epub_regions.sql"))
+
+
+def test_019_adds_anchor_and_spine_index_and_relaxes_only_page_and_bbox():
+    sql = migration_019()
+    assert "ALTER TABLE public.page_regions ADD COLUMN IF NOT EXISTS anchor jsonb;" in sql
+    assert "ALTER TABLE public.page_regions ADD COLUMN IF NOT EXISTS spine_index integer CHECK (spine_index >= 0);" in sql
+    for statement in PLACE_NULLABLE:
+        assert statement in sql
+    assert sql.count("DROP") == 2 and "DROP COLUMN" not in sql and "DROP TABLE" not in sql
+
+
+def test_019_every_row_has_a_page_and_box_or_an_anchor_and_spine_item():
+    sql = migration_019()
+    assert re.search(r"ADD CONSTRAINT page_regions_place_check CHECK \(\(page IS NOT NULL AND bbox IS NOT NULL\) "
+                     r"OR \(anchor IS NOT NULL AND spine_index IS NOT NULL\)\)", sql)
+    assert re.search(r"CREATE UNIQUE INDEX IF NOT EXISTS \w+ ON public\.page_regions \(book_id, spine_index, "
+                     r"order_in_page\) WHERE spine_index IS NOT NULL", sql)

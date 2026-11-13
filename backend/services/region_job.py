@@ -11,8 +11,9 @@ saves the cursor (pages done) after every batch. A batch run again first
 deletes its pages' rows, so a resumed job rewrites and never duplicates.
 
 A failed regions job is recorded on its row and never changes the book's
-status. EPUBs get their regions from their structure (C18.5); device-only
-books have no file on the server to resume from, so neither gets a job.
+status. EPUBs get theirs from their structure (backend/regions/epub.py,
+C18.5b), a spine document at a time; device-only books have no file on the
+server to resume from, so they get no job.
 """
 
 import asyncio
@@ -57,9 +58,22 @@ def batches(total: int, cursor: int, size: int):
         yield first, min(first + size - 1, total)
 
 
+def epub_rows(book: dict, regions: list[dict]) -> list[dict]:
+    """page_regions rows for EPUB regions (C18.5b): no page or box, an anchor and a spine item instead. Pure."""
+    rows = []
+    for region in regions:
+        score = garble_score(region["text"])
+        rows.append({"user_id": book["user_id"], "book_id": book["id"], "page": None, "bbox": None,
+                     "spine_index": region["spine_index"], "anchor": region["anchor"], "kind": region["kind"],
+                     "text": region["text"], "order_in_page": region["order"],
+                     "meta": {**region["meta"], "path": region["path"],
+                              "garble": {"ratio": round(score["ratio"], 4), "reasons": score["reasons"]}}})
+    return rows
+
+
 def queue(book: dict) -> dict | None:
-    """Create and claim the book's regions job; None for an EPUB, a device-only book, or a job already taken."""
-    if book.get("file_type") != "pdf" or not book.get("storage_path"):
+    """Create and claim the book's regions job; None for a device-only book or a job already taken."""
+    if book.get("file_type") not in ("pdf", "epub") or not book.get("storage_path"):
         return None
     return jobs.claim(jobs.create(book["id"], book["user_id"], kind=jobs.REGIONS))
 
@@ -84,13 +98,34 @@ def _store(book: dict, first: int, last: int, pages: list) -> None:
         supabase.table(TABLE).insert(rows).execute()
 
 
+async def _run_epub(job: dict, book: dict, file_bytes: bytes) -> int:
+    """An EPUB's regions, written PAGES_PER_BATCH spine documents at a time; the cursor counts documents."""
+    from backend.regions import epub
+
+    found = await asyncio.to_thread(epub.epub_regions, file_bytes)
+    total = await asyncio.to_thread(epub.spine_count, file_bytes)
+    for first, last in batches(total, job["cursor"], PAGES_PER_BATCH):
+        low, high = first - 1, last - 1
+        (supabase.table(TABLE).delete().eq("book_id", book["id"]).gte("spine_index", low).lte("spine_index", high)
+         .execute())
+        rows = epub_rows(book, [r for r in found if low <= r["spine_index"] <= high])
+        if rows:
+            supabase.table(TABLE).insert(rows).execute()
+        jobs.advance(job["id"], last, total)
+    return total
+
+
 async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
-    """Read the claimed job's pages from its cursor; the cursor is saved after each batch."""
+    """Read the claimed job's pages (PDF) or spine documents (EPUB) from its cursor, saved after each batch."""
     book = supabase.table("books").select("id, user_id, file_type, storage_path").eq(
         "id", job["book_id"]).execute().data[0]
     try:
         if file_bytes is None:
             file_bytes = await asyncio.to_thread(supabase.storage.from_("books").download, book["storage_path"])
+        if book["file_type"] == "epub":
+            total = await _run_epub(job, book, file_bytes)
+            jobs.finish(job["id"], total)
+            return {"status": "done", "pages": total}
         total = await asyncio.to_thread(_count, file_bytes)
         for first, last in batches(total, job["cursor"], PAGES_PER_BATCH):
             pages = await asyncio.to_thread(_read, file_bytes, first, last)

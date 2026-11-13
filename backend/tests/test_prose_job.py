@@ -30,10 +30,10 @@ def db(monkeypatch):
         {"id": "c1", "book_id": BOOK, "user_id": USER, "chunk_index": 1, "content": "A plain page of words only."},
     ]
     fake.tables["page_regions"] = [
-        {"book_id": BOOK, "page": 1, "kind": "block", "text": "Ohm's law is simple.", "order_in_page": 0, "meta": {}},
-        {"book_id": BOOK, "page": 1, "kind": "math", "text": "E = IR (2.1)", "order_in_page": 1,
+        {"id": "r0", "book_id": BOOK, "page": 1, "kind": "block", "text": "Ohm's law is simple.", "order_in_page": 0, "meta": {}},
+        {"id": "r1", "book_id": BOOK, "page": 1, "kind": "math", "text": "E = IR (2.1)", "order_in_page": 1,
          "meta": {"equation_number": "2.1"}},
-        {"book_id": BOOK, "page": 1, "kind": "block", "text": "It holds for metals.", "order_in_page": 2, "meta": {}},
+        {"id": "r2", "book_id": BOOK, "page": 1, "kind": "block", "text": "It holds for metals.", "order_in_page": 2, "meta": {}},
     ]
     fake.tables["question_bank"] = [
         {"id": "q-old", "chunk_id": "c0", "book_id": BOOK, "times_used": 0, "prompt": "E = ___"},
@@ -98,3 +98,38 @@ def test_reference_from_passage_leaves_out_garbled_and_placeholder_sentences():
     reference = evaluator_agent.reference_from_passage(passage)
     assert "Resistance opposes" in reference
     assert "[" not in reference and "" not in reference
+
+
+def test_paging_orders_by_a_unique_tiebreak(monkeypatch):
+    """Ties in the order column may come back in any order on each range: every row exactly once anyway."""
+    import random
+
+    rows = [{"id": f"r{n:03}", "order_in_page": n % 3} for n in range(25)]
+
+    class Query:
+        def __init__(self):
+            self.orders, self.window = [], None
+
+        def select(self, columns):
+            return self
+
+        def eq(self, column, value):
+            return self
+
+        def order(self, column):
+            self.orders.append(column)
+            return self
+
+        def range(self, start, end):
+            self.window = (start, end)
+            return self
+
+        def execute(self):
+            shuffled = random.Random(len(self.orders) * 1000 + self.window[0]).sample(rows, len(rows))
+            ordered = sorted(shuffled, key=lambda r: tuple(r[c] for c in self.orders))  # ties as the server likes
+            return type("R", (), {"data": ordered[self.window[0]: self.window[1] + 1]})
+
+    monkeypatch.setattr(prose_job, "supabase", type("Db", (), {"table": lambda self, name: Query()})())
+    monkeypatch.setattr(prose_job, "PAGE", 4)
+    fetched = prose_job._rows("page_regions", "*", BOOK, "order_in_page")
+    assert sorted(r["id"] for r in fetched) == [r["id"] for r in rows]

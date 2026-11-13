@@ -36,7 +36,7 @@ def pdf_page_texts(file_bytes: bytes) -> list[str]:
 def _rows(table: str, columns: str, book_id: str, order: str) -> list[dict]:
     out, start = [], 0
     while True:
-        rows = (supabase.table(table).select(columns).eq("book_id", book_id).order(order)
+        rows = (supabase.table(table).select(columns).eq("book_id", book_id).order(order).order("id")  # id: a unique tiebreak
                 .range(start, start + PAGE - 1).execute().data or [])
         out += rows
         if len(rows) < PAGE:

@@ -2955,3 +2955,62 @@ The `code_sample.pdf` entry removed from `purposes.json`; its generator
 
 ### Commit
 feat(regions): detect code blocks and rebuild indentation exactly
+
+## 2026-11-13 C18.6c — prose backfill not idempotent on books with over 1000 regions
+
+**Status:** fixed
+
+### Symptom
+After the approved real run of `scripts/backfill_prose.py` (all 7 books
+"handled"), a read-only `--dry-run` straight after said Dagano's chapter
+would still store 6 of 70 chunks and re-question 5, with 2411 placeholders
+against the 2395 just stored (the first dry run had said 2433). Expected:
+"would store 0" for every book. No exception or trace.
+
+    python scripts/backfill_prose.py --dry-run
+      3e3040a3  'Dagano 14 Chapter Operational Amplifiers.Pdf': regions done; would store 6 of 70 chunks, re-question 5, 2411 placeholders, 13 garbled
+
+### Repro
+Read-only, against the shared project (count with `count="exact"`, then
+`prose_job._rows("page_regions", "id", book_id, "order_in_page")` twice):
+
+    3e3040a3 count 3422 fetched 3422 distinct 3390
+    58a7d7e4 count 10624 fetched 10624 distinct 10181
+    5c7fdf10 count 10624 fetched 10624 distinct 10179
+    51fd1ff0 count 1498 fetched 1498 distinct 1498   (and every book under 1000 rows)
+
+### Hypotheses
+1. `_rows` pages with `.order("order_in_page").range(...)`; `order_in_page`
+   is not unique within a book (every page restarts at 0), so Postgres may
+   return tied rows in a different order for each range: some rows come
+   twice, others never. Evidence: only books over one page of 1000 rows are
+   hit. Ruled out if: fetched ids are all distinct. Result: confirmed (above).
+2. The regions job stored different rows on two runs (classification not
+   deterministic). Ruled out by 1: the stored count is fixed, the fetch is
+   what varies.
+
+### Root cause
+`backend/services/prose_job.py` `_rows`: paging ordered by a non-unique key.
+The chunk select (ordered by `chunk_index`, unique per book) was not hit.
+
+### Fix
+Order every page by the given column and then by `id`, a unique tiebreak,
+so ranges partition the rows exactly.
+
+### Regression test
+`backend/tests/test_prose_job.py::test_paging_orders_by_a_unique_tiebreak`
+(a fake query that returns ties in a different order on each call). Failed
+before the fix (fix stashed: 1 failed, 7 passed), passes after (8 passed). The
+fixture rows of `test_prose_job.py` and `test_backfill_prose.py` gained ids, as
+real rows have. Re-run of the repro after the fix, read-only: 3e3040a3 3422
+fetched, 3422 distinct; both 58a7d7e4 and 5c7fdf10 10624 / 10624. Standard
+checks: ruff 27, pytest 1059, ESLint 4, build, import, graph 62, contrast and
+images 0 failing, unit 120, e2e 127.
+
+The stored prose of the three books over 1000 regions was built from an
+incomplete region set; it is rebuilt by running the backfill again (your
+approval). The 9 chunks without prose belong to two device-only books (no
+file on the server, so no regions job): expected, not this bug.
+
+### Commit
+fix(ingest): page regions by a unique order when rebuilding prose

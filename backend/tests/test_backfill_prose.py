@@ -31,7 +31,8 @@ def db(monkeypatch):
     monkeypatch.setattr(prose_job.question_agent, "run", lambda book_id, ids: fake.generated.append(sorted(ids)))
 
     def rows(book, data):  # what the regions job would find in the file
-        return [{**r, "book_id": book["id"], "user_id": book["user_id"]} for r in REGIONS]
+        return [{**r, "id": f"{book['id']}-r{n}", "book_id": book["id"], "user_id": book["user_id"]}
+                for n, r in enumerate(REGIONS)]
 
     monkeypatch.setattr(backfill, "file_regions", rows)
 

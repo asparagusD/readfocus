@@ -845,6 +845,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_prose.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_backfill_structure.py",
       "type": "file",
       "role": "test",
@@ -2784,6 +2790,12 @@
     },
     {
       "id": "file:scripts/backfill_positions.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/backfill_prose.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -4832,6 +4844,36 @@
       "type": "imports",
       "from": "file:backend/tests/test_backfill_positions.py",
       "to": "file:scripts/backfill_positions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:scripts/backfill_prose.py"
     },
     {
       "type": "imports",
@@ -7175,6 +7217,36 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/backfill_structure.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -7625,6 +7697,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_structure.py",
       "to": "table:books"
     },
@@ -7741,6 +7818,11 @@
     {
       "type": "uses_env",
       "from": "file:scripts/backfill_positions.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_prose.py",
       "to": "env:ENV"
     },
     {

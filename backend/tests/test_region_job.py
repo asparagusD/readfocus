@@ -95,7 +95,7 @@ def test_queue_skips_device_only_books(db):
 def test_an_epub_job_stores_anchored_regions_by_spine_document(db):
     add_book(db, file_type="epub", data=EPUB.read_bytes())
     result = run(region_job.queue(db.tables["books"][0]))
-    assert result == {"status": "done", "pages": 2}  # two spine documents
+    assert (result["status"], result["pages"]) == ("done", 2)  # two spine documents
     rows = regions(db)
     assert {r["spine_index"] for r in rows} == {0, 1}
     assert all(r["page"] is None and r["bbox"] is None and r["anchor"]["cfi"].startswith("epubcfi(/6/") for r in rows)
@@ -120,7 +120,7 @@ def test_run_job_reads_every_page_in_batches_and_finishes(db):
     job = region_job.queue(db.tables["books"][0])
     result = run(job)
     total = extract.page_count(SAMPLE)
-    assert result == {"status": "done", "pages": total}
+    assert (result["status"], result["pages"]) == ("done", total)
     assert sorted({r["page"] for r in regions(db)}) == list(range(1, total + 1))
     stored = jobs.get(BOOK, kind="regions")
     assert (stored["status"], stored["cursor"], stored["progress"]) == ("done", total, 1)

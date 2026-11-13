@@ -127,16 +127,16 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         if book["file_type"] == "epub":
             total = await _run_epub(job, book, file_bytes)
             jobs.finish(job["id"], total)
-            await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions
-            return {"status": "done", "pages": total}
+            prose = await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions
+            return {"status": "done", "pages": total, "prose": prose}
         total = await asyncio.to_thread(_count, file_bytes)
         for first, last in batches(total, job["cursor"], PAGES_PER_BATCH):
             pages = await asyncio.to_thread(_read, file_bytes, first, last)
             _store(book, first, last, pages)
             jobs.advance(job["id"], last, total)
         jobs.finish(job["id"], total)
-        await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions
-        return {"status": "done", "pages": total}
+        prose = await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions
+        return {"status": "done", "pages": total, "prose": prose}
     except Exception as error:  # noqa: BLE001 - recorded on the job; the book stays as it is
         print(f"Regions of book {job['book_id']} stopped: {error}")
         jobs.fail(job["id"], str(error))

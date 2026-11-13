@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 624,
-    "inventoried": 482,
+    "tracked": 626,
+    "inventoried": 484,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13862,
+      "size_bytes": 13881,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -585,10 +585,10 @@
     {
       "path": "backend/services/prose_job.py",
       "language": "python",
-      "lines": 94,
-      "size_bytes": 4674,
+      "lines": 111,
+      "size_bytes": 5300,
       "role": "service",
-      "purpose": "Prose-only text per chunk after the regions job (C18.6b): rebuild(book, file_bytes) reads the book's page_regions and chunks (paged by 1000), builds prose and anchors through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises."
+      "purpose": "Prose-only text per chunk after the regions job (C18.6b): load() reads the book's page_regions and chunks (paged by 1000), plan() builds prose and anchors without writing, rebuild(book, file_bytes) applies it: through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises."
     },
     {
       "path": "backend/services/question_bank.py",
@@ -602,9 +602,9 @@
       "path": "backend/services/region_job.py",
       "language": "python",
       "lines": 153,
-      "size_bytes": 7450,
+      "size_bytes": 7498,
       "role": "service",
-      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books; once done, hands the book to prose_job.after_regions (C18.6b)."
+      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books; once done, hands the book to prose_job.after_regions (C18.6b) and returns its report as 'prose'."
     },
     {
       "path": "backend/services/retriever.py",
@@ -789,6 +789,14 @@
       "size_bytes": 5481,
       "role": "test",
       "purpose": "Pytest for scripts/backfill_positions.py on the in-memory database and the reader fixture books: pending places, a PDF point on the right page with the C12 keys kept, an EPUB CFI at the right element and offset, CFI steps for elements and text chunks, no stored file or no match left alone, a dry run writes nothing and a second run finds nothing to do. A short block is found with the text after it, not by its chunk's start (C17.6 dry-run regression)."
+    },
+    {
+      "path": "backend/tests/test_backfill_prose.py",
+      "language": "python",
+      "lines": 112,
+      "size_bytes": 5123,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_prose.py on the in-memory database: pending books, a dry run that only reads, a book without regions getting its regions job and prose, a second run changing nothing, a regions job running elsewhere left alone, one failing book not stopping the run, the environment guard."
     },
     {
       "path": "backend/tests/test_backfill_structure.py",
@@ -1122,7 +1130,7 @@
       "path": "backend/tests/test_region_job.py",
       "language": "python",
       "lines": 212,
-      "size_bytes": 9535,
+      "size_bytes": 9555,
       "role": "test",
       "purpose": "Pytest for backend/services/region_job.py on the in-memory database with sample.pdf: block rows, math rows and inline math meta, page batches from the cursor, one regions job beside the ingest job, device-only books skipped, EPUB jobs storing anchored rows and resuming without duplicates, a full run, a resumed run that never duplicates, a failure that leaves the book readable, bytes passed in, the sweep's dispatch by kind, giving up without touching the book, and after_ingest."
     },
@@ -1353,8 +1361,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3723,
-      "size_bytes": 680156,
+      "lines": 3724,
+      "size_bytes": 682852,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3383,6 +3391,14 @@
       "purpose": "Backfill (C17.5, ANCHORS A7): adds an original-view `anchor` beside each C12 reading_progress.position {chunk_index, block_id, char_offset}: the place's text (from the offset on through the blocks after it, else its chunk's start) is searched for, lower-case with no whitespace, in the book's stored file: a point on the PDF page holding it (pypdf), or a collapsed EPUB CFI computed from the spine document (ElementTree); places with an anchor, no stored file or no match are left alone; --dry-run, --limit, --book-id, dev-only guard."
     },
     {
+      "path": "scripts/backfill_prose.py",
+      "language": "python",
+      "lines": 131,
+      "size_bytes": 5738,
+      "role": "script",
+      "purpose": "Backfill for books ingested before C18.6: ready books kept on the server (PDF, EPUB), oldest id first; a book whose regions job is done gets prose_job.rebuild, any other gets its regions job (claimed by hand), which rebuilds prose; --dry-run maps regions in memory and reports chunks that would change, re-questions, placeholders and garbled sentences without writing; ENV=development guard and --allow-non-dev; idempotent."
+    },
+    {
       "path": "scripts/backfill_structure.py",
       "language": "python",
       "lines": 110,
@@ -3801,8 +3817,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 484,
-      "size_bytes": 148188,
+      "lines": 486,
+      "size_bytes": 149069,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -44,22 +44,29 @@ def _rows(table: str, columns: str, book_id: str, order: str) -> list[dict]:
         start += PAGE
 
 
-def rebuild(book: dict, file_bytes: bytes) -> dict:
-    """Store every chunk's prose, anchors and garbled count; embed and question again the chunks that changed."""
-    regions = _rows("page_regions", "*", book["id"], "order_in_page")
-    chunks = sorted(_rows("chunks", "id, chunk_index, content, blocks, block_paths, prose, anchors, garbled_sentences",
-                          book["id"], "chunk_index"), key=lambda row: row["chunk_index"])
+CHUNK_COLUMNS = "*"  # works before migration 020 adds prose, anchors and garbled_sentences
+
+
+def load(book_id: str) -> tuple[list[dict], list[dict]]:
+    """The book's stored regions and chunks (in chunk order)."""
+    regions = _rows("page_regions", "*", book_id, "order_in_page")
+    chunks = sorted(_rows("chunks", CHUNK_COLUMNS, book_id, "chunk_index"), key=lambda row: row["chunk_index"])
+    return regions, chunks
+
+
+def plan(book: dict, file_bytes: bytes, regions: list[dict], chunks: list[dict]) -> tuple[list, dict]:
+    """What a rebuild would write: [(chunk row, values, text changed)] and the report. No writes."""
     report = {"chunks": len(chunks), "stored": 0, "requestioned": 0, "garbled": 0, "placeholders": 0}
     if not regions or not chunks:
-        return report
+        return [], report
     contents = [row["content"] for row in chunks]
     if book["file_type"] == "pdf":
         built = prose.pdf_prose(contents, pdf_page_texts(file_bytes), regions)
     else:
-        built = prose.epub_prose(contents, [row.get("blocks") for row in chunks] if all(
-            row.get("blocks") for row in chunks) else None, [row.get("block_paths") for row in chunks] if all(
-            row.get("block_paths") for row in chunks) else None, regions)
-    changed = []
+        blocks = [row.get("blocks") for row in chunks]
+        paths = [row.get("block_paths") for row in chunks]
+        built = prose.epub_prose(contents, blocks if all(blocks) else None, paths if all(paths) else None, regions)
+    writes = []
     for row, new in zip(chunks, built):
         garbled = prose.sentence_counts(new["prose"])["garbled"]
         report["garbled"] += garbled
@@ -67,11 +74,20 @@ def rebuild(book: dict, file_bytes: bytes) -> dict:
         values = {"prose": new["prose"], "anchors": new["anchors"], "garbled_sentences": garbled}
         if all(row.get(key) == value for key, value in values.items()):
             continue
-        if new["prose"] != (row.get("prose") or row["content"]):
-            changed.append((row, values))
-        else:
-            supabase.table("chunks").update(values).eq("id", row["id"]).execute()
+        changed = new["prose"] != (row.get("prose") or row["content"])
+        writes.append((row, values, changed))
         report["stored"] += 1
+        report["requestioned"] += changed
+    return writes, report
+
+
+def rebuild(book: dict, file_bytes: bytes) -> dict:
+    """Store every chunk's prose, anchors and garbled count; embed and question again the chunks that changed."""
+    writes, report = plan(book, file_bytes, *load(book["id"]))
+    for row, values, changed in writes:
+        if not changed:
+            supabase.table("chunks").update(values).eq("id", row["id"]).execute()
+    changed = [(row, values) for row, values, text_changed in writes if text_changed]
     for start in range(0, len(changed), BATCH):
         batch = changed[start:start + BATCH]
         vectors = embedder.embed([values["prose"] for _, values in batch])
@@ -81,14 +97,15 @@ def rebuild(book: dict, file_bytes: bytes) -> dict:
         ids = [row["id"] for row, _ in batch]
         supabase.table("question_bank").delete().in_("chunk_id", ids).eq("times_used", 0).execute()
         question_agent.run(book["id"], ids)
-        report["requestioned"] += len(ids)
     return report
 
 
-async def after_regions(book: dict, file_bytes: bytes) -> None:
-    """Rebuild the book's prose once its regions job is done. Never raises."""
+async def after_regions(book: dict, file_bytes: bytes) -> dict | None:
+    """Rebuild the book's prose once its regions job is done: the report, or None if it failed. Never raises."""
     try:
         report = await asyncio.to_thread(rebuild, book, file_bytes)
         print(f"Prose of book {book['id']}: {report}")
+        return report
     except Exception as error:  # noqa: BLE001 - prose is extra; the book reads from content without it
         print(f"Prose of book {book.get('id')} not rebuilt: {error}")
+        return None

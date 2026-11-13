@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { spansFor } from './ocr';
 import { loadPdfjs } from './pdfjs';
 import './pdf.css';
 
@@ -6,8 +7,11 @@ import './pdf.css';
  * One PDF page as published (C17.2): the cached canvas, rendered at the device pixel
  * ratio, with PDF.js's invisible text layer laid exactly over it for selection,
  * search and word lookup. `onShown(pageNumber)` fires once both are on screen.
+ * C19.4: on a scanned page `ocr` (pdf/ocr.js) gives the words read by OCR, added to the same
+ * text layer; while the page is first read a quiet note says so.
  */
-export function PdfPage({ cache, pageNumber, label, onShown, side = 'single' }) {
+export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null }) {
+  const [reading, setReading] = useState(false);
   const root = useRef(null);
   const sheet = useRef(null);
   const text = useRef(null);
@@ -37,12 +41,40 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single' }) 
     };
   }, [cache, pageNumber]);
 
+  useEffect(() => {
+    if (!ocr || !size) return undefined;
+    let gone = false;
+    const added = [];
+    ocr.ready().then(() => {
+      if (gone || !ocr.isScanned(pageNumber)) return null;
+      if (!ocr.has(pageNumber)) setReading(true);
+      return ocr.wordsFor(pageNumber).then((words) => {
+        if (gone || !text.current) return;
+        for (const span of spansFor(words, size.scale)) {
+          const el = document.createElement('span');
+          el.className = 'rf-ocr-word';
+          el.textContent = span.text;
+          Object.assign(el.style, { left: `${span.left}px`, top: `${span.top}px`, fontSize: `${span.height * 0.86}px`, transform: 'none' });
+          text.current.append(el);
+          const drawn = el.getBoundingClientRect().width;
+          if (drawn > 0) el.style.transform = `scaleX(${span.width / drawn})`;
+          added.push(el);
+        }
+      });
+    }).catch(() => {}).finally(() => { if (!gone) setReading(false); });
+    return () => {
+      gone = true;
+      added.forEach((el) => el.remove());
+    };
+  }, [ocr, pageNumber, size]);
+
   return (
     <div ref={root} className="rf-pdf-page" data-side={side} data-page={pageNumber} data-scale={size?.scale} role="group"
       aria-label={label ?? `Page ${pageNumber}`}
       style={size ? { width: size.width, height: size.height } : undefined}>
       <div ref={sheet} className="rf-pdf-page__canvas" />
       <div ref={text} className="textLayer" />
+      {reading && <p className="rf-pdf-ocr" role="status">Making this page selectable…</p>}
     </div>
   );
 }

@@ -81,7 +81,7 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null,
+  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -243,7 +243,7 @@ export function Reader({
         onPointerCancel={() => { swipe.current = null; }}>
         <div className="rf-ov-book" data-spread={wide} ref={setBookBox}>
           {kind === 'pdf'
-            ? <PdfBook key={attempt} {...shared} zoom={zoom} onSheet={setSheet} />
+            ? <PdfBook key={attempt} {...shared} zoom={zoom} onSheet={setSheet} ocr={ocr} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} />}
           {turn && (
             <TurnLeaf key={turn.id} turn={turn} wide={wide}

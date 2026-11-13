@@ -37,8 +37,9 @@ const SHEET_INSET = 16; // px kept clear around the pages inside the frame
  * renderer interface the frame uses (Reader.jsx); onRelocate(place) fires on
  * every move with { pages, folio, entry, atStart, atEnd }.
  */
-export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null, onRelocate, onError, onSheet, ref }) {
+export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null, onRelocate, onError, onSheet, ocr = null, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
+  useEffect(() => { if (ocr && doc) ocr.attach(doc); }, [ocr, doc]); // C19.4: scanned pages read with the open PDF
   const box = useRef(null);
   const frame = useBoxSize(box);
   const [page, setPage] = useState(1);
@@ -159,7 +160,7 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       <div className="rf-pdf-spread" data-pages={pages.length}>
         {cache && pages.map((n, i) => (
           <PdfPage key={n} cache={cache} pageNumber={n} side={pages.length > 1 ? (i ? 'right' : 'left') : 'single'}
-            label={`Page ${meta.labels?.[n - 1] ?? n}`} />
+            label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} />
         ))}
       </div>
     </div>

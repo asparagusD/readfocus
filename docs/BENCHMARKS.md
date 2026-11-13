@@ -1084,6 +1084,30 @@ Against Gate G5's container peaks (Calculus Volume 1: 399 MB ingesting,
 limit), a 70-120 MB pandoc process during another book's ingestion would
 pass the limit, so pandoc was not added and C19.3 was skipped.
 
+### In-browser OCR for scanned pages (C19.4b, 2026-11-13)
+
+tesseract.js 7.0.0 and tesseract.js-core 7.0.0 (Apache-2.0, licence files
+read after install), English model from @tesseract.js-data/eng 1.0.0 (MIT
+package; `4.0.0_best_int`). Served from our origin (`/ocr/`, copied at
+build): worker 111 KB, one core of three by browser support (3.9 MB each,
+wasm inline), model 2.95 MB gzipped; about 7 MB on a reader's first OCR,
+then cached by the browser (the model also in IndexedDB). The tesseract.js
+library is a lazy chunk of 17.2 KB (7.2 KB gzip); the entry bundle does not
+include it. The server gains no dependency or memory.
+
+Seconds per page, `npx playwright test e2e/ocr.spec.js -g "fully scanned"`
+three times (headless Edge on this machine, the app from `vite preview` on
+loopback, the 2-page `scanned.pdf` at 150 dpi, 185 words a page, drawn for
+OCR at about 300 dpi capped at 2,400 px):
+
+| Step | Time |
+|---|---|
+| First page, from the worker request to the page's words posted (engine and model loaded from the local server) | 1.2 s, 1.2 s, 1.2 s |
+| Second page, from the first page's post to its own | 0.8 s, 0.8 s, 0.8 s |
+
+Not measured: a phone, a real network download of the 7 MB, long dense
+pages.
+
 ## Frontend: Lighthouse and image budgets
 
 ### C17.5: page turns on the original view (2026-11-12)

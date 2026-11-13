@@ -1526,6 +1526,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/ocr.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/reader.spec.js",
       "type": "file",
       "role": "config",
@@ -1623,6 +1629,12 @@
     },
     {
       "id": "file:frontend/scripts/check-images.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/copy-ocr.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -2358,6 +2370,18 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/ocr.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/ocr.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/originalview/pdf/pageCache.js",
@@ -3320,6 +3344,12 @@
       "language": "python"
     },
     {
+      "id": "file:tools/make_scanned_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:tools/no_paid_ai.py",
       "type": "file",
       "role": "script",
@@ -3632,6 +3662,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:GET /auth/profile"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:GET /books/{book_id}/status"
     },
     {
       "type": "calls_endpoint",
@@ -6182,6 +6217,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/ocr.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/reader.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -7083,12 +7123,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/ocr.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/originalview/pdf/pdf.css"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/ocr.test.js",
+      "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
     {
       "type": "imports",
@@ -7459,6 +7509,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
     {
       "type": "imports",

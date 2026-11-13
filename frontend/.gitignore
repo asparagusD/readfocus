@@ -26,3 +26,6 @@ dist-ssr
 # Playwright (C12.10)
 test-results/
 playwright-report/
+
+# OCR assets copied from node_modules at build (C19.4, scripts/copy-ocr.mjs)
+public/ocr/

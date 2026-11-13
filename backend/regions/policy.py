@@ -118,3 +118,52 @@ CODE_GUTTER_MIN_ROWS = 3
 CODE_GUTTER_SHARE = 0.6
 # The best language's keyword score must reach this, and beat the next.
 CODE_LANGUAGE_MIN_SCORE = 3
+
+# --- Region map: figures, tables, drawn math, columns (backend/regions/figures.py, C18.5)
+
+# The table finder runs only on pages with at least this many long thin
+# edges each way (points; a rect counts by its sides).
+TABLE_RULE_MIN_LENGTH = 24.0
+TABLE_RULE_MAX_THICKNESS = 2.0
+TABLE_MIN_RULES = 2
+# A found table needs this many rows and columns and this share of cells
+# with text (a shaded one-cell box around a theorem is not a table).
+TABLE_MIN_ROWS = 2
+TABLE_MIN_COLUMNS = 2
+TABLE_MIN_FILLED = 0.5
+# Drawing objects closer than this (em of the page's body text) are one cluster.
+FIGURE_CLUSTER_GAP_EM = 0.8
+# A cluster is a figure when it holds an image at least this many em on its
+# shorter side, or covers at least this many square em; a cluster with no
+# side this long (a lone rule) is nothing.
+FIGURE_MIN_IMAGE_SIDE_EM = 3.0
+FIGURE_MIN_AREA_EM2 = 25.0
+FIGURE_MIN_SIDE_EM = 1.5
+# A vector drawing has at least this many objects (one filled rect is a bar or a
+# page-edge tab, not a figure).
+FIGURE_MIN_VECTOR_OBJECTS = 3
+# Glyph-sized objects (no side over this many em) make up at least this
+# share of a cluster drawn as text: math set as outlines, not a figure.
+DRAWN_GLYPH_MAX_EM = 2.5
+DRAWN_GLYPH_SHARE = 0.8
+DRAWN_MIN_OBJECTS = 3
+# A drawn cluster overlapping a text line by this share of its height is
+# inline in that line.
+DRAWN_INLINE_OVERLAP = 0.5
+# Captions: "Figure 3.4", "Fig. 2", "Table 1.2", within this many em of
+# the figure or table, above or below.
+CAPTION_PATTERN = r"^((?:Figure|FIGURE|Fig\.|Table|TABLE)\s*\d+(?:[.\-]\d+)*[a-z]?)"
+CAPTION_GAP_EM = 2.5
+# A page has two columns when at least this many lines sit wholly on each
+# side of a clean gutter and this share of all lines does.
+COLUMN_MIN_LINES = 2
+COLUMN_MIN_SHARE = 0.25
+# A rect with at least this many text lines inside frames text (a shaded
+# box, an "EXAMPLE" banner): not a drawing.
+FRAME_MIN_LINES = 1
+# A drawing whose text lines cover more than this share of it is a text box.
+FIGURE_MAX_TEXT_SHARE = 0.3
+# A gutter may be crossed by at most this share of lines, or COLUMN_MIN_CROSSING
+# lines on a short page (full-width headings).
+COLUMN_MAX_CROSSING = 0.15
+COLUMN_MIN_CROSSING = 2

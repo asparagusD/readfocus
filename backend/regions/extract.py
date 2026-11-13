@@ -61,12 +61,20 @@ class Block:
 
 
 @dataclass
+class Graphic:
+    kind: str  # image, rect, curve or line
+    bbox: list[float]
+
+
+@dataclass
 class Page:
     page: int
     width: float
     height: float
     lines: list[Line] = field(default_factory=list)
     blocks: list[Block] = field(default_factory=list)
+    graphics: list[Graphic] = field(default_factory=list)  # C18.5
+    tables: list[dict] = field(default_factory=list)  # {"bbox", "rows"} from pdfplumber's table finder
 
 
 def font_family(fontname: str) -> str:
@@ -153,11 +161,20 @@ def _blocks(lines: list[Line]) -> list[Block]:
                   bottom=max(n.bottom for n in b)) for b in blocks]
 
 
-def build_page(raw_chars: list[dict], page_no: int, bbox: tuple[float, float, float, float]) -> Page:
-    """Lines and blocks from pdfplumber-shaped characters. Pure."""
+def _moved(box, left, top) -> list[float]:
+    return [round(box[0] - left, 2), round(box[1] - top, 2), round(box[2] - left, 2), round(box[3] - top, 2)]
+
+
+def build_page(raw_chars: list[dict], page_no: int, bbox: tuple[float, float, float, float],
+               graphics: list[dict] | None = None, tables: list[dict] | None = None) -> Page:
+    """Lines and blocks from pdfplumber-shaped characters, with the page's graphics (images, rects,
+    curves, lines) and table candidates moved to the same coordinates. Pure."""
     left, top, right, bottom = bbox
     chars = [_char(c, left, top) for c in raw_chars if c["text"] and not c["text"].isspace()]
     page = Page(page=page_no, width=round(right - left, 2), height=round(bottom - top, 2))
+    page.graphics = [Graphic(kind=g["object_type"], bbox=_moved((g["x0"], g["top"], g["x1"], g["bottom"]), left, top))
+                     for g in graphics or []]
+    page.tables = [{"bbox": _moved(t["bbox"], left, top), "rows": t["rows"]} for t in tables or []]
     if not chars:
         return page
     lines = []
@@ -187,9 +204,29 @@ def _read(pdf, page_no: int) -> Page:
         raise ValueError(f"page {page_no} is not in 1..{len(pdf.pages)}")
     plumber_page = pdf.pages[page_no - 1]
     try:
-        return build_page(plumber_page.chars, page_no, tuple(plumber_page.bbox))
+        graphics = [{**g, "object_type": kind} for kind, found in (
+            ("image", plumber_page.images), ("rect", plumber_page.rects), ("curve", plumber_page.curves),
+            ("line", plumber_page.lines)) for g in found]
+        tables = []
+        if _ruled(graphics):  # the table finder costs up to 0.4 s a page: only where rules could make a grid
+            tables = [{"bbox": list(found.bbox), "rows": found.extract()} for found in plumber_page.find_tables()]
+        return build_page(plumber_page.chars, page_no, tuple(plumber_page.bbox), graphics, tables)
     finally:
         plumber_page.close()
+
+
+def _ruled(graphics) -> bool:
+    """At least TABLE_MIN_RULES long horizontal and as many vertical thin edges (rects count by their sides)."""
+    horizontal = vertical = 0
+    for g in graphics:
+        if g["object_type"] not in ("rect", "line"):
+            continue
+        width, height = g["x1"] - g["x0"], g["bottom"] - g["top"]
+        if width >= policy.TABLE_RULE_MIN_LENGTH:
+            horizontal += 1 if height <= policy.TABLE_RULE_MAX_THICKNESS else 2
+        if height >= policy.TABLE_RULE_MIN_LENGTH / 2:
+            vertical += 1 if width <= policy.TABLE_RULE_MAX_THICKNESS else 2
+    return horizontal >= policy.TABLE_MIN_RULES and vertical >= policy.TABLE_MIN_RULES
 
 
 def page_count(source) -> int:

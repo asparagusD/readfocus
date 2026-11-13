@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 611,
-    "inventoried": 469,
+    "tracked": 613,
+    "inventoried": 471,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13786,
+      "size_bytes": 13805,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -394,9 +394,9 @@
       "path": "backend/regions/classify.py",
       "language": "python",
       "lines": 379,
-      "size_bytes": 17278,
+      "size_bytes": 17378,
       "role": "lib",
-      "purpose": "Pure classification of an extract.Page: code blocks first through backend.regions.code (C18.4), then math (C18.3): per-character evidence (math fonts, Unicode math symbols, sub- and superscripts; monospace, footnote marks, ordinals and units excluded), display-math regions (lines with enough evidence and an operator, or set off from the column; grouped, with fragments, stacked fractions and right-margin equation numbers), inline math spans as char ranges and boxes in the remaining blocks; iou()."
+      "purpose": "Pure classification of an extract.Page in reading order: tables, figures and drawn math through backend.regions.figures (C18.5a), code through backend.regions.code (C18.4), then math (C18.3): per-character evidence (math fonts, Unicode math symbols, sub- and superscripts; monospace, footnote marks, ordinals and units excluded), display-math regions (lines with enough evidence and an operator, or set off from the column; grouped, with fragments, stacked fractions and right-margin equation numbers), inline math spans as char ranges and boxes in the remaining blocks; iou()."
     },
     {
       "path": "backend/regions/code.py",
@@ -409,10 +409,18 @@
     {
       "path": "backend/regions/extract.py",
       "language": "python",
-      "lines": 210,
-      "size_bytes": 7312,
+      "lines": 247,
+      "size_bytes": 9376,
       "role": "lib",
-      "purpose": "PDF page characters with font name, size, box and uprightness via pdfplumber, grouped by the pure build_page into lines (each character's offset in the line text, sub- and superscripts joined with their baseline offset, split at column gutters, word gaps from positions) and blocks, in points from the crop box's top-left; page_chars, iter_pages (file opened once per range, pages closed) and page_count."
+      "purpose": "PDF page characters (and, since C18.5a, its graphics and, on ruled pages only, pdfplumber's table candidates) with font name, size, box and uprightness via pdfplumber, grouped by the pure build_page into lines (each character's offset in the line text, sub- and superscripts joined with their baseline offset, split at column gutters, word gaps from positions) and blocks, in points from the crop box's top-left; page_chars, iter_pages (file opened once per range, pages closed) and page_count."
+    },
+    {
+      "path": "backend/regions/figures.py",
+      "language": "python",
+      "lines": 186,
+      "size_bytes": 9623,
+      "role": "lib",
+      "purpose": "Pure tables, figures and drawn math for a PDF page (C18.5a): table candidates with enough rows, columns and filled cells (lines claimed, 'Table N' caption); drawing objects outside tables and text frames clustered by proximity: glyph-sized clusters are math drawn as outlines (inline boxes on their line, or display math with meta.drawn), large clusters with images or several vector objects and little text are figures with their labels and 'Figure N' caption; two-column gutter detection and reading order."
     },
     {
       "path": "backend/regions/garble.py",
@@ -425,10 +433,10 @@
     {
       "path": "backend/regions/policy.py",
       "language": "python",
-      "lines": 120,
-      "size_bytes": 6176,
+      "lines": 169,
+      "size_bytes": 8364,
       "role": "lib",
-      "purpose": "Region-map constants in one place: garble thresholds (C18.1), line and block grouping (C18.2), math fonts, monospace fonts, script offsets, display and inline rules, equation numbers and the evaluation IoU (C18.3); code lines, template lines, unnamed fonts, rows, gutters and the language score (C18.4)."
+      "purpose": "Region-map constants in one place: garble thresholds (C18.1), line and block grouping (C18.2), math fonts, monospace fonts, script offsets, display and inline rules, equation numbers and the evaluation IoU (C18.3); code lines, template lines, unnamed fonts, rows, gutters and the language score (C18.4); table gating and filters, figure clusters, drawn math, frames, captions and columns (C18.5a)."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -569,8 +577,8 @@
     {
       "path": "backend/services/region_job.py",
       "language": "python",
-      "lines": 112,
-      "size_bytes": 5182,
+      "lines": 114,
+      "size_bytes": 5276,
       "role": "service",
       "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; skips EPUBs and device-only books."
     },
@@ -877,6 +885,14 @@
       "size_bytes": 7198,
       "role": "test",
       "purpose": "Pytest: each feedback template and its conditions, term lists, the evidence snippet, and over the labelled fixtures that feedback holds only template words, key terms and verbatim evidence."
+    },
+    {
+      "path": "backend/tests/test_figures.py",
+      "language": "python",
+      "lines": 176,
+      "size_bytes": 8225,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/figures.py through classify: vector and image figures with captions above or below and labels, icons, rules and single bars ignored, drawn display and inline math, tables with captions, one-cell boxes, graphics inside tables, two-column reading order, crop-box coordinates; and on the shelf Calculus tables, Figure 2.11 and drawn math, and the Circuits schematic taking its labels."
     },
     {
       "path": "backend/tests/test_garble.py",
@@ -1209,8 +1225,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1325,
-      "size_bytes": 75439,
+      "lines": 1333,
+      "size_bytes": 75919,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1281,8 +1297,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3720,
-      "size_bytes": 670730,
+      "lines": 3721,
+      "size_bytes": 673461,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3697,8 +3713,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 471,
-      "size_bytes": 141868,
+      "lines": 473,
+      "size_bytes": 143120,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -563,6 +563,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/regions/figures.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/regions/garble.py",
       "type": "file",
       "role": "lib",
@@ -906,6 +912,12 @@
     },
     {
       "id": "file:backend/tests/test_feedback.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_figures.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -4128,6 +4140,11 @@
     {
       "type": "imports",
       "from": "file:backend/regions/classify.py",
+      "to": "file:backend/regions/figures.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/classify.py",
       "to": "file:backend/regions/policy.py"
     },
     {
@@ -4138,6 +4155,11 @@
     {
       "type": "imports",
       "from": "file:backend/regions/extract.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/figures.py",
       "to": "file:backend/regions/policy.py"
     },
     {
@@ -4869,6 +4891,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_feedback.py",
       "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_figures.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_figures.py",
+      "to": "file:backend/regions/extract.py"
     },
     {
       "type": "imports",

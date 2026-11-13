@@ -42,8 +42,10 @@ def block_rows(book: dict, page) -> list[dict]:
         rows.append({
             "user_id": book["user_id"], "book_id": book["id"], "page": page.page, "kind": region.kind,
             "bbox": [round(v, 2) for v in region.bbox], "text": region.text, "order_in_page": order,
-            "meta": {**region.meta, "lines": len(region.lines), "size": median(line.size for line in region.lines),
-                     "upright": region.lines[0].upright, "fonts": dict(fonts.most_common(TOP_FONTS)),
+            "meta": {**region.meta, "lines": len(region.lines),
+                     "size": median(line.size for line in region.lines) if region.lines else None,
+                     "upright": region.lines[0].upright if region.lines else True,
+                     "fonts": dict(fonts.most_common(TOP_FONTS)),
                      "garble": {"ratio": round(score["ratio"], 4), "reasons": score["reasons"]}},
         })
     return rows

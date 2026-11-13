@@ -218,6 +218,14 @@ Algebra 455 pages 0.132 s/page, peak 173.7 MB. Classification costs about
 C18.4, with code detection and rebuilding as well: SICP 0.139 s/page,
 peak 177.5 MB; Calculus 0.265 s/page, peak 249.5 MB.
 
+C18.5a, with graphics, figures, drawn math and pdfplumber's table finder
+(28 to 400 ms a page when it runs, so it runs only on pages with at least
+two long thin edges each way: 365 of Calculus's 769 pages, 117 of
+Circuits's 557, 95 of ILA's 455, 14 of SICP's 883), extraction and
+classification of every page, Windows: Calculus 0.275 s/page, Circuits
+0.174, ILA 0.129, SICP 0.135 (`fig_survey`-style loop over
+`extract.iter_pages` and `classify.classify_page`, 20-page batches).
+
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 
 The model is downloaded at build time into `FASTEMBED_CACHE`

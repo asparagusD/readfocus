@@ -279,6 +279,25 @@ ingesting, before any C18 code runs; it is also over the 50 MB upload limit,
 so the app refuses it today. Every shelf book under the limit finishes inside
 512 MB, the highest at 464 MB (SICP).
 
+After the memory fix (`48e7fc3`: PDF text read 50 pages per pypdf reader,
+freed memory handed back with `malloc_trim` after each phase and batch,
+regions loaded with only the meta prose needs), same container, same
+command, `--memory=512m --memory-swap=512m`:
+
+| Book | 512 MB cap | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild | Held by the gate's in-memory database at the end |
+|---|---|---|---|---|---|---|
+| Calculus Volume 1 | finished | 651 | 399 MB | 475 MB | 502 MB | 12 MB |
+| SICP | finished | 257 | 362 MB | 386 MB | 410 MB | 9 MB |
+| Lessons in Electric Circuits I | finished | 315 | 344 MB | 383 MB | 397 MB | 9 MB |
+| Interactive Linear Algebra | finished | 219 | 340 MB | 373 MB | 401 MB | 5 MB |
+| Alice (EPUB) | finished | 35 | 345 MB | 379 MB | 387 MB | 1 MB |
+
+The pypdf step on its own (Calculus, one process, `/proc/self/status`):
+one reader for all 769 pages 88 to 288 MB; a fresh reader per 50 pages 88
+to 136 MB, the same text for every page. Calculus keeps about 10 MB under
+the limit; the books the app accepts (50 MB upload limit) keep 100 MB or
+more.
+
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 
 The model is downloaded at build time into `FASTEMBED_CACHE`

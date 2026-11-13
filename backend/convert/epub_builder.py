@@ -249,4 +249,7 @@ def check_epub(data: bytes) -> list[str]:
         folder = path.rpartition("/")[0] + "/"
         problems += [f"{path}: <img> {img.getAttribute('src')} is not in the manifest"
                      for img in doc.getElementsByTagName("img") if folder + img.getAttribute("src") not in hrefs]
+        problems += [f"{path}: MathML <{e.localName}> must be inside <semantics>"  # as epubcheck's schema asks
+                     for name in ("annotation", "annotation-xml") for e in doc.getElementsByTagNameNS(MATHML_NS, name)
+                     if e.parentNode.localName != "semantics"]
     return problems

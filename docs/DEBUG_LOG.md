@@ -3264,3 +3264,72 @@ commit (clean).
 
 ### Commit
 fix(graph): refresh the inventory after the C18.G docs commits
+
+## 2026-11-13 C19.1 — epubcheck: `annotation` not allowed in the converted fixture
+
+**Status:** fixed
+
+### Symptom
+epubcheck 5.4.0 (in Docker, `eclipse-temurin:21-jre`, after the user's
+"Yes, download") on the committed e2e fixture and on the builder's test
+book. Expected 0 errors and 0 warnings for both; the test book passed, the
+fixture did not:
+
+    docker run --rm -v "<scratchpad>/epubcheck-dl/ex/epubcheck-5.4.0:/ec:ro" -v "<scratchpad>/books:/books:ro" eclipse-temurin:21-jre sh -c 'for f in /books/*.epub; do echo "== $f"; java -jar /ec/epubcheck.jar "$f" 2>&1; done'
+    == /books/converted.epub
+    Validating using EPUB version 3.4 rules.
+    ERROR(RSC-005): /books/converted.epub/OEBPS/chapter-002.xhtml(3,891): Error while parsing file: element "annotation" not allowed here; expected the element end-tag or element "ns:maction", "ns:maligngroup", "ns:malignmark", "ns:menclose", "ns:merror", "ns:mfenced", "ns:mfrac", "ns:mi", "ns:mlongdiv", "ns:mmultiscripts", "ns:mn", "ns:mo", "ns:mover", "ns:mpadded", "ns:mphantom", "ns:mroot", "ns:mrow", "ns:ms", "ns:mspace", "ns:msqrt", "ns:mstack", "ns:mstyle", "ns:msub", "ns:msubsup", "ns:msup", "ns:mtable", "ns:mtext", "ns:munder", "ns:munderover" or "ns:semantics" (with xmlns:ns="http://www.w3.org/1998/Math/MathML")
+
+    Check finished with errors
+    Messages: 0 fatals / 1 error / 0 warnings / 0 infos
+    == /books/test-book.epub
+    Validating using EPUB version 3.4 rules.
+    No errors or warnings detected.
+    Messages: 0 fatals / 0 errors / 0 warnings / 0 infos
+
+### Repro
+The same command on `frontend/e2e/fixtures/books/converted.epub` (fails
+every time; deterministic file). Without Java:
+`pytest backend/tests/test_epub_builder.py -q -k "fixture or semantics"`.
+
+### Hypotheses
+1. The fixture's MathML is invalid: `<annotation>` sits directly in
+   `<math>`, but MathML allows it only inside `<semantics>` (with the
+   presentation in an `<mrow>` first). Evidence: line 3, column 891 of
+   chapter 2 is the end of the math; the builder's own test book (MathML
+   without annotation) passes. Ruled out if: the same markup wrapped in
+   `<semantics>` still fails. Result: confirmed (see Fix: the rebuilt
+   fixture passes epubcheck with 0/0).
+2. The builder serialises MathML wrongly (namespace lost, prefixes).
+   Evidence: none beyond the error's `ns:` prefixes, which are
+   epubcheck's own. Ruled out if: the test book's MathML passes. Result:
+   ruled out, the test book passes.
+
+### Root cause
+`tools/make_converted_fixture.py:27` wrote `<annotation>` as a direct
+child of `<math>`. The builder passed it through, and `check_epub`
+(`backend/convert/epub_builder.py`) had no MathML rule, so only epubcheck
+saw it.
+
+### Fix
+The fixture's math is now `<math><semantics><mrow>…</mrow><annotation
+encoding="application/x-tex">…</annotation></semantics></math>`, as KaTeX
+writes it (`regions/epub.py` finds the annotation anywhere inside
+`<math>`). `check_epub` now reports an `annotation` or `annotation-xml`
+whose parent is not `semantics`, so the structural checks catch it
+without Java. First attempt.
+
+### Regression test
+`backend/tests/test_epub_builder.py::test_check_epub_flags_an_annotation_outside_semantics`
+and `::test_the_committed_converted_fixture_is_sound`. Before the fix
+(`git stash push -- backend/convert/epub_builder.py
+tools/make_converted_fixture.py frontend/e2e/fixtures/books/converted.epub`):
+1 failed, 1 passed (the semantics test fails; the fixture test passes
+because `check_epub` had no MathML rule yet). With the new rule but the
+old fixture: the fixture test fails (1 failed, 1 passed). After the whole
+fix: 2 passed; `test_epub_builder.py` 15 passed. epubcheck on the rebuilt
+fixture (3,663 bytes) and the test book: 0 fatals / 0 errors / 0 warnings
+/ 0 infos each.
+
+### Commit
+fix(convert): wrap the fixture's TeX annotation in MathML semantics

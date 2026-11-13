@@ -180,3 +180,18 @@ def test_check_epub_names_what_is_wrong():
         archive.writestr("mimetype", "application/epub+zip")
     problems = check_epub(broken.getvalue())
     assert any("mimetype" in p for p in problems)
+
+
+def test_check_epub_flags_an_annotation_outside_semantics():
+    bare = ('<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi>'
+            '<annotation encoding="application/x-tex">x</annotation></math>')
+    wrapped = ('<math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi></mrow>'
+               '<annotation encoding="application/x-tex">x</annotation></semantics></math>')
+    assert any("annotation" in p for p in check_epub(build(chapters=[Chapter("One", f"<p>a</p>{bare}")])))
+    assert check_epub(build(chapters=[Chapter("One", f"<p>a</p>{wrapped}")])) == []
+
+
+def test_the_committed_converted_fixture_is_sound():
+    from pathlib import Path
+    fixture = Path(__file__).resolve().parents[2] / "frontend" / "e2e" / "fixtures" / "books" / "converted.epub"
+    assert check_epub(fixture.read_bytes()) == []

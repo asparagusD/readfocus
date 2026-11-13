@@ -23,8 +23,9 @@ OUT = ROOT / "frontend" / "e2e" / "fixtures" / "books" / "converted.epub"
 PARA = "The lamp on the desk threw a small circle of light, and inside it the page was the only thing that mattered. " * 4
 SVG = (b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80">'
        b'<rect width="240" height="80" fill="#c8b48a"/><circle cx="40" cy="40" r="24" fill="#5a3e2b"/></svg>')
-MATH = ('<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>E</mi><mo>=</mo><mi>m</mi>'
-        '<msup><mi>c</mi><mn>2</mn></msup><annotation encoding="application/x-tex">E = mc^2</annotation></math>')
+MATH = ('<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>E</mi><mo>=</mo>'
+        '<mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow>'
+        '<annotation encoding="application/x-tex">E = mc^2</annotation></semantics></math>')
 CODE = "def area(r):\n    \"\"\"A circle's area.\"\"\"\n    return 3.14159 * r ** 2\n"
 
 

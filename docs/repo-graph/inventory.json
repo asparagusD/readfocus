@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14157,
+      "size_bytes": 14193,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -329,8 +329,8 @@
     {
       "path": "backend/convert/epub_builder.py",
       "language": "python",
-      "lines": 252,
-      "size_bytes": 13468,
+      "lines": 255,
+      "size_bytes": 13762,
       "role": "lib",
       "purpose": "Shared EPUB 3 builder (C19.1): build_epub(title, author, chapters, images) packages XHTML body fragments and images as mimetype (first, stored), container.xml, an EPUB 3 OPF (manifest with mathml/svg/nav properties, spine), nav.xhtml from h1-h3 headings, one XHTML per chapter and a small stylesheet; every img gets width/height and alt ('Figure N'); deterministic output. check_epub(bytes) lists structural problems."
     },
@@ -945,10 +945,10 @@
     {
       "path": "backend/tests/test_epub_builder.py",
       "language": "python",
-      "lines": 182,
-      "size_bytes": 8439,
+      "lines": 197,
+      "size_bytes": 9286,
       "role": "test",
-      "purpose": "Pytest for backend/convert/epub_builder.py: mimetype first and stored, well-formed XML, EPUB 3 metadata escaped, spine order and mathml property, images in the manifest with width/height/alt, missing images and bad bodies refused, nav nested from headings with working links, code whitespace and MathML namespace kept, determinism, ingestion and regions reading the result, check_epub's findings."
+      "purpose": "Pytest for backend/convert/epub_builder.py: mimetype first and stored, well-formed XML, EPUB 3 metadata escaped, spine order and mathml property, images in the manifest with width/height/alt, missing images and bad bodies refused, nav nested from headings with working links, code whitespace and MathML namespace kept, determinism, ingestion and regions reading the result, check_epub's findings (an annotation outside semantics), and the committed converted.epub fixture being sound."
     },
     {
       "path": "backend/tests/test_epub_regions.py",
@@ -1361,8 +1361,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3266,
-      "size_bytes": 142150,
+      "lines": 3335,
+      "size_bytes": 146012,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1425,8 +1425,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4009,
-      "size_bytes": 719978,
+      "lines": 4010,
+      "size_bytes": 721146,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1497,8 +1497,8 @@
     {
       "path": "frontend/e2e/fixtures/books/converted.epub",
       "language": "text",
-      "lines": 16,
-      "size_bytes": 3647,
+      "lines": 17,
+      "size_bytes": 3663,
       "role": "config",
       "purpose": "Generated EPUB 3 fixture (tools/make_converted_fixture.py, C19.1b), made by backend/convert/epub_builder.py; opened by frontend/e2e/converted.spec.js."
     },
@@ -3921,8 +3921,8 @@
     {
       "path": "tools/make_converted_fixture.py",
       "language": "python",
-      "lines": 45,
-      "size_bytes": 2196,
+      "lines": 46,
+      "size_bytes": 2243,
       "role": "script",
       "purpose": "Writes frontend/e2e/fixtures/books/converted.epub with backend/convert/epub_builder.py (C19.1b): two chapters with h1/h2 headings, a PNG plot with alt, an SVG without, display MathML with its TeX, and an indented Python block; deterministic."
     },
@@ -3970,7 +3970,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 505,
-      "size_bytes": 154658,
+      "size_bytes": 154746,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

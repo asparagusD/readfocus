@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 667,
-    "inventoried": 524,
+    "tracked": 670,
+    "inventoried": 527,
     "excluded": 143
   },
   "files": [
@@ -1599,10 +1599,26 @@
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
     {
+      "path": "frontend/e2e/fixtures/books/converted-md.epub",
+      "language": "text",
+      "lines": 18,
+      "size_bytes": 4196,
+      "role": "config",
+      "purpose": "Gate G6 fixture (tools/make_converted_fixture.py): backend/tests/fixtures/sources/sample.md zipped with its two figures, converted by the upload's converter and packed; opened by frontend/e2e/gate-g6.spec.js."
+    },
+    {
+      "path": "frontend/e2e/fixtures/books/converted-nb.epub",
+      "language": "text",
+      "lines": 46,
+      "size_bytes": 10765,
+      "role": "config",
+      "purpose": "Gate G6 fixture (tools/make_converted_fixture.py): backend/tests/fixtures/sources/sample.ipynb converted by the upload's converter and packed (an attachment, a PNG plot and an SVG output); opened by frontend/e2e/gate-g6.spec.js."
+    },
+    {
       "path": "frontend/e2e/fixtures/books/converted.epub",
       "language": "text",
-      "lines": 17,
-      "size_bytes": 3663,
+      "lines": 16,
+      "size_bytes": 3711,
       "role": "config",
       "purpose": "Generated EPUB 3 fixture (tools/make_converted_fixture.py, C19.1b), made by backend/convert/epub_builder.py; opened by frontend/e2e/converted.spec.js."
     },
@@ -1637,6 +1653,14 @@
       "size_bytes": 4196,
       "role": "config",
       "purpose": "Gate G5 renderer walk (playwright.gate.config.js, not a standard check): pages through each test EPUB in the original view with all API calls mocked and checks every packaged image loads (no remote one), captions, figcaptions and MathML boxes against g5_epub_expect.py."
+    },
+    {
+      "path": "frontend/e2e/gate-g6.spec.js",
+      "language": "javascript",
+      "lines": 59,
+      "size_bytes": 3299,
+      "role": "config",
+      "purpose": "Gate G6 renderer walk (C19.G, a standard e2e): converted-md.epub (sample.md zipped with its figures) and converted-nb.epub (sample.ipynb), made through the upload converter by tools/make_converted_fixture.py, paged end to end in the EPUB renderer: every image loaded with alt text, every MathML equation drawn, the notebook's 'Output of cell N' captions."
     },
     {
       "path": "frontend/e2e/journey.spec.js",
@@ -4073,10 +4097,10 @@
     {
       "path": "tools/make_converted_fixture.py",
       "language": "python",
-      "lines": 46,
-      "size_bytes": 2243,
+      "lines": 80,
+      "size_bytes": 3670,
       "role": "script",
-      "purpose": "Writes frontend/e2e/fixtures/books/converted.epub with backend/convert/epub_builder.py (C19.1b): two chapters with h1/h2 headings, a PNG plot with alt, an SVG without, display MathML with its TeX, and an indented Python block; deterministic."
+      "purpose": "Writes frontend/e2e/fixtures/books/converted.epub with backend/convert/epub_builder.py (C19.1b), and for Gate G6 converted-md.epub and converted-nb.epub through backend/convert/sources.py: two chapters with h1/h2 headings, a PNG plot with alt, an SVG without, display MathML with its TeX, and an indented Python block; deterministic."
     },
     {
       "path": "tools/make_notebook_fixture.py",
@@ -4137,8 +4161,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 526,
-      "size_bytes": 162410,
+      "lines": 529,
+      "size_bytes": 163440,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

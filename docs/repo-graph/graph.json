@@ -1472,6 +1472,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/fixtures/books/converted-md.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/converted-nb.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
       "id": "file:frontend/e2e/fixtures/books/converted.epub",
       "type": "file",
       "role": "config",
@@ -1497,6 +1509,12 @@
     },
     {
       "id": "file:frontend/e2e/gate-g5.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/gate-g6.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -6197,6 +6215,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/gate-g6.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/journey.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8159,6 +8182,11 @@
       "type": "imports",
       "from": "file:tools/make_converted_fixture.py",
       "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/make_converted_fixture.py",
+      "to": "file:backend/convert/sources.py"
     },
     {
       "type": "imports",

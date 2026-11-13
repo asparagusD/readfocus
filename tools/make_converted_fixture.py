@@ -41,6 +41,40 @@ def build() -> bytes:
     return build_epub("Converted fixture", "ReadFocus", chapters, images, modified="2026-11-13T00:00:00Z")
 
 
+def converted(name: str, data: bytes) -> bytes:
+    """A source run through the upload's converter (C19.2) and packed, as the server stores it (Gate G6)."""
+    from backend.convert.sources import convert_upload
+
+    _, book = convert_upload(name, data)
+    return build_epub(book.title, "ReadFocus", book.chapters, book.images, modified="2026-11-13T00:00:00Z")
+
+
+def markdown_zip() -> bytes:
+    """backend/tests/fixtures/sources/sample.md zipped with the two figures it names (one remote image stays out)."""
+    import io
+    import zipfile
+
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as archive:
+        for name, data in (("notes/sample.md", (SOURCES / "sample.md").read_bytes()),
+                           ("notes/figures/spectrum.png", png(240, 120, (60, 110, 150))),
+                           ("notes/figures/filter.svg", SVG)):
+            info = zipfile.ZipInfo(name, date_time=(2026, 11, 13, 0, 0, 0))
+            archive.writestr(info, data)
+    return out.getvalue()
+
+
+SOURCES = ROOT / "backend" / "tests" / "fixtures" / "sources"
+GATE = {
+    "converted-md.epub": lambda: converted("notes.zip", markdown_zip()),
+    "converted-nb.epub": lambda: converted("lab.ipynb", (SOURCES / "sample.ipynb").read_bytes()),
+}
+
+
 if __name__ == "__main__":
     OUT.write_bytes(build())
     print(f"{OUT.relative_to(ROOT)}: {OUT.stat().st_size} bytes")
+    for name, make in GATE.items():
+        target = OUT.parent / name
+        target.write_bytes(make())
+        print(f"{target.relative_to(ROOT)}: {target.stat().st_size} bytes")

@@ -402,11 +402,13 @@ def pdf_contents(file_bytes: bytes, blocks: list[list[dict]], chunks: list[str])
     """The PDF outline as [{title, page, chunk_index, block_id}]; [] when there is none."""
     from pypdf import PdfReader
 
-    reader = PdfReader(io.BytesIO(file_bytes))
+    from backend.services import pdf_text
+
     starts, total = [], 0  # each page's first non-space character in the joined text
-    for page in reader.pages:
+    for text in pdf_text.page_texts(file_bytes):  # a few pages per reader (C18.G)
         starts.append(total)
-        total += len(skeleton((page.extract_text() or "").replace("\x00", "")))
+        total += len(skeleton(text.replace("\x00", "")))
+    reader = PdfReader(io.BytesIO(file_bytes))  # the outline and its page numbers only: no page's text is read
     ends, out = _chunk_ends(chunks), []
 
     def walk(items):

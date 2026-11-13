@@ -125,13 +125,23 @@ async def ingest(path: Path, sampler: Sampler) -> dict:
     for r in regions:
         kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
     chunks = db.tables.get("chunks", [])
-    return {"book": path.name, "status": result.get("status"), "seconds": round(seconds, 1),
-            "rss_before_mb": round(before / MB, 1), "rss_peak_mb": max([round(sampler.peak / MB, 1), *phases.values()]),
-            "rss_peak_by_phase_mb": phases,
-            "chunks": len(chunks), "with_prose": sum(1 for c in chunks if c.get("prose")),
-            "garbled_sentences_counted": sum(c.get("garbled_sentences") or 0 for c in chunks),
-            "regions": kinds, "region_jobs": [j["status"] for j in db.tables.get("processing_jobs", [])],
-            **scan(db)}
+    row = {"book": path.name, "status": result.get("status"), "seconds": round(seconds, 1),
+           "rss_before_mb": round(before / MB, 1), "rss_peak_mb": max([round(sampler.peak / MB, 1), *phases.values()]),
+           "rss_peak_by_phase_mb": phases,
+           "chunks": len(chunks), "with_prose": sum(1 for c in chunks if c.get("prose")),
+           "garbled_sentences_counted": sum(c.get("garbled_sentences") or 0 for c in chunks),
+           "regions": kinds, "region_jobs": [j["status"] for j in db.tables.get("processing_jobs", [])],
+           **scan(db)}
+    # What the in-memory database itself holds (production keeps these rows in Postgres): RSS with it, then without.
+    from backend.services import pdf_text
+
+    pdf_text.release_memory()
+    with_db = sampler.process.memory_info().rss
+    db.tables.clear()
+    regions = chunks = None
+    pdf_text.release_memory()
+    row["memory_db_mb"] = round((with_db - sampler.process.memory_info().rss) / MB, 1)
+    return row
 
 
 def main() -> int:

@@ -133,3 +133,11 @@ def test_paging_orders_by_a_unique_tiebreak(monkeypatch):
     monkeypatch.setattr(prose_job, "PAGE", 4)
     fetched = prose_job._rows("page_regions", "*", BOOK, "order_in_page")
     assert sorted(r["id"] for r in fetched) == [r["id"] for r in rows]
+
+
+def test_regions_are_loaded_with_only_the_meta_prose_needs(db):
+    db.tables["page_regions"][1]["meta"].update({"fonts": {"CMR10": 9}, "garble": {"ratio": 0}, "inline_boxes": [[1, 2, 3, 4]],
+                                                 "lines": 1, "size": 10})
+    regions, _chunks = prose_job.load(BOOK)
+    assert regions[1]["meta"] == {"equation_number": "2.1"}
+    assert set(regions[1]) == {"id", "kind", "page", "text", "order_in_page", "spine_index", "anchor", "meta"}

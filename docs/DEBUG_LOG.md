@@ -3157,3 +3157,74 @@ failed, 14 passed), pass with it (18 passed).
 
 ### Commit
 fix(regions): replace garbled sentences in prose with unreadable placeholders
+
+## 2026-11-13 C18.G — a 769-page PDF runs out of memory in the 512 MB container
+
+**Status:** fixed
+
+### Symptom
+Gate G5, the whole pipeline (ingestion, regions job, prose rebuild) on the
+shelf's Calculus Volume 1 (52 MB, 769 pages) in the Render-sized container:
+killed by the kernel. Expected: peak under Render Free's 512 MB.
+
+    docker run --rm --network none --memory=512m --memory-swap=512m -v <repo>:/repo:ro -w /repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e PYTHONPATH=/repo readfocus-c18g-measure python scripts/dev/gate_g5.py --book calculus-volume-1.pdf
+    (no output after "model loaded, RSS 211.4 MB"; exit 137, State.OOMKilled true)
+
+With `--memory=2g`: peaks ingest 749 MB, regions job 848 MB, prose rebuild
+1,036 MB (each phase's peak includes what earlier phases kept). The other
+four shelf books finish at 402 to 464 MB.
+
+### Repro
+The command above (12 minutes; fails every time at 512 MB).
+
+### Hypotheses
+1. Each pypdf parse of the whole file costs about 190 MB at once, and the
+   pipeline parses it three times (ingestion's text, `book_structure`'s
+   page starts for the outline, the prose rebuild's page texts); on Linux
+   the freed memory stays with the process, so each phase starts higher.
+   Evidence (step-by-step profile in the container, `/proc/self/status`):
+   file read 299 MB, every page's text 493 MB, after `gc` and
+   `malloc_trim(0)` 303 MB; `build_with_paths` 496 MB, trimmed 305 MB;
+   regions job 461 MB, trimmed 410 MB; page texts again 590 MB, trimmed
+   415 MB. Ruled out if a batched parse peaks as high. Result: confirmed.
+   One reader for all 769 pages: 88 to 288 MB; a fresh reader per 50
+   pages: 88 to 136 MB peak (20 pages: 129 MB), and the text of every page
+   identical (same sha256 of all 769 texts).
+2. pdfplumber holds the regions job's pages. Partly: 364 to 461 MB over 769
+   pages with the file reopened per 20 pages, 410 MB after a trim; smaller
+   than 1.
+
+### Root cause
+`backend/services/book_ingestor.py` `extract_text_from_pdf`,
+`book_structure.pdf_contents` and `prose_job.pdf_page_texts` each parsed
+the whole PDF with one pypdf reader (about 200 MB for this book), and on
+Linux no phase gave freed memory back, so the job's peaks stacked; the
+prose rebuild also held every region's full `meta` (fonts, garble scores,
+boxes) for 15,000 regions.
+
+### Fix
+`backend/services/pdf_text.py` (new): `page_texts` reads 50 pages per fresh
+reader (same text for every page), used by all three; `release_memory`
+(`gc` + glibc `malloc_trim(0)`, a no-op elsewhere) after ingestion's parse,
+after each ingest batch, after each regions batch and once the prose plan
+is built. `prose_job.load` keeps only the six `meta` keys prose reads.
+`book_structure.pdf_contents` still reads the page texts (batched) for its
+page starts: passing them from ingestion would change the stubbed
+`extract_text_from_pdf` seam the ingestion tests use; it costs time, not
+memory.
+
+Container, 512 MB, Calculus: before, killed (2 GB cap: 749 / 848 / 1,036
+MB); after the batching and trims, finished at 398 / 476 / 524 MB; after the
+slim regions, finished at 399 / 475 / 502 MB, the gate's in-memory
+database holding 12 MB of that.
+
+### Regression test
+`backend/tests/test_pdf_text.py` (failed at collection without the module):
+batched text equals one reader's on every page, ingestion text unchanged,
+the structure reads through the batched reader, `release_memory` never
+raises; `test_prose_job.py::test_regions_are_loaded_with_only_the_meta_prose_needs`
+(failed before `_slim`). Memory itself is checked by hand in the container
+(`scripts/dev/gate_g5.py`), not in pytest.
+
+### Commit
+fix(ingest): read PDF text a few pages at a time and hand memory back

@@ -14,11 +14,11 @@ left alone. `after_regions` never raises: the book stays readable either way.
 """
 
 import asyncio
-import io
 
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
 from backend.regions import prose
+from backend.services import pdf_text
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
@@ -27,29 +27,38 @@ BATCH = 16   # chunks embedded and questioned together
 
 
 def pdf_page_texts(file_bytes: bytes) -> list[str]:
-    """pypdf's text of every page, empty pages included, as ingestion reads it."""
-    from pypdf import PdfReader
-
-    return [(page.extract_text() or "").replace("\x00", "") for page in PdfReader(io.BytesIO(file_bytes)).pages]
+    """pypdf's text of every page, empty pages included, as ingestion reads it (a few pages per reader, C18.G)."""
+    return [text.replace("\x00", "") for text in pdf_text.page_texts(file_bytes)]
 
 
-def _rows(table: str, columns: str, book_id: str, order: str) -> list[dict]:
+def _rows(table: str, columns: str, book_id: str, order: str, shape=None) -> list[dict]:
+    """Every row of the book, PAGE at a time; `shape` trims each page of rows as it arrives."""
     out, start = [], 0
     while True:
         rows = (supabase.table(table).select(columns).eq("book_id", book_id).order(order).order("id")  # id: a unique tiebreak
                 .range(start, start + PAGE - 1).execute().data or [])
-        out += rows
+        out += [shape(row) for row in rows] if shape else rows
         if len(rows) < PAGE:
             return out
         start += PAGE
 
 
 CHUNK_COLUMNS = "*"  # works before migration 020 adds prose, anchors and garbled_sentences
+REGION_COLUMNS = ("id", "kind", "page", "text", "order_in_page", "spine_index", "anchor", "meta")
+# What backend/regions/prose.py reads of a region's meta; fonts, garble scores and boxes are left behind (C18.G:
+# kept, they were most of the rebuild's memory on a 769-page book).
+PROSE_META = ("equation_number", "label", "caption", "alt", "labels", "inline_math")
+
+
+def _slim(region: dict) -> dict:
+    meta = region.get("meta") or {}
+    return {**{key: region.get(key) for key in REGION_COLUMNS},
+            "meta": {key: meta[key] for key in PROSE_META if key in meta}}
 
 
 def load(book_id: str) -> tuple[list[dict], list[dict]]:
-    """The book's stored regions and chunks (in chunk order)."""
-    regions = _rows("page_regions", "*", book_id, "order_in_page")
+    """The book's stored regions (only what prose needs) and chunks (in chunk order)."""
+    regions = _rows("page_regions", ", ".join(REGION_COLUMNS), book_id, "order_in_page", _slim)
     chunks = sorted(_rows("chunks", CHUNK_COLUMNS, book_id, "chunk_index"), key=lambda row: row["chunk_index"])
     return regions, chunks
 
@@ -84,6 +93,7 @@ def plan(book: dict, file_bytes: bytes, regions: list[dict], chunks: list[dict])
 def rebuild(book: dict, file_bytes: bytes) -> dict:
     """Store every chunk's prose, anchors and garbled count; embed and question again the chunks that changed."""
     writes, report = plan(book, file_bytes, *load(book["id"]))
+    pdf_text.release_memory()  # the regions and page texts are no longer needed (C18.G)
     for row, values, changed in writes:
         if not changed:
             supabase.table("chunks").update(values).eq("id", row["id"]).execute()

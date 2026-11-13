@@ -23,8 +23,8 @@ from statistics import median
 
 from backend.regions.classify import classify_page
 from backend.regions.garble import garble_score
+from backend.services import pdf_text, prose_job
 from backend.services import processing_jobs as jobs
-from backend.services import prose_job
 from backend.services.supabase_client import supabase
 
 PAGES_PER_BATCH = 20
@@ -133,6 +133,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         for first, last in batches(total, job["cursor"], PAGES_PER_BATCH):
             pages = await asyncio.to_thread(_read, file_bytes, first, last)
             _store(book, first, last, pages)
+            del pages
+            pdf_text.release_memory()  # this batch's pdfplumber pages go back (C18.G)
             jobs.advance(job["id"], last, total)
         jobs.finish(job["id"], total)
         prose = await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions

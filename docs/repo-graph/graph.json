@@ -690,6 +690,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/pdf_text.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/processing_jobs.py",
       "type": "file",
       "role": "service",
@@ -1057,6 +1063,12 @@
     },
     {
       "id": "file:backend/tests/test_optimizer_pace.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_pdf_text.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -4479,6 +4491,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/processing_jobs.py"
     },
     {
@@ -4490,6 +4507,11 @@
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_structure.py",
+      "to": "file:backend/services/pdf_text.py"
     },
     {
       "type": "imports",
@@ -4554,6 +4576,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/prose_job.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/prose_job.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -4595,6 +4622,11 @@
       "type": "imports",
       "from": "file:backend/services/region_job.py",
       "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/services/pdf_text.py"
     },
     {
       "type": "imports",
@@ -5445,6 +5477,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_optimizer_pace.py",
       "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_pdf_text.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_pdf_text.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_pdf_text.py",
+      "to": "file:backend/services/pdf_text.py"
     },
     {
       "type": "imports",
@@ -7470,6 +7517,11 @@
       "type": "imports",
       "from": "file:scripts/dev/gate_g5.py",
       "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/pdf_text.py"
     },
     {
       "type": "imports",

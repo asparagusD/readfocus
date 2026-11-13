@@ -491,5 +491,7 @@
   "scripts/dev/g5_page_diff.py": "Gate G5: compares PDF.js page renders with pypdfium2 (PDFium) renders: ink one render lacks within 1 px, raster image areas left out, connected blobs of at least 3 x 3 px and over 9 px fail; writes diff images.",
   "scripts/dev/g5_epub_expect.py": "Gate G5: counts each test EPUB's spine images (packaged and remote), figcaptions and MathML from the markup, plus package and spine images, into JSON for the renderer walk.",
   "frontend/e2e/gate-g5.spec.js": "Gate G5 renderer walk (playwright.gate.config.js, not a standard check): pages through each test EPUB in the original view with all API calls mocked and checks every packaged image loads (no remote one), captions, figcaptions and MathML boxes against g5_epub_expect.py.",
-  "frontend/playwright.gate.config.js": "Playwright config for Gate G5's EPUB renderer walk: the e2e config with only gate-g5.spec.js and a 10-minute timeout."
+  "frontend/playwright.gate.config.js": "Playwright config for Gate G5's EPUB renderer walk: the e2e config with only gate-g5.spec.js and a 10-minute timeout.",
+  "backend/services/pdf_text.py": "PDF page text with bounded memory (C18.G): page_texts reads every page's pypdf text 50 pages per fresh reader (the same text as one reader, about a quarter of the memory); release_memory runs gc and glibc malloc_trim(0) so a phase's freed memory goes back on Linux. Used by ingestion, book_structure's page starts and the prose rebuild.",
+  "backend/tests/test_pdf_text.py": "Pytest for backend/services/pdf_text.py: batched page text equals one reader's on sample.pdf, ingestion text unchanged, book_structure reads page starts through the batched reader, release_memory never raises."
 }

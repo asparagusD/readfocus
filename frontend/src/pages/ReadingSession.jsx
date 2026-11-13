@@ -9,6 +9,7 @@ import { Reader } from '../originalview/Reader';
 import { ReaderControls } from '../originalview/ReaderControls';
 import { useLamplight } from '../originalview/useLamplight';
 import { createRegionSource } from '../originalview/pdf/regions';
+import { createOcrSource } from '../originalview/pdf/ocr';
 import { beyond, chunkAt, compare, folioShort, snippetsFor } from '../originalview/today';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { createReadAhead } from '../reader/readAhead';
@@ -91,6 +92,31 @@ export function ReadingSession() {
   // C18.6d: a PDF's math, code and figure boxes, so lookup skips them (an EPUB's markup already says).
   const regions = useMemo(() => (kind === 'pdf' ? createRegionSource(fetchApi, bookId) : null), [kind, bookId]);
   const { theme, original, toggleOriginal } = useLamplight(bookId);
+  // C19.4: scanned pages get a text layer read by OCR in this browser. A fully scanned book with no chunks
+  // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
+  const pagesOnly = Boolean(sessionData?.pages_only);
+  const opened = Boolean(sessionData);
+  const ocr = useMemo(() => (kind === 'pdf' && opened ? createOcrSource(fetchApi, bookId, {
+    ahead: pagesOnly, skipFor: async (page) => { await regions?.load(page); return regions?.boxesOf(page) ?? []; },
+  }) : null), [kind, opened, bookId, pagesOnly, regions]);
+  const [ocrProgress, setOcrProgress] = useState(null);
+  useEffect(() => {
+    if (!ocr) return undefined;
+    ocr.ready().then(setOcrProgress);
+    return ocr.subscribe(setOcrProgress);
+  }, [ocr]);
+  const preparingFirst = pagesOnly && ocrProgress?.reingest;
+  useEffect(() => { // once the book has been read again from its OCR text, its first session can start
+    if (!preparingFirst) return undefined;
+    const timer = setInterval(() => {
+      fetchApi(`/books/${bookId}/status`).then((s) => {
+        if (s?.status === 'ready' && s?.total_chunks > 0) window.location.reload();
+      }).catch(() => {});
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [preparingFirst, bookId]);
+  const scannedCount = ocrProgress?.scanned?.length ?? sessionData?.scanned_pages?.length ?? 0;
+  const readCount = ocrProgress?.done?.length ?? 0;
 
   // Today's reading in the book (C17.5): where its chunks start and where the next chunk begins.
   const [bounds, setBounds] = useState(null); // { start, end, starts: [{ chunk_index, loc }] }
@@ -227,7 +253,7 @@ export function ReadingSession() {
   const handleAbandon = () => navigate('/');
 
   // The planner's reason, as a note over the first page of today's reading; the closing page with the test.
-  const note = useMemo(() => sessionData && (
+  const note = useMemo(() => sessionData && !pagesOnly && (
     <>
       <ReadingLamp className="rf-note-lamp" />
       <p>
@@ -235,9 +261,15 @@ export function ReadingSession() {
         {sessionData.reason ? ` ${sessionData.reason}` : ''}
       </p>
     </>
-  ), [sessionData]);
+  ), [sessionData, pagesOnly]);
   // The closing page mounts only when it is shown, so its lamp's one glow pulse (moment 3) lands then.
-  const closing = (
+  const closing = pagesOnly ? (
+    <>
+      <ReadingLamp className="rf-end-lamp" />
+      <h2 className="rf-end-title">That's the end of the book.</h2>
+      <p className="rf-end-text">Your first session starts once every page has been read.</p>
+    </>
+  ) : (
     <>
       <ReadingLamp className="rf-end-lamp" />
       <h2 className="rf-end-title">That's today's reading.</h2>
@@ -287,6 +319,13 @@ export function ReadingSession() {
               <span>Today's reading</span>
             </button>
           )}
+          {pagesOnly ? (
+            <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Pages read">
+              <span className="rf-session-time" role="status">
+                {preparingFirst ? 'Preparing your first session…' : `Reading this scan: ${readCount} of ${scannedCount} pages`}
+              </span>
+            </div>
+          ) : (
           <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Session">
             <span className="rf-session-time" role="timer" aria-label={`Time left ${formatTime(timeLeft)}`}>{formatTime(timeLeft)}</span>
             <button type="button" className="rf-tool" onClick={() => setTimerStatus(running ? 'paused' : 'running')}
@@ -302,6 +341,7 @@ export function ReadingSession() {
               <X size={18} strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
+          )}
         </ReaderToolbar>
       </div>
 
@@ -328,6 +368,7 @@ export function ReadingSession() {
           lookupClient={lookupClient}
           hoverLookup={hoverLookup}
           regions={regions}
+          ocr={ocr}
         />
       </main>
 

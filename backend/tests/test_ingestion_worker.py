@@ -11,7 +11,7 @@ from backend.dependencies import get_current_user
 from backend.main import app
 from backend.nlp import embedder
 from backend.routers import books
-from backend.services import book_ingestor, ingestion_worker, region_job
+from backend.services import book_ingestor, ingestion_worker, ocr_pages, region_job
 from backend.services import processing_jobs as jobs
 from backend.tests.memory_db import MemoryDb
 
@@ -22,7 +22,7 @@ LONG_AGO = jobs.iso(datetime.now(UTC) - timedelta(hours=1))
 @pytest.fixture
 def db(monkeypatch):
     fake = MemoryDb()
-    for module in (book_ingestor, jobs, ingestion_worker, books):
+    for module in (book_ingestor, jobs, ingestion_worker, books, ocr_pages):
         monkeypatch.setattr(module, "supabase", fake)
     monkeypatch.setattr(embedder, "embed", lambda texts: np.zeros((len(texts), embedder.EMBEDDING_DIM), dtype=np.float32))
     monkeypatch.setattr(book_ingestor.question_agent, "run", lambda book_id, chunk_ids: None)
@@ -31,7 +31,7 @@ def db(monkeypatch):
         return None
 
     monkeypatch.setattr(region_job, "after_ingest", no_regions)
-    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data: ["unused"])
+    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data, *a, **k: ["unused"])
     monkeypatch.setattr(book_ingestor, "chunk_text", lambda pages, target_words=600: [f"c{i}" for i in range(9)])
     return fake
 
@@ -80,7 +80,7 @@ def client(db):
 def test_upload_creates_a_job_and_ingests_the_book(client, db):
     resp = client.post("/books/upload", files={"file": ("b.pdf", b"%PDF", "application/pdf")},
                        data={"title": "t", "author": "a"})
-    assert resp.status_code == 200 and set(resp.json()) == {"book_id", "status"}
+    assert resp.status_code == 200 and set(resp.json()) == {"book_id", "status", "source_format", "notes"}  # the last two since C19.2c
     book_id = resp.json()["book_id"]
     status = client.get(f"/books/{book_id}/status").json()
     assert status["status"] == "ready" and status["total_chunks"] == 9

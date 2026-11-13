@@ -44,6 +44,14 @@ def create(book_id: str, user_id: str, now: datetime | None = None, *, kind: str
     return get(book_id, kind=kind)
 
 
+def requeue(book_id: str, user_id: str, now: datetime | None = None, *, kind: str = INGEST) -> dict | None:
+    """The book's job of this kind, made queued from the start again (a book re-ingested from OCR text, C19.4)."""
+    create(book_id, user_id, now, kind=kind)
+    supabase.table(TABLE).update({"status": "queued", "progress": 0, "cursor": 0, "error": None, "attempts": 0,
+                                  "updated_at": iso(_now(now))}).eq("book_id", book_id).eq("kind", kind).execute()
+    return get(book_id, kind=kind)
+
+
 def get(book_id: str, *, kind: str = INGEST) -> dict | None:
     rows = supabase.table(TABLE).select("*").eq("book_id", book_id).eq("kind", kind).execute().data
     return rows[0] if rows else None

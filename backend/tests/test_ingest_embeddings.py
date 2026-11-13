@@ -11,7 +11,13 @@ import numpy as np
 import pytest
 
 from backend.nlp import embedder
-from backend.services import book_ingestor, covers, ingestion_worker, region_job
+from backend.services import (
+    book_ingestor,
+    covers,
+    ingestion_worker,
+    ocr_pages,
+    region_job,
+)
 from backend.services import processing_jobs as jobs
 from backend.tests.memory_db import MemoryDb
 
@@ -26,7 +32,7 @@ class Crash(RuntimeError):
 def env(monkeypatch):
     """A book of `count` chunks in Storage, a fake embedder and a question agent that upserts one row per chunk."""
     db = MemoryDb()
-    for module in (book_ingestor, jobs, ingestion_worker):
+    for module in (book_ingestor, jobs, ingestion_worker, ocr_pages):
         monkeypatch.setattr(module, "supabase", db)
     state = {"embed_calls": [], "crash_on_embed": None, "events": []}
 
@@ -45,7 +51,7 @@ def env(monkeypatch):
 
     monkeypatch.setattr(embedder, "embed", fake_embed)
     monkeypatch.setattr(book_ingestor.question_agent, "run", fake_questions)
-    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data: ["unused"])
+    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data, *a, **k: ["unused"])
     state["covers"] = []  # (book_id, title, author) per cover lookup; no network in these tests
     monkeypatch.setattr(covers, "ensure_cover", lambda *args: state["covers"].append(args))
     state["regions"] = []  # (book, file_bytes, ingest job status) per hand-off to the regions job

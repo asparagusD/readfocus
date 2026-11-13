@@ -150,6 +150,22 @@ def owns_book(user_id: str, book_id: str) -> bool:
     return bool(supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute().data)
 
 
+def scanned_book(user_id: str, book_id: str) -> dict | None:
+    """The pages-only opening of a fully scanned book with no chunks yet (C19.4), else None.
+
+    No session, no test: the reader turns the pages while each scanned page is read by OCR in the
+    browser; once all are, the book is ingested again and its first session can start.
+    """
+    rows = supabase.table("books").select("scanned_pages, total_chunks").eq("id", book_id).eq(
+        "user_id", user_id).execute().data or []
+    if not rows or not rows[0].get("scanned_pages") or rows[0].get("total_chunks"):
+        return None
+    book, _ = read_book(user_id, book_id, 0)
+    return {"session_id": None, "pages_only": True, "chunk_indices": [], "chunks": [], "position": None,
+            "focus_duration_minutes": 0, "reason": "", "book": book, "chapter_before": None,
+            "scanned_pages": rows[0]["scanned_pages"]}
+
+
 @router.post("/start")
 async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     # 0. Only the caller's own book: nothing is planned, created or read for anyone else's
@@ -168,6 +184,9 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         
     chunk_indices = plan.chunk_indices
     if not chunk_indices:
+        pages_only = await run_in_threadpool(scanned_book, user_id, req.book_id)
+        if pages_only:  # C19.4: a fully scanned book opens with no session until its OCR text is read
+            return pages_only
         raise HTTPException(status_code=400, detail="No more chunks available to read.")
         
     # 2-3. Fetch the chunk content and create the session row; neither needs the other, so they run at once

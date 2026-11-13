@@ -37,6 +37,13 @@
       "handler": "get_book_file"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/ocr",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/ocr",
+      "handler": "get_ocr"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/pages",
       "type": "endpoint",
       "method": "GET",
@@ -105,6 +112,13 @@
       "method": "POST",
       "path": "/books/upload",
       "handler": "upload_book"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/ocr",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/ocr",
+      "handler": "post_ocr"
     },
     {
       "id": "endpoint:POST /books/{book_id}/resume",
@@ -498,6 +512,54 @@
       "language": "python"
     },
     {
+      "id": "file:backend/convert/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/assets.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/epub_builder.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/image_size.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/markdown.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/notebook.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/sources.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/convert/texmath.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/cors.py",
       "type": "file",
       "role": "lib",
@@ -642,6 +704,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/ocr.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/sessions.py",
       "type": "file",
       "role": "router",
@@ -685,6 +753,12 @@
     },
     {
       "id": "file:backend/services/lookup.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/ocr_pages.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -760,6 +834,18 @@
       "type": "file",
       "role": "test",
       "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/sources/sample.ipynb",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/sources/sample.md",
+      "type": "file",
+      "role": "test",
+      "language": "markdown"
     },
     {
       "id": "file:backend/tests/memory_db.py",
@@ -924,6 +1010,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_convert_markdown.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_convert_notebook.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_cors.py",
       "type": "file",
       "role": "test",
@@ -943,6 +1041,12 @@
     },
     {
       "id": "file:backend/tests/test_embedder.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_epub_builder.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1008,6 +1112,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_image_size.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_ingest_embeddings.py",
       "type": "file",
       "role": "test",
@@ -1051,6 +1161,12 @@
     },
     {
       "id": "file:backend/tests/test_no_paid_ai.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_ocr_pages.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1153,6 +1269,12 @@
     },
     {
       "id": "file:backend/tests/test_text.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_upload_converted.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1326,6 +1448,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/converted.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/dashboard.spec.js",
       "type": "file",
       "role": "config",
@@ -1342,6 +1470,24 @@
       "type": "file",
       "role": "config",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/converted-md.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/converted-nb.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/e2e/fixtures/books/converted.epub",
+      "type": "file",
+      "role": "config",
+      "language": "text"
     },
     {
       "id": "file:frontend/e2e/fixtures/books/fixed.epub",
@@ -1368,6 +1514,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/gate-g6.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/journey.spec.js",
       "type": "file",
       "role": "config",
@@ -1387,6 +1539,12 @@
     },
     {
       "id": "file:frontend/e2e/login.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/ocr.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -1489,6 +1647,12 @@
     },
     {
       "id": "file:frontend/scripts/check-images.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/copy-ocr.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -2224,6 +2388,18 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/ocr.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/ocr.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/originalview/pdf/pageCache.js",
@@ -3150,13 +3326,43 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/021_source_format.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/022_scanned_pages.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
       "language": "python"
     },
     {
+      "id": "file:tools/make_converted_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/make_notebook_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:tools/make_reader_fixtures.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/make_scanned_fixture.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -3304,6 +3510,10 @@
       "type": "table"
     },
     {
+      "id": "table:page_ocr",
+      "type": "table"
+    },
+    {
       "id": "table:page_regions",
       "type": "table"
     },
@@ -3402,6 +3612,16 @@
       "to": "table:chunks"
     },
     {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/021_source_format.sql",
+      "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/022_scanned_pages.sql",
+      "to": "table:books"
+    },
+    {
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/CalibrationFlow.jsx",
       "to": "endpoint:POST /auth/profile/calibrate"
@@ -3460,6 +3680,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:GET /auth/profile"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:GET /books/{book_id}/status"
     },
     {
       "type": "calls_endpoint",
@@ -3749,6 +3974,16 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/ocr.py",
+      "to": "endpoint:GET /books/{book_id}/ocr"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/ocr.py",
+      "to": "endpoint:POST /books/{book_id}/ocr"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:GET /sessions/{session_id}"
     },
@@ -3871,6 +4106,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/018_page_regions.sql",
       "to": "table:page_regions"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/022_scanned_pages.sql",
+      "to": "table:page_ocr"
     },
     {
       "type": "graph_edge",
@@ -4250,6 +4490,71 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/convert/assets.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/epub_builder.py",
+      "to": "file:backend/convert/image_size.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/markdown.py",
+      "to": "file:backend/convert/assets.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/markdown.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/markdown.py",
+      "to": "file:backend/convert/texmath.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/notebook.py",
+      "to": "file:backend/convert/assets.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/notebook.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/notebook.py",
+      "to": "file:backend/convert/markdown.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/notebook.py",
+      "to": "file:backend/convert/texmath.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/sources.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/sources.py",
+      "to": "file:backend/convert/assets.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/sources.py",
+      "to": "file:backend/convert/markdown.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/convert/sources.py",
+      "to": "file:backend/convert/notebook.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/dependencies.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -4297,6 +4602,11 @@
       "type": "imports",
       "from": "file:backend/main.py",
       "to": "file:backend/routers/mastery.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/ocr.py"
     },
     {
       "type": "imports",
@@ -4396,6 +4706,16 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/convert/sources.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/dependencies.py"
     },
     {
@@ -4445,6 +4765,36 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/services/ocr_pages.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/sessions.py",
       "to": "file:backend/agents/evaluator_agent.py"
     },
@@ -4471,6 +4821,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/agents/question_generation/agent.py"
     },
     {
@@ -4487,6 +4842,11 @@
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/ocr_pages.py"
     },
     {
       "type": "imports",
@@ -4551,6 +4911,21 @@
     {
       "type": "imports",
       "from": "file:backend/services/lookup.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ocr_pages.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ocr_pages.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ocr_pages.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -5120,6 +5495,51 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/convert/markdown.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/convert/texmath.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_markdown.py",
+      "to": "file:backend/tests/test_epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_notebook.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_notebook.py",
+      "to": "file:backend/convert/markdown.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_notebook.py",
+      "to": "file:backend/convert/notebook.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_convert_notebook.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_cors.py",
       "to": "file:backend/cors.py"
     },
@@ -5162,6 +5582,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_embedder.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_epub_builder.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_epub_builder.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_epub_builder.py",
+      "to": "file:backend/services/book_ingestor.py"
     },
     {
       "type": "imports",
@@ -5315,6 +5750,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_image_size.py",
+      "to": "file:backend/convert/image_size.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_image_size.py",
+      "to": "file:backend/tests/test_epub_builder.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -5332,6 +5777,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/ocr_pages.py"
     },
     {
       "type": "imports",
@@ -5377,6 +5827,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingestion_worker.py",
       "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/ocr_pages.py"
     },
     {
       "type": "imports",
@@ -5452,6 +5907,51 @@
       "type": "imports",
       "from": "file:backend/tests/test_no_paid_ai.py",
       "to": "file:tools/no_paid_ai.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/routers/ocr.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/services/ocr_pages.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ocr_pages.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -5665,7 +6165,37 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/convert/sources.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/tests/test_book_files.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_upload_converted.py",
+      "to": "file:backend/tests/test_epub_builder.py"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/calibration.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/converted.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -5681,6 +6211,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/gate-g5.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/gate-g6.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -5701,6 +6236,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/login.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/ocr.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -6606,12 +7146,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/ocr.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/originalview/pdf/pdf.css"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/ocr.test.js",
+      "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
     {
       "type": "imports",
@@ -6982,6 +7532,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
     {
       "type": "imports",
@@ -7625,6 +8180,21 @@
     },
     {
       "type": "imports",
+      "from": "file:tools/make_converted_fixture.py",
+      "to": "file:backend/convert/epub_builder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/make_converted_fixture.py",
+      "to": "file:backend/convert/sources.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/make_converted_fixture.py",
+      "to": "file:tools/make_reader_fixtures.py"
+    },
+    {
+      "type": "imports",
       "from": "file:tools/repo_graph/build.py",
       "to": "file:tools/repo_graph/inventory.py"
     },
@@ -7835,6 +8405,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/ocr.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/ocr.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
       "to": "table:books"
     },
@@ -7872,6 +8452,11 @@
       "type": "reads_table",
       "from": "file:backend/services/lookup.py",
       "to": "table:term_lookups"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/ocr_pages.py",
+      "to": "table:page_regions"
     },
     {
       "type": "reads_table",
@@ -8125,6 +8710,11 @@
     },
     {
       "type": "writes_table",
+      "from": "file:backend/routers/ocr.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
       "from": "file:backend/routers/sessions.py",
       "to": "table:reading_progress"
     },
@@ -8162,6 +8752,16 @@
       "type": "writes_table",
       "from": "file:backend/services/lookup.py",
       "to": "table:term_lookups"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/ocr_pages.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/ocr_pages.py",
+      "to": "table:page_regions"
     },
     {
       "type": "writes_table",

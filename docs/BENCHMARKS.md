@@ -1050,6 +1050,64 @@ httpx and the Supabase client already loaded: 55.8 → 57.1 MB RSS (+1.3
 MB). No new dependency (httpx was already pinned). The in-process LRU
 holds at most 2,000 compact answers.
 
+### Markdown and notebook conversion (C19.2a, 2026-11-13)
+
+New: `markdown-it-py==4.2.0`, `mdurl==0.1.2`, `mdit-py-plugins==0.6.1`
+(MIT, licence files read after install) and `latex2mathml==3.81.1` (MIT in
+its metadata); pure Python, about 250 KB of wheels. Windows, Python 3.11,
+fresh process, measured with psutil:
+
+| Step | RSS |
+|---|---|
+| `import backend.main` (the app as served) | 129.1 MB |
+| + `backend.convert.markdown` and the EPUB builder | +2.5 MB |
+| converting `sample.md` x 40 (31,960 characters, 80 chapters, 67 KB EPUB) | +2.6 MB more, 108 ms |
+
+Command: the inline script recorded in the C19.2a PROGRESS row. Not
+measured in the Linux container; well inside the 450 MB bar either way.
+
+### pandoc for LaTeX sources (C19.3, measured, not adopted; 2026-11-13)
+
+A throwaway image: `readfocus-c18g-measure` (the C18.G container, 917 MB)
+plus `apt-get install --no-install-recommends pandoc` (Debian's pandoc
+3.1.11.1, GPL-2.0-or-later). In a `--memory=512m` container, psutil polling
+the pandoc process every 10 ms, `pandoc <file> -f latex -t epub3 --mathml`:
+
+| What | Result |
+|---|---|
+| Image | 917 MB -> 1.16 GB (+243 MB; `/usr/bin/pandoc` is 189 MB) |
+| A 1.4 KB LaTeX source (sections, math, align, 3 figures, a table) | 0.05 s, peak RSS 71 MB |
+| The same body 40 times (41 KB, a long paper) | 0.31 s, peak RSS 119 MB |
+
+Against Gate G5's container peaks (Calculus Volume 1: 399 MB ingesting,
+475 MB in the regions job, 502 MB in the prose rebuild, under the 512 MB
+limit), a 70-120 MB pandoc process during another book's ingestion would
+pass the limit, so pandoc was not added and C19.3 was skipped.
+
+### In-browser OCR for scanned pages (C19.4b, 2026-11-13)
+
+tesseract.js 7.0.0 and tesseract.js-core 7.0.0 (Apache-2.0, licence files
+read after install), English model from @tesseract.js-data/eng 1.0.0 (MIT
+package; `4.0.0_best_int`). Served from our origin (`/ocr/`, copied at
+build): worker 111 KB, one core of three by browser support (3.9 MB each,
+wasm inline), model 2.95 MB gzipped; about 7 MB on a reader's first OCR,
+then cached by the browser (the model also in IndexedDB). The tesseract.js
+library is a lazy chunk of 17.2 KB (7.2 KB gzip); the entry bundle does not
+include it. The server gains no dependency or memory.
+
+Seconds per page, `npx playwright test e2e/ocr.spec.js -g "fully scanned"`
+three times (headless Edge on this machine, the app from `vite preview` on
+loopback, the 2-page `scanned.pdf` at 150 dpi, 185 words a page, drawn for
+OCR at about 300 dpi capped at 2,400 px):
+
+| Step | Time |
+|---|---|
+| First page, from the worker request to the page's words posted (engine and model loaded from the local server) | 1.2 s, 1.2 s, 1.2 s |
+| Second page, from the first page's post to its own | 0.8 s, 0.8 s, 0.8 s |
+
+Not measured: a phone, a real network download of the 7 MB, long dense
+pages.
+
 ## Frontend: Lighthouse and image budgets
 
 ### C17.5: page turns on the original view (2026-11-12)

@@ -37,7 +37,7 @@ export function createRegionSource(api, bookId) {
   const hits = (page, x, y) => (boxes.get(page) ?? [])
     .some(([x0, top, x1, bottom]) => x >= x0 && x <= x1 && y >= top && y <= bottom);
 
-  return { load, hits };
+  return { load, hits, boxesOf: (page) => boxes.get(page) ?? [] };
 }
 
 /** True when client point (x, y) is on a shown PDF page inside one of its skipped boxes. */

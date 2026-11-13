@@ -192,17 +192,20 @@ C22 notepad, C23 focus mode, C24 gamification. `docs/PROGRESS.md` (C16.4)
 numbers them differently: C18 region map, C19 anchors and highlights,
 C20 notepad, C21 Steve backend, C22 Steve in the reader. This table
 follows `docs/PROGRESS.md`; [question 1](#questions) asks which is right.
+The PROGRESS.md column uses the numbers after the C19 renumbering
+(2026-11-13: C19 became converted sources, so the stubs C19-C25 moved to
+C20-C26); the paragraph above and the questions keep the old numbers.
 
 | Screens / components | Chunk (PROGRESS.md) | Prompt's chunk |
 |---|---|---|
 | 11, 12; reader toolbar, spread, front matter, page flash | C17 original view | C17 |
-| Block affordances (which block allows what) | C18 region map (affordance UI with C19/C22) | not listed |
-| 18; selection toolbar, highlight/underline styles, `--hl-*` | C19 anchors, highlights and underlines | C21 |
-| 19; note cards, add bar, margin markers, study panel Notes tab | C20 notepad | C22 |
-| Consent record, own-key storage, quota behind 16 | C21 Steve backend | C20 |
-| 13–17; Steve panel states, composer, Ask Steve chip, citations | C22 Steve in the reader | C20 |
-| 20–23; focus bar, notice, ribbon, ready modal, quiz | C23 focus mode | C23 |
-| 24–28; results points, progress, badges, league, celebration, app bar | C24 XP, streaks, badges and leagues | C24 |
+| Block affordances (which block allows what) | C18 region map (affordance UI with C20/C23) | not listed |
+| 18; selection toolbar, highlight/underline styles, `--hl-*` | C20 anchors, highlights and underlines | C21 |
+| 19; note cards, add bar, margin markers, study panel Notes tab | C21 notepad | C22 |
+| Consent record, own-key storage, quota behind 16 | C22 Steve backend | C20 |
+| 13–17; Steve panel states, composer, Ask Steve chip, citations | C23 Steve in the reader | C20 |
+| 20–23; focus bar, notice, ribbon, ready modal, quiz | C24 focus mode | C23 |
+| 24–28; results points, progress, badges, league, celebration, app bar | C25 XP, streaks, badges and leagues | C24 |
 
 ## Gaps and conflicts
 
@@ -210,7 +213,7 @@ Conflicts with the project's rules and specs (the specs win until decided):
 
 1. **Own key storage.** The design says "Kept on this device only"; CLAUDE.md
    says readers' keys are stored encrypted on our server, never returned in
-   full, and C22 shows the last 4 only. The design shows a masked full key
+   full, and C23 shows the last 4 only. The design shows a masked full key
    and no "remove" control despite "Remove it any time".
 2. **Points.** Design: 1 XP per focused minute, up to 180; quiz bonus +30
    for 2 of 3 ("grows with your score"); +10 "Finished with the ribbon".
@@ -236,7 +239,7 @@ Conflicts with the project's rules and specs (the specs win until decided):
    not in FOCUS_RULES.
 8. **Reading view.** The toolbar keeps "Reading view" ("reflows the text,
    as in the phase 1 reader"); CLAUDE.md and C17 retire the book view.
-9. **Notes order.** Design: "Newest last", scoped to a chapter; C20:
+9. **Notes order.** Design: "Newest last", scoped to a chapter; C21:
    reading order by the sortable position (ANCHORS A4).
 10. **Steve's reset time.** "Back at midnight, your time"; the free tier's
     daily limit resets at midnight Pacific (C16.4) and the per-reader
@@ -262,7 +265,7 @@ Not specified in the design:
     figure" sends the image (`GEMINI_MODEL_VISION`); what "Test it" does
     (in the mock it equals Save).
 15. Annotations: editing, recolouring or deleting a highlight; orphaned
-    anchors (C19); affordances for tables (region type in C18); where
+    anchors (C20); affordances for tables (region type in C18); where
     "Copy as LaTeX" gets LaTeX for a PDF equation.
 16. Notes: the text, equation and drawing editors (only finished cards and
     the tool strip are drawn); editing and deleting notes.

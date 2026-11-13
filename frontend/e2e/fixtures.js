@@ -52,6 +52,11 @@ async function mockBackend(page, api, book) {
     if (path === '/dashboard') return json(route, { book_progress: [], score_over_time: [], reading_streak: 0, words_this_week: 0, recent_feedback: [] });
     if (path === '/sessions/start') {
       api.starts += 1;
+      if (BOOKS[book].pagesOnly) { // C19.4: a fully scanned book with no chunks opens pages-only
+        return json(route, { session_id: null, pages_only: true, chunk_indices: [], chunks: [], position: null,
+          focus_duration_minutes: 0, reason: '', chapter_before: null, scanned_pages: BOOKS[book].scanned,
+          book: { title: 'Scanned', author: 'A Scanner', toc: [], format: 'pdf', storage_mode: 'cloud' } });
+      }
       return json(route, {
         session_id: 'e2e-session', chunks: today.map((i) => chunk(book, i)), chunk_indices: today, position: api.position,
         focus_duration_minutes: 20, reason: 'A steady pace for this book.', chapter_before: '',
@@ -77,6 +82,21 @@ async function mockBackend(page, api, book) {
       api.regionAsks += 1;
       return json(route, { regions: api.regions });
     }
+    if (path === `/books/${BOOK}/ocr`) { // C19.4: scanned pages, as a book's BOOKS entry lists them
+      const scanned = BOOKS[book].scanned ?? [];
+      if (request.method() === 'POST') {
+        const body = JSON.parse(request.postData() || '{}');
+        api.ocrPosts.push({ ...body, at: Date.now() });
+        api.ocr.set(body.page, (body.words ?? []).filter((w) => w.c >= 60).map(({ t, b, c }) => ({ t, b, c })));
+        const reingest = scanned.every((p) => api.ocr.has(p)) && Boolean(BOOKS[book].pagesOnly);
+        return json(route, { page: body.page, words: api.ocr.get(body.page).length, dropped: 0, done: api.ocr.size, scanned: scanned.length, reingest });
+      }
+      const first = Number(url.searchParams.get('first'));
+      const last = Number(url.searchParams.get('last'));
+      const pages = first ? [...api.ocr].filter(([p]) => p >= first && p <= last).map(([p, words]) => ({ page: p, words })) : undefined;
+      return json(route, { scanned_pages: scanned, done: [...api.ocr.keys()], ...(pages ? { pages } : {}) });
+    }
+    if (path === `/books/${BOOK}/status`) return json(route, { status: 'processing', total_chunks: 0 });
     if (path === '/lookup') {
       const term = url.searchParams.get('term');
       api.lookups.push({ term, proper: url.searchParams.get('proper') === '1' });
@@ -106,7 +126,7 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0 };
+    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [] };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

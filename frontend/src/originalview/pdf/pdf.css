@@ -82,3 +82,23 @@
 .rf-pdf-page .textLayer.selecting .endOfContent {
   top: 0;
 }
+
+/* C19.4: while a scanned page is first read by OCR, a quiet note at its top; nothing moves. */
+.rf-pdf-ocr {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  z-index: 2;
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  transform: translateX(-50%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  white-space: nowrap;
+  pointer-events: none;
+}

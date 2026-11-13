@@ -4,15 +4,17 @@ import os
 import re
 import tempfile
 import zipfile
+from collections.abc import Callable
 from xml.etree import ElementTree
 from pypdf import PdfReader
 import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
 
+from backend.agents import policy
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
-from backend.services import book_structure, covers, pdf_text, processing_jobs, region_job
+from backend.services import book_structure, covers, ocr_pages, pdf_text, processing_jobs, region_job
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
@@ -24,10 +26,23 @@ FIRST_BATCH = 5
 INGEST_BATCH = 16
 TARGET_WORDS = 600
 
-def extract_text_from_pdf(file_bytes: bytes) -> list[str]:
+def extract_text_from_pdf(file_bytes: bytes, ocr: Callable[[], dict[int, str]] | None = None,
+                          scanned: list[int] | None = None) -> list[str]:
     """Extract text from a PDF file, returning a list of page strings (pages with no text left out).
-    A few pages per reader since C18.G (pdf_text.page_texts): the same text at a quarter of the memory."""
-    return [text.replace('\x00', '') for text in pdf_text.page_texts(file_bytes) if text]
+    A few pages per reader since C18.G (pdf_text.page_texts): the same text at a quarter of the memory.
+    C19.4: `scanned`, when given, collects the numbers of the pages whose text layer has fewer than
+    OCR_MIN_PAGE_CHARS visible characters. When every page is such a page (a fully scanned book), its
+    stray marks (page numbers, a scanner's stamp) are not its text: `ocr()` ({page: text}) is, and is
+    asked for only then. A book with text of its own never takes OCR text, so its chunks are the same
+    on every run (C18; DEBUG_LOG 2026-11-13 C19.4)."""
+    texts = [text.replace('\x00', '') for text in pdf_text.page_texts(file_bytes)]
+    marks = [n for n, text in enumerate(texts, start=1) if len("".join(text.split())) < policy.OCR_MIN_PAGE_CHARS]
+    if scanned is not None:
+        scanned.extend(marks)
+    if ocr is not None and texts and len(marks) == len(texts):
+        found = ocr()
+        return [found[n] for n in range(1, len(texts) + 1) if found.get(n)]
+    return [text for text in texts if text]
 
 def extract_text_from_epub(file_bytes: bytes) -> list[str]:
     """Extract text from an EPUB file, returning a list of chapter strings."""
@@ -218,7 +233,19 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
     try:
         if file_bytes is None:
             file_bytes = await asyncio.to_thread(download, book["storage_path"])
-        chunks = chunk_text(extract(book["file_type"], file_bytes), TARGET_WORDS)
+        ocr: dict[int, str] = {}
+        if book["file_type"].lower() == "pdf":  # C19.4: scanned pages flagged; a fully scanned book read from OCR
+            scanned: list[int] = []
+
+            def load_ocr() -> dict[int, str]:
+                ocr.update(ocr_pages.load_texts(book_id))
+                return ocr
+            pages = extract_text_from_pdf(file_bytes, load_ocr, scanned)
+            if scanned:
+                ocr_pages.record_scanned(book_id, scanned)
+        else:
+            pages = extract(book["file_type"], file_bytes)
+        chunks = chunk_text(pages, TARGET_WORDS)
         total, words = len(chunks), sum(len(c.split()) for c in chunks)
         # Reader structure beside the unchanged content (C12.1); (None, None) if it cannot be built.
         # C17.6: each EPUB block's spine index and element path, and the book's own contents.
@@ -248,8 +275,10 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         processing_jobs.finish(job["id"], total)
         # The book is readable and its job done; the cover (at most two 3 s requests) comes last.
         await asyncio.to_thread(look_up_cover, book, file_bytes)
-        # Then the page-region map (C18.2b), its own job: the book is already readable.
-        await region_job.after_ingest({**book, "user_id": user_id}, file_bytes)
+        # Then the page-region map (C18.2b), its own job: the book is already readable. A book read from OCR
+        # text has its pages' regions from the OCR already (C19.4); pdfplumber finds no text on them.
+        if not ocr:
+            await region_job.after_ingest({**book, "user_id": user_id}, file_bytes)
         return {"total_chunks": total, "total_words": words, "status": "ready"}
     except Exception as e:  # noqa: BLE001 - recorded on the job, which can be resumed
         print(f"Ingestion of book {book_id} stopped: {e}")

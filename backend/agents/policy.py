@@ -310,3 +310,24 @@ MAX_SHELF_BYTES_PER_USER = 300 * 1024 * 1024
 MAX_BOOK_FILE_BYTES = 50 * 1024 * 1024
 # Lifetime of the signed URL GET /books/{id}/file returns.
 BOOK_FILE_URL_SECONDS = 300
+
+# --- Converted sources (backend/convert/sources.py, C19.2c) ------------------
+
+# A .zip of Markdown and images is unpacked in memory on Render Free: at most
+# this many entries and this many bytes once unpacked (a zip bomb stops here).
+MAX_CONVERT_ZIP_ENTRIES = 2000
+MAX_CONVERT_UNPACKED_BYTES = 100 * 1024 * 1024
+
+# --- Scanned pages and OCR (backend/services/ocr_pages.py, C19.4) ------------
+
+# A PDF page whose pypdf text has fewer visible characters than this has no
+# text layer worth reading: it is flagged in books.scanned_pages for OCR.
+OCR_MIN_PAGE_CHARS = 20
+# tesseract's word confidence (0-100) below which a word is dropped.
+OCR_MIN_CONFIDENCE = 60
+# A word longer than this is not a word (a run-on of misread marks).
+OCR_MAX_WORD_CHARS = 48
+# Words one page may post; a dense page has about 600.
+OCR_MAX_WORDS_PER_PAGE = 4000
+# A figure covering at least this share of the page is the scan itself, not a drawing, so OCR may read it.
+OCR_FULL_PAGE_FIGURE = 0.8

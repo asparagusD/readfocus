@@ -2974,12 +2974,16 @@ applies: the terms summary, the leagues detail.
 |---|---|---|---|---|---|
 | [x] CD2.2 receive the phase-2 Claude Design handoff | this commit (`docs(design): add phase-2 Claude Design handoff and summary`) | `design/handoff-phase2/design_phase_2.html`: the bundle, unchanged (12 boards: the six phase-1 boards again plus six phase-2 boards). `design/handoff-phase2/extracted/`: `Study.dc.html` (the component behind all phase-2 screens) and `PhaseTwoComponents.dc.html`, decoded byte for byte, with a README. `design/screens/phase2/`: 75 PNGs from `readfocus_phase_2_images.zip`: 18 screens x Paper/Lamplight at 1440 (1440 x 900) and 375 (375 x 812, 1x), two components sheets, the prototype frame. `design/HANDOFF_PHASE2_SUMMARY.md`: contents, image table, eight new tokens with contrast, component inventory with states, screen notes, chunk mapping, 19 gaps and conflicts, nine questions. `tools/repo_graph/purposes.json` and `docs/repo-graph/`. No application code changed. | SHA-256 of the copied bundle equals the download (`7e123533…`); the four board copies of `Study.dc.html` hash equal. Artboard edges from a scratchpad projection script (coverage, then the sharpest step): desktop 1440 x 900 at x 64 / 1584, rows every 1040 from y 124; mobile 375 x 812 at x 64 + 415 n, y 148 / 1108; crops checked by eye (4 desktop, 4 mobile). Every phase-1 token in `Study.dc.html` compared with `frontend/src/styles/tokens.css` by script: equal; foundations board equal to `Main.dc.html` after normalizing. Contrast with the WCAG formula. Largest PNG 1,359,617 B; 44 MB in `design/screens/phase2/`. Standard checks: see commit. | 2026-11-12 | The design conflicts with CLAUDE.md (own key "kept on this device only"), FOCUS_RULES (points, quiz length) and GAMIFICATION (goal unit, badges, league size and rollover); chunk numbers in the CD2.2 prompt differ from this file's C19–C22. Nine questions in the summary. Sage accent not rendered; mobile mocks clip text |
 
-## Phase 2 chunks (C17-C25)
+## Phase 2 chunks (C17-C26)
 
-Stubs written in C16.4. Each chunk gets its full plan (what there is to
+Stubs written in C16.4. Renumbered at the C19 start (2026-11-13, your
+choice: "Yes, renumber"): C19 converted sources was inserted, so the
+stubs written as C19-C25 are now C20-C26. Plans and logs written before
+that date keep the old numbers. Each chunk gets its full plan (what there is to
 build on, decisions, subchunks with verification and cuts, an estimate)
-at its own start, before any code. The phase 2 budget is 31 hours
-(C16 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
+at its own start, before any code. The phase 2 budget is 36.5 hours
+(31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13; C16
+3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
 CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 `docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
 
@@ -3671,21 +3675,301 @@ fallback, multi-line display math.
 | [x] C18.G 🚦 Gate G5: originals intact, zero garbled text, memory OK — **G5: PASS** (re-run after the memory fix, your choice 2026-11-13: "Slim pipeline, keep limit") | `30b4bc8` (`docs(progress): record gate G5 verdict on technical books`); fix `48e7fc3`; first verdict `13c5d52` | Memory fix (DEBUG_LOG 2026-11-13 C18.G, a 769-page PDF out of memory): `backend/services/pdf_text.py` reads pypdf text 50 pages per fresh reader (one reader for 769 pages grew about 200 MB, the pipeline parsed the file three times) and `release_memory` (gc + `malloc_trim(0)`) after each phase and batch; the prose rebuild loads only the meta it reads. Re-run of every criterion that code touches: `scripts/dev/gate_g5.py` per book in the `readfocus-c18g` container at `--memory=512m --memory-swap=512m`. | **1. Garble:** 0 flagged prose sentences, prompts, answers, evidence or options in all five books (Calculus 2,722 questions, SICP 1,700, Circuits 2,565, ILA 2,392, Alice 405). **2. Originals:** unchanged by the fix (the renderers and files are untouched; shelf sha256 as SHELF.md; 10 pages match PDFium; 5 EPUBs pass the renderer walk, from the first verdict). **3. Region scores:** as recorded (display 1.00 / 1.00, inline 0.95 / 0.93). **4. Memory, peak RSS (ingest / regions job / prose rebuild), all finished:** Calculus 399 / 475 / 502 MB (was killed; 749 / 848 / 1,036 at a 2 GB cap), SICP 362 / 386 / 410, Circuits 344 / 383 / 397, ILA 340 / 373 / 401, Alice 345 / 379 / 387; the gate's in-memory database holds 1 to 12 MB of that. Rows in `docs/BENCHMARKS.md` C18.G. Standard checks at `48e7fc3`: ruff 27, pytest 1070, ESLint 4, build, import, graph 62, contrast and images 0 failing, unit 120, e2e 127. | 2026-11-13 | Calculus keeps only about 10 MB under 512 MB, and is above the 50 MB upload limit anyway; accepted books keep 100 MB or more. Not measured at Render's 0.1 CPU (memory does not depend on it; time does). Open from C18: SICP's unreadable placeholders (a ligature repair map would recover about a fifth of its sentences); the seven Supabase books hold 31 garbled prose sentences until the backfill runs with `d156712` (needs approval); Alice's image-only figures get no `[Figure]` placeholder; the "auto view mode" from the C18.6 title is unbuilt. |
 | [x] C18.G prose backfill with the unreadable fix (your approval, 2026-11-13: "Dump, then backfill") | this commit (`docs: record the unreadable-text backfill`); fixes `016ad82`, `d156712`, `48e7fc3` | Read-only before: 636 of 645 chunks with prose, 31 garbled sentences counted, no `[Unreadable text]` placeholder stored, 5,325 questions (23 used), 2,936 concepts; `--dry-run`: 47 chunks in six books would change. Fresh backup in `C:\Users\avash\readfocus-backups\2026-11-13-pre-unreadable-backfill\`: roles 358 B, schema 76,317 B, data 42,646,676 B. `python scripts/backfill_prose.py` (exit 0): stored Sample 1 of 7 chunks (1 re-questioned, 1 unreadable), Dagano ch. 14 13 of 70 (13, 24), My API Upload Test 1 of 7 (1, 1), Main 13 of 35 (13, 26), Digital Design and Computer Architecture 12 of 302 (12, 15) and 7 of 212 (7, 8), Walden 0. | `--dry-run` straight after: 0 chunks would be stored in every book. Read-only scan of the project with `is_garbled` (as printed and with lines joined): 38,173 prose sentences in 636 chunks, 0 garbled; 5,278 questions, 0 garbled prompts, answers, evidence or options, none holding a placeholder; 75 sentences stored as unreadable placeholders (the lines-joined check finds more than the 31 counted before). | 2026-11-13 | The 9 chunks of the two device-only books have no prose (no file on the server). Questions went from 5,325 to 5,278: unused questions of the 47 changed chunks were replaced; the 23 used ones stay. |
 
-## C19 — anchors, highlights and underlines
+## C19 — converted sources
+
+Branch `chunk/C19-converted-sources`, created from `readfocus-2.0` at
+`2ada27c`. Goal as given at chunk start: the reader has exactly two
+renderers (PDF and EPUB), so every other source is converted at
+ingestion into a standards-compliant EPUB 3 (XHTML, MathML, code,
+images) and opens in the EPUB renderer like any book: Markdown, Jupyter
+notebooks (plots and image outputs kept), optionally LaTeX/arXiv source.
+Scanned PDFs get an English text layer made in the browser so every
+feature works on their pages. Not in the C16.4 stubs: this chunk is new
+(see question 1).
+
+### Plan (written at chunk start, 2026-11-13, before any code)
+
+What there is to build on (read from the code and the docs):
+
+- **Upload** (`routers/books.py` `upload_book`): accepts `.pdf` and
+  `.epub` only, caps the file at `MAX_BOOK_FILE_BYTES`, hashes it, keeps
+  it in Storage or on the device (`storage_mode`), then runs the ingest
+  job. `pages/Library.jsx:368` accepts `.pdf,.epub`.
+- **EPUB path end to end:** `book_ingestor._epub_metadata` (OPF title,
+  creator), `extract_text_from_epub`, `book_structure` block paths (017),
+  `regions/epub.py` (C18.5b) already maps `<math>` (MathML kept, LaTeX
+  from an `application/x-tex` annotation), `<pre>`/block `<code>`
+  (language from `class`), `<figure>`/`<img>`/`<svg>` with
+  `<figcaption>`, and `<table>`. The renderer is vendored foliate-js
+  (`originalview/epub/engine.js`, `sanitize.js`), lazy-loaded.
+- **Zip:** the vendored `foliate-js/vendor/zip.js` (BSD-3) only reads;
+  `vendor/fflate.js` is a stub. Writing an EPUB needs a zip writer.
+- **Scanned PDFs today:** pypdf finds no text, so the book is "ready"
+  with no chunks (`book_ingestor.py:244`), every page is `unreadable` in
+  the region map, and the PDF.js text layer is empty: no selection,
+  lookup, highlights, sessions or questions.
+- **Checks:** `test:unit` runs Node's runner (no DOM, no `DOMParser`);
+  e2e runs a real Edge. Java is not installed (epubcheck needs it);
+  Docker is.
+- Migrations end at 020; next is 021.
+
+Libraries (licence from the npm registry, 2026-11-13; each pinned to
+its newest release over two weeks old when installed, size measured
+then, row in `BENCHMARKS.md`; every one lazy-loaded, never in the
+initial bundle):
+
+| Package | Licence | Pin (candidate) | Unpacked | Used for |
+|---|---|---|---|---|
+| `fflate` | MIT | 0.8.3 (2026-05-16) | 0.8 MB | writing the EPUB zip (`mimetype` first, stored) |
+| `markdown-it` | MIT | 15.0.3 (2026-10-16) | 2.1 MB | Markdown and notebook markdown cells |
+| `katex` | MIT | 0.19.1 (2026-10-23) | 4.0 MB | TeX to MathML only (`output: "mathml"`), no fonts or CSS shipped |
+| `tesseract.js` | Apache-2.0 | 7.0.0 (2025-12-15) | 1.4 MB | OCR worker (C19.4) |
+| `tesseract.js-core` | Apache-2.0 | 6.1.2 | 30.6 MB (one wasm variant served, ~3-4 MB) | OCR engine |
+| `@tesseract.js-data/eng` | MIT (data Apache-2.0) | 1.0.0 | 13.9 MB (the `fast` model served, ~2-4 MB) | English model only |
+| `@unified-latex/*` | MIT | 1.8.4 (2026-04-03) | 0.4 MB + parser | LaTeX parse (C19.3 only) |
+
+Rejected: pandoc-wasm (GPL-2, ~50 MB), latex.js (unmaintained since
+2023, 14 MB), JSZip (dual MIT/GPL-3, larger than fflate). DOMPurify is
+already a dependency and is reused.
+
+Decisions that apply to every subchunk:
+
+- **Convert in the browser, upload an ordinary EPUB.** Conversion runs
+  in the reader's browser from the file in hand (lazy chunk, a
+  "Converting…" state); the result goes through the existing upload as a
+  `.epub` with an optional `source_format` (`markdown`, `ipynb`,
+  `latex`). The backend treats it as any untrusted EPUB: same caps,
+  same ingestion, same regions. Render's memory is untouched (no new
+  Python dependency). Only the EPUB is kept, not the source file.
+- **XHTML is built as strings, not through a DOM,** by pure functions
+  with one XML escaper, so Node unit tests cover them. The one input
+  that is HTML (raw HTML in Markdown, `text/html` notebook outputs) goes
+  through DOMPurify and `XMLSerializer` in the browser and is covered by
+  e2e.
+- **Math is MathML with its TeX kept:** KaTeX `output: "mathml"`, the
+  `<math>` element taken out of KaTeX's wrapper, the source in
+  `<annotation encoding="application/x-tex">` (what `regions/epub.py`
+  reads); bad TeX becomes `<code class="tex-error">` with the source,
+  never a thrown conversion.
+- **Code is exact:** `<pre><code class="language-x">`, text escaped,
+  whitespace kept; no syntax colouring.
+- **Images are packaged, never fetched:** data URIs, notebook outputs
+  and archive files become EPUB resources. Remote `http(s)` images are
+  not downloaded (no scraping, no third-party calls); they become a
+  figure holding the alt text and the URL as text.
+- **Deterministic output:** ids and file names from content hashes,
+  `dcterms:modified` from the source file's date, so the same source
+  gives the same bytes and the same `file_sha256`.
+- **Contract test across languages:** a Node script
+  (`frontend/scripts/build-epub-fixtures.mjs`) writes small EPUBs from
+  committed sources into `backend/tests/fixtures/converted/`; pytest
+  parses every XHTML with a strict XML parser and runs ingestion
+  extraction, `book_structure` and `regions/epub.py` on them, asserting
+  the math, code, figure and table regions expected.
+- **epubcheck** (BSD-3, Java) runs in Docker (`eclipse-temurin` image
+  plus the epubcheck release jar) on the fixtures at C19.1 and the gate:
+  0 errors, 0 warnings. **Downloads asked for first** (image, jar,
+  sizes); not part of the standard checks.
+- **Migrations** (additive): 021 `books.source_format text` (null means
+  uploaded as is), C19.2; 022 `page_ocr` and `books.ocr_status`, C19.4.
+  "Dev only" is not possible (one shared project, constraint 2): each
+  apply needs your approval and a fresh dump; until then code treats the
+  fields as optional.
+- **Verification per commit:** the ten standard checks (ruff stays at
+  27, ESLint at 4), `make graph` for new files, `design-review` for the
+  upload states, the converted-book label and the OCR progress, and the
+  initial JS bundle checked unchanged (every new library in its own lazy
+  chunk, sizes in `BENCHMARKS.md`).
+
+Subchunks (each at most ~200 changed lines; tests in the same commit;
+split into a/b where marked):
+
+**C19.1 EPUB 3 builder (shared): XHTML + MathML + code + images + nav**
+(about 1.0 h; a builder, b fixtures and epubcheck).
+- a: `fflate` installed (licence and size checked). `frontend/src/convert/epub/`
+  (new): `xml.js` (escape, attributes, well-formed element helpers),
+  `build.js` `buildEpub({title, author, language: "en", modified,
+  chapters: [{id, title, body}], resources: [{path, bytes, type}]})` ->
+  `Uint8Array`: `mimetype` stored first, `META-INF/container.xml`,
+  `content.opf` (EPUB 3, `dc:identifier` `urn:uuid` from the content
+  hash, manifest `properties` `mathml`/`svg`/`nav` set per item),
+  `nav.xhtml` (toc from chapter headings, landmarks), one XHTML per
+  chapter with `epub` namespace, one small stylesheet; `math.js`
+  `texToMathml(tex, display)` over KaTeX. Unit tests (~80): escaping,
+  manifest properties, nav order, zip entry order and `mimetype` stored,
+  TeX error path, same input same bytes.
+- b: `build-epub-fixtures.mjs` and two hand-written sources (prose with
+  headings, math, code, a figure, a table); pytest contract test
+  `test_converted_epub.py` as above; epubcheck run in Docker (after your
+  yes) recorded here.
+- Verified by: unit tests, pytest contract test, epubcheck 0/0, the
+  fixture EPUB opened in the e2e EPUB reader. Cut: landmarks; the svg
+  property detection (no SVG until C19.2).
+
+**C19.2 Markdown and Jupyter -> EPUB (images and plots kept)** (about
+1.5 h; a Markdown, b Jupyter, c upload and migration 021).
+- a: `markdown-it` installed. `convert/markdown.js`: CommonMark + GFM
+  tables, `xhtmlOut`, a small math rule (`$…$`, `$$…$$`, `\(…\)`,
+  `\[…\]`, not inside code), code fences to exact code, images from data
+  URIs packaged, remote ones as above, raw HTML through DOMPurify;
+  chapters split at the top heading level used more than once, nav from
+  headings; title from the first heading, else the file name. Tests on
+  math edge cases (`$5 and $6`, escaped `\$`, math in code).
+- b: `convert/notebook.js` (nbformat 4; 3 refused with a clear message):
+  markdown cells through a, with `attachment:` images packaged; code
+  cells as code with the kernel language and an `In [n]` label; outputs
+  in order, richest type first: `image/svg+xml` (sanitised, packaged as
+  an `.svg` file, shown by `<img>`), `image/png`, `image/jpeg`,
+  `text/latex` (MathML), `text/html` (DOMPurify; tables kept),
+  `text/markdown`, `text/plain`; `stream` and `error` as `<pre>` with
+  ANSI escapes stripped; widget and JavaScript outputs dropped with a
+  one-line note. Chapters at markdown H1 cells, else one chapter. Tests
+  with a committed fixture notebook (a PNG plot, an SVG, LaTeX, a
+  DataFrame table, a traceback).
+- c: Library accepts `.md`, `.markdown`, `.ipynb`; the file is converted
+  (lazy chunk, "Converting…", a failure says why and uploads nothing),
+  then uploaded as EPUB with `source_format`; `upload_book` accepts
+  `source_format` from an allow-list. Migration
+  `021_source_format.sql` (not applied until your yes and a dump); the
+  book's info shows "Converted from Markdown/Jupyter". e2e: upload a
+  notebook, the reader opens it, a plot image and an equation are shown.
+- Verified by: tests, e2e, the contract fixtures re-run on the notebook,
+  `design-review` on the upload states. Cut: `.md` with local images
+  (only data URIs and notebooks carry images); `text/markdown` outputs.
+
+**C19.3 LaTeX/arXiv source -> EPUB (optional; cuttable)** (about 1.0 h).
+- Input: a `.tex` file, or an arXiv source archive the reader downloaded
+  themselves (`.tar.gz`, `.tar`, `.zip`; we never fetch arXiv). Unpack
+  with fflate plus a ~40-line tar reader; main file = the one with
+  `\documentclass`; `\input`/`\include` resolved inside the archive.
+- `@unified-latex` parses (installed after the size check); macros from
+  `\newcommand`/`\def` go to KaTeX `macros`; sections give chapters and
+  nav; `equation`/`align`/`gather` display math with numbers;
+  theorem-like environments as labelled sections; `figure` with
+  `\includegraphics` packaged (PNG/JPEG as is; PDF figures drawn to PNG
+  with the PDF.js we already ship; EPS left as a caption-only figure);
+  `\ref`/`\eqref` as numbered links; `\cite` from the `.bbl` when
+  present; `tabular` to a table. Anything unknown keeps its text, is
+  counted, and the reader is told "N commands were not converted; the
+  PDF may read better".
+- Verified by: a CC BY arXiv source from the C18 shelf (download asked
+  for first), epubcheck 0/0, regions show its equations as math. Cut:
+  the whole subchunk (arXiv readers upload the PDF instead); else in
+  order: `.bbl` citations, PDF figures, theorem styling.
+
+**C19.4 scanned PDFs: in-browser OCR text layer** (about 1.75 h; a
+engine and text layer, b storing and ingesting, c progress UI).
+- Detection (server, at ingestion): a page with fewer than
+  `OCR_MIN_PAGE_CHARS` (policy) of pypdf text and an image filling most
+  of it needs OCR; if any page does, `books.ocr_status = "needed"` and the
+  list of pages is returned with the book.
+- a: `tesseract.js` with core and the English `fast` model **served from
+  our own origin** (copied into the build from `node_modules`; no CDN, no
+  third-party call), loaded only when an OCR page is opened or OCR
+  starts. `originalview/pdf/ocr/`: render the page with PDF.js at about
+  300 dpi (pixel budget capped), recognise in a worker, convert word
+  boxes from pixels to page points with a top-left origin (ANCHORS A1),
+  group words into lines; `PdfPage` draws these words as a transparent
+  text layer with the same transform as PDF.js's, so selection, word
+  lookup and later highlight quads work unchanged. Unit tests for the
+  box conversion and line grouping.
+- b: `POST /books/{id}/ocr` (owner only, at most 10 pages a call, text
+  and box sanity checked, control and garbled characters dropped through
+  the C18 detector) stores pages in `page_ocr` (migration 022:
+  `book_id` fk cascade, `user_id`, `page`, `text`, `words jsonb`,
+  `mean_confidence`, `engine`, unique `(book_id, page)`, RLS own select,
+  service-role writes; plus `books.ocr_status`); `GET` returns them for
+  the reader. When the last needed page is stored, the ingest job runs
+  again from scratch for that book (chunks upserted), with OCR text
+  standing in for those pages; regions for OCR pages are prose lines,
+  words under `OCR_MIN_CONFIDENCE` become `unreadable`. pytest for
+  validation, ingestion from OCR text and the region kinds.
+- c: OCR runs in the background in the open tab, first pages first,
+  one worker (two on desktop when `hardwareConcurrency >= 8`), resuming
+  from the server's list after a reload; Library card and reader show
+  "Recognising text: 34 of 212 pages"; first session once done. e2e
+  mocks `recognize`; one real run on a small scanned fixture made by us
+  (text drawn to an image, wrapped in a PDF) measures word accuracy and
+  seconds per page (`BENCHMARKS.md`).
+- Verified by: tests, e2e, accuracy and speed rows, `design-review` on
+  the progress states. Cut, in order: two workers, OCR on device-only
+  books (they need the file in the tab anyway), the confidence-based
+  `unreadable` split.
+
+**C19.G 🚦 Gate G6: converted sources and scanned pages read like books**
+(about 0.25 h). Proposed criteria:
+1. Every converted fixture (Markdown, notebook, and LaTeX if built)
+   passes epubcheck with 0 errors and 0 warnings, ingests, and its
+   regions hold the expected math, code, figure and table counts.
+2. Notebook plots and images all present in the EPUB and visible in the
+   reader (screenshot); equations shown as MathML with TeX kept.
+3. Scanned fixture: OCR word accuracy ≥ 95%, text selectable and word
+   lookup works on an OCR page, questions generated from OCR text.
+4. Initial JS unchanged within 1 KB gzip; each new chunk's size and
+   OCR seconds per page in `BENCHMARKS.md`; no backend memory change.
+5. Standard checks green, counts not up; graph current.
+
+Questions for you:
+
+1. Numbering (answered 2026-11-13: "Yes, renumber"): the C16.4 stubs
+   C19-C25 are now C20-C26, here and in the docs that cite them.
+2. Budget (answered 2026-11-13: "Raise the budget"): phase 2 goes from
+   31 h to 36.5 h, C19 at 5.5 h; the 50%-over rule applies to C19's
+   5.5 h.
+3. Approvals (answered 2026-11-13: "approve all three"): tesseract.js as
+   a new "intelligence" library, serving its ~6-8 MB engine and English
+   model from our Vercel origin, and the epubcheck Docker download (the
+   image and jar are still named, with sizes, before fetching).
+4. Migrations 021 and 022 on the shared project, each after a fresh
+   dump you confirm, at the end of C19.2c and C19.4b: still asked for at
+   each apply (constraint 2 needs approval for that specific action).
+
+Risks: KaTeX does not cover every LaTeX package (unknown macros fall back
+to a TeX error span, counted); the foliate renderer's MathML support
+depends on the browser (MathML Core is in Chromium, Firefox and Safari;
+the e2e browser is Edge); OCR speed on phones (one worker, progress
+shown, nothing blocks reading the page images); OCR on math and tables
+gives poor text (low-confidence words go to `unreadable`, the garble
+detector catches the rest); large notebooks with many plots near the
+file cap (the upload's cap message applies).
+
+Estimated time: about 5.5 h (C19.1 1.0, C19.2 1.5, C19.3 1.0, C19.4
+1.75, C19.G 0.25); 4.5 h without C19.3. If time runs short, in this
+order: C19.3, two OCR workers, notebook `text/markdown` outputs,
+landmarks.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C19.1a shared EPUB 3 builder with MathML, code and images | `7ae807e` (`feat(convert): shared EPUB 3 builder with MathML, code and images`); plan `75a59b2` | Built to the C19.1 prompt, which puts the builder in the backend (Python, standard library only) where the plan had it in the browser (JS with fflate); no new dependency. `backend/convert/epub_builder.py` (new): `build_epub(title, author, chapters, images, language="en", modified)` takes chapters as XHTML body fragments (parsed with minidom: not well-formed or a DOCTYPE is refused, naming the chapter) and images as bytes + media type (PNG, JPEG, GIF, WebP, SVG; safe unique names); writes `mimetype` first and stored with no extra field, `META-INF/container.xml`, `OEBPS/content.opf` (EPUB 3, `urn:uuid` identifier from a hash of the content, `dc:title`, `dc:creator`, `dc:language`, `dcterms:modified`; manifest with `nav`, `mathml` and `svg` properties; spine of the chapters), `nav.xhtml` (`epub:type="toc"`, nested from h1-h3, ids added to headings without one; a chapter with no heading listed by its title), `chapter-NNN.xhtml` and `style.css` (Lora body, Playfair headings, monospace code with whitespace kept and horizontal scroll, centred figures at most 100% wide with `break-inside: avoid`, display MathML centred). Every `<img>` must name a packaged image (`images/<name>`, else refused), gets `width`/`height` from the image header when missing, and keeps its alt or gets "Figure N" (N counted over the book). Zip dates come from `modified`, so the same input gives the same bytes. `check_epub(bytes)`: structural checks (mimetype first and stored, container and OPF, version 3.0, required metadata, manifest vs zip both ways, one nav, spine ids, XHTML well-formed, every img in the manifest). `backend/convert/image_size.py` (new): sizes from PNG, JPEG, GIF, WebP and SVG headers. `tools/repo_graph/purposes.json`: five entries; graph regenerated. | `pytest backend/tests/test_epub_builder.py backend/tests/test_image_size.py -q`: 25 passed (failed at collection before the module existed); ingestion (`extract_metadata`, `extract`) and `regions/epub.py` read the built book (math, code, figure regions). `ruff check backend/`: 27 (baseline). `pytest backend/tests -q`: 1095 passed. `python -c "import backend.main"`: exit 0. `pytest tools/repo_graph/tests -q`: 62 passed. Frontend untouched. | 2026-11-13 | epubcheck not run: no Java here; the Docker download is approved but its image and jar are named with sizes before fetching. The builder runs in the backend, so C19.2's Markdown and notebook conversion is planned in the browser but would call it on the server: to settle at C19.2. |
+| [x] C19.1b converted fixture opens in the EPUB renderer (e2e) | `422c79f` (`test(convert): open a built EPUB in the EPUB renderer`); C19.1a `7ae807e` | `tools/make_converted_fixture.py` (new) writes `frontend/e2e/fixtures/books/converted.epub` (3,647 bytes, same bytes on a re-run; `check_epub` finds nothing) with the builder: two chapters (h1, h2), a PNG plot with alt, an SVG with none, display MathML with its TeX, an indented Python block. `frontend/e2e/converted.spec.js` (new, 2 tests): opened on the real reading page with the API mocked, the Contents list is the builder's nav (Getting started, A plot, Equations and code); paged through end to end, both images load with the builder's width/height (320x160, 240x80) and alt (the source's, and "Figure 2"), the equation gets a box, and the code's text is exact. `tools/repo_graph/purposes.json`: three entries; graph regenerated. | `npx playwright test e2e/converted.spec.js`: first run 1 passed, 1 failed (the code's `white-space` was `pre-wrap`, not the package's `pre`: the renderer's `BOOK_CSS` in `originalview/epub/sanitize.js` (C17.3) sets `pre, code { white-space: pre-wrap }` for every book; a wrong expectation in the new test, not a builder fault); the test now checks the text is exact and the value is `pre` or `pre-wrap`: 2 passed. Standard checks: see the commit. | 2026-11-13 | In the reader, long code lines wrap rather than scroll sideways (the renderer's rule for every EPUB beats the package's `overflow-x: auto`); spaces are kept. Changing that is a renderer decision, not C19's. |
+| [x] C19.1 epubcheck run (your approval, 2026-11-13: "Yes, download") and fix | this commit (`fix(convert): wrap the fixture's TeX annotation in MathML semantics`); C19.1b `422c79f` | Downloaded into the scratchpad (not the repo): `epubcheck-5.4.0.zip` from the W3C's GitHub release (33,093,170 bytes, sha256 `33350c61038e71dfb3d45a76aed04bf5481e6d5500cb780f6e98db8bbd15a28c`; BSD-3) and the `eclipse-temurin:21-jre` Docker image (462 MB unpacked). First run: the builder's test book 0/0; `converted.epub` 1 error (RSC-005: `annotation` directly in `math`; DEBUG_LOG 2026-11-13 C19.1). Fix: the fixture's math wrapped in `<semantics><mrow>…</mrow><annotation/></semantics>` as KaTeX writes it; `check_epub` reports an `annotation`/`annotation-xml` outside `semantics`; two regression tests (the rule, and the committed fixture is sound). | epubcheck 5.4.0 in Docker on the rebuilt fixture (3,663 bytes) and the test book: 0 fatals / 0 errors / 0 warnings / 0 infos each. Regression tests: 1 failed before the fix (stash), 2 passed after. Standard checks: see the commit. | 2026-11-13 | epubcheck is a manual run (Docker command in DEBUG_LOG), not a standard check. |
+| [x] C19.2a Markdown to EPUB chapters (math, code, tables, images) | `a8aae5e` (`feat(convert): Markdown to EPUB chapters with MathML, code and images`); epubcheck fix `2e81e50` | Built to the C19.2 prompt with your choice (2026-11-13: "Python on server"): conversion runs on the backend with markdown-it-py 4.2.0 + mdit-py-plugins 0.6.1 (dollarmath) + latex2mathml 3.81.1 (all MIT, newest releases at least two weeks old; `mdurl` 0.1.2 pinned as their dependency) instead of markdown-it + KaTeX in the browser. `backend/convert/texmath.py`: `tex_to_mathml(tex, display)` -> `<math><semantics><mrow>…</mrow><annotation encoding="application/x-tex">` (KaTeX's shape, which `regions/epub.py` and epubcheck accept); TeX that fails, or names a command latex2mathml leaves as `<mi>oo</mi>`, becomes `<code class="tex-error">` with its source. `backend/convert/markdown.py`: CommonMark + tables, raw HTML escaped, `$…$`/`$$…$$` with `allow_digits=False` ("$5 and $6" stays text), fenced code exact with `language-x`, images packed from data URIs, upload files (`resolve` refuses paths leaving the upload) and notebook attachments; remote images never fetched, listed with missing ones in `notes` and shown as "[Image not included: …]"; links keep only http(s)/mailto targets; chapters at each h1 when there are two or more. `backend/convert/assets.py`: `Converted`, `sniff`, `ImageStore` (one copy per image, content-hash names), `resolve`. `requirements.txt`: the four pins; `test_requirements.py`: `markdown_it` -> `markdown-it-py`. `BENCHMARKS.md`: memory row. Fixture `backend/tests/fixtures/sources/sample.md` (ours). | `pytest backend/tests/test_convert_markdown.py -q`: failed at collection before the modules existed; 13 passed after (count of local images in the source = images in the EPUB = 2; the remote one listed; `check_epub` clean; math, code, table, figure and prose regions found). Memory (fresh process, `python -` with psutil: `import backend.main`, then the converter, then `sample.md` x 40): 129.1 MB, +2.5 MB on import, +2.6 MB converting 31,960 characters into 80 chapters in 108 ms. Standard checks: see the commit. | 2026-11-13 | TeX coverage is latex2mathml's, narrower than KaTeX's: unsupported commands show as TeX code, not MathML. Not yet reachable from the app: upload in C19.2c. |
+| [x] C19.2b Jupyter notebooks to EPUB (plots kept) | `24237f5` (`feat(convert): Jupyter notebooks to EPUB with plots kept as figures`); C19.2a `a8aae5e` | `backend/convert/notebook.py` (new): nbformat 4 only (a non-JSON file or format 3 refused with a reason); markdown cells through the C19.2a converter, cut before each h1, `attachment:` images packed; code cells `<pre><code class="language-<kernel>">` exact; outputs in order: PNG, JPEG or SVG (a matplotlib plot is a PNG) packed as `<figure><img alt="Output of cell N"/><figcaption>Output of cell N</figcaption></figure>`, N the cell's place from 1; else `text/latex` as MathML, else `text/plain` as `<pre class="rf-output">`; `stream` and `error` as output blocks (stderr and errors marked); `text/html` never used. `backend/convert/assets.py`: `clean()` drops ANSI codes and characters XML forbids, also applied to Markdown input (`markdown.py`). `epub_builder.py` stylesheet: `pre.rf-output` smaller, with a rule at its left. Fixture `backend/tests/fixtures/sources/sample.ipynb` from `tools/make_notebook_fixture.py` (new; no Jupyter or matplotlib installed here, so the plot is a generated PNG stored exactly as matplotlib's inline backend stores one, with its `<Figure size 640x480 with 1 Axes>` text). | `pytest backend/tests/test_convert_notebook.py -q`: collection error before the module existed; 10 passed after (image count in source = in EPUB = 3: an attachment, a plot, an SVG; figures captioned "Output of cell 3" and "Output of cell 5"; `check_epub` clean; 3 figure regions). ruff linted the `.ipynb` fixture (import order, an undefined `df`): the fixture's cells were made lint-clean, ruff stays at 27. The generator reproduces the fixture byte for byte. Standard checks: see the commit. | 2026-11-13 | Not yet reachable from the app: upload in C19.2c. `text/html` outputs (pandas tables) show as their text form, not a table. |
+| [x] C19.2c .md, .zip and .ipynb uploads stored as EPUB (migration 021) | `c4c5930` (`feat(convert): Markdown and Jupyter notebooks to EPUB with plots kept`); C19.2b `24237f5` | `backend/convert/sources.py` (new): `.md`/`.markdown`, a `.zip` of Markdown and images (in-memory, at most `MAX_CONVERT_ZIP_ENTRIES` 2,000 entries and `MAX_CONVERT_UNPACKED_BYTES` 100 MB, checked from the directory and while reading; the shallowest `.md`, README/index first, two at one depth refused; paths out of the archive ignored) or `.ipynb`. `routers/books.py` upload: those types are converted in a worker thread (`run_in_threadpool`), packed with the title and author typed at upload, and the EPUB is what is capped, hashed, stored (`<book>.epub`) and ingested, with `file_type`/`file_format` `epub`; `books.source_format` is written after the insert by `record_source_format`, which logs and carries on when the column is missing; the response adds `source_format` and `notes`; a converted source with `storage_mode=device` is refused (the reader needs the EPUB, which only the server has); a file that cannot convert is a 400 naming why. `supabase/migrations/021_source_format.sql` (new, **not applied**): `books.source_format text`. `Library.jsx`: the picker and drop accept `.md`, `.markdown`, `.zip`, `.ipynb`; for those the dialog shows "We’ll turn it into a book on our server, keeping its equations, code and images, and store that book for you." instead of the keep-on-device box, the button says "Converting…", and images left out are listed in a warning toast. `test_ingestion_worker.py`: the upload response's keys now include the two new ones. | `pytest backend/tests/test_upload_converted.py -q`: 12 failed before the router change (the converter module existed, the upload refused the types), 15 passed after; `npx playwright test e2e/library.spec.js`: 16 passed (new: a notebook upload sends `cloud`, shows no checkbox, lists 3 missing images). Design review: dialog viewed settled at 1440 and 375 px (screenshots in the session scratchpad); the note is `--ink-2` on `--surface`, a pair `check:contrast` measures at 4.5:1 or more; no new motion; keyboard order Title, Author, Cancel, Add book. Standard checks: see the commit. | 2026-11-13 | Migration 021 applied later the same day (row below). The impeccable, design-taste-frontend and ui-ux-pro-max skills were not loaded for this copy-and-visibility change; the checklist was run in the browser instead. |
+| [x] C19.2c apply migration 021 to the Supabase project (your approval, 2026-11-13: "Dump, then apply 021") | `da46eaf` (`docs: record migration 021 applied`); C19.2c `c4c5930` | Read-only check first: `books` had no `source_format` (0 matching columns), 9 books. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-13-pre-021\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (76,317 B; no `source_format`), `readfocus_prod_data.sql` (42,614,326 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`). Then `npx supabase db query --linked -f` with `BEGIN;` + `021_source_format.sql` + `COMMIT;` (exit 0). | Read-only query after: `source_format` text, nullable; 9 books, none tagged; 1 RLS policy on `books` (the migration does not touch policies; the count before was not taken). | 2026-11-13 | Applied with `db query` like 016 to 020, so the CLI's migration history does not list 021. Existing books stay untagged (all were uploaded as PDF or EPUB). |
+| [-] C19.3 LaTeX/arXiv source -> EPUB (optional) — **skipped: pandoc does not fit Render Free's memory** | `5ec1052` (`docs(progress): skip C19.3, pandoc does not fit the memory budget`); C19.2c `c4c5930` | Time allowed it (about 2 h of C19's 5.5 h used at 20:45, C19.4 and the gate planned at 2 h), so the prompt's check was run first. A throwaway image (`readfocus-c18g-measure` + Debian's pandoc 3.1.11.1, GPL-2.0-or-later) grew from 917 MB to 1.16 GB (+243 MB); in a 512 MB container pandoc converted an arXiv-shaped fixture written for the test (1.4 KB of LaTeX, math, `align`, PNG/PDF/EPS figures, a table) in 0.05 s at 71 MB peak RSS, and the same body x 40 (41 KB) in 0.31 s at 119 MB. Gate G5 measured the app at up to 502 MB of the 512 MB limit (Calculus, prose rebuild), so a pandoc process during another book's ingestion would pass the limit; the prompt allows pandoc only within the budget. No code committed: the fixture generator and fixture were deleted; rows in `BENCHMARKS.md`. | `docker build` and `docker run --memory=512m` with a psutil poller (scripts in the session scratchpad, not committed); `docker image ls` for sizes. Docs only: standard checks not re-run (all ten passed on `c4c5930`). | 2026-11-13 | LaTeX and arXiv sources are not accepted; readers upload the paper's PDF instead. Ways back if wanted later: serialise pandoc with ingestion, a `+RTS -M` heap cap, or a bigger instance (not free). The `readfocus-c19-pandoc` image was removed afterwards (your yes). |
+| [x] C19.4a scanned pages flagged; OCR text stored, cleaned and re-ingested (backend) | `2146269` (`feat(pdf): store OCR text for scanned pages and read fully scanned books from it`); C19.3 record `5ec1052` | Built to the C19.4 prompt with your choice (2026-11-13: "Re-ingest when OCR done"). Ingestion: `extract_text_from_pdf(file_bytes, ocr, scanned)` collects pages with fewer than `OCR_MIN_PAGE_CHARS` (20) visible characters into `books.scanned_pages` (`ocr_pages.record_scanned`, logged and skipped before 022) and lets stored OCR text stand in for a page; a book read from OCR text skips the pdfplumber regions/prose job (its regions come from the OCR). `backend/services/ocr_pages.py` (new): `clean_page` drops words under `OCR_MIN_CONFIDENCE` (60), longer than 48 characters, off the page, or inside math, code, table or figure regions (the scan itself, a figure over 80% of the page, does not count), then every line `is_garbled` flags; paragraphs become `page_regions` rows (kind `block`, `meta.source` `ocr`), replacing the page's text regions. `backend/routers/ocr.py` (new): `POST /books/{id}/ocr` (owner only; a flagged page only, else 409; at most 4,000 words) stores the page in `page_ocr`; when that completes every scanned page of a cloud book with no chunks, the book goes back to `processing` and its ingest job is requeued (`processing_jobs.requeue`, new) and run, giving chunks and questions; a book with chunks keeps them (C18). `GET /books/{id}/ocr` returns `scanned_pages`, `done` and, for first..last (at most 20), the words. `sessions.py`: a fully scanned book with no chunks starts as `{pages_only: true, session_id: null, scanned_pages}` instead of the 400. `supabase/migrations/022_scanned_pages.sql` (new, **not applied**). Harness stubs in `test_ingestion_worker.py` and `test_ingest_embeddings.py` take the new optional arguments. | `pytest backend/tests/test_ocr_pages.py -q`: collection error before the modules existed; first run 18 passed, 2 failed on my test data (a box I mis-added, a 15-character page under the 20-character bar), fixed; 20 passed. The full suite then failed 19 tests in the two harnesses whose `extract_text_from_pdf` stubs took one argument; they take the new ones now: 1157 passed. ruff went to 30 (two import lines over length after my edits, a needless `noqa`), fixed: 27. `pytest tools/repo_graph/tests -q` then failed once: its list of the schema's tables had no `page_ocr`; added (as `page_regions` was in C18.2b): 62 passed. Standard checks: see the commit. | 2026-11-13 | Migration 022 not applied (needs your approval and a dump): until then scanned pages are not flagged and OCR posts fail. Device-only scanned books cannot be re-ingested (no file on the server); their pages still become selectable in C19.4b. The browser side is C19.4b. |
+| [x] C19.4b in-browser OCR with tesseract.js: text layer, indicator, pages-only opening | `398ded5` (`feat(pdf): in-browser OCR text layer for scanned pages`); C19.4a `2146269` | `frontend/src/originalview/pdf/ocr.js` (new): one tesseract.js worker for the app (English, LSTM), lazy-loaded, its worker, core and `eng` best_int model served from `/ocr/` (`scripts/copy-ocr.mjs`, npm `predev`/`prebuild`; `public/ocr/` ignored by git and ESLint); a scanned page is drawn with PDF.js at about 300 dpi (at most 2,400 px), its math, code, table and figure boxes from the region map painted white (not the full-page scan), read, posted to `POST /books/{id}/ocr`, and its cleaned words fetched back; the server is the cache (a stored page is never read again) and pages are read one at a time. `PdfPage.jsx`: on a scanned page the words are added to the same `.textLayer` as transparent spans sized to their boxes (selection, PDF anchors and word lookup work unchanged), with "Making this page selectable…" while the page is first read. `ReadingSession.jsx`: the OCR source (with the region boxes); a pages-only book (C19.4a) shows "Reading this scan: n of m pages" instead of the timer and Done reading, reads every scanned page in turn, then "Preparing your first session…" and reloads once the book's status is ready with chunks; its closing page says the first session comes once every page is read. `tesseract.js` 7.0.0, `tesseract.js-core` 7.0.0, `@tesseract.js-data/eng` 1.0.0 pinned (your approval at the plan). Fixture `scanned.pdf` (`tools/make_scanned_fixture.py`). `e2e/fixtures.js` answers the OCR endpoints and the pages-only start. | `node --test src/originalview/pdf/ocr.test.js`: 4 passed (written before `ocr.js`). `npx playwright test e2e/ocr.spec.js`: 2 passed with real OCR: page 1 posted 185 words with `lamp` in them, the text layer drew over 20 spans, hovering an OCR'd "lamp" opened its word card; the pages-only book read both pages and showed "Preparing your first session…". Seconds per page (three runs): 1.2 s for the first page with the engine and model loading from the local server, 0.8 s each after (`BENCHMARKS.md`). Design review: the note and the pages-only toolbar seen at 1440 and 375 px (screenshots in the session scratchpad); the note is `--ink-2` on `--surface` with a `--line` border, a pair `check:contrast` measures; it does not move and takes no pointer events. The pages-only screenshot showed its explanation note never appears (notes hang on today's start, which a pages-only book has none of), so the toolbar now says "Reading this scan" and the dead note was removed. Standard checks: see the commit. | 2026-11-13 | Migration 022 applied the same evening (row below); books ingested before it are not flagged until read again. Not measured on a phone or a real network. At 375 px the note sits close to the page's first heading. A pages-only reader must keep the tab open until every page is read. The impeccable, design-taste-frontend and ui-ux-pro-max skills were not loaded; the checklist was run in the browser. |
+| [x] C19.4 apply migration 022 to the Supabase project (your approval, 2026-11-13: "Dump, then apply 022") | `cbffbe8` (`docs: record migration 022 applied`); C19.4b `398ded5` | Read-only check first: no `books.scanned_pages`, no `page_ocr`, 9 books. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-13-pre-022\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (76,345 B; `source_format` from 021, nothing from 022), `readfocus_prod_data.sql` (42,614,397 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`). Then `npx supabase db query --linked -f` with `BEGIN;` + `022_scanned_pages.sql` + `COMMIT;` (exit 0). | Read-only query after (my first one failed on a missing `::text` cast, nothing written): `scanned_pages` integer[] nullable; `page_ocr` columns id, book_id, user_id, page, text, words, mean_confidence, engine, created_at as written; row-level security on; policy `page_ocr_select_own` (SELECT); constraints: book_id foreign key, unique (book_id, page), page check, primary key; 0 OCR rows; 9 books, none flagged. | 2026-11-13 | Applied with `db query` like 016 to 021, so the CLI's migration history does not list 022. Books ingested before today have no `scanned_pages` until they are ingested again; none of the 9 is known to be scanned. |
+| [x] C19.G 🚦 Gate G6: converted sources and scanned pages read like books — **G6: PASS** | this commit (`docs(progress): record gate G6 verdict`); gate tests `155b896`, review fix `105020c` | 1. **Converted books are standards-compliant and read like books:** a Markdown file zipped with its figures (`converted-md.epub`) and a notebook with a PNG plot and an SVG output (`converted-nb.epub`), each made through the upload's own converter (`tools/make_converted_fixture.py`), plus the builder's `converted.epub`: epubcheck 5.4.0 0 fatals / 0 errors / 0 warnings / 0 infos each; in the EPUB renderer (`e2e/gate-g6.spec.js`) Markdown 2/2 images loaded and 2/2 equations drawn, notebook 3/3 and 2/2 with "Output of cell 3" and "Output of cell 5" captions; `check_epub` clean; ingestion and the region map read them (math, code, table, figure regions, C19.2 tests). 2. **A scanned page becomes selectable:** `e2e/ocr.spec.js` with real tesseract.js: 185 words posted for a page, a text layer of OCR words, a word card on an OCR'd "lamp"; a fully scanned book reads both pages and prepares its first session. OCR speed: 1.2 s for the first page with the engine and model loading, 0.8 s a page after (headless Edge, this desktop, three runs). 3. **Memory and size:** no server dependency for OCR; Markdown/notebook conversion +2.5 MB RSS on import; pandoc measured and rejected (C19.3). 4. **Standard checks:** all ten green at `105020c` (ruff 27, ESLint 4, pytest 1159, unit 124, e2e 134); `make graph` leaves no diff. 5. **Self-review** of `git diff readfocus-2.0...HEAD`: one blocking finding, fixed in `105020c` (a resumed ingest would have taken OCR text into a mixed book's chunks; DEBUG_LOG 2026-11-13 C19.4). | `npx playwright test e2e/gate-g6.spec.js` (2 passed); epubcheck in Docker on the three EPUBs; the full standard checks at `155b896` and at `105020c`; `make graph` then `git status` clean. | 2026-11-13 | Non-blocking, left as is: a device-only scanned book is never re-ingested (no file on the server); a fully scanned book needs its tab open until every page is read; conversion runs inside the upload request (a large notebook makes a slow upload, within the 50 MB cap); OCR not measured on a phone or a real network; latex2mathml's TeX coverage is narrower than KaTeX's; pandas HTML tables show as text. Time: about 3.3 h of C19's 5.5 h (planning from about 18:50, close at 22:06). |
+
+## C20 — anchors, highlights and underlines
 
 Goal: select text in the original view, highlight or underline it in a
 palette colour, see it again after zoom, font change and reload; anchors
 stored as ANCHORS A1-A5 with RLS; orphaned anchors listed. Depends on:
 C17, C18. Estimate: 3.5 h. Safe to cut: underline styles beyond one.
 
-## C20 — notepad
+## C21 — notepad
 
 Goal: typed notes and Excalidraw drawings anchored to passages or
 regions, in reading order by the sortable position (A4), with the
 drawing editor lazy-loaded and its bundle size recorded. Depends on: C19.
 Estimate: 3.0 h. Safe to cut: drawings on figures (notes only).
 
-## C21 — Steve backend
+## C22 — Steve backend
 
 Goal: `backend/steve/` with `provider.py` as the one door to Gemini, the
 consent column (`profiles.steve_consent_at`) and off switch, the context
@@ -3696,26 +3980,26 @@ may import the SDK or read `GEMINI_*`; `GEMINI_API_KEY` added on Render
 when Steve ships (the user's decision at C16); re-test `gemini-3.8-flash`
 and `gemini-3.6-flash` for chat (both 503 on 2026-11-12, DEBUG_LOG) and
 size the global daily budget: on Flash-Lite's 500 requests a day, a
-per-reader limit of 15 serves about 33 readers. Depends on: C16 (and C19
+per-reader limit of 15 serves about 33 readers. Depends on: C16 (and C20
 for highlighted passages). Estimate: 3.5 h. Safe to cut: the response
 cache.
 
-## C22 — Steve in the reader
+## C23 — Steve in the reader
 
 Goal: the consent notice, "Ask Steve" from a highlight, a side panel with
 grounded answers (page or section citations, LaTeX), the paused state,
 the own-key setting (last 4 shown). Depends on: C21. Estimate: 2.5 h.
 Safe to cut: image questions on figures (`GEMINI_MODEL_VISION`).
 
-## C23 — focus mode
+## C24 — focus mode
 
 Goal: FOCUS_RULES F1-F14: body start, the server-timed stopwatch,
 idle and hidden-tab pauses, page and 3-hour caps, the bookmark quiz from
 the question bank, server-scored points; "Quiz me" outside focus mode.
-Depends on: C17 (C19 for bookmarks as anchors). Estimate: 3.5 h. Safe
+Depends on: C17 (C20 for bookmarks as anchors). Estimate: 3.5 h. Safe
 to cut: "Quiz me".
 
-## C24 — XP, streaks, badges and leagues
+## C25 — XP, streaks, badges and leagues
 
 Goal: GAMIFICATION G1-G15: XP from final focus points, the daily goal,
 streaks with earned freezes, the badge catalogue, weekly leagues with the
@@ -3723,7 +4007,7 @@ streaks with earned freezes, the badge catalogue, weekly leagues with the
 on: C23. Estimate: 3.0 h. Safe to cut: leagues (XP, streaks and badges
 only).
 
-## C25 — phase 2 verification and release
+## C26 — phase 2 verification and release
 
 Goal: live journey and isolation checks extended to highlights, notes,
 Steve (consent, quota, no book text in logs) and focus scoring; docs and

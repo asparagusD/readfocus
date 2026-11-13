@@ -2449,12 +2449,12 @@ Studio by the user, 2026-11-12).
 ### Fix
 None in code (no Steve code exists). The user chose
 `GEMINI_MODEL_CHAT=gemini-3.5-flash-lite`, the one model verified on this
-key (200 "OK" twice, 1.3-1.7 s), for both variables; C21 re-tests
+key (200 "OK" twice, 1.3-1.7 s), for both variables; C22 (Steve backend, C21 before the C19 renumbering) re-tests
 `gemini-3.8-flash` and `gemini-3.6-flash` and may switch chat back.
 
 ### Regression test
 Not applicable: an external service's availability. Steve's backend
-(C21) must treat 503 and timeouts as the paused state
+(C22) must treat 503 and timeouts as the paused state
 (`steve-guardrails` section 6) and get offline tests for both.
 
 ### Commit
@@ -3264,3 +3264,133 @@ commit (clean).
 
 ### Commit
 fix(graph): refresh the inventory after the C18.G docs commits
+
+## 2026-11-13 C19.1 — epubcheck: `annotation` not allowed in the converted fixture
+
+**Status:** fixed
+
+### Symptom
+epubcheck 5.4.0 (in Docker, `eclipse-temurin:21-jre`, after the user's
+"Yes, download") on the committed e2e fixture and on the builder's test
+book. Expected 0 errors and 0 warnings for both; the test book passed, the
+fixture did not:
+
+    docker run --rm -v "<scratchpad>/epubcheck-dl/ex/epubcheck-5.4.0:/ec:ro" -v "<scratchpad>/books:/books:ro" eclipse-temurin:21-jre sh -c 'for f in /books/*.epub; do echo "== $f"; java -jar /ec/epubcheck.jar "$f" 2>&1; done'
+    == /books/converted.epub
+    Validating using EPUB version 3.4 rules.
+    ERROR(RSC-005): /books/converted.epub/OEBPS/chapter-002.xhtml(3,891): Error while parsing file: element "annotation" not allowed here; expected the element end-tag or element "ns:maction", "ns:maligngroup", "ns:malignmark", "ns:menclose", "ns:merror", "ns:mfenced", "ns:mfrac", "ns:mi", "ns:mlongdiv", "ns:mmultiscripts", "ns:mn", "ns:mo", "ns:mover", "ns:mpadded", "ns:mphantom", "ns:mroot", "ns:mrow", "ns:ms", "ns:mspace", "ns:msqrt", "ns:mstack", "ns:mstyle", "ns:msub", "ns:msubsup", "ns:msup", "ns:mtable", "ns:mtext", "ns:munder", "ns:munderover" or "ns:semantics" (with xmlns:ns="http://www.w3.org/1998/Math/MathML")
+
+    Check finished with errors
+    Messages: 0 fatals / 1 error / 0 warnings / 0 infos
+    == /books/test-book.epub
+    Validating using EPUB version 3.4 rules.
+    No errors or warnings detected.
+    Messages: 0 fatals / 0 errors / 0 warnings / 0 infos
+
+### Repro
+The same command on `frontend/e2e/fixtures/books/converted.epub` (fails
+every time; deterministic file). Without Java:
+`pytest backend/tests/test_epub_builder.py -q -k "fixture or semantics"`.
+
+### Hypotheses
+1. The fixture's MathML is invalid: `<annotation>` sits directly in
+   `<math>`, but MathML allows it only inside `<semantics>` (with the
+   presentation in an `<mrow>` first). Evidence: line 3, column 891 of
+   chapter 2 is the end of the math; the builder's own test book (MathML
+   without annotation) passes. Ruled out if: the same markup wrapped in
+   `<semantics>` still fails. Result: confirmed (see Fix: the rebuilt
+   fixture passes epubcheck with 0/0).
+2. The builder serialises MathML wrongly (namespace lost, prefixes).
+   Evidence: none beyond the error's `ns:` prefixes, which are
+   epubcheck's own. Ruled out if: the test book's MathML passes. Result:
+   ruled out, the test book passes.
+
+### Root cause
+`tools/make_converted_fixture.py:27` wrote `<annotation>` as a direct
+child of `<math>`. The builder passed it through, and `check_epub`
+(`backend/convert/epub_builder.py`) had no MathML rule, so only epubcheck
+saw it.
+
+### Fix
+The fixture's math is now `<math><semantics><mrow>…</mrow><annotation
+encoding="application/x-tex">…</annotation></semantics></math>`, as KaTeX
+writes it (`regions/epub.py` finds the annotation anywhere inside
+`<math>`). `check_epub` now reports an `annotation` or `annotation-xml`
+whose parent is not `semantics`, so the structural checks catch it
+without Java. First attempt.
+
+### Regression test
+`backend/tests/test_epub_builder.py::test_check_epub_flags_an_annotation_outside_semantics`
+and `::test_the_committed_converted_fixture_is_sound`. Before the fix
+(`git stash push -- backend/convert/epub_builder.py
+tools/make_converted_fixture.py frontend/e2e/fixtures/books/converted.epub`):
+1 failed, 1 passed (the semantics test fails; the fixture test passes
+because `check_epub` had no MathML rule yet). With the new rule but the
+old fixture: the fixture test fails (1 failed, 1 passed). After the whole
+fix: 2 passed; `test_epub_builder.py` 15 passed. epubcheck on the rebuilt
+fixture (3,663 bytes) and the test book: 0 fatals / 0 errors / 0 warnings
+/ 0 infos each.
+
+### Commit
+fix(convert): wrap the fixture's TeX annotation in MathML semantics
+
+## 2026-11-13 C19.4 — a resumed ingest would take OCR text into a mixed book's chunks
+
+**Status:** fixed
+
+### Symptom
+Found in the C19 close's self-review of `git diff readfocus-2.0...HEAD`, not
+by a failing check. `book_ingestor.run_job` (C19.4a) loads every stored
+`page_ocr` text and lets it stand in for its page on every run. A book with
+text of its own (a mixed book) is ingested once without OCR; if its job is
+run again later (the startup sweep resumes stale jobs, common on Render
+Free) after the reader has OCR'd a scanned page, the pages hold more text,
+`chunk_text` cuts different chunks, and they are upserted by index over the
+first run's: stored chunk text changes under questions that quote it
+(C18's rule, ANCHORS A6). Expected: OCR text only for a book whose own text
+gives no chunks at all (a fully scanned book), the case re-ingest is for.
+
+    pytest backend/tests/test_ocr_pages.py -q -k "fully_scanned_book_is_read or own_text_never"
+    E       AssertionError: assert ['Some text o...on page two.'] == ['Some text o... first page.']
+    E         Left contains one more item: 'Read by OCR on page two.'
+    1 failed, 1 passed, 19 deselected in 2.08s
+
+### Repro
+`pytest backend/tests/test_ocr_pages.py::test_a_book_with_its_own_text_never_takes_ocr_text_into_chunks -q`
+(a two-page PDF, page 1 with text, page 2 scanned with stored OCR text).
+
+### Hypotheses
+1. `run_job` passes `ocr_pages.load_texts(book_id)` to `extract_text_from_pdf` whatever the book's own
+   text is. Evidence: `backend/services/book_ingestor.py`, the C19.4 branch of `run_job`. Ruled out if:
+   the repro's chunks hold no OCR text. Result: confirmed by reading the code and the repro's output.
+
+### Root cause
+`backend/services/book_ingestor.py` `run_job`: the OCR texts were loaded and
+substituted unconditionally, not only for a book with no text of its own.
+
+### Fix
+Attempt 1: `run_job` read the PDF's own text first and loaded OCR text only
+when that gave no chunks. The repro passed, but the companion test (a
+fully scanned book whose second page carries a stray " 3 ") failed: a page
+number or a scanner's stamp makes chunks, so such a book would never be
+read from its OCR text (and, with chunks, never re-ingested).
+
+Attempt 2 (kept): `extract_text_from_pdf(file_bytes, ocr, scanned)` takes
+an OCR *loader* and calls it only when every page is a scanned page (fewer
+than `OCR_MIN_PAGE_CHARS` visible characters); then the stray marks are
+dropped and the OCR text is the book's text (before any OCR: no text, so
+no chunks and the pages-only opening). A book with any page of its own
+text never asks for OCR text, so its chunks are the same on every run.
+`run_job` passes a loader that also records what it loaded (the region
+job is still skipped for a book read from OCR).
+
+### Regression test
+`backend/tests/test_ocr_pages.py::test_a_book_with_its_own_text_never_takes_ocr_text_into_chunks`,
+`::test_ingestion_flags_pages_without_text_and_keeps_a_mixed_books_own_text`
+and `::test_a_fully_scanned_book_takes_its_ocr_text_and_drops_stray_marks`.
+With `backend/services/book_ingestor.py` stashed: 3 failed. With the fix:
+3 passed; `test_ocr_pages.py` 22 passed; `pytest backend/tests -q` 1159
+passed.
+
+### Commit
+fix(ingest): read OCR text only for books with no text of their own

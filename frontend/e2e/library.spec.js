@@ -102,7 +102,7 @@ test.describe('at 375 px', () => {
 });
 
 /** Record and answer the writes and the status poll; GET /books comes from `shelf()` on each call. */
-async function mockWrites(page, shelf, { progress = 0.64, failUpload = false } = {}) {
+async function mockWrites(page, shelf, { progress = 0.64, failUpload = false, uploaded = {} } = {}) {
   const calls = { uploads: [], deletes: [], statuses: 0 };
   const json = (route, body, status = 200) => route.fulfill({ status, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   await page.route('http://localhost:8000/books', async (route) => {
@@ -131,7 +131,7 @@ async function mockWrites(page, shelf, { progress = 0.64, failUpload = false } =
     const field = (name) => new RegExp(`name="${name}"\\r\\n\\r\\n([^\\r]*)`).exec(body)?.[1];
     calls.uploads.push({ title: field('title'), author: field('author'), mode: field('storage_mode'), file: /filename="([^"]+)"/.exec(body)?.[1] });
     if (failUpload) return json(route, { detail: 'That file is too large' }, 400);
-    return json(route, { book_id: 'new-book', status: 'processing' });
+    return json(route, { book_id: 'new-book', status: 'processing', ...uploaded });
   });
   return calls;
 }
@@ -156,6 +156,25 @@ test('adding a book: picker, inline errors, the same form fields, a toast and a 
   expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: 'Edith Wharton', mode: 'cloud', file: 'the_age_of_innocence.pdf' }]);
   await expect(page.getByText('The Age Of Innocence is on your shelf. We’re reading its pages now.')).toBeVisible();
   await expect(page.locator('.rf-shelf__item').first()).toContainText('Reading the pages…');
+});
+
+test('a notebook is converted on the server: no device choice, sent to keep, missing images listed (C19.2c)', async ({ page }) => {
+  const notes = ['Image not included: https://example.org/a.png (remote images are not downloaded)',
+    'Image not included: figures/b.png (not in the upload)', 'Image not included: figures/c.png (not in the upload)'];
+  const calls = await mockWrites(page, () => SHELF.slice(0, 3), { uploaded: { source_format: 'ipynb', notes } });
+  await page.goto('/');
+  await page.getByRole('list').waitFor();
+  await expect(page.locator('input[type=file]')).toHaveAttribute('accept', '.pdf,.epub,.md,.markdown,.zip,.ipynb');
+  await page.locator('input[type=file]').setInputFiles({ name: 'fourier_lab.ipynb', mimeType: 'application/x-ipynb+json', buffer: Buffer.from('{}') });
+  const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
+  await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+  await expect(dialog).toContainText('We’ll turn it into a book on our server, keeping its equations, code and images');
+  await dialog.getByLabel('Author').fill('Ada Lovelace');
+  if (shots) await page.screenshot({ path: `${shots}/library-convert-dialog.png` });
+  await dialog.getByRole('button', { name: 'Add book' }).click();
+  await expect(dialog).toBeHidden();
+  expect(calls.uploads).toEqual([{ title: 'Fourier Lab', author: 'Ada Lovelace', mode: 'cloud', file: 'fourier_lab.ipynb' }]);
+  await expect(page.getByText('3 images couldn’t be included: https://example.org/a.png (remote images are not downloaded); figures/b.png (not in the upload) and 1 more.')).toBeVisible();
 });
 
 test('a device-only book: the choice is sent, the file stays in this browser, the shelf says so (C17.1)', async ({ page }) => {
@@ -225,7 +244,7 @@ test('a file dropped on the page: the drop target shows, then the dialog; other 
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await drag('dragenter', 'photo.jpg');
   await drag('drop', 'photo.jpg');
-  await expect(page.getByText('photo.jpg isn’t a PDF or EPUB, so it can’t go on the shelf.')).toBeVisible();
+  await expect(page.getByText('photo.jpg isn’t a PDF, EPUB, Markdown file or notebook, so it can’t go on the shelf.')).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 

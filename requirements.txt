@@ -19,6 +19,12 @@ supabase==2.34.1
 pypdf==7.0.0
 ebooklib==0.21
 beautifulsoup4==4.15.0
+# Region map (C18.2): characters with fonts and positions. pdfplumber is
+# MIT; it pins pdfminer.six (MIT) and needs pypdfium2 (BSD-3/Apache-2.0,
+# ships PDFium), pinned here to releases at least two weeks old.
+pdfplumber==0.11.10
+pdfminer.six==20260107
+pypdfium2==5.14.0
 
 # Local NLP (backend/nlp/). No API calls.
 fastembed==0.9.1

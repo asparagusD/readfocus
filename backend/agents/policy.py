@@ -322,3 +322,21 @@ GARBLE_HARD_REASONS = ("replacement", "private_use", "cid", "control")
 # glyph): this many letters in one run of one-character tokens is a signal.
 # Inline maths such as "a + b = c + d" has fewer letters per run.
 GARBLE_SPACED_RUN = 6
+
+# --- Region map: characters, lines and blocks (backend/regions/extract.py, C18.2)
+
+# Sizes are in em: multiples of the line's median font size.
+# A character smaller than this share of the page's median size (a sub- or
+# superscript, a footnote mark) joins the line it overlaps most.
+REGION_SMALL_CHAR = 0.8
+# A character joins a line when they overlap vertically by at least this
+# share of the smaller height (0.3 lets a raised "2" join its "x").
+REGION_LINE_OVERLAP = 0.3
+# A horizontal gap wider than this is a space between words. TeX shrinks
+# its interword space to about 0.11 em in tight lines; letters sit closer.
+REGION_WORD_GAP_EM = 0.1
+# A gap wider than this splits a line in two (a column gutter).
+REGION_COLUMN_GAP_EM = 2.5
+# Consecutive lines that overlap horizontally form one block while the gap
+# between them is at most this.
+REGION_BLOCK_GAP_EM = 0.9

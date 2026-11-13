@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 595,
-    "inventoried": 454,
+    "tracked": 598,
+    "inventoried": 457,
     "excluded": 141
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13716,
+      "size_bytes": 13734,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,10 +249,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 324,
-      "size_bytes": 13045,
+      "lines": 342,
+      "size_bytes": 13919,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime); and the region map's garble thresholds (C18.1)."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime); and the region map's garble thresholds (C18.1) and line and block grouping (C18.2)."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -389,6 +389,14 @@
       "size_bytes": 99,
       "role": "lib",
       "purpose": "Package marker for backend.regions, the region map (C18): prose, math, code, figure, table and unreadable regions of a book's pages; pure functions, no I/O."
+    },
+    {
+      "path": "backend/regions/extract.py",
+      "language": "python",
+      "lines": 207,
+      "size_bytes": 7189,
+      "role": "lib",
+      "purpose": "PDF page characters with font name, size, box and uprightness via pdfplumber, grouped by the pure build_page into lines (sub- and superscripts joined with their baseline offset, split at column gutters, word gaps from positions) and blocks, in points from the crop box's top-left; page_chars, iter_pages (file opened once per range, pages closed) and page_count."
     },
     {
       "path": "backend/regions/garble.py",
@@ -799,6 +807,14 @@
       "purpose": "Tests for scripts/eval_grader.py's pure helpers (C15.3): candidate constants apply to one grading call only, and the best combination is chosen by agreements, then error."
     },
     {
+      "path": "backend/tests/test_extract.py",
+      "language": "python",
+      "lines": 145,
+      "size_bytes": 5743,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/extract.py: font subset prefixes, word gaps with and without space characters, line order, raised and lowered characters, column gutters, paragraph blocks, rotated characters, crop-box coordinates, determinism, the e2e sample.pdf from a path and from bytes, and SICP's word gaps when the shelf is present."
+    },
+    {
       "path": "backend/tests/test_feedback.py",
       "language": "python",
       "lines": 141,
@@ -1129,8 +1145,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1259,
-      "size_bytes": 71306,
+      "lines": 1297,
+      "size_bytes": 73871,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1201,8 +1217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3718,
-      "size_bytes": 659245,
+      "lines": 3719,
+      "size_bytes": 661133,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3185,8 +3201,8 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 36,
-      "size_bytes": 969,
+      "lines": 42,
+      "size_bytes": 1241,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
@@ -3269,6 +3285,14 @@
       "size_bytes": 3047,
       "role": "script",
       "purpose": "Measures the embedding model in a fresh process: psutil RSS before and after import, load and batches, model load time, and the latency of a batch of short and of chunk-sized texts."
+    },
+    {
+      "path": "scripts/dev/measure_regions.py",
+      "language": "python",
+      "lines": 75,
+      "size_bytes": 3026,
+      "role": "script",
+      "purpose": "Measures pdfplumber's import RSS and, per technical-shelf PDF, seconds per page and peak RSS while reading pages through backend.regions.extract (sampled pages, or every page with the file opened once or once per --batch pages); local files only."
     },
     {
       "path": "scripts/dev/measure_rss.py",
@@ -3577,8 +3601,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 456,
-      "size_bytes": 135633,
+      "lines": 459,
+      "size_bytes": 136724,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

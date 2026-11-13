@@ -545,6 +545,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/regions/extract.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/regions/garble.py",
       "type": "file",
       "role": "lib",
@@ -846,6 +852,12 @@
     },
     {
       "id": "file:backend/tests/test_eval_grader.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_extract.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2705,6 +2717,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/measure_regions.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/measure_rss.py",
       "type": "file",
       "role": "script",
@@ -4023,6 +4041,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/regions/extract.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/regions/garble.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -4650,6 +4673,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_eval_grader.py",
       "to": "file:scripts/eval_grader.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_extract.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_extract.py",
+      "to": "file:backend/regions/extract.py"
     },
     {
       "type": "imports",
@@ -6740,6 +6773,11 @@
       "type": "imports",
       "from": "file:scripts/dev/measure_embedder.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_regions.py",
+      "to": "file:backend/regions/extract.py"
     },
     {
       "type": "imports",

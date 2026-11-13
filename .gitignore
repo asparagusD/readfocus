@@ -20,6 +20,10 @@ build/
 # Local model caches (FASTEMBED_CACHE)
 .cache/
 
+# Region-map test shelf: the books stay local; SHELF.md records them (C18.1)
+samples/technical/*
+!samples/technical/SHELF.md
+
 # Agent skills: platform-specific binaries (reinstall with `npx impeccable skills install`)
 .claude/skills/impeccable/scripts/bin/
 

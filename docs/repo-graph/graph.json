@@ -539,6 +539,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/regions/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/garble.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/__init__.py",
       "type": "file",
       "role": "router",
@@ -840,6 +852,12 @@
     },
     {
       "id": "file:backend/tests/test_feedback.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_garble.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2627,6 +2645,12 @@
       "language": "text"
     },
     {
+      "id": "file:samples/technical/SHELF.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:scripts/backfill_book_files.py",
       "type": "file",
       "role": "script",
@@ -2694,6 +2718,12 @@
     },
     {
       "id": "file:scripts/export_agent_graph.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/fetch_test_shelf.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -3993,6 +4023,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/regions/garble.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/auth.py",
       "to": "file:backend/dependencies.py"
     },
@@ -4630,6 +4665,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_feedback.py",
       "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_garble.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_garble.py",
+      "to": "file:backend/regions/garble.py"
     },
     {
       "type": "imports",

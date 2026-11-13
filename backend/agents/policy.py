@@ -310,3 +310,15 @@ MAX_SHELF_BYTES_PER_USER = 300 * 1024 * 1024
 MAX_BOOK_FILE_BYTES = 50 * 1024 * 1024
 # Lifetime of the signed URL GET /books/{id}/file returns.
 BOOK_FILE_URL_SECONDS = 300
+
+# --- Region map: garbled text (backend/regions/garble.py, C18.1) -------------
+
+# Text is garbled when this share (0..1) of its visible characters is
+# suspicious, or when any hard signal appears at all.
+GARBLE_MAX_RATIO = 0.05
+# Signals that never occur in a clean extraction: one is enough.
+GARBLE_HARD_REASONS = ("replacement", "private_use", "cid", "control")
+# Single letters separated by spaces ("T h e", a TeX equation read glyph by
+# glyph): this many letters in one run of one-character tokens is a signal.
+# Inline maths such as "a + b = c + d" has fewer letters per run.
+GARBLE_SPACED_RUN = 6

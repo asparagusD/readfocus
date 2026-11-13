@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 590,
-    "inventoried": 449,
+    "tracked": 595,
+    "inventoried": 454,
     "excluded": 141
   },
   "files": [
@@ -81,8 +81,8 @@
     {
       "path": ".gitignore",
       "language": "gitignore",
-      "lines": 28,
-      "size_bytes": 370,
+      "lines": 32,
+      "size_bytes": 496,
       "role": "config",
       "purpose": "Root ignore rules: env files, node_modules, Python caches and virtualenvs, .cache/, the Impeccable binary, OS files."
     },
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13699,
+      "size_bytes": 13716,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,10 +249,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 312,
-      "size_bytes": 12439,
+      "lines": 324,
+      "size_bytes": 13045,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime); and the region map's garble thresholds (C18.1)."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -381,6 +381,22 @@
       "size_bytes": 5442,
       "role": "lib",
       "purpose": "Pure text utilities, standard library only: normalize (PDF hyphenation, line breaks, quotes), split_sentences with an abbreviation guard, tokenize, STOPWORDS, content_words, and informativeness, a 0..1 sentence score."
+    },
+    {
+      "path": "backend/regions/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 99,
+      "role": "lib",
+      "purpose": "Package marker for backend.regions, the region map (C18): prose, math, code, figure, table and unreadable regions of a book's pages; pure functions, no I/O."
+    },
+    {
+      "path": "backend/regions/garble.py",
+      "language": "python",
+      "lines": 96,
+      "size_bytes": 4515,
+      "role": "lib",
+      "purpose": "Garble detector: garble_score(text) gives the share of visible characters in broken-extraction artefacts (U+FFFD, Private Use Area, (cid:NN), control characters, a math symbol inside a word, long runs of spaced single letters, dropped-ligature gaps) and the reasons; is_garbled applies the policy thresholds."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -791,6 +807,14 @@
       "purpose": "Pytest: each feedback template and its conditions, term lists, the evidence snippet, and over the labelled fixtures that feedback holds only template words, key terms and verbatim evidence."
     },
     {
+      "path": "backend/tests/test_garble.py",
+      "language": "python",
+      "lines": 102,
+      "size_bytes": 4286,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/garble.py: clean prose, math, code and ligature characters not flagged; cid artefacts, replacement and private-use characters, a garbled TeX equation extraction, symbols inside words, spaced-letter runs at the threshold, dropped-ligature gaps and control characters flagged."
+    },
+    {
       "path": "backend/tests/test_grader.py",
       "language": "python",
       "lines": 247,
@@ -1177,8 +1201,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3407,
-      "size_bytes": 638362,
+      "lines": 3718,
+      "size_bytes": 659245,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3167,6 +3191,14 @@
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
     {
+      "path": "samples/technical/SHELF.md",
+      "language": "markdown",
+      "lines": 15,
+      "size_bytes": 2760,
+      "role": "doc",
+      "purpose": "The C18 technical test shelf as fetched: file, title, author, what each book tests, licence, source URL, the page the licence was checked on, size and sha256 (the books themselves are git-ignored)."
+    },
+    {
       "path": "scripts/backfill_book_files.py",
       "language": "python",
       "lines": 87,
@@ -3261,6 +3293,14 @@
       "size_bytes": 1578,
       "role": "script",
       "purpose": "Writes docs/repo-graph/AGENT_GRAPH.md from the compiled LangGraph workflow: an event table from graph.ENTRY and workflow.get_graph().draw_mermaid(); needs .env, so it is the agent-graph Makefile target, not part of graph."
+    },
+    {
+      "path": "scripts/fetch_test_shelf.py",
+      "language": "python",
+      "lines": 138,
+      "size_bytes": 7071,
+      "role": "script",
+      "purpose": "Downloads the region map's technical test shelf (five openly licensed books) into the git-ignored samples/technical/, after checking each licence's wording on its source page; records title, source, licence, size and sha256 in samples/technical/SHELF.md; --dry-run checks licences only."
     },
     {
       "path": "scripts/manual/README.md",
@@ -3537,8 +3577,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 451,
-      "size_bytes": 134154,
+      "lines": 456,
+      "size_bytes": 135633,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

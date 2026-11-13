@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14323,
+      "size_bytes": 14375,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -601,8 +601,8 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 281,
-      "size_bytes": 13234,
+      "lines": 288,
+      "size_bytes": 13761,
       "role": "service",
       "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b)."
     },
@@ -1193,8 +1193,8 @@
     {
       "path": "backend/tests/test_ocr_pages.py",
       "language": "python",
-      "lines": 199,
-      "size_bytes": 10135,
+      "lines": 224,
+      "size_bytes": 11512,
       "role": "test",
       "purpose": "Pytest for C19.4: clean_page (paragraphs, unsure/long/off-page/skipped words, garbled lines), skip_boxes ignoring the full-page scan, ready_to_reingest cases, scanned pages flagged and OCR text standing in at extraction, the POST/GET endpoints (store, replace, read back, refusals, owner only), re-ingest on the last page, a book with chunks kept, the pages-only session start, and ingestion recording scanned pages and skipping the region job after OCR."
     },
@@ -1465,8 +1465,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3335,
-      "size_bytes": 146012,
+      "lines": 3396,
+      "size_bytes": 149300,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },

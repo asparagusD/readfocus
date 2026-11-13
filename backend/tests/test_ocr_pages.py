@@ -65,14 +65,21 @@ def test_only_a_fully_scanned_cloud_book_is_read_again(book, done, expected):
 
 # --- ingestion: flagging and OCR text standing in ------------------------------------------------
 
-def test_ingestion_flags_pages_without_text_and_uses_ocr_text(monkeypatch):
+def test_ingestion_flags_pages_without_text_and_keeps_a_mixed_books_own_text(monkeypatch):
     monkeypatch.setattr(pdf_text, "page_texts", lambda data: ["A full page of real text here.", "", " 12 ", "More text on the fourth page."])
-    scanned = []
-    assert book_ingestor.extract_text_from_pdf(b"%PDF", None, scanned) == [
+    scanned, asked = [], []
+    assert book_ingestor.extract_text_from_pdf(b"%PDF", lambda: asked.append(1) or {2: "Read by OCR."}, scanned) == [
         "A full page of real text here.", " 12 ", "More text on the fourth page."]
-    assert scanned == [2, 3]
-    assert book_ingestor.extract_text_from_pdf(b"%PDF", {2: "Read by OCR."}) == [
-        "A full page of real text here.", "Read by OCR.", " 12 ", "More text on the fourth page."]
+    assert scanned == [2, 3] and asked == []  # a book with text of its own never asks for OCR text
+
+
+def test_a_fully_scanned_book_takes_its_ocr_text_and_drops_stray_marks(monkeypatch):
+    monkeypatch.setattr(pdf_text, "page_texts", lambda data: ["", " 12 ", "Digitized"])
+    scanned = []
+    assert book_ingestor.extract_text_from_pdf(b"%PDF", lambda: {1: "Page one.", 3: "Page three."}, scanned) == [
+        "Page one.", "Page three."]
+    assert scanned == [1, 2, 3]
+    assert book_ingestor.extract_text_from_pdf(b"%PDF", dict) == []  # before any OCR: no chunks, pages-only
 
 
 # --- the endpoints ---------------------------------------------------------------------------------
@@ -170,15 +177,16 @@ def test_a_fully_scanned_book_opens_pages_only(api, monkeypatch):
     assert api.client.post("/sessions/start", json={"book_id": "b2"}).status_code == 400
 
 
-def test_ingestion_records_scanned_pages_and_skips_the_region_job_after_ocr(monkeypatch):
+def ingest(monkeypatch, texts: list[str], ocr: dict[int, str]):
+    """Run the ingest job on a PDF whose pypdf page texts are `texts`, with `ocr` stored; (db, region job calls)."""
     db = MemoryDb()
     for module in (book_ingestor, ocr_pages, jobs):
         monkeypatch.setattr(module, "supabase", db)
     db.tables["books"] = [{"id": "b1", "user_id": USER, "file_type": "pdf", "status": "processing",
                            "storage_path": "u/b1.pdf", "title": "t", "author": "a"}]
-    db.tables["page_ocr"] = [{"book_id": "b1", "page": 2, "text": "Read by OCR on page two."}]
-    monkeypatch.setattr(pdf_text, "page_texts", lambda data: ["Some text on the first page.", ""])
-    monkeypatch.setattr(book_ingestor, "chunk_text", lambda pages, target_words=600: list(pages))
+    db.tables["page_ocr"] = [{"book_id": "b1", "page": page, "text": text} for page, text in ocr.items()]
+    monkeypatch.setattr(pdf_text, "page_texts", lambda data: list(texts))
+    monkeypatch.setattr(book_ingestor, "chunk_text", lambda pages, target_words=600: [p for p in pages if p.strip()])
     monkeypatch.setattr(book_ingestor.book_structure, "build_with_paths", lambda *a: (None, None, None))
     monkeypatch.setattr(book_ingestor.embedder, "embed", lambda texts: [[0.0] * 3 for _ in texts])
 
@@ -193,7 +201,24 @@ def test_ingestion_records_scanned_pages_and_skips_the_region_job_after_ocr(monk
     monkeypatch.setattr(book_ingestor.region_job, "after_ingest", after_ingest)
     job = jobs.claim(jobs.create("b1", USER), manual=True)
     asyncio.run(book_ingestor.run_job(job, b"%PDF"))
-    assert db.tables["books"][0]["scanned_pages"] == [2]
-    assert [c["content"] for c in sorted(db.tables["chunks"], key=lambda c: c["chunk_index"])] == [
-        "Some text on the first page.", "Read by OCR on page two."]
+    return db, regions
+
+
+def contents(db) -> list[str]:
+    return [c["content"] for c in sorted(db.tables.get("chunks", []), key=lambda c: c["chunk_index"])]
+
+
+def test_a_fully_scanned_book_is_read_from_its_ocr_text(monkeypatch):
+    db, regions = ingest(monkeypatch, ["", " 3 "], {1: "Read by OCR on page one.", 2: "And on page two."})
+    assert db.tables["books"][0]["scanned_pages"] == [1, 2]
+    assert contents(db) == ["Read by OCR on page one.", "And on page two."]
     assert regions == []  # the OCR'd book's regions came from the OCR
+
+
+def test_a_book_with_its_own_text_never_takes_ocr_text_into_chunks(monkeypatch):
+    # C18: stored chunk text never changes once questions quote it. A resumed job (the startup sweep) on a
+    # mixed book whose scanned page was OCR'd meanwhile must cut the same chunks as its first run did.
+    db, regions = ingest(monkeypatch, ["Some text on the first page.", ""], {2: "Read by OCR on page two."})
+    assert db.tables["books"][0]["scanned_pages"] == [2]
+    assert contents(db) == ["Some text on the first page."]
+    assert regions == ["b1"]  # its region map is built as for any PDF

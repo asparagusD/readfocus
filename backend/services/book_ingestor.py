@@ -4,6 +4,7 @@ import os
 import re
 import tempfile
 import zipfile
+from collections.abc import Callable
 from xml.etree import ElementTree
 from pypdf import PdfReader
 import ebooklib
@@ -25,21 +26,23 @@ FIRST_BATCH = 5
 INGEST_BATCH = 16
 TARGET_WORDS = 600
 
-def extract_text_from_pdf(file_bytes: bytes, ocr: dict[int, str] | None = None,
+def extract_text_from_pdf(file_bytes: bytes, ocr: Callable[[], dict[int, str]] | None = None,
                           scanned: list[int] | None = None) -> list[str]:
     """Extract text from a PDF file, returning a list of page strings (pages with no text left out).
     A few pages per reader since C18.G (pdf_text.page_texts): the same text at a quarter of the memory.
-    C19.4: `ocr` ({page: text}) stands in for a page; `scanned`, when given, collects the numbers of the
-    pages whose text layer has fewer than OCR_MIN_PAGE_CHARS visible characters."""
-    pages = []
-    for number, text in enumerate(pdf_text.page_texts(file_bytes), start=1):
-        text = text.replace('\x00', '')
-        if scanned is not None and len("".join(text.split())) < policy.OCR_MIN_PAGE_CHARS:
-            scanned.append(number)
-        text = (ocr or {}).get(number) or text
-        if text:
-            pages.append(text)
-    return pages
+    C19.4: `scanned`, when given, collects the numbers of the pages whose text layer has fewer than
+    OCR_MIN_PAGE_CHARS visible characters. When every page is such a page (a fully scanned book), its
+    stray marks (page numbers, a scanner's stamp) are not its text: `ocr()` ({page: text}) is, and is
+    asked for only then. A book with text of its own never takes OCR text, so its chunks are the same
+    on every run (C18; DEBUG_LOG 2026-11-13 C19.4)."""
+    texts = [text.replace('\x00', '') for text in pdf_text.page_texts(file_bytes)]
+    marks = [n for n, text in enumerate(texts, start=1) if len("".join(text.split())) < policy.OCR_MIN_PAGE_CHARS]
+    if scanned is not None:
+        scanned.extend(marks)
+    if ocr is not None and texts and len(marks) == len(texts):
+        found = ocr()
+        return [found[n] for n in range(1, len(texts) + 1) if found.get(n)]
+    return [text for text in texts if text]
 
 def extract_text_from_epub(file_bytes: bytes) -> list[str]:
     """Extract text from an EPUB file, returning a list of chapter strings."""
@@ -231,9 +234,13 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         if file_bytes is None:
             file_bytes = await asyncio.to_thread(download, book["storage_path"])
         ocr: dict[int, str] = {}
-        if book["file_type"].lower() == "pdf":  # C19.4: scanned pages flagged; their OCR text, once posted, read
-            ocr, scanned = ocr_pages.load_texts(book_id), []
-            pages = extract_text_from_pdf(file_bytes, ocr, scanned)
+        if book["file_type"].lower() == "pdf":  # C19.4: scanned pages flagged; a fully scanned book read from OCR
+            scanned: list[int] = []
+
+            def load_ocr() -> dict[int, str]:
+                ocr.update(ocr_pages.load_texts(book_id))
+                return ocr
+            pages = extract_text_from_pdf(file_bytes, load_ocr, scanned)
             if scanned:
                 ocr_pages.record_scanned(book_id, scanned)
         else:

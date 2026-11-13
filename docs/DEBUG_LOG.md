@@ -3333,3 +3333,64 @@ fixture (3,663 bytes) and the test book: 0 fatals / 0 errors / 0 warnings
 
 ### Commit
 fix(convert): wrap the fixture's TeX annotation in MathML semantics
+
+## 2026-11-13 C19.4 — a resumed ingest would take OCR text into a mixed book's chunks
+
+**Status:** fixed
+
+### Symptom
+Found in the C19 close's self-review of `git diff readfocus-2.0...HEAD`, not
+by a failing check. `book_ingestor.run_job` (C19.4a) loads every stored
+`page_ocr` text and lets it stand in for its page on every run. A book with
+text of its own (a mixed book) is ingested once without OCR; if its job is
+run again later (the startup sweep resumes stale jobs, common on Render
+Free) after the reader has OCR'd a scanned page, the pages hold more text,
+`chunk_text` cuts different chunks, and they are upserted by index over the
+first run's: stored chunk text changes under questions that quote it
+(C18's rule, ANCHORS A6). Expected: OCR text only for a book whose own text
+gives no chunks at all (a fully scanned book), the case re-ingest is for.
+
+    pytest backend/tests/test_ocr_pages.py -q -k "fully_scanned_book_is_read or own_text_never"
+    E       AssertionError: assert ['Some text o...on page two.'] == ['Some text o... first page.']
+    E         Left contains one more item: 'Read by OCR on page two.'
+    1 failed, 1 passed, 19 deselected in 2.08s
+
+### Repro
+`pytest backend/tests/test_ocr_pages.py::test_a_book_with_its_own_text_never_takes_ocr_text_into_chunks -q`
+(a two-page PDF, page 1 with text, page 2 scanned with stored OCR text).
+
+### Hypotheses
+1. `run_job` passes `ocr_pages.load_texts(book_id)` to `extract_text_from_pdf` whatever the book's own
+   text is. Evidence: `backend/services/book_ingestor.py`, the C19.4 branch of `run_job`. Ruled out if:
+   the repro's chunks hold no OCR text. Result: confirmed by reading the code and the repro's output.
+
+### Root cause
+`backend/services/book_ingestor.py` `run_job`: the OCR texts were loaded and
+substituted unconditionally, not only for a book with no text of its own.
+
+### Fix
+Attempt 1: `run_job` read the PDF's own text first and loaded OCR text only
+when that gave no chunks. The repro passed, but the companion test (a
+fully scanned book whose second page carries a stray " 3 ") failed: a page
+number or a scanner's stamp makes chunks, so such a book would never be
+read from its OCR text (and, with chunks, never re-ingested).
+
+Attempt 2 (kept): `extract_text_from_pdf(file_bytes, ocr, scanned)` takes
+an OCR *loader* and calls it only when every page is a scanned page (fewer
+than `OCR_MIN_PAGE_CHARS` visible characters); then the stray marks are
+dropped and the OCR text is the book's text (before any OCR: no text, so
+no chunks and the pages-only opening). A book with any page of its own
+text never asks for OCR text, so its chunks are the same on every run.
+`run_job` passes a loader that also records what it loaded (the region
+job is still skipped for a book read from OCR).
+
+### Regression test
+`backend/tests/test_ocr_pages.py::test_a_book_with_its_own_text_never_takes_ocr_text_into_chunks`,
+`::test_ingestion_flags_pages_without_text_and_keeps_a_mixed_books_own_text`
+and `::test_a_fully_scanned_book_takes_its_ocr_text_and_drops_stray_marks`.
+With `backend/services/book_ingestor.py` stashed: 3 failed. With the fix:
+3 passed; `test_ocr_pages.py` 22 passed; `pytest backend/tests -q` 1159
+passed.
+
+### Commit
+fix(ingest): read OCR text only for books with no text of their own

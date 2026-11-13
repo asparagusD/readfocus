@@ -43,7 +43,7 @@ algorithmic or local-model alternative instead of adding it.
 ### Existing violations
 
 None since C8.8: the Groq and Google AI Studio clients, their packages and
-their keys are gone. Until Steve's backend chunk (C21) the guard below
+their keys are gone. Until Steve's backend chunk (C22) the guard below
 still bans Gemini everywhere; that chunk narrows it, test first, so only
 `backend/steve/` may import the Gemini SDK or read `GEMINI_*` keys.
 `backend/tests/test_no_paid_ai.py` fails if a banned

@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14118,
+      "size_bytes": 14120,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1201,8 +1201,8 @@
     {
       "path": "design/HANDOFF_PHASE2_SUMMARY.md",
       "language": "markdown",
-      "lines": 300,
-      "size_bytes": 22246,
+      "lines": 303,
+      "size_bytes": 22455,
       "role": "doc",
       "purpose": "Summary of the phase-2 Claude Design handoff (reference only, not imported by the app): bundle contents, the 75 cropped screen images, new tokens with contrast, new components with states, screen notes, mapping to chunks C17-C24, gaps and conflicts with the phase-2 specs, and open questions."
     },
@@ -1322,7 +1322,7 @@
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
       "lines": 3266,
-      "size_bytes": 142102,
+      "size_bytes": 142150,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1330,7 +1330,7 @@
       "path": "docs/DECISIONS.md",
       "language": "markdown",
       "lines": 70,
-      "size_bytes": 6220,
+      "size_bytes": 6252,
       "role": "doc",
       "purpose": "Decisions with their evidence, newest first: D-C17.3, foliate-js over epub.js for EPUB (licence, maintenance, size, pagination, spreads, CFI, fixed layout, images, MathML, section documents, scripts), accepted, with how its gaps are covered."
     },
@@ -1385,8 +1385,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3731,
-      "size_bytes": 699295,
+      "lines": 4008,
+      "size_bytes": 715825,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

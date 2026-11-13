@@ -2449,12 +2449,12 @@ Studio by the user, 2026-11-12).
 ### Fix
 None in code (no Steve code exists). The user chose
 `GEMINI_MODEL_CHAT=gemini-3.5-flash-lite`, the one model verified on this
-key (200 "OK" twice, 1.3-1.7 s), for both variables; C21 re-tests
+key (200 "OK" twice, 1.3-1.7 s), for both variables; C22 (Steve backend, C21 before the C19 renumbering) re-tests
 `gemini-3.8-flash` and `gemini-3.6-flash` and may switch chat back.
 
 ### Regression test
 Not applicable: an external service's availability. Steve's backend
-(C21) must treat 503 and timeouts as the paused state
+(C22) must treat 503 and timeouts as the paused state
 (`steve-guardrails` section 6) and get offline tests for both.
 
 ### Commit

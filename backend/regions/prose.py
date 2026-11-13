@@ -18,6 +18,7 @@ region's, inline math by its text and context) or per EPUB block (by the
 element path that `chunks.block_paths` and `page_regions.anchor` share).
 """
 
+import bisect
 import re
 
 from backend.regions import policy
@@ -25,7 +26,7 @@ from backend.regions.garble import is_garbled
 
 NON_PROSE = ("math", "code", "figure", "table")
 PROSE_KINDS = ("block", "prose")
-PLACEHOLDER = re.compile(r"\[(?:Equation|Code listing|Figure|Table)\b[^\[\]]*, (?:p|sec)\. \d+\]")
+PLACEHOLDER = re.compile(r"\[(?:Equation|Code listing|Figure|Table|Unreadable text)\b[^\[\]]*, (?:p|sec)\. \d+\]")
 CAPTION_LABEL = re.compile(policy.CAPTION_PATTERN)
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 # A placeholder holds "p. 45", which a sentence splitter would end a sentence at: it is masked first.
@@ -64,7 +65,13 @@ def placeholder(region: dict, where: str) -> str:
 def apply(content: str, start: int, spans: list[dict]) -> tuple[str, list[dict]]:
     """`content` (starting at book skeleton position `start`) with each span's characters replaced by its
     placeholder, written once per region; whitespace outside spans kept as it is. Returns (text, spans used)."""
-    out, used, seen, pending = [], [], set(), ""
+    text, used, _at = _apply(content, start, spans)
+    return text, used
+
+
+def _apply(content: str, start: int, spans: list[dict]) -> tuple[str, list[dict], list]:
+    """apply(), and for each character of the text its book skeleton position (None for spaces and placeholders)."""
+    out, used, seen, pending, at = [], [], set(), "", []
     spans = sorted(spans, key=lambda s: s["start"])
     pos, i, inside = start, 0, False
     for ch in content:
@@ -73,6 +80,7 @@ def apply(content: str, start: int, spans: list[dict]) -> tuple[str, list[dict]]
                 pending += ch
             else:
                 out.append(ch)
+                at.append(None)
             continue
         while i < len(spans) and spans[i]["end"] <= pos:
             i += 1
@@ -80,18 +88,49 @@ def apply(content: str, start: int, spans: list[dict]) -> tuple[str, list[dict]]
         if span is not None:
             if not inside and out and not out[-1][-1:].isspace() and id(span["region"]) not in seen:
                 out.append(" ")
+                at.append(None)
             if id(span["region"]) not in seen:
                 seen.add(id(span["region"]))
                 used.append(span)
                 out.append(span["text"])
+                at += [None] * len(span["text"])
             inside, pending = True, ""
         else:
             if inside and pending and out and not out[-1][-1:].isspace():
                 out.append("\n" if "\n" in pending else " ")
+                at.append(None)
             inside, pending = False, ""
             out.append(ch)
+            at.append(pos)
         pos += 1
-    return "".join(out), used
+    return "".join(out), used, at
+
+
+def _garbled(sentence: str) -> bool:
+    """A sentence's own text (placeholders left out) is garbled as printed or with its lines joined."""
+    own = PLACEHOLDER.sub(" ", sentence)
+    return bool(own.strip()) and (is_garbled(own) or is_garbled(" ".join(own.split())))
+
+
+def unreadable(text: str, at: list, where) -> tuple[str, list[tuple[str, int]]]:
+    """Each garbled sentence of `text` as "[Unreadable text, <where(position)>]", the placeholders it held kept
+    after it. Sentences end at . ! ? and a space, never inside a placeholder. Returns (text, [(placeholder,
+    book position)])."""
+    inside = [m.span() for m in PLACEHOLDER.finditer(text)]
+    cuts = [m.end() for m in SENTENCE_END.finditer(text) if not any(s < m.start() < e for s, e in inside)]
+    out, found, begin = [], [], 0
+    for end in [*cuts, len(text)]:
+        piece = text[begin:end]
+        body = piece.rstrip()
+        if body and _garbled(body):
+            position = next((p for p in at[begin:end] if p is not None), None)
+            mark = f"[Unreadable text, {where(position)}]"
+            out.append(" ".join([mark, *PLACEHOLDER.findall(body)]) + piece[len(body):])
+            found.append((mark, position))
+        else:
+            out.append(piece)
+        begin = end
+    return "".join(out), found
 
 
 def _merge(spans: list[dict]) -> list[dict]:
@@ -195,15 +234,21 @@ def pdf_prose(chunks: list[str], page_texts: list[str], regions: list[dict]) -> 
         for span in page_spans(text, number, sorted(by_page.get(number, []), key=lambda r: r["order_in_page"])):
             spans.append({**span, "start": span["start"] + total, "end": span["end"] + total, "page": number})
         total += len(skeleton(text))
+    def page_at(position):  # the page holding a book skeleton position
+        return bisect.bisect_right(starts, position or 0) if starts else None
+
     out = []
     for content, (start, end) in zip(chunks, _ranges(chunks)):
-        text, used = apply(content, start, spans)
+        text, used, at = _apply(content, start, spans)
+        text, bad = unreadable(text, at, lambda p: f"p. {page_at(p)}")
         pieces = [{"page": n + 1, "char_start": max(start, s) - s, "char_end": min(end, e) - s}
                   for n, (s, e) in enumerate(zip(starts, [*starts[1:], total])) if s < end and e > start and e > s]
-        out.append({"prose": text, "anchors": {
+        marks = [{"kind": u["region"]["kind"], "text": u["text"], "page": u["page"],
+                  "order": u["region"].get("order_in_page"), "at": u["start"]} for u in used]
+        marks += [{"kind": "unreadable", "text": mark, "page": page_at(p), "order": None, "at": p or 0} for mark, p in bad]
+        out.append({"prose": text, "garbled": len(bad), "anchors": {
             "kind": "pdf", "pages": [pieces[0]["page"], pieces[-1]["page"]] if pieces else None, "spans": pieces,
-            "placeholders": [{"kind": u["region"]["kind"], "text": u["text"], "page": u["page"],
-                              "order": u["region"].get("order_in_page")} for u in used]}})
+            "placeholders": [{k: v for k, v in m.items() if k != "at"} for m in sorted(marks, key=lambda m: m["at"])]}})
     return out
 
 
@@ -241,16 +286,17 @@ def _cfi(spine: int, path: str) -> str:
 def epub_prose(chunks: list[str], blocks, paths, regions: list[dict]) -> list[dict]:
     """Per chunk {prose, anchors} for an EPUB from its blocks and block paths; content as it is without them."""
     if not blocks or not paths:
-        return [{"prose": content, "anchors": None} for content in chunks]
+        return [{"prose": content, "garbled": 0, "anchors": None} for content in chunks]
     by_spine: dict[int, list[dict]] = {}
     for region in regions:
         by_spine.setdefault(region.get("spine_index"), []).append(region)
-    spans, places, pos, done = [], [], 0, {}  # done: skeleton characters already seen in each spine document
+    spans, places, pos, done, owners = [], [], 0, {}, []  # done: skeleton characters seen per spine document
     for chunk_blocks, chunk_paths in zip(blocks, paths):
         first = last = None
         for block, place in zip(chunk_blocks, chunk_paths):
             spine, path, text = place["spine_index"], place["path"], skeleton(block["text"])
             if spine is not None:  # a document outside the spine has text but no place to anchor to
+                owners.append((pos, spine))
                 location = spine * 1_000_000 + min(done.get(spine, 0), 999_999)
                 last = {"spine_index": spine, "cfi": _cfi(spine, path), "location": location}
                 first = first or last
@@ -279,14 +325,24 @@ def epub_prose(chunks: list[str], blocks, paths, regions: list[dict]) -> list[di
             pos += len(text)
         places.append((first, last))
     spans = _merge(spans)
+    keys = [p for p, _ in owners]
+
+    def spine_at(position):  # the spine document holding a book skeleton position
+        n = bisect.bisect_right(keys, position or 0) - 1
+        return owners[n][1] if n >= 0 else None
+
     out = []
     for content, (start, _end), (first, last) in zip(chunks, _ranges(chunks), places):
-        text, used = apply(content, start, spans)
-        out.append({"prose": text, "anchors": {
+        text, used, at = _apply(content, start, spans)
+        text, bad = unreadable(text, at, lambda p: f"sec. {(spine_at(p) or 0) + 1}")
+        marks = [{"kind": u["region"]["kind"], "text": u["text"], "spine_index": u["region"].get("spine_index"),
+                  "order": u["region"].get("order_in_page"), "cfi": (u["region"].get("anchor") or {}).get("cfi"),
+                  "at": u["start"]} for u in used]
+        marks += [{"kind": "unreadable", "text": mark, "spine_index": spine_at(p), "order": None, "cfi": None,
+                   "at": p or 0} for mark, p in bad]
+        out.append({"prose": text, "garbled": len(bad), "anchors": {
             "kind": "epub", "start": first, "end": last,
-            "placeholders": [{"kind": u["region"]["kind"], "text": u["text"],
-                              "spine_index": u["region"].get("spine_index"), "order": u["region"].get("order_in_page"),
-                              "cfi": (u["region"].get("anchor") or {}).get("cfi")} for u in used]}})
+            "placeholders": [{k: v for k, v in m.items() if k != "at"} for m in sorted(marks, key=lambda m: m["at"])]}})
     return out
 
 

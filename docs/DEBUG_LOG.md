@@ -3067,3 +3067,93 @@ chunks, no garbled item. Standard checks: see the commit.
 
 ### Commit
 fix(regions): skip blocks outside the spine when anchoring EPUB prose
+
+## 2026-11-13 C18.G — a garbled run split across lines passes the question filter
+
+**Status:** fixed
+
+### Symptom
+Gate G5's offline ingestion of the shelf flagged 2 question prompts as
+garbled (expected 0): no exception, found by the gate's scan.
+
+    python scripts/dev/gate_g5.py
+    sicp.pdf  PROMPT: 'Fill in the blank: D E A B S C Figure 3.25:A half-adder circuit. circuit shown inFigure 3.25consists of an or-gate, two and-gates, and an _____.' ['spaced_letters']
+    interactive-linear-algebra.pdf  PROMPT: 'Fill in the blank: Consider the system of two _____ n x + y + z = 1 x − z = 0.' ['spaced_letters']
+
+### Repro
+`backend/tests/test_question_generation_agent.py::test_a_garbled_run_split_across_lines_is_still_dropped`
+(figure labels one per line before a sentence).
+
+### Hypotheses
+1. `body_sentences` runs `is_garbled` on the sentence's verbatim span, where
+   the single letters sit on separate lines; the detector's spaced-letter run
+   only joins single spaces, so the run shows only in the prompt, whose
+   whitespace is collapsed. Evidence: both prompts are `spaced_letters`,
+   both sources have one letter per line. Ruled out if the span with its
+   lines joined is not garbled. Result: confirmed (it is).
+
+### Root cause
+`backend/agents/question_generation/agent.py` `body_sentences` checked the
+span as printed only; `evaluator_agent.reference_from_passage` likewise.
+
+### Fix
+`agent.garbled(span)`: the detector on the span as printed and with its
+whitespace collapsed (as a question shows it); the evaluator's reference
+sentences are checked with whitespace collapsed.
+
+### Regression test
+`test_question_generation_agent.py::test_a_garbled_run_split_across_lines_is_still_dropped`:
+1 failed with the fix stashed, passes with it.
+
+### Commit
+fix(agents): check sentences for garble with their lines joined
+
+## 2026-11-13 C18.G — garbled sentences stay in the agents' prose
+
+**Status:** fixed
+
+### Symptom
+Gate G5 scans every sentence of every chunk's prose with `is_garbled`;
+expected 0 flagged, got SICP 2,105 of 14,003 and Interactive Linear Algebra
+172 of 5,375 (Calculus, Circuits, Alice 0):
+
+    python scripts/dev/gate_g5.py
+    sicp.pdf: prose_garbled 2105 (reasons: private_use 2089, control 27, ligature 3, symbol_in_word 2)
+      'e Massachuses Institute of Technology'   ("The Massachusetts")
+    interactive-linear-algebra.pdf: prose_garbled 172 (control 155, private_use 18)
+      'form matrix was \x81 1 0 5 1\n0 1 2 −1\n\x8b\n.'   (matrix brackets)
+
+### Repro
+`backend/tests/test_prose.py::test_a_garbled_sentence_becomes_an_unreadable_placeholder_with_its_page`
+and the three tests after it.
+
+### Hypotheses
+1. C18.6 counts garbled sentences and keeps them out of questions and
+   evidence, but `pdf_prose` and `epub_prose` leave their text in `prose`,
+   which Steve and any later reader of `prose` would see. The C18 plan
+   asked for an `unreadable` placeholder instead. Evidence: every flagged
+   item is a sentence that `prose` still holds verbatim. Ruled out if the
+   flagged sentences were not in `prose`. Result: confirmed.
+2. The detector over-flags. Ruled out: the reasons are Linux Libertine's
+   Private Use Area ligatures (U+E049 "Th", U+E03C "tt") and control
+   characters for ILA's matrix brackets, real artefacts (C18.1).
+
+### Root cause
+`backend/regions/prose.py`: garbled sentences were counted, never replaced.
+
+### Fix
+`prose.unreadable` replaces each garbled sentence (checked without its
+placeholders, as printed and with its lines joined) with "[Unreadable text,
+p. N]" ("sec. N" in an EPUB), keeping the placeholders it held after it; the
+page comes from the skeleton position of the sentence's first character
+(`_apply` now records one per character). The placeholder is listed in the
+chunk's anchors (`kind: unreadable`), counted in `garbled` and stored as
+`garbled_sentences`; question generation already leaves out sentences with
+a placeholder.
+
+### Regression test
+`test_prose.py`: the four unreadable tests failed with the fix stashed (4
+failed, 14 passed), pass with it (18 passed).
+
+### Commit
+fix(regions): replace garbled sentences in prose with unreadable placeholders

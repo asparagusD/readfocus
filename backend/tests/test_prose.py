@@ -190,3 +190,36 @@ def test_epub_blocks_outside_the_spine_get_no_anchor():
     assert built[1]["prose"] == "Colophon text."
     assert built[1]["anchors"]["start"] is None and built[1]["anchors"]["end"] is None
     assert built[0]["anchors"]["end"]["spine_index"] == 2
+
+
+# --- unreadable sentences (C18.G) ------------------------------------------------------------------
+
+def test_a_garbled_sentence_becomes_an_unreadable_placeholder_with_its_page():
+    pages = ["A clean first sentence.", "is construct is clear. The next sentence reads well."]
+    chunks = ["A clean first sentence.\n\nis construct is clear. The next sentence reads well."]
+    built = prose.pdf_prose(chunks, pages, [])[0]
+    assert built["prose"] == "A clean first sentence.\n\n[Unreadable text, p. 2] The next sentence reads well."
+    assert built["garbled"] == 1 and prose.sentence_counts(built["prose"])["garbled"] == 0
+    assert built["anchors"]["placeholders"] == [
+        {"kind": "unreadable", "text": "[Unreadable text, p. 2]", "page": 2, "order": None}]
+    assert prose.PLACEHOLDER.fullmatch("[Unreadable text, p. 2]")
+
+
+def test_an_unreadable_sentence_keeps_the_placeholders_inside_it():
+    page = "Th law is\nE = I R (2.1)\nfor metals. Clean text follows."
+    regions = [region("math", "E = IR (2.1)", order=1, equation_number="2.1")]
+    built = prose.pdf_prose([page], [page], regions)[0]
+    assert built["prose"] == "[Unreadable text, p. 1] [Equation 2.1, p. 1] Clean text follows."
+
+
+def test_a_run_of_single_letters_across_lines_is_unreadable_too():
+    page = "D\nE\nA\nB\nS\nC Labels of a figure. Then prose."
+    assert prose.pdf_prose([page], [page], [])[0]["prose"] == "[Unreadable text, p. 1] Then prose."
+
+
+def test_epub_unreadable_sentences_name_their_section():
+    chunks, blocks, paths, regions = epub_book()
+    blocks[0][0]["text"] = "Alice was ere."
+    chunks[0] = chunks[0].replace("Alice was tired.", "Alice was ere.")
+    built = prose.epub_prose(chunks, blocks, paths, regions)[0]
+    assert built["prose"].startswith("[Unreadable text, sec. 2]") and built["garbled"] == 1

@@ -68,7 +68,7 @@ def plan(book: dict, file_bytes: bytes, regions: list[dict], chunks: list[dict])
         built = prose.epub_prose(contents, blocks if all(blocks) else None, paths if all(paths) else None, regions)
     writes = []
     for row, new in zip(chunks, built):
-        garbled = prose.sentence_counts(new["prose"])["garbled"]
+        garbled = new["garbled"]  # sentences replaced by "[Unreadable text, p. N]" (C18.G)
         report["garbled"] += garbled
         report["placeholders"] += len((new["anchors"] or {}).get("placeholders") or [])
         values = {"prose": new["prose"], "anchors": new["anchors"], "garbled_sentences": garbled}

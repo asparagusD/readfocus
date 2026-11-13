@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 657,
-    "inventoried": 515,
+    "tracked": 661,
+    "inventoried": 519,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14268,
+      "size_bytes": 14287,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 319,
-      "size_bytes": 12756,
+      "lines": 333,
+      "size_bytes": 13417,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -401,8 +401,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 48,
-      "size_bytes": 1767,
+      "lines": 58,
+      "size_bytes": 1873,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
@@ -575,10 +575,18 @@
       "purpose": "GET /mastery?book_id=&limit=&offset=: the caller's concept mastery rows with their labels, weakest first, one page per call with the total; a page past the last row is empty."
     },
     {
+      "path": "backend/routers/ocr.py",
+      "language": "python",
+      "lines": 88,
+      "size_bytes": 4724,
+      "role": "router",
+      "purpose": "OCR endpoints (C19.4): POST /books/{id}/ocr stores one scanned page's tesseract.js words (owner only, flagged pages only, cleaned by ocr_pages) and, when that completes a fully scanned book with no chunks, requeues and runs ingestion from the OCR text; GET /books/{id}/ocr gives scanned_pages, done, and with first..last (at most 20) each page's words for the text layer."
+    },
+    {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 377,
-      "size_bytes": 19205,
+      "lines": 396,
+      "size_bytes": 20315,
       "role": "router",
       "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
@@ -593,8 +601,8 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 259,
-      "size_bytes": 12082,
+      "lines": 281,
+      "size_bytes": 13234,
       "role": "service",
       "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b)."
     },
@@ -639,6 +647,14 @@
       "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract and Wikipedia's short description; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
     },
     {
+      "path": "backend/services/ocr_pages.py",
+      "language": "python",
+      "lines": 136,
+      "size_bytes": 7202,
+      "role": "service",
+      "purpose": "OCR text for scanned PDF pages (C19.4): skip_boxes (math, code, table and figure regions, not the full-page scan), clean_page (drops unsure, over-long, off-page and skipped words, then garbled lines; text in paragraphs, region boxes, compact words), region_rows, load_texts and record_scanned (best-effort before migration 022), store_page (page_ocr upsert, text regions replaced), done_pages, ready_to_reingest (a fully scanned cloud book with no chunks whose every scanned page has text)."
+    },
+    {
       "path": "backend/services/pdf_text.py",
       "language": "python",
       "lines": 45,
@@ -649,8 +665,8 @@
     {
       "path": "backend/services/processing_jobs.py",
       "language": "python",
-      "lines": 102,
-      "size_bytes": 4656,
+      "lines": 110,
+      "size_bytes": 5188,
       "role": "service",
       "purpose": "processing_jobs rows for book ingestion and the regions job (kinds INGEST and REGIONS): create one queued job per book and kind, get by kind, the pure claimable rule (done, fresh running, attempt cap), claim with an optimistic update on attempts and updated_at so only one caller runs a job, advance the cursor and progress after each batch, finish, fail, and list stale queued or running jobs for the startup sweep."
     },
@@ -1113,8 +1129,8 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 289,
-      "size_bytes": 12466,
+      "lines": 295,
+      "size_bytes": 12522,
       "role": "test",
       "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume. C17.6: no structure leaves block_paths empty too."
     },
@@ -1122,7 +1138,7 @@
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
       "lines": 125,
-      "size_bytes": 5840,
+      "size_bytes": 5871,
       "role": "test",
       "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
     },
@@ -1173,6 +1189,14 @@
       "size_bytes": 3334,
       "role": "test",
       "purpose": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
+    },
+    {
+      "path": "backend/tests/test_ocr_pages.py",
+      "language": "python",
+      "lines": 199,
+      "size_bytes": 10135,
+      "role": "test",
+      "purpose": "Pytest for C19.4: clean_page (paragraphs, unsure/long/off-page/skipped words, garbled lines), skip_boxes ignoring the full-page scan, ready_to_reingest cases, scanned pages flagged and OCR text standing in at extraction, the POST/GET endpoints (store, replace, read back, refusals, owner only), re-ingest on the last page, a book with chunks kept, the pages-only session start, and ingestion recording scanned pages and skipping the region job after OCR."
     },
     {
       "path": "backend/tests/test_offline.py",
@@ -1505,8 +1529,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4013,
-      "size_bytes": 730213,
+      "lines": 4014,
+      "size_bytes": 733061,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3999,6 +4023,14 @@
       "purpose": "Migration 021 (C19.2c, additive): books.source_format text, 'md' or 'ipynb' for a book converted to EPUB on upload, null otherwise."
     },
     {
+      "path": "supabase/migrations/022_scanned_pages.sql",
+      "language": "sql",
+      "lines": 39,
+      "size_bytes": 1800,
+      "role": "migration",
+      "purpose": "Migration 022 (C19.4, additive): books.scanned_pages integer[]; table page_ocr (book_id cascade, user_id, page, text, words jsonb, mean_confidence, engine, unique (book_id, page)) with RLS: a reader selects their own rows, the service role writes."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -4065,8 +4097,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 517,
-      "size_bytes": 159150,
+      "lines": 521,
+      "size_bytes": 160875,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -4098,7 +4130,7 @@
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
       "lines": 264,
-      "size_bytes": 10960,
+      "size_bytes": 11007,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

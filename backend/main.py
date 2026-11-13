@@ -7,7 +7,16 @@ from fastapi import FastAPI
 
 from backend.cors import add_cors
 from backend.nlp import embedder
-from backend.routers import agent, auth, books, dashboard, lookup, mastery, sessions
+from backend.routers import (
+    agent,
+    auth,
+    books,
+    dashboard,
+    lookup,
+    mastery,
+    ocr,
+    sessions,
+)
 from backend.services import ingestion_worker
 
 load_dotenv()
@@ -32,6 +41,7 @@ add_cors(app)  # FRONTEND_URL only; localhost too when ENV=development (backend/
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])
+app.include_router(ocr.router, prefix="/books", tags=["Books"])
 app.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
 app.include_router(agent.router, prefix="/agent", tags=["Agent"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])

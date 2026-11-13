@@ -11,7 +11,8 @@ saves the cursor (pages done) after every batch. A batch run again first
 deletes its pages' rows, so a resumed job rewrites and never duplicates.
 
 A failed regions job is recorded on its row and never changes the book's
-status. EPUBs get theirs from their structure (backend/regions/epub.py,
+status. Once a job is done the chunks' prose-only text is rebuilt from the
+regions (prose_job, C18.6b). EPUBs get theirs from their structure (backend/regions/epub.py,
 C18.5b), a spine document at a time; device-only books have no file on the
 server to resume from, so they get no job.
 """
@@ -23,6 +24,7 @@ from statistics import median
 from backend.regions.classify import classify_page
 from backend.regions.garble import garble_score
 from backend.services import processing_jobs as jobs
+from backend.services import prose_job
 from backend.services.supabase_client import supabase
 
 PAGES_PER_BATCH = 20
@@ -125,6 +127,7 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         if book["file_type"] == "epub":
             total = await _run_epub(job, book, file_bytes)
             jobs.finish(job["id"], total)
+            await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions
             return {"status": "done", "pages": total}
         total = await asyncio.to_thread(_count, file_bytes)
         for first, last in batches(total, job["cursor"], PAGES_PER_BATCH):
@@ -132,6 +135,7 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
             _store(book, first, last, pages)
             jobs.advance(job["id"], last, total)
         jobs.finish(job["id"], total)
+        await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions
         return {"status": "done", "pages": total}
     except Exception as error:  # noqa: BLE001 - recorded on the job; the book stays as it is
         print(f"Regions of book {job['book_id']} stopped: {error}")

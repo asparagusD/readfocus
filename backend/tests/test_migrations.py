@@ -452,3 +452,14 @@ def test_019_every_row_has_a_page_and_box_or_an_anchor_and_spine_item():
                      r"OR \(anchor IS NOT NULL AND spine_index IS NOT NULL\)\)", sql)
     assert re.search(r"CREATE UNIQUE INDEX IF NOT EXISTS \w+ ON public\.page_regions \(book_id, spine_index, "
                      r"order_in_page\) WHERE spine_index IS NOT NULL", sql)
+
+
+# --- 020: prose-only text per chunk (C18.6b) ------------------------------------------------------
+
+def test_020_adds_prose_anchors_and_garbled_count_to_chunks_only():
+    sql = re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "020_chunk_prose.sql"))
+    assert "ALTER TABLE public.chunks ADD COLUMN IF NOT EXISTS prose text;" in sql
+    assert "ALTER TABLE public.chunks ADD COLUMN IF NOT EXISTS anchors jsonb;" in sql
+    assert ("ALTER TABLE public.chunks ADD COLUMN IF NOT EXISTS garbled_sentences integer "
+            "CHECK (garbled_sentences >= 0);") in sql
+    assert sql.count(";") == 3

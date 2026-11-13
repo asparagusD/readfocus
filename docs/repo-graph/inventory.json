@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 621,
-    "inventoried": 479,
+    "tracked": 624,
+    "inventoried": 482,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13824,
+      "size_bytes": 13862,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -161,10 +161,10 @@
     {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
-      "lines": 175,
-      "size_bytes": 9127,
+      "lines": 180,
+      "size_bytes": 9510,
       "role": "agent",
-      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence."
+      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence; the passage is each chunk's prose when it has one, and sentences with a placeholder or garbled text are never reference evidence (C18.6b)."
     },
     {
       "path": "backend/agents/graph.py",
@@ -265,10 +265,10 @@
     {
       "path": "backend/agents/question_generation/agent.py",
       "language": "python",
-      "lines": 138,
-      "size_bytes": 6760,
+      "lines": 155,
+      "size_bytes": 7696,
       "role": "agent",
-      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); hands each chunk's concepts to the concept store; returns a GenerationReport."
+      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); hands each chunk's concepts to the concept store; returns a GenerationReport. Since C18.6b it reads a chunk's prose when set and leaves out sentences with a placeholder or garbled text, counted in the report's dropped."
     },
     {
       "path": "backend/agents/question_generation/assembler.py",
@@ -583,6 +583,14 @@
       "purpose": "processing_jobs rows for book ingestion and the regions job (kinds INGEST and REGIONS): create one queued job per book and kind, get by kind, the pure claimable rule (done, fresh running, attempt cap), claim with an optimistic update on attempts and updated_at so only one caller runs a job, advance the cursor and progress after each batch, finish, fail, and list stale queued or running jobs for the startup sweep."
     },
     {
+      "path": "backend/services/prose_job.py",
+      "language": "python",
+      "lines": 94,
+      "size_bytes": 4674,
+      "role": "service",
+      "purpose": "Prose-only text per chunk after the regions job (C18.6b): rebuild(book, file_bytes) reads the book's page_regions and chunks (paged by 1000), builds prose and anchors through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises."
+    },
+    {
       "path": "backend/services/question_bank.py",
       "language": "python",
       "lines": 83,
@@ -593,10 +601,10 @@
     {
       "path": "backend/services/region_job.py",
       "language": "python",
-      "lines": 149,
-      "size_bytes": 7107,
+      "lines": 153,
+      "size_bytes": 7450,
       "role": "service",
-      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books."
+      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books; once done, hands the book to prose_job.after_regions (C18.6b)."
     },
     {
       "path": "backend/services/retriever.py",
@@ -1009,8 +1017,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 454,
-      "size_bytes": 19446,
+      "lines": 465,
+      "size_bytes": 20052,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
@@ -1071,6 +1079,14 @@
       "purpose": "Pytest for backend/regions/prose.py: placeholder wording for math, code, figures and tables, caption cutting, span replacement written once per region, PDF chunks with display and inline math, code and a labelled figure across an empty page, short labels, page spans per chunk, EPUB code, figure and inline math by path with CFI anchors, placeholders never garbled, garbled and placeholder sentence counts."
     },
     {
+      "path": "backend/tests/test_prose_job.py",
+      "language": "python",
+      "lines": 100,
+      "size_bytes": 4559,
+      "role": "test",
+      "purpose": "Pytest for backend/services/prose_job.py and the evaluator's passage: prose, anchors and garbled counts stored, only changed chunks embedded again and re-questioned (unused questions deleted, used kept), idempotent second run, a book without regions left alone, after_regions never raising, load_passage reading prose, reference sentences without placeholders or garbled text."
+    },
+    {
       "path": "backend/tests/test_question_assembler.py",
       "language": "python",
       "lines": 125,
@@ -1081,8 +1097,8 @@
     {
       "path": "backend/tests/test_question_generation_agent.py",
       "language": "python",
-      "lines": 204,
-      "size_bytes": 9310,
+      "lines": 228,
+      "size_bytes": 10429,
       "role": "test",
       "purpose": "Pytest on an in-memory database and a fake embedder: stored rows are grounded in their chunk, the report matches them, a second run adds nothing, questions per chunk are capped, each chunk's concepts go to the concept store (whose failure loses no question), and no LLM is used."
     },
@@ -1105,8 +1121,8 @@
     {
       "path": "backend/tests/test_region_job.py",
       "language": "python",
-      "lines": 199,
-      "size_bytes": 9048,
+      "lines": 212,
+      "size_bytes": 9535,
       "role": "test",
       "purpose": "Pytest for backend/services/region_job.py on the in-memory database with sample.pdf: block rows, math rows and inline math meta, page batches from the cursor, one regions job beside the ingest job, device-only books skipped, EPUB jobs storing anchored rows and resuming without duplicates, a full run, a resumed run that never duplicates, a failure that leaves the book readable, bytes passed in, the sweep's dispatch by kind, giving up without touching the book, and after_ingest."
     },
@@ -3727,6 +3743,14 @@
       "purpose": "Migration 019 (C18.5b): page_regions.anchor jsonb and spine_index; page and bbox may be null (the one approved exception); a check that each row has a page and box or an anchor and spine item; a unique index on (book_id, spine_index, order_in_page) for EPUB rows."
     },
     {
+      "path": "supabase/migrations/020_chunk_prose.sql",
+      "language": "sql",
+      "lines": 20,
+      "size_bytes": 1354,
+      "role": "migration",
+      "purpose": "Migration 020 (C18.6b, additive): chunks.prose (content with placeholders for math, code, figures and tables), chunks.anchors (PDF pages and spans or EPUB CFIs, and the placeholders), chunks.garbled_sentences (non-negative)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -3777,8 +3801,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 481,
-      "size_bytes": 146650,
+      "lines": 484,
+      "size_bytes": 148188,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

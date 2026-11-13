@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from backend.regions import extract
-from backend.services import book_ingestor, ingestion_worker, region_job
+from backend.services import book_ingestor, ingestion_worker, prose_job, region_job
 from backend.services import processing_jobs as jobs
 from backend.tests.memory_db import MemoryDb
 
@@ -20,7 +20,7 @@ LONG_AGO = jobs.iso(datetime.now(UTC) - timedelta(hours=1))
 @pytest.fixture
 def db(monkeypatch):
     fake = MemoryDb()
-    for module in (region_job, jobs, ingestion_worker, book_ingestor):
+    for module in (region_job, jobs, ingestion_worker, book_ingestor, prose_job):
         monkeypatch.setattr(module, "supabase", fake)
     monkeypatch.setattr(region_job, "PAGES_PER_BATCH", 2)
     return fake
@@ -197,3 +197,16 @@ def test_after_ingest_queues_and_runs_the_job(db):
 def test_after_ingest_never_raises(db):
     db.broken.add("processing_jobs")
     asyncio.run(region_job.after_ingest({"id": BOOK, "user_id": USER, "file_type": "pdf", "storage_path": "x.pdf"}))
+
+
+def test_a_finished_job_rebuilds_the_books_prose(db, monkeypatch):
+    add_book(db)
+    seen = []
+
+    async def after_regions(book, data):
+        seen.append((book["id"], len(data)))
+
+    monkeypatch.setattr(prose_job, "after_regions", after_regions)
+    job = region_job.queue({"id": BOOK, "user_id": USER, "file_type": "pdf", "storage_path": f"{USER}/{BOOK}.pdf"})
+    assert run(job)["status"] == "done"
+    assert seen == [(BOOK, len(SAMPLE.read_bytes()))]

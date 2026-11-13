@@ -215,6 +215,9 @@ on every page, same harness: Calculus 0.256 s/page (was 0.253), peak
 Algebra 455 pages 0.132 s/page, peak 173.7 MB. Classification costs about
 3 to 5 ms a page; reading the PDF is the rest.
 
+C18.4, with code detection and rebuilding as well: SICP 0.139 s/page,
+peak 177.5 MB; Calculus 0.265 s/page, peak 249.5 MB.
+
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 
 The model is downloaded at build time into `FASTEMBED_CACHE`

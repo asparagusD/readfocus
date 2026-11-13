@@ -24,7 +24,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from statistics import median
 
-from backend.regions import policy
+from backend.regions import code, policy
 
 MATH_FONT = re.compile(policy.MATH_FONT_PATTERN)
 MONO_FONT = re.compile(policy.MONO_FONT_PATTERN, re.IGNORECASE)
@@ -340,17 +340,25 @@ def _block_region(lines, evidences) -> Region:
 
 
 def classify_page(page) -> list[Region]:
-    """The page's display math regions and the rest of its blocks, in reading order."""
+    """The page's code blocks (C18.4), display math regions and the rest of its blocks, in reading order."""
     upright = [n for n in page.lines if n.upright]
     if not upright:
         return [Region(kind="block", lines=b.lines, bbox=[b.x0, b.top, b.x1, b.bottom],
                        text="\n".join(n.text for n in b.lines), meta={"inline_math": [], "inline_boxes": []})
                 for b in page.blocks]
-    evidences = {id(n): _evidence(n) for n in page.lines}
-    column = _column(upright)
-    groups = _display_groups(upright, [evidences[id(n)] for n in upright], column)
-    in_math = {id(upright[i]) for g in groups for i in g["ids"]}
     regions = []
+    for ids in code.code_groups(upright):  # code first: its lines are neither math nor prose
+        lines = [upright[i] for i in ids]
+        text, meta = code.rebuild(lines)
+        meta["language_guess"] = code.guess_language(text)
+        regions.append(Region(kind="code", lines=sorted(lines, key=lambda n: (n.top, n.x0)), bbox=_box(lines),
+                              text=text, meta=meta))
+    in_code = {id(n) for r in regions for n in r.lines}
+    upright = [n for n in upright if id(n) not in in_code]
+    evidences = {id(n): _evidence(n) for n in page.lines}
+    column = _column(upright) if upright else (0.0, page.width)
+    groups = _display_groups(upright, [evidences[id(n)] for n in upright], column)
+    in_math = {id(upright[i]) for g in groups for i in g["ids"]} | in_code
     for group in groups:
         lines = sorted((upright[i] for i in group["ids"]), key=lambda n: (n.top, n.x0))
         meta = {"display": True, "clues": sorted(group["clues"])}
@@ -358,7 +366,7 @@ def classify_page(page) -> list[Region]:
             meta["equation_number"] = group["number"]
         regions.append(Region(kind="math", lines=lines, bbox=_box(lines), text="\n".join(n.text for n in lines),
                               meta=meta))
-    for block in page.blocks:  # the rest, split where display math was taken out
+    for block in page.blocks:  # the rest, split where code and display math were taken out
         run = []
         for line in block.lines + [None]:
             if line is not None and id(line) not in in_math:

@@ -2923,3 +2923,35 @@ The same test, which now pins the table set with `page_regions` in it.
 
 ### Commit
 feat(regions): store page regions from a resumable regions job
+
+## 2026-11-13 C18.4 — make graph rejects a purpose for the fixture PDF
+
+**Status:** fixed
+
+### Symptom
+`make graph` before the C18.4 commit: "purposes.json is out of date ...
+Purpose for a file that is not inventoried:
+['backend/tests/fixtures/code_sample.pdf']"; then `pytest
+tools/repo_graph/tests -q`: 4 failed, 58 passed (the graph was stale).
+
+### Repro
+Every run with the entry in `tools/repo_graph/purposes.json`.
+
+### Hypotheses
+1. The inventory leaves binary files such as PDFs out, so a purpose for
+   one is stale by definition. Confirmed: the e2e `sample.pdf` and the
+   other fixture PDFs have no purpose entry either.
+2. The fixture was not staged. Ruled out: `git status` showed it added.
+
+### Root cause
+I added a purpose line for a file type the inventory does not list.
+
+### Fix
+The `code_sample.pdf` entry removed from `purposes.json`; its generator
+`scripts/dev/make_code_fixture.py` keeps the description.
+
+### Regression test
+`make graph` runs clean and `pytest tools/repo_graph/tests -q` passes.
+
+### Commit
+feat(regions): detect code blocks and rebuild indentation exactly

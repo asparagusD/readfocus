@@ -551,6 +551,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/regions/code.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/regions/extract.py",
       "type": "file",
       "role": "lib",
@@ -840,6 +846,12 @@
     },
     {
       "id": "file:backend/tests/test_classify.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_code.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2759,6 +2771,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/make_code_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/measure_embedder.py",
       "type": "file",
       "role": "script",
@@ -4105,6 +4123,16 @@
     {
       "type": "imports",
       "from": "file:backend/regions/classify.py",
+      "to": "file:backend/regions/code.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/classify.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/code.py",
       "to": "file:backend/regions/policy.py"
     },
     {
@@ -4721,6 +4749,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_classify.py",
       "to": "file:scripts/dev/eval_math_regions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_code.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_code.py",
+      "to": "file:backend/regions/code.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_code.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_code.py",
+      "to": "file:scripts/dev/make_code_fixture.py"
     },
     {
       "type": "imports",

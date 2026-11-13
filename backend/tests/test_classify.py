@@ -181,9 +181,10 @@ def test_ordinal_endings_are_not_math():
     assert classify_chars(raw)[0].meta["inline_math"] == []
 
 
-def test_a_line_that_is_mostly_monospace_has_no_inline_math():
+def test_a_line_that_is_mostly_monospace_is_code_not_math():
     raw = chars("x = 1 | y = 2 | z = 3", 72, 100, font="NimbusMonL-Regu") + prose(112)
-    assert classify_chars(raw)[0].meta["inline_math"] == []
+    first = classify_chars(raw)[0]
+    assert first.kind == "code" and "inline_math" not in first.meta
 
 
 def test_spans_in_a_later_line_count_from_the_region_start():

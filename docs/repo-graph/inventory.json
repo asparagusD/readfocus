@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 607,
-    "inventoried": 466,
-    "excluded": 141
+    "tracked": 611,
+    "inventoried": 469,
+    "excluded": 142
   },
   "files": [
     {
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13769,
+      "size_bytes": 13786,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -393,10 +393,18 @@
     {
       "path": "backend/regions/classify.py",
       "language": "python",
-      "lines": 371,
-      "size_bytes": 16682,
+      "lines": 379,
+      "size_bytes": 17278,
       "role": "lib",
-      "purpose": "Pure math classification of an extract.Page (C18.3): per-character evidence (math fonts, Unicode math symbols, sub- and superscripts; monospace, footnote marks, ordinals and units excluded), display-math regions (lines with enough evidence and an operator, or set off from the column; grouped, with fragments, stacked fractions and right-margin equation numbers), inline math spans as char ranges and boxes in the remaining blocks; iou()."
+      "purpose": "Pure classification of an extract.Page: code blocks first through backend.regions.code (C18.4), then math (C18.3): per-character evidence (math fonts, Unicode math symbols, sub- and superscripts; monospace, footnote marks, ordinals and units excluded), display-math regions (lines with enough evidence and an operator, or set off from the column; grouped, with fragments, stacked fractions and right-margin equation numbers), inline math spans as char ranges and boxes in the remaining blocks; iou()."
+    },
+    {
+      "path": "backend/regions/code.py",
+      "language": "python",
+      "lines": 194,
+      "size_bytes": 9360,
+      "role": "lib",
+      "purpose": "Pure code-block detection and exact rebuilding (C18.4): monospace lines (font names, unnamed fonts with one advance for narrow and wide letters, template lines with no prose word), blocks ended by prose, rows by baseline, text rebuilt by column = round((x0 - left) / mean char width) with blank lines from the line pitch, line-number gutters stripped into meta.line_numbers, and a keyword-based language_guess (python, scheme, c, java, javascript, matlab, unknown)."
     },
     {
       "path": "backend/regions/extract.py",
@@ -417,10 +425,10 @@
     {
       "path": "backend/regions/policy.py",
       "language": "python",
-      "lines": 90,
-      "size_bytes": 4705,
+      "lines": 120,
+      "size_bytes": 6176,
       "role": "lib",
-      "purpose": "Region-map constants in one place: garble thresholds (C18.1), line and block grouping (C18.2), math fonts, monospace fonts, script offsets, display and inline rules, equation numbers and the evaluation IoU (C18.3)."
+      "purpose": "Region-map constants in one place: garble thresholds (C18.1), line and block grouping (C18.2), math fonts, monospace fonts, script offsets, display and inline rules, equation numbers and the evaluation IoU (C18.3); code lines, template lines, unnamed fonts, rows, gutters and the language score (C18.4)."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -785,10 +793,18 @@
     {
       "path": "backend/tests/test_classify.py",
       "language": "python",
-      "lines": 234,
-      "size_bytes": 10133,
+      "lines": 235,
+      "size_bytes": 10174,
       "role": "test",
       "purpose": "Pytest for backend/regions/classify.py: math fonts and symbols, display lines (fonts, symbols alone, operator needed, monospace never), side-by-side systems, fragments, stacked fractions, equation numbers, inline spans (char ranges, scripts, footnotes and units, glued words, commas, small subscripts, ordinals, monospace lines), determinism, the label fixture, and precision/recall on the 10 hand-labelled shelf pages when the shelf is present."
+    },
+    {
+      "path": "backend/tests/test_code.py",
+      "language": "python",
+      "lines": 165,
+      "size_bytes": 7415,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/code.py: language guesses, exact indentation, blank lines and inner spaces, block-relative columns, gutters (same line and split), digits that are not a gutter, prose with inline code, template lines, lone mono symbols, unnamed equal-advance fonts, code never math, the generated PDF rebuilt character for character (Python parsed by ast), and SICP pages 50, 76 and 121 rebuilt exactly with balanced parentheses when the shelf is present."
     },
     {
       "path": "backend/tests/test_concept_store.py",
@@ -1193,16 +1209,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1322,
-      "size_bytes": 75315,
+      "lines": 1325,
+      "size_bytes": 75439,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2925,
-      "size_bytes": 126480,
+      "lines": 2957,
+      "size_bytes": 127580,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1266,7 +1282,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3720,
-      "size_bytes": 667702,
+      "size_bytes": 670730,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3343,6 +3359,14 @@
       "purpose": "Scores backend/regions/classify on the hand-labelled shelf pages: one-to-one matching at IoU >= MATH_MATCH_IOU, precision and recall for display and inline math, optionally per page; evaluate() is reused by test_classify.py."
     },
     {
+      "path": "scripts/dev/make_code_fixture.py",
+      "language": "python",
+      "lines": 104,
+      "size_bytes": 3604,
+      "role": "script",
+      "purpose": "Draws backend/tests/fixtures/code_sample.pdf with pypdfium2's raw API and standard fonts: prose, the PYTHON listing (nested indentation, a blank line, aligned comment) and the C listing with a right-aligned line-number gutter; the tests import PYTHON and C to compare."
+    },
+    {
       "path": "scripts/dev/measure_embedder.py",
       "language": "python",
       "lines": 86,
@@ -3673,8 +3697,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 468,
-      "size_bytes": 140408,
+      "lines": 471,
+      "size_bytes": 141868,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -3736,6 +3760,10 @@
     }
   ],
   "excluded": [
+    {
+      "path": "backend/tests/fixtures/code_sample.pdf",
+      "reason": "binary"
+    },
     {
       "path": "design/screens/components-lamplight-sheet.png",
       "reason": "binary"

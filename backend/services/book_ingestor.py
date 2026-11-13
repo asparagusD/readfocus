@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
-from backend.services import book_structure, covers, processing_jobs
+from backend.services import book_structure, covers, processing_jobs, region_job
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
@@ -252,6 +252,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         processing_jobs.finish(job["id"], total)
         # The book is readable and its job done; the cover (at most two 3 s requests) comes last.
         await asyncio.to_thread(look_up_cover, book, file_bytes)
+        # Then the page-region map (C18.2b), its own job: the book is already readable.
+        await region_job.after_ingest({**book, "user_id": user_id}, file_bytes)
         return {"total_chunks": total, "total_words": words, "status": "ready"}
     except Exception as e:  # noqa: BLE001 - recorded on the job, which can be resumed
         print(f"Ingestion of book {book_id} stopped: {e}")

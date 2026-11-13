@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 598,
-    "inventoried": 457,
+    "tracked": 601,
+    "inventoried": 460,
     "excluded": 141
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13734,
+      "size_bytes": 13752,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -481,10 +481,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 261,
-      "size_bytes": 11765,
+      "lines": 263,
+      "size_bytes": 11945,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b)."
     },
     {
       "path": "backend/services/book_structure.py",
@@ -513,10 +513,10 @@
     {
       "path": "backend/services/ingestion_worker.py",
       "language": "python",
-      "lines": 61,
-      "size_bytes": 2426,
+      "lines": 67,
+      "size_bytes": 2717,
       "role": "service",
-      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time, or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
     },
     {
       "path": "backend/services/lookup.py",
@@ -529,10 +529,10 @@
     {
       "path": "backend/services/processing_jobs.py",
       "language": "python",
-      "lines": 100,
-      "size_bytes": 4429,
+      "lines": 102,
+      "size_bytes": 4656,
       "role": "service",
-      "purpose": "processing_jobs rows for book ingestion: create one queued job per book, the pure claimable rule (done, fresh running, attempt cap), claim with an optimistic update on attempts and updated_at so only one caller runs a job, advance the cursor and progress after each batch, finish, fail, and list stale queued or running jobs for the startup sweep."
+      "purpose": "processing_jobs rows for book ingestion and the regions job (kinds INGEST and REGIONS): create one queued job per book and kind, get by kind, the pure claimable rule (done, fresh running, attempt cap), claim with an optimistic update on attempts and updated_at so only one caller runs a job, advance the cursor and progress after each batch, finish, fail, and list stale queued or running jobs for the startup sweep."
     },
     {
       "path": "backend/services/question_bank.py",
@@ -541,6 +541,14 @@
       "size_bytes": 4483,
       "role": "service",
       "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session only if it has none yet (otherwise returns the stored test; issue 34) and increments times_used for the run that stored."
+    },
+    {
+      "path": "backend/services/region_job.py",
+      "language": "python",
+      "lines": 107,
+      "size_bytes": 4888,
+      "role": "service",
+      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows as unclassified 'block' regions with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; skips EPUBs and device-only books."
     },
     {
       "path": "backend/services/retriever.py",
@@ -585,10 +593,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 145,
-      "size_bytes": 5232,
+      "lines": 160,
+      "size_bytes": 5763,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -865,16 +873,16 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 274,
-      "size_bytes": 11789,
+      "lines": 289,
+      "size_bytes": 12466,
       "role": "test",
       "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume. C17.6: no structure leaves block_paths empty too."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
-      "lines": 120,
-      "size_bytes": 5605,
+      "lines": 125,
+      "size_bytes": 5785,
       "role": "test",
       "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
     },
@@ -905,8 +913,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 370,
-      "size_bytes": 15524,
+      "lines": 421,
+      "size_bytes": 17765,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb."
     },
@@ -953,8 +961,8 @@
     {
       "path": "backend/tests/test_processing_jobs.py",
       "language": "python",
-      "lines": 87,
-      "size_bytes": 3993,
+      "lines": 96,
+      "size_bytes": 4420,
       "role": "test",
       "purpose": "Pytest on the in-memory database: one queued job per book, the claimable rule at each boundary, a racing second claim gets nothing, advance records cursor and progress, finish and fail, which jobs the sweep sees as stale, and the stale window from INGEST_STALE_MINUTES."
     },
@@ -989,6 +997,14 @@
       "size_bytes": 12670,
       "role": "test",
       "purpose": "Pytest on fixed text: verbatim sentence spans and each question strategy's prompt, answer and evidence, with no model or database."
+    },
+    {
+      "path": "backend/tests/test_region_job.py",
+      "language": "python",
+      "lines": 164,
+      "size_bytes": 7018,
+      "role": "test",
+      "purpose": "Pytest for backend/services/region_job.py on the in-memory database with sample.pdf: block rows, page batches from the cursor, one regions job beside the ingest job, EPUB and device-only books skipped, a full run, a resumed run that never duplicates, a failure that leaves the book readable, bytes passed in, the sweep's dispatch by kind, giving up without touching the book, and after_ingest."
     },
     {
       "path": "backend/tests/test_requirements.py",
@@ -1145,16 +1161,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1297,
-      "size_bytes": 73871,
+      "lines": 1316,
+      "size_bytes": 74972,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2894,
-      "size_bytes": 125391,
+      "lines": 2925,
+      "size_bytes": 126480,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1218,7 +1234,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 3719,
-      "size_bytes": 661133,
+      "size_bytes": 663375,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3551,6 +3567,14 @@
       "purpose": "Migration (C17.6, additive, not applied): chunks.block_paths jsonb, one {block_id, spine_index, path} per chunks.blocks entry for EPUBs, so a CFI maps to a block (ANCHORS A6); null for PDFs and earlier books."
     },
     {
+      "path": "supabase/migrations/018_page_regions.sql",
+      "language": "sql",
+      "lines": 64,
+      "size_bytes": 3068,
+      "role": "migration",
+      "purpose": "Migration 018 (C18.2b): page_regions (user, book, page, kind block/prose/math/code/figure/table/unreadable, bbox float8[4], text, meta, order_in_page; unique per book, page and order; index on book and page; readers select their own) and processing_jobs' kind check widened to 'ingest' and 'regions' (the one approved DROP CONSTRAINT)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -3601,8 +3625,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 459,
-      "size_bytes": 136724,
+      "lines": 462,
+      "size_bytes": 138254,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -3633,8 +3657,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 263,
-      "size_bytes": 10936,
+      "lines": 264,
+      "size_bytes": 10960,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

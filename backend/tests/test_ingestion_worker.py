@@ -11,7 +11,7 @@ from backend.dependencies import get_current_user
 from backend.main import app
 from backend.nlp import embedder
 from backend.routers import books
-from backend.services import book_ingestor, ingestion_worker
+from backend.services import book_ingestor, ingestion_worker, region_job
 from backend.services import processing_jobs as jobs
 from backend.tests.memory_db import MemoryDb
 
@@ -26,6 +26,11 @@ def db(monkeypatch):
         monkeypatch.setattr(module, "supabase", fake)
     monkeypatch.setattr(embedder, "embed", lambda texts: np.zeros((len(texts), embedder.EMBEDDING_DIM), dtype=np.float32))
     monkeypatch.setattr(book_ingestor.question_agent, "run", lambda book_id, chunk_ids: None)
+
+    async def no_regions(book, file_bytes=None):  # covered in test_region_job.py
+        return None
+
+    monkeypatch.setattr(region_job, "after_ingest", no_regions)
     monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data: ["unused"])
     monkeypatch.setattr(book_ingestor, "chunk_text", lambda pages, target_words=600: [f"c{i}" for i in range(9)])
     return fake

@@ -190,6 +190,25 @@ book is readable and must never hold up ingestion. Not measured in the
 container: the other three books page by page, the backend server with
 a job running (C18.2b).
 
+C18.2b, the regions job itself (`backend/services/region_job.py`, 20-page
+batches), Windows, one process with `backend.main` imported
+(`INGEST_SWEEP=0`; embedding model not loaded), the in-memory database
+standing in for Supabase with each batch's rows dropped once written (a
+server sends them away), the book's bytes held as the job holds them:
+
+| Book | Pages | Regions | s/page | RSS after imports | Peak | After the job |
+|---|---|---|---|---|---|---|
+| Calculus Volume 1 | 769 | 15,082 | 0.253 | 128.4 MB | 248.8 MB | 231.0 MB |
+| SICP | 883 | 4,291 | 0.132 | 128.4 MB | 176.5 MB | 175.0 MB |
+
+So a job adds up to about 120 MB on the largest shelf book (52 MB of it
+the file, which ingestion hands over rather than copying). On the 267 to
+275 MB idle server with the embedding model (C9.3) that is about 390 MB
+against Render Free's 512 MB, not measured in the container. The process
+does not give the memory back after the job (231 MB at the end): Gate G5
+measures the server in the container, and running the job in a child
+process or with smaller batches is the fallback if it is too close.
+
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 
 The model is downloaded at build time into `FASTEMBED_CACHE`

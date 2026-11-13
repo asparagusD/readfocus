@@ -2892,3 +2892,34 @@ this is evidence, not proof.
 
 ### Commit
 test(reader): read each place in the turn test once its turn has landed
+
+## 2026-11-13 C18.2b — the repo-graph test does not know the new table
+
+**Status:** fixed (an expected test update, not a bug in the graph)
+
+### Symptom
+`pytest tools/repo_graph/tests -q` before the C18.2b commit: 61 passed,
+1 failed, `test_build.py::test_real_graph_has_the_schema_and_the_agents`,
+`assert {defines_table targets} == {the listed tables}`.
+
+### Repro
+Every run, after `make graph` with `018_page_regions.sql` staged.
+
+### Hypotheses
+1. The test lists the schema's tables by hand and `page_regions` is new.
+   Confirmed: the graph's `defines_table` edges hold every listed table
+   plus `table:page_regions`, which migration 018 creates.
+2. The graph mis-parses 018's DO block as a table. Ruled out: the only
+   new table node is `page_regions`.
+
+### Root cause
+The test's hand-written table list predates migration 018.
+
+### Fix
+`tools/repo_graph/tests/test_build.py`: `page_regions` added to the list.
+
+### Regression test
+The same test, which now pins the table set with `page_regions` in it.
+
+### Commit
+feat(regions): store page regions from a resumable regions job

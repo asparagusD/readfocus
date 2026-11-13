@@ -659,6 +659,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/region_job.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/retriever.py",
       "type": "file",
       "role": "service",
@@ -990,6 +996,12 @@
     },
     {
       "id": "file:backend/tests/test_question_strategies.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_region_job.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2915,6 +2927,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/018_page_regions.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3066,6 +3084,10 @@
     },
     {
       "id": "table:concepts",
+      "type": "table"
+    },
+    {
+      "id": "table:page_regions",
       "type": "table"
     },
     {
@@ -3612,6 +3634,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/015_term_lookups.sql",
       "to": "table:term_lookups"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/018_page_regions.sql",
+      "to": "table:page_regions"
     },
     {
       "type": "graph_edge",
@@ -4167,6 +4194,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -4193,6 +4225,11 @@
       "type": "imports",
       "from": "file:backend/services/ingestion_worker.py",
       "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/region_job.py"
     },
     {
       "type": "imports",
@@ -4227,6 +4264,26 @@
     {
       "type": "imports",
       "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -4817,6 +4874,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {
@@ -4853,6 +4915,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingestion_worker.py",
       "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/region_job.py"
     },
     {
       "type": "imports",
@@ -5018,6 +5085,36 @@
       "type": "imports",
       "from": "file:backend/tests/test_question_strategies.py",
       "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -7108,6 +7205,11 @@
       "type": "reads_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/region_job.py",
+      "to": "table:books"
     },
     {
       "type": "reads_table",

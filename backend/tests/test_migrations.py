@@ -26,9 +26,17 @@ def migration_005() -> str:
     return sql_without_comments(MIGRATIONS / "005_local_embeddings.sql")
 
 
+# The one DROP allowed: 018 replaces processing_jobs' CHECK on kind with a wider one
+# (your decision at C18.2b). No table, column or row is dropped or changed.
+KIND_CHECK_SWAP = "EXECUTE format('ALTER TABLE public.processing_jobs DROP CONSTRAINT %I', name);"
+
+
 @pytest.mark.parametrize("path", sorted(MIGRATIONS.glob("*.sql")), ids=lambda p: p.name)
 def test_migrations_are_additive(path):
-    found = DESTRUCTIVE.findall(sql_without_comments(path))
+    sql = sql_without_comments(path)
+    if path.name == "018_page_regions.sql":
+        sql = re.sub(r"\s+", " ", sql).replace(KIND_CHECK_SWAP, "")
+    found = DESTRUCTIVE.findall(sql)
     assert not found, f"{path.name} has destructive statements: {found}"
 
 
@@ -368,3 +376,46 @@ def test_015_creates_a_shared_term_cache_readable_by_signed_in_users_only():
     assert "ENABLE ROW LEVEL SECURITY" in sql
     policies = re.findall(r"CREATE\s+POLICY\s+\w+\s+ON\s+public\.term_lookups\s+FOR\s+(\w+)\s+TO\s+(\w+)", sql)
     assert policies == [("SELECT", "authenticated")]  # no write policy: only the service role writes
+
+
+# --- 018: page_regions and the "regions" job kind (C18.2b) -----------------------------------
+
+def migration_018() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "018_page_regions.sql"))
+
+
+PAGE_REGIONS = {
+    "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+    "user_id": OWNER,
+    "book_id": BOOK,
+    "page": "integer NOT NULL CHECK (page >= 1)",
+    "kind": "text NOT NULL CHECK (kind IN ('block', 'prose', 'math', 'code', 'figure', 'table', 'unreadable'))",
+    "bbox": "float8[4] NOT NULL CHECK (array_length(bbox, 1) = 4)",
+    "text": "text NOT NULL DEFAULT ''",
+    "meta": "jsonb NOT NULL DEFAULT '{}'",
+    "order_in_page": "integer NOT NULL CHECK (order_in_page >= 0)",
+    "created_at": "timestamptz NOT NULL DEFAULT now()",
+    "UNIQUE": "(book_id, page, order_in_page)",
+}
+
+
+def test_018_creates_page_regions_with_the_agreed_columns():
+    definition = table_definition(migration_018(), "page_regions")
+    assert list(definition) == list(PAGE_REGIONS)
+    for name, expected in PAGE_REGIONS.items():
+        assert definition[name] == expected, f"page_regions.{name}: {definition[name]}"
+
+
+def test_018_readers_see_only_their_own_regions_and_cannot_write():
+    sql = migration_018()
+    assert "ALTER TABLE public.page_regions ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(r"CREATE POLICY \"[^\"]+\" ON public\.page_regions FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert policies == ["SELECT"]
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.page_regions \(book_id, page\)", sql)
+
+
+def test_018_widens_the_job_kind_check_and_drops_nothing_else():
+    sql = migration_018()
+    assert KIND_CHECK_SWAP in sql
+    assert re.search(r"ADD CONSTRAINT processing_jobs_kind_check CHECK \(kind IN \('ingest', 'regions'\)\)", sql)
+    assert sql.count("DROP") == 1

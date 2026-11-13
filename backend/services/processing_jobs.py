@@ -1,4 +1,4 @@
-"""Durable job rows for book ingestion (table processing_jobs, migration 010).
+"""Durable job rows for book ingestion and the region map (table processing_jobs, migrations 010, 018).
 
 The job row, not the process, holds the state: status, the cursor (the next
 chunk index to process), progress and attempts. A worker claims a job with
@@ -14,7 +14,9 @@ from datetime import UTC, datetime, timedelta
 
 from backend.services.supabase_client import supabase
 
-KIND = "ingest"
+INGEST = "ingest"
+REGIONS = "regions"  # the page-region map (C18.2b, backend/services/region_job.py)
+KIND = INGEST
 MAX_ATTEMPTS = 3
 DEFAULT_STALE_MINUTES = 5
 ERROR_LIMIT = 500
@@ -34,16 +36,16 @@ def stale_minutes() -> float:
     return float(os.getenv("INGEST_STALE_MINUTES") or DEFAULT_STALE_MINUTES)
 
 
-def create(book_id: str, user_id: str, now: datetime | None = None) -> dict:
-    """The book's ingestion job, made queued if it does not exist yet."""
-    row = {"book_id": book_id, "user_id": user_id, "kind": KIND, "status": "queued", "progress": 0,
+def create(book_id: str, user_id: str, now: datetime | None = None, *, kind: str = INGEST) -> dict:
+    """The book's job of this kind, made queued if it does not exist yet."""
+    row = {"book_id": book_id, "user_id": user_id, "kind": kind, "status": "queued", "progress": 0,
            "cursor": 0, "error": None, "attempts": 0, "updated_at": iso(_now(now))}
     supabase.table(TABLE).upsert(row, on_conflict="book_id,kind", ignore_duplicates=True).execute()
-    return get(book_id)
+    return get(book_id, kind=kind)
 
 
-def get(book_id: str) -> dict | None:
-    rows = supabase.table(TABLE).select("*").eq("book_id", book_id).eq("kind", KIND).execute().data
+def get(book_id: str, *, kind: str = INGEST) -> dict | None:
+    rows = supabase.table(TABLE).select("*").eq("book_id", book_id).eq("kind", kind).execute().data
     return rows[0] if rows else None
 
 
@@ -77,7 +79,7 @@ def claim(job: dict, now: datetime | None = None, manual: bool = False) -> dict 
 
 
 def advance(job_id: str, cursor: int, total: int, now: datetime | None = None) -> None:
-    """Record that every chunk before `cursor` is done."""
+    """Record that every unit (chunk, or page for regions) before `cursor` is done."""
     progress = 1.0 if total <= 0 else min(1.0, cursor / total)
     supabase.table(TABLE).update({"cursor": cursor, "progress": progress, "updated_at": iso(_now(now))}).eq(
         "id", job_id).execute()
@@ -94,7 +96,7 @@ def fail(job_id: str, error: str, now: datetime | None = None) -> None:
 
 
 def stale_jobs(now: datetime | None = None, window: float | None = None) -> list[dict]:
-    """Queued or running jobs not updated within the stale window, oldest first."""
+    """Queued or running jobs of every kind not updated within the stale window, oldest first."""
     cutoff = iso(_now(now) - timedelta(minutes=stale_minutes() if window is None else window))
     return (supabase.table(TABLE).select("*").in_("status", ["queued", "running"]).lt("updated_at", cutoff)
             .order("updated_at").execute().data or [])

@@ -1,7 +1,7 @@
 """A small in-memory stand-in for the Supabase client, for the ingestion tests.
 
 It understands the calls the ingestion code makes: select, insert, update,
-upsert (with on_conflict and ignore_duplicates), eq, in_, lt, is_, order,
+upsert (with on_conflict and ignore_duplicates), delete, eq, in_, lt, gte, lte, is_, order,
 limit, range and execute, plus Storage upload, download and get_public_url. It records
 each select's columns and window, and can add a delay to every call. Rows are copied through JSON on
 the way in and out, as they would be over HTTP.
@@ -35,6 +35,18 @@ class Query:
 
     def upsert(self, values, on_conflict="", ignore_duplicates=False):
         self.action = ("upsert", (values, [k.strip() for k in on_conflict.split(",")], ignore_duplicates))
+        return self
+
+    def delete(self):
+        self.action = ("delete", None)
+        return self
+
+    def gte(self, column, value):
+        self.filters.append(lambda r: r.get(column) is not None and r[column] >= value)
+        return self
+
+    def lte(self, column, value):
+        self.filters.append(lambda r: r.get(column) is not None and r[column] <= value)
         return self
 
     def eq(self, column, value):
@@ -97,6 +109,9 @@ class Query:
                     written.append(value)
             return SimpleNamespace(data=_copy(written))
         matched = [r for r in rows if all(f(r) for f in self.filters)]
+        if kind == "delete":
+            rows[:] = [r for r in rows if r not in matched]
+            return SimpleNamespace(data=_copy(matched))
         if kind == "update":
             for r in matched:
                 r.update(_copy(values))

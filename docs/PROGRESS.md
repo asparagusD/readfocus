@@ -3347,6 +3347,330 @@ measured for memory before `pdfplumber` is added (constraint 5); which
 actions each region type allows (ANCHORS A8). Depends on: C17.
 Estimate: 3.0 h. Safe to cut: table detection (tables as figures).
 
+Branch `chunk/C18-region-map`, created from `readfocus-2.0` at
+`088d388`. Goal as given at chunk start: classify every PDF page and
+EPUB section into regions (prose, math, code, figure, table) at
+ingestion, so only clean prose feeds quizzes, grading, search and word
+lookup, while math and code keep their own text for their own tools.
+
+### Plan (written at chunk start, 2026-11-13, before any code)
+
+What there is to build on (read from the code and the docs):
+
+- **Ingestion** (`backend/services/book_ingestor.py`, `run_job`): pypdf
+  page text (EPUB: BeautifulSoup `get_text` per document) goes through
+  `chunk_text` (about 600 words), then `book_structure.build_with_paths`
+  (blocks, toc, EPUB block paths), then batches of chunks (5 first, then
+  16) are embedded, upserted on `(book_id, chunk_index)`, questioned, and
+  the job cursor (`processing_jobs.advance`) saved after each. The sweep
+  (`ingestion_worker.py`) resumes from the cursor; extraction is
+  deterministic, so a chunk index means the same text on every run.
+- **`chunks.content` must not change** (question evidence quotes it;
+  ANCHORS A6). Its readers: question generation
+  (`question_generation/agent.py:103`, `body_sentences`), the evaluator's
+  evidence (`evaluator_agent.py:68`), search (`retriever.py`, the
+  `search_chunks` function and GIN index of migration 006 on
+  `to_tsvector(content)`), `GET /books/{id}/pages`, `mcp_server.py`.
+- **No PDF positions yet:** ANCHORS A6 says chunk spans are recorded for
+  EPUB blocks (`chunks.block_paths`, 017) but not PDF pages; there is no
+  `chunks.source_span` column (016 added book columns only).
+- **Word lookup in the reader** (C17.5c, `reader/useWordAtPoint.js`)
+  already skips `math`, `code`, `pre`, figures and SVG in EPUB sections;
+  a PDF text layer has no such elements, so PDF math and code are still
+  looked up.
+- **Not installed:** `pdfplumber` (on the free-intelligence approved
+  list, not in `requirements.txt`). Migrations end at 017; next is 018.
+  Fixtures: `backend/tests/fixtures/` has only `answers.json`;
+  `frontend/e2e/fixtures/books/` has `sample.pdf` and three EPUBs, none
+  technical.
+- **Body start** (FOCUS_RULES F2) falls back to "the first page whose
+  region map shows prose after the front matter": C18 provides the data,
+  C23 uses it.
+
+Decisions that apply to every subchunk:
+
+- **Content stays, prose is added.** `chunks.content` and chunk
+  boundaries stay exactly as today (pypdf; asserted byte for byte on the
+  shelf). Each chunk gets a new `chunks.prose`: its content with every
+  non-prose line replaced by an anchored placeholder `⟦math:p12-r3⟧`,
+  `⟦code:…⟧`, `⟦figure:…⟧`, `⟦table:…⟧`, `⟦unreadable:…⟧`. Agents,
+  grading evidence and search read `prose` when set, else `content`
+  (books ingested before C18 until a backfill).
+- **Regions are computed inside the existing job batches**, not in a
+  second pass: before a chunk batch is embedded, the pages it covers
+  (from its new PDF page span) are opened with pdfplumber one at a time,
+  classified, upserted per page (idempotent, so a resumed job rewrites,
+  never duplicates) and closed (`page.close()` to free pdfminer's cache).
+  The chunk cursor is enough to resume: pages of finished batches are
+  done. The first batch (about 10 pages) gets ready a few seconds later,
+  measured in C18.2.
+- **Alignment, not re-extraction.** pypdf lines (which make `content`)
+  are matched to pdfplumber lines (which carry fonts and positions) by
+  page and normalised text (`book_structure.skeleton`, rapidfuzz for near
+  matches); a pypdf line takes the kind of its pdfplumber line. This is
+  the chunk's main risk, measured on the shelf in C18.6.
+- **EPUB: structure only, no guessing.** `<math>` is math (its
+  `alttext` or annotation kept); `<pre>` and block `<code>` are code;
+  `<figure>`, `<img>`, `<svg>` are figures with `<figcaption>` and `alt`
+  as caption; `<table>` is a table. Inline `<code>` inside a paragraph
+  stays prose text. Regions carry the CFI path as `block_paths` does.
+- **Classifiers are pure.** `backend/regions/` functions take characters
+  or lines and return regions: no I/O, same input same output; every
+  threshold in `backend/agents/policy.py` (`REGION_*`), as the
+  free-intelligence skill and ANCHORS ask. Tests need no mocks.
+- **Garbled text never reaches prose.** The garble detector (C18.1)
+  marks a line or page `unreadable` (CID codes `(cid:NN)`, U+FFFD, Private
+  Use Area characters, control characters, implausible letter and
+  stop-word statistics); it becomes a placeholder, kept out of quizzes,
+  search and lookup, and counted in the book's region summary.
+- **Region shape** (stored per page or spine item; documented in a new
+  ANCHORS section A9 in C18.5): PDF `{id, kind, page, bbox: [x0, y0, x1,
+  y1], text, display?, caption?, confidence, clues}` in points, top-left
+  origin like A1; EPUB `{id, kind, spine_index, path, text, alt?}`.
+  `kind` in `prose | math | code | figure | table | unreadable`. Code
+  `text` keeps its reconstructed indentation; math `text` is the raw
+  extraction (or MathML alttext) for the later math tool.
+- **Migration `018_region_map.sql`** (additive): table `page_regions`
+  (`book_id` fk with cascade, `user_id`, `unit_kind` `page|spine`,
+  `unit` int, `regions jsonb`, `garbled bool`, `version int`, unique
+  `(book_id, unit_kind, unit)`, RLS: a reader selects their own, only the
+  service role writes); `chunks.prose text`, `chunks.source_span jsonb`
+  (PDF `[{page, char_start, char_end}]`, ANCHORS A6); `books.regions_version
+  int`; a new GIN index on `to_tsvector(coalesce(prose, content))` and
+  `CREATE OR REPLACE` of `search_chunks` to use it (the old index stays).
+  The prompt says "dev only", but dev and production are one project
+  (constraint 2): applying it needs your approval and a fresh dump.
+  Until then code treats every new field as optional; pytest and e2e
+  never touch the project.
+- **Memory and licences** (constraint 5): pdfplumber (MIT) pulls in
+  pdfminer.six (MIT) and pypdfium2 (Apache-2.0 / BSD-3, ships the PDFium
+  binary); licences and the pin (newest release over two weeks old) are
+  checked in C18.2 before install. RSS measured in a fresh process
+  (import) and across a whole job on the largest shelf book, on Windows
+  and in the `python:3.11-slim` image used in C14; rows in
+  `docs/BENCHMARKS.md`. Render Free is believed to be 512 MB (issue 24:
+  ingestion already peaks at 347 MB on Windows), so the bar is a peak
+  under 450 MB on Linux.
+- **Math and code tools themselves** (copy code with indentation, show
+  an equation, ask Steve about it) are not built here: C18 stores what
+  they need and records in ANCHORS A8 which actions each region allows;
+  the tools land with C19/C22. Old books keep using `content` until the
+  optional backfill offered at the gate.
+- **Verification per commit:** the ten standard checks (ruff stays at
+  27, ESLint at 4 errors), `make graph` for new files, and
+  `design-review` for the one frontend change (C18.6b).
+
+Subchunks (each at most ~200 changed lines; tests in the same commit;
+split into a/b where marked):
+
+**C18.1 test shelf of openly licensed technical books + garble detector**
+(about 0.5 h; a shelf, b detector).
+- a: `tools/shelf/books.json` (new, ~60): five or six openly licensed
+  technical books chosen to cover TeX math fonts, non-TeX math (Cambria
+  Math or STIX), code in several monospace fonts, figures and tables, and
+  one EPUB with MathML: candidates OpenStax Calculus (CC BY 4.0),
+  Hefferon's Linear Algebra (CC BY-SA), SICP (CC BY-SA 4.0), an arXiv
+  CC BY paper, Pro Git (CC BY-NC-SA, EPUB and PDF); each entry has URL,
+  licence, sha256, and the pages to extract. Licences are confirmed from
+  each publisher's page before use, and **each download is asked for
+  first** (file, source, size). `tools/shelf/fetch.py` (new, ~60):
+  downloads into the ignored `tools/shelf/cache/`, checks sha256, and
+  writes small page extracts (pypdf) to `backend/tests/fixtures/shelf/`
+  (each under ~150 KB, with `SOURCES.md` attribution; NC-licensed books
+  stay in the cache, never committed). `labels.json`: line-level region
+  labels for about 24 extract pages, made by reading the rendered pages,
+  for the gate's precision and recall. Golden sha256 of every shelf
+  book's `chunk_text` output under today's code, so C18.6 can prove
+  `content` unchanged.
+- b: `backend/regions/garble.py` (new, ~80): `garbled(line) ->
+  (bool, reasons)` and a page verdict; constants in `policy.py` (+15).
+  Tests `test_garble.py` (~70): CID codes, U+FFFD, PUA, ligature
+  fragments, a broken-ToUnicode page from the shelf, clean prose, math
+  and code lines that must not be flagged (symbols are not garbage).
+- Verified by: fetch run (after your yes), extracts open in pypdf;
+  tests. Cut: the second EPUB; labels down to 12 pages.
+
+**C18.2 page character extraction with fonts and positions (batched
+job)** (about 0.75 h; a extraction, b in the job).
+- a: add `pdfplumber==<pin>` to `requirements.txt` after the licence
+  check and the RSS measurement (fresh process, Windows and
+  `python:3.11-slim`), row in `BENCHMARKS.md`.
+  `backend/regions/pdf_chars.py` (new, ~120): `page_lines(page) ->
+  [Line]`, one pure step over pdfplumber's `chars` (text, fontname,
+  size, x0, x1, top, bottom, upright): group into lines by baseline,
+  keep per-character font, size and baseline offset, flip to top-left
+  coordinates by the crop box (A1); `open_pages(file_bytes, pages)` a
+  generator that closes each page. Tests `test_pdf_chars.py` (~70) on a
+  shelf extract: lines in reading order, fonts read, offsets for a
+  subscript, coordinates inside the crop box.
+- b: `book_ingestor.py` (+50): `chunk_text` also returns each chunk's
+  PDF page span (`source_span`, content asserted unchanged); in
+  `run_job`, before each batch, the batch's pages are extracted and
+  stored as `prose`-only placeholder regions through
+  `backend/services/region_store.py` (new, ~50; upsert on the unique key,
+  skipped when 018 is not applied). `supabase/migrations/018_region_map.sql`
+  (new, as above; outside the line count). Tests `test_ingest_regions.py`
+  (~80, `memory_db.py`): a resumed job rewrites, never duplicates; spans
+  cover every chunk; first-batch time recorded; `test_migrations.py`
+  covers 018. `test_requirements.py` stays green.
+- Your step: approve and dump, then apply 018 (any time before C18.G).
+- Verified by: tests; one full local ingestion of the largest shelf
+  book with peak RSS and seconds per page. Cut: none (the base of the
+  chunk).
+
+**C18.3 math region detection** (about 0.75 h).
+- `backend/regions/math.py` (new, ~150): per character a math score
+  from the clues: font names (`CMMI`, `CMSY`, `CMEX`, `CMBSY`, `MSAM`,
+  `MSBM`, `EUFM`, `RSFS`, `Cambria Math`, `STIX`, `*Math*`; matched
+  without the subset prefix `ABCDEF+`), Unicode math operators and
+  alphanumerics (U+2200–22FF, 2A00–2AFF, 1D400–1D7FF, arrows, Greek
+  used as symbols), characters raised or lowered off the line's
+  baseline and smaller (sub- and superscripts), and symbol density.
+  Lines with a high share are display math (merged with a centred
+  neighbour and an equation number like `(3.2)`); short math runs inside
+  a prose line are inline math (the line stays prose, the run becomes an
+  inline placeholder, and question generation skips the sentence).
+  Constants in `policy.py` (+15). Tests `test_regions_math.py` (~90):
+  display, inline, sub/superscripts, equation numbers, a TeX page and a
+  Cambria page from the shelf, and prose with a stray `=` or Greek name
+  that stays prose; precision and recall on the labelled lines printed.
+- Verified by: tests; labelled math lines recall ≥ 0.9, prose lines
+  wrongly marked ≤ 2%. Cut: merging multi-line display blocks (each line
+  its own region).
+
+**C18.4 code region detection + indentation reconstruction** (about
+0.5 h).
+- `backend/regions/code.py` (new, ~140): monospace by font name
+  (`Courier`, `Consolas`, `Menlo`, `Monaco`, `CMTT`, `LMMono`,
+  `Inconsolata`, `SourceCodePro`, `*Mono*`, `*Code*`) or by equal
+  character advances when the name says nothing; blocks of consecutive
+  monospace lines, scored up by indentation on a character grid, a
+  ragged right edge (prose is justified) and code punctuation (`{}();=`,
+  `->`, `==`, `#`, keywords); indentation rebuilt as spaces from
+  `(x0 - block_left) / char_width`; line numbers in the margin dropped
+  and kept as `line_numbers`. Tests `test_regions_code.py` (~80): Python
+  indentation round trip, C braces, a monospace-free code listing, a
+  monospace table that is not code, inline `code` in prose.
+- Verified by: tests; labelled code lines recall ≥ 0.9; indentation of
+  every labelled block equal to the source. Cut: the equal-advance
+  fallback.
+
+**C18.5 figures and tables (PDF) + EPUB structural regions** (about
+0.75 h; a PDF, b EPUB).
+- a: `backend/regions/figures.py` (new, ~120): figures from
+  `page.images` and dense clusters of `curves`, `lines` and `rects`
+  (their small label text joins the figure, not the prose); captions
+  (`Figure 3.1`, `Fig.`, `Table 2`) attached to the nearest region;
+  tables from ruled grids (`page.find_tables` on lines only) or aligned
+  columns, with their cells as text. `backend/regions/page.py` (new,
+  ~60): one page's lines → regions in reading order (math, code,
+  figures, tables, garbled, the rest prose). Tests `test_regions_figures.py`
+  (~70).
+- b: `backend/regions/epub.py` (new, ~100) over the same documents and
+  root paths as `book_structure.xhtml_blocks`: the tag rules above,
+  stored per spine item; `docs/ANCHORS.md` A8 (which actions each kind
+  allows: prose all; math and code highlight, note, copy, no lookup or
+  underline; figure and table a note and a drawing) and a new A9 (region
+  shape). Tests `test_regions_epub.py` (~70) on `reflow.epub`, a MathML
+  section and the shelf EPUB.
+- Verified by: tests; every shelf figure and table caption found.
+  Cut: tables as figures (the stub's cut), vector-figure clusters (images
+  only).
+
+**C18.6 prose-only agent text with anchored placeholders** (about
+0.75 h; a backend, b reader).
+- a: `backend/regions/prose.py` (new, ~110): align a chunk's pypdf
+  lines (or EPUB text) with the stored regions and build `prose` with
+  placeholders; `book_ingestor.py` (+20) stores it per batch and sets
+  `books.regions_version`. Readers switch to `prose or content`:
+  `question_generation/agent.py` (+10, skips sentences with a
+  placeholder), `evaluator_agent.py` (+5), `retriever.py` (+5, through
+  the replaced `search_chunks`). Tests `test_prose.py` (~90): the
+  shelf's `content` sha256 equals the C18.1 goldens; no placeholder or
+  garbled character reaches a question; every non-prose labelled line is
+  out of `prose`; prose lines kept ≥ 98%.
+- b: `GET /books/{id}/regions?from=&to=` (`routers/books.py`, +30) and
+  `frontend/src/originalview/regions.js` (new, ~50) so
+  `useWordAtPoint` skips PDF points inside math, code, figure and table
+  boxes as it already does in EPUB; `regions.test.js`, one e2e on a
+  mocked math page. `design-review` (no visible change except no card).
+- Verified by: tests; an ingested shelf PDF's questions read by eye
+  for math or code fragments. Cut: b (PDF lookup over math stays as
+  today; EPUB is already right).
+
+**C18.G 🚦 Gate G5: originals intact, zero garbled text, memory OK**
+(about 0.25 h). Proposed criteria, all measured on the shelf with
+`tools/shelf/report.py` (new, ~60; offline, no Supabase):
+1. Originals intact: the stored file is never written (the bytes handed
+   to the job hash to `books.file_sha256` before and after); every shelf
+   book's `chunks.content` matches its C18.1 golden; the original view's
+   e2e stays green, plus a screenshot of a math page and a code page in
+   each renderer showing them untouched.
+2. Zero garbled text: no `(cid:`, U+FFFD, PUA or control character, and
+   no line the detector flags, in any `prose` or question on the shelf;
+   every unreadable page listed in the report.
+3. Region quality on the labelled pages: math and code recall ≥ 0.9,
+   prose kept ≥ 0.98.
+4. Memory: peak RSS while ingesting the largest shelf book under 450 MB
+   in `python:3.11-slim`, the import delta and seconds per page in
+   `BENCHMARKS.md`; the first batch ready at most 5 s later than before
+   locally.
+5. Standard checks green, counts not up; graph current.
+- Your steps: 018 applied (approved, after a dump); optionally approve a
+  backfill of existing books' regions and prose (`--dry-run` first).
+
+Questions for you:
+
+1. Shelf downloads: OK to download the shelf books (I will list each
+   file, source and size before fetching), and to commit small page
+   extracts of the CC BY / CC BY-SA ones as test fixtures?
+2. Migration 018 goes to the one shared project ("dev only" is not
+   possible): OK to plan its apply, after a fresh dump you confirm, at
+   the end of C18.2?
+3. `chunks.prose` beside an unchanged `content` (recommended), rather
+   than rewriting `content` for new books?
+4. Inline math in a prose sentence: skip that sentence for questions
+   (recommended), or keep it with a placeholder?
+
+Risks: pypdf-to-pdfplumber line alignment on odd layouts (two columns,
+rotated pages): unmatched lines default to prose and are counted in the
+report; pdfplumber's speed on Render's CPU (seconds per page measured
+in C18.2, the batch keeps the first session close to today's time);
+pypdfium2's binary adding memory even if unused (measured before
+install); scanned books (no text layer: every page `unreadable`, no
+questions, said in the open issues).
+
+Estimated time: about 4.25 h (C18.1 0.5, C18.2 0.75, C18.3 0.75, C18.4
+0.5, C18.5 0.75, C18.6 0.75, C18.G 0.25). That is 42% over the 3.0 h
+stub, inside the 50% rule. If time runs short, in this order: tables as
+figures, C18.6b, vector-figure clusters, the equal-advance code
+fallback, multi-line display math.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C18.1 test shelf of openly licensed technical books + garble detector | `82cce36` (`test(regions): add technical test shelf and garble detector`); plan `90a988b` | Built to the C18.1 prompt, which replaces the plan's layout: `scripts/fetch_test_shelf.py` (new) checks each licence's wording on its source page, then downloads into the git-ignored `samples/technical/` and writes `samples/technical/SHELF.md` (title, author, role, licence, source, licence page, bytes, sha256). Shelf: OpenStax Calculus Volume 1 (CC BY-NC-SA 4.0, not CC BY as the prompt said; kept as it is still openly licensed and stays local), SICP texinfo PDF (CC BY-SA 4.0), Kuphaldt's Lessons in Electric Circuits I: DC (CC BY 4.0), Margalit and Rabinoff's Interactive Linear Algebra (GNU FDL 1.2+; Hefferon's PDF sits behind a contribution form and his site was down), Standard Ebooks' illustrated Alice (public domain, CC0). No openly licensed MathML EPUB found: C19 builds one. `backend/regions/garble.py` (new): `garble_score` (ratio of visible characters in flagged spans; reasons replacement, private_use, cid, control, symbol_in_word, spaced_letters, ligature gaps such as "de nition") and `is_garbled` (any hard reason, or ratio at or above `GARBLE_MAX_RATIO`); `policy.py` +3 constants. | `test_garble.py` 20 passed (written first; failed at collection without the module). `fetch_test_shelf.py --dry-run`: five licences ok; full run: five files, 87 MB, sha256 recorded. Sampled about 60 pages per shelf PDF through pypdf and the detector: Calculus 0 of 65 pages garbled, Circuits 0 of 62, SICP 58 of 64, Linear Algebra 49 of 65 (see open issues). Standard checks: ruff 27, pytest 878, ESLint 4, build, import, graph 62, contrast 0 failing, images 0 failing, unit 116, e2e 126. | 2026-11-13 | SICP's Linux Libertine puts the "Th" ligature and old-style figures in the Private Use Area (`is construct` = "This construct"), and Interactive Linear Algebra's matrix brackets come out as U+F8EB to U+F8F8 with NUL for minus: real artefacts, correctly flagged, but a page verdict would discard most of both books' prose. C18.2 onward applies the detector per line, and a small PUA repair map (Libertine Th, oldstyle digits) is worth trying in C18.2 before marking lines unreadable. The Calculus PDF (52 MB) is above `MAX_BOOK_FILE_BYTES` (50 MB), so the app would refuse it as an upload; the region tests read it locally. |
+| [x] C18.2a per-page characters with fonts and positions | `6dcd972` (`feat(regions): extract per-page characters with fonts and positions`); C18.1 `82cce36` | `requirements.txt`: `pdfplumber==0.11.10` (MIT, checked in its LICENSE.txt), `pdfminer.six==20260107` (MIT, pdfplumber's exact pin), `pypdfium2==5.14.0` (BSD-3/Apache-2.0; 5.15.x are under two weeks old). `backend/regions/extract.py` (new): pure `build_page` groups pdfplumber characters into lines (rows by vertical overlap, small characters joined after, each character's offset from the line's baseline, split at column gutters, word gaps from positions so PDFs without space characters read right) and blocks; coordinates from the crop box's top-left (ANCHORS A1); `page_chars(path or bytes, page)`, `iter_pages` (one open per range, each page closed), `page_count`. `policy.py` +5 `REGION_*` constants. `scripts/dev/measure_regions.py` (new). | `test_extract.py` 17 passed (written first; failed at collection without the module). Windows, every page in 20-page batches: 0.12 to 0.24 s/page, peak 135.5 MB (Calculus; 52 MB of it the file); opened once per book the peak is 274 to 280 MB. Linux image at 0.1 CPU, 512 MB: import +20.8 MB, SICP 1.055 s/page, peak 67.5 MB. Rows in `docs/BENCHMARKS.md`. `backend.main` does not import pdfplumber. Standard checks: ruff 27, pytest 895, ESLint 4, build, import, graph 62, contrast 0 failing, images 0 failing, unit 116, e2e 126. | 2026-11-13 | Split from the prompt's one commit: this is a (extraction, dependency, measurements); b is migration 018 and the regions job. The prompt's `014_page_regions.sql` is taken (014 is the reading position), so the migration is 018. Calculus draws its equations as vector curves (711 curves and no math text on page 150): C18.3 has to find math from drawings as well as fonts. SICP's stacked `cases` equation collapses into one line (its tall brace spans the rows). |
+| [x] C18.2b migration 018 and the regions job | `4213ea3` (`feat(regions): store page regions from a resumable regions job`); C18.2a `6dcd972` | `supabase/migrations/018_page_regions.sql` (new, **not applied**): `page_regions` as the prompt asked (id, user_id, book_id, page, kind, bbox `float8[4]`, text, meta, order_in_page) plus `created_at`, unique `(book_id, page, order_in_page)`, index `(book_id, page)`, RLS select-own; kind adds `block` (not yet classified). `processing_jobs.kind` check widened to `ingest`, `regions` by dropping whichever CHECK reads `kind` and adding `processing_jobs_kind_check` (your decision at C18.2b; `test_migrations.py` allows exactly that one statement). `processing_jobs.py`: `INGEST`, `REGIONS`, `create`/`get` take `kind`. `backend/services/region_job.py` (new): `queue`, `run_job` (20-page batches, file reopened per batch, delete then insert per batch, page cursor, failure recorded without touching the book), `after_ingest`; pdfplumber imported on first use. `book_ingestor.run_job` hands the book and bytes to `after_ingest` once done; `ingestion_worker` runs each kind with its own runner and gives up on a regions job without touching the book. `memory_db.py`: delete, gte, lte. | Tests written first (collection failed without `region_job`): `test_region_job.py` 13, `test_processing_jobs.py` +1, `test_migrations.py` +3, `test_ingest_embeddings.py` +1 (hand-off after the ingest job is done). Whole regions job offline in a process with `backend.main` imported: Calculus 769 pages 0.253 s/page, 15,082 regions, RSS 128.4 to 248.8 MB peak; SICP 0.132 s/page, peak 176.5 MB (`docs/BENCHMARKS.md`). `backend.main` still does not import pdfplumber. Standard checks: ruff 27, pytest 913, ESLint 4, build, import, graph 62, contrast 0 failing, images 0 failing, unit 116, e2e 126. | 2026-11-13 | Your step: approve, dump, then apply 018 to the shared project (dev and production are one, so "dev only" is not possible). Until then a regions job fails on its first write and is recorded as failed; reading is unaffected. Memory: about +120 MB during a job on the largest book and not returned afterwards; with the model loaded that is about 390 MB of 512, unmeasured in the container (Gate G5). EPUB and device-only books get no regions job yet (C18.5). |
+| [x] C18.2b apply migration 018 to the Supabase project (your approval, 2026-11-13: "Dump, then apply 018") | `21a39cb` (`docs: record migration 018 applied`); C18.2b `4213ea3` | Read-only check first: one CHECK on `processing_jobs.kind`, `processing_jobs_kind_check` (`kind = 'ingest'`), one job, no `page_regions`. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-13-pre-018\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (73,638 B; 12 public tables, `chunks.block_paths` present, no `page_regions`), `readfocus_prod_data.sql` (21,521,889 B; `INSERT`s for every non-empty public table), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`; CLI 2.98.2). Then `npx supabase db query --linked -f` with `BEGIN;` + `018_page_regions.sql` + `COMMIT;` (exit 0). | Read-only queries after: `page_regions` has its 10 columns, all NOT NULL; checks on page, kind, bbox length and order; unique `(book_id, page, order_in_page)`; `idx_page_regions_book_page`; RLS on with only "Users can read own page regions" (SELECT); 0 rows. `processing_jobs_kind_check` is now `kind = ANY (ARRAY['ingest', 'regions'])`; the other checks and `UNIQUE (book_id, kind)` unchanged; still 1 job. Standard checks: see commit. | 2026-11-13 | Applied with `db query`, as 016 and 017 were, so the CLI's migration history does not list 018. Books ingested before now have no regions; queuing a regions job for each server-kept PDF (a backfill) needs its own approval. |
+| [x] C18.3 math region detection | `0864ad9` (`feat(regions): detect display and inline math regions`); 018 record `21a39cb` | `backend/regions/classify.py` (new, pure): character evidence from math fonts (`MATH_FONT_PATTERN`: CM*, AMS, tx/px and their `r` variants, MathDesign, Cambria Math, STIX, `*Math*`), Unicode math symbols (Sm, Greek, arrows, primes, dot operators) and sub/superscripts (two rules: 0.12 em off the baseline at up to 90% size, or 0.06 em at up to 80%); never from monospace characters, footnote marks, ordinal endings or units after a number. Display math: a line with enough evidence and an operator, or set off from the column with some; nearby display lines make one region, taking in fragments, stacked fractions (numerator and denominator beside the equation) and a right-margin equation number (`meta.equation_number`). The rest are `block` regions with `meta.inline_math` char ranges (and `inline_boxes`): runs of math tokens and short tokens beside them, split at commas outside brackets and at sentence ends, glued words and footnote marks trimmed, none in a mostly monospace line. `backend/regions/policy.py` (new): every region-map constant, the C18.1 and C18.2 ones moved from `backend/agents/policy.py` (the region map is not an agent). `extract.Char.offset` (each character's index in its line text). `region_job.block_rows` stores the classified regions. Hand labels: `scripts/dev/build_math_labels.py` (rules and labels) writes `backend/tests/fixtures/math_labels.json` (boxes, line ids, sha256; no book text): 10 pages, 19 display regions (one with an equation number), 110 inline spans. `scripts/dev/eval_math_regions.py` scores them. | Tests first (`test_classify.py` failed at collection without the module); `test_classify.py` 47 passed, `test_extract.py` +1, `test_region_job.py` +1. `python scripts/dev/eval_math_regions.py` (IoU >= 0.6, one-to-one): **display precision 0.86 (19/22), recall 1.00 (19/19); inline precision 0.85 (104/123), recall 0.95 (104/110)**; first run before tuning 0.90 / 0.95 and 0.46 / 0.70. The test asserts display >= 0.8 / 0.9 and inline >= 0.8 / 0.9 when the shelf is present (skipped in CI). Job with classification: Calculus 0.256 s/page, SICP 0.137, ILA 0.132 (`docs/BENCHMARKS.md`). Standard checks: see the commit. | 2026-11-13 | Tuned on the same 10 pages it is scored on (script offsets, `NimbusMon`, list commas): a held-out set would give a fairer number. All remaining false positives are figure labels (ILA 287's diagrams, the Circuits 304 schematic): C18.5's figure regions should take them. Calculus is not covered: its equations are vector drawings with no text (C18.5 can mark them as drawn-math or figures). Page 244 was swapped for 236 to cover an equation number. While labelling I first missed one inline formula ("I=E/R", Circuits 85, line 92 read truncated); added. **Correction (C18.4):** the commit body's Notes said about 560 changed lines of code and tests and 31 synthetic tests; the real figures are +943/-45 lines (label fixture and graph aside) and 46 of the 47 `test_classify.py` runs (all but the shelf test). |
+| [x] C18.4 code region detection + indentation reconstruction | `b9321f6` (`feat(regions): detect code blocks and rebuild indentation exactly`); C18.3 `0864ad9` | `backend/regions/code.py` (new, pure): a code line is at least 80% monospace (`MONO_FONT_PATTERN`, or an unnamed font such as `F12` whose narrow and wide letters share one advance on the page), or at least 40% with no prose word of 3 letters (template lines such as `(if ⟨??⟩`); consecutive code lines make a block, prose below ends it, a block needs 2 letters or digits (a lone `∞` in DejaVuSansMono is not code). Rows by baseline; each character at column `round((x0 - block_left) / mean_char_width)`; blank lines from the row pitch; a line-number gutter (numbers counting up by one, followed by space, on at least 3 rows and 60% of them, on the code's line or split off) stripped into `meta.line_numbers`; `meta.char_width`; `meta.language_guess` from weighted keyword patterns (python, scheme, c, java, javascript, matlab, else unknown). `classify_page` takes code first, so its lines are neither math nor prose. `scripts/dev/make_code_fixture.py` (new) draws `backend/tests/fixtures/code_sample.pdf` with pdfium's standard Courier and Times (our own Python function and C program with a gutter). Constants in `backend/regions/policy.py`. | Tests first (`test_code.py` failed at collection without the module): `test_code.py` 23 (20 everywhere, 3 SICP pages when the shelf is present), `test_classify.py` 47 (one test now expects the monospace line to be code). The generated PDF rebuilds the Python and C listings character for character (Python through `ast.parse`; gutter `[1, 8]` stripped, the numbered blank line kept); SICP pp. 50, 76, 121 rebuild exactly (5 blocks, every column as printed) with balanced parentheses and `scheme`. Whole shelf: SICP 1,522 code blocks on 662 pages, 1,131 guessed scheme, 1,307 (86%) with balanced parentheses; of the 215 unbalanced, 140 touch a page edge (a definition split across pages) and 75 are mid-page (templates broken by a `⋮` line, the substitution diagrams of pp. 44 and 49). Circuits 94 blocks (SPICE netlists and output, `unknown`), all balanced; ILA 6; Calculus 1 (was 301 lone `∞` before the 2-character rule). Math scores unchanged (0.86 / 1.00, 0.85 / 0.95). Job: SICP 0.139 s/page, Calculus 0.265 (`docs/BENCHMARKS.md`). Standard checks: see the commit. | 2026-11-13 | Code set in a proportional font is not found (no monospace clue); the clues used are fonts and equal advances, then columns for the rebuild. A definition split across a page break is two blocks (C18.6 can join them when the next page opens with an unbalanced block). Inline code in prose lines stays in the prose region (C18.6 placeholders). No Python, Java, JavaScript or MATLAB book is on the shelf: those guesses are tested on snippets only.  Size: +510/-8 lines of code and tests (fixture PDF and graph aside), over the ~200 guide; the commit body's "see the numstat in PROGRESS" refers here. |
+| [x] C18.5a figures, tables and drawn math (PDF); two-column reading order | `86dbd91` (`feat(regions): detect figures and tables in PDF pages`); C18.4 `b9321f6` | Split from the C18.5 prompt (a PDF, b EPUB with migration 019). `extract`: each page's images, rects, curves and lines (`Page.graphics`), and pdfplumber's table candidates (`Page.tables`) only on pages with at least 2 long thin edges each way. `backend/regions/figures.py` (new, pure): tables need 2 rows, 2 columns and half their cells filled (a shaded one-cell theorem box is not one), claim their lines, take a `Table N` caption; drawing objects outside tables and text frames (a rect around a text line: an `EXAMPLE` banner, a theorem box) cluster within 0.8 em: a cluster of glyph-sized objects is math drawn as outlines (`meta.inline_drawn` boxes on the block whose line it sits in, or display `math` with `meta.drawn`), otherwise a cluster with an image of 3 em or with 3 vector objects over 25 square em and little text is a `figure` taking its labels (`meta.labels`) and a `Figure N`/`Fig. N` caption (`meta.caption`, `meta.label`); two-column gutter detection and reading order column by column between full-width regions. `classify_page` order: tables, figures and drawn math, code, math, prose. `region_job.block_rows` handles regions without text lines. Constants in `backend/regions/policy.py`. | Tests first (`test_figures.py` failed at collection without the module): `test_figures.py` 15 (13 everywhere, 2 on the shelf). Math scores now **display 1.00 (19/19) / 1.00, inline 0.95 (102/107) / 0.93 (102/110)**: figures took the figure labels that were the false positives; two labelled inline formulas in ILA 287's figure text went with the figure. Whole shelf (regions per book): Calculus 850 figures (243 captioned), 96 tables, 1,947 drawn display math, 12,499 inline drawn boxes, 13 text math; ILA 240 figures, 5 tables; Circuits 345 figures, 55 tables; SICP 81 figures (36 captioned), 3 tables. Pages checked by eye: Calculus 141 (6 tables), 150 (drawn math, no figures after the frame rule), 212 (no figures), 300 (two graphs; a page-edge tab was a figure until the 3-object rule). Speed with the gated table finder: Calculus 0.275 s/page, Circuits 0.174, ILA 0.129, SICP 0.135. Standard checks: see the commit. | 2026-11-13 | Figure counts are not checked against a labelled set (four pages by eye). Tables without rules are not found (no lines for the finder). Drawn inline math is boxes only: C18.6 places its placeholders by position. A figure's caption paragraph is taken to the end of its block. |
+| [x] C18.5b EPUB structural regions, migration 019 | `45b1cd5` (`feat(regions): map EPUB structure to regions`); C18.5a `86dbd91` | `backend/regions/epub.py` (new): each spine document walked in order with the CFI steps `chunks.block_paths` uses; block `<math>` to `math` (MathML kept, LaTeX from an x-tex annotation, else alttext); `<pre>` and block `<code>` to `code` (exact text, language from the class, else `code.guess_language`); `<figure>`, `<img>`, `<svg>`, `<object>` (also alone in a `<p>`) to `figure` (figcaption, else alt, else a following `Figure N` paragraph, which the figure takes; every rendition from src, srcset and `<source>` as a package path); `<table>` to `table` (caption, rows); text blocks to `prose` with `inline_math` and `inline_code` ranges. Anchors `{kind: epub, spine_index, path, cfi}`. `supabase/migrations/019_epub_regions.sql` (new, **not applied**): `anchor jsonb`, `spine_index`, page and bbox nullable (your decision at C18.5b; the prompt's "instead of a bbox" made bbox the second column), a check that each row has a page and box or an anchor and spine item, a unique index on `(book_id, spine_index, order_in_page)` for EPUB rows. `region_job`: EPUB books with a server-kept file get a regions job, a spine document per cursor step, rows without page or box. `scripts/dev/make_epub_fixture.py` writes `backend/tests/fixtures/regions_sample.epub` (our own content, every kind, four images). `docs/ANCHORS.md`: A8 actions by region kind, A9 region shapes. | Tests first (collection failed without `epub`; the 019 tests failed without the migration): `test_epub_regions.py` 16 (one needs the shelf), `test_region_job.py` +2 (EPUB job, EPUB resume), `test_migrations.py` +3 (two tests and the additive check running on 019). Every image in the fixture's package has a figure region; the three e2e EPUBs: every image their spine uses has one; Alice: 45 figures with captions, every manifest image but the cover (named only in the package metadata) in a figure, 2x renditions included, 882 prose regions. Alice regions in 0.25 s (`docs/BENCHMARKS.md`). Standard checks: see the commit. | 2026-11-13 | Your step: approve and dump, then apply 019 (until then EPUB regions jobs fail on their first write and are recorded failed; reading is unaffected). The CFI's spine step assumes the spine is the package's third element (`/6`), as in every EPUB checked; a package with another order would need its own step. No MathML book is on the shelf: math and code come from the generated fixture only. An inline `<svg>` with no `<image>` (pure vector drawing) is a figure without images. |
+| [x] C18.5b apply migration 019 to the Supabase project (your approval, 2026-11-13: "Dump, then apply 019") | this commit (`docs: record migration 019 applied`); C18.5b `45b1cd5` | Read-only check first: `page_regions.page` and `bbox` NOT NULL, no `anchor` or `spine_index`, 0 rows, no regions jobs. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-13-pre-019\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (75,709 B; 13 public tables with `page_regions`, no `spine_index`), `readfocus_prod_data.sql` (21,521,980 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`; CLI 2.98.2). Then `npx supabase db query --linked -f` with `BEGIN;` + `019_epub_regions.sql` + `COMMIT;` (exit 0). | Read-only queries after: `anchor` jsonb and `spine_index` integer added; `page` and `bbox` nullable; `page_regions_place_check` `((page IS NOT NULL AND bbox IS NOT NULL) OR (anchor IS NOT NULL AND spine_index IS NOT NULL))` and `page_regions_spine_index_check` added; `uq_page_regions_book_spine_order` (partial, `WHERE spine_index IS NOT NULL`) added; the 018 checks, unique key, `idx_page_regions_book_page` and the one SELECT policy unchanged; 0 rows. Standard checks: see commit. | 2026-11-13 | Applied with `db query` like 016 to 018, so the CLI's migration history does not list 019. Books uploaded before now have no regions (a backfill needs its own approval). |
+| [x] C18.6a prose-only text with anchored placeholders (pure builder) | `5696eff` (`feat(regions): feed agents prose-only text with anchored placeholders`); 019 record `a167cb3` | Split from the C18.6 prompt: a pure builder; b stores it (migration 020, the regions job, question generation and grading read it, garbled sentences dropped and counted); c the backfill script; d word lookup over PDF regions. `backend/regions/prose.py` (new, pure): `placeholder` writes `[Equation 3.2, p. 45]` (`[Equation, p. 45]` without a number), `[Code listing, p. 46]`, `[Figure 3.4: <caption or alt>, p. 47]`, `[Table 2.1: <caption>, p. 9]`; EPUB places are `sec. N` (spine document N). Chunks and regions are lined up by non-space character positions (the chunks' skeletons concatenate to the book's): `page_spans` gives a PDF page's non-prose pypdf lines (inside a math, code, figure or table region's text, labels included; exact, or partial_ratio >= 90 for lines not in prose; short labels go with a region beside them) and its inline math (by its text and 6 characters of context); `epub_prose` works by element path (a block inside a region, or a container holding one and no prose; inline math as the gaps between a prose region's pieces). `apply` writes each region's placeholder once per chunk and keeps every other character and space of `content`. Anchors: PDF `{kind, pages, spans: [{page, char_start, char_end}], placeholders}` (non-space offsets in pypdf's page text); EPUB `{kind, start, end: {spine_index, cfi, location}, placeholders}` (location as ANCHORS A4, characters counted without spaces). `sentence_counts` (placeholders masked first, since `p. 45` ends a sentence for a splitter). `policy.py` +6 constants. `scripts/dev/eval_prose.py` (new). | Tests first (`test_prose.py` failed at collection without the module); 13 passed. `python scripts/dev/eval_prose.py --pages 30` (30 pages spread through each shelf PDF): prose lines kept (lines without inline math, >= 12 characters) Calculus 0.990 (668/675), ILA 1.000 (307/307), Circuits 0.996 (539/541), SICP 0.998 (520/521); non-prose lines (>= 6) removed 0.923 (12/13), 0.962 (153/159), 0.921 (58/63), 0.969 (187/193); garbled sentences left in prose (to be dropped from questions in b) 0, 13, 0, 77 (SICP's Libertine ligatures). Standard checks: ruff 27, pytest 1034, ESLint 4, build, import, graph 62, contrast 0 failing, images 0 failing, unit 116, e2e 126. | 2026-11-13 | Nothing stores or reads `prose` yet (b). Size: about +300 code, +180 tests, +90 script, over the ~200 guide; one pure module with its tests. The prompt's title also names an "auto view mode" that none of its four tasks describes: not built, awaiting what it should do. |
+| [x] C18.6b store prose after the regions job; agents read it, garbled sentences dropped | `3bb2e14` (`feat(agents): read prose-only chunk text and drop garbled sentences`); C18.6a `5696eff` | `supabase/migrations/020_chunk_prose.sql` (new, **not applied**): `chunks.prose text`, `chunks.anchors jsonb`, `chunks.garbled_sentences integer` (>= 0), all nullable. `backend/services/prose_job.py` (new): `rebuild` reads the book's `page_regions` and chunks (1000 rows a select), builds prose through C18.6a (pypdf page texts for a PDF, stored blocks and block paths for an EPUB), writes only chunks whose prose, anchors or count differ; a chunk whose agent text changed is embedded again from its prose, its unused questions (`times_used = 0`) deleted and the question agent run on it again (it saves the chunk's concepts); used questions stay. `after_regions` never raises. `region_job.run_job` calls it when a PDF or EPUB job finishes. `question_generation/agent.py`: reads `prose` when set (select `*`, so it still works before 020 is applied); `body_sentences` masks placeholders, then leaves out sentences with a placeholder or flagged by `is_garbled`, counted in `GenerationReport.dropped`. `evaluator_agent.py`: `load_passage` reads prose when set; `reference_from_passage` leaves out placeholder and garbled sentences. CLAUDE.md pytest baseline. | Tests first for the agents, the job and 020 (`test_prose_job.py` failed at collection without `prose_job`; the agent and migration tests failed before the change); the region-job hand-off test was written with the hook. `test_prose_job.py` 7, `test_question_generation_agent.py` +2, `test_migrations.py` +1 (and the additive check on 020), `test_region_job.py` +1. Offline end to end, no database (chunk_text, regions of the first pages, prose, the question agent with the local embedder): SICP chunks 13-15 (pp. 41-50) 13 questions, 5 garbled sentences dropped; Circuits chunks 35-37 (pp. 60-65) 28 questions, 1 placeholder sentence dropped; read by eye: no math or code fragment in any prompt. `backend.main` does not import pdfplumber. Standard checks: ruff 27, pytest 1046, ESLint 4, build, import, graph 62, contrast 0 failing, images 0 failing, unit 116, e2e 126. | 2026-11-13 | Your step: approve, dump, then apply 020. Until then the prose rebuild fails on its first select and prints why; questions and grading keep reading content (with garbled sentences already dropped). Concepts found in math or code before a rebuild stay in `concepts` (merged, never removed). Search (`search_chunks_text`, `match_chunks_local`) still returns content; nothing in the app calls it today. Existing books get prose through the backfill (C18.6c). |
+| [x] C18.6c backfill regions and prose for existing books | `3ae06fe` (`feat(tooling): backfill region maps and prose-only text`); C18.6b `3bb2e14` | `scripts/backfill_prose.py` (new): ready books kept on the server (PDF, EPUB), oldest id first; a book whose regions job is done gets `prose_job.rebuild` from its stored regions; any other gets its regions job (created and claimed by hand), which rebuilds prose when it finishes; either way changed chunks are embedded again, their unused questions deleted and questions and concepts generated again. `--dry-run` maps regions in memory from the downloaded file and reports what would be stored, writing nothing; `ENV=development` guard and `--allow-non-dev`, as the other backfills. `prose_job`: split into `load`, `plan` (no writes) and `rebuild`; chunks read with `*` so the dry run works before 020. `region_job.run_job` returns the prose report as `prose`. | Tests first (`test_backfill_prose.py` failed at collection without the script): 7 passed; `test_region_job.py` two asserts read status and pages. `python scripts/backfill_prose.py --dry-run` against the shared project (read-only: selects and Storage downloads; ENV=development): 7 books; Sample 7 of 7 chunks would change, 6 re-questioned, 60 placeholders, 0 garbled; Dagano ch. 14 Operational Amplifiers 70/70, 68, 2,433, 13; My API Upload Test 7/7, 6, 60, 0; Main 35/35, 22, 595, 13; Digital Design and Computer Architecture (two copies) 302/302, 289, 2,011, 4 and 212/212, 199, 1,485, 1; Walden 3/3 (prose stored, no text change), 0, 0, 0. Standard checks: ruff 27, pytest 1053, ESLint 4, build, import, graph 62, contrast 0 failing, images 0 failing, unit 116, e2e 126. | 2026-11-13 | Your steps, in order: apply 020 (approval and a dump), then approve the real run (it writes regions, chunks and question_bank on the shared project; a dump first). Not run for real. The "Sample" and "My API Upload Test" books show 60 placeholders in 7 chunks: worth a look at one of them before approving. |
+| [x] C18.6d word lookup skips PDF math, code, figures and tables | `b6d3c2c` (`feat(reader): keep PDF math, code and figures out of word lookup`); C18.6c `3ae06fe` | `GET /books/{id}/regions?first=&last=` (`routers/books.py`): owner only, at most 20 pages, read-only; `{page, kind, bbox}` for math, code, figure and table regions and each block's inline math boxes (`inline_boxes`, `inline_drawn`), points from the page's top-left (ANCHORS A1). `frontend/src/originalview/pdf/regions.js` (new): `createRegionSource` asks a 20-page batch once (a failure skips nothing and is asked again), `hits`, `toPagePoint`, `skipPdfPoint` (the shown `.rf-pdf-page` under a client point, through its `data-scale`). `useWordAtPoint`: a surface may carry `skip(x, y)`; hover, long-press and selection (its first rect) are skipped there. `Reader.jsx`: the PDF surface's `skip`, and the shown pages' batches asked for on every relocate, before a hover. `ReadingSession.jsx` passes a source for PDFs. EPUB unchanged (C17.5c already skips `math`, `code`, `pre`, figures and SVG by markup). e2e fixtures mock the endpoint (no boxes unless a test sets them). | Tests first for the endpoint (`test_api_regions.py` 404 before the route; 5 passed); `regions.test.js` 4 passed (written with the module); e2e `reader.spec.js` +1: with every page a math box, hovering 'lamp' opens no card and asks for nothing; with the source unwired the same test failed (no regions asked), wired it passed; the other lookup tests (8) still pass. `design-review`: nothing drawn changes (no new element, colour, motion or layout); only a card no longer opens over math, code or figures; the three design skills not run for that reason; not viewed in a browser outside Playwright. Standard checks: ruff 27, pytest 1058, ESLint 4, build, import, graph 62, contrast 0 failing, images 0 failing, unit 120, e2e 127. | 2026-11-13 | A book gets boxes only once its regions job has run (after 018/019, or through the C18.6c backfill). The first hover on a page whose batch has not arrived yet is looked up as before. Boxes are tested on mocked data; no shelf PDF was hovered in a real browser. |
+| [x] C18.6b apply migration 020 to the Supabase project (your approval, 2026-11-13: "Dump, then apply 020") | `fc5b619` (`docs: record migration 020 applied`); C18.6b `3bb2e14` | Read-only check first: `chunks` had no `prose`, `anchors` or `garbled_sentences`. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-13-pre-020\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (76,157 B; no `garbled_sentences`), `readfocus_prod_data.sql` (21,521,980 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`). Then `npx supabase db query --linked -f` with `BEGIN;` + `020_chunk_prose.sql` + `COMMIT;` (exit 0). | Read-only queries after: `prose` text, `anchors` jsonb, `garbled_sentences` integer, all nullable; `chunks_garbled_sentences_check` `CHECK (garbled_sentences >= 0)`; 645 chunks, all with content, none with prose yet; one RLS policy on `chunks`, as before. | 2026-11-13 | Applied with `db query` like 016 to 019, so the CLI's migration history does not list 020. Existing books get prose only through the C18.6c backfill, which needs its own approval and dump. |
+| [x] C18.6c run the prose backfill on the Supabase project (your approval, 2026-11-13: "Dump, then backfill") | `6e477dc` (`docs: record the prose backfill run`); paging fix `b6f596d` | Counts before (read-only): 645 chunks, 0 with prose, 0 regions, 0 regions jobs, 40 questions (23 used), 37 concepts. Fresh backup in `C:\Users\avash\readfocus-backups\2026-11-13-pre-prose-backfill\`: roles 358 B, schema 76,317 B (with 020), data 21,533,631 B (`npx supabase db dump --linked`; the roles dump needed a second try). Then `python scripts/backfill_prose.py` (exit 0): 7 books, each mapped regions then stored prose: Sample 7/7 chunks, 6 re-questioned, 60 placeholders; Dagano ch. 14 70/70, 68, 2,395, 13 garbled; My API Upload Test 7/7, 6, 60; Main 35/35, 22, 595, 13 garbled; Digital Design and Computer Architecture 302/302, 289, 1,997, 4 garbled and 212/212, 199, 1,471, 1 garbled; Walden 3/3, 0, 0. | Counts after (read-only): 26,419 regions, 7 regions jobs all done, 636 of 645 chunks with prose (the other 9 are two device-only books: no file, no regions job, as designed), 31 garbled sentences, 5,329 questions (23 used, kept), 2,922 concepts, 0 questions whose evidence holds a placeholder. A dry run straight after said Dagano would still change 6 chunks: regions paged by a non-unique order (DEBUG_LOG 2026-11-13, fixed in `b6f596d`). After the fix the dry run says 10 chunks of Dagano and 11 of each Digital Design copy would change (placeholders 2,433, 2,011, 1,485, as the first dry run said); every other book 0. | 2026-11-13 | Those 32 chunks of the three books over 1000 regions hold prose built from an incomplete region set (a few regions missed or repeated) until the backfill runs again, which needs your approval and a dump. Questions jumped from 40 to 5,329: before C18.6 most chunks had no bank rows (generated on demand at session start); the backfill generated them for every changed chunk. |
+| [x] C18.6c rerun the prose backfill after the paging fix (your approval, 2026-11-13: "Dump, then rerun") | `efcad3b` (`docs: record the prose backfill rerun`); fix `b6f596d` | Fresh backup in `C:\Users\avash\readfocus-backups\2026-11-13-pre-prose-rerun\`: roles 358 B, schema 76,317 B, data 42,643,489 B. `python scripts/backfill_prose.py` (exit 0): regions done for all 7 books; stored Dagano 10 of 70 chunks (10 re-questioned, 2,433 placeholders), each Digital Design copy 11 (2,011 and 1,485 placeholders); the other four books 0. | `--dry-run` straight after: every book would store 0 chunks (idempotent now). Read-only counts: 26,419 regions, 636 of 645 chunks with prose, 31 garbled sentences, 5,325 questions (23 used, kept), 2,936 concepts, 0 questions whose evidence holds a placeholder. | 2026-11-13 | Done. Device-only books (9 chunks) stay without prose until a reader uploads the file to the server. |
+| [x] C18.G memory measured in the 512 MB Linux container (your choice, 2026-11-13: "Measure in container first") | `f9b0f96` (`docs(progress): record gate G5 memory in the container`); verdict `13c5d52` | `docker build -t readfocus-c18g .` (the repo `Dockerfile` at `13c5d52`, pinned requirements, model baked in; 916 MB) plus a layer with `psutil==7.2.2` from `requirements-dev.txt`; `scripts/dev/gate_g5.py` per book, repo read-only, no network, no CPU limit, `--memory=512m --memory-swap=512m`. | Calculus Volume 1 killed out of memory (exit 137, `OOMKilled` true); with a 2 GB cap its peaks are ingest 749, regions job 848, prose rebuild 1,036 MB. Under 512 MB and finished: SICP 462 / 444 / 464 MB, Circuits 382 / 433 / 452, ILA 374 / 400 / 435, Alice 377 / 400 / 402 (model loaded 208 to 216 MB). Rows in `docs/BENCHMARKS.md` C18.G. | 2026-11-13 | G5 stays FAIL on memory: Calculus is over 512 MB already while ingesting (pre-C18 code) and is above the 50 MB upload limit; every shelf book under the limit fits, with 48 MB to spare at most (SICP). Waiting for your choice. |
+| [x] C18.G 🚦 Gate G5 first verdict (superseded by the re-run below) — **G5: FAIL memory: Calculus Volume 1 peaks at 663 MB in the prose rebuild and 519 MB while ingesting, over Render Free's 512 MB (Windows); region extraction stays under it on every book; garble and originals pass** | this commit (`docs(progress): record gate G5 verdict on technical books`, `13c5d52`); fixes `470e158`, `016ad82`, `d156712`; tooling `5e9eb62` | Run offline, not in the Supabase project: ingesting the shelf there would write books to the shared project (constraint 2), and Calculus (52 MB) is over the 50 MB upload limit. `scripts/dev/gate_g5.py` runs the real pipeline per book on the in-memory database. **1. Garble (after three fixes, run again):** `is_garbled` over every prose sentence and every question's prompt, answer, evidence and options: **0 flagged** in all five books (prose sentences: Calculus 10,902, SICP 10,582, Circuits 14,142, ILA 4,878, Alice 1,053; questions 2,722, 1,700, 2,565, 2,392, 405; no placeholder in any question). The first run found 2,105 (SICP) and 172 (ILA) garbled prose sentences and 2 garbled prompts, and no prose at all for the EPUB: fixed in `470e158` (EPUB blocks outside the spine), `016ad82` (garble checked with lines joined), `d156712` (garbled sentences become `[Unreadable text, p. N]`; now SICP 2,673, ILA 719, Circuits 3 such placeholders). Chunk `content`, kept verbatim for the reader, still holds the originals' artefacts (SICP 2,731, ILA 1,139, Calculus 1 sentences): no agent reads it where prose exists. **2. Originals intact:** the five shelf files' sizes and sha256 equal SHELF.md after every run; 10 pages (Calculus 141, 150, 300; SICP 50, 76, 121; Circuits 85, 304; ILA 60, 287) drawn by PDF.js in Edge as the original view draws them match a PDFium render at scale 2 (`g5_page_diff.py`: no blob of ink one has and the other lacks over 9 px and 3 x 3 px, raster images left out; a page with one word erased is flagged); poppler's `pdftoppm` is not installed here, so PDFium is the reference. `npx playwright test -c playwright.gate.config.js` pages through 5 test EPUBs in the original view: Alice 45 of 45 images drawn, each with its alt caption (its 89 package images are those 45 in 88 renditions plus the cover); the MathML fixture 4 of 4 images, 1 figcaption, 2 of 2 equations with a box; reflow 7/7, 1 figcaption, 1 of 1 equation; fixed 2/2; hostile 1 of 1 packaged image, its remote tracker never loaded. **3. Region scores:** math display precision 1.00 (19/19), recall 1.00; inline 0.95 (102/107) / 0.93 (102/110) (`eval_math_regions.py`, unchanged since C18.5a); code: no labelled set, SICP pp. 50, 76, 121 rebuilt exactly (3 shelf tests pass); prose alignment (C18.6a) lines kept 0.990 to 1.000, non-prose removed 0.921 to 0.969. **4. Memory:** see `docs/BENCHMARKS.md` C18.G; peaks per phase, Calculus ingest 519, regions 481 to 484, prose 662 to 663 MB; SICP 436 / 407 / 426; Circuits 337 / 386 / 414; ILA 337 / 370 / 408; Alice 326 / 344 / 349. | Standard checks at `d156712`: ruff 27, pytest 1065, ESLint 4, build, import, graph 62, contrast and images 0 failing, unit 120, e2e 127. | 2026-11-13 | Waiting for your choice on memory (options in the session). Unreadable placeholders cost SICP about a fifth of its sentences (Libertine's ligatures): a repair map is a follow-up. The seven Supabase books still hold 31 garbled prose sentences until the backfill runs again with `d156712` (needs approval). Alice's 45 figures have no text in `content` (an image with alt text only), so they get no `[Figure: ...]` placeholder in prose. Memory measured on Windows, not in the 512 MB container. |
+| [x] C18.G 🚦 Gate G5: originals intact, zero garbled text, memory OK — **G5: PASS** (re-run after the memory fix, your choice 2026-11-13: "Slim pipeline, keep limit") | `30b4bc8` (`docs(progress): record gate G5 verdict on technical books`); fix `48e7fc3`; first verdict `13c5d52` | Memory fix (DEBUG_LOG 2026-11-13 C18.G, a 769-page PDF out of memory): `backend/services/pdf_text.py` reads pypdf text 50 pages per fresh reader (one reader for 769 pages grew about 200 MB, the pipeline parsed the file three times) and `release_memory` (gc + `malloc_trim(0)`) after each phase and batch; the prose rebuild loads only the meta it reads. Re-run of every criterion that code touches: `scripts/dev/gate_g5.py` per book in the `readfocus-c18g` container at `--memory=512m --memory-swap=512m`. | **1. Garble:** 0 flagged prose sentences, prompts, answers, evidence or options in all five books (Calculus 2,722 questions, SICP 1,700, Circuits 2,565, ILA 2,392, Alice 405). **2. Originals:** unchanged by the fix (the renderers and files are untouched; shelf sha256 as SHELF.md; 10 pages match PDFium; 5 EPUBs pass the renderer walk, from the first verdict). **3. Region scores:** as recorded (display 1.00 / 1.00, inline 0.95 / 0.93). **4. Memory, peak RSS (ingest / regions job / prose rebuild), all finished:** Calculus 399 / 475 / 502 MB (was killed; 749 / 848 / 1,036 at a 2 GB cap), SICP 362 / 386 / 410, Circuits 344 / 383 / 397, ILA 340 / 373 / 401, Alice 345 / 379 / 387; the gate's in-memory database holds 1 to 12 MB of that. Rows in `docs/BENCHMARKS.md` C18.G. Standard checks at `48e7fc3`: ruff 27, pytest 1070, ESLint 4, build, import, graph 62, contrast and images 0 failing, unit 120, e2e 127. | 2026-11-13 | Calculus keeps only about 10 MB under 512 MB, and is above the 50 MB upload limit anyway; accepted books keep 100 MB or more. Not measured at Render's 0.1 CPU (memory does not depend on it; time does). Open from C18: SICP's unreadable placeholders (a ligature repair map would recover about a fifth of its sentences); the seven Supabase books hold 31 garbled prose sentences until the backfill runs with `d156712` (needs approval); Alice's image-only figures get no `[Figure]` placeholder; the "auto view mode" from the C18.6 title is unbuilt. |
+| [x] C18.G prose backfill with the unreadable fix (your approval, 2026-11-13: "Dump, then backfill") | this commit (`docs: record the unreadable-text backfill`); fixes `016ad82`, `d156712`, `48e7fc3` | Read-only before: 636 of 645 chunks with prose, 31 garbled sentences counted, no `[Unreadable text]` placeholder stored, 5,325 questions (23 used), 2,936 concepts; `--dry-run`: 47 chunks in six books would change. Fresh backup in `C:\Users\avash\readfocus-backups\2026-11-13-pre-unreadable-backfill\`: roles 358 B, schema 76,317 B, data 42,646,676 B. `python scripts/backfill_prose.py` (exit 0): stored Sample 1 of 7 chunks (1 re-questioned, 1 unreadable), Dagano ch. 14 13 of 70 (13, 24), My API Upload Test 1 of 7 (1, 1), Main 13 of 35 (13, 26), Digital Design and Computer Architecture 12 of 302 (12, 15) and 7 of 212 (7, 8), Walden 0. | `--dry-run` straight after: 0 chunks would be stored in every book. Read-only scan of the project with `is_garbled` (as printed and with lines joined): 38,173 prose sentences in 636 chunks, 0 garbled; 5,278 questions, 0 garbled prompts, answers, evidence or options, none holding a placeholder; 75 sentences stored as unreadable placeholders (the lines-joined check finds more than the 31 counted before). | 2026-11-13 | The 9 chunks of the two device-only books have no prose (no file on the server). Questions went from 5,325 to 5,278: unused questions of the 47 changed chunks were replaced; the 23 used ones stay. |
+
 ## C19 — anchors, highlights and underlines
 
 Goal: select text in the original view, highlight or underline it in a

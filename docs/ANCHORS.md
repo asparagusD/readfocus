@@ -128,3 +128,36 @@ Highlights and underlines take a colour from a fixed palette of named
 tokens (not free hex), so `check:contrast` can cover every colour in both
 themes. Which actions a region type allows (for example no underline on a
 figure) is set by the region map chunk (C18) and recorded here.
+
+Actions by region kind (C18.5b; A9 lists the kinds):
+
+| Kind | Highlight | Underline | Note | Drawing | Word lookup | Copy |
+|---|---|---|---|---|---|---|
+| prose (`block` on a PDF until C18.6) | yes | yes | yes | yes | yes | yes |
+| math | yes | no | yes | yes | no | yes (LaTeX or MathML when known) |
+| code | yes | no | yes | no | no | yes (exact text and indentation) |
+| figure | no | no | yes | yes | no | caption only |
+| table | yes (cells) | no | yes | yes | no | yes (tab-separated rows) |
+| unreadable | no | no | yes | no | no | no |
+
+## A9. Regions
+
+The region map (C18) stores each region in `page_regions` (migrations 018,
+019). `kind` is `block`, `prose`, `math`, `code`, `figure`, `table` or
+`unreadable`; `order_in_page` is the reading order within a page or spine
+document.
+
+- PDF: `page` and `bbox` `[x0, top, x1, bottom]` in points from the crop
+  box's top-left (A1). Math: `meta.display`, `meta.equation_number`,
+  `meta.drawn` (set as outlines); a `block` carries its inline math as
+  `meta.inline_math` character ranges and `inline_boxes`, drawn inline math
+  as `inline_drawn` boxes. Code: rebuilt `text`, `meta.language_guess`,
+  `char_width`, `line_numbers`. Figure: `meta.caption`, `label`, `labels`,
+  `images`, `vectors`. Table: `meta.caption`, `label`, `rows`.
+- EPUB: `page` and `bbox` null; `spine_index` and `anchor`
+  `{kind: "epub", spine_index, path, cfi}`, `path` counted as
+  `chunks.block_paths` counts it (A6). Math: `meta.mathml`, `latex`; prose:
+  `inline_math` and `inline_code` ranges; code: `language_guess` and
+  `language_source` (`class` or `guess`); figure: `caption`, `label`, `alt`,
+  `images` (package paths, every rendition); table: `caption`, `label`,
+  `rows`.

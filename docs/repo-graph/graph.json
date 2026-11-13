@@ -44,6 +44,13 @@
       "handler": "get_pages"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/regions",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/regions",
+      "handler": "get_regions"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/status",
       "type": "endpoint",
       "method": "GET",
@@ -539,6 +546,60 @@
       "language": "python"
     },
     {
+      "id": "file:backend/regions/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/classify.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/code.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/epub.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/extract.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/figures.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/garble.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/policy.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/regions/prose.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/__init__.py",
       "type": "file",
       "role": "router",
@@ -629,13 +690,31 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/pdf_text.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/processing_jobs.py",
       "type": "file",
       "role": "service",
       "language": "python"
     },
     {
+      "id": "file:backend/services/prose_job.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/question_bank.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/region_job.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -669,6 +748,18 @@
       "type": "file",
       "role": "test",
       "language": "json"
+    },
+    {
+      "id": "file:backend/tests/fixtures/math_labels.json",
+      "type": "file",
+      "role": "test",
+      "language": "json"
+    },
+    {
+      "id": "file:backend/tests/fixtures/regions_sample.epub",
+      "type": "file",
+      "role": "test",
+      "language": "text"
     },
     {
       "id": "file:backend/tests/memory_db.py",
@@ -725,6 +816,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_regions.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_sessions.py",
       "type": "file",
       "role": "test",
@@ -767,6 +864,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_prose.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_backfill_structure.py",
       "type": "file",
       "role": "test",
@@ -792,6 +895,18 @@
     },
     {
       "id": "file:backend/tests/test_book_structure.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_classify.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_code.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -833,13 +948,37 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_epub_regions.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_eval_grader.py",
       "type": "file",
       "role": "test",
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_extract.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_feedback.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_figures.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_garble.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -929,6 +1068,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_pdf_text.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_planner_strategy.py",
       "type": "file",
       "role": "test",
@@ -936,6 +1081,18 @@
     },
     {
       "id": "file:backend/tests/test_processing_jobs.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_prose.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_prose_job.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -960,6 +1117,12 @@
     },
     {
       "id": "file:backend/tests/test_question_strategies.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_region_job.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1199,6 +1362,12 @@
       "language": "text"
     },
     {
+      "id": "file:frontend/e2e/gate-g5.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/journey.spec.js",
       "type": "file",
       "role": "config",
@@ -1290,6 +1459,12 @@
     },
     {
       "id": "file:frontend/playwright.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/playwright.gate.config.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2087,6 +2262,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/regions.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/regions.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/usePdfDocument.js",
       "type": "file",
       "role": "asset",
@@ -2627,6 +2814,12 @@
       "language": "text"
     },
     {
+      "id": "file:samples/technical/SHELF.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:scripts/backfill_book_files.py",
       "type": "file",
       "role": "script",
@@ -2651,6 +2844,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/backfill_prose.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/backfill_structure.py",
       "type": "file",
       "role": "script",
@@ -2658,6 +2857,12 @@
     },
     {
       "id": "file:scripts/bench.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/build_math_labels.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -2675,7 +2880,61 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/eval_math_regions.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/eval_prose.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/g5_epub_expect.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/g5_page_diff.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/g5_render_pages.mjs",
+      "type": "file",
+      "role": "script",
+      "language": "text"
+    },
+    {
+      "id": "file:scripts/dev/gate_g5.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/make_code_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/make_epub_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/measure_embedder.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/measure_regions.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -2694,6 +2953,12 @@
     },
     {
       "id": "file:scripts/export_agent_graph.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/fetch_test_shelf.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -2867,6 +3132,24 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/018_page_regions.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/019_epub_regions.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/020_chunk_prose.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3021,6 +3304,10 @@
       "type": "table"
     },
     {
+      "id": "table:page_regions",
+      "type": "table"
+    },
+    {
       "id": "table:processing_jobs",
       "type": "table"
     },
@@ -3102,6 +3389,16 @@
     {
       "type": "alters_table",
       "from": "file:supabase/migrations/017_block_paths.sql",
+      "to": "table:chunks"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/019_epub_regions.sql",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/020_chunk_prose.sql",
       "to": "table:chunks"
     },
     {
@@ -3418,6 +3715,11 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/regions"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}/status"
     },
     {
@@ -3564,6 +3866,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/015_term_lookups.sql",
       "to": "table:term_lookups"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/018_page_regions.sql",
+      "to": "table:page_regions"
     },
     {
       "type": "graph_edge",
@@ -3724,6 +4031,16 @@
     {
       "type": "imports",
       "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/evaluator_agent.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -3845,6 +4162,16 @@
       "type": "imports",
       "from": "file:backend/agents/question_generation/agent.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/agents/question_generation/agent.py",
+      "to": "file:backend/regions/prose.py"
     },
     {
       "type": "imports",
@@ -3993,6 +4320,66 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/regions/classify.py",
+      "to": "file:backend/regions/code.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/classify.py",
+      "to": "file:backend/regions/figures.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/classify.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/code.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/epub.py",
+      "to": "file:backend/regions/code.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/epub.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/epub.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/extract.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/figures.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/garble.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/prose.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/prose.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/auth.py",
       "to": "file:backend/dependencies.py"
     },
@@ -4104,12 +4491,27 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/processing_jobs.py"
     },
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_structure.py",
+      "to": "file:backend/services/pdf_text.py"
     },
     {
       "type": "imports",
@@ -4139,6 +4541,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -4149,6 +4556,31 @@
     {
       "type": "imports",
       "from": "file:backend/services/processing_jobs.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/prose_job.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/prose_job.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/prose_job.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/prose_job.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/prose_job.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -4169,6 +4601,46 @@
     {
       "type": "imports",
       "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -4343,6 +4815,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_api_regions.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_regions.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_regions.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_regions.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/agents/evaluation/feedback.py"
     },
@@ -4473,6 +4965,36 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_prose.py",
+      "to": "file:scripts/backfill_prose.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_backfill_structure.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -4543,6 +5065,46 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_classify.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_classify.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_classify.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_classify.py",
+      "to": "file:scripts/dev/eval_math_regions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_code.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_code.py",
+      "to": "file:backend/regions/code.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_code.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_code.py",
+      "to": "file:scripts/dev/make_code_fixture.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_concept_store.py",
       "to": "file:backend/nlp/concepts.py"
     },
@@ -4603,6 +5165,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_epub_regions.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_epub_regions.py",
+      "to": "file:scripts/dev/make_epub_fixture.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_eval_grader.py",
       "to": "file:backend/agents/evaluation/grader.py"
     },
@@ -4618,6 +5190,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_extract.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_extract.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_feedback.py",
       "to": "file:backend/agents/evaluation/feedback.py"
     },
@@ -4630,6 +5212,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_feedback.py",
       "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_figures.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_figures.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_garble.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_garble.py",
+      "to": "file:backend/regions/policy.py"
     },
     {
       "type": "imports",
@@ -4739,6 +5341,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {
@@ -4775,6 +5382,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingestion_worker.py",
       "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingestion_worker.py",
+      "to": "file:backend/services/region_job.py"
     },
     {
       "type": "imports",
@@ -4868,6 +5480,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_pdf_text.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_pdf_text.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_pdf_text.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_planner_strategy.py",
       "to": "file:backend/agents/planner/strategy.py"
     },
@@ -4884,6 +5511,41 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_processing_jobs.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose_job.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose_job.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose_job.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose_job.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {
@@ -4943,6 +5605,41 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_region_job.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_retriever.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -4979,6 +5676,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/errors.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/gate-g5.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -5040,6 +5742,11 @@
       "type": "imports",
       "from": "file:frontend/e2e/warmup.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/playwright.gate.config.js",
+      "to": "file:frontend/playwright.config.js"
     },
     {
       "type": "imports",
@@ -5754,6 +6461,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/pdf/regions.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/today.js"
     },
     {
@@ -5915,6 +6627,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/recolour.test.js",
       "to": "file:frontend/src/originalview/pdf/recolour.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/regions.test.js",
+      "to": "file:frontend/src/originalview/pdf/regions.js"
     },
     {
       "type": "imports",
@@ -6265,6 +6982,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/pdf/regions.js"
     },
     {
       "type": "imports",
@@ -6653,6 +7375,36 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/backfill_structure.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -6665,6 +7417,11 @@
       "type": "imports",
       "from": "file:scripts/backfill_structure.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/build_math_labels.py",
+      "to": "file:backend/regions/extract.py"
     },
     {
       "type": "imports",
@@ -6693,8 +7450,108 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/dev/eval_math_regions.py",
+      "to": "file:backend/regions/classify.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_math_regions.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_math_regions.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_prose.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_prose.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_prose.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/g5_epub_expect.py",
+      "to": "file:backend/regions/epub.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/g5_epub_expect.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/gate_g5.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/dev/measure_embedder.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_regions.py",
+      "to": "file:backend/regions/extract.py"
     },
     {
       "type": "imports",
@@ -6939,6 +7796,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/books.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
       "to": "table:reading_progress"
     },
     {
@@ -7028,6 +7890,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/region_job.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_book_files.py",
       "to": "table:books"
     },
@@ -7055,6 +7922,11 @@
       "type": "reads_table",
       "from": "file:scripts/backfill_positions.py",
       "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "table:books"
     },
     {
       "type": "reads_table",
@@ -7178,6 +8050,11 @@
     },
     {
       "type": "uses_env",
+      "from": "file:scripts/backfill_prose.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
       "from": "file:scripts/backfill_structure.py",
       "to": "env:ENV"
     },
@@ -7285,6 +8162,16 @@
       "type": "writes_table",
       "from": "file:backend/services/lookup.py",
       "to": "table:term_lookups"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/prose_job.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/prose_job.py",
+      "to": "table:question_bank"
     },
     {
       "type": "writes_table",

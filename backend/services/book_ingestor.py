@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
-from backend.services import book_structure, covers, processing_jobs
+from backend.services import book_structure, covers, pdf_text, processing_jobs, region_job
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
@@ -25,15 +25,9 @@ INGEST_BATCH = 16
 TARGET_WORDS = 600
 
 def extract_text_from_pdf(file_bytes: bytes) -> list[str]:
-    """Extract text from a PDF file, returning a list of page strings."""
-    reader = PdfReader(io.BytesIO(file_bytes))
-    pages = []
-    for page in reader.pages:
-        text = page.extract_text()
-        if text:
-            text = text.replace('\x00', '')
-            pages.append(text)
-    return pages
+    """Extract text from a PDF file, returning a list of page strings (pages with no text left out).
+    A few pages per reader since C18.G (pdf_text.page_texts): the same text at a quarter of the memory."""
+    return [text.replace('\x00', '') for text in pdf_text.page_texts(file_bytes) if text]
 
 def extract_text_from_epub(file_bytes: bytes) -> list[str]:
     """Extract text from an EPUB file, returning a list of chapter strings."""
@@ -229,6 +223,7 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         # Reader structure beside the unchanged content (C12.1); (None, None) if it cannot be built.
         # C17.6: each EPUB block's spine index and element path, and the book's own contents.
         blocks, toc, paths = await asyncio.to_thread(book_structure.build_with_paths, book["file_type"], file_bytes, chunks)
+        pdf_text.release_memory()  # C18.G: the parses are over; on Linux the freed memory goes back
         for start, end in batches(total, job["cursor"]):
             batch = chunks[start:end]
             vectors = await asyncio.to_thread(embedder.embed, batch)
@@ -245,6 +240,7 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
                 mark_ready(book_id, total, words, toc)
                 ready = True
             processing_jobs.advance(job["id"], end, total)
+            pdf_text.release_memory()
         if not ready:  # a book with no text at all is still ready, as before
             mark_ready(book_id, total, words, toc)
         elif toc is not None and book.get("status") == "ready":  # resumed after the book was ready
@@ -252,6 +248,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         processing_jobs.finish(job["id"], total)
         # The book is readable and its job done; the cover (at most two 3 s requests) comes last.
         await asyncio.to_thread(look_up_cover, book, file_bytes)
+        # Then the page-region map (C18.2b), its own job: the book is already readable.
+        await region_job.after_ingest({**book, "user_id": user_id}, file_bytes)
         return {"total_chunks": total, "total_words": words, "status": "ready"}
     except Exception as e:  # noqa: BLE001 - recorded on the job, which can be resumed
         print(f"Ingestion of book {book_id} stopped: {e}")

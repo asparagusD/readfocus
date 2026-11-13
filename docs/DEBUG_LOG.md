@@ -2892,3 +2892,375 @@ this is evidence, not proof.
 
 ### Commit
 test(reader): read each place in the turn test once its turn has landed
+
+## 2026-11-13 C18.2b — the repo-graph test does not know the new table
+
+**Status:** fixed (an expected test update, not a bug in the graph)
+
+### Symptom
+`pytest tools/repo_graph/tests -q` before the C18.2b commit: 61 passed,
+1 failed, `test_build.py::test_real_graph_has_the_schema_and_the_agents`,
+`assert {defines_table targets} == {the listed tables}`.
+
+### Repro
+Every run, after `make graph` with `018_page_regions.sql` staged.
+
+### Hypotheses
+1. The test lists the schema's tables by hand and `page_regions` is new.
+   Confirmed: the graph's `defines_table` edges hold every listed table
+   plus `table:page_regions`, which migration 018 creates.
+2. The graph mis-parses 018's DO block as a table. Ruled out: the only
+   new table node is `page_regions`.
+
+### Root cause
+The test's hand-written table list predates migration 018.
+
+### Fix
+`tools/repo_graph/tests/test_build.py`: `page_regions` added to the list.
+
+### Regression test
+The same test, which now pins the table set with `page_regions` in it.
+
+### Commit
+feat(regions): store page regions from a resumable regions job
+
+## 2026-11-13 C18.4 — make graph rejects a purpose for the fixture PDF
+
+**Status:** fixed
+
+### Symptom
+`make graph` before the C18.4 commit: "purposes.json is out of date ...
+Purpose for a file that is not inventoried:
+['backend/tests/fixtures/code_sample.pdf']"; then `pytest
+tools/repo_graph/tests -q`: 4 failed, 58 passed (the graph was stale).
+
+### Repro
+Every run with the entry in `tools/repo_graph/purposes.json`.
+
+### Hypotheses
+1. The inventory leaves binary files such as PDFs out, so a purpose for
+   one is stale by definition. Confirmed: the e2e `sample.pdf` and the
+   other fixture PDFs have no purpose entry either.
+2. The fixture was not staged. Ruled out: `git status` showed it added.
+
+### Root cause
+I added a purpose line for a file type the inventory does not list.
+
+### Fix
+The `code_sample.pdf` entry removed from `purposes.json`; its generator
+`scripts/dev/make_code_fixture.py` keeps the description.
+
+### Regression test
+`make graph` runs clean and `pytest tools/repo_graph/tests -q` passes.
+
+### Commit
+feat(regions): detect code blocks and rebuild indentation exactly
+
+## 2026-11-13 C18.6c — prose backfill not idempotent on books with over 1000 regions
+
+**Status:** fixed
+
+### Symptom
+After the approved real run of `scripts/backfill_prose.py` (all 7 books
+"handled"), a read-only `--dry-run` straight after said Dagano's chapter
+would still store 6 of 70 chunks and re-question 5, with 2411 placeholders
+against the 2395 just stored (the first dry run had said 2433). Expected:
+"would store 0" for every book. No exception or trace.
+
+    python scripts/backfill_prose.py --dry-run
+      3e3040a3  'Dagano 14 Chapter Operational Amplifiers.Pdf': regions done; would store 6 of 70 chunks, re-question 5, 2411 placeholders, 13 garbled
+
+### Repro
+Read-only, against the shared project (count with `count="exact"`, then
+`prose_job._rows("page_regions", "id", book_id, "order_in_page")` twice):
+
+    3e3040a3 count 3422 fetched 3422 distinct 3390
+    58a7d7e4 count 10624 fetched 10624 distinct 10181
+    5c7fdf10 count 10624 fetched 10624 distinct 10179
+    51fd1ff0 count 1498 fetched 1498 distinct 1498   (and every book under 1000 rows)
+
+### Hypotheses
+1. `_rows` pages with `.order("order_in_page").range(...)`; `order_in_page`
+   is not unique within a book (every page restarts at 0), so Postgres may
+   return tied rows in a different order for each range: some rows come
+   twice, others never. Evidence: only books over one page of 1000 rows are
+   hit. Ruled out if: fetched ids are all distinct. Result: confirmed (above).
+2. The regions job stored different rows on two runs (classification not
+   deterministic). Ruled out by 1: the stored count is fixed, the fetch is
+   what varies.
+
+### Root cause
+`backend/services/prose_job.py` `_rows`: paging ordered by a non-unique key.
+The chunk select (ordered by `chunk_index`, unique per book) was not hit.
+
+### Fix
+Order every page by the given column and then by `id`, a unique tiebreak,
+so ranges partition the rows exactly.
+
+### Regression test
+`backend/tests/test_prose_job.py::test_paging_orders_by_a_unique_tiebreak`
+(a fake query that returns ties in a different order on each call). Failed
+before the fix (fix stashed: 1 failed, 7 passed), passes after (8 passed). The
+fixture rows of `test_prose_job.py` and `test_backfill_prose.py` gained ids, as
+real rows have. Re-run of the repro after the fix, read-only: 3e3040a3 3422
+fetched, 3422 distinct; both 58a7d7e4 and 5c7fdf10 10624 / 10624. Standard
+checks: ruff 27, pytest 1059, ESLint 4, build, import, graph 62, contrast and
+images 0 failing, unit 120, e2e 127.
+
+The stored prose of the three books over 1000 regions was built from an
+incomplete region set; it is rebuilt by running the backfill again (your
+approval). The 9 chunks without prose belong to two device-only books (no
+file on the server, so no regions job): expected, not this bug.
+
+### Commit
+`b6f596d` fix(ingest): page regions by a unique order when rebuilding prose
+
+Rerun after the fix (approved): the 32 chunks were stored, and a dry run straight
+after would store 0 chunks in every book.
+
+## 2026-11-13 C18.G — EPUB prose rebuild fails on blocks outside the spine
+
+**Status:** fixed
+
+### Symptom
+Gate G5's offline ingestion of the shelf's Alice EPUB stored no prose
+(`with_prose: 0`); expected every chunk to get prose. The job printed:
+
+    python scripts/dev/gate_g5.py --book alices-adventures-in-wonderland.epub
+    Prose of book alices-adventures-in-wonderland not rebuilt: unsupported operand type(s) for +: 'NoneType' and 'int'
+
+    Traceback (most recent call last):
+      File "I:\readfocus\backend\services\prose_job.py", line 86, in rebuild
+        writes, report = plan(book, file_bytes, *load(book["id"]))
+      File "I:\readfocus\backend\services\prose_job.py", line 68, in plan
+        built = prose.epub_prose(contents, blocks if all(blocks) else None, paths if all(paths) else None, regions)
+      File "I:\readfocus\backend\regions\prose.py", line 254, in epub_prose
+        first = first or {"spine_index": spine, "cfi": _cfi(spine, path), "location": location}
+      File "I:\readfocus\backend\regions\prose.py", line 238, in _cfi
+        return f"epubcfi(/6/{2 * (spine + 1)}!{path})"
+    TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+
+### Repro
+`book_structure.build_with_paths` on Alice: 25 of 913 blocks (chunk 45) have
+`spine_index: None` (a document read by ingestion but not in the spine);
+`prose.epub_prose` on those paths raises every time. None of the seven books
+in the Supabase project is an EPUB, so the C18.6c backfill never met it.
+
+### Hypotheses
+1. `epub_prose` builds a CFI for every block, and a block outside the spine
+   has no spine index. Evidence: the trace and the 25 blocks. Ruled out if
+   the first chunk with such a block does not raise. Result: confirmed.
+
+### Root cause
+`backend/regions/prose.py` `epub_prose`: anchors are built for blocks with
+no spine index (`_cfi(None, path)`).
+
+### Fix
+Blocks without a spine index still count toward the skeleton position but
+give no anchor place; a chunk with no spine block has `start` and `end` null.
+
+### Regression test
+`backend/tests/test_prose.py::test_epub_blocks_outside_the_spine_get_no_anchor`. Failed
+with the fix stashed (1 failed, 13 passed), passes with it (14 passed). The
+repro after the fix: Alice's offline ingestion stores prose on 46 of 46
+chunks, no garbled item. Standard checks: see the commit.
+
+### Commit
+fix(regions): skip blocks outside the spine when anchoring EPUB prose
+
+## 2026-11-13 C18.G — a garbled run split across lines passes the question filter
+
+**Status:** fixed
+
+### Symptom
+Gate G5's offline ingestion of the shelf flagged 2 question prompts as
+garbled (expected 0): no exception, found by the gate's scan.
+
+    python scripts/dev/gate_g5.py
+    sicp.pdf  PROMPT: 'Fill in the blank: D E A B S C Figure 3.25:A half-adder circuit. circuit shown inFigure 3.25consists of an or-gate, two and-gates, and an _____.' ['spaced_letters']
+    interactive-linear-algebra.pdf  PROMPT: 'Fill in the blank: Consider the system of two _____ n x + y + z = 1 x − z = 0.' ['spaced_letters']
+
+### Repro
+`backend/tests/test_question_generation_agent.py::test_a_garbled_run_split_across_lines_is_still_dropped`
+(figure labels one per line before a sentence).
+
+### Hypotheses
+1. `body_sentences` runs `is_garbled` on the sentence's verbatim span, where
+   the single letters sit on separate lines; the detector's spaced-letter run
+   only joins single spaces, so the run shows only in the prompt, whose
+   whitespace is collapsed. Evidence: both prompts are `spaced_letters`,
+   both sources have one letter per line. Ruled out if the span with its
+   lines joined is not garbled. Result: confirmed (it is).
+
+### Root cause
+`backend/agents/question_generation/agent.py` `body_sentences` checked the
+span as printed only; `evaluator_agent.reference_from_passage` likewise.
+
+### Fix
+`agent.garbled(span)`: the detector on the span as printed and with its
+whitespace collapsed (as a question shows it); the evaluator's reference
+sentences are checked with whitespace collapsed.
+
+### Regression test
+`test_question_generation_agent.py::test_a_garbled_run_split_across_lines_is_still_dropped`:
+1 failed with the fix stashed, passes with it.
+
+### Commit
+fix(agents): check sentences for garble with their lines joined
+
+## 2026-11-13 C18.G — garbled sentences stay in the agents' prose
+
+**Status:** fixed
+
+### Symptom
+Gate G5 scans every sentence of every chunk's prose with `is_garbled`;
+expected 0 flagged, got SICP 2,105 of 14,003 and Interactive Linear Algebra
+172 of 5,375 (Calculus, Circuits, Alice 0):
+
+    python scripts/dev/gate_g5.py
+    sicp.pdf: prose_garbled 2105 (reasons: private_use 2089, control 27, ligature 3, symbol_in_word 2)
+      'e Massachuses Institute of Technology'   ("The Massachusetts")
+    interactive-linear-algebra.pdf: prose_garbled 172 (control 155, private_use 18)
+      'form matrix was \x81 1 0 5 1\n0 1 2 −1\n\x8b\n.'   (matrix brackets)
+
+### Repro
+`backend/tests/test_prose.py::test_a_garbled_sentence_becomes_an_unreadable_placeholder_with_its_page`
+and the three tests after it.
+
+### Hypotheses
+1. C18.6 counts garbled sentences and keeps them out of questions and
+   evidence, but `pdf_prose` and `epub_prose` leave their text in `prose`,
+   which Steve and any later reader of `prose` would see. The C18 plan
+   asked for an `unreadable` placeholder instead. Evidence: every flagged
+   item is a sentence that `prose` still holds verbatim. Ruled out if the
+   flagged sentences were not in `prose`. Result: confirmed.
+2. The detector over-flags. Ruled out: the reasons are Linux Libertine's
+   Private Use Area ligatures (U+E049 "Th", U+E03C "tt") and control
+   characters for ILA's matrix brackets, real artefacts (C18.1).
+
+### Root cause
+`backend/regions/prose.py`: garbled sentences were counted, never replaced.
+
+### Fix
+`prose.unreadable` replaces each garbled sentence (checked without its
+placeholders, as printed and with its lines joined) with "[Unreadable text,
+p. N]" ("sec. N" in an EPUB), keeping the placeholders it held after it; the
+page comes from the skeleton position of the sentence's first character
+(`_apply` now records one per character). The placeholder is listed in the
+chunk's anchors (`kind: unreadable`), counted in `garbled` and stored as
+`garbled_sentences`; question generation already leaves out sentences with
+a placeholder.
+
+### Regression test
+`test_prose.py`: the four unreadable tests failed with the fix stashed (4
+failed, 14 passed), pass with it (18 passed).
+
+### Commit
+fix(regions): replace garbled sentences in prose with unreadable placeholders
+
+## 2026-11-13 C18.G — a 769-page PDF runs out of memory in the 512 MB container
+
+**Status:** fixed
+
+### Symptom
+Gate G5, the whole pipeline (ingestion, regions job, prose rebuild) on the
+shelf's Calculus Volume 1 (52 MB, 769 pages) in the Render-sized container:
+killed by the kernel. Expected: peak under Render Free's 512 MB.
+
+    docker run --rm --network none --memory=512m --memory-swap=512m -v <repo>:/repo:ro -w /repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e PYTHONPATH=/repo readfocus-c18g-measure python scripts/dev/gate_g5.py --book calculus-volume-1.pdf
+    (no output after "model loaded, RSS 211.4 MB"; exit 137, State.OOMKilled true)
+
+With `--memory=2g`: peaks ingest 749 MB, regions job 848 MB, prose rebuild
+1,036 MB (each phase's peak includes what earlier phases kept). The other
+four shelf books finish at 402 to 464 MB.
+
+### Repro
+The command above (12 minutes; fails every time at 512 MB).
+
+### Hypotheses
+1. Each pypdf parse of the whole file costs about 190 MB at once, and the
+   pipeline parses it three times (ingestion's text, `book_structure`'s
+   page starts for the outline, the prose rebuild's page texts); on Linux
+   the freed memory stays with the process, so each phase starts higher.
+   Evidence (step-by-step profile in the container, `/proc/self/status`):
+   file read 299 MB, every page's text 493 MB, after `gc` and
+   `malloc_trim(0)` 303 MB; `build_with_paths` 496 MB, trimmed 305 MB;
+   regions job 461 MB, trimmed 410 MB; page texts again 590 MB, trimmed
+   415 MB. Ruled out if a batched parse peaks as high. Result: confirmed.
+   One reader for all 769 pages: 88 to 288 MB; a fresh reader per 50
+   pages: 88 to 136 MB peak (20 pages: 129 MB), and the text of every page
+   identical (same sha256 of all 769 texts).
+2. pdfplumber holds the regions job's pages. Partly: 364 to 461 MB over 769
+   pages with the file reopened per 20 pages, 410 MB after a trim; smaller
+   than 1.
+
+### Root cause
+`backend/services/book_ingestor.py` `extract_text_from_pdf`,
+`book_structure.pdf_contents` and `prose_job.pdf_page_texts` each parsed
+the whole PDF with one pypdf reader (about 200 MB for this book), and on
+Linux no phase gave freed memory back, so the job's peaks stacked; the
+prose rebuild also held every region's full `meta` (fonts, garble scores,
+boxes) for 15,000 regions.
+
+### Fix
+`backend/services/pdf_text.py` (new): `page_texts` reads 50 pages per fresh
+reader (same text for every page), used by all three; `release_memory`
+(`gc` + glibc `malloc_trim(0)`, a no-op elsewhere) after ingestion's parse,
+after each ingest batch, after each regions batch and once the prose plan
+is built. `prose_job.load` keeps only the six `meta` keys prose reads.
+`book_structure.pdf_contents` still reads the page texts (batched) for its
+page starts: passing them from ingestion would change the stubbed
+`extract_text_from_pdf` seam the ingestion tests use; it costs time, not
+memory.
+
+Container, 512 MB, Calculus: before, killed (2 GB cap: 749 / 848 / 1,036
+MB); after the batching and trims, finished at 398 / 476 / 524 MB; after the
+slim regions, finished at 399 / 475 / 502 MB, the gate's in-memory
+database holding 12 MB of that.
+
+### Regression test
+`backend/tests/test_pdf_text.py` (failed at collection without the module):
+batched text equals one reader's on every page, ingestion text unchanged,
+the structure reads through the batched reader, `release_memory` never
+raises; `test_prose_job.py::test_regions_are_loaded_with_only_the_meta_prose_needs`
+(failed before `_slim`). Memory itself is checked by hand in the container
+(`scripts/dev/gate_g5.py`), not in pytest.
+
+### Commit
+fix(ingest): read PDF text a few pages at a time and hand memory back
+
+## 2026-11-13 C18.G — `make graph` leaves a diff at the chunk close
+
+**Status:** fixed
+
+### Symptom
+Closing C18, `make graph` on a clean tree changed `docs/repo-graph/inventory.json`
+and `REPO_MAP.md`; expected no diff:
+
+    make graph && git status --short docs/repo-graph
+     M docs/repo-graph/REPO_MAP.md
+     M docs/repo-graph/inventory.json
+    (docs/BENCHMARKS.md lines 1386 -> 1405, size 79000 -> 80101;
+     docs/PROGRESS.md lines 3729 -> 3731, size 695554 -> 699295)
+
+### Repro
+`make graph && git diff --stat docs/repo-graph` at `2556493`.
+
+### Hypotheses
+1. The last docs-only commits (`f9b0f96`, `30b4bc8`, `2556493`) changed
+   `docs/BENCHMARKS.md` and `docs/PROGRESS.md` without regenerating the
+   graph, whose inventory records every tracked file's lines and size.
+   Ruled out if other entries differ. Result: confirmed (only those two).
+
+### Root cause
+Docs commits were made without `make graph`; the inventory tracks docs too.
+
+### Fix
+Regenerate and commit the graph. No code change.
+
+### Regression test
+None automated: the check is `make graph` leaving no diff, re-run after this
+commit (clean).
+
+### Commit
+fix(graph): refresh the inventory after the C18.G docs commits

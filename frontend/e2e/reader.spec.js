@@ -283,6 +283,20 @@ test('a proper noun shows a Wikipedia summary with a link', async ({ page, api }
   expect(api.lookups).toContainEqual({ term: 'Signals', proper: true });
 });
 
+test("words inside a PDF page's math, code or figure boxes are not looked up (C18.6d)", async ({ page, api }) => {
+  // Every page's whole area is a math box: no word on it may be looked up.
+  api.regions = Array.from({ length: 20 }, (_, i) => ({ page: i + 1, kind: 'math', bbox: [0, 0, 2000, 2000] }));
+  await openReader(page);
+  await expect.poll(() => api.regionAsks).toBeGreaterThan(0);
+  const lamp = await wordPoint(page, 'lamp');
+  expect(lamp).not.toBeNull();
+  await page.mouse.move(5, 5);
+  await page.mouse.move(lamp.x, lamp.y);
+  await page.waitForTimeout(900);
+  await expect(page.locator('.rf-wordcard')).toHaveCount(0);
+  expect(api.lookups).toEqual([]);
+});
+
 test.describe('epub', () => {
   test.use({ book: 'epub' });
 

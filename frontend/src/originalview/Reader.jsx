@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
 import { EpubBook } from './epub/EpubBook';
 import { PdfBook } from './pdf/PdfBook';
+import { skipPdfPoint } from './pdf/regions';
 import { keyAction, SPREAD_MIN_WIDTH, timeAtProgress } from './frame';
 import { placeEnd, placeStart, reached, shows } from './today';
 
@@ -75,11 +76,12 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * `opening` keeps the blank page up while the session finds and opens its place; `status`
  * joins the folio ("Beyond today's reading"). `ref` also gets find(snippets, from) and toc().
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
- * `hoverLookup` false leaves selection, long-press and Enter).
+ * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
+ * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true,
+  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -102,8 +104,12 @@ export function Reader({
   const [sections, setSections] = useState([]);
   const lookup = useRef(null);
   const surfaces = useMemo(() => (kind === 'pdf'
-    ? (bookBox ? [{ root: bookBox, doc: document }] : [])
-    : sections.filter((doc) => doc.defaultView && doc.body).map((doc) => ({ root: doc.body, doc }))), [kind, bookBox, sections]);
+    ? (bookBox ? [{ root: bookBox, doc: document, skip: regions ? (x, y) => skipPdfPoint(regions, x, y) : undefined }] : [])
+    : sections.filter((doc) => doc.defaultView && doc.body).map((doc) => ({ root: doc.body, doc }))), [kind, bookBox, sections, regions]);
+  const shownPages = place?.kind === 'pdf' ? place.pages.join() : '';
+  useEffect(() => { // C18.6d: the boxes of the pages shown are asked for before a word is hovered
+    if (regions && shownPages) shownPages.split(',').forEach((n) => regions.load(Number(n)));
+  }, [regions, shownPages]);
 
   const relocate = useCallback((next) => {
     setPlace(next);

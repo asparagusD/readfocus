@@ -202,3 +202,37 @@ def test_body_sentences_drop_boilerplate_and_renumber():
 def test_the_agent_uses_no_llm():
     source = inspect.getsource(agent_module)
     assert "llm" not in source and "langchain" not in source
+
+
+# --- C18.6b: prose-only text, garbled and placeholder sentences dropped -------------------------
+
+PROSE = (BODY_A + " The rate is [Equation 2.1, p. 4] per hour. As [Figure 1: A leaf, p. 5] shows, leaves are flat. "
+         "Th chloroplast is the organelle where the light reactions take place in green plants.")
+
+
+def test_prose_is_read_instead_of_content_when_the_chunk_has_it(db):
+    db.chunks[0]["content"] = "x = y + 1 (define (f) 2) " + BODY_A
+    db.chunks[0]["prose"] = PROSE
+    report = QuestionGenerationAgent().run("book-1", ["c0"])
+    evidence = " ".join(row["evidence"] for row in db.bank)
+    assert evidence and "define" not in evidence and "x = y" not in evidence
+    assert "[" not in evidence and "" not in evidence
+    assert report.dropped == {"garbled": 1, "placeholder": 2}
+
+
+def test_body_sentences_counts_what_it_drops():
+    dropped = {}
+    kept = agent_module.body_sentences(PROSE, dropped)
+    assert dropped == {"garbled": 1, "placeholder": 2}
+    assert all("[" not in s.span and "" not in s.span for s in kept)
+    assert [s.index for s in kept] == list(range(len(kept)))
+
+
+def test_a_garbled_run_split_across_lines_is_still_dropped():
+    # Figure labels one per line: harmless line by line, a run of single letters once the lines are joined.
+    text = (BODY_A + " D\nE\nA\nB\nS\nC Figure 3.25 shows that the half adder circuit consists of an or-gate, "
+            "two and-gates and an inverter.")
+    dropped = {}
+    kept = agent_module.body_sentences(text, dropped)
+    assert dropped.get("garbled") == 1
+    assert not any("D E A" in " ".join(s.span.split()) for s in kept)

@@ -1,9 +1,9 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 590,
-    "inventoried": 449,
-    "excluded": 141
+    "tracked": 637,
+    "inventoried": 495,
+    "excluded": 142
   },
   "files": [
     {
@@ -81,8 +81,8 @@
     {
       "path": ".gitignore",
       "language": "gitignore",
-      "lines": 28,
-      "size_bytes": 370,
+      "lines": 32,
+      "size_bytes": 496,
       "role": "config",
       "purpose": "Root ignore rules: env files, node_modules, Python caches and virtualenvs, .cache/, the Impeccable binary, OS files."
     },
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13699,
+      "size_bytes": 14118,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -161,10 +161,10 @@
     {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
-      "lines": 175,
-      "size_bytes": 9127,
+      "lines": 180,
+      "size_bytes": 9528,
       "role": "agent",
-      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence."
+      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence; the passage is each chunk's prose when it has one, and sentences with a placeholder or garbled text are never reference evidence (C18.6b)."
     },
     {
       "path": "backend/agents/graph.py",
@@ -265,10 +265,10 @@
     {
       "path": "backend/agents/question_generation/agent.py",
       "language": "python",
-      "lines": 138,
-      "size_bytes": 6760,
+      "lines": 161,
+      "size_bytes": 7982,
       "role": "agent",
-      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); hands each chunk's concepts to the concept store; returns a GenerationReport."
+      "purpose": "QuestionGenerationAgent.run(book_id, chunk_ids): builds, filters and scores questions for chunks with the local embedder only and upserts them into question_bank (on conflict do nothing); hands each chunk's concepts to the concept store; returns a GenerationReport. Since C18.6b it reads a chunk's prose when set and leaves out sentences with a placeholder or garbled text, counted in the report's dropped."
     },
     {
       "path": "backend/agents/question_generation/assembler.py",
@@ -383,6 +383,78 @@
       "purpose": "Pure text utilities, standard library only: normalize (PDF hyphenation, line breaks, quotes), split_sentences with an abbreviation guard, tokenize, STOPWORDS, content_words, and informativeness, a 0..1 sentence score."
     },
     {
+      "path": "backend/regions/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 99,
+      "role": "lib",
+      "purpose": "Package marker for backend.regions, the region map (C18): prose, math, code, figure, table and unreadable regions of a book's pages; pure functions, no I/O."
+    },
+    {
+      "path": "backend/regions/classify.py",
+      "language": "python",
+      "lines": 379,
+      "size_bytes": 17378,
+      "role": "lib",
+      "purpose": "Pure classification of an extract.Page in reading order: tables, figures and drawn math through backend.regions.figures (C18.5a), code through backend.regions.code (C18.4), then math (C18.3): per-character evidence (math fonts, Unicode math symbols, sub- and superscripts; monospace, footnote marks, ordinals and units excluded), display-math regions (lines with enough evidence and an operator, or set off from the column; grouped, with fragments, stacked fractions and right-margin equation numbers), inline math spans as char ranges and boxes in the remaining blocks; iou()."
+    },
+    {
+      "path": "backend/regions/code.py",
+      "language": "python",
+      "lines": 194,
+      "size_bytes": 9360,
+      "role": "lib",
+      "purpose": "Pure code-block detection and exact rebuilding (C18.4): monospace lines (font names, unnamed fonts with one advance for narrow and wide letters, template lines with no prose word), blocks ended by prose, rows by baseline, text rebuilt by column = round((x0 - left) / mean char width) with blank lines from the line pitch, line-number gutters stripped into meta.line_numbers, and a keyword-based language_guess (python, scheme, c, java, javascript, matlab, unknown)."
+    },
+    {
+      "path": "backend/regions/epub.py",
+      "language": "python",
+      "lines": 271,
+      "size_bytes": 11908,
+      "role": "lib",
+      "purpose": "EPUB regions from structure with CFI anchors (C18.5b): each spine document walked in order with CFI steps; block MathML -> math (MathML, LaTeX from an x-tex annotation), pre and block code -> code (exact text, language from class else guessed), figure/img/svg/object -> figure (figcaption, alt, or a following 'Figure N' paragraph; every image rendition as a package path), table -> table (caption, rows), text blocks -> prose with inline_math and inline_code ranges; package_images, spine_images, spine_count."
+    },
+    {
+      "path": "backend/regions/extract.py",
+      "language": "python",
+      "lines": 247,
+      "size_bytes": 9376,
+      "role": "lib",
+      "purpose": "PDF page characters (and, since C18.5a, its graphics and, on ruled pages only, pdfplumber's table candidates) with font name, size, box and uprightness via pdfplumber, grouped by the pure build_page into lines (each character's offset in the line text, sub- and superscripts joined with their baseline offset, split at column gutters, word gaps from positions) and blocks, in points from the crop box's top-left; page_chars, iter_pages (file opened once per range, pages closed) and page_count."
+    },
+    {
+      "path": "backend/regions/figures.py",
+      "language": "python",
+      "lines": 186,
+      "size_bytes": 9623,
+      "role": "lib",
+      "purpose": "Pure tables, figures and drawn math for a PDF page (C18.5a): table candidates with enough rows, columns and filled cells (lines claimed, 'Table N' caption); drawing objects outside tables and text frames clustered by proximity: glyph-sized clusters are math drawn as outlines (inline boxes on their line, or display math with meta.drawn), large clusters with images or several vector objects and little text are figures with their labels and 'Figure N' caption; two-column gutter detection and reading order."
+    },
+    {
+      "path": "backend/regions/garble.py",
+      "language": "python",
+      "lines": 96,
+      "size_bytes": 4516,
+      "role": "lib",
+      "purpose": "Garble detector: garble_score(text) gives the share of visible characters in broken-extraction artefacts (U+FFFD, Private Use Area, (cid:NN), control characters, a math symbol inside a word, long runs of spaced single letters, dropped-ligature gaps) and the reasons; is_garbled applies the thresholds in backend/regions/policy.py."
+    },
+    {
+      "path": "backend/regions/policy.py",
+      "language": "python",
+      "lines": 188,
+      "size_bytes": 9283,
+      "role": "lib",
+      "purpose": "Region-map constants in one place: garble thresholds (C18.1), line and block grouping (C18.2), math fonts, monospace fonts, script offsets, display and inline rules, equation numbers and the evaluation IoU (C18.3); code lines, template lines, unnamed fonts, rows, gutters and the language score (C18.4); table gating and filters, figure clusters, drawn math, frames, captions and columns (C18.5a); placeholder captions, line matching, short labels, fuzzy matches and inline-math context for prose-only text (C18.6)."
+    },
+    {
+      "path": "backend/regions/prose.py",
+      "language": "python",
+      "lines": 364,
+      "size_bytes": 17632,
+      "role": "lib",
+      "purpose": "Prose-only agent text (C18.6): placeholder() writes '[Equation 3.2, p. 45]', '[Code listing, p. 46]', '[Figure 3.4: caption, p. 47]' ('sec. N' for EPUB); page_spans finds a PDF page's non-prose pypdf lines and inline math by text; pdf_prose and epub_prose (by element path) give each chunk {prose, anchors} (PDF pages and per-page character spans, EPUB start and end CFIs with A4 locations, the placeholders it holds); apply replaces spans once per region; sentence_counts counts garbled and placeholder sentences. Pure."
+    },
+    {
       "path": "backend/routers/__init__.py",
       "language": "python",
       "lines": 1,
@@ -409,10 +481,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 244,
-      "size_bytes": 11628,
+      "lines": 270,
+      "size_bytes": 13199,
       "role": "router",
-      "purpose": "Book endpoints: upload (read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book."
+      "purpose": "Book endpoints: upload (read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -457,16 +529,16 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 261,
-      "size_bytes": 11765,
+      "lines": 259,
+      "size_bytes": 12082,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b)."
     },
     {
       "path": "backend/services/book_structure.py",
       "language": "python",
-      "lines": 521,
-      "size_bytes": 23751,
+      "lines": 523,
+      "size_bytes": 23889,
       "role": "service",
       "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure apart from parsing the file: EPUB documents (in ingestion's order) walked into chapter, heading, paragraph, quote and list_item blocks with em and strong marks, plain text only, the top repeated heading level as chapters, then cut at the chunk boundaries by counting non-space characters (a text mismatch falls back to text blocks); PDF and fallback text rebuilt into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, page and chunk breaks continued) with chapter headings guessed from short lines (\"Chapter N\", standard Roman numerals under 100, Latin ALL CAPS followed by prose), running heads found across the book dropped from the text (the first one naming an unseen chapter becomes it), each chapter listed once; blocks are {id, type, text, marks[, continued]}; the toc lists chapter blocks; build never raises. chunks.content is untouched. C17.6: build_with_paths also gives each EPUB block its spine index and element path (chunks.block_paths, blocks unchanged), block_for_cfi, and books.toc from the PDF outline (title, page) or the EPUB nav (title, href, spine_index), each with its chunk_index and block_id; the chapter blocks remain the contents without them."
     },
@@ -489,10 +561,10 @@
     {
       "path": "backend/services/ingestion_worker.py",
       "language": "python",
-      "lines": 61,
-      "size_bytes": 2426,
+      "lines": 67,
+      "size_bytes": 2717,
       "role": "service",
-      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time, or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
     },
     {
       "path": "backend/services/lookup.py",
@@ -503,12 +575,28 @@
       "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract and Wikipedia's short description; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
     },
     {
+      "path": "backend/services/pdf_text.py",
+      "language": "python",
+      "lines": 45,
+      "size_bytes": 1794,
+      "role": "service",
+      "purpose": "PDF page text with bounded memory (C18.G): page_texts reads every page's pypdf text 50 pages per fresh reader (the same text as one reader, about a quarter of the memory); release_memory runs gc and glibc malloc_trim(0) so a phase's freed memory goes back on Linux. Used by ingestion, book_structure's page starts and the prose rebuild."
+    },
+    {
       "path": "backend/services/processing_jobs.py",
       "language": "python",
-      "lines": 100,
-      "size_bytes": 4429,
+      "lines": 102,
+      "size_bytes": 4656,
       "role": "service",
-      "purpose": "processing_jobs rows for book ingestion: create one queued job per book, the pure claimable rule (done, fresh running, attempt cap), claim with an optimistic update on attempts and updated_at so only one caller runs a job, advance the cursor and progress after each batch, finish, fail, and list stale queued or running jobs for the startup sweep."
+      "purpose": "processing_jobs rows for book ingestion and the regions job (kinds INGEST and REGIONS): create one queued job per book and kind, get by kind, the pure claimable rule (done, fresh running, attempt cap), claim with an optimistic update on attempts and updated_at so only one caller runs a job, advance the cursor and progress after each batch, finish, fail, and list stale queued or running jobs for the startup sweep."
+    },
+    {
+      "path": "backend/services/prose_job.py",
+      "language": "python",
+      "lines": 121,
+      "size_bytes": 6227,
+      "role": "service",
+      "purpose": "Prose-only text per chunk after the regions job (C18.6b): load() reads the book's page_regions and chunks (paged by 1000), plan() builds prose and anchors without writing, rebuild(book, file_bytes) applies it: through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises."
     },
     {
       "path": "backend/services/question_bank.py",
@@ -517,6 +605,14 @@
       "size_bytes": 4483,
       "role": "service",
       "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session only if it has none yet (otherwise returns the stored test; issue 34) and increments times_used for the run that stored."
+    },
+    {
+      "path": "backend/services/region_job.py",
+      "language": "python",
+      "lines": 155,
+      "size_bytes": 7617,
+      "role": "service",
+      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books; once done, hands the book to prose_job.after_regions (C18.6b) and returns its report as 'prose'."
     },
     {
       "path": "backend/services/retriever.py",
@@ -559,12 +655,28 @@
       "purpose": "Labelled answers for calibrating the grader: 34 cases over five questions, each with question, type, evidence, key terms, an answer, a category (correct, paraphrase, partial, wrong, off-topic, empty, copy of the question) and a hand-given human_score from 0 to 1."
     },
     {
+      "path": "backend/tests/fixtures/math_labels.json",
+      "language": "json",
+      "lines": 1499,
+      "size_bytes": 20041,
+      "role": "test",
+      "purpose": "Hand labels for C18.3 on 10 technical-shelf pages (SICP, Interactive Linear Algebra, Lessons in Electric Circuits): display regions (line ids, box, equation number) and inline math boxes, with each book's sha256; no book text. Built by scripts/dev/build_math_labels.py."
+    },
+    {
+      "path": "backend/tests/fixtures/regions_sample.epub",
+      "language": "text",
+      "lines": 14,
+      "size_bytes": 3117,
+      "role": "test",
+      "purpose": "Generated C18.5b fixture (scripts/dev/make_epub_fixture.py): two chapters with headings, prose with inline code and MathML, display MathML with LaTeX, Python and Scheme code, a figure, bare images with and without alt, an inline SVG and a captioned table; our own content."
+    },
+    {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 145,
-      "size_bytes": 5232,
+      "lines": 160,
+      "size_bytes": 5763,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, eq, in_, lt, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -631,6 +743,14 @@
       "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start. C17.5: PDF and EPUB anchors stored as sent and returned, a backfilled place keeps its C12 keys beside its anchor, malformed anchors 422, and start names the book's file format."
     },
     {
+      "path": "backend/tests/test_api_regions.py",
+      "language": "python",
+      "lines": 58,
+      "size_bytes": 2496,
+      "role": "test",
+      "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused."
+    },
+    {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
       "lines": 632,
@@ -687,6 +807,14 @@
       "purpose": "Pytest for scripts/backfill_positions.py on the in-memory database and the reader fixture books: pending places, a PDF point on the right page with the C12 keys kept, an EPUB CFI at the right element and offset, CFI steps for elements and text chunks, no stored file or no match left alone, a dry run writes nothing and a second run finds nothing to do. A short block is found with the text after it, not by its chunk's start (C17.6 dry-run regression)."
     },
     {
+      "path": "backend/tests/test_backfill_prose.py",
+      "language": "python",
+      "lines": 113,
+      "size_bytes": 5181,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_prose.py on the in-memory database: pending books, a dry run that only reads, a book without regions getting its regions job and prose, a second run changing nothing, a regions job running elsewhere left alone, one failing book not stopping the run, the environment guard."
+    },
+    {
       "path": "backend/tests/test_backfill_structure.py",
       "language": "python",
       "lines": 95,
@@ -725,6 +853,22 @@
       "size_bytes": 14422,
       "role": "test",
       "purpose": "Pytest on EPUBs built in memory, text snippets and sample.pdf: EPUB tags to typed blocks and marks with scripts and styles skipped, blocks cut at chunk boundaries covering each chunk exactly with marks kept, the chapter level, fallbacks for a mismatched or unreadable EPUB; PDF line joining, hyphenation, page numbers, paragraph breaks, chapter detection and its false positives, title lines, continuation across chunks, the stored block shape and toc, build never raising; regressions for running heads, print slugs, formulas, maths letters, Roman-looking variables, repeated chapter numbers and an opener after a page ending mid-sentence."
+    },
+    {
+      "path": "backend/tests/test_classify.py",
+      "language": "python",
+      "lines": 235,
+      "size_bytes": 10174,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/classify.py: math fonts and symbols, display lines (fonts, symbols alone, operator needed, monospace never), side-by-side systems, fragments, stacked fractions, equation numbers, inline spans (char ranges, scripts, footnotes and units, glued words, commas, small subscripts, ordinals, monospace lines), determinism, the label fixture, and precision/recall on the 10 hand-labelled shelf pages when the shelf is present."
+    },
+    {
+      "path": "backend/tests/test_code.py",
+      "language": "python",
+      "lines": 165,
+      "size_bytes": 7415,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/code.py: language guesses, exact indentation, blank lines and inner spaces, block-relative columns, gutters (same line and split), digits that are not a gutter, prose with inline code, template lines, lone mono symbols, unnamed equal-advance fonts, code never math, the generated PDF rebuilt character for character (Python parsed by ast), and SICP pages 50, 76 and 121 rebuilt exactly with balanced parentheses when the shelf is present."
     },
     {
       "path": "backend/tests/test_concept_store.py",
@@ -775,6 +919,14 @@
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
     {
+      "path": "backend/tests/test_epub_regions.py",
+      "language": "python",
+      "lines": 125,
+      "size_bytes": 5865,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/epub.py: the generated fixture's kinds in order, inline math and code ranges, display MathML and LaTeX, exact code with language, figures from figcaption, alt and a following caption paragraph, srcset renditions, tables, every package image in a figure, CFI anchors, determinism, a non-EPUB raising, the e2e EPUBs, and Alice's 45 figures when the shelf is present."
+    },
+    {
       "path": "backend/tests/test_eval_grader.py",
       "language": "python",
       "lines": 29,
@@ -783,12 +935,36 @@
       "purpose": "Tests for scripts/eval_grader.py's pure helpers (C15.3): candidate constants apply to one grading call only, and the best combination is chosen by agreements, then error."
     },
     {
+      "path": "backend/tests/test_extract.py",
+      "language": "python",
+      "lines": 151,
+      "size_bytes": 6067,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/extract.py: font subset prefixes, word gaps with and without space characters, line order, raised and lowered characters, column gutters, paragraph blocks, rotated characters, crop-box coordinates, determinism, the e2e sample.pdf from a path and from bytes, and SICP's word gaps when the shelf is present."
+    },
+    {
       "path": "backend/tests/test_feedback.py",
       "language": "python",
       "lines": 141,
       "size_bytes": 7198,
       "role": "test",
       "purpose": "Pytest: each feedback template and its conditions, term lists, the evidence snippet, and over the labelled fixtures that feedback holds only template words, key terms and verbatim evidence."
+    },
+    {
+      "path": "backend/tests/test_figures.py",
+      "language": "python",
+      "lines": 176,
+      "size_bytes": 8225,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/figures.py through classify: vector and image figures with captions above or below and labels, icons, rules and single bars ignored, drawn display and inline math, tables with captions, one-cell boxes, graphics inside tables, two-column reading order, crop-box coordinates; and on the shelf Calculus tables, Figure 2.11 and drawn math, and the Circuits schematic taking its labels."
+    },
+    {
+      "path": "backend/tests/test_garble.py",
+      "language": "python",
+      "lines": 102,
+      "size_bytes": 4287,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/garble.py: clean prose, math, code and ligature characters not flagged; cid artefacts, replacement and private-use characters, a garbled TeX equation extraction, symbols inside words, spaced-letter runs at the threshold, dropped-ligature gaps and control characters flagged."
     },
     {
       "path": "backend/tests/test_grader.py",
@@ -825,16 +1001,16 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 274,
-      "size_bytes": 11789,
+      "lines": 289,
+      "size_bytes": 12466,
       "role": "test",
       "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume. C17.6: no structure leaves block_paths empty too."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
-      "lines": 120,
-      "size_bytes": 5605,
+      "lines": 125,
+      "size_bytes": 5785,
       "role": "test",
       "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
     },
@@ -865,10 +1041,10 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 370,
-      "size_bytes": 15524,
+      "lines": 465,
+      "size_bytes": 20052,
       "role": "test",
-      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb."
+      "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
     {
       "path": "backend/tests/test_model_ready.py",
@@ -903,6 +1079,14 @@
       "purpose": "Pytest on hand-made scores, sessions and answers: every score band at its boundaries, the re-read queue rules and bound, rolling damping, no growth after a low test, compounding within bounds, abandonment and its window, focus minutes and speed bounds, question-mix moves and their bounds, reason wording, the Results keys, and that decide is pure."
     },
     {
+      "path": "backend/tests/test_pdf_text.py",
+      "language": "python",
+      "lines": 41,
+      "size_bytes": 1493,
+      "role": "test",
+      "purpose": "Pytest for backend/services/pdf_text.py: batched page text equals one reader's on sample.pdf, ingestion text unchanged, book_structure reads page starts through the batched reader, release_memory never raises."
+    },
+    {
       "path": "backend/tests/test_planner_strategy.py",
       "language": "python",
       "lines": 220,
@@ -913,10 +1097,26 @@
     {
       "path": "backend/tests/test_processing_jobs.py",
       "language": "python",
-      "lines": 87,
-      "size_bytes": 3993,
+      "lines": 96,
+      "size_bytes": 4420,
       "role": "test",
       "purpose": "Pytest on the in-memory database: one queued job per book, the claimable rule at each boundary, a racing second claim gets nothing, advance records cursor and progress, finish and fail, which jobs the sweep sees as stale, and the stale window from INGEST_STALE_MINUTES."
+    },
+    {
+      "path": "backend/tests/test_prose.py",
+      "language": "python",
+      "lines": 225,
+      "size_bytes": 12306,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/prose.py: placeholder wording for math, code, figures and tables, caption cutting, span replacement written once per region, PDF chunks with display and inline math, code and a labelled figure across an empty page, short labels, page spans per chunk, EPUB code, figure and inline math by path with CFI anchors, placeholders never garbled, garbled and placeholder sentence counts."
+    },
+    {
+      "path": "backend/tests/test_prose_job.py",
+      "language": "python",
+      "lines": 143,
+      "size_bytes": 6384,
+      "role": "test",
+      "purpose": "Pytest for backend/services/prose_job.py and the evaluator's passage: prose, anchors and garbled counts stored, only changed chunks embedded again and re-questioned (unused questions deleted, used kept), idempotent second run, a book without regions left alone, after_regions never raising, load_passage reading prose, reference sentences without placeholders or garbled text."
     },
     {
       "path": "backend/tests/test_question_assembler.py",
@@ -929,8 +1129,8 @@
     {
       "path": "backend/tests/test_question_generation_agent.py",
       "language": "python",
-      "lines": 204,
-      "size_bytes": 9310,
+      "lines": 238,
+      "size_bytes": 10939,
       "role": "test",
       "purpose": "Pytest on an in-memory database and a fake embedder: stored rows are grounded in their chunk, the report matches them, a second run adds nothing, questions per chunk are capped, each chunk's concepts go to the concept store (whose failure loses no question), and no LLM is used."
     },
@@ -949,6 +1149,14 @@
       "size_bytes": 12670,
       "role": "test",
       "purpose": "Pytest on fixed text: verbatim sentence spans and each question strategy's prompt, answer and evidence, with no model or database."
+    },
+    {
+      "path": "backend/tests/test_region_job.py",
+      "language": "python",
+      "lines": 212,
+      "size_bytes": 9555,
+      "role": "test",
+      "purpose": "Pytest for backend/services/region_job.py on the in-memory database with sample.pdf: block rows, math rows and inline math meta, page batches from the cursor, one regions job beside the ingest job, device-only books skipped, EPUB jobs storing anchored rows and resuming without duplicates, a full run, a resumed run that never duplicates, a failure that leaves the book readable, bytes passed in, the sweep's dispatch by kind, giving up without touching the book, and after_ingest."
     },
     {
       "path": "backend/tests/test_requirements.py",
@@ -1081,8 +1289,8 @@
     {
       "path": "docs/ANCHORS.md",
       "language": "markdown",
-      "lines": 130,
-      "size_bytes": 5963,
+      "lines": 163,
+      "size_bytes": 7683,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
     },
@@ -1105,16 +1313,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1259,
-      "size_bytes": 71306,
+      "lines": 1405,
+      "size_bytes": 80101,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 2894,
-      "size_bytes": 125391,
+      "lines": 3266,
+      "size_bytes": 142102,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1177,8 +1385,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3407,
-      "size_bytes": 638362,
+      "lines": 3731,
+      "size_bytes": 699295,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1233,8 +1441,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 217,
-      "size_bytes": 12373,
+      "lines": 221,
+      "size_bytes": 12640,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -1261,6 +1469,14 @@
       "size_bytes": 6306,
       "role": "config",
       "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): three chapters with every kind of image (img PNG/GIF/SVG, inline SVG image by xlink:href and href, CSS background, figure and caption, srcset, cover), MathML and a code block."
+    },
+    {
+      "path": "frontend/e2e/gate-g5.spec.js",
+      "language": "javascript",
+      "lines": 73,
+      "size_bytes": 4196,
+      "role": "config",
+      "purpose": "Gate G5 renderer walk (playwright.gate.config.js, not a standard check): pages through each test EPUB in the original view with all API calls mocked and checks every packaged image loads (no remote one), captions, figcaptions and MathML boxes against g5_epub_expect.py."
     },
     {
       "path": "frontend/e2e/journey.spec.js",
@@ -1297,8 +1513,8 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 359,
-      "size_bytes": 19204,
+      "lines": 373,
+      "size_bytes": 19880,
       "role": "config",
       "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books."
     },
@@ -1385,10 +1601,18 @@
     {
       "path": "frontend/playwright.config.js",
       "language": "javascript",
-      "lines": 24,
-      "size_bytes": 860,
+      "lines": 25,
+      "size_bytes": 934,
       "role": "config",
       "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1)."
+    },
+    {
+      "path": "frontend/playwright.gate.config.js",
+      "language": "javascript",
+      "lines": 8,
+      "size_bytes": 581,
+      "role": "config",
+      "purpose": "Playwright config for Gate G5's EPUB renderer walk: the e2e config with only gate-g5.spec.js and a 10-minute timeout."
     },
     {
       "path": "frontend/playwright.live.config.js",
@@ -2249,10 +2473,10 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 303,
-      "size_bytes": 16273,
+      "lines": 309,
+      "size_bytes": 16836,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -2447,6 +2671,22 @@
       "purpose": "Node test (npm run test:unit): hex parsing, paper and ink remapped, greys mixed with alpha kept, coloured strokes untouched, image rectangles from corner points."
     },
     {
+      "path": "frontend/src/originalview/pdf/regions.js",
+      "language": "javascript",
+      "lines": 52,
+      "size_bytes": 2196,
+      "role": "asset",
+      "purpose": "Where PDF word lookup stays quiet (C18.6d): createRegionSource(api, bookId) asks GET /books/{id}/regions 20 pages at a time (a failure skips nothing and is asked again), hits(page, x, y) in PDF points; batchOf, toPagePoint, skipPdfPoint(source, x, y) finds the shown .rf-pdf-page under a client point."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/regions.test.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 1693,
+      "role": "asset",
+      "purpose": "Node tests for originalview/pdf/regions.js: batches of 20 pages, client point to PDF points, boxes skipped once loaded and asked for once per batch, a failed request skipping nothing and asked again."
+    },
+    {
       "path": "frontend/src/originalview/pdf/usePdfDocument.js",
       "language": "javascript",
       "lines": 51,
@@ -2585,8 +2825,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 348,
-      "size_bytes": 16014,
+      "lines": 352,
+      "size_bytes": 16325,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -2857,10 +3097,10 @@
     {
       "path": "frontend/src/reader/useWordAtPoint.js",
       "language": "javascript",
-      "lines": 252,
-      "size_bytes": 11744,
+      "lines": 260,
+      "size_bytes": 12237,
       "role": "asset",
-      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM, over any number of surfaces {root, doc} since C17.5 (the PDF's text layers in the page, each EPUB section's body in its iframe): caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside its rects; math, code, pre, figures and SVG are never looked up (SKIP); 350 ms on the same word looks it up once; a 2-5 word selection looks up a phrase; marks it via highlight.js; paused while a leaf turns; C12.8: hover can be turned off, lookUpSelection() for Enter or ?, clearMark(); C12.9: a touch long-press opens it ('press') with the OS menu held off, a touch selection of 2-5 words goes to onChip; lookUp(target, by)."
+      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM, over any number of surfaces {root, doc} since C17.5 (the PDF's text layers in the page, each EPUB section's body in its iframe): caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside its rects; math, code, pre, figures and SVG are never looked up (SKIP); 350 ms on the same word looks it up once; a 2-5 word selection looks up a phrase; marks it via highlight.js; paused while a leaf turns; C12.8: hover can be turned off, lookUpSelection() for Enter or ?, clearMark(); C12.9: a touch long-press opens it ('press') with the OS menu held off, a touch selection of 2-5 words goes to onChip; lookUp(target, by). A surface's skip(x, y) (a PDF's region map, C18.6d) keeps a point or selection out of lookup."
     },
     {
       "path": "frontend/src/reader/useWordCard.js",
@@ -3161,10 +3401,18 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 36,
-      "size_bytes": 969,
+      "lines": 42,
+      "size_bytes": 1241,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
+    },
+    {
+      "path": "samples/technical/SHELF.md",
+      "language": "markdown",
+      "lines": 15,
+      "size_bytes": 2760,
+      "role": "doc",
+      "purpose": "The C18 technical test shelf as fetched: file, title, author, what each book tests, licence, source URL, the page the licence was checked on, size and sha256 (the books themselves are git-ignored)."
     },
     {
       "path": "scripts/backfill_book_files.py",
@@ -3199,6 +3447,14 @@
       "purpose": "Backfill (C17.5, ANCHORS A7): adds an original-view `anchor` beside each C12 reading_progress.position {chunk_index, block_id, char_offset}: the place's text (from the offset on through the blocks after it, else its chunk's start) is searched for, lower-case with no whitespace, in the book's stored file: a point on the PDF page holding it (pypdf), or a collapsed EPUB CFI computed from the spine document (ElementTree); places with an anchor, no stored file or no match are left alone; --dry-run, --limit, --book-id, dev-only guard."
     },
     {
+      "path": "scripts/backfill_prose.py",
+      "language": "python",
+      "lines": 131,
+      "size_bytes": 5738,
+      "role": "script",
+      "purpose": "Backfill for books ingested before C18.6: ready books kept on the server (PDF, EPUB), oldest id first; a book whose regions job is done gets prose_job.rebuild, any other gets its regions job (claimed by hand), which rebuilds prose; --dry-run maps regions in memory and reports chunks that would change, re-questions, placeholders and garbled sentences without writing; ENV=development guard and --allow-non-dev; idempotent."
+    },
+    {
       "path": "scripts/backfill_structure.py",
       "language": "python",
       "lines": 110,
@@ -3213,6 +3469,14 @@
       "size_bytes": 16239,
       "role": "script",
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
+    },
+    {
+      "path": "scripts/dev/build_math_labels.py",
+      "language": "python",
+      "lines": 118,
+      "size_bytes": 6411,
+      "role": "script",
+      "purpose": "Holds the C18.3 hand labels (display line groups, inline stretches, equation numbers, with the labelling rules) and writes backend/tests/fixtures/math_labels.json with boxes from the extracted lines and each book's sha256; needs the shelf."
     },
     {
       "path": "scripts/dev/check_retriever.py",
@@ -3231,12 +3495,84 @@
       "purpose": "Creates or resets two confirmed dev test users and writes .env.test; refuses to run unless ENV=development."
     },
     {
+      "path": "scripts/dev/eval_math_regions.py",
+      "language": "python",
+      "lines": 90,
+      "size_bytes": 3715,
+      "role": "script",
+      "purpose": "Scores backend/regions/classify on the hand-labelled shelf pages: one-to-one matching at IoU >= MATH_MATCH_IOU, precision and recall for display and inline math, optionally per page; evaluate() is reused by test_classify.py."
+    },
+    {
+      "path": "scripts/dev/eval_prose.py",
+      "language": "python",
+      "lines": 84,
+      "size_bytes": 3756,
+      "role": "script",
+      "purpose": "Measures prose-only text on the technical shelf (C18.6): for pages spread through each PDF, regions as the job stores them and pypdf's text through prose.page_spans; prints the share of prose lines kept, non-prose lines removed and garbled sentences left. Local files only."
+    },
+    {
+      "path": "scripts/dev/g5_epub_expect.py",
+      "language": "python",
+      "lines": 75,
+      "size_bytes": 3356,
+      "role": "script",
+      "purpose": "Gate G5: counts each test EPUB's spine images (packaged and remote), figcaptions and MathML from the markup, plus package and spine images, into JSON for the renderer walk."
+    },
+    {
+      "path": "scripts/dev/g5_page_diff.py",
+      "language": "python",
+      "lines": 108,
+      "size_bytes": 5624,
+      "role": "script",
+      "purpose": "Gate G5: compares PDF.js page renders with pypdfium2 (PDFium) renders: ink one render lacks within 1 px, raster image areas left out, connected blobs of at least 3 x 3 px and over 9 px fail; writes diff images."
+    },
+    {
+      "path": "scripts/dev/g5_render_pages.mjs",
+      "language": "text",
+      "lines": 51,
+      "size_bytes": 2876,
+      "role": "script",
+      "purpose": "Gate G5: renders shelf PDF pages with PDF.js (frontend's pdfjs-dist, its fonts and wasm) in Edge through Playwright from a made-up origin and saves PNGs; local files only."
+    },
+    {
+      "path": "scripts/dev/gate_g5.py",
+      "language": "python",
+      "lines": 175,
+      "size_bytes": 7178,
+      "role": "script",
+      "purpose": "Gate G5 (C18.G): ingests shelf books offline through book_ingestor.run_job on MemoryDb (embeddings, questions, regions job, prose rebuild; no cover lookup, no Supabase), samples RSS per phase (ingest, regions, prose), then runs is_garbled over every prose sentence and every question's prompt, answer, evidence and options; content scanned apart; --book, --out."
+    },
+    {
+      "path": "scripts/dev/make_code_fixture.py",
+      "language": "python",
+      "lines": 104,
+      "size_bytes": 3604,
+      "role": "script",
+      "purpose": "Draws backend/tests/fixtures/code_sample.pdf with pypdfium2's raw API and standard fonts: prose, the PYTHON listing (nested indentation, a blank line, aligned comment) and the C listing with a right-aligned line-number gutter; the tests import PYTHON and C to compare."
+    },
+    {
+      "path": "scripts/dev/make_epub_fixture.py",
+      "language": "python",
+      "lines": 91,
+      "size_bytes": 5082,
+      "role": "script",
+      "purpose": "Writes backend/tests/fixtures/regions_sample.epub with zipfile: an EPUB 3 with every region kind and four images all used by the spine; the tests import its PYTHON and SCHEME listings."
+    },
+    {
       "path": "scripts/dev/measure_embedder.py",
       "language": "python",
       "lines": 86,
       "size_bytes": 3047,
       "role": "script",
       "purpose": "Measures the embedding model in a fresh process: psutil RSS before and after import, load and batches, model load time, and the latency of a batch of short and of chunk-sized texts."
+    },
+    {
+      "path": "scripts/dev/measure_regions.py",
+      "language": "python",
+      "lines": 75,
+      "size_bytes": 3026,
+      "role": "script",
+      "purpose": "Measures pdfplumber's import RSS and, per technical-shelf PDF, seconds per page and peak RSS while reading pages through backend.regions.extract (sampled pages, or every page with the file opened once or once per --batch pages); local files only."
     },
     {
       "path": "scripts/dev/measure_rss.py",
@@ -3261,6 +3597,14 @@
       "size_bytes": 1578,
       "role": "script",
       "purpose": "Writes docs/repo-graph/AGENT_GRAPH.md from the compiled LangGraph workflow: an event table from graph.ENTRY and workflow.get_graph().draw_mermaid(); needs .env, so it is the agent-graph Makefile target, not part of graph."
+    },
+    {
+      "path": "scripts/fetch_test_shelf.py",
+      "language": "python",
+      "lines": 138,
+      "size_bytes": 7071,
+      "role": "script",
+      "purpose": "Downloads the region map's technical test shelf (five openly licensed books) into the git-ignored samples/technical/, after checking each licence's wording on its source page; records title, source, licence, size and sha256 in samples/technical/SHELF.md; --dry-run checks licences only."
     },
     {
       "path": "scripts/manual/README.md",
@@ -3487,6 +3831,30 @@
       "purpose": "Migration (C17.6, additive, not applied): chunks.block_paths jsonb, one {block_id, spine_index, path} per chunks.blocks entry for EPUBs, so a CFI maps to a block (ANCHORS A6); null for PDFs and earlier books."
     },
     {
+      "path": "supabase/migrations/018_page_regions.sql",
+      "language": "sql",
+      "lines": 64,
+      "size_bytes": 3068,
+      "role": "migration",
+      "purpose": "Migration 018 (C18.2b): page_regions (user, book, page, kind block/prose/math/code/figure/table/unreadable, bbox float8[4], text, meta, order_in_page; unique per book, page and order; index on book and page; readers select their own) and processing_jobs' kind check widened to 'ingest' and 'regions' (the one approved DROP CONSTRAINT)."
+    },
+    {
+      "path": "supabase/migrations/019_epub_regions.sql",
+      "language": "sql",
+      "lines": 28,
+      "size_bytes": 1627,
+      "role": "migration",
+      "purpose": "Migration 019 (C18.5b): page_regions.anchor jsonb and spine_index; page and bbox may be null (the one approved exception); a check that each row has a page and box or an anchor and spine item; a unique index on (book_id, spine_index, order_in_page) for EPUB rows."
+    },
+    {
+      "path": "supabase/migrations/020_chunk_prose.sql",
+      "language": "sql",
+      "lines": 20,
+      "size_bytes": 1354,
+      "role": "migration",
+      "purpose": "Migration 020 (C18.6b, additive): chunks.prose (content with placeholders for math, code, figures and tables), chunks.anchors (PDF pages and spans or EPUB CFIs, and the placeholders), chunks.garbled_sentences (non-negative)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -3537,8 +3905,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 451,
-      "size_bytes": 134154,
+      "lines": 497,
+      "size_bytes": 152381,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -3569,8 +3937,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 263,
-      "size_bytes": 10936,
+      "lines": 264,
+      "size_bytes": 10960,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },
@@ -3600,6 +3968,10 @@
     }
   ],
   "excluded": [
+    {
+      "path": "backend/tests/fixtures/code_sample.pdf",
+      "reason": "binary"
+    },
     {
       "path": "design/screens/components-lamplight-sheet.png",
       "reason": "binary"

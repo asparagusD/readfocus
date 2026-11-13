@@ -131,6 +131,7 @@ One row per model or heavy dependency (the memory rule in the
 | 2026-11-10 | C4.4 | `rapidfuzz` 3.14.6, imported | 16.9 MB (Windows) | 19.0 MB | 2 MB | as above |
 | 2026-11-11 | C8.8 | **Removed**: `langchain`, `langchain-community`, `langchain-groq`, `groq`, `langchain-google-genai`, `tenacity` from `requirements.txt` (`langgraph` 1.2.20 and its `langchain-core` 1.7.6 kept) | 132.4 MB with `backend.main` and the LangGraph workflow imported; 327.0 MB with the embedding model loaded and 8 chunks embedded (Windows, median of 3) | 132.0 MB; 327.0 MB (same stages, the removed packages made unimportable) | 0 MB at run time: no app code had imported them since C8.4b | 134.0 MB idle, 2 processes, before and after (`scripts/dev/measure_rss.py`, 3 runs each) |
 | 2026-11-11 | C9.3 | No new dependency: the embedding model (C4.1) is now **loaded at startup** on a background thread (`EMBED_PRELOAD`, default on), not on first use | Windows: 136 MB idle (3 runs) | Windows: 266 to 267 MB idle, ready 2.6 to 3.7 s after process start (3 runs). Container at 0.1 CPU and 512 MB: 110 to 126 MB idle before, 272 to 275 MB after, ready 29.2 to 29.9 s after start (download included) | about +130 MB (Windows), about +150 MB (container) | The idle server now holds the model: 267 MB Windows, 275 MB in the container, against 512 MB on Render Free. Peak during ingestion in the container 328 to 335 MB (316 to 350 MB in C9.2) |
+| 2026-11-13 | C18.2 | `pdfplumber` 0.11.10 (brings `pdfminer.six` 20260107, `pypdfium2` 5.14.0; `Pillow` already installed), imported through `backend.regions.extract` | 18.4 MB (Windows) | 32.9 MB; whole-book peaks below | 14.5 MB to import; reading a book in 20-page batches peaks at 136 MB (52 MB of it the file) | Unchanged in C18.2a: nothing the app imports at startup uses it yet (the regions job in C18.2b does; measured there) |
 
 Gate G3 (C8.G), 2026-11-11: after one full journey on the dev project
 (upload, start, finish-reading, submit, results, dashboard) with no AI
@@ -151,6 +152,151 @@ Concept extraction time per chunk, Windows, `sample.pdf` chunks of 507, 740
 and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
+
+### C18.2: pdfplumber on the technical test shelf (2026-11-13)
+
+`pdfplumber` 0.11.10 with `pdfminer.six` 20260107 and `pypdfium2` 5.14.0,
+read through `backend/regions/extract.py`. Command, Windows, fresh
+process, shelf from `scripts/fetch_test_shelf.py`:
+`python scripts/dev/measure_regions.py --all --batch 20` (and `--batch 0`,
+`--batch 50`, `--pages 40`). RSS includes the book's bytes held in memory
+(52 MB for Calculus).
+
+| Book | Pages | s/page | Peak RSS, file opened once | Peak RSS, reopened every 20 pages |
+|---|---|---|---|---|
+| Calculus Volume 1 | 769 | 0.227 (once), 0.244 (per 20) | 274.4 MB | 135.5 MB (143.1 MB per 50) |
+| Interactive Linear Algebra | 455 | 0.095, 0.121 | 279.7 MB | 126.3 MB |
+| Lessons in Electric Circuits I | 557 | 0.147, 0.153 | 80.8 MB | 72.3 MB |
+| SICP | 883 | 0.101, 0.128 | 80.7 MB | 71.3 MB |
+
+Import alone: 18.4 MB before, 32.9 MB after (+14.5 MB). Opened once,
+pdfminer keeps every parsed object of the document, so a whole book costs
+up to 280 MB even with each page closed: on top of the 267 to 275 MB idle
+server (C9.3) that passes Render Free's 512 MB. Reopening the file every
+20 pages keeps the peak near 136 MB for about 7% more time, so the
+regions job (C18.2b) works in batches of 20 pages with the file reopened
+for each. Sampling 40 pages per book with a reopen per page costs 0.28 to
+0.64 s/page: opening is the expensive part.
+
+Linux, the `readfocus-api` image at `--cpus=0.1 --memory=512m` (Render
+Free's share), pdfplumber installed into `/tmp` at run time, shelf
+mounted read-only: import 17.9 MB to 38.6 MB (+20.8 MB). 15 pages per book
+with a reopen per page: Calculus 4.67 s/page (peak 137.3 MB), Linear
+Algebra 5.03 (88.6 MB), Circuits 2.41 (90.9 MB), SICP 5.28 (90.5 MB).
+Every SICP page in 20-page batches: **1.055 s/page**, 883 pages in about
+15.5 minutes, peak 67.5 MB. By the Windows ratio Calculus would take about
+2 s/page, about 26 minutes for the book: the regions job runs after a
+book is readable and must never hold up ingestion. Not measured in the
+container: the other three books page by page, the backend server with
+a job running (C18.2b).
+
+C18.2b, the regions job itself (`backend/services/region_job.py`, 20-page
+batches), Windows, one process with `backend.main` imported
+(`INGEST_SWEEP=0`; embedding model not loaded), the in-memory database
+standing in for Supabase with each batch's rows dropped once written (a
+server sends them away), the book's bytes held as the job holds them:
+
+| Book | Pages | Regions | s/page | RSS after imports | Peak | After the job |
+|---|---|---|---|---|---|---|
+| Calculus Volume 1 | 769 | 15,082 | 0.253 | 128.4 MB | 248.8 MB | 231.0 MB |
+| SICP | 883 | 4,291 | 0.132 | 128.4 MB | 176.5 MB | 175.0 MB |
+
+So a job adds up to about 120 MB on the largest shelf book (52 MB of it
+the file, which ingestion hands over rather than copying). On the 267 to
+275 MB idle server with the embedding model (C9.3) that is about 390 MB
+against Render Free's 512 MB, not measured in the container. The process
+does not give the memory back after the job (231 MB at the end): Gate G5
+measures the server in the container, and running the job in a child
+process or with smaller batches is the fallback if it is too close.
+
+C18.3, the same job with math classification (`backend/regions/classify.py`)
+on every page, same harness: Calculus 0.256 s/page (was 0.253), peak
+247.7 MB; SICP 0.137 s/page (was 0.132), peak 176.2 MB; Interactive Linear
+Algebra 455 pages 0.132 s/page, peak 173.7 MB. Classification costs about
+3 to 5 ms a page; reading the PDF is the rest.
+
+C18.4, with code detection and rebuilding as well: SICP 0.139 s/page,
+peak 177.5 MB; Calculus 0.265 s/page, peak 249.5 MB.
+
+C18.5a, with graphics, figures, drawn math and pdfplumber's table finder
+(28 to 400 ms a page when it runs, so it runs only on pages with at least
+two long thin edges each way: 365 of Calculus's 769 pages, 117 of
+Circuits's 557, 95 of ILA's 455, 14 of SICP's 883), extraction and
+classification of every page, Windows: Calculus 0.275 s/page, Circuits
+0.174, ILA 0.129, SICP 0.135 (`fig_survey`-style loop over
+`extract.iter_pages` and `classify.classify_page`, 20-page batches).
+
+C18.5b, EPUB regions from structure (`backend/regions/epub.py`), Windows, fresh
+process: Alice (18.4 MB, 20 spine documents, 927 regions) in 0.25 s, about
+13 ms a document, RSS 18 to 72 MB with ebooklib, BeautifulSoup and the
+book's bytes loaded. EPUBs need no pdfplumber.
+
+### C18.G: Gate G5, the whole pipeline on the technical shelf (2026-11-13)
+
+`python scripts/dev/gate_g5.py --book <file>`, one fresh process per book,
+Windows, no CPU limit: the real `book_ingestor.run_job` (extraction,
+chunks, local embeddings, questions), then the regions job and the prose
+rebuild (which embeds and questions changed chunks again), on the in-memory
+database. RSS sampled every 0.2 s; each phase's peak is the process's RSS,
+so it includes what earlier phases kept. The model loaded first: 179 to
+180 MB.
+
+| Book | Pages / chunks | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild |
+|---|---|---|---|---|---|
+| Calculus Volume 1 (52 MB, over the 50 MB upload limit) | 769 / 246 | 688 to 749 | 519 MB | 481 to 484 MB | 662 to 663 MB |
+| SICP | 883 / 269 | 289 | 436 MB | 407 MB | 426 MB |
+| Lessons in Electric Circuits I | 557 / 253 | 353 | 337 MB | 386 MB | 414 MB |
+| Interactive Linear Algebra | 455 / 184 | 240 | 337 MB | 370 MB | 408 MB |
+| Alice (EPUB) | 20 spine documents / 46 | 35 | 326 MB | 344 MB | 349 MB |
+
+Against Render Free's 512 MB (the container limit every earlier
+measurement used; Gate G2's 300 MB line is the model's own load): region
+extraction stays under it for every book; Calculus goes over it while
+ingesting (519 MB, before any C18 code runs) and in the prose rebuild
+(663 MB).
+
+Linux container (your choice at C18.G, "Measure in container first"): the
+repo `Dockerfile` built at `13c5d52` as `readfocus-c18g` (916 MB; model
+baked in) plus `psutil==7.2.2` (`readfocus-c18g-measure`), repo mounted
+read-only, `--network none`, no CPU limit (memory does not depend on it),
+`--memory=512m --memory-swap=512m`:
+
+    docker run --rm --network none --memory=512m --memory-swap=512m -v <repo>:/repo:ro -w /repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e PYTHONPATH=/repo readfocus-c18g-measure python scripts/dev/gate_g5.py --book <file>
+
+Model loaded: 208 to 216 MB.
+
+| Book | 512 MB cap | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild |
+|---|---|---|---|---|---|
+| Calculus Volume 1 | **killed: out of memory (exit 137, OOMKilled)** | 640 (2 GB cap) | 749 MB | 848 MB | 1,036 MB (2 GB cap) |
+| SICP | finished | 249 | 462 MB | 444 MB | 464 MB |
+| Lessons in Electric Circuits I | finished | 311 | 382 MB | 433 MB | 452 MB |
+| Interactive Linear Algebra | finished | 208 | 374 MB | 400 MB | 435 MB |
+| Alice (EPUB) | finished | 35 | 377 MB | 400 MB | 402 MB |
+
+Linux keeps more than Windows (each phase starts from what the last one
+left: glibc does not hand freed memory back). Calculus is over 512 MB while
+ingesting, before any C18 code runs; it is also over the 50 MB upload limit,
+so the app refuses it today. Every shelf book under the limit finishes inside
+512 MB, the highest at 464 MB (SICP).
+
+After the memory fix (`48e7fc3`: PDF text read 50 pages per pypdf reader,
+freed memory handed back with `malloc_trim` after each phase and batch,
+regions loaded with only the meta prose needs), same container, same
+command, `--memory=512m --memory-swap=512m`:
+
+| Book | 512 MB cap | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild | Held by the gate's in-memory database at the end |
+|---|---|---|---|---|---|---|
+| Calculus Volume 1 | finished | 651 | 399 MB | 475 MB | 502 MB | 12 MB |
+| SICP | finished | 257 | 362 MB | 386 MB | 410 MB | 9 MB |
+| Lessons in Electric Circuits I | finished | 315 | 344 MB | 383 MB | 397 MB | 9 MB |
+| Interactive Linear Algebra | finished | 219 | 340 MB | 373 MB | 401 MB | 5 MB |
+| Alice (EPUB) | finished | 35 | 345 MB | 379 MB | 387 MB | 1 MB |
+
+The pypdf step on its own (Calculus, one process, `/proc/self/status`):
+one reader for all 769 pages 88 to 288 MB; a fresh reader per 50 pages 88
+to 136 MB, the same text for every page. Calculus keeps about 10 MB under
+the limit; the books the app accepts (50 MB upload limit) keep 100 MB or
+more.
 
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 

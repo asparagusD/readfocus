@@ -8,6 +8,7 @@ import { CalibrationFlow } from '../components/CalibrationFlow';
 import { Reader } from '../originalview/Reader';
 import { ReaderControls } from '../originalview/ReaderControls';
 import { useLamplight } from '../originalview/useLamplight';
+import { createRegionSource } from '../originalview/pdf/regions';
 import { beyond, chunkAt, compare, folioShort, snippetsFor } from '../originalview/today';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { createReadAhead } from '../reader/readAhead';
@@ -87,6 +88,8 @@ export function ReadingSession() {
   const reader = useRef(null);
   const { toast } = useToast();
   const kind = sessionData?.book?.format === 'epub' ? 'epub' : 'pdf';
+  // C18.6d: a PDF's math, code and figure boxes, so lookup skips them (an EPUB's markup already says).
+  const regions = useMemo(() => (kind === 'pdf' ? createRegionSource(fetchApi, bookId) : null), [kind, bookId]);
   const { theme, original, toggleOriginal } = useLamplight(bookId);
 
   // Today's reading in the book (C17.5): where its chunks start and where the next chunk begins.
@@ -324,6 +327,7 @@ export function ReadingSession() {
           label={outside ? `${bookTitle}: beyond today's reading, it does not count toward today's session` : `Today's reading from ${bookTitle}`}
           lookupClient={lookupClient}
           hoverLookup={hoverLookup}
+          regions={regions}
         />
       </main>
 

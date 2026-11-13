@@ -22,6 +22,8 @@ from backend.agents.question_generation.strategies import Question, Sentence
 from backend.nlp import concepts as concept_extraction
 from backend.nlp import embedder
 from backend.nlp.concepts import Concept
+from backend.regions import prose
+from backend.regions.garble import is_garbled
 from backend.services import concept_store
 from backend.services.supabase_client import supabase
 
@@ -41,11 +43,28 @@ class GenerationReport(BaseModel):
     by_strategy: dict[str, int] = {}
     rejected: dict[str, int] = {}
     average_quality: float | None = None  # of the accepted questions
+    dropped: dict[str, int] = {}  # sentences left out: "garbled", "placeholder" (C18.6b)
 
 
-def body_sentences(chunk: str) -> list[Sentence]:
-    """The chunk's sentences without front matter, reference entries and page furniture, renumbered."""
-    kept = [s for s in strategies.sentences_of(chunk) if quality.boilerplate_reason(s.span) is None]
+def garbled(span: str) -> bool:
+    """The garble detector on a sentence as printed and as a question shows it (lines joined: a run of
+    single letters one per line, such as figure labels, only shows once they are)."""
+    return is_garbled(span) or is_garbled(" ".join(span.split()))
+
+
+def body_sentences(chunk: str, dropped: dict | None = None) -> list[Sentence]:
+    """The chunk's sentences without front matter, reference entries and page furniture, renumbered.
+
+    Since C18.6b a sentence holding a placeholder ("[Equation 3.2, p. 45]", masked first so "p. 45" does not
+    end a sentence) or flagged by the garble detector is left out too, and counted in `dropped`.
+    """
+    kept = []
+    for sentence in strategies.sentences_of(prose.mask(chunk)):
+        reason = "placeholder" if prose.MASK in sentence.span else "garbled" if garbled(sentence.span) else None
+        if reason and dropped is not None:
+            dropped[reason] = dropped.get(reason, 0) + 1
+        if reason is None and quality.boilerplate_reason(sentence.span) is None:
+            kept.append(sentence)
     return [sentence.model_copy(update={"index": index}) for index, sentence in enumerate(kept)]
 
 
@@ -96,11 +115,14 @@ class QuestionGenerationAgent:
         report = GenerationReport(book_id=book_id)
         if not chunk_ids:
             return report
-        query = supabase.table("chunks").select("id, book_id, user_id, chunk_index, content")
+        # "*": prose (migration 020) is read when the chunk has it, and the query works before 020 too.
+        query = supabase.table("chunks").select("*")
         found = query.eq("book_id", book_id).in_("id", chunk_ids).execute().data or []
-        prepared = []
+        prepared, dropped = [], Counter()
         for chunk in sorted(found, key=lambda row: row["chunk_index"]):
-            sentences = body_sentences(chunk["content"])
+            counts: dict = {}
+            sentences = body_sentences(chunk.get("prose") or chunk["content"], counts)
+            dropped.update(counts)
             # Concepts come from the body text only, so a name in the front matter cannot be the topic.
             body = " ".join(sentence.text for sentence in sentences)
             prepared.append((chunk, sentences, concept_extraction.extract_concepts(body, use_embeddings=False)))
@@ -126,6 +148,7 @@ class QuestionGenerationAgent:
             rows.extend(to_row(question, chunk) for question in result.accepted)
 
         report.chunks = len(prepared)
+        report.dropped = dict(dropped)
         report.accepted = len(accepted)
         report.by_type = dict(Counter(question.type for question in accepted))
         report.by_strategy = dict(Counter(question.strategy for question in accepted))

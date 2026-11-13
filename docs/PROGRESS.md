@@ -3347,6 +3347,317 @@ measured for memory before `pdfplumber` is added (constraint 5); which
 actions each region type allows (ANCHORS A8). Depends on: C17.
 Estimate: 3.0 h. Safe to cut: table detection (tables as figures).
 
+Branch `chunk/C18-region-map`, created from `readfocus-2.0` at
+`088d388`. Goal as given at chunk start: classify every PDF page and
+EPUB section into regions (prose, math, code, figure, table) at
+ingestion, so only clean prose feeds quizzes, grading, search and word
+lookup, while math and code keep their own text for their own tools.
+
+### Plan (written at chunk start, 2026-11-13, before any code)
+
+What there is to build on (read from the code and the docs):
+
+- **Ingestion** (`backend/services/book_ingestor.py`, `run_job`): pypdf
+  page text (EPUB: BeautifulSoup `get_text` per document) goes through
+  `chunk_text` (about 600 words), then `book_structure.build_with_paths`
+  (blocks, toc, EPUB block paths), then batches of chunks (5 first, then
+  16) are embedded, upserted on `(book_id, chunk_index)`, questioned, and
+  the job cursor (`processing_jobs.advance`) saved after each. The sweep
+  (`ingestion_worker.py`) resumes from the cursor; extraction is
+  deterministic, so a chunk index means the same text on every run.
+- **`chunks.content` must not change** (question evidence quotes it;
+  ANCHORS A6). Its readers: question generation
+  (`question_generation/agent.py:103`, `body_sentences`), the evaluator's
+  evidence (`evaluator_agent.py:68`), search (`retriever.py`, the
+  `search_chunks` function and GIN index of migration 006 on
+  `to_tsvector(content)`), `GET /books/{id}/pages`, `mcp_server.py`.
+- **No PDF positions yet:** ANCHORS A6 says chunk spans are recorded for
+  EPUB blocks (`chunks.block_paths`, 017) but not PDF pages; there is no
+  `chunks.source_span` column (016 added book columns only).
+- **Word lookup in the reader** (C17.5c, `reader/useWordAtPoint.js`)
+  already skips `math`, `code`, `pre`, figures and SVG in EPUB sections;
+  a PDF text layer has no such elements, so PDF math and code are still
+  looked up.
+- **Not installed:** `pdfplumber` (on the free-intelligence approved
+  list, not in `requirements.txt`). Migrations end at 017; next is 018.
+  Fixtures: `backend/tests/fixtures/` has only `answers.json`;
+  `frontend/e2e/fixtures/books/` has `sample.pdf` and three EPUBs, none
+  technical.
+- **Body start** (FOCUS_RULES F2) falls back to "the first page whose
+  region map shows prose after the front matter": C18 provides the data,
+  C23 uses it.
+
+Decisions that apply to every subchunk:
+
+- **Content stays, prose is added.** `chunks.content` and chunk
+  boundaries stay exactly as today (pypdf; asserted byte for byte on the
+  shelf). Each chunk gets a new `chunks.prose`: its content with every
+  non-prose line replaced by an anchored placeholder `⟦math:p12-r3⟧`,
+  `⟦code:…⟧`, `⟦figure:…⟧`, `⟦table:…⟧`, `⟦unreadable:…⟧`. Agents,
+  grading evidence and search read `prose` when set, else `content`
+  (books ingested before C18 until a backfill).
+- **Regions are computed inside the existing job batches**, not in a
+  second pass: before a chunk batch is embedded, the pages it covers
+  (from its new PDF page span) are opened with pdfplumber one at a time,
+  classified, upserted per page (idempotent, so a resumed job rewrites,
+  never duplicates) and closed (`page.close()` to free pdfminer's cache).
+  The chunk cursor is enough to resume: pages of finished batches are
+  done. The first batch (about 10 pages) gets ready a few seconds later,
+  measured in C18.2.
+- **Alignment, not re-extraction.** pypdf lines (which make `content`)
+  are matched to pdfplumber lines (which carry fonts and positions) by
+  page and normalised text (`book_structure.skeleton`, rapidfuzz for near
+  matches); a pypdf line takes the kind of its pdfplumber line. This is
+  the chunk's main risk, measured on the shelf in C18.6.
+- **EPUB: structure only, no guessing.** `<math>` is math (its
+  `alttext` or annotation kept); `<pre>` and block `<code>` are code;
+  `<figure>`, `<img>`, `<svg>` are figures with `<figcaption>` and `alt`
+  as caption; `<table>` is a table. Inline `<code>` inside a paragraph
+  stays prose text. Regions carry the CFI path as `block_paths` does.
+- **Classifiers are pure.** `backend/regions/` functions take characters
+  or lines and return regions: no I/O, same input same output; every
+  threshold in `backend/agents/policy.py` (`REGION_*`), as the
+  free-intelligence skill and ANCHORS ask. Tests need no mocks.
+- **Garbled text never reaches prose.** The garble detector (C18.1)
+  marks a line or page `unreadable` (CID codes `(cid:NN)`, U+FFFD, Private
+  Use Area characters, control characters, implausible letter and
+  stop-word statistics); it becomes a placeholder, kept out of quizzes,
+  search and lookup, and counted in the book's region summary.
+- **Region shape** (stored per page or spine item; documented in a new
+  ANCHORS section A9 in C18.5): PDF `{id, kind, page, bbox: [x0, y0, x1,
+  y1], text, display?, caption?, confidence, clues}` in points, top-left
+  origin like A1; EPUB `{id, kind, spine_index, path, text, alt?}`.
+  `kind` in `prose | math | code | figure | table | unreadable`. Code
+  `text` keeps its reconstructed indentation; math `text` is the raw
+  extraction (or MathML alttext) for the later math tool.
+- **Migration `018_region_map.sql`** (additive): table `page_regions`
+  (`book_id` fk with cascade, `user_id`, `unit_kind` `page|spine`,
+  `unit` int, `regions jsonb`, `garbled bool`, `version int`, unique
+  `(book_id, unit_kind, unit)`, RLS: a reader selects their own, only the
+  service role writes); `chunks.prose text`, `chunks.source_span jsonb`
+  (PDF `[{page, char_start, char_end}]`, ANCHORS A6); `books.regions_version
+  int`; a new GIN index on `to_tsvector(coalesce(prose, content))` and
+  `CREATE OR REPLACE` of `search_chunks` to use it (the old index stays).
+  The prompt says "dev only", but dev and production are one project
+  (constraint 2): applying it needs your approval and a fresh dump.
+  Until then code treats every new field as optional; pytest and e2e
+  never touch the project.
+- **Memory and licences** (constraint 5): pdfplumber (MIT) pulls in
+  pdfminer.six (MIT) and pypdfium2 (Apache-2.0 / BSD-3, ships the PDFium
+  binary); licences and the pin (newest release over two weeks old) are
+  checked in C18.2 before install. RSS measured in a fresh process
+  (import) and across a whole job on the largest shelf book, on Windows
+  and in the `python:3.11-slim` image used in C14; rows in
+  `docs/BENCHMARKS.md`. Render Free is believed to be 512 MB (issue 24:
+  ingestion already peaks at 347 MB on Windows), so the bar is a peak
+  under 450 MB on Linux.
+- **Math and code tools themselves** (copy code with indentation, show
+  an equation, ask Steve about it) are not built here: C18 stores what
+  they need and records in ANCHORS A8 which actions each region allows;
+  the tools land with C19/C22. Old books keep using `content` until the
+  optional backfill offered at the gate.
+- **Verification per commit:** the ten standard checks (ruff stays at
+  27, ESLint at 4 errors), `make graph` for new files, and
+  `design-review` for the one frontend change (C18.6b).
+
+Subchunks (each at most ~200 changed lines; tests in the same commit;
+split into a/b where marked):
+
+**C18.1 test shelf of openly licensed technical books + garble detector**
+(about 0.5 h; a shelf, b detector).
+- a: `tools/shelf/books.json` (new, ~60): five or six openly licensed
+  technical books chosen to cover TeX math fonts, non-TeX math (Cambria
+  Math or STIX), code in several monospace fonts, figures and tables, and
+  one EPUB with MathML: candidates OpenStax Calculus (CC BY 4.0),
+  Hefferon's Linear Algebra (CC BY-SA), SICP (CC BY-SA 4.0), an arXiv
+  CC BY paper, Pro Git (CC BY-NC-SA, EPUB and PDF); each entry has URL,
+  licence, sha256, and the pages to extract. Licences are confirmed from
+  each publisher's page before use, and **each download is asked for
+  first** (file, source, size). `tools/shelf/fetch.py` (new, ~60):
+  downloads into the ignored `tools/shelf/cache/`, checks sha256, and
+  writes small page extracts (pypdf) to `backend/tests/fixtures/shelf/`
+  (each under ~150 KB, with `SOURCES.md` attribution; NC-licensed books
+  stay in the cache, never committed). `labels.json`: line-level region
+  labels for about 24 extract pages, made by reading the rendered pages,
+  for the gate's precision and recall. Golden sha256 of every shelf
+  book's `chunk_text` output under today's code, so C18.6 can prove
+  `content` unchanged.
+- b: `backend/regions/garble.py` (new, ~80): `garbled(line) ->
+  (bool, reasons)` and a page verdict; constants in `policy.py` (+15).
+  Tests `test_garble.py` (~70): CID codes, U+FFFD, PUA, ligature
+  fragments, a broken-ToUnicode page from the shelf, clean prose, math
+  and code lines that must not be flagged (symbols are not garbage).
+- Verified by: fetch run (after your yes), extracts open in pypdf;
+  tests. Cut: the second EPUB; labels down to 12 pages.
+
+**C18.2 page character extraction with fonts and positions (batched
+job)** (about 0.75 h; a extraction, b in the job).
+- a: add `pdfplumber==<pin>` to `requirements.txt` after the licence
+  check and the RSS measurement (fresh process, Windows and
+  `python:3.11-slim`), row in `BENCHMARKS.md`.
+  `backend/regions/pdf_chars.py` (new, ~120): `page_lines(page) ->
+  [Line]`, one pure step over pdfplumber's `chars` (text, fontname,
+  size, x0, x1, top, bottom, upright): group into lines by baseline,
+  keep per-character font, size and baseline offset, flip to top-left
+  coordinates by the crop box (A1); `open_pages(file_bytes, pages)` a
+  generator that closes each page. Tests `test_pdf_chars.py` (~70) on a
+  shelf extract: lines in reading order, fonts read, offsets for a
+  subscript, coordinates inside the crop box.
+- b: `book_ingestor.py` (+50): `chunk_text` also returns each chunk's
+  PDF page span (`source_span`, content asserted unchanged); in
+  `run_job`, before each batch, the batch's pages are extracted and
+  stored as `prose`-only placeholder regions through
+  `backend/services/region_store.py` (new, ~50; upsert on the unique key,
+  skipped when 018 is not applied). `supabase/migrations/018_region_map.sql`
+  (new, as above; outside the line count). Tests `test_ingest_regions.py`
+  (~80, `memory_db.py`): a resumed job rewrites, never duplicates; spans
+  cover every chunk; first-batch time recorded; `test_migrations.py`
+  covers 018. `test_requirements.py` stays green.
+- Your step: approve and dump, then apply 018 (any time before C18.G).
+- Verified by: tests; one full local ingestion of the largest shelf
+  book with peak RSS and seconds per page. Cut: none (the base of the
+  chunk).
+
+**C18.3 math region detection** (about 0.75 h).
+- `backend/regions/math.py` (new, ~150): per character a math score
+  from the clues: font names (`CMMI`, `CMSY`, `CMEX`, `CMBSY`, `MSAM`,
+  `MSBM`, `EUFM`, `RSFS`, `Cambria Math`, `STIX`, `*Math*`; matched
+  without the subset prefix `ABCDEF+`), Unicode math operators and
+  alphanumerics (U+2200–22FF, 2A00–2AFF, 1D400–1D7FF, arrows, Greek
+  used as symbols), characters raised or lowered off the line's
+  baseline and smaller (sub- and superscripts), and symbol density.
+  Lines with a high share are display math (merged with a centred
+  neighbour and an equation number like `(3.2)`); short math runs inside
+  a prose line are inline math (the line stays prose, the run becomes an
+  inline placeholder, and question generation skips the sentence).
+  Constants in `policy.py` (+15). Tests `test_regions_math.py` (~90):
+  display, inline, sub/superscripts, equation numbers, a TeX page and a
+  Cambria page from the shelf, and prose with a stray `=` or Greek name
+  that stays prose; precision and recall on the labelled lines printed.
+- Verified by: tests; labelled math lines recall ≥ 0.9, prose lines
+  wrongly marked ≤ 2%. Cut: merging multi-line display blocks (each line
+  its own region).
+
+**C18.4 code region detection + indentation reconstruction** (about
+0.5 h).
+- `backend/regions/code.py` (new, ~140): monospace by font name
+  (`Courier`, `Consolas`, `Menlo`, `Monaco`, `CMTT`, `LMMono`,
+  `Inconsolata`, `SourceCodePro`, `*Mono*`, `*Code*`) or by equal
+  character advances when the name says nothing; blocks of consecutive
+  monospace lines, scored up by indentation on a character grid, a
+  ragged right edge (prose is justified) and code punctuation (`{}();=`,
+  `->`, `==`, `#`, keywords); indentation rebuilt as spaces from
+  `(x0 - block_left) / char_width`; line numbers in the margin dropped
+  and kept as `line_numbers`. Tests `test_regions_code.py` (~80): Python
+  indentation round trip, C braces, a monospace-free code listing, a
+  monospace table that is not code, inline `code` in prose.
+- Verified by: tests; labelled code lines recall ≥ 0.9; indentation of
+  every labelled block equal to the source. Cut: the equal-advance
+  fallback.
+
+**C18.5 figures and tables (PDF) + EPUB structural regions** (about
+0.75 h; a PDF, b EPUB).
+- a: `backend/regions/figures.py` (new, ~120): figures from
+  `page.images` and dense clusters of `curves`, `lines` and `rects`
+  (their small label text joins the figure, not the prose); captions
+  (`Figure 3.1`, `Fig.`, `Table 2`) attached to the nearest region;
+  tables from ruled grids (`page.find_tables` on lines only) or aligned
+  columns, with their cells as text. `backend/regions/page.py` (new,
+  ~60): one page's lines → regions in reading order (math, code,
+  figures, tables, garbled, the rest prose). Tests `test_regions_figures.py`
+  (~70).
+- b: `backend/regions/epub.py` (new, ~100) over the same documents and
+  root paths as `book_structure.xhtml_blocks`: the tag rules above,
+  stored per spine item; `docs/ANCHORS.md` A8 (which actions each kind
+  allows: prose all; math and code highlight, note, copy, no lookup or
+  underline; figure and table a note and a drawing) and a new A9 (region
+  shape). Tests `test_regions_epub.py` (~70) on `reflow.epub`, a MathML
+  section and the shelf EPUB.
+- Verified by: tests; every shelf figure and table caption found.
+  Cut: tables as figures (the stub's cut), vector-figure clusters (images
+  only).
+
+**C18.6 prose-only agent text with anchored placeholders** (about
+0.75 h; a backend, b reader).
+- a: `backend/regions/prose.py` (new, ~110): align a chunk's pypdf
+  lines (or EPUB text) with the stored regions and build `prose` with
+  placeholders; `book_ingestor.py` (+20) stores it per batch and sets
+  `books.regions_version`. Readers switch to `prose or content`:
+  `question_generation/agent.py` (+10, skips sentences with a
+  placeholder), `evaluator_agent.py` (+5), `retriever.py` (+5, through
+  the replaced `search_chunks`). Tests `test_prose.py` (~90): the
+  shelf's `content` sha256 equals the C18.1 goldens; no placeholder or
+  garbled character reaches a question; every non-prose labelled line is
+  out of `prose`; prose lines kept ≥ 98%.
+- b: `GET /books/{id}/regions?from=&to=` (`routers/books.py`, +30) and
+  `frontend/src/originalview/regions.js` (new, ~50) so
+  `useWordAtPoint` skips PDF points inside math, code, figure and table
+  boxes as it already does in EPUB; `regions.test.js`, one e2e on a
+  mocked math page. `design-review` (no visible change except no card).
+- Verified by: tests; an ingested shelf PDF's questions read by eye
+  for math or code fragments. Cut: b (PDF lookup over math stays as
+  today; EPUB is already right).
+
+**C18.G 🚦 Gate G5: originals intact, zero garbled text, memory OK**
+(about 0.25 h). Proposed criteria, all measured on the shelf with
+`tools/shelf/report.py` (new, ~60; offline, no Supabase):
+1. Originals intact: the stored file is never written (the bytes handed
+   to the job hash to `books.file_sha256` before and after); every shelf
+   book's `chunks.content` matches its C18.1 golden; the original view's
+   e2e stays green, plus a screenshot of a math page and a code page in
+   each renderer showing them untouched.
+2. Zero garbled text: no `(cid:`, U+FFFD, PUA or control character, and
+   no line the detector flags, in any `prose` or question on the shelf;
+   every unreadable page listed in the report.
+3. Region quality on the labelled pages: math and code recall ≥ 0.9,
+   prose kept ≥ 0.98.
+4. Memory: peak RSS while ingesting the largest shelf book under 450 MB
+   in `python:3.11-slim`, the import delta and seconds per page in
+   `BENCHMARKS.md`; the first batch ready at most 5 s later than before
+   locally.
+5. Standard checks green, counts not up; graph current.
+- Your steps: 018 applied (approved, after a dump); optionally approve a
+  backfill of existing books' regions and prose (`--dry-run` first).
+
+Questions for you:
+
+1. Shelf downloads: OK to download the shelf books (I will list each
+   file, source and size before fetching), and to commit small page
+   extracts of the CC BY / CC BY-SA ones as test fixtures?
+2. Migration 018 goes to the one shared project ("dev only" is not
+   possible): OK to plan its apply, after a fresh dump you confirm, at
+   the end of C18.2?
+3. `chunks.prose` beside an unchanged `content` (recommended), rather
+   than rewriting `content` for new books?
+4. Inline math in a prose sentence: skip that sentence for questions
+   (recommended), or keep it with a placeholder?
+
+Risks: pypdf-to-pdfplumber line alignment on odd layouts (two columns,
+rotated pages): unmatched lines default to prose and are counted in the
+report; pdfplumber's speed on Render's CPU (seconds per page measured
+in C18.2, the batch keeps the first session close to today's time);
+pypdfium2's binary adding memory even if unused (measured before
+install); scanned books (no text layer: every page `unreadable`, no
+questions, said in the open issues).
+
+Estimated time: about 4.25 h (C18.1 0.5, C18.2 0.75, C18.3 0.75, C18.4
+0.5, C18.5 0.75, C18.6 0.75, C18.G 0.25). That is 42% over the 3.0 h
+stub, inside the 50% rule. If time runs short, in this order: tables as
+figures, C18.6b, vector-figure clusters, the equal-advance code
+fallback, multi-line display math.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [ ] C18.1 test shelf of openly licensed technical books + garble detector | | | | | |
+| [ ] C18.2 page character extraction with fonts and positions (batched job) | | | | | |
+| [ ] C18.3 math region detection | | | | | |
+| [ ] C18.4 code region detection + indentation reconstruction | | | | | |
+| [ ] C18.5 figures and tables (PDF) + EPUB structural regions | | | | | |
+| [ ] C18.6 prose-only agent text with anchored placeholders | | | | | |
+| [ ] C18.G 🚦 Gate G5: originals intact, zero garbled text, memory OK | | | | | |
+
 ## C19 — anchors, highlights and underlines
 
 Goal: select text in the original view, highlight or underline it in a

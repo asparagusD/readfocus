@@ -253,8 +253,31 @@ Against Render Free's 512 MB (the container limit every earlier
 measurement used; Gate G2's 300 MB line is the model's own load): region
 extraction stays under it for every book; Calculus goes over it while
 ingesting (519 MB, before any C18 code runs) and in the prose rebuild
-(663 MB). Not measured in the 512 MB container: the `readfocus-api`
-image predates `pdfplumber` and needs a rebuild.
+(663 MB).
+
+Linux container (your choice at C18.G, "Measure in container first"): the
+repo `Dockerfile` built at `13c5d52` as `readfocus-c18g` (916 MB; model
+baked in) plus `psutil==7.2.2` (`readfocus-c18g-measure`), repo mounted
+read-only, `--network none`, no CPU limit (memory does not depend on it),
+`--memory=512m --memory-swap=512m`:
+
+    docker run --rm --network none --memory=512m --memory-swap=512m -v <repo>:/repo:ro -w /repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e PYTHONPATH=/repo readfocus-c18g-measure python scripts/dev/gate_g5.py --book <file>
+
+Model loaded: 208 to 216 MB.
+
+| Book | 512 MB cap | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild |
+|---|---|---|---|---|---|
+| Calculus Volume 1 | **killed: out of memory (exit 137, OOMKilled)** | 640 (2 GB cap) | 749 MB | 848 MB | 1,036 MB (2 GB cap) |
+| SICP | finished | 249 | 462 MB | 444 MB | 464 MB |
+| Lessons in Electric Circuits I | finished | 311 | 382 MB | 433 MB | 452 MB |
+| Interactive Linear Algebra | finished | 208 | 374 MB | 400 MB | 435 MB |
+| Alice (EPUB) | finished | 35 | 377 MB | 400 MB | 402 MB |
+
+Linux keeps more than Windows (each phase starts from what the last one
+left: glibc does not hand freed memory back). Calculus is over 512 MB while
+ingesting, before any C18 code runs; it is also over the 50 MB upload limit,
+so the app refuses it today. Every shelf book under the limit finishes inside
+512 MB, the highest at 464 MB (SICP).
 
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 

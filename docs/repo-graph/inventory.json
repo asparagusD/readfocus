@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 618,
-    "inventoried": 476,
+    "tracked": 621,
+    "inventoried": 479,
     "excluded": 142
   },
   "files": [
@@ -441,10 +441,18 @@
     {
       "path": "backend/regions/policy.py",
       "language": "python",
-      "lines": 169,
-      "size_bytes": 8364,
+      "lines": 188,
+      "size_bytes": 9283,
       "role": "lib",
-      "purpose": "Region-map constants in one place: garble thresholds (C18.1), line and block grouping (C18.2), math fonts, monospace fonts, script offsets, display and inline rules, equation numbers and the evaluation IoU (C18.3); code lines, template lines, unnamed fonts, rows, gutters and the language score (C18.4); table gating and filters, figure clusters, drawn math, frames, captions and columns (C18.5a)."
+      "purpose": "Region-map constants in one place: garble thresholds (C18.1), line and block grouping (C18.2), math fonts, monospace fonts, script offsets, display and inline rules, equation numbers and the evaluation IoU (C18.3); code lines, template lines, unnamed fonts, rows, gutters and the language score (C18.4); table gating and filters, figure clusters, drawn math, frames, captions and columns (C18.5a); placeholder captions, line matching, short labels, fuzzy matches and inline-math context for prose-only text (C18.6)."
+    },
+    {
+      "path": "backend/regions/prose.py",
+      "language": "python",
+      "lines": 307,
+      "size_bytes": 14664,
+      "role": "lib",
+      "purpose": "Prose-only agent text (C18.6): placeholder() writes '[Equation 3.2, p. 45]', '[Code listing, p. 46]', '[Figure 3.4: caption, p. 47]' ('sec. N' for EPUB); page_spans finds a PDF page's non-prose pypdf lines and inline math by text; pdf_prose and epub_prose (by element path) give each chunk {prose, anchors} (PDF pages and per-page character spans, EPUB start and end CFIs with A4 locations, the placeholders it holds); apply replaces spans once per region; sentence_counts counts garbled and placeholder sentences. Pure."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -1055,6 +1063,14 @@
       "purpose": "Pytest on the in-memory database: one queued job per book, the claimable rule at each boundary, a racing second claim gets nothing, advance records cursor and progress, finish and fail, which jobs the sweep sees as stale, and the stale window from INGEST_STALE_MINUTES."
     },
     {
+      "path": "backend/tests/test_prose.py",
+      "language": "python",
+      "lines": 182,
+      "size_bytes": 9903,
+      "role": "test",
+      "purpose": "Pytest for backend/regions/prose.py: placeholder wording for math, code, figures and tables, caption cutting, span replacement written once per region, PDF chunks with display and inline math, code and a labelled figure across an empty page, short labels, page spans per chunk, EPUB code, figure and inline math by path with CFI anchors, placeholders never garbled, garbled and placeholder sentence counts."
+    },
+    {
       "path": "backend/tests/test_question_assembler.py",
       "language": "python",
       "lines": 125,
@@ -1321,8 +1337,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3721,
-      "size_bytes": 676016,
+      "lines": 3723,
+      "size_bytes": 680156,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3399,6 +3415,14 @@
       "purpose": "Scores backend/regions/classify on the hand-labelled shelf pages: one-to-one matching at IoU >= MATH_MATCH_IOU, precision and recall for display and inline math, optionally per page; evaluate() is reused by test_classify.py."
     },
     {
+      "path": "scripts/dev/eval_prose.py",
+      "language": "python",
+      "lines": 84,
+      "size_bytes": 3756,
+      "role": "script",
+      "purpose": "Measures prose-only text on the technical shelf (C18.6): for pages spread through each PDF, regions as the job stores them and pypdf's text through prose.page_spans; prints the share of prose lines kept, non-prose lines removed and garbled sentences left. Local files only."
+    },
+    {
       "path": "scripts/dev/make_code_fixture.py",
       "language": "python",
       "lines": 104,
@@ -3753,8 +3777,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 478,
-      "size_bytes": 145227,
+      "lines": 481,
+      "size_bytes": 146650,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

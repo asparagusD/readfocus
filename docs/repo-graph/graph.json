@@ -587,6 +587,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/regions/prose.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/__init__.py",
       "type": "file",
       "role": "router",
@@ -1038,6 +1044,12 @@
     },
     {
       "id": "file:backend/tests/test_processing_jobs.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_prose.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2801,6 +2813,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/eval_prose.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/make_code_fixture.py",
       "type": "file",
       "role": "script",
@@ -4219,6 +4237,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/regions/prose.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/prose.py",
+      "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/auth.py",
       "to": "file:backend/dependencies.py"
     },
@@ -5241,6 +5269,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_processing_jobs.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose.py",
+      "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_prose.py",
+      "to": "file:backend/services/book_ingestor.py"
     },
     {
       "type": "imports",
@@ -7096,6 +7139,21 @@
       "type": "imports",
       "from": "file:scripts/dev/eval_math_regions.py",
       "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_prose.py",
+      "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_prose.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/eval_prose.py",
+      "to": "file:backend/services/region_job.py"
     },
     {
       "type": "imports",

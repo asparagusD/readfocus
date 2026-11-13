@@ -167,3 +167,22 @@ FIGURE_MAX_TEXT_SHARE = 0.3
 # lines on a short page (full-width headings).
 COLUMN_MAX_CROSSING = 0.15
 COLUMN_MIN_CROSSING = 2
+
+# --- Region map: prose-only agent text (backend/regions/prose.py, C18.6) -------
+
+# A caption in a placeholder ("[Figure 3.4: <caption>, p. 47]") is cut to
+# this many characters, at a word, with an ellipsis.
+PLACEHOLDER_CAPTION_MAX = 120
+# A pypdf line at least this long (non-space characters) found inside a
+# non-prose region is that region's, even if a prose region also holds it.
+PROSE_EXCLUSIVE_MIN = 12
+# A line this short or shorter next to a line of a non-prose region whose text
+# holds it (a figure label, an operator alone on its line) goes with it.
+PROSE_SANDWICH_MAX = 3
+# A line not found exactly may still match a non-prose region when it is at
+# least PROSE_FUZZY_MIN long and rapidfuzz's partial_ratio is at least this.
+PROSE_FUZZY_MIN = 4
+PROSE_FUZZY_RATIO = 90
+# Inline math is found in the page by its text plus this many non-space
+# characters of context on each side.
+PROSE_INLINE_CONTEXT = 6

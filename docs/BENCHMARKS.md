@@ -231,6 +231,31 @@ process: Alice (18.4 MB, 20 spine documents, 927 regions) in 0.25 s, about
 13 ms a document, RSS 18 to 72 MB with ebooklib, BeautifulSoup and the
 book's bytes loaded. EPUBs need no pdfplumber.
 
+### C18.G: Gate G5, the whole pipeline on the technical shelf (2026-11-13)
+
+`python scripts/dev/gate_g5.py --book <file>`, one fresh process per book,
+Windows, no CPU limit: the real `book_ingestor.run_job` (extraction,
+chunks, local embeddings, questions), then the regions job and the prose
+rebuild (which embeds and questions changed chunks again), on the in-memory
+database. RSS sampled every 0.2 s; each phase's peak is the process's RSS,
+so it includes what earlier phases kept. The model loaded first: 179 to
+180 MB.
+
+| Book | Pages / chunks | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild |
+|---|---|---|---|---|---|
+| Calculus Volume 1 (52 MB, over the 50 MB upload limit) | 769 / 246 | 688 to 749 | 519 MB | 481 to 484 MB | 662 to 663 MB |
+| SICP | 883 / 269 | 289 | 436 MB | 407 MB | 426 MB |
+| Lessons in Electric Circuits I | 557 / 253 | 353 | 337 MB | 386 MB | 414 MB |
+| Interactive Linear Algebra | 455 / 184 | 240 | 337 MB | 370 MB | 408 MB |
+| Alice (EPUB) | 20 spine documents / 46 | 35 | 326 MB | 344 MB | 349 MB |
+
+Against Render Free's 512 MB (the container limit every earlier
+measurement used; Gate G2's 300 MB line is the model's own load): region
+extraction stays under it for every book; Calculus goes over it while
+ingesting (519 MB, before any C18 code runs) and in the prose rebuild
+(663 MB). Not measured in the 512 MB container: the `readfocus-api`
+image predates `pdfplumber` and needs a rebuild.
+
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 
 The model is downloaded at build time into `FASTEMBED_CACHE`

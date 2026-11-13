@@ -73,6 +73,10 @@ async function mockBackend(page, api, book) {
       api.fileLoads += 1;
       return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': type }, body: readFileSync(new URL(file, FILES)) });
     }
+    if (path === `/books/${BOOK}/regions`) { // C18.6d: boxes word lookup skips; none unless a test sets them
+      api.regionAsks += 1;
+      return json(route, { regions: api.regions });
+    }
     if (path === '/lookup') {
       const term = url.searchParams.get('term');
       api.lookups.push({ term, proper: url.searchParams.get('proper') === '1' });
@@ -102,7 +106,7 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0 };
+    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0 };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

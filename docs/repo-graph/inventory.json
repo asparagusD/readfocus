@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 626,
-    "inventoried": 484,
+    "tracked": 629,
+    "inventoried": 487,
     "excluded": 142
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 13881,
+      "size_bytes": 13936,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -481,10 +481,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 244,
-      "size_bytes": 11628,
+      "lines": 270,
+      "size_bytes": 13199,
       "role": "router",
-      "purpose": "Book endpoints: upload (read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book."
+      "purpose": "Book endpoints: upload (read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -733,6 +733,14 @@
       "size_bytes": 7407,
       "role": "test",
       "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start. C17.5: PDF and EPUB anchors stored as sent and returned, a backfilled place keeps its C12 keys beside its anchor, malformed anchors 422, and start names the book's file format."
+    },
+    {
+      "path": "backend/tests/test_api_regions.py",
+      "language": "python",
+      "lines": 58,
+      "size_bytes": 2496,
+      "role": "test",
+      "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused."
     },
     {
       "path": "backend/tests/test_api_sessions.py",
@@ -1361,8 +1369,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 3724,
-      "size_bytes": 682852,
+      "lines": 3725,
+      "size_bytes": 684863,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1417,8 +1425,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 217,
-      "size_bytes": 12373,
+      "lines": 221,
+      "size_bytes": 12596,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -1481,8 +1489,8 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 359,
-      "size_bytes": 19204,
+      "lines": 373,
+      "size_bytes": 19880,
       "role": "config",
       "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books."
     },
@@ -2433,10 +2441,10 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 303,
-      "size_bytes": 16273,
+      "lines": 309,
+      "size_bytes": 16836,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -2631,6 +2639,22 @@
       "purpose": "Node test (npm run test:unit): hex parsing, paper and ink remapped, greys mixed with alpha kept, coloured strokes untouched, image rectangles from corner points."
     },
     {
+      "path": "frontend/src/originalview/pdf/regions.js",
+      "language": "javascript",
+      "lines": 52,
+      "size_bytes": 2196,
+      "role": "asset",
+      "purpose": "Where PDF word lookup stays quiet (C18.6d): createRegionSource(api, bookId) asks GET /books/{id}/regions 20 pages at a time (a failure skips nothing and is asked again), hits(page, x, y) in PDF points; batchOf, toPagePoint, skipPdfPoint(source, x, y) finds the shown .rf-pdf-page under a client point."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/regions.test.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 1693,
+      "role": "asset",
+      "purpose": "Node tests for originalview/pdf/regions.js: batches of 20 pages, client point to PDF points, boxes skipped once loaded and asked for once per batch, a failed request skipping nothing and asked again."
+    },
+    {
       "path": "frontend/src/originalview/pdf/usePdfDocument.js",
       "language": "javascript",
       "lines": 51,
@@ -2769,8 +2793,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 348,
-      "size_bytes": 16014,
+      "lines": 352,
+      "size_bytes": 16325,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -3041,10 +3065,10 @@
     {
       "path": "frontend/src/reader/useWordAtPoint.js",
       "language": "javascript",
-      "lines": 252,
-      "size_bytes": 11744,
+      "lines": 260,
+      "size_bytes": 12237,
       "role": "asset",
-      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM, over any number of surfaces {root, doc} since C17.5 (the PDF's text layers in the page, each EPUB section's body in its iframe): caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside its rects; math, code, pre, figures and SVG are never looked up (SKIP); 350 ms on the same word looks it up once; a 2-5 word selection looks up a phrase; marks it via highlight.js; paused while a leaf turns; C12.8: hover can be turned off, lookUpSelection() for Enter or ?, clearMark(); C12.9: a touch long-press opens it ('press') with the OS menu held off, a touch selection of 2-5 words goes to onChip; lookUp(target, by)."
+      "purpose": "Hook for in-place lookup (C12.7) without changing the book's DOM, over any number of surfaces {root, doc} since C17.5 (the PDF's text layers in the page, each EPUB section's body in its iframe): caretPositionFromPoint (caretRangeFromPoint fallback) and wordAt.js find the word under a mouse or pen, confirmed inside its rects; math, code, pre, figures and SVG are never looked up (SKIP); 350 ms on the same word looks it up once; a 2-5 word selection looks up a phrase; marks it via highlight.js; paused while a leaf turns; C12.8: hover can be turned off, lookUpSelection() for Enter or ?, clearMark(); C12.9: a touch long-press opens it ('press') with the OS menu held off, a touch selection of 2-5 words goes to onChip; lookUp(target, by). A surface's skip(x, y) (a PDF's region map, C18.6d) keeps a point or selection out of lookup."
     },
     {
       "path": "frontend/src/reader/useWordCard.js",
@@ -3817,8 +3841,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 486,
-      "size_bytes": 149069,
+      "lines": 489,
+      "size_bytes": 150227,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

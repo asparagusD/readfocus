@@ -47,12 +47,18 @@ function blockOf(root, node) {
   return block && root.contains(block) ? block : root;
 }
 
+/** True when a surface's own region map (a PDF's math, code and figure boxes, C18.6d) says to skip the point. */
+const skipped = (surface, x, y) => Boolean(surface.skip?.(x, y));
+
 /** The current selection inside a surface as a target: one word or a 2-5 word phrase; null otherwise. */
-function selectionTarget({ root, doc }, lang, single) {
+function selectionTarget(surface, lang, single) {
+  const { root, doc } = surface;
   const selection = doc.getSelection();
   if (!selection?.rangeCount || selection.isCollapsed) return null;
   const range = selection.getRangeAt(0);
   if (!root.contains(range.commonAncestorContainer)) return null;
+  const first = range.getClientRects()[0];
+  if (first && skipped(surface, first.left + first.width / 2, first.top + first.height / 2)) return null;
   const start = range.startContainer;
   const block = blockOf(root, start);
   if (!block) return null;
@@ -67,7 +73,9 @@ function selectionTarget({ root, doc }, lang, single) {
 }
 
 /** The lookup target under (x, y) in a surface's own coordinates, or null: margins, spaces, skipped words and math, code or figures give null. */
-function wordTarget({ root, doc }, x, y, lang) {
+function wordTarget(surface, x, y, lang) {
+  const { root, doc } = surface;
+  if (skipped(surface, x, y)) return null;
   const caret = caretAt(doc, x, y);
   const node = caret?.node;
   if (node?.nodeType !== Node.TEXT_NODE || !root.contains(node)) return null;
@@ -86,8 +94,8 @@ function wordTarget({ root, doc }, x, y, lang) {
 
 /**
  * Words and phrases to look up in a book (C12.7; any number of documents since C17.5), with
- * no change to its DOM. `surfaces` are { root, doc }: the PDF's text layers in this page, or
- * each EPUB section's body in its own iframe. Hover: a mouse or pen resting on the same word
+ * no change to its DOM. `surfaces` are { root, doc, skip? }: the PDF's text layers in this page, or
+ * each EPUB section's body in its own iframe; skip(x, y) true leaves a point alone (a PDF's region map). Hover: a mouse or pen resting on the same word
  * for HOVER_MS. Selection: 2 to 5 words selected, by mouse or touch. Each gives
  * onLookup({kind, term, proper, range}) once and marks it softly; a turn (paused), clear() or
  * the next target removes the mark. Math, code and figures are never looked up.

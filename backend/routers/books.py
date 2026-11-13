@@ -179,6 +179,32 @@ async def get_pages(book_id: str, start: int = Query(ge=0), end: int | None = Qu
     return {"chunks": [{field: row.get(field) for field in PAGE_FIELDS} for row in chunks]}
 
 
+REGIONS_MAX_PAGES = 20  # the regions job's batch: a reader asks for a spread's neighbourhood at a time
+SKIPPED_KINDS = ("math", "code", "figure", "table")
+
+
+@router.get("/{book_id}/regions")
+async def get_regions(book_id: str, first: int = Query(ge=1), last: int = Query(ge=1),
+                      user_id: str = Depends(get_current_user)):
+    """Boxes on PDF pages first..last that word lookup skips (C18.6d): math, code, figures, tables and
+    inline math, as {page, kind, bbox} in points from the page's top-left (ANCHORS A1). Read-only."""
+    if last < first or last - first + 1 > REGIONS_MAX_PAGES:
+        raise HTTPException(status_code=422, detail=f"Ask for 1 to {REGIONS_MAX_PAGES} pages, first to last.")
+    owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
+    if not owned.data:
+        raise HTTPException(status_code=404, detail="Book not found")
+    rows = (supabase.table("page_regions").select("page, kind, bbox, order_in_page, meta").eq("book_id", book_id)
+            .gte("page", first).lte("page", last).execute().data or [])
+    out = []
+    for row in sorted(rows, key=lambda r: (r["page"], r["order_in_page"])):
+        meta = row.get("meta") or {}
+        if row["kind"] in SKIPPED_KINDS and row.get("bbox"):
+            out.append({"page": row["page"], "kind": row["kind"], "bbox": row["bbox"]})
+        for box in [*(meta.get("inline_boxes") or []), *(meta.get("inline_drawn") or [])]:
+            out.append({"page": row["page"], "kind": "math", "bbox": box})
+    return {"regions": out}
+
+
 JOB_FIELDS = ("status", "progress", "cursor", "attempts", "error", "updated_at")
 
 

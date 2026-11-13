@@ -44,6 +44,13 @@
       "handler": "get_pages"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/regions",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/regions",
+      "handler": "get_regions"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/status",
       "type": "endpoint",
       "method": "GET",
@@ -798,6 +805,12 @@
     },
     {
       "id": "file:backend/tests/test_api_position.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_regions.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2225,6 +2238,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/regions.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/regions.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/usePdfDocument.js",
       "type": "file",
       "role": "asset",
@@ -3642,6 +3667,11 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/regions"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}/status"
     },
     {
@@ -4714,6 +4744,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_position.py",
       "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_regions.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_regions.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_regions.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_regions.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -6318,6 +6368,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/pdf/regions.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/today.js"
     },
     {
@@ -6479,6 +6534,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/recolour.test.js",
       "to": "file:frontend/src/originalview/pdf/recolour.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/regions.test.js",
+      "to": "file:frontend/src/originalview/pdf/regions.js"
     },
     {
       "type": "imports",
@@ -6829,6 +6889,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/pdf/regions.js"
     },
     {
       "type": "imports",
@@ -7569,6 +7634,11 @@
       "type": "reads_table",
       "from": "file:backend/routers/books.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/books.py",
+      "to": "table:page_regions"
     },
     {
       "type": "reads_table",

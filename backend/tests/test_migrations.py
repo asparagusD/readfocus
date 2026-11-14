@@ -463,3 +463,89 @@ def test_020_adds_prose_anchors_and_garbled_count_to_chunks_only():
     assert ("ALTER TABLE public.chunks ADD COLUMN IF NOT EXISTS garbled_sentences integer "
             "CHECK (garbled_sentences >= 0);") in sql
     assert sql.count(";") == 3
+
+
+# --- 023: Steve's consent, settings, key, usage and threads (C20.1) -------------------------------
+
+def migration_023() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "023_steve.sql"))
+
+
+STEVE_PROFILE_COLUMNS = (
+    "steve_enabled boolean NOT NULL DEFAULT true",
+    "steve_consent_at timestamptz",
+    "steve_consent_version text",
+    "steve_key_cipher text",
+    "steve_key_last4 text CHECK (steve_key_last4 IS NULL OR char_length(steve_key_last4) = 4)",
+)
+STEVE_TABLES = {
+    "steve_usage": {
+        "user_id": OWNER,
+        "day": "date NOT NULL",
+        "requests": "integer NOT NULL DEFAULT 0 CHECK (requests >= 0)",
+        "PRIMARY": "KEY (user_id, day)",
+    },
+    "steve_threads": {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "user_id": OWNER,
+        "book_id": BOOK,
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+    },
+    "steve_messages": {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "thread_id": "uuid NOT NULL REFERENCES public.steve_threads(id) ON DELETE CASCADE",
+        "user_id": OWNER,
+        "role": "text NOT NULL CHECK (role IN ('reader', 'steve'))",
+        "content": "text NOT NULL",
+        "anchor": "jsonb",
+        "citations": "jsonb NOT NULL DEFAULT '[]'",
+        "model": "text",
+        "tokens_in": "integer CHECK (tokens_in >= 0)",
+        "tokens_out": "integer CHECK (tokens_out >= 0)",
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+    },
+}
+
+
+def test_023_adds_the_steve_columns_to_profiles():
+    sql = migration_023()
+    for column in STEVE_PROFILE_COLUMNS:
+        assert f"ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS {column};" in sql, column
+
+
+@pytest.mark.parametrize("table", sorted(STEVE_TABLES))
+def test_023_creates_the_table_with_the_agreed_columns_and_key(table):
+    definition = table_definition(migration_023(), table)
+    assert list(definition) == list(STEVE_TABLES[table])
+    for name, expected in STEVE_TABLES[table].items():
+        assert definition[name] == expected, f"{table}.{name}: {definition[name]}"
+
+
+@pytest.mark.parametrize("table", sorted(STEVE_TABLES))
+def test_023_readers_only_read_their_own_rows_and_never_write_them(table):
+    sql = migration_023()
+    assert f"ALTER TABLE public.{table} ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(rf"CREATE POLICY \"[^\"]+\" ON public\.{table} FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert "SELECT" in policies
+    assert not {"ALL", "INSERT", "UPDATE"} & set(policies)  # only the backend's service role writes
+    assert "SECURITY DEFINER" not in sql
+
+
+def test_023_only_the_backend_changes_a_readers_steve_columns():
+    sql = migration_023()
+    assert re.search(r"CREATE OR REPLACE TRIGGER \w+ BEFORE INSERT OR UPDATE ON public\.profiles "
+                     r"FOR EACH ROW EXECUTE FUNCTION public\.steve_profile_guard\(\)", sql)
+    guard = re.search(r"CREATE OR REPLACE FUNCTION public\.steve_profile_guard\(\).*?\$\$;", sql).group(0)
+    assert "current_user IN ('anon', 'authenticated')" in guard
+    for column in ("steve_enabled", "steve_consent_at", "steve_consent_version", "steve_key_cipher",
+                   "steve_key_last4"):
+        assert f"NEW.{column} IS DISTINCT FROM OLD.{column}" in guard, column
+    assert "RAISE EXCEPTION" in guard and "SET search_path = ''" in guard
+
+
+def test_023_has_the_lookup_indexes_and_touches_only_its_tables():
+    sql = migration_023()
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.steve_threads \(user_id, book_id\)", sql)
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.steve_messages \(thread_id, created_at\)", sql)
+    assert sorted(set(re.findall(r"ALTER TABLE public\.(\w+)", sql))) == sorted({"profiles", *STEVE_TABLES})
+    assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)

@@ -16,6 +16,7 @@ from backend.routers import (
     mastery,
     ocr,
     sessions,
+    steve,
 )
 from backend.services import ingestion_worker
 
@@ -47,6 +48,7 @@ app.include_router(agent.router, prefix="/agent", tags=["Agent"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 app.include_router(mastery.router, prefix="/mastery", tags=["Mastery"])
 app.include_router(lookup.router, prefix="/lookup", tags=["Lookup"])
+app.include_router(steve.router, prefix="/steve", tags=["Steve"])
 
 @app.get("/health")
 def health_check():

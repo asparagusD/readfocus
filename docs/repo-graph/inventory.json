@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14376,
+      "size_bytes": 14394,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -401,8 +401,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 58,
-      "size_bytes": 1873,
+      "lines": 60,
+      "size_bytes": 1950,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
@@ -537,8 +537,8 @@
     {
       "path": "backend/routers/auth.py",
       "language": "python",
-      "lines": 49,
-      "size_bytes": 1845,
+      "lines": 50,
+      "size_bytes": 1960,
       "role": "router",
       "purpose": "GET /auth/profile and POST /auth/profile/calibrate: read the profile and save the calibrated reading speed."
     },
@@ -1169,8 +1169,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 465,
-      "size_bytes": 20052,
+      "lines": 551,
+      "size_bytes": 23920,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
@@ -1529,8 +1529,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4308,
-      "size_bytes": 756171,
+      "lines": 4307,
+      "size_bytes": 759074,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

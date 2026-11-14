@@ -217,6 +217,16 @@ export function ReadingSession() {
   // C22.2: a note's reference names its page and chapter, read from the book as the list draws; it goes there.
   const describeNote = (note) => ({ page: reader.current?.pageLabel(note) ?? '', chapter: chapterOf(note, reader.current?.toc() ?? []) });
   const goToNote = useCallback((note) => onCite(note.anchors?.[0]), [onCite]);
+  // C22.2b: a new text note at the selection, else the pages shown; its key, so the notepad opens it.
+  const addTextNote = async () => {
+    const place = await reader.current?.notePlace();
+    if (!place) {
+      toast({ kind: 'warning', message: 'The book is still opening. Try again in a moment.' });
+      return null;
+    }
+    return notepad.create({ kind: 'text', scope: place.scope, anchors: place.anchors, position_start: place.start,
+      position_end: place.end, content: { type: 'doc', content: [{ type: 'paragraph' }] } });
+  };
   const { ask: askSteve } = steve;
   const steveOn = steve.state.enabled !== false; // C21.4: Ask Steve entry points hide once his settings say he is off
   const steveActions = useMemo(() => ({
@@ -444,7 +454,7 @@ export function ReadingSession() {
           ) : (
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
               onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}
-              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} />
+              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit} onAdd={addTextNote} />
           )}
         </SidePanel>
       )}

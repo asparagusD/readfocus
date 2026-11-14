@@ -44,6 +44,31 @@ def test_a_rich_text_document_with_inline_math_is_kept_as_given():
     assert check("text", content) == content
 
 
+def test_checklists_and_display_math_are_kept():
+    """C22.2b: TipTap's task list and our display-math node, as the editor writes them."""
+    content = doc(
+        {"type": "taskList", "content": [
+            {"type": "taskItem", "attrs": {"checked": True}, "content": [para(text("read 4.2"))]},
+            {"type": "taskItem", "attrs": {"checked": False}, "content": [para(text("eq. 4.4")), {
+                "type": "taskList", "content": [{"type": "taskItem", "attrs": {"checked": False}, "content": [para(text("odd"))]}]}]},
+        ]},
+        {"type": "blockMath", "attrs": {"latex": r"\sum_{k=1}^{n} k"}},
+        {"type": "orderedList", "attrs": {"start": 1, "type": None}, "content": [{"type": "listItem", "content": [para(text("x"))]}]},
+    )
+    assert check("text", content) == content
+
+
+@pytest.mark.parametrize("node", [
+    {"type": "taskItem", "attrs": {"checked": "yes"}, "content": []},
+    {"type": "blockMath", "attrs": {"latex": 1}},
+    {"type": "blockMath", "attrs": {}},
+    {"type": "blockMath", "attrs": {"latex": "x"}, "content": [text("x")]},
+])
+def test_bad_checklists_and_display_math_are_refused(node):
+    with pytest.raises(ContentError):
+        check("text", doc(node))
+
+
 @pytest.mark.parametrize("content", [
     {"type": "paragraph"},                                           # the root is a doc
     doc({"type": "image", "attrs": {"src": "x"}}),                   # images are not text nodes

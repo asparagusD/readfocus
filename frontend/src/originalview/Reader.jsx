@@ -292,6 +292,8 @@ export function Reader({
     pageLabel: (annotation) => book.current?.pageLabel?.(annotation) ?? '', // C21.5: the Annotations tab
     documents: () => book.current?.documents() ?? [],
     anchor: () => book.current?.anchor() ?? null,
+    // C22.2b: { scope, anchors, start, end } for a new note: the selection, else the pages shown.
+    notePlace: () => book.current?.notePlace?.() ?? Promise.resolve(null),
   }), [move]);
 
   const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn

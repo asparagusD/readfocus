@@ -1129,6 +1129,26 @@ pages.
 
 ## Frontend: Lighthouse and image budgets
 
+### C22.2: the notepad and TipTap (2026-11-14)
+
+`npm --prefix frontend run build` after C22.2b. Budgets from the C22 plan:
+the entry chunk grows by at most 5 KB gzip, the TipTap chunk is at most
+150 KB gzip.
+
+| Chunk | Before (gzip) | After C22.2b (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.88 kB (35.13 kB), C22.2a | 97.08 kB (35.20 kB) |
+| `ReadingSession-*.js` | 90.03 kB (30.54 kB), C20.8c, before C21 | 127.95 kB (42.14 kB), with C21 and C22.2a/b |
+| `TextEditor-*.js` (new, lazy: TipTap 3.34.0, ProseMirror, our math nodes) | none | 406.76 kB (129.25 kB) |
+| `TextEditor-*.css` (new, lazy) | none | 2.96 kB (0.92 kB) |
+| `katex-*.js` (lazy since C20.7b, now also for notes) | — | 259.69 kB (77.81 kB) |
+
+The editor chunk loads only when a note is opened for editing or added
+(checked in `e2e/notes-editor.spec.js`: no `TextEditor` script before
+"Text"); drawn notes use NoteDoc and KaTeX only. The six `@tiptap/*`
+packages are MIT, pinned at 3.34.0; `npm audit` names none of them (its six
+findings are in vite and launch-editor, as before).
+
 ### C20.8b-c: block actions and mathml-to-latex (2026-11-14)
 
 `npm --prefix frontend run build` after C20.8c, against C20.7b above:

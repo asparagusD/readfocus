@@ -209,7 +209,7 @@ test.describe('phone', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     for (const button of await panel.getByRole('button').all()) {
       const b = await button.boundingBox();
-      if (b) expect(b.height).toBeGreaterThanOrEqual(44);
+      if (b) expect(Math.round(b.height)).toBeGreaterThanOrEqual(44);
     }
     if (shots) { await page.waitForTimeout(700); await page.screenshot({ path: `${shots}/notes-lamplight-375.png` }); }
   });

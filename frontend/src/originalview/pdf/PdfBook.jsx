@@ -140,6 +140,18 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       const anchors = selectionAnchors(range, box.current, widths);
       return anchors.length ? { anchors, ...pdfPositions(anchors, widths), range, doc: document } : null;
     },
+    // C22.2b: where a new note goes: the selection, else the pages shown (one whole-page quad each, no text).
+    notePlace: async () => {
+      const selection = document.getSelection();
+      if (selection?.rangeCount && !selection.isCollapsed && box.current?.contains(selection.anchorNode)) {
+        const widths = [];
+        const anchors = selectionAnchors(selection.getRangeAt(0), box.current, widths);
+        if (anchors.length) return { scope: 'selection', anchors, ...pdfPositions(anchors, widths) };
+      }
+      const sizes = await Promise.all(pages.map((n) => doc.getPage(n).then((p) => [n, p.view[2] - p.view[0], p.view[3] - p.view[1]])));
+      const anchors = sizes.map(([n, w, h]) => ({ kind: 'pdf', page: n, quads: [[0, 0, Math.round(w * 100) / 100, Math.round(h * 100) / 100]], text: '' }));
+      return { scope: 'view', anchors, ...pdfPositions(anchors, sizes.map(([, w]) => w)) };
+    },
     getSelection: () => {
       const selection = document.getSelection();
       if (!selection?.rangeCount || !box.current?.contains(selection.anchorNode)) return null;

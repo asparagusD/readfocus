@@ -1,4 +1,5 @@
-import { Bookmark, Code2, Image, PenLine, Sigma, Trash2, Type } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+import { Bookmark, Code2, Image, PenLine, Plus, Sigma, Trash2, Type } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NoteDoc } from './NoteDoc';
 import { reference } from './place';
@@ -37,14 +38,27 @@ function NoteState({ status, onRetry, onKeepMine, onTakeTheirs }) {
   return null;
 }
 
+const TextEditor = lazy(() => import('./TextEditor'));
+
 /**
  * The notepad (C22.2, handoff screen 19): the reader's note blocks in book order, each under a reference to its
- * passage ("p. 45 · Fourier series", a button that goes there) and its kind. Text notes are drawn by NoteDoc;
- * `renderBody(note)` may replace a body (the editor, C22.2b). Loading, error and empty states; one save line
- * for the panel, announced politely; a conflict or a refused save is shown on its note with what to do.
+ * passage ("p. 45 · Fourier series", a button that goes there) and its kind. Text notes are drawn by NoteDoc and
+ * edited in TipTap, loaded the first time one is opened (C22.2b): a click, or Enter on a focused note, opens it;
+ * Escape or Done closes it. "Text" adds a note at the selection or the pages shown and opens it. Loading, error
+ * and empty states; one save line, announced politely; a conflict or a refused save on its note.
  */
-export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, renderBody, addBar }) {
+export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd }) {
+  const [editing, setEditing] = useState(null); // a note's key (or id)
   const status = overallStatus(statuses, notes.filter((n) => !n.pending).map((n) => n.id));
+  const add = async () => {
+    const key = await onAdd();
+    if (key) setEditing(key);
+  };
+  const stop = (note) => {
+    setEditing(null);
+    if (!note.pending) onRetry(note.id); // save now rather than in 800 ms
+    requestAnimationFrame(() => document.querySelector(`.rf-note[data-key="${note.key ?? note.id}"] .rf-note-read`)?.focus());
+  };
   return (
     <div className="rf-notes">
       <div className="rf-notes-head">
@@ -71,13 +85,17 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
             const { label, Icon } = KINDS[note.kind] ?? KINDS.text;
             const where = describe(note);
             const ref = reference(where.page, where.chapter);
+            const key = note.key ?? note.id;
+            const open = editing === key && note.kind === 'text';
             return (
-              <li key={note.id} className="rf-note" data-kind={note.kind} data-id={note.id} data-pending={note.pending || undefined}>
+              <li key={key} className="rf-note" data-kind={note.kind} data-id={note.id} data-key={key}
+                data-new={note.key ? 'true' : undefined} data-editing={open || undefined}>
                 <div className="rf-note-head">
                   <button type="button" className="rf-note-ref" onClick={() => onGoTo(note)} aria-label={`Go to ${ref}`}>
                     <Bookmark size={14} strokeWidth={1.75} aria-hidden="true" />
                     <span>{ref}</span>
                   </button>
+                  {open && <button type="button" className="rf-note-done" onClick={() => stop(note)}>Done</button>}
                   <span className="rf-note-kind" title={label}>
                     <Icon size={15} strokeWidth={1.75} aria-hidden="true" />
                     <span className="rf-note-hidden">{label} note</span>
@@ -88,7 +106,20 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
                   </button>
                 </div>
                 <div className="rf-note-body">
-                  {renderBody?.(note) ?? (note.kind === 'text' ? <NoteDoc doc={note.content} /> : <p className="rf-note-small">{label} notes open in a later version.</p>)}
+                  {open && (
+                    <Suspense fallback={<NoteDoc doc={note.content} />}>
+                      <TextEditor content={note.content} label={`Note at ${ref}`}
+                        onChange={(content) => onChange(note.id, { content })} onDone={() => stop(note)} />
+                    </Suspense>
+                  )}
+                  {!open && note.kind === 'text' && (
+                    <div className="rf-note-read" role="button" tabIndex={0} aria-label={`Edit note at ${ref}`}
+                      onClick={() => setEditing(key)}
+                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setEditing(key); } }}>
+                      <NoteDoc doc={note.content} />
+                    </div>
+                  )}
+                  {note.kind !== 'text' && <p className="rf-note-small">{label} notes open in a later version.</p>}
                 </div>
                 <NoteState status={statuses[note.id]?.status} onRetry={() => onRetry(note.id)}
                   onKeepMine={() => onKeepMine(note.id)} onTakeTheirs={() => onTakeTheirs(note.id)} />
@@ -97,7 +128,14 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
           })}
         </ol>
       )}
-      {addBar}
+      {state === 'ready' && (
+        <div className="rf-notes-add">
+          <button type="button" className="rf-notes-pill" onClick={add}>
+            <Plus size={15} strokeWidth={1.75} aria-hidden="true" />Text
+          </button>
+          <p className="rf-note-small">At your selection, or the pages you are on</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -26,8 +26,12 @@ _NODES = {
     "orderedList": {"start": lambda v: isinstance(v, int) and not isinstance(v, bool) and 0 <= v < 100_000,
                     "type": lambda v: v is None or v in ("1", "a", "A", "i", "I")},
     "inlineMath": {"latex": lambda v: isinstance(v, str) and len(v) <= policy.NOTE_LATEX_MAX},
+    # C22.2b: checklists (TipTap's task list) and display math.
+    "taskList": {},
+    "taskItem": {"checked": lambda v: isinstance(v, bool)},
+    "blockMath": {"latex": lambda v: isinstance(v, str) and len(v) <= policy.NOTE_LATEX_MAX},
 }
-_LEAVES = {"hardBreak", "inlineMath"}
+_LEAVES = {"hardBreak", "inlineMath", "blockMath"}
 _MARKS = {"bold", "italic", "strike", "code"}
 _APP_STATE = {"viewBackgroundColor", "gridSize", "gridModeEnabled"}
 
@@ -57,8 +61,8 @@ def _text_doc(node, depth: int = 1) -> int:
     for name, value in (node.get("attrs") or {}).items():
         if name not in checks or not checks[name](value):
             raise ContentError(f"{kind} may not have the attribute {name!r} = {value!r}")
-    if kind == "inlineMath" and not isinstance((node.get("attrs") or {}).get("latex"), str):
-        raise ContentError("inline math has its LaTeX")
+    if kind in ("inlineMath", "blockMath") and not isinstance((node.get("attrs") or {}).get("latex"), str):
+        raise ContentError("math has its LaTeX")
     children = node.get("content", [])
     if not isinstance(children, list) or (children and kind in _LEAVES):
         raise ContentError(f"{kind} has a list of child nodes" if kind not in _LEAVES else f"{kind} has no children")

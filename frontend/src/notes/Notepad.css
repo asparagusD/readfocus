@@ -57,7 +57,43 @@
   background-color: var(--paper);
 }
 
-.rf-note[data-pending] { opacity: 0.7; }
+/* C22.2b: a note added on this visit rises in with an accent edge (handoff); the one being edited keeps it. */
+.rf-note[data-new] { animation: rf-note-in var(--dur-5) var(--ease-arrive) both; }
+.rf-note[data-editing] { border-color: var(--accent); }
+@keyframes rf-note-in { from { opacity: 0; transform: translateY(8px); } }
+
+.rf-note-read {
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
+  border-radius: var(--radius-input);
+  cursor: text;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-note-read:hover { background-color: var(--paper-2); }
+.rf-note-read:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
+
+.rf-notes-add { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding-top: var(--space-1); }
+
+.rf-notes-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: var(--border-hair) dashed var(--line-field);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-notes-pill:hover { background-color: var(--paper-2); }
+.rf-notes-pill:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
 
 .rf-note-head { display: flex; align-items: center; gap: var(--space-1); min-height: 32px; }
 
@@ -84,6 +120,25 @@
 .rf-note-ref span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rf-note-ref svg { flex: none; color: var(--ink-2); }
 .rf-note-ref:hover { background-color: var(--paper-2); }
+
+.rf-note-done {
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: none;
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-note-done:hover { background-color: var(--paper-2); }
+.rf-note-done:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+.rf-note-done + .rf-note-kind { margin-left: 0; }
 
 .rf-note-kind { display: inline-grid; place-items: center; margin-left: auto; width: 28px; height: 28px; color: var(--ink-2); }
 
@@ -150,7 +205,15 @@
 .rf-note-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
 @media (max-width: 759px) {
-  .rf-notes { padding: var(--space-3) var(--space-4) var(--space-5); }
-  .rf-note-delete, .rf-note-ref { min-height: 44px; }
+  .rf-notes { padding: var(--space-3) var(--space-3) var(--space-5); }
+  .rf-note { padding: var(--space-2) var(--space-3) var(--space-3); }
+  .rf-note-delete, .rf-note-ref, .rf-note-done { min-height: 44px; }
   .rf-note-delete { width: 44px; height: 44px; }
+  .rf-notes-pill { min-height: 44px; }
+  .rf-note-read { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-note[data-new] { animation-name: rf-note-fade; }
+  @keyframes rf-note-fade { from { opacity: 0; } }
 }

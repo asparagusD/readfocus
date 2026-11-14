@@ -3859,3 +3859,41 @@ Keep mine).
 ### Commit
 `feat(notes): notepad panel beside the book with tabs and autosave` (C22.2a,
 fixed before committing)
+
+## 2026-11-14 C22.2b — typed math kept a stray "$"; checklist items broke onto two lines
+
+### Symptom
+Design review screenshot of the editor after typing `$a_n$` and
+`$$\sum_{k=1}^{n} k$$`: the equations drew, but "$" was left before the
+inline one and "$$"/"$$$" around the display one. Checklist items showed the
+box on its own line, the text below. Found before any commit.
+
+### Repro
+`e2e/notes-editor.spec.js` "rich text and math": the editor's text contains
+"$" after the input rules ran.
+
+### Hypotheses
+1. TipTap's `nodeInputRule` replaces only from the capture group's start,
+   keeping the text before it in the match. Result: confirmed (it keeps
+   `match[0]` up to `match[1]`; our capture is the LaTeX inside the dollars).
+2. The checklist CSS selector `li[data-type="taskItem"]` does not match
+   TipTap 3's markup. Result: confirmed (the `li` has `data-checked` only;
+   printed with a temporary spec).
+
+### Root cause
+`nodeInputRule` is made for rules whose capture is the whole replaced text;
+ours is not. The CSS targeted TipTap 2's attribute.
+
+### Fix
+Our own `InputRule` that replaces the whole match with the node
+(`replaceRangeWith` for display math, so it takes the paragraph's place)
+(`frontend/src/notes/mathNodes.js`); the checklist rules select
+`ul[data-type="taskList"] > li` (`TextEditor.css`).
+
+### Regression test
+`notes-editor.spec.js`: the editor's text has no "$" once both equations
+are drawn; the drawn note's checklist item reads its text alone.
+
+### Commit
+`feat(notes): notepad panel with rich-text blocks and math` (C22.2b, fixed
+before committing)

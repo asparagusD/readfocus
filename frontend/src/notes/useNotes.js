@@ -20,6 +20,7 @@ export function useNotes(bookId) {
   const [attempt, setAttempt] = useState(0);
   const { toast } = useToast();
   const made = useRef(0);
+  const drafts = useRef(new Map()); // edits to notes the server has not given an id yet
   const autosave = useMemo(() => createAutosave({
     save: notesApi.save, queue,
     onChange: (id, status) => setStatuses((now) => ({ ...now, [id]: status })),
@@ -54,24 +55,29 @@ export function useNotes(bookId) {
 
   const reload = useCallback(() => { setState('loading'); setAttempt((n) => n + 1); }, []);
 
-  const create = useCallback(async (body) => {
-    const id = `pending-${(made.current += 1)}`;
-    setNotes((list) => inBookOrder([...list, { ...body, id, pending: true, version: 0, created_at: new Date().toISOString() }]));
-    try {
-      const saved = await notesApi.create(bookId, body);
+  /** Shows the note at once and returns its `key` (kept after the server gives it an id, so an open editor
+   * stays open); edits made before the server answers are sent as soon as it has. */
+  const create = useCallback((body) => {
+    const key = `pending-${(made.current += 1)}`;
+    setNotes((list) => inBookOrder([...list, { ...body, id: key, key, pending: true, version: 0, created_at: new Date().toISOString() }]));
+    notesApi.create(bookId, body).then((saved) => {
       autosave.track(saved.id, saved.version);
-      setNotes((list) => list.map((n) => (n.id === id ? { ...saved, content: n.content } : n)));
-      return { id, saved };
-    } catch {
-      setNotes((list) => list.filter((n) => n.id !== id));
+      setNotes((list) => list.map((n) => (n.key === key ? { ...saved, key, content: n.content } : n)));
+      const draft = drafts.current.get(key);
+      drafts.current.delete(key);
+      if (draft) autosave.edit(saved.id, draft);
+    }).catch(() => {
+      drafts.current.delete(key);
+      setNotes((list) => list.filter((n) => n.key !== key));
       toast({ kind: 'warning', message: "That note wasn't added. Try again." });
-      return null;
-    }
+    });
+    return key;
   }, [bookId, autosave, toast]);
 
   const edit = useCallback((id, change) => {
     setNotes((list) => list.map((n) => (n.id === id ? { ...n, ...change } : n)));
-    if (!String(id).startsWith('pending-')) autosave.edit(id, change);
+    if (String(id).startsWith('pending-')) drafts.current.set(id, { ...(drafts.current.get(id) ?? {}), ...change });
+    else autosave.edit(id, change);
   }, [autosave]);
 
   const remove = useCallback(async (id) => {

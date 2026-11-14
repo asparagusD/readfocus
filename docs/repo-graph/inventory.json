@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 781,
-    "inventoried": 638,
+    "tracked": 787,
+    "inventoried": 644,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14976,
+      "size_bytes": 15031,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -689,8 +689,8 @@
     {
       "path": "backend/services/note_content.py",
       "language": "python",
-      "lines": 157,
-      "size_bytes": 7293,
+      "lines": 161,
+      "size_bytes": 7552,
       "role": "service",
       "purpose": "Allow-lists a note block's content by kind (C22.1): TipTap JSON nodes, marks and attributes with depth and length caps, Excalidraw scenes with files only in the reader's notes folder, equation/code/figure fields, and the per-block size cap."
     },
@@ -1409,8 +1409,8 @@
     {
       "path": "backend/tests/test_note_content.py",
       "language": "python",
-      "lines": 125,
-      "size_bytes": 5900,
+      "lines": 150,
+      "size_bytes": 7113,
       "role": "test",
       "purpose": "Pytest for note block content: rich text with inline math kept; nodes, marks, attributes, empty text and HTML outside the allow-list refused; depth and length caps; drawings with files only in the reader's folder; equation, code and figure fields; the size cap."
     },
@@ -1761,16 +1761,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1515,
-      "size_bytes": 85328,
+      "lines": 1535,
+      "size_bytes": 86389,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3861,
-      "size_bytes": 169285,
+      "lines": 3899,
+      "size_bytes": 170876,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1834,7 +1834,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4904,
-      "size_bytes": 859420,
+      "size_bytes": 864054,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2042,9 +2042,17 @@
       "path": "frontend/e2e/notepad.spec.js",
       "language": "javascript",
       "lines": 216,
-      "size_bytes": 11739,
+      "size_bytes": 11751,
       "role": "config",
       "purpose": "E2E for the notepad (C22.2): Notes beside the book in book order without loading an editor, references go to their passage (PDF and EPUB), tabs and keyboard, empty and failed load, delete and Undo, a queued offline change sent on load, a stale one as a conflict with Keep mine, the phone sheet in Lamplight."
+    },
+    {
+      "path": "frontend/e2e/notes-editor.spec.js",
+      "language": "javascript",
+      "lines": 192,
+      "size_bytes": 10625,
+      "role": "config",
+      "purpose": "E2E for writing notes (C22.2b): Text adds a note at the pages shown and lazy-loads the editor; rich text, checklist and math autosave after 800 ms and draw as written; editing an equation; a selection-anchored note; offline edits queued in IndexedDB and saved on online; keyboard; EPUB; the phone sheet."
     },
     {
       "path": "frontend/e2e/ocr.spec.js",
@@ -2169,8 +2177,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 56,
-      "size_bytes": 1822,
+      "lines": 62,
+      "size_bytes": 2024,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -3185,18 +3193,18 @@
     {
       "path": "frontend/src/notes/Notepad.css",
       "language": "css",
-      "lines": 156,
-      "size_bytes": 5205,
+      "lines": 219,
+      "size_bytes": 7526,
       "role": "asset",
       "purpose": "Styles for the notepad's list and note cards (C22.2): reference, kind, delete, the drawn TipTap document, checklists, math, alerts and 44 px targets on phones."
     },
     {
       "path": "frontend/src/notes/Notepad.jsx",
       "language": "jsx",
-      "lines": 103,
-      "size_bytes": 4943,
+      "lines": 141,
+      "size_bytes": 6957,
       "role": "asset",
-      "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note."
+      "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note; C22.2b: a note opens in the lazy editor on click or Enter, Done in its header, and Text adds a note at the selection or the pages shown."
     },
     {
       "path": "frontend/src/notes/SidePanel.css",
@@ -3215,6 +3223,22 @@
       "purpose": "The side area beside the book (C22.2): tabs Notes | Steve as a WAI-ARIA tablist over one panel, 380 px column or pull-up sheet under 760 px; focuses the chosen tab on open, Esc or close returns focus to the opener; named after its tab."
     },
     {
+      "path": "frontend/src/notes/TextEditor.css",
+      "language": "css",
+      "lines": 92,
+      "size_bytes": 3714,
+      "role": "asset",
+      "purpose": "Styles for the note editor (C22.2b): the format bar (one row of 44 px tools on phones), the editable text, checklists, placeholder and math nodes with their LaTeX field."
+    },
+    {
+      "path": "frontend/src/notes/TextEditor.jsx",
+      "language": "jsx",
+      "lines": 81,
+      "size_bytes": 4141,
+      "role": "asset",
+      "purpose": "A text note's editor (C22.2b), lazy: TipTap with StarterKit trimmed to the server's allow-list, checklists, placeholder and our math nodes; a format bar as one tab stop; changes to onChange as TipTap JSON; Escape returns to the drawn note."
+    },
+    {
       "path": "frontend/src/notes/autosave.js",
       "language": "javascript",
       "lines": 96,
@@ -3229,6 +3253,30 @@
       "size_bytes": 6147,
       "role": "asset",
       "purpose": "Unit tests for autosave: debounce, flush during a save, offline queue and retry, queued versions kept, 409 conflict and keep mine, refused changes, pending and forget."
+    },
+    {
+      "path": "frontend/src/notes/mathNodes.js",
+      "language": "javascript",
+      "lines": 123,
+      "size_bytes": 5286,
+      "role": "asset",
+      "purpose": "TipTap nodes inlineMath and blockMath (C22.2b): atoms with LaTeX drawn as KaTeX MathML, input rules for $...$ and $$...$$ replacing the whole match, click or Enter opens the LaTeX field, insert commands."
+    },
+    {
+      "path": "frontend/src/notes/mathRules.js",
+      "language": "javascript",
+      "lines": 7,
+      "size_bytes": 388,
+      "role": "asset",
+      "purpose": "The input-rule patterns for math in notes (C22.2b): inline $x$ (no space inside the ends, not escaped) and display $$x$$ alone in a paragraph."
+    },
+    {
+      "path": "frontend/src/notes/mathRules.test.js",
+      "language": "javascript",
+      "lines": 19,
+      "size_bytes": 965,
+      "role": "asset",
+      "purpose": "Unit tests for the math input rules: inline math, prices and escaped dollars left as text, display math only alone in its paragraph."
     },
     {
       "path": "frontend/src/notes/notesApi.js",
@@ -3281,8 +3329,8 @@
     {
       "path": "frontend/src/notes/useNotes.js",
       "language": "javascript",
-      "lines": 103,
-      "size_bytes": 4639,
+      "lines": 109,
+      "size_bytes": 5143,
       "role": "asset",
       "purpose": "The reader's note blocks in a book (C22.2): load in book order, optimistic create, edit with 800 ms autosave, offline queue retried on load, online and before the tab hides, conflict choices, delete with Undo."
     },
@@ -3297,8 +3345,8 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 395,
-      "size_bytes": 22178,
+      "lines": 397,
+      "size_bytes": 22352,
       "role": "asset",
       "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions."
     },
@@ -3337,8 +3385,8 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 167,
-      "size_bytes": 8560,
+      "lines": 182,
+      "size_bytes": 9422,
       "role": "asset",
       "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places."
     },
@@ -3433,8 +3481,8 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 191,
-      "size_bytes": 9806,
+      "lines": 203,
+      "size_bytes": 10720,
       "role": "asset",
       "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor."
     },
@@ -3665,8 +3713,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 475,
-      "size_bytes": 22772,
+      "lines": 485,
+      "size_bytes": 23361,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -5049,8 +5097,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 640,
-      "size_bytes": 193449,
+      "lines": 646,
+      "size_bytes": 195031,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -122,6 +122,21 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         }
         return null;
       },
+      // C22.2b: where a new note goes: the selection, else the page shown (its range CFI, no text).
+      notePlace: async () => {
+        for (const { doc, index } of now()?.contents() ?? []) {
+          const selection = doc.getSelection();
+          if (!selection?.rangeCount || selection.isCollapsed) continue;
+          const range = selection.getRangeAt(0);
+          const cfi = now().cfiFor(doc, range);
+          if (!cfi) break;
+          const [start, end] = now().charsOf(doc, range);
+          return { scope: 'selection', anchors: [epubAnchor(cfi, range.toString())], ...epubPositions(index, start, end) };
+        }
+        const place = last.current;
+        if (!place?.cfi?.includes(',')) return null;
+        return { scope: 'view', anchors: [epubAnchor(place.cfi)], ...epubPositions(place.index, place.charStart, place.charEnd) };
+      },
       getSelection: () => {
         for (const { doc } of now()?.contents() ?? []) {
           const selection = doc.getSelection();

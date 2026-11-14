@@ -2,7 +2,7 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'r
 import { epubThemeCss, locationAt } from '../frame';
 import { EpubView } from './EpubView';
 import { epubAnchor, epubPositions } from '../../anchors';
-import { paintSection, readPalette } from '../../annotations/epubPaint';
+import { paintedIn, paintSection, readPalette } from '../../annotations/epubPaint';
 
 /** "p. 34 of ~210" or "pp. 34–35 of ~210"; "~" because the numbers count characters, not printed pages. */
 function epubFolio(locations, place) {
@@ -128,6 +128,19 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         return null;
       },
       documents: () => (now()?.contents() ?? []).map(({ doc }) => doc),
+      // C21.4: where each painted annotation is, in the page's coordinates (each section's frame shifts it).
+      annotationEntries: () => {
+        const byId = new Map();
+        for (const { doc } of now()?.contents() ?? []) {
+          const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+          if (!frame) continue;
+          for (const { id, range } of paintedIn(doc)) {
+            const rects = [...range.getClientRects()].map((r) => new DOMRect(r.x + frame.x, r.y + frame.y, r.width, r.height));
+            byId.set(id, [...(byId.get(id) ?? []), ...rects]);
+          }
+        }
+        return [...byId].map(([id, rects]) => ({ id, rects }));
+      },
       // C20.8c: a shown section's spine index, for the region map's EPUB places.
       sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
       panning: () => false,

@@ -6,6 +6,10 @@ import { forSpine, highlightCss, highlightName } from './paint.js';
 
 const STYLE = 'data-rf-annotations';
 const NAMES = COLOURS.flatMap((c) => [`rf-highlight-${c}`, `rf-underline-${c}`]);
+const painted = new WeakMap(); // section document -> [{ id, range }], for hover and the chip (C21.4)
+
+/** What paintSection last drew in `doc`: [{ id, range }]. */
+export const paintedIn = (doc) => painted.get(doc) ?? [];
 
 /** Each colour's highlight and underline as this page shows them: Paper's on a light page, the theme's otherwise. */
 export function readPalette(dark) {
@@ -29,14 +33,17 @@ export function paintSection(doc, index, annotations, rangeFor, palette) {
   if (!win?.CSS?.highlights || typeof win.Highlight !== 'function') return;
   for (const name of NAMES) win.CSS.highlights.delete(name);
   const groups = new Map();
+  const drawn = [];
   for (const a of forSpine(annotations, index)) {
     for (const anchor of a.anchors) {
       const range = anchor.kind === 'epub' ? rangeFor(doc, anchor.cfi) : null;
       if (!range || range.collapsed) continue; // not this section's, or not found (orphans: C21.5)
       const name = highlightName(a);
       groups.set(name, [...(groups.get(name) ?? []), range]);
+      drawn.push({ id: a.id, range });
     }
   }
+  painted.set(doc, drawn);
   for (const [name, ranges] of groups) {
     const highlight = new win.Highlight(...ranges);
     highlight.priority = -1;

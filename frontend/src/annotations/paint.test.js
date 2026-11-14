@@ -17,11 +17,11 @@ test('only annotations on the pages shown, and one either side, are drawn', () =
 test('a page draws a box per quad in CSS px at its scale; an underline is a 2 px bar under the line', () => {
   const boxes = pdfBoxes([pdf('a1', 2, [[72, 100, 300, 112], [72, 114, 150.5, 126]]), across, pdf('a5', 5, [[10, 10, 20, 20]], 'underline', 'lilac')], 5, 1.5);
   assert.deepEqual(boxes, [
-    { key: 'a3:0', style: 'underline', color: 'sky', left: 108, top: 108, width: 72, height: 2 },
-    { key: 'a5:0', style: 'underline', color: 'lilac', left: 15, top: 30, width: 15, height: 2 },
+    { key: 'a3:0', id: 'a3', style: 'underline', color: 'sky', left: 108, top: 108, width: 72, height: 2 },
+    { key: 'a5:0', id: 'a5', style: 'underline', color: 'lilac', left: 15, top: 30, width: 15, height: 2 },
   ]);
   assert.deepEqual(pdfBoxes([pdf('a1', 2, [[72, 100, 300, 112]])], 2, 2), [
-    { key: 'a1:0', style: 'highlight', color: 'honey', left: 144, top: 200, width: 456, height: 24 },
+    { key: 'a1:0', id: 'a1', style: 'highlight', color: 'honey', left: 144, top: 200, width: 456, height: 24 },
   ]);
 });
 

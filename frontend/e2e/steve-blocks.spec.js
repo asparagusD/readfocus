@@ -40,6 +40,7 @@ test('an equation offers Explain and Copy as LaTeX; Explain sends a crop to Stev
   await actions.getByRole('button', { name: 'Explain this equation' }).click();
   await expect(page.getByRole('complementary', { name: 'Steve' })).toBeVisible();
   await expect(page.locator('.rf-steve-q')).toHaveText('Equation, p. 1: Explain this equation.');
+  await expect.poll(() => api.steve.asks.length).toBe(1); // C21.4: an ask waits for Steve's settings, then goes
   const [asked] = api.steve.asks;
   expect(asked).toMatchObject({ mode: 'explain_equation', region_id: 'r-eq', question: 'Explain this equation.' });
   expect(asked.image_png_b64.startsWith('iVBOR')).toBe(true); // a PNG

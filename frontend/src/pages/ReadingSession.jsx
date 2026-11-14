@@ -195,9 +195,11 @@ export function ReadingSession() {
   // A citation chip moves the book to its page or section; the panel stays open.
   const onCite = useCallback((anchor) => reader.current?.goTo(anchor?.kind === 'epub' ? { cfi: anchor.cfi } : anchor), []);
   const { ask: askSteve } = steve;
+  const steveOn = steve.state.enabled !== false; // C21.4: Ask Steve entry points hide once his settings say he is off
   const steveActions = useMemo(() => ({
     askAbout: (request) => { setSteveOpen(true); askSteve(request); },
-  }), [askSteve]);
+    enabled: steveOn,
+  }), [askSteve, steveOn]);
   const onLookupToggle = () => {
     storeLookupOn(user?.id, !hoverLookup);
     setSwitched({ userId: user?.id, on: !hoverLookup });
@@ -392,6 +394,8 @@ export function ReadingSession() {
           ocr={ocr}
           onAnnotate={notes.create}
           annotations={notes.annotations}
+          onAnnotationChange={notes.update}
+          onAnnotationDelete={notes.remove}
         />
       </main>
       {steveOpen && (

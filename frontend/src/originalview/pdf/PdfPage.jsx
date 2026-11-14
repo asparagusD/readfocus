@@ -80,7 +80,7 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', oc
         // A light page takes Paper's colours even in Lamplight (original colours): the layer says which.
         <div className="rf-pdf-annos" data-theme={dark ? undefined : 'paper'} data-dark={dark || undefined} aria-hidden="true">
           {pdfBoxes(annotations, pageNumber, size.scale).map((box) => (
-            <span key={box.key} className="rf-anno" data-style={box.style} data-colour={box.color}
+            <span key={box.key} className="rf-anno" data-id={box.id} data-style={box.style} data-colour={box.color}
               style={{ left: box.left, top: box.top, width: box.width, height: box.height }} />
           ))}
         </div>

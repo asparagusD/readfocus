@@ -5,6 +5,9 @@ import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
 import { SelectionToolbar } from '../annotations/SelectionToolbar';
 import { useSelection } from '../annotations/useSelection';
+import { AnnotationChip } from '../annotations/AnnotationChip';
+import { useAnnotationChip } from '../annotations/useAnnotationChip';
+import { cycle } from '../annotations/hover';
 import { PdfBlockActions } from '../steve/PdfBlockActions';
 import { EpubBlockActions } from '../steve/EpubBlockActions';
 import { EpubBook } from './epub/EpubBook';
@@ -96,6 +99,7 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
+  onAnnotationChange = null, onAnnotationDelete = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -138,6 +142,32 @@ export function Reader({
   const { place: selected, dismiss: dismissSelection } = useSelection({
     book, docs: selectionDocs, skipAt, paused: !onAnnotate || !place || opening || ending || Boolean(turn) || Boolean(failure),
   });
+
+  // C21.4: with word lookup off, a drawn annotation's chip on hover, a tap or A (Ask Steve, colour, underline, delete).
+  const chipEl = useRef(null);
+  const entries = useCallback(() => book.current?.annotationEntries?.() ?? [], []);
+  const rectsOf = useCallback((id) => entries().find((e) => e.id === id)?.rects ?? [], [entries]);
+  const chipActive = Boolean(onAnnotate) && !hoverLookup && Boolean(place) && !opening && !ending && !turn && !failure;
+  const { open: chipOpen, show: showChip, close: closeChip } = useAnnotationChip({
+    entries, chip: chipEl, active: chipActive, blocked: Boolean(selected),
+  });
+  const chipFor = chipOpen && annotations?.find((a) => a.id === chipOpen.id);
+  /** The next (dir 1) or previous (-1) annotation drawn on the pages shown, in reading order, by key. */
+  const cycleChip = useCallback((dir) => {
+    const view = stage.current?.getBoundingClientRect();
+    if (!view) return false;
+    const order = new Map((annotations ?? []).map((a, i) => [a.id, a.position_start ?? i]));
+    const ids = entries()
+      .filter((e) => e.rects.some((r) => r.bottom > view.top && r.top < view.bottom && r.right > view.left && r.left < view.right))
+      .sort((a, b) => order.get(a.id) - order.get(b.id)).map((e) => e.id);
+    const id = cycle(ids, chipOpen?.id ?? null, dir);
+    if (id) showChip({ id, by: 'key' });
+    return Boolean(id);
+  }, [annotations, entries, chipOpen, showChip]);
+  const closeChipTo = (book) => {
+    closeChip();
+    if (book) stage.current?.focus();
+  };
 
   const move = useCallback(async (dir) => {
     const renderer = book.current;
@@ -186,6 +216,11 @@ export function Reader({
       return;
     }
     if (onAnnotate && toolbar.current?.onKey(event)) return;
+    if (chipActive && !selected && (event.key === 'a' || event.key === 'A') && !event.ctrlKey && !event.metaKey && !event.altKey
+      && cycleChip(event.shiftKey ? -1 : 1)) {
+      event.preventDefault();
+      return;
+    }
     if (lookupClient && (event.key === 'Enter' || event.key === '?') && lookup.current?.lookUpSelection()) {
       event.preventDefault(); // the card opens with focus
       return;
@@ -193,12 +228,13 @@ export function Reader({
     if (event.key === 'Escape') {
       lookup.current?.clear();
       dismissSelection();
+      closeChip();
     }
     const action = keyAction(event);
     if (!action || (action === 'ribbon' && !onBookmark)) return;
     event.preventDefault();
     act(action);
-  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection]);
+  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip]);
 
   const onKeyRef = useRef(null);
   const swipeStart = useRef(null);
@@ -237,6 +273,7 @@ export function Reader({
     };
     doc.addEventListener('pointermove', relay);
     doc.addEventListener('pointerdown', relay);
+    doc.addEventListener('pointerup', relay); // C21.4: a tap on a highlight
     doc.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); });
     setSections((list) => [...list.filter((d) => d.defaultView && d !== doc), doc]);
     doc.addEventListener('pointerup', (e) => swipeEnd.current?.(e));
@@ -336,6 +373,10 @@ export function Reader({
       {onAnnotate && (
         // C21.2: colours, underline and Ask Steve over a selection.
         <SelectionToolbar ref={toolbar} place={selected} onAnnotate={onAnnotate} onDismiss={dismissSelection} returnFocusTo={stage} />
+      )}
+      {chipFor && (
+        <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}
+          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} />
       )}
       {kind === 'pdf' && regions && bookBox && (
         // C20.8b: equations, code and figures offer Explain, Copy code and Copy as LaTeX.

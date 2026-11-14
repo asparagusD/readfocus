@@ -4,6 +4,7 @@ import { MessageCircle, Underline } from 'lucide-react';
 import { outerBox } from '../reader/highlight';
 import { useSteveActions } from '../steve/SteveContext';
 import { COLOURS, colourName, lastColour, newAnnotation, storeLastColour } from './palette';
+import { rove } from './roving';
 import './SelectionToolbar.css';
 
 /**
@@ -14,7 +15,8 @@ import './SelectionToolbar.css';
  * bar, arrows move along it, Escape puts it away and returns to the book. "Add note" waits for the notepad (C22).
  */
 export function SelectionToolbar({ place, onAnnotate, onDismiss, returnFocusTo, ref }) {
-  const steve = useSteveActions();
+  const actions = useSteveActions();
+  const steve = actions?.enabled === false ? null : actions; // hidden while Steve is off (steve-guardrails S2)
   const [toggled, setToggled] = useState(null); // the selection whose Underline is pressed
   const [said, setSaid] = useState('');
   const [last, setLast] = useState(lastColour);
@@ -67,22 +69,16 @@ export function SelectionToolbar({ place, onAnnotate, onDismiss, returnFocusTo, 
     },
   }));
 
-  // One tab stop; arrows, Home and End move along the bar (WAI-ARIA toolbar).
+  // One tab stop; arrows, Home and End move along the bar (roving.js).
   const onKeyDown = (event) => {
-    const buttons = [...bar.current.querySelectorAll('button:not(:disabled)')];
-    const at = buttons.indexOf(document.activeElement);
-    const to = { ArrowRight: at + 1, ArrowLeft: at - 1, Home: 0, End: buttons.length - 1 }[event.key];
-    if (event.key === 'Escape' || (event.key === 'Tab' && event.shiftKey && at === 0)) {
+    const first = bar.current.querySelector('button:not(:disabled)');
+    if (event.key === 'Escape' || (event.key === 'Tab' && event.shiftKey && document.activeElement === first)) {
       event.preventDefault();
       back();
       if (event.key === 'Escape') onDismiss();
       return;
     }
-    if (to === undefined) return;
-    event.preventDefault();
-    const next = buttons[(to + buttons.length) % buttons.length];
-    for (const b of buttons) b.tabIndex = b === next ? 0 : -1;
-    next.focus();
+    rove(event, bar.current);
   };
 
   const style = underline ? 'underline' : 'highlight';

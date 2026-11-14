@@ -14,7 +14,9 @@ export function useSteve(bookId, open) {
   const controller = useRef(null);
   const thread = useRef(null);
   const last = useRef(null);
-  useEffect(() => { thread.current = state.threadId; }, [state.threadId]);
+  const view = useRef(state.view);
+  const queued = useRef(null); // C21.4: a question asked before the settings say Steve may read along
+  useEffect(() => { thread.current = state.threadId; view.current = state.view; }, [state.threadId, state.view]);
 
   const load = useCallback(async () => {
     try {
@@ -32,6 +34,10 @@ export function useSteve(bookId, open) {
 
   const ask = useCallback(async ({ question, mode = 'ask', anchor, regionId, imagePngB64, label } = {}) => {
     if (!question?.trim() || controller.current) return;
+    if (view.current === 'loading' || view.current === 'consent') { // nothing is sent before consent (S2)
+      queued.current = { question, mode, anchor, regionId, imagePngB64, label };
+      return;
+    }
     last.current = { question, mode, anchor, regionId, imagePngB64, label };
     dispatch({ type: 'ask', question: question.trim(), label });
     const abort = new AbortController();
@@ -57,6 +63,13 @@ export function useSteve(bookId, open) {
       controller.current = null;
     }
   }, [bookId]);
+
+  useEffect(() => { // the queued question goes once the settings are in and consent is given
+    if (state.view !== 'chat' || !queued.current) return;
+    const next = queued.current;
+    queued.current = null;
+    ask(next);
+  }, [state.view, ask]);
 
   const stop = useCallback(() => controller.current?.abort(), []);
   const retry = useCallback(() => last.current && ask(last.current), [ask]);

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 751,
-    "inventoried": 608,
+    "tracked": 757,
+    "inventoried": 614,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14812,
+      "size_bytes": 14846,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1729,8 +1729,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3747,
-      "size_bytes": 164916,
+      "lines": 3787,
+      "size_bytes": 166471,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1794,7 +1794,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4560,
-      "size_bytes": 819277,
+      "size_bytes": 823204,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1829,6 +1829,14 @@
       "size_bytes": 1027,
       "role": "doc",
       "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
+    },
+    {
+      "path": "frontend/e2e/annotations-hover.spec.js",
+      "language": "javascript",
+      "lines": 180,
+      "size_bytes": 8828,
+      "role": "config",
+      "purpose": "E2E for the annotation chip (C21.4) on PDF and EPUB: lookup off shows it at the highlight's end clear of the line and Ask Steve sends explain_highlight with the anchor; lookup on keeps the word card; consent notice first; recolour, underline, delete with Undo; refused change put back; A, arrows, Escape, reduced motion; a tap on touch."
     },
     {
       "path": "frontend/e2e/annotations-render.spec.js",
@@ -1881,8 +1889,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 311,
-      "size_bytes": 19089,
+      "lines": 325,
+      "size_bytes": 19969,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -2025,8 +2033,8 @@
     {
       "path": "frontend/e2e/steve-blocks.spec.js",
       "language": "javascript",
-      "lines": 119,
-      "size_bytes": 6769,
+      "lines": 120,
+      "size_bytes": 6882,
       "role": "config",
       "purpose": "E2E for the PDF block actions (C20.8b): equation Explain sends a PNG crop, Copy as LaTeX previews and copies, refusals in the dialog, code copied exactly with no Steve call and explained by region id, figure crops, inline math has none, the bar leaves with the pointer, keyboard focus, Tab and Esc."
     },
@@ -2215,34 +2223,58 @@
       "purpose": "Anchors (docs/ANCHORS.md, C17.6), no DOM, shared by both renderers: textOf; quadsFromRects (one quad per line in PDF points from the page's top-left, the zoom undone) and rectsFromQuads; pdfAnchor (a point without quads) and epubAnchor; parseCfi (spine index, steps, offset; a range's start) and compareCfi; pdfPosition (A4's integer) and compareAnchors; blockForCfi (a CFI to its C12 block through chunks.block_paths)."
     },
     {
+      "path": "frontend/src/annotations/AnnotationChip.jsx",
+      "language": "jsx",
+      "lines": 104,
+      "size_bytes": 5201,
+      "role": "asset",
+      "purpose": "The chip on a highlight (C21.4): Ask Steve (explain_highlight with the first anchor), the five colours (current pressed), Underline and Delete, above the end of the last line; a toolbar with A / Shift+A to the next or previous highlight and Escape back to the book."
+    },
+    {
       "path": "frontend/src/annotations/SelectionToolbar.css",
       "language": "css",
-      "lines": 84,
-      "size_bytes": 3422,
+      "lines": 85,
+      "size_bytes": 3509,
       "role": "asset",
       "purpose": "Styles for the selection toolbar: surface, hairline and lift; 28 px dots in --dot-* with a --line-field ring, the last colour ringed; 36 px buttons (44 px on touch); rises 8 px, fade only under reduced motion; the Ask Steve word hidden under 480 px."
     },
     {
       "path": "frontend/src/annotations/SelectionToolbar.jsx",
       "language": "jsx",
-      "lines": 124,
-      "size_bytes": 5988,
+      "lines": 120,
+      "size_bytes": 5804,
       "role": "asset",
       "purpose": "The selection toolbar (C21.2, handoff screen 18): five colour dots, an Underline toggle and Ask Steve (explain_highlight) above a mouse selection or below a touch one, never on it; a colour saves at once and clears the selection; H and U from the book, Tab into the bar, arrows along it, Escape back; a polite status line."
     },
     {
       "path": "frontend/src/annotations/epubPaint.js",
       "language": "javascript",
-      "lines": 52,
-      "size_bytes": 2400,
+      "lines": 59,
+      "size_bytes": 2709,
       "role": "asset",
       "purpose": "EPUB highlights and underlines (C21.3) with the CSS Custom Highlight API inside each section document (no DOM changed; marks follow re-layout), priority under the lookup mark; the palette read from the tokens, Paper's on a light page."
+    },
+    {
+      "path": "frontend/src/annotations/hover.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 907,
+      "role": "asset",
+      "purpose": "Finding a drawn annotation (C21.4), pure: the one under a point (latest drawn first, 2 px slack) and the next or previous id in reading order, wrapping (the A key)."
+    },
+    {
+      "path": "frontend/src/annotations/hover.test.js",
+      "language": "javascript",
+      "lines": 24,
+      "size_bytes": 1148,
+      "role": "asset",
+      "purpose": "Unit tests for hover.js: hits with slack and stacking, misses, and A cycling forward, back and from a missing id."
     },
     {
       "path": "frontend/src/annotations/paint.js",
       "language": "javascript",
       "lines": 51,
-      "size_bytes": 2573,
+      "size_bytes": 2583,
       "role": "asset",
       "purpose": "Drawing annotations (C21.3), pure: which ones a set of PDF pages (plus one either side) or an EPUB spine item shows, a PDF page's boxes from the quads at its scale (2 px underline bars), the ::highlight name per style and colour, and the section rules."
     },
@@ -2250,7 +2282,7 @@
       "path": "frontend/src/annotations/paint.test.js",
       "language": "javascript",
       "lines": 40,
-      "size_bytes": 2628,
+      "size_bytes": 2658,
       "role": "asset",
       "purpose": "Unit tests for paint.js: pages shown plus one either side, boxes in CSS px for highlights and underlines, EPUB annotations by spine item, the ::highlight rules."
     },
@@ -2271,10 +2303,26 @@
       "purpose": "Unit tests for palette.js: the five colours in order, the remembered last colour with fallbacks, the API body."
     },
     {
+      "path": "frontend/src/annotations/roving.js",
+      "language": "javascript",
+      "lines": 15,
+      "size_bytes": 676,
+      "role": "asset",
+      "purpose": "Arrow keys, Home and End along a toolbar's buttons with one tab stop (WAI-ARIA toolbar), shared by the selection toolbar and the annotation chip."
+    },
+    {
+      "path": "frontend/src/annotations/useAnnotationChip.js",
+      "language": "javascript",
+      "lines": 77,
+      "size_bytes": 3485,
+      "role": "asset",
+      "purpose": "Hook for the annotation chip's state (C21.4): with lookup off, a mouse resting on a drawn annotation opens it and leaving both closes it after 250 ms; a tap opens it; a press elsewhere closes it; shut while a selection is live."
+    },
+    {
       "path": "frontend/src/annotations/useAnnotations.js",
       "language": "javascript",
-      "lines": 38,
-      "size_bytes": 1596,
+      "lines": 67,
+      "size_bytes": 3214,
       "role": "asset",
       "purpose": "Hook for a book's highlights and underlines (C21.2): loads them once; create() shows the new one at once, saves it through the C21.1 API and takes it back with a warning toast if the server refuses."
     },
@@ -2913,8 +2961,8 @@
     {
       "path": "frontend/src/lib/api.js",
       "language": "javascript",
-      "lines": 40,
-      "size_bytes": 1051,
+      "lines": 42,
+      "size_bytes": 1133,
       "role": "lib",
       "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response; exports API_BASE_URL for the /health poll."
     },
@@ -3065,8 +3113,8 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 353,
-      "size_bytes": 19711,
+      "lines": 394,
+      "size_bytes": 22072,
       "role": "asset",
       "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions."
     },
@@ -3105,8 +3153,8 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 147,
-      "size_bytes": 7373,
+      "lines": 160,
+      "size_bytes": 8070,
       "role": "asset",
       "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places."
     },
@@ -3201,8 +3249,8 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 181,
-      "size_bytes": 9215,
+      "lines": 189,
+      "size_bytes": 9639,
       "role": "asset",
       "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor."
     },
@@ -3210,7 +3258,7 @@
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
       "language": "jsx",
       "lines": 92,
-      "size_bytes": 4453,
+      "size_bytes": 4470,
       "role": "asset",
       "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen. C17.4: a side for spreads. C17.6: data-page and data-scale (CSS px per point) for anchors."
     },
@@ -3433,8 +3481,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 421,
-      "size_bytes": 19954,
+      "lines": 425,
+      "size_bytes": 20192,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -3801,8 +3849,8 @@
     {
       "path": "frontend/src/steve/SteveContext.js",
       "language": "javascript",
-      "lines": 10,
-      "size_bytes": 470,
+      "lines": 11,
+      "size_bytes": 534,
       "role": "asset",
       "purpose": "SteveContext (C20.7b): askAbout() for the reading page, so block actions (C20.8) and highlights (C21) open the panel and ask; null outside the reader."
     },
@@ -3945,8 +3993,8 @@
     {
       "path": "frontend/src/steve/useSteve.js",
       "language": "javascript",
-      "lines": 75,
-      "size_bytes": 3316,
+      "lines": 88,
+      "size_bytes": 3954,
       "role": "asset",
       "purpose": "Steve for one book (C20.7b): the panel reducer, settings loaded on first open, ask() streaming one answer, stop, retry, consent and the off switch."
     },
@@ -4809,8 +4857,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 610,
-      "size_bytes": 185745,
+      "lines": 616,
+      "size_bytes": 187286,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

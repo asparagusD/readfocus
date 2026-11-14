@@ -1760,6 +1760,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:frontend/e2e/annotations-hover.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/annotations-render.spec.js",
       "type": "file",
       "role": "config",
@@ -2048,6 +2054,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/annotations/SelectionToolbar.css",
       "type": "file",
       "role": "asset",
@@ -2061,6 +2073,18 @@
     },
     {
       "id": "file:frontend/src/annotations/epubPaint.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/hover.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/hover.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -2085,6 +2109,18 @@
     },
     {
       "id": "file:frontend/src/annotations/palette.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/roving.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/useAnnotationChip.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4261,7 +4297,17 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "endpoint:DELETE /annotations/{annotation_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
       "to": "endpoint:GET /books/{book_id}/annotations"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "endpoint:PATCH /annotations/{annotation_id}"
     },
     {
       "type": "calls_endpoint",
@@ -7503,6 +7549,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/annotations-hover.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/annotations-render.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -7683,6 +7734,26 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/annotations/roving.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
       "to": "file:frontend/src/annotations/SelectionToolbar.css"
     },
@@ -7690,6 +7761,11 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
       "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/annotations/roving.js"
     },
     {
       "type": "imports",
@@ -7713,6 +7789,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/annotations/hover.test.js",
+      "to": "file:frontend/src/annotations/hover.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/annotations/paint.js",
       "to": "file:frontend/src/anchors/index.js"
     },
@@ -7730,6 +7811,11 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/palette.test.js",
       "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useAnnotationChip.js",
+      "to": "file:frontend/src/annotations/hover.js"
     },
     {
       "type": "imports",
@@ -8374,7 +8460,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/AnnotationChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/annotations/SelectionToolbar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/hover.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/useAnnotationChip.js"
     },
     {
       "type": "imports",

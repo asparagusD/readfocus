@@ -145,6 +145,14 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       return { text: selection.toString(), range: selection.getRangeAt(0), document };
     },
     documents: () => [document],
+    // C21.4: where each drawn annotation is, in this page's coordinates, for hover, taps and the chip.
+    annotationEntries: () => {
+      const byId = new Map();
+      for (const el of box.current?.querySelectorAll('.rf-anno[data-id]') ?? []) {
+        byId.set(el.dataset.id, [...(byId.get(el.dataset.id) ?? []), el.getBoundingClientRect()]);
+      }
+      return [...byId].map(([id, rects]) => ({ id, rects }));
+    },
     panning: () => Boolean(box.current && (box.current.scrollWidth > box.current.clientWidth + 1 || box.current.scrollHeight > box.current.clientHeight + 1)),
     find,
     toc: () => meta.outline.map((entry) => ({ title: entry.title, target: { page: entry.page }, loc: { kind: 'pdf', page: entry.page } })),

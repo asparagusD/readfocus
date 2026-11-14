@@ -30,6 +30,8 @@ export async function fetchApi(endpoint, options = {}) {
     throw new Error('Unauthorized');
   }
 
+  if (response.status === 204) return null; // nothing to read: a delete (C21.4)
+
   const data = await response.json();
   
   if (!response.ok) {

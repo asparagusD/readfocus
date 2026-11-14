@@ -33,7 +33,7 @@ export function pdfBoxes(annotations, page, scale) {
       anchor.quads.forEach(([x0, y0, x1, y1], i) => {
         const under = a.style === 'underline';
         out.push({
-          key: `${a.id}:${i}`, style: a.style, color: a.color, left: round(x0 * scale), top: round((under ? y1 : y0) * scale),
+          key: `${a.id}:${i}`, id: a.id, style: a.style, color: a.color, left: round(x0 * scale), top: round((under ? y1 : y0) * scale),
           width: round((x1 - x0) * scale), height: under ? UNDERLINE_PX : round((y1 - y0) * scale),
         });
       });

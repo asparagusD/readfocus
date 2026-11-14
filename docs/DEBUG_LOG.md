@@ -3745,3 +3745,43 @@ read zoomed in.
 The 375 px test uses the EPUB, which reflows to a readable size. It also
 asserts Lamplight is on (`colorScheme: 'dark'`, as the other specs do; a
 stored `rf-theme` alone left System mode in Paper).
+
+## 2026-11-14 C21.4 — the chip passes over the line while it rises; A does not focus it
+
+**Status:** fixed
+
+### Symptom
+`e2e/annotations-hover.spec.js`: "not over the line" failed for PDF and
+EPUB (chip box bottom 253 px, line top 250.8 px); the keyboard test's chip
+opened with A but its Ask Steve button was not focused.
+
+### Repro
+Hover a highlight with lookup off and read the chip's box at once; press A
+on the book.
+
+### Hypotheses
+1. The box was read during the entrance: the chip's style said `top: 199px`
+   (5 px clear of the line) and the box said 207, the 8 px rise of the
+   shared `rf-seltool` animation, more than the 6 px gap. Result: confirmed
+   (style vs box in the probe). The C21.2 toolbar had the same moment.
+2. The placement reference was empty. Ruled out: `data-side` was `top`
+   and the left edge matched the highlight's end.
+3. Focus: `FloatingPortal` mounts its children after the chip's effect
+   ran, so the effect found no element. Result: confirmed (focus works when
+   asked from the ref callback).
+
+### Root cause
+An entrance rise larger than the gap to the line; focus asked for before
+the portal had mounted the chip.
+
+### Fix
+The bars rise 4 px (as the word card) with an 8 px gap, so they never pass
+over the line even mid-animation; the chip focuses its first button from
+its ref callback when the portal mounts it.
+
+### Regression test
+The two assertions in `annotations-hover.spec.js` (box read straight after
+hovering; Ask Steve focused after A).
+
+### Commit
+Fixed inside the C21.4 commit before it was made.

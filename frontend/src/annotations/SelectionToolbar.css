@@ -1,5 +1,6 @@
 /* The selection toolbar (C21.2, handoff screen 18 .seltool): a small bar on the page's own surface, a hairline
-   and the soft lift; colour dots, then text buttons after a rule. Rises 8 px into place. */
+   and the soft lift; colour dots, then text buttons after a rule. Rises 4 px into place, less than its 8 px gap,
+   so it never passes over the line even while moving (C21.4). */
 .rf-seltool {
   z-index: var(--z-popover);
   display: flex;
@@ -17,8 +18,8 @@
 }
 .rf-seltool[data-side="bottom"] { animation-name: rf-seltool-drop; }
 
-@keyframes rf-seltool-rise { from { opacity: 0; transform: translateY(8px); } }
-@keyframes rf-seltool-drop { from { opacity: 0; transform: translateY(-8px); } }
+@keyframes rf-seltool-rise { from { opacity: 0; transform: translateY(4px); } }
+@keyframes rf-seltool-drop { from { opacity: 0; transform: translateY(-4px); } }
 @keyframes rf-seltool-fade { from { opacity: 0; } }
 
 /* Reduced motion: the fade alone (see WordCard.css for why this sits in the base layer). */

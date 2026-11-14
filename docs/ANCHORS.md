@@ -161,3 +161,27 @@ document.
   `language_source` (`class` or `guess`); figure: `caption`, `label`, `alt`,
   `images` (package paths, every rendition); table: `caption`, `label`,
   `rows`.
+
+## A10. Highlights and underlines as built (C21)
+
+- **Storage** (migration 026): one `annotations` row per highlight or
+  underline, `anchors` an array of A1 range anchors in reading order (one
+  per PDF page or EPUB spine item, A2), `position_start` and
+  `position_end` (A4; the end from the bottom-right of the last quad, or
+  the characters before the range's end). The reader computes the
+  positions (it has the page width and the section text); the server
+  checks the page or spine part and, for a PDF, the line part.
+- **Styles** (A8): `color` is one of honey, sage, sky, rose, lilac (tokens
+  `--hl-*` behind the text, `--ul-*` for a 2 px underline in the same hue,
+  `--dot-*` in the toolbar); `style` is highlight or underline.
+- **Drawing** (A5): a PDF anchor's quads are drawn at the page's scale
+  between the canvas and the text layer, so zoom only rescales them; an
+  EPUB CFI is resolved to a DOM range in its section and painted with the
+  CSS Custom Highlight API, which follows every re-layout. Only the pages
+  shown and one either side are drawn.
+- **Region rules** (A8): the selection toolbar turns Underline off outside
+  running text; the server does not check region kinds yet.
+- **Not yet built:** checking an anchor's `text` against the page and
+  re-finding moved anchors, and flagging `orphaned` (A5). An EPUB anchor
+  that no longer resolves is listed but not drawn.
+

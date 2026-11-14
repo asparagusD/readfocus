@@ -1697,16 +1697,16 @@
     {
       "path": "docs/ANCHORS.md",
       "language": "markdown",
-      "lines": 163,
-      "size_bytes": 7683,
+      "lines": 187,
+      "size_bytes": 9084,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
     },
     {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
-      "lines": 272,
-      "size_bytes": 15614,
+      "lines": 292,
+      "size_bytes": 16957,
       "role": "doc",
       "purpose": "Architecture of 2.0 (C15.4): the system, the five agents' pure decide() contracts (inputs, outputs, what each decides), the LangGraph diagram copied from docs/repo-graph/AGENT_GRAPH.md with its routing conditions, event flows per endpoint, ingestion, the data model by migration, the book reader and the word-lookup path, and the security layers."
     },
@@ -1794,7 +1794,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4561,
-      "size_bytes": 826889,
+      "size_bytes": 828440,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

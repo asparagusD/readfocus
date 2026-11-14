@@ -18,8 +18,7 @@ const snippet = (text) => (text.length > SNIPPET ? `${text.slice(0, SNIPPET - 1)
  * hover rules (useAnnotationChip). A pending (unsaved) annotation can be asked about but not changed yet.
  */
 export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, onCycle, onClose, ref }) {
-  const actions = useSteveActions();
-  const steve = actions?.enabled === false ? null : actions; // hidden while Steve is off (steve-guardrails S2)
+  const steve = useSteveActions(); // null while Steve is off: no Ask Steve
   const { refs, floatingStyles, placement } = useFloating({
     placement: 'top-end',
     strategy: 'fixed',

@@ -118,3 +118,17 @@ test('keyboard: an outline takes focus, Tab reaches the actions, Esc puts them a
   await page.keyboard.press('Escape');
   await expect(actions).toHaveCount(0);
 });
+
+test('with Steve switched off, blocks keep only what stays on the device', async ({ page, api }) => {
+  api.steve.enabled = false; // C21.4 follow-up: Steve's entry points hide while he is off (steve-guardrails S2)
+  await openReader(page);
+  await page.getByRole('button', { name: 'Ask Steve' }).click(); // the toolbar's Steve: his settings load
+  await expect(page.getByPlaceholder('Turn on Steve to ask')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await hover(page, CODE);
+  await expect(bar(page, 'Code, page 1').getByRole('button')).toHaveText(['Copy code']);
+  await hover(page, EQ);
+  await page.waitForTimeout(400);
+  await expect(bar(page, 'Equation, page 1')).toHaveCount(0); // Explain and Copy as LaTeX both ask Gemini on a PDF
+  expect(api.steve.asks).toHaveLength(0);
+});

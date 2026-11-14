@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14846,
+      "size_bytes": 14885,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1729,8 +1729,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3787,
-      "size_bytes": 166471,
+      "lines": 3824,
+      "size_bytes": 167918,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1793,8 +1793,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4560,
-      "size_bytes": 823204,
+      "lines": 4561,
+      "size_bytes": 824309,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2033,16 +2033,16 @@
     {
       "path": "frontend/e2e/steve-blocks.spec.js",
       "language": "javascript",
-      "lines": 120,
-      "size_bytes": 6882,
+      "lines": 134,
+      "size_bytes": 7684,
       "role": "config",
       "purpose": "E2E for the PDF block actions (C20.8b): equation Explain sends a PNG crop, Copy as LaTeX previews and copies, refusals in the dialog, code copied exactly with no Steve call and explained by region id, figure crops, inline math has none, the bar leaves with the pointer, keyboard focus, Tab and Esc."
     },
     {
       "path": "frontend/e2e/steve-epub-blocks.spec.js",
       "language": "javascript",
-      "lines": 114,
-      "size_bytes": 5714,
+      "lines": 125,
+      "size_bytes": 6321,
       "role": "config",
       "purpose": "E2E for the EPUB block actions on the converted fixture (C20.8c): Copy as LaTeX from the TeX annotation with no call, Explain from the source or by region, Copy code exact, a figure's image as a PNG, keyboard focus, Enter and Esc."
     },
@@ -2225,8 +2225,8 @@
     {
       "path": "frontend/src/annotations/AnnotationChip.jsx",
       "language": "jsx",
-      "lines": 104,
-      "size_bytes": 5201,
+      "lines": 103,
+      "size_bytes": 5128,
       "role": "asset",
       "purpose": "The chip on a highlight (C21.4): Ask Steve (explain_highlight with the first anchor), the five colours (current pressed), Underline and Delete, above the end of the last line; a toolbar with A / Shift+A to the next or previous highlight and Escape back to the book."
     },
@@ -2241,8 +2241,8 @@
     {
       "path": "frontend/src/annotations/SelectionToolbar.jsx",
       "language": "jsx",
-      "lines": 120,
-      "size_bytes": 5804,
+      "lines": 119,
+      "size_bytes": 5731,
       "role": "asset",
       "purpose": "The selection toolbar (C21.2, handoff screen 18): five colour dots, an Underline toggle and Ask Steve (explain_highlight) above a mouse selection or below a touch one, never on it; a colour saves at once and clears the selection; H and U from the book, Tab into the bar, arrows along it, Escape back; a polite status line."
     },
@@ -3849,8 +3849,8 @@
     {
       "path": "frontend/src/steve/SteveContext.js",
       "language": "javascript",
-      "lines": 11,
-      "size_bytes": 534,
+      "lines": 17,
+      "size_bytes": 735,
       "role": "asset",
       "purpose": "SteveContext (C20.7b): askAbout() for the reading page, so block actions (C20.8) and highlights (C21) open the panel and ask; null outside the reader."
     },

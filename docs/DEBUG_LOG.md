@@ -3785,3 +3785,40 @@ hovering; Ask Steve focused after A).
 
 ### Commit
 Fixed inside the C21.4 commit before it was made.
+
+## 2026-11-14 C21.4 follow-up — block actions offer Explain while Steve is off
+
+**Status:** fixed
+
+### Symptom
+With Steve switched off in his settings, hovering a PDF equation or code
+listing, or an EPUB equation, still showed Explain this equation / code
+(and on a PDF, Copy as LaTeX, which asks Gemini). steve-guardrails S2:
+while Steve is off, the "Ask Steve" entry points are hidden. Found while
+writing C21.4; the server already refused every such call.
+
+### Repro
+`api.steve.enabled = false`, open Steve's panel once (his settings load),
+hover a block: the bar lists the Explain buttons
+(`e2e/steve-blocks.spec.js`, `steve-epub-blocks.spec.js`, "switched off").
+
+### Hypotheses
+1. The block actions only ask whether a Steve context exists (null on a
+   pages-only book), never whether he is on. Result: confirmed
+   (`actionsFor(kind, { steve: Boolean(steve) })`).
+
+### Root cause
+`useSteveActions()` returned the context whether or not Steve was on.
+
+### Fix
+`useSteveActions()` returns null while the provider says `enabled: false`,
+so every caller (block actions, selection toolbar, annotation chip) drops
+its Steve entry points the same way (`frontend/src/steve/SteveContext.js`).
+
+### Regression test
+The two "switched off" tests: a PDF code block keeps only Copy code and a
+PDF equation shows no bar; an EPUB equation keeps only Copy as LaTeX; no
+ask is sent.
+
+### Commit
+`fix(steve): hide Explain block actions while Steve is off`

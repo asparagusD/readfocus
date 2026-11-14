@@ -15,8 +15,7 @@ import './SelectionToolbar.css';
  * bar, arrows move along it, Escape puts it away and returns to the book. "Add note" waits for the notepad (C22).
  */
 export function SelectionToolbar({ place, onAnnotate, onDismiss, returnFocusTo, ref }) {
-  const actions = useSteveActions();
-  const steve = actions?.enabled === false ? null : actions; // hidden while Steve is off (steve-guardrails S2)
+  const steve = useSteveActions(); // null while Steve is off: no Ask Steve
   const [toggled, setToggled] = useState(null); // the selection whose Underline is pressed
   const [said, setSaid] = useState('');
   const [last, setLast] = useState(lastColour);

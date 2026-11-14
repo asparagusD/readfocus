@@ -876,6 +876,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/steve/context.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/steve/errors.py",
       "type": "file",
       "role": "lib",
@@ -1363,6 +1369,12 @@
     },
     {
       "id": "file:backend/tests/test_startup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_context.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -5378,6 +5390,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/services/retriever.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/steve/keys.py",
       "to": "file:backend/services/supabase_client.py"
     },
@@ -6560,6 +6592,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_startup.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_context.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_context.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_context.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -9060,6 +9107,31 @@
       "type": "reads_table",
       "from": "file:backend/services/region_job.py",
       "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:sessions"
     },
     {
       "type": "reads_table",

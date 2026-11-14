@@ -83,29 +83,51 @@ pacing decision (those stay algorithmic and never call Steve).
 
 ## S4. Context rules
 
-One builder (`backend/steve/context.py`, C20.4) assembles each request,
-in this priority order, and trims it to a hard cap from policy:
+Built in C20.4: `backend/steve/context.py` `build_context(user, book,
+question, anchor?, image?, region?)` is the one builder. It returns the
+request's parts (the delimited context, an optional image, the question
+last), a citations map `{label: anchor}` for every page or section sent
+(`"p. 112": {"kind": "pdf", "page": 112}`, `"sec. 5": {"kind": "epub",
+"spine_index": 4, "cfi": ...}`), the token estimate and a context hash for
+the cache. Numbers are in `backend/steve/policy.py`.
 
-1. the reader's question;
-2. the selected passage, if any (text plus an ANCHORS A1 anchor; it must
-   occur in this book's text near the anchor, else it is refused);
-3. the current session's text (`chunks.prose`, else `content`), or the
-   part on screen when it is over budget;
-4. the table of contents (`books.toc`), titles with pages or sections;
-5. the top-k passages from the existing hybrid retriever
-   (`services/retriever.py`) that are not already in part 3, each with
-   its pages from `chunks.anchors`.
+1. **Book card** (600 tokens): title, author, as much of the contents as
+   fits, then "… and N more entries".
+2. **Session text** (4,500): `chunks.prose` verbatim (placeholders for
+   equations, code and figures) from the reading session's first chunk to
+   the reader's place (`reading_progress.position`); with no session, the
+   chunk at the reader's place. Over budget: about 600 tokens around the
+   anchor, then the most recent text back from the reader's place.
+3. **Highlight** (1,000): the selection and its paragraph, found in the
+   chunk whose pages or spine items hold the anchor. A selection not
+   found there is still sent, marked `verified="no"` (it is the reader's
+   own text).
+4. **Retrieved** (6 passages, 450 each): the hybrid retriever over the
+   whole book for the question and the selection, minus every chunk of
+   the session's range and the highlight's chunk; each labelled with its
+   page(s) or section, cut around the question's words.
+5. **Region and image**: an equation's LaTeX or MathML (EPUB), exact code
+   text with its language, a figure's label, caption and alt text, a
+   table's rows (1,500); an image (PNG, JPEG or WebP, at most 1.5 MB,
+   counted as 1,300 tokens).
 
-Trimming drops retrieved passages first, then the TOC, then the edges of
-the session text; never the question or the selection. Never the whole
-book, never another reader's data, never the reader's id, name or email.
+Hard cap: 12,000 tokens for everything, estimated conservatively
+(the larger of characters / 3 and UTF-8 bytes / 4, rounded up; English
+prose really costs about 4 characters a token). Retrieved passages are
+dropped first, then the session's older text; the question (1,200
+characters at most), the selection and the region are never cut. Only
+chunks named above are read with their text; the anchor lookup reads the
+book's `chunks.anchors` column only. Never the whole book, never another
+reader's book or region, no user id or email.
 
 Book text is data, not instructions: each part sits inside its own
-delimited section (`<book_passage page="44">...</book_passage>`), the
-system instruction says any instruction inside those sections is to be
-ignored, and a passage cannot close its own tag. Steve has no tools and
-no database access; his answers are rendered as typed blocks, never as
-HTML (C20.5).
+section (`<book_card>`, `<session_text>`, `<book_passage label="p. 44">`,
+`<highlight>`, `<selection>`, `<surrounding>`, `<retrieved>`, `<region>`,
+`<question>`), and any of those tag names inside book text or the
+question has its `<` replaced, so a passage cannot open or close a
+section. C20.5 adds the system instruction that says so to the model.
+Steve has no tools and no database access; his answers are rendered as
+typed blocks, never as HTML.
 
 ## S5. Answers and citations
 

@@ -80,6 +80,18 @@
   text-transform: capitalize;
 }
 
+/* C22.2: the notes count beside Notes (handoff screen 19), accent text on its soft tint. */
+.rf-tool-count {
+  min-width: 20px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background-color: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  font-variant-numeric: tabular-nums;
+}
+
 .rf-zoom-level {
   min-width: 10ch;
   font-variant-numeric: tabular-nums;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUp, Copy, KeyRound, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, Copy, KeyRound } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ReadingLamp } from '../illustrations';
 import { OwnKeyForm } from './OwnKeyForm';
@@ -170,33 +170,17 @@ function KeyView({ enabled, onEnabled, onBack }) {
 }
 
 /**
- * Steve's side panel (C20.7b, handoff screens 13-17): a narrow column beside the book from 760 px, a pull-up
- * sheet below; the book stays visible and usable either way (it is not a modal). Esc or the close button closes
- * it and focus returns to the toolbar's Steve button. States: consent, off, empty with suggestions, the
- * conversation (streaming answers, citations, stop, errors), resting (quota) and settings with the own key.
+ * Steve's tab of the side panel (C20.7b, handoff screens 13-17; since C22.2 the panel, its tabs, Esc and focus
+ * are SidePanel's): the book stays visible and usable beside it. States: consent, off, empty with suggestions,
+ * the conversation (streaming answers, citations, stop, errors), resting (quota) and settings with the own key.
+ * `onClose` closes the whole panel ("Not now", "Keep reading").
  */
-export function StevePanel({ steve, chapter, onCite, onClose, returnTo }) {
+export function StevePanel({ steve, chapter, onCite, onClose }) {
   const { state, ask, stop, retry, accept, setEnabled, dispatch, reload } = steve;
   const [draft, setDraft] = useState('');
-  const panel = useRef(null);
   const body = useRef(null);
-  const heading = useRef(null);
   const last = state.messages[state.messages.length - 1];
   const active = last?.role === 'steve' && ACTIVE.has(last.status);
-
-  useEffect(() => {
-    heading.current?.focus();
-    const button = returnTo?.current;
-    return () => button?.focus();
-  }, [returnTo]);
-
-  useEffect(() => {
-    const onKey = (event) => {
-      if (event.key === 'Escape' && panel.current?.contains(document.activeElement)) { event.preventDefault(); onClose(); }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
 
   useEffect(() => { // follow the answer as it grows, unless the reader has scrolled up
     const el = body.current;
@@ -243,16 +227,7 @@ export function StevePanel({ steve, chapter, onCite, onClose, returnTo }) {
   }
 
   return (
-    <aside ref={panel} id="rf-steve-panel" className="rf-steve" aria-labelledby="rf-steve-title">
-      <span className="rf-steve-grab" aria-hidden="true" />
-      <header className="rf-steve-head">
-        <h2 id="rf-steve-title" className="rf-steve-title" tabIndex={-1} ref={heading}>
-          <span className="rf-steve-av rf-steve-av--sm" aria-hidden="true">S</span>Steve
-        </h2>
-        <button type="button" className="rf-steve-x" onClick={onClose} aria-label="Close Steve">
-          <X size={18} strokeWidth={1.75} aria-hidden="true" />
-        </button>
-      </header>
+    <div className="rf-steve">
       <div className="rf-steve-body" ref={body}>{content}</div>
       <footer className="rf-steve-foot">
         <form className="rf-steve-ask" onSubmit={send}>
@@ -268,6 +243,6 @@ export function StevePanel({ steve, chapter, onCite, onClose, returnTo }) {
           <button type="button" onClick={() => dispatch({ type: 'show_key' })}>Settings</button>
         </p>
       </footer>
-    </aside>
+    </div>
   );
 }

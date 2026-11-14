@@ -117,7 +117,7 @@ test('keyboard: the panel takes focus, Esc closes it and focus returns to the to
   await button.focus();
   await page.keyboard.press('Enter');
   await expect(button).toHaveAttribute('aria-expanded', 'true');
-  await expect(panel(page).getByRole('heading', { name: 'Steve', exact: true })).toBeFocused();
+  await expect(panel(page).getByRole('tab', { name: 'Steve', exact: true })).toBeFocused(); // C22.2: Steve is a tab
   await page.keyboard.press('Tab');
   await expect(panel(page).getByRole('button', { name: 'Close Steve' })).toBeFocused();
   await page.keyboard.press('Escape');
@@ -168,7 +168,7 @@ test.describe('in Lamplight with reduced motion', () => {
     await page.addInitScript(() => localStorage.setItem('rf-theme', JSON.stringify('lamplight')));
     await openSteve(page);
     const animation = await panel(page).evaluate((el) => getComputedStyle(el).animationName);
-    expect(animation).toBe('rf-steve-fade');
+    expect(animation).toBe('rf-side-fade'); // C22.2: the side panel's fade
     await panel(page).locator('.rf-steve-sg').first().click();
     await expect(panel(page).locator('.rf-steve-answer')).toContainText('He counts twice');
     if (shots) await page.screenshot({ path: `${shots}/steve-answer-lamplight-1440.png` });

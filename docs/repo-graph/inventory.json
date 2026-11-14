@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 766,
-    "inventoried": 623,
+    "tracked": 781,
+    "inventoried": 638,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14940,
+      "size_bytes": 14976,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1769,8 +1769,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3824,
-      "size_bytes": 167918,
+      "lines": 3861,
+      "size_bytes": 169285,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1833,8 +1833,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4903,
-      "size_bytes": 854806,
+      "lines": 4904,
+      "size_bytes": 859420,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1937,8 +1937,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 325,
-      "size_bytes": 19969,
+      "lines": 355,
+      "size_bytes": 21839,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -2039,6 +2039,14 @@
       "purpose": "Playwright e2e for sign in (C13.1b), signed out with Supabase Auth answered in the spec: empty fields explained inline with nothing sent, a wrong password with the loading label and the error on the field, a correct one opening the library, and create account by keyboard (tab, short password, inbox message, back). Under reduced motion neither the form nor the drawings have a transform in any frame."
     },
     {
+      "path": "frontend/e2e/notepad.spec.js",
+      "language": "javascript",
+      "lines": 216,
+      "size_bytes": 11739,
+      "role": "config",
+      "purpose": "E2E for the notepad (C22.2): Notes beside the book in book order without loading an editor, references go to their passage (PDF and EPUB), tabs and keyboard, empty and failed load, delete and Undo, a queued offline change sent on load, a stale one as a conflict with Keep mine, the phone sheet in Lamplight."
+    },
+    {
       "path": "frontend/e2e/ocr.spec.js",
       "language": "javascript",
       "lines": 64,
@@ -2106,7 +2114,7 @@
       "path": "frontend/e2e/steve-panel.spec.js",
       "language": "javascript",
       "lines": 176,
-      "size_bytes": 9864,
+      "size_bytes": 9916,
       "role": "config",
       "purpose": "E2E for Steve's panel (C20.7b): consent stored to its version, Not now, a streamed answer with KaTeX math, tinted code and a citation chip that moves the book, checked chips only, resting with the own key, errors and Try again, the off switch, keyboard and focus return, side by side at 1440, the sheet at 375, Lamplight with reduced motion."
     },
@@ -3025,8 +3033,8 @@
     {
       "path": "frontend/src/lib/api.js",
       "language": "javascript",
-      "lines": 42,
-      "size_bytes": 1133,
+      "lines": 44,
+      "size_bytes": 1391,
       "role": "lib",
       "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response; exports API_BASE_URL for the /health poll."
     },
@@ -3165,6 +3173,118 @@
       "size_bytes": 1208,
       "role": "asset",
       "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
+    },
+    {
+      "path": "frontend/src/notes/NoteDoc.jsx",
+      "language": "jsx",
+      "lines": 51,
+      "size_bytes": 2314,
+      "role": "asset",
+      "purpose": "Draws a text note's TipTap JSON as plain React (C22.2): only the server's allowed nodes and marks, checklists, inline and display math through SteveMath, so the notepad loads no editor."
+    },
+    {
+      "path": "frontend/src/notes/Notepad.css",
+      "language": "css",
+      "lines": 156,
+      "size_bytes": 5205,
+      "role": "asset",
+      "purpose": "Styles for the notepad's list and note cards (C22.2): reference, kind, delete, the drawn TipTap document, checklists, math, alerts and 44 px targets on phones."
+    },
+    {
+      "path": "frontend/src/notes/Notepad.jsx",
+      "language": "jsx",
+      "lines": 103,
+      "size_bytes": 4943,
+      "role": "asset",
+      "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note."
+    },
+    {
+      "path": "frontend/src/notes/SidePanel.css",
+      "language": "css",
+      "lines": 108,
+      "size_bytes": 3461,
+      "role": "asset",
+      "purpose": "Styles for the side panel (C22.2, was Steve's panel): the column, tabs with an accent rule drawn by scale, close button, the phone sheet and reduced-motion fade."
+    },
+    {
+      "path": "frontend/src/notes/SidePanel.jsx",
+      "language": "jsx",
+      "lines": 64,
+      "size_bytes": 2991,
+      "role": "asset",
+      "purpose": "The side area beside the book (C22.2): tabs Notes | Steve as a WAI-ARIA tablist over one panel, 380 px column or pull-up sheet under 760 px; focuses the chosen tab on open, Esc or close returns focus to the opener; named after its tab."
+    },
+    {
+      "path": "frontend/src/notes/autosave.js",
+      "language": "javascript",
+      "lines": 96,
+      "size_bytes": 4456,
+      "role": "asset",
+      "purpose": "Autosave for note blocks (C22.2): debounced, one save at a time per note on the last version, unreachable saves queued, 409 held as a conflict until keepMine or takeTheirs, other refusals shown as errors."
+    },
+    {
+      "path": "frontend/src/notes/autosave.test.js",
+      "language": "javascript",
+      "lines": 155,
+      "size_bytes": 6147,
+      "role": "asset",
+      "purpose": "Unit tests for autosave: debounce, flush during a save, offline queue and retry, queued versions kept, 409 conflict and keep mine, refused changes, pending and forget."
+    },
+    {
+      "path": "frontend/src/notes/notesApi.js",
+      "language": "javascript",
+      "lines": 12,
+      "size_bytes": 693,
+      "role": "asset",
+      "purpose": "Client for the note blocks API (C22.1/C22.2): list, create, save with If-Match, delete."
+    },
+    {
+      "path": "frontend/src/notes/place.js",
+      "language": "javascript",
+      "lines": 29,
+      "size_bytes": 1176,
+      "role": "asset",
+      "purpose": "Where a note sits (C22.2): its chapter from the contents by A4 position, its reference line and book order."
+    },
+    {
+      "path": "frontend/src/notes/place.test.js",
+      "language": "javascript",
+      "lines": 47,
+      "size_bytes": 2315,
+      "role": "asset",
+      "purpose": "Unit tests for note places and the save line: chapter by position for PDF and EPUB, reference text, book order, worst status."
+    },
+    {
+      "path": "frontend/src/notes/queue.js",
+      "language": "javascript",
+      "lines": 62,
+      "size_bytes": 2187,
+      "role": "asset",
+      "purpose": "The notepad's offline queue (C22.2): one change per note in IndexedDB, wrapped in try/catch with a memory fallback."
+    },
+    {
+      "path": "frontend/src/notes/queue.test.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 1194,
+      "role": "asset",
+      "purpose": "Unit tests for the offline queue: one entry per note, memory fallback without or with a failing IndexedDB."
+    },
+    {
+      "path": "frontend/src/notes/status.js",
+      "language": "javascript",
+      "lines": 8,
+      "size_bytes": 508,
+      "role": "asset",
+      "purpose": "The notepad's one save line (C22.2): the worst state among its notes."
+    },
+    {
+      "path": "frontend/src/notes/useNotes.js",
+      "language": "javascript",
+      "lines": 103,
+      "size_bytes": 4639,
+      "role": "asset",
+      "purpose": "The reader's note blocks in a book (C22.2): load in book order, optimistic create, edit with 800 ms autosave, offline queue retried on load, online and before the tab hides, conflict choices, delete with Undo."
     },
     {
       "path": "frontend/src/originalview/BookLookup.jsx",
@@ -3545,8 +3665,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 436,
-      "size_bytes": 20864,
+      "lines": 475,
+      "size_bytes": 22772,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -3681,16 +3801,16 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.css",
       "language": "css",
-      "lines": 138,
-      "size_bytes": 3999,
+      "lines": 150,
+      "size_bytes": 4383,
       "role": "asset",
       "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px. C17.4: .rf-tool-value and .rf-zoom-level, values hidden under 640 px."
     },
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 82,
-      "size_bytes": 3894,
+      "lines": 91,
+      "size_bytes": 4562,
       "role": "asset",
       "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place."
     },
@@ -3929,16 +4049,16 @@
     {
       "path": "frontend/src/steve/StevePanel.css",
       "language": "css",
-      "lines": 348,
-      "size_bytes": 10999,
+      "lines": 282,
+      "size_bytes": 9086,
       "role": "asset",
       "purpose": "Styles for Steve's panel (C20.7b): column and sheet, identity seal, consent and resting cards, suggestions, answers, citation chips, display math, tinted code, the switch and the composer; tokens only, transform and opacity motion."
     },
     {
       "path": "frontend/src/steve/StevePanel.jsx",
       "language": "jsx",
-      "lines": 273,
-      "size_bytes": 12626,
+      "lines": 248,
+      "size_bytes": 11505,
       "role": "asset",
       "purpose": "Steve's side panel (C20.7b, handoff screens 13-17): a 380 px column beside the book or a pull-up sheet under 760 px; consent, off, empty with suggestions, the conversation with streaming answers, Stop, citations that move the book, errors, resting with the own-key link, and settings; Esc returns focus to the toolbar."
     },
@@ -4929,8 +5049,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 625,
-      "size_bytes": 190384,
+      "lines": 640,
+      "size_bytes": 193449,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

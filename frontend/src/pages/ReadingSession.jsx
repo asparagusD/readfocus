@@ -25,6 +25,10 @@ import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
 import { useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
+import { SidePanel } from '../notes/SidePanel';
+import { Notepad } from '../notes/Notepad';
+import { useNotes } from '../notes/useNotes';
+import { chapterOf } from '../notes/place';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -88,10 +92,14 @@ export function ReadingSession() {
   const [toolbarFocused, setToolbarFocused] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
   const [annotationPages, setAnnotationPages] = useState(() => new Map());
-  // Steve (C20.7b): a panel beside the book; the book stays usable while it is open.
-  const [steveOpen, setSteveOpen] = useState(false);
+  // The side panel (C20.7b Steve, C22.2 Notes): tabs beside the book; the book stays usable while it is open.
+  const [side, setSide] = useState(null); // null | 'notes' | 'steve'
+  const steveOpen = side === 'steve';
   const steveButton = useRef(null);
+  const notesButton = useRef(null);
+  const opener = useRef(null); // the toolbar button that opened the panel gets focus back
   const steve = useSteve(bookId, steveOpen);
+  const notepad = useNotes(bookId);
   const [entries, setEntries] = useState([]);
   const chromeVisible = useChromeVisible(toolbarFocused || showAbandonModal || contentsOpen);
   const contentsButton = useRef(null);
@@ -199,13 +207,23 @@ export function ReadingSession() {
     reader.current?.goTo(entry.target);
   }, []);
   const backToToday = () => reader.current?.goTo(todayAnchor.current ?? bounds?.start);
-  const closeSteve = useCallback(() => setSteveOpen(false), []);
+  const closeSide = useCallback(() => setSide(null), []);
+  const toggleSide = (tab, button) => {
+    if (!side) opener.current = button.current;
+    setSide((now) => (now === tab ? null : tab));
+  };
   // A citation chip moves the book to its page or section; the panel stays open.
   const onCite = useCallback((anchor) => reader.current?.goTo(anchor?.kind === 'epub' ? { cfi: anchor.cfi } : anchor), []);
+  // C22.2: a note's reference names its page and chapter, read from the book as the list draws; it goes there.
+  const describeNote = (note) => ({ page: reader.current?.pageLabel(note) ?? '', chapter: chapterOf(note, reader.current?.toc() ?? []) });
+  const goToNote = useCallback((note) => onCite(note.anchors?.[0]), [onCite]);
   const { ask: askSteve } = steve;
   const steveOn = steve.state.enabled !== false; // C21.4: Ask Steve entry points hide once his settings say he is off
   const steveActions = useMemo(() => ({
-    askAbout: (request) => { setSteveOpen(true); askSteve(request); },
+    askAbout: (request) => {
+      setSide((now) => { if (!now) opener.current = steveButton.current; return 'steve'; });
+      askSteve(request);
+    },
     enabled: steveOn,
   }), [askSteve, steveOn]);
   const onLookupToggle = () => {
@@ -338,7 +356,11 @@ export function ReadingSession() {
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
-          onSteve={pagesOnly ? undefined : () => setSteveOpen((open) => !open)}
+          onNotes={() => toggleSide('notes', notesButton)}
+          notesOpen={side === 'notes'}
+          notesRef={notesButton}
+          notesCount={notepad.notes.length}
+          onSteve={pagesOnly ? undefined : () => toggleSide('steve', steveButton)}
           steveOpen={steveOpen}
           steveRef={steveButton}
         >
@@ -406,8 +428,25 @@ export function ReadingSession() {
           onAnnotationDelete={notes.remove}
         />
       </main>
-      {steveOpen && (
-        <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSteve} returnTo={steveButton} />
+      {side && (
+        <SidePanel
+          tabs={[
+            { id: 'notes', label: 'Notes', count: notepad.notes.length },
+            ...(pagesOnly ? [] : [{ id: 'steve', label: 'Steve', mark: <span className="rf-steve-av rf-steve-av--sm" aria-hidden="true">S</span> }]),
+          ]}
+          current={side}
+          onTab={setSide}
+          onClose={closeSide}
+          returnTo={opener}
+        >
+          {side === 'steve' ? (
+            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} />
+          ) : (
+            <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
+              onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}
+              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} />
+          )}
+        </SidePanel>
       )}
       </div>
       </SteveContext.Provider>

@@ -1,0 +1,156 @@
+/* The notepad (C22.2, handoff screen 19): note cards in book order inside the side panel. Tokens only; only
+   transform and opacity move. */
+.rf-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.rf-notes-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+
+.rf-notes-count {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.rf-notes-order, .rf-notes-status, .rf-note-small {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
+}
+
+.rf-notes-status:empty { display: none; }
+
+.rf-notes-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border: var(--border-hair) dashed var(--line-2);
+  border-radius: var(--radius-card);
+}
+
+.rf-notes-empty-title { margin: 0; font-family: var(--font-reading); font-size: var(--text-quote); line-height: var(--text-quote--line-height); color: var(--ink); }
+
+.rf-notes-list { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+
+.rf-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-4) var(--space-4);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-card);
+  background-color: var(--paper);
+}
+
+.rf-note[data-pending] { opacity: 0.7; }
+
+.rf-note-head { display: flex; align-items: center; gap: var(--space-1); min-height: 32px; }
+
+.rf-note-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 32px;
+  margin-left: calc(-1 * var(--space-1));
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui--line-height);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-note-ref span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rf-note-ref svg { flex: none; color: var(--ink-2); }
+.rf-note-ref:hover { background-color: var(--paper-2); }
+
+.rf-note-kind { display: inline-grid; place-items: center; margin-left: auto; width: 28px; height: 28px; color: var(--ink-2); }
+
+.rf-note-delete {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-note-delete:hover { background-color: var(--paper-2); color: var(--ink); }
+.rf-note-delete:disabled { opacity: 0.4; cursor: default; }
+
+.rf-note-ref:focus-visible, .rf-note-delete:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.rf-note-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.rf-note-body { min-width: 0; }
+
+.rf-note-doc, .rf-note-empty {
+  font-family: var(--font-reading);
+  font-size: var(--text-quote);
+  line-height: var(--text-quote--line-height);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.rf-note-empty { margin: 0; color: var(--ink-2); font-style: italic; }
+.rf-note-doc > * + * { margin-top: var(--space-2); }
+.rf-note-doc p, .rf-note-doc ul, .rf-note-doc ol, .rf-note-doc blockquote { margin-bottom: 0; }
+.rf-note-doc p:first-child { margin-top: 0; }
+.rf-note-doc ul, .rf-note-doc ol { padding-left: var(--space-5); }
+.rf-note-doc blockquote { margin-left: 0; padding-left: var(--space-3); border-left: var(--border-strong) solid var(--line-2); color: var(--ink-2); }
+.rf-note-doc code { font-family: var(--font-mono); font-size: 0.9em; }
+.rf-note-tasks { padding-left: 0 !important; list-style: none; }
+.rf-note-task { display: flex; align-items: flex-start; gap: var(--space-2); }
+.rf-note-task input { margin-top: 5px; accent-color: var(--accent); }
+.rf-note-task[data-checked="true"] > div { color: var(--ink-2); text-decoration: line-through; }
+.rf-note-doc .rf-steve-math--display { overflow-x: auto; }
+
+.rf-note-alert {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-input);
+  background-color: var(--paper-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink);
+}
+
+.rf-note-alert p { margin: 0; }
+.rf-note-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+@media (max-width: 759px) {
+  .rf-notes { padding: var(--space-3) var(--space-4) var(--space-5); }
+  .rf-note-delete, .rf-note-ref { min-height: 44px; }
+  .rf-note-delete { width: 44px; height: 44px; }
+}

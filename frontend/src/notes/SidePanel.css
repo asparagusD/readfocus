@@ -1,0 +1,108 @@
+/* The side area beside the book (C22.2; was Steve's panel, C20.7b): a 380 px column from 760 px, a pull-up sheet
+   64 % high below it. Tabs "Notes | Steve" as in handoff screen 19. Tokens only; only transform and opacity move. */
+.rf-side {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: 380px;
+  min-height: 0;
+  border-left: var(--border-hair) solid var(--line);
+  background-color: var(--surface);
+  color: var(--ink);
+  animation: rf-side-in var(--dur-4) var(--ease-arrive) both;
+}
+
+@keyframes rf-side-in { from { opacity: 0; transform: translateX(24px); } }
+
+.rf-side-grab { display: none; }
+
+.rf-side-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2) 0 var(--space-4);
+  border-bottom: var(--border-hair) solid var(--line);
+}
+
+.rf-side-tabs { display: flex; align-items: stretch; gap: var(--space-4); min-width: 0; }
+
+.rf-side-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui--line-height);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rf-side-tab::after { /* the selected tab's accent rule, drawn by scale so it can move */
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: var(--border-strong);
+  background-color: var(--accent);
+  transform: scaleX(0);
+  transition: transform var(--dur-2) var(--ease-settle);
+}
+
+.rf-side-tab[aria-selected="true"] { color: var(--ink); }
+.rf-side-tab[aria-selected="true"]::after { transform: scaleX(1); }
+.rf-side-tab:hover { color: var(--ink); }
+.rf-side-tab:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: calc(-1 * var(--focus-ring-width)); border-radius: var(--radius-input); }
+
+.rf-side-count { font-size: var(--text-label); line-height: var(--text-label--line-height); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.rf-side-x {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-side-x:hover { background-color: var(--paper-2); color: var(--ink); }
+.rf-side-x:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
+.rf-side-body { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+@media (max-width: 759px) {
+  .rf-side {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-popover);
+    width: auto;
+    height: 64dvh;
+    border-left: 0;
+    border-top: var(--border-hair) solid var(--line-2);
+    border-radius: 18px 18px 0 0;
+    box-shadow: var(--shadow-lift);
+    animation-name: rf-side-up;
+    animation-duration: var(--dur-5);
+  }
+  @keyframes rf-side-up { from { opacity: 0; transform: translateY(24px); } }
+  .rf-side-grab { display: block; width: 36px; height: 4px; margin: var(--space-2) auto 0; border-radius: var(--radius-pill); background-color: var(--line-2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-side { animation-name: rf-side-fade; }
+  @keyframes rf-side-fade { from { opacity: 0; } }
+  .rf-side-tab::after { transition: none; }
+}

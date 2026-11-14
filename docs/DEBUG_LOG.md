@@ -3822,3 +3822,40 @@ ask is sent.
 
 ### Commit
 `fix(steve): hide Explain block actions while Steve is off`
+
+
+## 2026-11-14 C22.2a — a change queued offline was resent on the newest version
+
+### Symptom
+`e2e/notepad.spec.js` "a stale change is a conflict": a change left in the
+IndexedDB queue on version 1, with the server at version 3 (another tab
+saved twice), was sent with `If-Match: "3"` and saved over the other
+tab's text; no conflict was shown. Found while writing C22.2a, before
+any commit.
+
+### Repro
+List the note (version 3), put `{ id, change, version: 1 }` in the queue,
+reload: one PATCH with version 3, 200.
+
+### Hypotheses
+1. `retry()` keeps the version the list loaded and ignores the queued
+   one. Result: confirmed (`if (e.version === null) e.version = queued.version`;
+   `track()` had already set 3).
+
+### Root cause
+The queue stored the version a change was made on, but `retry()` only used
+it for notes it had never seen.
+
+### Fix
+`retry()` takes a queued change together with its own version whenever the
+note has no newer unsaved change in this tab, so a newer save on the server
+is a 409 and the reader chooses (`frontend/src/notes/autosave.js`).
+
+### Regression test
+`autosave.test.js` "a queued change keeps its own version even when the list
+loaded a newer one"; the e2e conflict test (versions sent 1, then 3 after
+Keep mine).
+
+### Commit
+`feat(notes): notepad panel beside the book with tabs and autosave` (C22.2a,
+fixed before committing)

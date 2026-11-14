@@ -3521,3 +3521,93 @@ None (not reproduced).
 
 ### Commit
 Recorded with `feat(steve): equation LaTeX cache, region details and figure context`.
+
+## 2026-11-14 C20.9 — every live Steve call fails with `unavailable`
+
+**Status:** fixed
+
+### Symptom
+The first live run of the C20.9 evaluation (your yes, 15 calls) returned
+`unavailable` for all 15 items; expected 15 answers. The provider re-raises
+every SDK error as `SteveUnavailable` and drops the original (on purpose: it
+may echo input), so the run showed only:
+
+    python scripts/steve_eval.py --live --out <scratch>/steve_eval_run1.json
+    session-alice-box: unavailable
+    ... (the same for all 15 items)
+    "passed": "0/15", "tokens_in": 0, "tokens_out": 0
+
+The original exception, from one item re-run with DNS blocked (so nothing
+could reach Google) and `provider._unavailable` wrapped to print it (key
+redacted; nothing printed one):
+
+    File "I:\readfocus\.venv\Lib\site-packages\google\genai\_api_client.py", line 2119, in async_request
+      result = await self._async_request(
+    File "I:\readfocus\.venv\Lib\site-packages\google\genai\_api_client.py", line 2052, in _async_request
+      return await self._async_retry(  # type: ignore[no-any-return]
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 112, in __call__
+      do = await self.iter(retry_state=retry_state)
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 157, in iter
+      result = await action(retry_state)
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\_utils.py", line 111, in inner
+      return call(*args, **kwargs)
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\__init__.py", line 393, in <lambda>
+      self._add_action_func(lambda rs: rs.outcome.result())
+    File "C:\Users\avash\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+      return self.__get_result()
+    File "C:\Users\avash\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+      raise self._exception
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 116, in __call__
+      result = await fn(*args, **kwargs)
+    File "I:\readfocus\.venv\Lib\site-packages\google\genai\_api_client.py", line 1965, in _async_request_once
+      response = await session.request(  # type: ignore[union-attr]
+    File "I:\readfocus\.venv\Lib\site-packages\aiohttp\client.py", line 900, in _request
+      resp = await handler(req)
+    File "I:\readfocus\.venv\Lib\site-packages\aiohttp\client.py", line 850, in _connect_and_send_request
+      assert self._connector is not None
+    AssertionError
+
+It fails before any connection is made, so the 15 attempts spent no quota
+(Google reported no tokens either).
+
+### Repro
+One item, offline (DNS blocked; scratch script, not committed):
+`python <scratch>/repro.py`: `ORIGINAL: builtins AssertionError`, every time.
+In pytest: `backend/tests/test_steve_provider.py::test_the_sdk_client_lives_for_the_whole_call`.
+
+### Hypotheses
+1. The SDK client is garbage-collected mid-call. `generate()` does
+   `models = _make_client(key).aio.models` and `check_key()` does
+   `await _make_client(api_key).aio.models.get(...)`: nothing keeps the
+   `genai.Client`, its `__del__` calls `close()`, which closes the HTTP
+   session that `aio.models` still uses (aiohttp: `_connector` is None).
+   Ruled out if: keeping a reference to the client changes nothing.
+   Result: confirmed. The same repro with `_make_client` wrapped to keep
+   each client in a list gets past the session and fails only at DNS
+   (`ClientConnectorDNSError ... generativelanguage.googleapis.com`).
+2. The key or model name is wrong. Ruled out: the error is raised before a
+   request is sent, and the key and model are only read from `.env`.
+3. A Windows event-loop issue with aiohttp. Ruled out by 1: the same loop
+   connects once the client is kept.
+
+Why the tests missed it: `FakeSdk.client()` returns a `SimpleNamespace`
+whose `models` does not depend on the client living. aiohttp is in the
+local virtualenv only through `langchain-community` (not in
+requirements.txt); without it the SDK uses httpx, where the effect of
+`close()` differs, but relying on the collector either way is the bug.
+
+### Root cause
+`backend/steve/provider.py` (`generate` and `check_key`) used the SDK
+client as a temporary, so CPython freed it (and closed its HTTP session)
+before the request was sent.
+
+### Fix
+Hold the client in a local for the whole call in both functions.
+
+### Regression test
+`backend/tests/test_steve_provider.py::test_the_sdk_client_lives_for_the_whole_call`:
+a fake client that closes its models when collected. Failed before the fix
+(stashed provider.py), passes after: see the commit's How verified.
+
+### Commit
+`fix(steve): keep the Gemini client alive for the whole call`

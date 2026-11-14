@@ -94,7 +94,8 @@ async def check_key(api_key: str) -> None:
     started, status = time.monotonic(), "ok"
     try:
         async with asyncio.timeout(policy.TIMEOUT_SECONDS):
-            await _make_client(api_key).aio.models.get(model=name)
+            client = _make_client(api_key)  # held for the call: a collected client closes its HTTP session
+            await client.aio.models.get(model=name)
     except Exception as exc:  # noqa: BLE001 - every failure is re-raised typed; the original (may echo input) dropped
         unavailable = _unavailable(exc)
         status = unavailable.reason
@@ -119,7 +120,8 @@ async def generate(parts: list, *, model: str = "chat", api_key: str | None = No
     config = {"system_instruction": system} if system else None
     started, status, counts, size = time.monotonic(), "ok", (None, None), 0
     try:
-        models = _make_client(key).aio.models
+        client = _make_client(key)  # held for the call: a collected client closes its HTTP session (DEBUG_LOG C20.9)
+        models = client.aio.models
         if not stream:
             async with asyncio.timeout(policy.TIMEOUT_SECONDS):
                 response = await models.generate_content(model=name, contents=parts, config=config)

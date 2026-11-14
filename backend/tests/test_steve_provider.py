@@ -225,3 +225,34 @@ def test_a_slow_key_check_times_out(sdk, monkeypatch):
     with pytest.raises(SteveUnavailable) as caught:
         asyncio.run(provider.check_key(OWN_KEY))
     assert caught.value.reason == "timeout"
+
+
+class ClosingModels(FakeModels):
+    """Like the SDK: the models share the client's HTTP session, which the client closes when it is collected."""
+
+    closed = False
+
+    async def generate_content(self, **kwargs):
+        if self.closed:
+            raise AssertionError("session closed")  # what aiohttp raised (DEBUG_LOG, C20.9)
+        return await super().generate_content(**kwargs)
+
+    async def get(self, **kwargs):
+        if self.closed:
+            raise AssertionError("session closed")
+        return await super().get(**kwargs)
+
+
+class ClosingClient:
+    def __init__(self, sdk):
+        self.aio = SimpleNamespace(models=ClosingModels(sdk))
+
+    def __del__(self):
+        self.aio.models.closed = True
+
+
+def test_the_sdk_client_lives_for_the_whole_call(sdk, monkeypatch):
+    monkeypatch.setattr(provider, "_make_client", lambda api_key: ClosingClient(sdk))
+    (piece,) = collect(provider.generate(["q"], model="chat"))
+    assert piece.text == "Charon counts twice [p. 4]."
+    asyncio.run(provider.check_key(OWN_KEY))

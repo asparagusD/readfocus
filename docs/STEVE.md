@@ -117,20 +117,39 @@ HTML (C20.5).
 
 ## S6. Quota and paused states
 
-- **Per reader:** `STEVE_DAILY_LIMIT_PER_USER` questions a day on our key,
-  counted on the server in `steve_usage` (the reader's local day, so
-  "back at midnight, your time" is true). Counted only when a call is
-  made; refunded if Google fails. A reader's own key is not counted.
-- **Global:** a daily budget for our key from policy, sized from
-  Google's free-tier limits (recorded in S10 when C20.2 reads them).
-- **Circuit breaker:** after a 429 from Google, no call on our key for a
-  cool-down (Google's `Retry-After`, else policy), for every reader.
-- **Cache:** a repeated question on the same book and context answers
-  from the cache and costs no call.
-- **Paused, not broken:** when the limit, the breaker or an outage stops
-  a call, the panel shows "Steve is resting" with when he is back.
-  Reading, tests and grading never wait on him. No fallback provider, no
-  countdowns, no upsell.
+Built in C20.2: `backend/steve/service.py` `ask()` checks, in order, the
+cache, the breaker and the daily limit, then calls the provider. Numbers
+are in `backend/steve/policy.py`.
+
+- **Per reader:** `STEVE_DAILY_LIMIT_PER_USER` questions a day on our key
+  (15 if unset), counted in `steve_usage` by one atomic database call
+  (`steve_take_quota`, migration 024), so two tabs cannot both take the
+  last question. The day is the reader's own: the browser sends its UTC
+  offset in minutes (no time-zone database is needed), so "back at
+  midnight, your time" is true. Counted only when a call is made;
+  refunded (`steve_refund_quota`) when Google fails. A reader's own key
+  is never counted. Over the limit: `SteveUnavailable("daily_limit")`
+  with `until` = the reader's next midnight.
+- **Circuit breaker:** after a 429 (Google's RESOURCE_EXHAUSTED), no call
+  on that key for at least 10 minutes, or Google's `retryDelay` if longer
+  (capped at a day): `SteveUnavailable("paused_quota", until=...)`. Our
+  key is shared, so its breaker pauses every reader; a reader's own key
+  has its own and pauses only itself. The SDK makes one attempt and never
+  retries. In process memory: one Render instance; a restart closes it.
+- **Global daily budget:** not built. Google's free-tier daily limit is
+  per project and resets at midnight Pacific; when it runs out Google
+  answers 429 and the breaker pauses everyone. Readers' own limits keep
+  one reader from using it all.
+- **Cache:** sha256 of (book id, normalised question, context hash,
+  model), kept 7 days, at most 500 answers, in process memory (a restart
+  empties it). A hit costs no call and no count. A failed answer is not
+  cached. A book belongs to one reader, so answers never cross readers.
+- **Other pauses:** `timeout` (30 s for an answer, 60 s for a whole
+  stream), `unavailable` (5xx, network), `key_rejected`,
+  `not_configured`. None of them opens the breaker.
+- **Paused, not broken:** the panel shows "Steve is resting" with when he
+  is back. Reading, tests and grading never wait on him. No fallback
+  provider, no countdowns, no upsell.
 
 ## S7. Keys
 
@@ -156,10 +175,25 @@ backend writes them.
 
 ## S10. Models and free-tier limits
 
-Model names come from `GEMINI_MODEL_CHAT` and `GEMINI_MODEL_VISION`. On
-2026-11-12 only `gemini-3.5-flash-lite` answered on the free tier
-(DEBUG_LOG C16.4). C20.2 re-tests the chat models and records Google's
-current limits here, with the date.
+Client: Google's Gen AI SDK for Python, `google-genai` 2.34.0
+(Apache-2.0, released 2026-10-29; Google's libraries page, read
+2026-11-14, names it the official library and the older
+`google-generativeai` deprecated since 2025-11-30). Imported only by
+`backend/steve/provider.py`, on first use; +18 MB RSS when loaded
+(`docs/BENCHMARKS.md`). Timeout from policy; `retry_options.attempts = 1`.
+
+Model names come from `GEMINI_MODEL_CHAT` and `GEMINI_MODEL_VISION`; none
+is hardcoded. On 2026-11-12 only `gemini-3.5-flash-lite` answered on the
+free tier (DEBUG_LOG C16.4), so both are set to it; the chat models are
+not re-tested in C20.2 (no live call was made).
+
+Limits, read 2026-11-14 at aistudio.google.com/docs/rate-limits: limits
+apply per project, not per key; requests per day reset at midnight
+Pacific; per-model free-tier numbers are shown only in AI Studio. The
+last numbers read there (by you, 2026-11-12): `gemini-3.5-flash-lite`
+15 RPM, 250k TPM, 500 RPD; `gemini-3.8-flash` 5 RPM, 250k TPM, 20 RPD.
+At 500 a day and 15 per reader, our key serves about 33 readers' full
+days.
 
 ## S11. Evaluation
 

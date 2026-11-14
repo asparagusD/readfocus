@@ -119,6 +119,25 @@ and the provider clients.
 Not measured: Linux or Render, where there is no launcher process and the
 numbers will differ; memory under load; memory during book ingestion.
 
+### C20.2: Google's Gen AI SDK for Steve (2026-11-14)
+
+`python -c "import psutil, os; import backend.main; ...; print(rss)"`, three
+runs each, Windows, `.venv` Python 3.11, no server started:
+
+| | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| `import backend.main` | 130.4 MB | 130.4 MB | 130.8 MB |
+| `import backend.main` + `from google import genai` + `types`, `errors` | 148.6 MB | 148.4 MB | 148.5 MB |
+
+`google-genai` 2.34.0 costs about 18 MB when loaded. `backend/steve/provider.py`
+imports it on the first Steve call only, so the idle server is unchanged
+until someone asks Steve something. No new transitive package: `.venv` already
+held `google-genai` 3.0.0 (C16.4's throwaway check), which the 2.34.0 pin
+replaced; `pip freeze` before and after differ only in that line, and
+`pip check` reports no broken requirements.
+
+Not measured: Linux or Render; memory during a streamed answer.
+
 ## Local models and dependencies
 
 One row per model or heavy dependency (the memory rule in the

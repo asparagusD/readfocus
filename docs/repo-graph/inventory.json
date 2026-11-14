@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 676,
-    "inventoried": 533,
+    "tracked": 686,
+    "inventoried": 543,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14394,
+      "size_bytes": 14412,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -727,12 +727,68 @@
       "purpose": "Package marker for backend.steve, Steve the opt-in study assistant (docs/STEVE.md); the only package that may reach Gemini (from C20.2)."
     },
     {
+      "path": "backend/steve/breaker.py",
+      "language": "python",
+      "lines": 40,
+      "size_bytes": 1380,
+      "role": "lib",
+      "purpose": "Steve's circuit breaker (C20.2): after a 429, no call on that key until the cool-down (policy, or Google's longer retryDelay) ends; our shared key pauses every reader, a reader's own key only itself; in process memory."
+    },
+    {
+      "path": "backend/steve/cache.py",
+      "language": "python",
+      "lines": 50,
+      "size_bytes": 1779,
+      "role": "lib",
+      "purpose": "Steve's answer cache (C20.2): sha256 of (book id, normalised question, context hash, model), 7-day TTL, at most CACHE_MAX_ENTRIES answers in process memory, oldest dropped first."
+    },
+    {
       "path": "backend/steve/consent.py",
       "language": "python",
       "lines": 28,
       "size_bytes": 1628,
       "role": "lib",
       "purpose": "Steve's consent notice (C20.1): CONSENT_VERSION, CONSENT_TEXT quoting Google's free-tier terms, and TERMS_URL; served by GET /steve/settings and kept identical to docs/STEVE.md by a test."
+    },
+    {
+      "path": "backend/steve/errors.py",
+      "language": "python",
+      "lines": 25,
+      "size_bytes": 1216,
+      "role": "lib",
+      "purpose": "SteveUnavailable (C20.2): the typed reason Steve cannot answer (paused_quota, daily_limit, timeout, unavailable, key_rejected, not_configured), with when he is back and Google's retry delay."
+    },
+    {
+      "path": "backend/steve/policy.py",
+      "language": "python",
+      "lines": 14,
+      "size_bytes": 937,
+      "role": "lib",
+      "purpose": "Steve's numbers (C20.2): timeouts, the breaker's cool-down and cap, the cache's TTL and size, the default daily limit and the UTC offset range; no Google quota is hardcoded."
+    },
+    {
+      "path": "backend/steve/provider.py",
+      "language": "python",
+      "lines": 135,
+      "size_bytes": 5860,
+      "role": "lib",
+      "purpose": "The one door to Gemini (C20.2): the only module that imports Google's Gen AI SDK (lazily) or reads Steve's three Gemini variables; generate() streamed or not, with a timeout and one attempt (no retries), errors typed as SteveUnavailable, logs of counts and latency only."
+    },
+    {
+      "path": "backend/steve/quota.py",
+      "language": "python",
+      "lines": 57,
+      "size_bytes": 2384,
+      "role": "lib",
+      "purpose": "Steve's per-reader daily limit (C20.2): STEVE_DAILY_LIMIT_PER_USER questions per local day (UTC offset from the browser), taken and refunded through migration 024's atomic functions; daily_limit raised until the reader's midnight."
+    },
+    {
+      "path": "backend/steve/service.py",
+      "language": "python",
+      "lines": 45,
+      "size_bytes": 2020,
+      "role": "lib",
+      "purpose": "Steve's ask() (C20.2): cache, then the breaker, then the daily limit (our key only), then the provider; a failed call is refunded and not cached, a 429 opens the breaker for that key."
     },
     {
       "path": "backend/tests/__init__.py",
@@ -1193,8 +1249,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 551,
-      "size_bytes": 23920,
+      "lines": 583,
+      "size_bytes": 25613,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
@@ -1209,8 +1265,8 @@
     {
       "path": "backend/tests/test_no_paid_ai.py",
       "language": "python",
-      "lines": 88,
-      "size_bytes": 3334,
+      "lines": 128,
+      "size_bytes": 5297,
       "role": "test",
       "purpose": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
     },
@@ -1321,8 +1377,8 @@
     {
       "path": "backend/tests/test_requirements.py",
       "language": "python",
-      "lines": 84,
-      "size_bytes": 3406,
+      "lines": 88,
+      "size_bytes": 3863,
       "role": "test",
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
     },
@@ -1341,6 +1397,22 @@
       "size_bytes": 643,
       "role": "test",
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
+    },
+    {
+      "path": "backend/tests/test_steve_provider.py",
+      "language": "python",
+      "lines": 195,
+      "size_bytes": 8069,
+      "role": "test",
+      "purpose": "Pytest for backend/steve/provider.py with a fake SDK client: answer and token counts, streaming, vision model and own key, 429 as paused_quota with Google's delay, timeouts, typed failures, not configured, no book text or key in logs or errors, the real client's timeout and single attempt."
+    },
+    {
+      "path": "backend/tests/test_steve_service.py",
+      "language": "python",
+      "lines": 221,
+      "size_bytes": 8742,
+      "role": "test",
+      "purpose": "Pytest for backend/steve/service.py: answered and counted once, streaming, cache hits and TTL and eviction, the daily limit per local day and per reader, own-key bypass, the breaker for every reader on our key and per own key, refunds on failure, the limit from the environment."
     },
     {
       "path": "backend/tests/test_steve_settings.py",
@@ -1489,16 +1561,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1463,
-      "size_bytes": 82946,
+      "lines": 1482,
+      "size_bytes": 83840,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3456,
-      "size_bytes": 152191,
+      "lines": 3464,
+      "size_bytes": 152709,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1562,15 +1634,15 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4307,
-      "size_bytes": 759074,
+      "size_bytes": 763369,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "docs/STEVE.md",
       "language": "markdown",
-      "lines": 168,
-      "size_bytes": 8018,
+      "lines": 202,
+      "size_bytes": 10073,
       "role": "doc",
       "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
@@ -3657,8 +3729,8 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 49,
-      "size_bytes": 1506,
+      "lines": 55,
+      "size_bytes": 1849,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
@@ -4135,6 +4207,14 @@
       "purpose": "Migration 023 (C20.1, additive): profiles.steve_enabled, steve_consent_at, steve_consent_version, steve_key_cipher, steve_key_last4 with a guard trigger so only the backend changes them; tables steve_usage, steve_threads, steve_messages with RLS: a reader selects their own rows, the service role writes."
     },
     {
+      "path": "supabase/migrations/024_steve_quota.sql",
+      "language": "sql",
+      "lines": 47,
+      "size_bytes": 1944,
+      "role": "migration",
+      "purpose": "Migration 024 (C20.2, additive): steve_take_quota (one atomic upsert that never passes the limit; -1 when reached) and steve_refund_quota (never below zero) over steve_usage, executable by the service role only."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -4177,8 +4257,8 @@
     {
       "path": "tools/no_paid_ai.py",
       "language": "python",
-      "lines": 41,
-      "size_bytes": 2038,
+      "lines": 59,
+      "size_bytes": 3030,
       "role": "script",
       "purpose": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
     },
@@ -4193,8 +4273,8 @@
     {
       "path": "tools/repo_graph/build.py",
       "language": "python",
-      "lines": 386,
-      "size_bytes": 17182,
+      "lines": 397,
+      "size_bytes": 17863,
       "role": "script",
       "purpose": "Builds docs/repo-graph/graph.json: typed nodes and edges for files, endpoints, tables, functions, env vars, external services and LangGraph nodes; LangGraph wiring is read from non-test files only."
     },
@@ -4209,8 +4289,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 535,
-      "size_bytes": 164982,
+      "lines": 545,
+      "size_bytes": 167576,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -4241,8 +4321,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 264,
-      "size_bytes": 11007,
+      "lines": 283,
+      "size_bytes": 11930,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

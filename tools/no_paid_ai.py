@@ -25,9 +25,27 @@ BANNED_PACKAGES = frozenset({
 # Environment variable names of provider keys.
 BANNED_KEYS = re.compile(r"GROQ|GOOGLE_AI_STUDIO|GEMINI|OPENAI|ANTHROPIC|CEREBRAS|SAMBANOVA|OPENROUTER")
 
-# Steve's env names (C16.4): the only provider names .env.example may declare. Backend code,
-# imports, requirements and render.yaml stay banned until Steve's backend chunk (C20.2).
+# Steve's env names (C16.4): the only provider names .env.example may declare, and (C20.2) the
+# only ones backend/steve/provider.py may read. render.yaml stays free of them until Steve ships.
 STEVE_ENV_NAMES = frozenset({"GEMINI_API_KEY", "GEMINI_MODEL_CHAT", "GEMINI_MODEL_VISION"})
+
+# C20.2: the guard is narrowed to one file. Steve's provider, and nothing else in backend/, may
+# import Google's Gen AI SDK (google.genai, distribution google-genai) and read Steve's env names.
+# The deprecated google.generativeai and every other provider stay banned there too.
+STEVE_PROVIDER = "backend/steve/provider.py"
+STEVE_MODULE = "google.genai"
+STEVE_PACKAGES = frozenset({"google-genai"})
+STEVE_GATE_NAMES = re.compile(r"google_genai")  # the SDK's logger name, quieted in the provider
+
+
+def steve_sdk_allowed(path: str, module: str) -> bool:
+    """Whether the repo-relative path may import module: the Gen AI SDK, in the provider only."""
+    return path == STEVE_PROVIDER and (module == STEVE_MODULE or module.startswith(STEVE_MODULE + "."))
+
+
+def steve_gate_text(path: str, text: str) -> str:
+    """The text Gate G3's search sees: the provider's own SDK names removed, nothing else."""
+    return STEVE_GATE_NAMES.sub("", text) if path == STEVE_PROVIDER else text
 
 
 def provider_keys_outside_steve(text: str) -> set[str]:

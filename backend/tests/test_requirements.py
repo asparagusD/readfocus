@@ -9,7 +9,8 @@ ROOT = Path(__file__).resolve().parents[2]
 REQUIREMENTS = ROOT / "requirements.txt"
 
 # Import name -> distribution name, where they differ.
-DISTRIBUTION = {"bs4": "beautifulsoup4", "dotenv": "python-dotenv", "markdown_it": "markdown-it-py"}
+DISTRIBUTION = {"bs4": "beautifulsoup4", "dotenv": "python-dotenv", "markdown_it": "markdown-it-py",
+                "google.genai": "google-genai"}  # a namespace package: the dotted name says which (C20.2)
 
 
 def normalise(name):
@@ -44,13 +45,16 @@ def third_party_imports(paths):
             if isinstance(node, ast.Import):
                 names = [alias.name for alias in node.names]
             elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-                names = [node.module]
+                dotted = [f"{node.module}.{a.name}" for a in node.names if f"{node.module}.{a.name}" in DISTRIBUTION]
+                names = dotted or [node.module]  # from google import genai -> google.genai
             else:
                 continue
             for name in names:
                 top = name.split(".")[0]
+                namespaced = next((DISTRIBUTION[k] for k in DISTRIBUTION if "." in k and (name + ".").startswith(k + ".")),
+                                  None)
                 if top not in sys.stdlib_module_names and top not in PROJECT_PACKAGES:
-                    found.setdefault(normalise(DISTRIBUTION.get(top, top)), path.name)
+                    found.setdefault(normalise(namespaced or DISTRIBUTION.get(top, top)), path.name)
     return found
 
 

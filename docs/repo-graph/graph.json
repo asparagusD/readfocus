@@ -272,6 +272,11 @@
       "type": "env"
     },
     {
+      "id": "external:gemini",
+      "type": "external",
+      "banned": false
+    },
+    {
       "id": "external:google_fonts",
       "type": "external",
       "banned": false
@@ -832,7 +837,49 @@
       "language": "python"
     },
     {
+      "id": "file:backend/steve/breaker.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/cache.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/steve/consent.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/errors.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/policy.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/provider.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/quota.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/service.py",
       "type": "file",
       "role": "lib",
       "language": "python"
@@ -1289,6 +1336,18 @@
     },
     {
       "id": "file:backend/tests/test_startup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_provider.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_service.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -3388,6 +3447,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/024_steve_quota.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3507,6 +3572,14 @@
     },
     {
       "id": "function:steve_profile_guard",
+      "type": "function"
+    },
+    {
+      "id": "function:steve_refund_quota",
+      "type": "function"
+    },
+    {
+      "id": "function:steve_take_quota",
       "type": "function"
     },
     {
@@ -3808,6 +3881,12 @@
     },
     {
       "type": "calls_external",
+      "from": "file:backend/steve/provider.py",
+      "to": "external:gemini",
+      "line": 61
+    },
+    {
+      "type": "calls_external",
       "from": "file:backend/tests/conftest.py",
       "to": "external:supabase",
       "line": 22
@@ -3857,6 +3936,16 @@
       "type": "calls_function",
       "from": "file:backend/services/retriever.py",
       "to": "function:search_chunks_text"
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/steve/quota.py",
+      "to": "function:steve_refund_quota"
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/steve/quota.py",
+      "to": "function:steve_take_quota"
     },
     {
       "type": "declares_env",
@@ -4127,6 +4216,16 @@
       "type": "defines_function",
       "from": "file:supabase/migrations/023_steve.sql",
       "to": "function:steve_profile_guard"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/024_steve_quota.sql",
+      "to": "function:steve_refund_quota"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/024_steve_quota.sql",
+      "to": "function:steve_take_quota"
     },
     {
       "type": "defines_table",
@@ -5153,6 +5252,71 @@
       "type": "imports",
       "from": "file:backend/services/retriever.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/breaker.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/breaker.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/cache.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/provider.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/provider.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/quota.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/quota.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/quota.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/breaker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/cache.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/quota.py"
     },
     {
       "type": "imports",
@@ -6273,6 +6437,56 @@
       "type": "imports",
       "from": "file:backend/tests/test_startup.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_provider.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_provider.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_provider.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/breaker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/cache.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/quota.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/service.py"
     },
     {
       "type": "imports",

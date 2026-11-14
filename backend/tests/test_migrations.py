@@ -549,3 +549,35 @@ def test_023_has_the_lookup_indexes_and_touches_only_its_tables():
     assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.steve_messages \(thread_id, created_at\)", sql)
     assert sorted(set(re.findall(r"ALTER TABLE public\.(\w+)", sql))) == sorted({"profiles", *STEVE_TABLES})
     assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)
+
+
+# --- 024: Steve's atomic daily quota (C20.2) -------------------------------------------------------
+
+def migration_024() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "024_steve_quota.sql"))
+
+
+def test_024_takes_a_question_atomically_and_never_past_the_limit():
+    sql = migration_024()
+    take = re.search(r"CREATE OR REPLACE FUNCTION public\.steve_take_quota\(.*?\$\$;", sql).group(0)
+    assert "(p_user uuid, p_day date, p_limit integer) RETURNS integer" in take
+    assert ("INSERT INTO public.steve_usage (user_id, day, requests) VALUES (p_user, p_day, 1) "
+            "ON CONFLICT (user_id, day) DO UPDATE SET requests = public.steve_usage.requests + 1 "
+            "WHERE public.steve_usage.requests < p_limit RETURNING requests") in take
+    assert "IF p_limit <= 0 THEN RETURN -1;" in take and "SET search_path = ''" in take
+
+
+def test_024_refunds_without_going_below_zero():
+    sql = migration_024()
+    refund = re.search(r"CREATE OR REPLACE FUNCTION public\.steve_refund_quota\(.*?\$\$;", sql).group(0)
+    assert ("UPDATE public.steve_usage SET requests = requests - 1 "
+            "WHERE user_id = p_user AND day = p_day AND requests > 0") in refund
+
+
+def test_024_only_the_backend_may_call_the_functions():
+    sql = migration_024()
+    for name, args in (("steve_take_quota", "uuid, date, integer"), ("steve_refund_quota", "uuid, date")):
+        assert f"REVOKE ALL ON FUNCTION public.{name}({args}) FROM PUBLIC, anon, authenticated;" in sql
+        assert f"GRANT EXECUTE ON FUNCTION public.{name}({args}) TO service_role;" in sql
+    assert "SECURITY DEFINER" not in sql
+    assert not re.search(r"\b(CREATE TABLE|ALTER TABLE)\b", sql)

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 747,
-    "inventoried": 604,
+    "tracked": 751,
+    "inventoried": 608,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14778,
+      "size_bytes": 14812,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1794,7 +1794,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4560,
-      "size_bytes": 816424,
+      "size_bytes": 819277,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1829,6 +1829,14 @@
       "size_bytes": 1027,
       "role": "doc",
       "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
+    },
+    {
+      "path": "frontend/e2e/annotations-render.spec.js",
+      "language": "javascript",
+      "lines": 127,
+      "size_bytes": 6656,
+      "role": "config",
+      "purpose": "E2E for drawn annotations (C21.3): a PDF highlight on its words at fit and after zooming and a reload, darken in Paper and lighten in Lamplight with the token colour, a 2 px underline, nothing off the shown pages; an EPUB highlight's range through a text-size change, a resize and a reload; the lookup mark above it."
     },
     {
       "path": "frontend/e2e/annotations-toolbar.spec.js",
@@ -2221,6 +2229,30 @@
       "size_bytes": 5988,
       "role": "asset",
       "purpose": "The selection toolbar (C21.2, handoff screen 18): five colour dots, an Underline toggle and Ask Steve (explain_highlight) above a mouse selection or below a touch one, never on it; a colour saves at once and clears the selection; H and U from the book, Tab into the bar, arrows along it, Escape back; a polite status line."
+    },
+    {
+      "path": "frontend/src/annotations/epubPaint.js",
+      "language": "javascript",
+      "lines": 52,
+      "size_bytes": 2400,
+      "role": "asset",
+      "purpose": "EPUB highlights and underlines (C21.3) with the CSS Custom Highlight API inside each section document (no DOM changed; marks follow re-layout), priority under the lookup mark; the palette read from the tokens, Paper's on a light page."
+    },
+    {
+      "path": "frontend/src/annotations/paint.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2573,
+      "role": "asset",
+      "purpose": "Drawing annotations (C21.3), pure: which ones a set of PDF pages (plus one either side) or an EPUB spine item shows, a PDF page's boxes from the quads at its scale (2 px underline bars), the ::highlight name per style and colour, and the section rules."
+    },
+    {
+      "path": "frontend/src/annotations/paint.test.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 2628,
+      "role": "asset",
+      "purpose": "Unit tests for paint.js: pages shown plus one either side, boxes in CSS px for highlights and underlines, EPUB annotations by spine item, the ::highlight rules."
     },
     {
       "path": "frontend/src/annotations/palette.js",
@@ -3034,7 +3066,7 @@
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
       "lines": 353,
-      "size_bytes": 19682,
+      "size_bytes": 19711,
       "role": "asset",
       "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions."
     },
@@ -3073,8 +3105,8 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 135,
-      "size_bytes": 6577,
+      "lines": 147,
+      "size_bytes": 7373,
       "role": "asset",
       "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places."
     },
@@ -3089,8 +3121,8 @@
     {
       "path": "frontend/src/originalview/epub/engine.js",
       "language": "javascript",
-      "lines": 244,
-      "size_bytes": 11495,
+      "lines": 254,
+      "size_bytes": 11910,
       "role": "asset",
       "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made). C17.4: text size and line height in both styles, margins, theme CSS, animated off for the frame, wide from the frame, goToFraction, locations (character counts, cached per book), charStart and charEnd on relocate. C17.5: find(snippets) over each section's packaged text (squeezed, cached), goToChar({index, char}) in the shown section, sectionOf(href), pointCfi (a collapsed CFI); rangeAtChar exported. C17.6: cfiFor(doc, range), pointAt(index, char), goToPoint(cfi) aimed at the point's character."
     },
@@ -3169,16 +3201,16 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 179,
-      "size_bytes": 8986,
+      "lines": 181,
+      "size_bytes": 9215,
       "role": "asset",
       "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
       "language": "jsx",
-      "lines": 80,
-      "size_bytes": 3563,
+      "lines": 92,
+      "size_bytes": 4453,
       "role": "asset",
       "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen. C17.4: a side for spreads. C17.6: data-page and data-scale (CSS px per point) for anchors."
     },
@@ -3217,8 +3249,8 @@
     {
       "path": "frontend/src/originalview/pdf/pdf.css",
       "language": "css",
-      "lines": 104,
-      "size_bytes": 2639,
+      "lines": 130,
+      "size_bytes": 4233,
       "role": "asset",
       "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour. C17.4: the page paper follows --rf-pdf-paper (lamplight)."
     },
@@ -4777,8 +4809,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 606,
-      "size_bytes": 184596,
+      "lines": 610,
+      "size_bytes": 185745,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -256,7 +256,7 @@ export function Reader({
     anchor: () => book.current?.anchor() ?? null,
   }), [move]);
 
-  const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book };
+  const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
   return (
     <section className="rf-ov" aria-label={label ?? title} data-wide={wide} data-kind={kind}
       data-original={theme === 'lamplight' && original ? 'true' : undefined} data-loading={(!place || opening) && !failure}

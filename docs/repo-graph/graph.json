@@ -1760,6 +1760,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:frontend/e2e/annotations-render.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/annotations-toolbar.spec.js",
       "type": "file",
       "role": "config",
@@ -2052,6 +2058,24 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/epubPaint.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/paint.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/paint.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/annotations/palette.js",
@@ -7479,6 +7503,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/annotations-render.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/annotations-toolbar.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -7671,6 +7700,31 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/epubPaint.js",
+      "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/epubPaint.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/paint.js",
+      "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/paint.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/paint.test.js",
+      "to": "file:frontend/src/annotations/paint.js"
     },
     {
       "type": "imports",
@@ -8420,6 +8474,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/annotations/epubPaint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
       "to": "file:frontend/src/originalview/epub/EpubView.jsx"
     },
     {
@@ -8490,6 +8549,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/frame.js"
     },
     {
@@ -8516,6 +8580,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/useBoxSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/annotations/paint.js"
     },
     {
       "type": "imports",

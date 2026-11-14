@@ -221,6 +221,16 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
       const shown = (renderer.getContents?.() ?? []).find((c) => c.doc === doc);
       return shown ? view.getCFI(shown.index, range) : null;
     },
+    /** The DOM range a CFI names in shown section document `doc`, or null when it is another section's (C21.3). */
+    rangeFor: (doc, cfi) => {
+      const shown = (renderer.getContents?.() ?? []).find((c) => c.doc === doc);
+      try {
+        const { index, anchor } = view.resolveCFI(cfi);
+        return shown && index === shown.index ? anchor(doc) : null;
+      } catch {
+        return null;
+      }
+    },
     /** [start, end]: characters of the section's text before each end of `range` (C21.2, ANCHORS A4). */
     charsOf: (doc, range) => [charOffset(doc.body, range.startContainer, range.startOffset),
       charOffset(doc.body, range.endContainer, range.endOffset)],

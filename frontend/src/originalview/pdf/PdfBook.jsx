@@ -2,6 +2,7 @@ import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
 import { squeeze } from '../today';
 import { pdfAnchor, pdfPositions, quadsFromRects } from '../../anchors';
+import { forPages } from '../../annotations/paint';
 
 /**
  * PDF anchors for a selection (ANCHORS A1, A2): one per page it touches, each with a quad
@@ -39,7 +40,7 @@ const SHEET_INSET = 16; // px kept clear around the pages inside the frame
  * renderer interface the frame uses (Reader.jsx); onRelocate(place) fires on
  * every move with { pages, folio, entry, atStart, atEnd }.
  */
-export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null, onRelocate, onError, onSheet, ocr = null, ref }) {
+export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null, onRelocate, onError, onSheet, ocr = null, annotations = null, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
   useEffect(() => { if (ocr && doc) ocr.attach(doc); }, [ocr, doc]); // C19.4: scanned pages read with the open PDF
   const box = useRef(null);
@@ -72,6 +73,7 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
     ? pdfScale(zoom, size, { width: frame.width - SHEET_INSET * 2, height: frame.height - SHEET_INSET * 2 }, pages.length)
     : null;
   const cache = usePageCache(doc, scale, pages[0], colours);
+  const drawn = annotations ? forPages(annotations, pages) : null; // C21.3: the pages shown and one either side
   // The frame hugs the paper (C17.4 review): the spread's width at fit-page or fit-width.
   const sheetWidth = scale && size ? Math.round(size.width * scale * pages.length + SHEET_INSET * 2) : null;
   const sheetHeight = scale && size ? Math.round(size.height * scale + SHEET_INSET * 2) : null;
@@ -171,7 +173,7 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       <div className="rf-pdf-spread" data-pages={pages.length}>
         {cache && pages.map((n, i) => (
           <PdfPage key={n} cache={cache} pageNumber={n} side={pages.length > 1 ? (i ? 'right' : 'left') : 'single'}
-            label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} />
+            label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} annotations={drawn} dark={Boolean(colours)} />
         ))}
       </div>
     </div>

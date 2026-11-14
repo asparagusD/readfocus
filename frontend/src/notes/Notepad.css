@@ -6,6 +6,7 @@
   gap: var(--space-3);
   flex: 1;
   min-height: 0;
+  overflow-x: hidden; /* C22.3: nothing inside may scroll the list sideways */
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: var(--space-4) var(--space-5) var(--space-5);
@@ -72,6 +73,74 @@
 
 .rf-note-read:hover { background-color: var(--paper-2); }
 .rf-note-read:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
+
+/* C22.3: drawings. In the list, the PNG thumbnail on white, inverted in Lamplight as Excalidraw's dark mode is. */
+.rf-note-drawing { display: block; }
+.rf-note-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: var(--radius-input);
+  background-color: #ffffff;
+}
+:root[data-theme="lamplight"] .rf-note-thumb { filter: invert(0.93) hue-rotate(180deg); }
+
+/* The open drawing: a bar (the reference on a phone, Paste passage, Done) over Excalidraw's canvas. */
+.rf-drawing { display: flex; flex-direction: column; gap: var(--space-2); }
+.rf-drawing-bar { display: flex; align-items: center; gap: var(--space-2); }
+.rf-drawing-bar .rf-note-done { margin-left: auto; }
+.rf-drawing-ref {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui--line-height);
+  color: var(--ink);
+}
+
+.rf-drawing-paste {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-drawing-paste:hover:not(:disabled) { background-color: var(--paper-2); }
+.rf-drawing-paste:disabled { opacity: 0.45; cursor: default; }
+.rf-drawing-paste:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
+.rf-drawing-canvas { height: 420px; overflow: hidden; border: var(--border-hair) solid var(--line); border-radius: var(--radius-input); }
+.rf-drawing-wait { display: grid; place-items: center; height: 420px; }
+
+/* A phone: the drawing takes the whole screen, under its reference and bar. */
+.rf-drawing-screen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background-color: var(--surface);
+}
+
+.rf-drawing-screen .rf-drawing { flex: 1; min-height: 0; }
+.rf-drawing-screen .rf-drawing-canvas, .rf-drawing-screen .rf-drawing-wait { flex: 1; height: auto; min-height: 0; }
+.rf-drawing-screen .rf-drawing-paste, .rf-drawing-screen .rf-note-done { min-height: 44px; }
 
 .rf-notes-add { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding-top: var(--space-1); }
 

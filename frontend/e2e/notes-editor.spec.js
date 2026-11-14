@@ -55,11 +55,12 @@ test('rich text and math autosave 800 ms after the last key, then show as writte
   await page.keyboard.type('$$\\sum_{k=1}^{n} k$$');
   await expect(editor(page).locator('.rf-math-node--display math')).toBeAttached();
   await expect(editor(page)).not.toContainText('$'); // the dollars became the equations
+  const sent = api.notePatches.length; // a slow machine may pause long enough mid-typing for an earlier save
   await page.waitForTimeout(500);
-  expect(api.notePatches).toHaveLength(0); // still typing: nothing sent yet
-  await expect.poll(() => api.notePatches.length, { timeout: 3000 }).toBe(1);
+  expect(api.notePatches).toHaveLength(sent); // within 800 ms of the last key: nothing more sent
+  await expect.poll(() => api.notePatches.length, { timeout: 3000 }).toBe(sent + 1);
   const saved = api.notePatches.at(-1);
-  expect(saved.version).toBe(1);
+  expect(saved.version).toBe(sent + 1);
   const all = nodes(saved.content);
   expect(all.find((n) => n.type === 'text' && n.text === 'coefficients').marks).toEqual([{ type: 'bold' }]);
   expect(all.find((n) => n.type === 'inlineMath').attrs).toEqual({ latex: 'a_n' });

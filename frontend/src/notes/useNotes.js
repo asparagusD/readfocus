@@ -4,6 +4,7 @@ import { createAutosave } from './autosave';
 import { notesApi } from './notesApi';
 import { createQueue, idbStore } from './queue';
 import { inBookOrder } from './place';
+import { base64Of } from './drawing';
 
 const queue = createQueue(idbStore());
 
@@ -96,6 +97,19 @@ export function useNotes(bookId) {
     }
   }, [notes, toast, create, autosave]);
 
+  // C22.3: a drawing's PNG thumbnail goes to the notes bucket and its path onto the note (saved at once).
+  const attachThumbnail = useCallback(async (note, blob) => {
+    if (!blob || note.pending) return;
+    try {
+      const { path, url } = await notesApi.upload(bookId, { content_type: 'image/png', data: await base64Of(blob) });
+      setNotes((list) => list.map((n) => (n.id === note.id ? { ...n, thumbnail_path: path, urls: { ...(n.urls ?? {}), [path]: url } } : n)));
+      autosave.edit(note.id, { thumbnail_path: path });
+      autosave.flush(note.id);
+    } catch {
+      toast({ kind: 'warning', message: "The drawing is saved, but its picture in the list wasn't. It is made again next time you press Done." });
+    }
+  }, [bookId, autosave, toast]);
+
   const keepMine = useCallback((id) => autosave.keepMine(id), [autosave]);
   const takeTheirs = useCallback(async (id) => {
     const rows = await notesApi.list(bookId).catch(() => null);
@@ -105,5 +119,5 @@ export function useNotes(bookId) {
     setNotes((list) => list.map((n) => (n.id === id ? theirs : n)));
   }, [bookId, autosave]);
 
-  return { notes, state, statuses, reload, create, edit, remove, keepMine, takeTheirs, flush: autosave.flush };
+  return { notes, state, statuses, reload, create, edit, remove, keepMine, takeTheirs, attachThumbnail, flush: autosave.flush };
 }

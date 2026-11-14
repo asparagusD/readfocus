@@ -1129,6 +1129,39 @@ pages.
 
 ## Frontend: Lighthouse and image budgets
 
+### C22.3: drawing notes and Excalidraw (2026-11-14)
+
+`npm --prefix frontend run build` after C22.3; what opening a drawing loads was
+read from the e2e build's network log (a temporary spec), gzip sizes from the
+build. Budget from the C22 plan: Excalidraw at most 1.2 MB gzip, fonts apart.
+
+| Loaded when a drawing opens | Size (gzip) |
+|---|---|
+| `DrawingEditor-*.js` (our editor and Excalidraw's entry) | 558.28 kB (169.61 kB) |
+| `chunk-K2UTITRG-*.js` (Excalidraw's core) | 533.35 kB (178.89 kB) |
+| `DrawingEditor-*.css` (Excalidraw's styles) | 142.02 kB (22.37 kB) |
+| `chunk-6U3AYISY-*.js` | 22.44 kB (8.62 kB) |
+| nine small chunks (file and directory open/save, `en` locale, roundRect, …) | 5.48 kB gzip together |
+| **JS and CSS together** | **about 385 kB gzip** |
+| Excalidraw's UI font, Assistant Regular and Medium (bundled from its CSS) | 40.6 kB woff2 |
+| Excalifont faces, from `/excalidraw-assets/` only when text is drawn | about 25 kB each |
+
+Not loaded unless used: `chunk-EIO257PC-*.js` 1,821 kB (744.25 kB gzip) and
+`chunk-FOHPRMQF-*.js` 662.67 kB (143.23 kB gzip), with mermaid's diagram
+chunks and 50-odd locale files: Excalidraw's "Mermaid to Excalidraw" and its
+other languages. The entry chunk: 97.08 kB (35.20 kB gzip) after C22.2b, 100.68
+kB (36.46 kB gzip) now, +1.26 kB gzip (budget 5). `public/excalidraw-assets/`
+holds all nine font families, about 12.5 MB on disk (Xiaolai's 209 subsets
+most of it), fetched one face at a time; none is fetched from another host
+(`e2e/notes-drawing.spec.js`).
+
+`@excalidraw/excalidraw` 0.18.1 is MIT (package.json; it ships no licence
+file). `npm audit --omit=dev` after it: 17 findings (13 high, 1 moderate, 3
+low); new with Excalidraw: `nanoid` 3.3.3 (Excalidraw's element ids), and
+through `@excalidraw/mermaid-to-excalidraw`: `lodash-es` 4.17.21,
+`chevrotain`, `langium`, `@mermaid-js/parser`, `mermaid` 11 and its `katex`
+0.16. Already there before: vite, postcss, source-map-js, react-router.
+
 ### C22.2: the notepad and TipTap (2026-11-14)
 
 `npm --prefix frontend run build` after C22.2b. Budgets from the C22 plan:

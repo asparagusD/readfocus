@@ -14,6 +14,9 @@
 
 @keyframes rf-side-in { from { opacity: 0; transform: translateX(24px); } }
 
+/* C22.3: an open drawing widens the panel so Excalidraw has room for its tools; the book keeps the rest. */
+.rf-side[data-wide] { width: min(620px, 46vw); }
+
 .rf-side-grab { display: none; }
 
 .rf-side-head {
@@ -97,6 +100,7 @@
     animation-name: rf-side-up;
     animation-duration: var(--dur-5);
   }
+  .rf-side[data-wide] { width: auto; } /* a phone draws full screen instead (DrawingNote.jsx) */
   @keyframes rf-side-up { from { opacity: 0; transform: translateY(24px); } }
   .rf-side-grab { display: block; width: 36px; height: 4px; margin: var(--space-2) auto 0; border-radius: var(--radius-pill); background-color: var(--line-2); }
 }

@@ -9,4 +9,6 @@ export const notesApi = {
     method: 'PATCH', body: JSON.stringify(change), headers: { 'If-Match': `"${version}"` },
   }),
   remove: (id) => fetchApi(`/notes/${id}`, { method: 'DELETE' }),
+  /** A PNG or WebP (base64) into the reader's folder of the notes bucket: { path, url } (C22.3). */
+  upload: (bookId, file) => fetchApi(`/books/${bookId}/note-files`, { method: 'POST', body: JSON.stringify(file) }),
 };

@@ -185,7 +185,15 @@ async function mockBackend(page, api, book) {
         return json(route, row, 201);
       }
       api.noteLists += 1;
-      return json(route, { notes: api.notes.filter((n) => !n.deleted_at) });
+      const urls = (n) => Object.fromEntries([n.thumbnail_path, n.content?.image_path].filter((p) => api.noteFiles[p]).map((p) => [p, api.noteFiles[p]]));
+      return json(route, { notes: api.notes.filter((n) => !n.deleted_at).map((n) => ({ ...n, urls: urls(n) })) });
+    }
+    if (path === `/books/${BOOK}/note-files`) { // C22.3: a drawing's thumbnail; "signed" as a data URL, no outside host
+      const body = request.postDataJSON();
+      api.noteFilePosts.push(body);
+      const filePath = `e2e-reader/${BOOK}/file-${api.noteFilePosts.length}.${body.content_type === 'image/png' ? 'png' : 'webp'}`;
+      api.noteFiles[filePath] = `data:${body.content_type};base64,${body.data}`;
+      return json(route, { path: filePath, url: api.noteFiles[filePath] }, 201);
     }
     if (path.startsWith('/notes/')) { // C22.2: autosave with If-Match, and soft delete
       const id = path.split('/').pop();
@@ -240,7 +248,7 @@ export const test = base.extend({
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
-      notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0 };
+      notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [] };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

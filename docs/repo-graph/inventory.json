@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 787,
-    "inventoried": 644,
+    "tracked": 795,
+    "inventoried": 652,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15031,
+      "size_bytes": 15081,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1761,16 +1761,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1535,
-      "size_bytes": 86389,
+      "lines": 1568,
+      "size_bytes": 88359,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3899,
-      "size_bytes": 170876,
+      "lines": 4001,
+      "size_bytes": 174637,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1834,7 +1834,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4904,
-      "size_bytes": 864054,
+      "size_bytes": 869195,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1857,8 +1857,8 @@
     {
       "path": "frontend/.gitignore",
       "language": "gitignore",
-      "lines": 31,
-      "size_bytes": 399,
+      "lines": 33,
+      "size_bytes": 517,
       "role": "config",
       "purpose": "Vite template ignore rules: logs, node_modules, dist, editor files."
     },
@@ -1937,8 +1937,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 355,
-      "size_bytes": 21839,
+      "lines": 363,
+      "size_bytes": 22566,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -2047,10 +2047,18 @@
       "purpose": "E2E for the notepad (C22.2): Notes beside the book in book order without loading an editor, references go to their passage (PDF and EPUB), tabs and keyboard, empty and failed load, delete and Undo, a queued offline change sent on load, a stale one as a conflict with Keep mine, the phone sheet in Lamplight."
     },
     {
+      "path": "frontend/e2e/notes-drawing.spec.js",
+      "language": "javascript",
+      "lines": 184,
+      "size_bytes": 10345,
+      "role": "config",
+      "purpose": "E2E for drawing notes (C22.3): Excalidraw loads only when opened and asks no other host; shapes, arrows, freehand, text and undo saved as scene JSON; Done uploads a PNG thumbnail shown in the list without Excalidraw; the panel widens; Paste passage; Lamplight; Escape stays in the drawing; full screen on a phone."
+    },
+    {
       "path": "frontend/e2e/notes-editor.spec.js",
       "language": "javascript",
-      "lines": 192,
-      "size_bytes": 10625,
+      "lines": 193,
+      "size_bytes": 10770,
       "role": "config",
       "purpose": "E2E for writing notes (C22.2b): Text adds a note at the pages shown and lazy-loads the editor; rich text, checklist and math autosave after 800 ms and draw as written; editing an equation; a selection-anchored note; offline edits queued in IndexedDB and saved on online; keyboard; EPUB; the phone sheet."
     },
@@ -2177,8 +2185,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 62,
-      "size_bytes": 2024,
+      "lines": 63,
+      "size_bytes": 2136,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -2229,6 +2237,14 @@
       "size_bytes": 4533,
       "role": "config",
       "purpose": "Image budgets (npm run check:images, a standard check since C11.5): each raster under src/ and public/ at most 150 KB, all together at most 400 KB, illustration SVGs at most 8 KB, every <img> with width, height, decoding and loading (lazy, or eager with fetchPriority high for the LCP image), and the backend cover cap within budget; optional root argument for scratch trees; exit 1 on any failure."
+    },
+    {
+      "path": "frontend/scripts/copy-excalidraw.mjs",
+      "language": "text",
+      "lines": 20,
+      "size_bytes": 1552,
+      "role": "config",
+      "purpose": "Copies Excalidraw's fonts into public/excalidraw-assets/ before dev and build (C22.3), with a notice naming their source and licences; the folder is not committed."
     },
     {
       "path": "frontend/scripts/copy-ocr.mjs",
@@ -3183,6 +3199,22 @@
       "purpose": "useCountUp(target): counts up with an ease-out cubic over --dur-6 on animation frames; returns the target at once under reduced motion."
     },
     {
+      "path": "frontend/src/notes/DrawingEditor.jsx",
+      "language": "jsx",
+      "lines": 85,
+      "size_bytes": 3851,
+      "role": "asset",
+      "purpose": "A drawing note's editor (C22.3), lazy: Excalidraw 0.18 with AI, export, file and image tools off, our light or dark theme, scene changes to onChange, a ResizeObserver that refreshes its offsets, Paste passage as a text element and a PNG thumbnail on Done."
+    },
+    {
+      "path": "frontend/src/notes/DrawingNote.jsx",
+      "language": "jsx",
+      "lines": 83,
+      "size_bytes": 3882,
+      "role": "asset",
+      "purpose": "Drawing notes in the notepad (C22.3): the list thumbnail (inverted in Lamplight) and the open drawing, inline on wide screens or a full-screen dialog under the passage reference on phones; loads Excalidraw only when opened, after serveOwnFonts."
+    },
+    {
       "path": "frontend/src/notes/NoteDoc.jsx",
       "language": "jsx",
       "lines": 51,
@@ -3193,32 +3225,32 @@
     {
       "path": "frontend/src/notes/Notepad.css",
       "language": "css",
-      "lines": 219,
-      "size_bytes": 7526,
+      "lines": 288,
+      "size_bytes": 10071,
       "role": "asset",
       "purpose": "Styles for the notepad's list and note cards (C22.2): reference, kind, delete, the drawn TipTap document, checklists, math, alerts and 44 px targets on phones."
     },
     {
       "path": "frontend/src/notes/Notepad.jsx",
       "language": "jsx",
-      "lines": 141,
-      "size_bytes": 6957,
+      "lines": 154,
+      "size_bytes": 8130,
       "role": "asset",
       "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note; C22.2b: a note opens in the lazy editor on click or Enter, Done in its header, and Text adds a note at the selection or the pages shown."
     },
     {
       "path": "frontend/src/notes/SidePanel.css",
       "language": "css",
-      "lines": 108,
-      "size_bytes": 3461,
+      "lines": 112,
+      "size_bytes": 3717,
       "role": "asset",
       "purpose": "Styles for the side panel (C22.2, was Steve's panel): the column, tabs with an accent rule drawn by scale, close button, the phone sheet and reduced-motion fade."
     },
     {
       "path": "frontend/src/notes/SidePanel.jsx",
       "language": "jsx",
-      "lines": 64,
-      "size_bytes": 2991,
+      "lines": 68,
+      "size_bytes": 3272,
       "role": "asset",
       "purpose": "The side area beside the book (C22.2): tabs Notes | Steve as a WAI-ARIA tablist over one panel, 380 px column or pull-up sheet under 760 px; focuses the chosen tab on open, Esc or close returns focus to the opener; named after its tab."
     },
@@ -3255,6 +3287,38 @@
       "purpose": "Unit tests for autosave: debounce, flush during a save, offline queue and retry, queued versions kept, 409 conflict and keep mine, refused changes, pending and forget."
     },
     {
+      "path": "frontend/src/notes/drawing.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 1564,
+      "role": "asset",
+      "purpose": "Drawing helpers without Excalidraw (C22.3): the saved scene (live, non-image elements and the allowed app state), the passage wrapped for a text element, a note's passage, a blob as base64."
+    },
+    {
+      "path": "frontend/src/notes/drawing.test.js",
+      "language": "javascript",
+      "lines": 29,
+      "size_bytes": 1365,
+      "role": "asset",
+      "purpose": "Unit tests for the drawing helpers: saved scenes drop deleted and image elements, passage wrapping, base64."
+    },
+    {
+      "path": "frontend/src/notes/excalidrawFonts.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 1579,
+      "role": "asset",
+      "purpose": "Excalidraw's fonts from our own origin only (C22.3): sets EXCALIDRAW_ASSET_PATH and wraps FontFace to drop sources on other origins, so the esm.sh fallback is never asked."
+    },
+    {
+      "path": "frontend/src/notes/excalidrawFonts.test.js",
+      "language": "javascript",
+      "lines": 33,
+      "size_bytes": 1899,
+      "role": "asset",
+      "purpose": "Unit tests for the font source filter: other origins dropped, ours, relative and local() kept, unchanged when nothing would remain, FontFace wrapped once."
+    },
+    {
       "path": "frontend/src/notes/mathNodes.js",
       "language": "javascript",
       "lines": 123,
@@ -3281,8 +3345,8 @@
     {
       "path": "frontend/src/notes/notesApi.js",
       "language": "javascript",
-      "lines": 12,
-      "size_bytes": 693,
+      "lines": 14,
+      "size_bytes": 911,
       "role": "asset",
       "purpose": "Client for the note blocks API (C22.1/C22.2): list, create, save with If-Match, delete."
     },
@@ -3329,8 +3393,8 @@
     {
       "path": "frontend/src/notes/useNotes.js",
       "language": "javascript",
-      "lines": 109,
-      "size_bytes": 5143,
+      "lines": 123,
+      "size_bytes": 5964,
       "role": "asset",
       "purpose": "The reader's note blocks in a book (C22.2): load in book order, optimistic create, edit with 800 ms autosave, offline queue retried on load, online and before the tab hides, conflict choices, delete with Undo."
     },
@@ -3713,8 +3777,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 485,
-      "size_bytes": 23361,
+      "lines": 487,
+      "size_bytes": 23621,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -5097,8 +5161,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 646,
-      "size_bytes": 195031,
+      "lines": 654,
+      "size_bytes": 196989,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

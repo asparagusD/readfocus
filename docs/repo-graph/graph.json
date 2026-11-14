@@ -1957,6 +1957,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/notes-drawing.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/notes-editor.spec.js",
       "type": "file",
       "role": "config",
@@ -2090,6 +2096,12 @@
     },
     {
       "id": "file:frontend/scripts/check-images.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/copy-excalidraw.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -2809,6 +2821,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/notes/DrawingEditor.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/DrawingNote.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/notes/NoteDoc.jsx",
       "type": "file",
       "role": "asset",
@@ -2858,6 +2882,30 @@
     },
     {
       "id": "file:frontend/src/notes/autosave.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/drawing.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/drawing.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/excalidrawFonts.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/excalidrawFonts.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4552,6 +4600,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/notes/notesApi.js",
       "to": "endpoint:PATCH /notes/{note_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/notes/notesApi.js",
+      "to": "endpoint:POST /books/{book_id}/note-files"
     },
     {
       "type": "calls_endpoint",
@@ -7968,6 +8021,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/notes-drawing.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/notes-editor.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8798,6 +8856,21 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/notes/DrawingEditor.jsx",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/DrawingNote.jsx",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/DrawingNote.jsx",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/notes/NoteDoc.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
     },
@@ -8805,6 +8878,11 @@
       "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/DrawingNote.jsx"
     },
     {
       "type": "imports",
@@ -8853,6 +8931,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/notes/drawing.test.js",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/excalidrawFonts.test.js",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/notes/mathNodes.js",
       "to": "file:frontend/src/notes/mathRules.js"
     },
@@ -8895,6 +8983,11 @@
       "type": "imports",
       "from": "file:frontend/src/notes/useNotes.js",
       "to": "file:frontend/src/notes/autosave.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/useNotes.js",
+      "to": "file:frontend/src/notes/drawing.js"
     },
     {
       "type": "imports",

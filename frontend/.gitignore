@@ -29,3 +29,5 @@ playwright-report/
 
 # OCR assets copied from node_modules at build (C19.4, scripts/copy-ocr.mjs)
 public/ocr/
+# Excalidraw's fonts copied from node_modules at build (C22.3, scripts/copy-excalidraw.mjs)
+public/excalidraw-assets/

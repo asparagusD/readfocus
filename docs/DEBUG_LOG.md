@@ -3897,3 +3897,105 @@ are drawn; the drawn note's checklist item reads its text alone.
 ### Commit
 `feat(notes): notepad panel with rich-text blocks and math` (C22.2b, fixed
 before committing)
+
+## 2026-11-14 C22.3 — Excalidraw asked esm.sh for every font
+
+### Symptom
+Opening a drawing logged about 230 "Loading the font 'https://esm.sh/...'
+violates ... font-src" errors, one for every face of every family (Xiaolai's
+209 subsets too). The app's CSP blocked them, so nothing left the machine in
+a build, but each was an attempt at another host (constraint 1), and dev has
+no CSP. Found by the first run of `e2e/notes-drawing.spec.js`, before any
+commit.
+
+### Repro
+Open a drawing with request logging on: requests to esm.sh, none to
+`/excalidraw-assets/`.
+
+### Hypotheses
+1. `window.EXCALIDRAW_ASSET_PATH` is read before we set it. Result: confirmed
+   at first: set in DrawingEditor's module body, it ran after Excalidraw's
+   chunk (the bundler places a module's own code after the chunks it
+   imports), and the faces had only the esm.sh source. Setting it before the
+   lazy import fixed the faces (`url(ours), url(esm.sh)`, logged by wrapping
+   FontFace) but not the requests.
+2. Chrome asks every source in a FontFace's list, not only until one loads.
+   Result: confirmed with a hand-made face `url(local), url(esm.sh)`: both
+   were requested although the local one loaded.
+
+### Root cause
+Excalidraw always appends its CDN fallback to each font's sources, and Chrome
+requests every source listed.
+
+### Fix
+`frontend/src/notes/excalidrawFonts.js` `serveOwnFonts()`, run in the lazy
+loader before Excalidraw's chunk: sets the asset path and wraps FontFace so
+it keeps only sources on this origin (or local()). A build-time rewrite was
+considered and left out: Vite pre-bundles dependencies in dev without
+plugins, so dev would still ask esm.sh.
+
+### Regression test
+`excalidrawFonts.test.js` (3); every test in `notes-drawing.spec.js` that
+opens a drawing fails on a request to a host other than this machine.
+
+### Commit
+`feat(notes): Excalidraw drawing blocks with thumbnails` (C22.3, fixed before
+committing)
+
+## 2026-11-14 C22.3 — Escape after typing text in a drawing closed the panel
+
+### Symptom
+`notes-drawing.spec.js`: after typing a text element, Escape closed the
+whole side panel instead of ending the text.
+
+### Repro
+Text tool, click, type, Escape: the panel is gone.
+
+### Hypotheses
+1. Excalidraw removes its text box on Escape before the event reaches the
+   panel's document listener, so `closest('[data-own-escape]')` finds no
+   ancestor. Result: confirmed (the target is detached by then).
+
+### Root cause
+The panel's check looked only at the target's ancestors.
+
+### Fix
+`SidePanel.jsx` also ignores an Escape whose target is no longer in the
+document.
+
+### Regression test
+`notes-drawing.spec.js` first test: Escape after the text, the panel is
+still visible, then the text is saved.
+
+### Commit
+`feat(notes): Excalidraw drawing blocks with thumbnails` (C22.3, fixed before
+committing)
+
+## 2026-11-14 C22.3 — strokes right after the panel widened were lost
+
+### Symptom
+Once the panel widened for an open drawing (design review: 380 px was too
+narrow for Excalidraw's tools), shapes drawn straight away were not saved.
+
+### Repro
+Open a drawing and drag at once: no element; after 800 ms the same drag
+works (a temporary spec printed the scene).
+
+### Hypotheses
+1. Excalidraw keeps its canvas offsets from before the resize. Result:
+   confirmed (its API has `refresh()` for this).
+
+### Root cause
+The container changes size after Excalidraw mounts; Excalidraw is not told.
+
+### Fix
+`DrawingEditor.jsx`: a ResizeObserver on the drawing's box calls
+`refresh()`.
+
+### Regression test
+`notes-drawing.spec.js` draws right after the canvas stops resizing, with
+the panel at 560 px or more and back to 380 px after Done.
+
+### Commit
+`feat(notes): Excalidraw drawing blocks with thumbnails` (C22.3, fixed before
+committing)

@@ -141,6 +141,24 @@ test('Paste passage puts the selected words in as a text element', async ({ page
   await expect.poll(() => lastScene(api)?.elements.find((e) => e.type === 'text')?.text.replace(/\s+/g, ' '), { timeout: 5000 }).toBe(words);
 });
 
+test('Mermaid to Excalidraw still converts, math included, on the overridden nanoid and katex', async ({ page, api }) => {
+  // package.json "overrides" (C22.3 follow-up): nanoid 5 and katex 0.19 under mermaid-to-excalidraw.
+  const far = outside(page);
+  await openReader(page);
+  await addDrawing(page);
+  await expect.poll(() => api.notes.length).toBe(1);
+  await drawing(page).getByRole('button', { name: 'More tools' }).click();
+  await drawing(page).getByText('Mermaid to Excalidraw').click();
+  const dialog = page.getByRole('dialog').filter({ hasText: 'Mermaid to Excalidraw' }); // Excalidraw leaves it unnamed
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  await dialog.getByRole('textbox').fill('flowchart LR\n  A["$$x^2$$"] --> B[Done]');
+  // Excalidraw parses the chart on a debounce and draws its preview on a canvas the page cannot read: give it time.
+  await page.waitForTimeout(2000);
+  await dialog.getByRole('button', { name: 'Insert' }).click();
+  await expect.poll(() => (lastScene(api)?.elements ?? []).length, { timeout: 8000 }).toBeGreaterThan(2);
+  expect(far).toEqual([]);
+});
+
 test('a note on whole pages has no passage to paste', async ({ page }) => {
   await openReader(page);
   await addDrawing(page);

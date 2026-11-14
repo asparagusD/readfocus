@@ -1161,6 +1161,12 @@ low); new with Excalidraw: `nanoid` 3.3.3 (Excalidraw's element ids), and
 through `@excalidraw/mermaid-to-excalidraw`: `lodash-es` 4.17.21,
 `chevrotain`, `langium`, `@mermaid-js/parser`, `mermaid` 11 and its `katex`
 0.16. Already there before: vite, postcss, source-map-js, react-router.
+After the C22.3 follow-up (`package.json` `overrides`: nanoid 3.3.20 in
+Excalidraw, 5.1.16 in mermaid-to-excalidraw, lodash-es 4.18.1, mermaid's
+katex 0.19.1): 5 findings (4 high, 1 low), all of them the older ones; the
+build lost mermaid's own 259 kB (77.5 kB gzip) katex chunk, as it now shares
+ours. The Mermaid tool still converts, math labels included
+(`e2e/notes-drawing.spec.js`).
 
 ### C22.2: the notepad and TipTap (2026-11-14)
 

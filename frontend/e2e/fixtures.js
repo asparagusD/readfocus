@@ -139,6 +139,11 @@ async function mockBackend(page, api, book) {
       if (reply.status) return json(route, { detail: reply.detail }, reply.status);
       return json(route, reply);
     }
+    if (path === `/books/${BOOK}/region-at`) { // C20.8c: an EPUB region by section and element path
+      const detail = api.regionAt[`${url.searchParams.get('spine_index')}:${url.searchParams.get('path')}`];
+      api.regionAtAsks.push(`${url.searchParams.get('spine_index')}:${url.searchParams.get('path')}`);
+      return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
+    }
     if (path.startsWith(`/books/${BOOK}/regions/`)) { // C20.8: one region's details
       const detail = api.regionDetails[path.split('/').pop()];
       return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
@@ -179,7 +184,7 @@ export const test = base.extend({
   api: [async ({ page, signedIn, book }, use, info) => {
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
-      regionDetails: {} };
+      regionDetails: {}, regionAt: {}, regionAtAsks: [] };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

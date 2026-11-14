@@ -3465,7 +3465,7 @@ InventoryError above). Passes after: yes (`git stash pop`: 1 passed).
 
 ## 2026-11-14 C20.8a — `make graph` exits 2 once, right after `git add`
 
-**Status:** open (intermittent)
+**Status:** open (intermittent; cause found in C20.8c, fix not made)
 
 ### Symptom
 Twice in C20 (C20.2 and C20.8a) the first `make graph` after staging a
@@ -3491,10 +3491,29 @@ exit 0 each time (2026-11-14, after the C20.8a failure).
    Result: untested; the failing runs' output was discarded.
 
 ### Root cause
-Unknown.
+Found on the third occurrence (C20.8c), with the output kept:
+
+    python tools/repo_graph/inventory.py
+    Traceback (most recent call last):
+      File "I:eadfocus	oolsepo_graph\inventory.py", line 194, in <module>
+        sys.exit(main())
+      File "I:eadfocus	oolsepo_graph\inventory.py", line 184, in main
+        OUT_FILE.write_text(render(inventory), encoding="utf-8", newline="
+")
+      ...
+    OSError: [Errno 22] Invalid argument: 'I:\readfocus\docs\repo-graph\inventory.json'
+    make: *** [Makefile:17: graph] Error 1
+
+Opening `docs/repo-graph/inventory.json` for writing fails on Windows
+right after `git add` has staged it: hypothesis 1 (a race), as a
+sharing violation that Windows reports as EINVAL while another process
+(git, or a file scanner) still holds the file. Not a logic error: the
+content written by the next run is the same.
 
 ### Fix
-None yet. Working rule until it is found: run `make graph` with its
+Not made (tooling, outside C20; your call): retry the write a few times
+in `inventory.py` (and build.py, render.py) on OSError. Working rule
+meanwhile: run `make graph` with its
 output kept, and run it again after staging until a second run leaves no
 diff (done for C20.2 and C20.8a; both commits' graphs are stable).
 

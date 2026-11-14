@@ -28,6 +28,9 @@
 
 .rf-block:has(.rf-block-bar) { z-index: 8; }
 
+/* An EPUB block lives in a section's iframe: its bar is placed over it in this page (C20.8c). */
+.rf-block--fixed { position: fixed; z-index: var(--z-popover); }
+
 .rf-block-bar {
   position: absolute;
   right: 0;

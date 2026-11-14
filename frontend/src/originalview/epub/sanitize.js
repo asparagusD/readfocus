@@ -16,7 +16,11 @@ import { cleanCss, cleanSrcset } from './urls';
 const PURIFY = {
   IN_PLACE: true,
   PARSER_MEDIA_TYPE: 'application/xhtml+xml',
-  ADD_TAGS: ['link', 'meta'], // the book's stylesheets (href must pass ALLOWED_URI_REGEXP); metas are cut to viewport below
+  ADD_TAGS: ['link', 'meta', // the book's stylesheets (href must pass ALLOWED_URI_REGEXP); metas are cut to viewport below
+    // C20.8c: MathML's <semantics> and its text-only <annotation> (the equation's TeX, never drawn), so Copy as
+    // LaTeX reads the book's own source; DOMPurify drops both by default and kept the TeX as stray text.
+    // <annotation-xml> can hold HTML and stays out.
+    'semantics', 'annotation'],
   ADD_ATTR: ['epub:type', 'xml:lang', 'loading', 'decoding', 'content'],
   FORBID_TAGS: ['form', 'input', 'button', 'select', 'textarea', 'iframe', 'frame', 'frameset', 'object', 'embed',
     'base', 'audio', 'video', 'source', 'track'],

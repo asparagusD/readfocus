@@ -1846,6 +1846,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/steve-epub-blocks.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/steve-key.spec.js",
       "type": "file",
       "role": "config",
@@ -3070,6 +3076,12 @@
       "language": "css"
     },
     {
+      "id": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/steve/LatexDialog.css",
       "type": "file",
       "role": "asset",
@@ -3155,6 +3167,18 @@
     },
     {
       "id": "file:frontend/src/steve/highlight.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/latexLocal.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/latexLocal.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4189,6 +4213,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/reader/usePlaceSaver.js",
       "to": "endpoint:PUT /sessions/{session_id}/position"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "endpoint:GET /books/{book_id}/region-at"
     },
     {
       "type": "calls_endpoint",
@@ -7340,6 +7369,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/steve-epub-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/steve-key.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8097,6 +8131,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/useLamplight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/steve/EpubBlockActions.jsx"
     },
     {
       "type": "imports",
@@ -8930,6 +8969,46 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/BlockActions.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/LatexDialog.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/crop.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/latexLocal.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/steve/LatexDialog.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -9087,6 +9166,11 @@
       "type": "imports",
       "from": "file:frontend/src/steve/crop.js",
       "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/latexLocal.test.js",
+      "to": "file:frontend/src/steve/latexLocal.js"
     },
     {
       "type": "imports",

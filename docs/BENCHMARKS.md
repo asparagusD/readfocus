@@ -1129,6 +1129,20 @@ pages.
 
 ## Frontend: Lighthouse and image budgets
 
+### C20.8b-c: block actions and mathml-to-latex (2026-11-14)
+
+`npm --prefix frontend run build` after C20.8c, against C20.7b above:
+
+| Chunk | C20.7b (gzip) | C20.8c (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.74 kB (35.07 kB) | 96.74 kB (35.08 kB) |
+| `ReadingSession-*.js` | 77.47 kB (26.60 kB) | 90.03 kB (30.54 kB) |
+| `dist-*.js` (new, lazy: `mathml-to-latex` + `@xmldom/xmldom`) | none | 172.48 kB (52.17 kB) |
+
+`mathml-to-latex` 1.8.0 (MIT, released 2026-06-10; one dependency,
+`@xmldom/xmldom` 0.9.12, MIT) is imported only when an EPUB equation with
+no TeX annotation is copied or explained; `npm audit` names neither.
+
 ### C20.7b: Steve's panel and KaTeX (2026-11-14)
 
 `npm --prefix frontend run build`, before (C20.7a's tree, the panel not

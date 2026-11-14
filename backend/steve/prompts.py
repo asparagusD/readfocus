@@ -97,7 +97,8 @@ def _check(ctx: Context, mode: str) -> None:
         raise PromptError("needs_figure")
 
 
-def _label_key(label: str):
+def label_key(label: str):
+    """Sort order for labels: pages by number, then sections by number."""
     kind, _, number = label.partition(" ")
     return (0 if kind == "p." else 1, int(number) if number.isdigit() else 0, label)
 
@@ -105,7 +106,7 @@ def _label_key(label: str):
 def build_prompt(ctx: Context, mode: str = "ask") -> Prompt:
     """The system instruction for this mode and the context's parts, unchanged (book text stays in them)."""
     _check(ctx, mode)
-    labels = sorted(ctx.citations, key=_label_key)
+    labels = sorted(ctx.citations, key=label_key)
     allowed = ", ".join(f"[{label}]" for label in labels) if labels else "none (no book pages were sent)"
     system = f"{SYSTEM_RULES}\n\n{TASKS[mode]}\n\nAllowed citation labels: {allowed}"
     return Prompt(mode, system, list(ctx.parts))

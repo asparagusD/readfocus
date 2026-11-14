@@ -35,3 +35,6 @@ IMAGE_TYPES = ("image/png", "image/jpeg", "image/webp")
 # --- Prompts (C20.5, docs/STEVE.md S5) ---------------------------------------------------------------------
 ANSWER_MAX_WORDS = 200        # the default length the system instruction asks for
 CITATION_RANGE_MAX = 10       # "[pp. 44-45]" is expanded to each page; a wider range is kept only as written
+
+# --- Asking (C20.6, docs/STEVE.md S12) ---------------------------------------------------------------------
+ASK_IMAGE_MAX_BYTES = 500 * 1024  # an equation crop or figure sent with a question, as PNG (refused above: 413)

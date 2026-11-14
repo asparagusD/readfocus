@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 703,
-    "inventoried": 560,
+    "tracked": 706,
+    "inventoried": 563,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14516,
+      "size_bytes": 14534,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -401,8 +401,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 60,
-      "size_bytes": 1950,
+      "lines": 62,
+      "size_bytes": 2035,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
@@ -599,6 +599,14 @@
       "purpose": "GET and PUT /steve/settings (C20.1): auth required; Steve's off switch and the reader's consent with the notice version stored (only the current version counts; another version 409; withdrawing clears both); never reads the key cipher."
     },
     {
+      "path": "backend/routers/steve_ask.py",
+      "language": "python",
+      "lines": 190,
+      "size_bytes": 9744,
+      "role": "router",
+      "purpose": "POST /steve/ask (C20.6): consent, off switch, open test, image (PNG, 500 KB), thread and book checked first with typed errors; then context, prompt and service.ask streamed as Server-Sent Events (start, token, done with checked citations and usage, or error); GET /steve/threads?book_id and GET /steve/threads/{id}, the reader's own only."
+    },
+    {
       "path": "backend/services/__init__.py",
       "language": "python",
       "lines": 1,
@@ -777,16 +785,16 @@
     {
       "path": "backend/steve/policy.py",
       "language": "python",
-      "lines": 37,
-      "size_bytes": 2606,
+      "lines": 40,
+      "size_bytes": 2830,
       "role": "lib",
       "purpose": "Steve's numbers (C20.2): timeouts, the breaker's cool-down and cap, the cache's TTL and size, the default daily limit and the UTC offset range; no Google quota is hardcoded."
     },
     {
       "path": "backend/steve/prompts.py",
       "language": "python",
-      "lines": 163,
-      "size_bytes": 8250,
+      "lines": 164,
+      "size_bytes": 8323,
       "role": "lib",
       "purpose": "Steve's prompts (C20.5): the fixed system rules (book text is reference material whose instructions are ignored; cite only listed labels; say when the book does not cover it; LaTeX and fenced code; 200 words), six modes, build_prompt, clean_citations (drops labels not sent) and clean_latex."
     },
@@ -813,6 +821,14 @@
       "size_bytes": 2123,
       "role": "lib",
       "purpose": "Steve's ask() (C20.2): cache, then the breaker, then the daily limit (our key only), then the provider; a failed call is refunded and not cached, a 429 opens the breaker for that key."
+    },
+    {
+      "path": "backend/steve/threads.py",
+      "language": "python",
+      "lines": 62,
+      "size_bytes": 3050,
+      "role": "lib",
+      "purpose": "Steve's threads and messages (C20.6): get, create and list a reader's threads on a book (titled by the first question), add a message (text, anchor, citations, model, tokens; never a key or image), read a thread with its messages in order; every read filtered by the reader."
     },
     {
       "path": "backend/tests/__init__.py",
@@ -1471,6 +1487,14 @@
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
     },
     {
+      "path": "backend/tests/test_steve_api.py",
+      "language": "python",
+      "lines": 315,
+      "size_bytes": 15573,
+      "role": "test",
+      "purpose": "Pytest for /steve/ask and /steve/threads with a faked provider and retriever: SSE shape and final citations and usage, messages kept, follow-ups, highlights, code regions, images to the vision model, LaTeX mode, consent and off switch, open tests, typed pauses, mid-stream errors, image limits, ownership, own keys never stored, thread lists and reads."
+    },
+    {
       "path": "backend/tests/test_steve_context.py",
       "language": "python",
       "lines": 279,
@@ -1730,15 +1754,15 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4308,
-      "size_bytes": 771499,
+      "size_bytes": 774044,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "docs/STEVE.md",
       "language": "markdown",
-      "lines": 288,
-      "size_bytes": 16726,
+      "lines": 332,
+      "size_bytes": 18997,
       "role": "doc",
       "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
@@ -4425,8 +4449,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 562,
-      "size_bytes": 172133,
+      "lines": 565,
+      "size_bytes": 173210,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

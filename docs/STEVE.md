@@ -286,3 +286,47 @@ days.
 C20.9 sets the bars before the run: citation accuracy, "not covered"
 recall, injection resistance (100 %), math that parses, latency, calls
 used. Results go in `docs/BENCHMARKS.md`.
+
+## S12. Endpoints
+
+Built in C20.6 (`backend/routers/steve_ask.py`, `backend/steve/threads.py`).
+
+`POST /steve/ask` with `{book_id, thread_id?, question, mode, anchor?,
+image_png_b64?, region_id? (or code_region_id), utc_offset_minutes?}`.
+Before anything leaves the server, in order (JSON errors
+`{"detail": {"code", "message", ...}}`):
+
+| Check | Status | Code |
+|---|---|---|
+| consent to the current notice | 403 | `no_consent` |
+| Steve switched on | 403 | `disabled` |
+| no comprehension test open on the book | 409 | `in_test` |
+| image: base64 PNG of at most 500 KB | 413 / 422 | `too_large` / `bad_image` |
+| the thread is the reader's, on this book | 404 | `thread_not_found` |
+| the book and region are the reader's | 404 | `book_not_found` / `region_not_found` |
+| the mode has what it explains | 422 | `needs_highlight`, `needs_equation`, `needs_code`, `needs_figure` |
+| breaker, daily limit, Google (before the first token) | 429 / 503 / 400 | `paused_quota` or `daily_limit` (with `until`), `timeout`, `unavailable`, `not_configured`, `key_rejected` |
+
+Then a Server-Sent Events stream (`text/event-stream`):
+
+- `start` `{thread_id, pages}`: the labels that were sent, in order;
+- `token` `{text}` as Gemini writes (raw: citations not yet checked);
+- `done` `{message_id, thread_id, text, citations: [{label, anchor}],
+  usage: {model, tokens_in, tokens_out, cached}}`: the final text, with
+  citations to pages that were not sent removed (`latex_equation`: bare
+  LaTeX); the panel replaces the streamed text with it;
+- or `error` `{code, message}` if Google fails after the first token; no
+  answer is saved then.
+
+An image goes to `GEMINI_MODEL_VISION`, everything else to
+`GEMINI_MODEL_CHAT`. The cache key includes the mode.
+
+Threads: a question without `thread_id` starts a thread on that book; the
+question (with its anchor) is saved once the first token arrives, the
+answer when `done` is sent. `GET /steve/threads?book_id=` lists the
+reader's threads on a book, newest first, titled by their first
+question; `GET /steve/threads/{id}` returns one with its messages in
+order. Every read is filtered by the reader as well as by RLS (023), since
+the backend's database client bypasses RLS. No key and no image is ever
+stored; logs hold counts only.
+

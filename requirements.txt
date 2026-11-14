@@ -53,3 +53,8 @@ mcp==1.30.0
 # Its other dependencies (httpx, pydantic, google-auth, tenacity, websockets,
 # requests, anyio) are already here or installed through supabase and pdfminer.
 google-genai==2.34.0
+
+# Readers' own Gemini keys (C20.3): Fernet with an HKDF-derived key in
+# backend/steve/keys.py. Already installed through google-auth and
+# pdfminer.six; pinned here now that backend/ imports it directly.
+cryptography==50.0.2

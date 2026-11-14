@@ -154,12 +154,31 @@ are in `backend/steve/policy.py`.
 ## S7. Keys
 
 - Our key: `GEMINI_API_KEY`, server environment only.
-- A reader's own key (C20.3): `profiles.steve_key_cipher`, encrypted with
-  a key derived from `KEY_ENCRYPTION_SECRET`; decrypted only in
-  `backend/steve/` for the call; never returned (the client sees
-  `steve_key_last4`), never logged, never in an error. `/auth/profile`
-  strips the cipher. Own-key questions skip our quota and breaker but
-  keep the context rules.
+- A reader's own key (C20.3, `backend/steve/keys.py`):
+  - `PUT /steve/key` `{"key": "..."}`: the body is read by hand (a
+    validation error would echo the key), the shape checked, then Google
+    is asked once to read the chat model's details with that key (no
+    generation, no quota). Accepted: encrypted and stored; refused: 400;
+    Google busy or down: 503, nothing stored.
+  - Stored in `profiles.steve_key_cipher` as a Fernet token (AES-128-CBC
+    with HMAC-SHA256) under a key derived by HKDF-SHA256 from
+    `KEY_ENCRYPTION_SECRET` (at least 32 characters, else own keys are off:
+    503); `steve_key_last4` beside it.
+  - `GET /steve/key` and every other response give only
+    `{has_key, last4}`; `DELETE /steve/key` clears both columns.
+    `/auth/profile` strips the cipher.
+  - Decrypted only in `keys.reader_key` for a call. A cipher that no
+    longer decrypts (the secret changed) is `key_rejected`: the reader
+    adds the key again.
+  - Never logged, never in an error; the browser drops it once sent.
+  - Own-key questions skip our daily limit and our breaker (their own key
+    has its own breaker) but keep the context rules.
+- UI: "Use your own free Gemini key" in the account panel's settings
+  (C20.3; Steve's panel reuses it in C20.7): a password field, a link to
+  Google AI Studio's key page, Save key (checks with Google first), then
+  "Key ending in ...." and Remove key. The handoff's "Kept on this device
+  only" became "The key is encrypted and never shown again" (D6); its
+  "Test it" is Save key, which tests before it saves.
 
 ## S8. Logging
 

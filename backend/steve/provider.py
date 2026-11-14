@@ -87,6 +87,23 @@ def _counts(response) -> tuple[int | None, int | None]:
     return getattr(usage, "prompt_token_count", None), getattr(usage, "candidates_token_count", None)
 
 
+async def check_key(api_key: str) -> None:
+    """Check a reader's key with Google by reading the chat model's details: no generation, no quota spent.
+    Returns if Google accepts the key; raises SteveUnavailable (key_rejected, paused_quota, timeout, ...)."""
+    name = model_name("chat")
+    started, status = time.monotonic(), "ok"
+    try:
+        async with asyncio.timeout(policy.TIMEOUT_SECONDS):
+            await _make_client(api_key).aio.models.get(model=name)
+    except Exception as exc:  # noqa: BLE001 - every failure is re-raised typed; the original (may echo input) dropped
+        unavailable = _unavailable(exc)
+        status = unavailable.reason
+        raise unavailable from None
+    finally:
+        logger.info("steve.provider key check model=%s status=%s ms=%d", name, status,
+                    (time.monotonic() - started) * 1000)
+
+
 async def generate(parts: list, *, model: str = "chat", api_key: str | None = None, stream: bool = False,
                    system: str | None = None) -> AsyncIterator[Piece]:
     """Ask Gemini once.

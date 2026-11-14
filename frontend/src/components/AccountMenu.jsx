@@ -8,6 +8,7 @@ import { useTheme } from '../theme/themeContext';
 import { displayName, initials } from '../lib/initials';
 import { SIZES, readSize, storeSize } from '../reader/textSize';
 import { ThemeToggle } from './ThemeToggle';
+import { OwnKeyForm } from '../steve/OwnKeyForm';
 import './AccountMenu.css';
 
 const SIZE_LABELS = { 16.5: 'Small', 18: 'Medium', 19.5: 'Large' };
@@ -32,7 +33,7 @@ function Choice({ legend, name, options, value, onChange }) {
 
 /**
  * The initials button and its account panel (D4): name and email, reading
- * settings (text size, theme, accent) and Sign out. The panel mixes form
+ * settings (text size, theme, accent), Steve's own-key setting (C20.3) and Sign out. The panel mixes form
  * controls with a button, so it is a disclosure (aria-expanded,
  * aria-controls), not an ARIA menu. Esc closes it and returns focus to the
  * button; a press outside closes it. The theme toggle sits here, and in
@@ -129,6 +130,10 @@ export function AccountMenu() {
             value={accent}
             onChange={setAccent}
           />
+        </section>
+        <section className="rf-account__settings" aria-labelledby={`${panelId}-steve`}>
+          <h2 id={`${panelId}-steve`} className="eyebrow">Steve</h2>
+          <OwnKeyForm />
         </section>
         <button type="button" className="rf-account__signout" onClick={leave}>
           <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />

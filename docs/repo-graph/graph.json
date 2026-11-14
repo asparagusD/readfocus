@@ -9,6 +9,13 @@
       "handler": "delete_book"
     },
     {
+      "id": "endpoint:DELETE /steve/key",
+      "type": "endpoint",
+      "method": "DELETE",
+      "path": "/steve/key",
+      "handler": "delete_key"
+    },
+    {
       "id": "endpoint:GET /auth/profile",
       "type": "endpoint",
       "method": "GET",
@@ -100,6 +107,13 @@
       "handler": "get_session"
     },
     {
+      "id": "endpoint:GET /steve/key",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/steve/key",
+      "handler": "get_key"
+    },
+    {
       "id": "endpoint:GET /steve/settings",
       "type": "endpoint",
       "method": "GET",
@@ -175,6 +189,13 @@
       "method": "PUT",
       "path": "/sessions/{session_id}/position",
       "handler": "save_position"
+    },
+    {
+      "id": "endpoint:PUT /steve/key",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/steve/key",
+      "handler": "put_key"
     },
     {
       "id": "endpoint:PUT /steve/settings",
@@ -861,6 +882,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/steve/keys.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/steve/policy.py",
       "type": "file",
       "role": "lib",
@@ -1341,6 +1368,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_steve_keys.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_steve_provider.py",
       "type": "file",
       "role": "test",
@@ -1672,6 +1705,12 @@
     },
     {
       "id": "file:frontend/e2e/shell.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/steve-key.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2883,6 +2922,30 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/steve/OwnKeyForm.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/ownKey.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/ownKey.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/styles/base.css",
       "type": "file",
       "role": "asset",
@@ -3856,6 +3919,21 @@
       "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "endpoint:DELETE /steve/key"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "endpoint:GET /steve/key"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "endpoint:PUT /steve/key"
+    },
+    {
       "type": "calls_external",
       "from": "file:backend/agents/graph.py",
       "to": "external:langgraph",
@@ -4180,7 +4258,22 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/steve.py",
+      "to": "endpoint:DELETE /steve/key"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:GET /steve/key"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
       "to": "endpoint:GET /steve/settings"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:PUT /steve/key"
     },
     {
       "type": "defines_endpoint",
@@ -5040,6 +5133,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/steve/keys.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -5270,6 +5378,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/steve/keys.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/keys.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/steve/provider.py",
       "to": "file:backend/steve/errors.py"
     },
@@ -5307,6 +5425,11 @@
       "type": "imports",
       "from": "file:backend/steve/service.py",
       "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/keys.py"
     },
     {
       "type": "imports",
@@ -6440,6 +6563,51 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/routers/auth.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/routers/steve.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/steve/keys.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/steve/service.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_steve_provider.py",
       "to": "file:backend/steve/errors.py"
     },
@@ -6467,6 +6635,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_steve_service.py",
       "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/keys.py"
     },
     {
       "type": "imports",
@@ -6635,6 +6808,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/steve-key.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/test.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -6732,6 +6910,11 @@
       "type": "imports",
       "from": "file:frontend/src/components/AccountMenu.jsx",
       "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/steve/OwnKeyForm.jsx"
     },
     {
       "type": "imports",
@@ -8190,6 +8373,36 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/steve/OwnKeyForm.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/steve/ownKey.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/ownKey.test.js",
+      "to": "file:frontend/src/steve/ownKey.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/theme/ThemeProvider.jsx",
       "to": "file:frontend/src/theme/theme.js"
     },
@@ -8850,6 +9063,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/steve/keys.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_book_files.py",
       "to": "table:books"
     },
@@ -9157,6 +9375,11 @@
       "type": "writes_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/steve/keys.py",
+      "to": "table:profiles"
     },
     {
       "type": "writes_table",

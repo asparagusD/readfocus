@@ -1,14 +1,15 @@
 """ask(): one question to Steve, through the cache, the breaker and the daily limit, to the provider (C20.2).
 
 Order: cache (a hit costs nothing), breaker (paused keys make no call), daily limit (our key only), then the
-provider. A failed call is refunded and not cached; a 429 opens the breaker for that key. Consent, the off switch
-and the context are the caller's (C20.4-C20.6).
+provider. A failed call is refunded and not cached; a 429 opens the breaker for that key. The reader's own key (C20.3)
+is used when they stored one, and is then never counted. Consent, the off switch and the context are the
+caller's (C20.4-C20.6).
 """
 
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 
-from backend.steve import provider, quota
+from backend.steve import keys, provider, quota
 from backend.steve.breaker import breaker
 from backend.steve.cache import cache, key
 from backend.steve.errors import SteveUnavailable
@@ -19,7 +20,7 @@ def now() -> datetime:
 
 
 async def ask(*, user_id: str, book_id: str, question: str, context_hash: str, parts: list,
-              system: str | None = None, model: str = "chat", api_key: str | None = None, stream: bool = False,
+              system: str | None = None, model: str = "chat", stream: bool = False,
               utc_offset_minutes: int = 0) -> AsyncIterator[provider.Piece]:
     """Yield Steve's answer as Pieces (one when cached or not streamed); raise SteveUnavailable."""
     model_name = provider.model_name(model)
@@ -28,6 +29,7 @@ async def ask(*, user_id: str, book_id: str, question: str, context_hash: str, p
     if cached is not None:
         yield provider.Piece(text=cached, done=True, model=model_name, cached=True)
         return
+    api_key = keys.reader_key(user_id)
     key_id = provider.key_id(api_key)
     breaker.check(key_id, now())
     day = quota.take(user_id, now(), utc_offset_minutes) if api_key is None else None

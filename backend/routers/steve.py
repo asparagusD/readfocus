@@ -1,18 +1,23 @@
-"""Steve's settings (C20.1): GET and PUT /steve/settings, the reader's off switch and consent.
+"""Steve's settings (C20.1): GET and PUT /steve/settings, the reader's off switch and consent; and (C20.3)
+GET, PUT and DELETE /steve/key, the reader's own Gemini key.
 
 Consent is stored with the notice version the reader accepted (backend/steve/consent.py); only the
-current version counts as consent. The encrypted key column is never read here (C20.3 owns it).
+current version counts as consent. The key is checked with Google, encrypted and stored by backend/steve/keys.py;
+responses carry only {has_key, last4}. PUT /steve/key reads its body by hand: FastAPI's validation errors echo the
+input, and the input is the key.
 """
 
+import json
 from datetime import UTC, datetime
 from typing import Any, cast
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, StrictBool, model_validator
 
 from backend.dependencies import get_current_user
 from backend.services.supabase_client import supabase
-from backend.steve import consent
+from backend.steve import consent, keys, provider
+from backend.steve.errors import SteveUnavailable
 
 router = APIRouter()
 
@@ -71,3 +76,43 @@ async def put_settings(req: SettingsUpdate, user_id: str = Depends(get_current_u
         changes["steve_consent_version"] = None
     supabase.table("profiles").update(changes).eq("user_id", user_id).execute()
     return _settings(_profile(user_id))
+
+
+KEY_MALFORMED = "Send {\"key\": \"...\"} with a Gemini API key from Google AI Studio."
+KEY_REJECTED = "Google did not accept this key. Check that you copied all of it, from Google AI Studio."
+KEY_UNCHECKED = "Google could not check the key just now. Try again in a minute."
+KEYS_OFF = "Own keys are not available on this server yet."
+
+
+@router.get("/key")
+async def get_key(user_id: str = Depends(get_current_user)):
+    return keys.status(user_id)
+
+
+@router.put("/key")
+async def put_key(request: Request, user_id: str = Depends(get_current_user)):
+    try:
+        body = json.loads(await request.body())
+    except ValueError:
+        body = None
+    key = body.get("key") if isinstance(body, dict) and set(body) == {"key"} else None
+    key = key.strip() if isinstance(key, str) else ""
+    if not keys.looks_like_key(key):
+        raise HTTPException(status_code=422, detail=KEY_MALFORMED)
+    try:
+        keys.encrypt("check")  # the server can store keys at all, before asking Google
+        await provider.check_key(key)
+        keys.store(user_id, key)
+    except keys.KeysNotConfigured:
+        raise HTTPException(status_code=503, detail=KEYS_OFF) from None
+    except SteveUnavailable as unavailable:
+        if unavailable.reason == "key_rejected":
+            raise HTTPException(status_code=400, detail=KEY_REJECTED) from None
+        raise HTTPException(status_code=503, detail=KEY_UNCHECKED) from None
+    return keys.status(user_id)
+
+
+@router.delete("/key")
+async def delete_key(user_id: str = Depends(get_current_user)):
+    keys.remove(user_id)
+    return keys.status(user_id)

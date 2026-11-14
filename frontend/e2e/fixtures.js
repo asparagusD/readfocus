@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { test as base, expect } from '@playwright/test';
 
 export const BOOK = 'e2e-book';
+export const GOOD_KEY = 'AIzaSyReaderOwnKey-not-real-abcdefghij12'; // a made-up Gemini key (C20.3)
 const API = 'http://localhost:8000';
 const SUPABASE_REF = 'lvfhuszvuiowyeizstru'; // frontend/.env's project, as baked into the build
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
@@ -102,6 +103,16 @@ async function mockBackend(page, api, book) {
       api.lookups.push({ term, proper: url.searchParams.get('proper') === '1' });
       return json(route, LOOKUPS[term] ?? { term, found: false, meanings: [], wiki: null, ambiguous: false });
     }
+    if (path === '/steve/key') { // C20.3: GOOD_KEY is accepted, anything else is what Google refuses
+      if (request.method() === 'PUT') {
+        const { key } = request.postDataJSON();
+        api.steveKeyPuts.push(key);
+        if (key !== GOOD_KEY) return json(route, { detail: 'Google did not accept this key. Check that you copied all of it, from Google AI Studio.' }, 400);
+        api.steveKey = key.slice(-4);
+      }
+      if (request.method() === 'DELETE') api.steveKey = null;
+      return json(route, { has_key: api.steveKey !== null, last4: api.steveKey });
+    }
     api.unmocked.push(`${request.method()} ${path}`);
     return json(route, { detail: 'not mocked' }, 404);
   });
@@ -126,7 +137,7 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [] };
+    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [] };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

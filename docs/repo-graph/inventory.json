@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 686,
-    "inventoried": 543,
+    "tracked": 693,
+    "inventoried": 550,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14412,
+      "size_bytes": 14480,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -593,8 +593,8 @@
     {
       "path": "backend/routers/steve.py",
       "language": "python",
-      "lines": 73,
-      "size_bytes": 2854,
+      "lines": 118,
+      "size_bytes": 4780,
       "role": "router",
       "purpose": "GET and PUT /steve/settings (C20.1): auth required; Steve's off switch and the reader's consent with the notice version stored (only the current version counts; another version 409; withdrawing clears both); never reads the key cipher."
     },
@@ -759,6 +759,14 @@
       "purpose": "SteveUnavailable (C20.2): the typed reason Steve cannot answer (paused_quota, daily_limit, timeout, unavailable, key_rejected, not_configured), with when he is back and Google's retry delay."
     },
     {
+      "path": "backend/steve/keys.py",
+      "language": "python",
+      "lines": 81,
+      "size_bytes": 3095,
+      "role": "lib",
+      "purpose": "A reader's own Gemini key (C20.3): HKDF-SHA256 from KEY_ENCRYPTION_SECRET to a Fernet key; encrypt, decrypt, last4, shape check; status, store, remove on profiles; reader_key decrypts for one call (undecryptable = key_rejected); no secret = own keys off."
+    },
+    {
       "path": "backend/steve/policy.py",
       "language": "python",
       "lines": 14,
@@ -769,8 +777,8 @@
     {
       "path": "backend/steve/provider.py",
       "language": "python",
-      "lines": 135,
-      "size_bytes": 5860,
+      "lines": 152,
+      "size_bytes": 6722,
       "role": "lib",
       "purpose": "The one door to Gemini (C20.2): the only module that imports Google's Gen AI SDK (lazily) or reads Steve's three Gemini variables; generate() streamed or not, with a timeout and one attempt (no retries), errors typed as SteveUnavailable, logs of counts and latency only."
     },
@@ -785,8 +793,8 @@
     {
       "path": "backend/steve/service.py",
       "language": "python",
-      "lines": 45,
-      "size_bytes": 2020,
+      "lines": 47,
+      "size_bytes": 2123,
       "role": "lib",
       "purpose": "Steve's ask() (C20.2): cache, then the breaker, then the daily limit (our key only), then the provider; a failed call is refunded and not cached, a 429 opens the breaker for that key."
     },
@@ -1399,18 +1407,26 @@
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
     },
     {
+      "path": "backend/tests/test_steve_keys.py",
+      "language": "python",
+      "lines": 178,
+      "size_bytes": 7236,
+      "role": "test",
+      "purpose": "Pytest for /steve/key and keys.py: a good key checked, encrypted and stored with its last four; refused, malformed and unchecked keys store nothing and are never echoed; delete; only the caller's row; no secret; key never in a response or log; rotated secret; the service uses the stored key and never counts it."
+    },
+    {
       "path": "backend/tests/test_steve_provider.py",
       "language": "python",
-      "lines": 195,
-      "size_bytes": 8069,
+      "lines": 227,
+      "size_bytes": 9452,
       "role": "test",
       "purpose": "Pytest for backend/steve/provider.py with a fake SDK client: answer and token counts, streaming, vision model and own key, 429 as paused_quota with Google's delay, timeouts, typed failures, not configured, no book text or key in logs or errors, the real client's timeout and single attempt."
     },
     {
       "path": "backend/tests/test_steve_service.py",
       "language": "python",
-      "lines": 221,
-      "size_bytes": 8742,
+      "lines": 226,
+      "size_bytes": 8946,
       "role": "test",
       "purpose": "Pytest for backend/steve/service.py: answered and counted once, streaming, cache hits and TTL and eviction, the daily limit per local day and per reader, own-key bypass, the breaker for every reader on our key and per own key, refunds on failure, the limit from the environment."
     },
@@ -1633,16 +1649,16 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4307,
-      "size_bytes": 763369,
+      "lines": 4308,
+      "size_bytes": 767071,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "docs/STEVE.md",
       "language": "markdown",
-      "lines": 202,
-      "size_bytes": 10073,
+      "lines": 221,
+      "size_bytes": 11269,
       "role": "doc",
       "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
@@ -1705,8 +1721,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 241,
-      "size_bytes": 14258,
+      "lines": 252,
+      "size_bytes": 14973,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -1845,6 +1861,14 @@
       "size_bytes": 6984,
       "role": "config",
       "purpose": "Playwright e2e for the app shell (C13.2a): the current page marked and every page titled, the skip link first and leading to main, the account panel (initials, text size and accent saved, Esc returning focus, a press outside), sign out to /login, and at 375 px the links in the bar, no sideways scroll, 44 px targets and the theme inside the panel; with and without reduced motion, the account panel and a page change carry a transform only when motion is allowed."
+    },
+    {
+      "path": "frontend/e2e/steve-key.spec.js",
+      "language": "javascript",
+      "lines": 92,
+      "size_bytes": 4886,
+      "role": "config",
+      "purpose": "E2E for the own-key form (C20.3): save shows only the last four and the key leaves the page, a refused key shows why and is cleared, a non-key is caught before sending, 375 px fit and 44 px targets, a short phone in Lamplight scrolls the panel."
     },
     {
       "path": "frontend/e2e/test.spec.js",
@@ -2009,16 +2033,16 @@
     {
       "path": "frontend/src/components/AccountMenu.css",
       "language": "css",
-      "lines": 198,
-      "size_bytes": 4164,
+      "lines": 203,
+      "size_bytes": 4422,
       "role": "component",
       "purpose": "Account button and panel styles: 44 px round initials with a field border, a raised surface panel with a lift shadow (full width under 640 px), segmented radio rows on paper-2 with the checked one raised, accent swatches, the theme row only under 640 px, Sign out."
     },
     {
       "path": "frontend/src/components/AccountMenu.jsx",
       "language": "jsx",
-      "lines": 142,
-      "size_bytes": 5122,
+      "lines": 147,
+      "size_bytes": 5406,
       "role": "component",
       "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes; the panel slides down as it opens (pop) and fades out, opacity only under reduced motion."
     },
@@ -3455,6 +3479,38 @@
       "purpose": "node --test: word under an offset, apostrophes and hyphens, stopwords/short words/numbers skipped, sentence starts, proper nouns, phrases of 2-5 words, the lookup path."
     },
     {
+      "path": "frontend/src/steve/OwnKeyForm.css",
+      "language": "css",
+      "lines": 81,
+      "size_bytes": 1785,
+      "role": "asset",
+      "purpose": "Styles for the own-key form (C20.3): disclosure row, explanation, field, AI Studio link and buttons, from the project's tokens only."
+    },
+    {
+      "path": "frontend/src/steve/OwnKeyForm.jsx",
+      "language": "jsx",
+      "lines": 114,
+      "size_bytes": 4485,
+      "role": "asset",
+      "purpose": "\"Use your own free Gemini key\" (C20.3, handoff screen 17): a disclosure in the account panel with a password field, the Google AI Studio link and Save key (checked with Google by PUT /steve/key), then the last four and Remove key; the key is dropped once sent."
+    },
+    {
+      "path": "frontend/src/steve/ownKey.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1148,
+      "role": "asset",
+      "purpose": "Pure helpers for the own-key form (C20.3): the AI Studio URL, cleaning a pasted key, whether it is worth sending, the last-four label and the error text."
+    },
+    {
+      "path": "frontend/src/steve/ownKey.test.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 1492,
+      "role": "asset",
+      "purpose": "Unit tests for frontend/src/steve/ownKey.js: pasted keys cleaned, only key-shaped values sent, the last-four label, error text, the AI Studio link."
+    },
+    {
       "path": "frontend/src/styles/base.css",
       "language": "css",
       "lines": 152,
@@ -3729,8 +3785,8 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 55,
-      "size_bytes": 1849,
+      "lines": 60,
+      "size_bytes": 2076,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
@@ -4289,8 +4345,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 545,
-      "size_bytes": 167576,
+      "lines": 552,
+      "size_bytes": 169360,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

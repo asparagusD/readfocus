@@ -42,6 +42,14 @@ class FakeModels:
             await asyncio.sleep(self.sdk.delay)
         return response("".join(self.sdk.pieces), 120, 30)
 
+    async def get(self, *, model):
+        self.sdk.calls.append({"model": model, "get": True})
+        if self.sdk.error:
+            raise self.sdk.error
+        if self.sdk.delay:
+            await asyncio.sleep(self.sdk.delay)
+        return SimpleNamespace(name=f"models/{model}")
+
     async def generate_content_stream(self, *, model, contents, config=None):
         self.sdk.calls.append({"model": model, "contents": contents, "config": config, "stream": True})
         if self.sdk.error:
@@ -193,3 +201,27 @@ def test_key_ids_tell_keys_apart_without_holding_them():
     assert provider.key_id(None) == "ours"
     one, two = provider.key_id(OWN_KEY), provider.key_id(OUR_KEY)
     assert one.startswith("own:") and one != two and OWN_KEY not in one
+
+
+def test_checking_a_key_reads_the_chat_model_with_that_key_and_generates_nothing(sdk):
+    asyncio.run(provider.check_key(OWN_KEY))
+    assert sdk.calls == [{"model": "gemini-test-chat", "get": True}] and sdk.keys == [OWN_KEY]
+
+
+@pytest.mark.parametrize("code, reason", [(400, "key_rejected"), (403, "key_rejected"), (429, "paused_quota"),
+                                          (503, "unavailable")])
+def test_a_key_check_failure_is_typed(sdk, code, reason):
+    sdk.error = QuotaError()
+    sdk.error.code = code
+    sdk.error.details = {"error": {"code": code, "details": [{"reason": "API_KEY_INVALID"}]}} if code == 400 else {}
+    with pytest.raises(SteveUnavailable) as caught:
+        asyncio.run(provider.check_key(OWN_KEY))
+    assert caught.value.reason == reason and OWN_KEY not in repr(caught.value)
+
+
+def test_a_slow_key_check_times_out(sdk, monkeypatch):
+    monkeypatch.setattr(policy, "TIMEOUT_SECONDS", 0.05)
+    sdk.delay = 0.5
+    with pytest.raises(SteveUnavailable) as caught:
+        asyncio.run(provider.check_key(OWN_KEY))
+    assert caught.value.reason == "timeout"

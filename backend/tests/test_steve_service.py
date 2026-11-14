@@ -7,11 +7,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from backend.steve import breaker, cache, policy, provider, quota, service
+from backend.steve import breaker, cache, keys, policy, provider, quota, service
 from backend.steve.errors import SteveUnavailable
 
 OWN_KEY = "AIzaReaderKey-not-real-11111111111111111"
 NOW = datetime(2026, 11, 14, 18, 30, tzinfo=UTC)
+STORED = {}  # the reader's own key as keys.reader_key returns it (C20.3); None = ours
 
 
 class FakeRpc:
@@ -55,6 +56,8 @@ def env(monkeypatch):
     monkeypatch.setattr(provider, "model_name", lambda role: f"gemini-test-{role}")
     monkeypatch.setenv("STEVE_DAILY_LIMIT_PER_USER", "2")
     monkeypatch.setattr(service, "now", lambda: NOW)
+    monkeypatch.setattr(keys, "reader_key", lambda user_id: STORED.get(user_id))
+    STORED.clear()
     breaker.breaker.reset()
     cache.cache.clear()
     yield SimpleNamespace(rpc=rpc, provider=fake)
@@ -64,10 +67,12 @@ def env(monkeypatch):
 
 def ask(user="user-1", book="book-1", question="Who is the ferryman?", context_hash="ctx-1", api_key=None,
         stream=False, offset=0):
+    STORED[user] = api_key
+
     async def run():
         return [piece async for piece in service.ask(
             user_id=user, book_id=book, question=question, context_hash=context_hash, parts=["passage", question],
-            api_key=api_key, stream=stream, utc_offset_minutes=offset)]
+            stream=stream, utc_offset_minutes=offset)]
     return asyncio.run(run())
 
 

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 695,
-    "inventoried": 552,
+    "tracked": 703,
+    "inventoried": 560,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14498,
+      "size_bytes": 14516,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -777,10 +777,18 @@
     {
       "path": "backend/steve/policy.py",
       "language": "python",
-      "lines": 33,
-      "size_bytes": 2302,
+      "lines": 37,
+      "size_bytes": 2606,
       "role": "lib",
       "purpose": "Steve's numbers (C20.2): timeouts, the breaker's cool-down and cap, the cache's TTL and size, the default daily limit and the UTC offset range; no Google quota is hardcoded."
+    },
+    {
+      "path": "backend/steve/prompts.py",
+      "language": "python",
+      "lines": 163,
+      "size_bytes": 8250,
+      "role": "lib",
+      "purpose": "Steve's prompts (C20.5): the fixed system rules (book text is reference material whose instructions are ignored; cite only listed labels; say when the book does not cover it; LaTeX and fenced code; 200 words), six modes, build_prompt, clean_citations (drops labels not sent) and clean_latex."
     },
     {
       "path": "backend/steve/provider.py",
@@ -861,6 +869,54 @@
       "size_bytes": 799,
       "role": "test",
       "purpose": "Markdown fixture (C19.2a, written for the tests): two h1 chapters, inline and display math, money that is not math, a quote, lists, a table, fenced Python, two local images, one remote image, a relative and a remote link, raw HTML."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/ask.txt",
+      "language": "text",
+      "lines": 35,
+      "size_bytes": 2008,
+      "role": "test",
+      "purpose": "Snapshot of Steve's ask prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/explain_code.txt",
+      "language": "text",
+      "lines": 39,
+      "size_bytes": 2257,
+      "role": "test",
+      "purpose": "Snapshot of Steve's explain_code prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/explain_equation.txt",
+      "language": "text",
+      "lines": 38,
+      "size_bytes": 2252,
+      "role": "test",
+      "purpose": "Snapshot of Steve's explain_equation prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/explain_figure.txt",
+      "language": "text",
+      "lines": 39,
+      "size_bytes": 2249,
+      "role": "test",
+      "purpose": "Snapshot of Steve's explain_figure prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/explain_highlight.txt",
+      "language": "text",
+      "lines": 38,
+      "size_bytes": 2221,
+      "role": "test",
+      "purpose": "Snapshot of Steve's explain_highlight prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/latex_equation.txt",
+      "language": "text",
+      "lines": 38,
+      "size_bytes": 2272,
+      "role": "test",
+      "purpose": "Snapshot of Steve's latex_equation prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
     },
     {
       "path": "backend/tests/memory_db.py",
@@ -1431,6 +1487,14 @@
       "purpose": "Pytest for /steve/key and keys.py: a good key checked, encrypted and stored with its last four; refused, malformed and unchecked keys store nothing and are never echoed; delete; only the caller's row; no secret; key never in a response or log; rotated secret; the service uses the stored key and never counts it."
     },
     {
+      "path": "backend/tests/test_steve_prompts.py",
+      "language": "python",
+      "lines": 172,
+      "size_bytes": 8506,
+      "role": "test",
+      "purpose": "Pytest for backend/steve/prompts.py: snapshots of all six modes, every rule present, injected book text or questions never change the system instruction, modes refused without what they explain, citation clean-up (invalid, lists, ranges, section signs, code and math untouched), bare LaTeX, STEVE.md carries the rules."
+    },
+    {
       "path": "backend/tests/test_steve_provider.py",
       "language": "python",
       "lines": 227,
@@ -1666,15 +1730,15 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4308,
-      "size_bytes": 769257,
+      "size_bytes": 771499,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "docs/STEVE.md",
       "language": "markdown",
-      "lines": 243,
-      "size_bytes": 12788,
+      "lines": 288,
+      "size_bytes": 16726,
       "role": "doc",
       "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
@@ -4361,8 +4425,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 554,
-      "size_bytes": 170105,
+      "lines": 562,
+      "size_bytes": 172133,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

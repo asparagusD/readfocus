@@ -31,3 +31,7 @@ PASSAGE_MAX_TOKENS = 450      # one retrieved passage
 IMAGE_TOKENS = 1_300          # what an image is assumed to cost (a few of Gemini's 258-token tiles)
 IMAGE_MAX_BYTES = 1_500_000
 IMAGE_TYPES = ("image/png", "image/jpeg", "image/webp")
+
+# --- Prompts (C20.5, docs/STEVE.md S5) ---------------------------------------------------------------------
+ANSWER_MAX_WORDS = 200        # the default length the system instruction asks for
+CITATION_RANGE_MAX = 10       # "[pp. 44-45]" is expanded to each page; a wider range is kept only as written

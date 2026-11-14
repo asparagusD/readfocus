@@ -265,6 +265,10 @@
       "type": "env"
     },
     {
+      "id": "env:STEVE_UPDATE_SNAPSHOTS",
+      "type": "env"
+    },
+    {
       "id": "env:SUPABASE_ANON_KEY",
       "type": "env"
     },
@@ -900,6 +904,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/steve/prompts.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/steve/provider.py",
       "type": "file",
       "role": "lib",
@@ -958,6 +968,42 @@
       "type": "file",
       "role": "test",
       "language": "markdown"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/ask.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/explain_code.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/explain_equation.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/explain_figure.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/explain_highlight.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/latex_equation.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
     },
     {
       "id": "file:backend/tests/memory_db.py",
@@ -1381,6 +1427,12 @@
     },
     {
       "id": "file:backend/tests/test_steve_keys.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_prompts.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -5420,6 +5472,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/steve/prompts.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/prompts.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/steve/provider.py",
       "to": "file:backend/steve/errors.py"
     },
@@ -6652,6 +6714,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_steve_keys.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_prompts.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_prompts.py",
+      "to": "file:backend/steve/prompts.py"
     },
     {
       "type": "imports",
@@ -9242,6 +9314,11 @@
       "type": "uses_env",
       "from": "file:backend/services/supabase_client.py",
       "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/tests/test_steve_prompts.py",
+      "to": "env:STEVE_UPDATE_SNAPSHOTS"
     },
     {
       "type": "uses_env",

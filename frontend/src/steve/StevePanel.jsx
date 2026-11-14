@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowUp, Copy, KeyRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, Check, Copy, KeyRound, NotebookPen } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ReadingLamp } from '../illustrations';
 import { OwnKeyForm } from './OwnKeyForm';
@@ -79,8 +79,13 @@ function pagesLabel(pages) {
   return pages.length ? pages.join(', ') : 'these pages';
 }
 
-function Conversation({ messages, pages, onCite, onStop, onRetry }) {
+function Conversation({ messages, pages, onCite, onStop, onRetry, onSaveNote }) {
   const [copied, setCopied] = useState(null);
+  const [saved, setSaved] = useState(() => new Set()); // C22.6: answers already in the notes
+  const save = async (message) => {
+    const key = await onSaveNote({ text: message.text, citations: message.citations ?? [], heading: `Steve · from ${pagesLabel(pages)}` });
+    if (key) setSaved((now) => new Set(now).add(message.id));
+  };
   const copy = async (message) => {
     try { await navigator.clipboard.writeText(message.text); setCopied(message.id); } catch { /* clipboard refused */ }
   };
@@ -113,6 +118,12 @@ function Conversation({ messages, pages, onCite, onStop, onRetry }) {
               <Button variant="ghost" onClick={() => copy(message)}>
                 <Copy size={16} strokeWidth={1.75} aria-hidden="true" />{copied === message.id ? 'Copied' : 'Copy'}
               </Button>
+              {onSaveNote && (
+                <Button variant="ghost" onClick={() => save(message)} disabled={saved.has(message.id)}>
+                  {saved.has(message.id) ? <Check size={16} strokeWidth={1.75} aria-hidden="true" /> : <NotebookPen size={16} strokeWidth={1.75} aria-hidden="true" />}
+                  {saved.has(message.id) ? 'Saved to notes' : 'Save to notes'}
+                </Button>
+              )}
             </div>
           )}
         </li>
@@ -175,7 +186,7 @@ function KeyView({ enabled, onEnabled, onBack }) {
  * the conversation (streaming answers, citations, stop, errors), resting (quota) and settings with the own key.
  * `onClose` closes the whole panel ("Not now", "Keep reading").
  */
-export function StevePanel({ steve, chapter, onCite, onClose }) {
+export function StevePanel({ steve, chapter, onCite, onClose, onSaveNote = null }) {
   const { state, ask, stop, retry, accept, setEnabled, dispatch, reload } = steve;
   const [draft, setDraft] = useState('');
   const body = useRef(null);
@@ -223,7 +234,7 @@ export function StevePanel({ steve, chapter, onCite, onClose }) {
   } else if (!state.messages.length) {
     content = <Empty chapter={chapter} onAsk={ask} />;
   } else {
-    content = <Conversation messages={state.messages} pages={state.pages} onCite={onCite} onStop={stop} onRetry={retry} />;
+    content = <Conversation messages={state.messages} pages={state.pages} onCite={onCite} onStop={stop} onRetry={retry} onSaveNote={onSaveNote} />;
   }
 
   return (

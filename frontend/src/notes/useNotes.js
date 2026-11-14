@@ -22,6 +22,7 @@ export function useNotes(bookId) {
   const { toast } = useToast();
   const made = useRef(0);
   const drafts = useRef(new Map()); // edits to notes the server has not given an id yet
+  const ids = useRef(new Map()); // key -> the id the server gave, set the moment it answers
   const autosave = useMemo(() => createAutosave({
     save: notesApi.save, queue,
     onChange: (id, status) => setStatuses((now) => ({ ...now, [id]: status })),
@@ -57,13 +58,15 @@ export function useNotes(bookId) {
   const reload = useCallback(() => { setState('loading'); setAttempt((n) => n + 1); }, []);
 
   /** Shows the note at once and returns its `key` (kept after the server gives it an id, so an open editor
-   * stays open); edits made before the server answers are sent as soon as it has. */
-  const create = useCallback((body) => {
+   * stays open); edits made before the server answers are sent as soon as it has. `local` is shown with the note
+   * but never sent (C22.6: the signed `urls` of an image just uploaded). */
+  const create = useCallback((body, local = {}) => {
     const key = `pending-${(made.current += 1)}`;
-    setNotes((list) => inBookOrder([...list, { ...body, id: key, key, pending: true, version: 0, created_at: new Date().toISOString() }]));
+    setNotes((list) => inBookOrder([...list, { ...body, ...local, id: key, key, pending: true, version: 0, created_at: new Date().toISOString() }]));
     notesApi.create(bookId, body).then((saved) => {
+      ids.current.set(key, saved.id);
       autosave.track(saved.id, saved.version);
-      setNotes((list) => list.map((n) => (n.key === key ? { ...saved, key, content: n.content } : n)));
+      setNotes((list) => list.map((n) => (n.key === key ? { ...saved, ...local, key, content: n.content } : n)));
       const draft = drafts.current.get(key);
       drafts.current.delete(key);
       if (draft) autosave.edit(saved.id, draft);
@@ -75,7 +78,9 @@ export function useNotes(bookId) {
     return key;
   }, [bookId, autosave, toast]);
 
-  const edit = useCallback((id, change) => {
+  /** A change to a note by its id, or by the key `create` gave (C22.6: a LaTeX that arrives after the note). */
+  const edit = useCallback((idOrKey, change) => {
+    const id = ids.current.get(idOrKey) ?? idOrKey;
     setNotes((list) => list.map((n) => (n.id === id ? { ...n, ...change } : n)));
     if (String(id).startsWith('pending-')) drafts.current.set(id, { ...(drafts.current.get(id) ?? {}), ...change });
     else autosave.edit(id, change);
@@ -118,6 +123,9 @@ export function useNotes(bookId) {
     }
   }, [bookId, autosave, toast]);
 
+  /** C22.6: a crop (base64 PNG) into the notes bucket: { path, url }. */
+  const uploadImage = useCallback((data) => notesApi.upload(bookId, { content_type: 'image/png', data }), [bookId]);
+
   const keepMine = useCallback((id) => autosave.keepMine(id), [autosave]);
   const takeTheirs = useCallback(async (id) => {
     const rows = await notesApi.list(bookId).catch(() => null);
@@ -127,5 +135,5 @@ export function useNotes(bookId) {
     setNotes((list) => list.map((n) => (n.id === id ? theirs : n)));
   }, [bookId, autosave]);
 
-  return { notes, state, statuses, reload, create, edit, relink, remove, keepMine, takeTheirs, attachThumbnail, flush: autosave.flush };
+  return { notes, state, statuses, reload, create, edit, relink, remove, uploadImage, keepMine, takeTheirs, attachThumbnail, flush: autosave.flush };
 }

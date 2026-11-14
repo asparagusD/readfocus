@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react';
-import { MessageCircle, Trash2, Underline } from 'lucide-react';
+import { MessageCircle, Plus, Trash2, Underline } from 'lucide-react';
 import { useSteveActions } from '../steve/SteveContext';
 import { COLOURS, colourName } from './palette';
 import { rove } from './roving';
@@ -17,7 +17,7 @@ const snippet = (text) => (text.length > SNIPPET ? `${text.slice(0, SNIPPET - 1)
  * A moves to the next highlight, Shift+A the previous, Escape returns to the book. `ref` is its element, for the
  * hover rules (useAnnotationChip). A pending (unsaved) annotation can be asked about but not changed yet.
  */
-export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, onCycle, onClose, ref }) {
+export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, onCycle, onClose, onNote = null, ref }) {
   const steve = useSteveActions(); // null while Steve is off: no Ask Steve
   const { refs, floatingStyles, placement } = useFloating({
     placement: 'top-end',
@@ -92,6 +92,14 @@ export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, on
           disabled={fixed} onClick={() => onChange(id, { style: style === 'underline' ? 'highlight' : 'underline' })}>
           <Underline size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
+        {onNote && (
+          // C22.6: a text note quoting this passage, linked to it.
+          <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Add note" title="Add note" disabled={fixed}
+            onClick={() => { onNote(annotation); onClose(false); }}>
+            <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
+            <span className="rf-seltool-label">Note</span>
+          </button>
+        )}
         <span className="rf-seltool-sep" aria-hidden="true" />
         <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Delete" title={`Delete this ${style}`}
           disabled={fixed} onClick={() => { onDelete(id); onClose(by === 'key'); }}>

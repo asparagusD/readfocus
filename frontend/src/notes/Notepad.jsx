@@ -3,6 +3,8 @@ import { Bookmark, Code2, Image, Link2, PenLine, Plus, Sigma, Trash2, Type } fro
 import { Button } from '../components/ui/Button';
 import { NoteDoc } from './NoteDoc';
 import { DrawingFrame, DrawingThumb } from './DrawingNote';
+import { BlockNote } from './BlockNote';
+import { NOTE_DRAG, useNotesActions } from './NotesContext';
 import { reference } from './place';
 import { overallStatus } from './status';
 import { followAction, notesFor, overlapping } from './sync';
@@ -92,7 +94,7 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
   useEffect(() => {
     if (!focused) return undefined;
     const frame = requestAnimationFrame(() => requestAnimationFrame(() => { // after the panel has focused its tab
-      const first = document.querySelector(`.rf-note[data-id="${focused.ids[0]}"]`);
+      const first = document.querySelector(`.rf-note[data-id="${focused.ids[0]}"], .rf-note[data-key="${focused.ids[0]}"]`);
       first?.scrollIntoView({ block: 'nearest', behavior: 'auto' });
       (first?.querySelector('.rf-note-read') ?? first?.querySelector('.rf-note-ref'))?.focus();
     }));
@@ -137,6 +139,22 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
     });
     return () => cancelAnimationFrame(frame);
   }, [rangeKey, state, scrollTo]);
+  // C22.6: an equation or listing dragged from the book is added where it is dropped.
+  const notesActions = useNotesActions();
+  const [dropping, setDropping] = useState(false);
+  const canDrop = (event) => Boolean(notesActions) && [...(event.dataTransfer?.types ?? [])].includes(NOTE_DRAG);
+  const onDragOver = (event) => {
+    if (!canDrop(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    setDropping(true);
+  };
+  const onDrop = (event) => {
+    if (!canDrop(event)) return;
+    event.preventDefault();
+    setDropping(false);
+    notesActions.drop();
+  };
   const byHand = useCallback(() => { handAt.current = Date.now(); }, []);
   const goTo = useCallback((note) => { jumpAt.current = Date.now(); setPill(null); onGoTo(note); }, [onGoTo]);
   const drawingOpen = notes.some((n) => (n.key ?? n.id) === editing && n.kind === 'drawing');
@@ -153,7 +171,8 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
     requestAnimationFrame(() => document.querySelector(`.rf-note[data-key="${note.key ?? note.id}"] .rf-note-read`)?.focus());
   };
   return (
-    <div className="rf-notes" ref={root} onWheel={byHand} onTouchMove={byHand}
+    <div className="rf-notes" ref={root} onWheel={byHand} onTouchMove={byHand} data-drop={dropping || undefined}
+      onDragOver={onDragOver} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropping(false); }} onDrop={onDrop}
       onKeyDown={(event) => { if (['PageUp', 'PageDown', 'ArrowUp', 'ArrowDown'].includes(event.key) && !event.target.closest('[contenteditable="true"]')) byHand(); }}>
       <div className="rf-notes-head">
         <p className="rf-notes-count">{shown.length === 1 ? '1 note' : `${shown.length} notes`}</p>
@@ -193,7 +212,7 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
             return (
               <li key={key} className="rf-note" data-kind={note.kind} data-id={note.id} data-key={key}
                 data-new={note.key ? 'true' : undefined} data-editing={open || undefined}
-                data-focused={focused?.ids.includes(note.id) || undefined} data-here={hereIds.has(note.id) || undefined}>
+                data-focused={focused?.ids.some((x) => x === note.id || x === note.key) || undefined} data-here={hereIds.has(note.id) || undefined}>
                 <div className="rf-note-head">
                   <button type="button" className="rf-note-ref" onClick={() => goTo(note)} aria-label={`Go to ${ref}`}>
                     <Bookmark size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -236,7 +255,9 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
                       <NoteDoc doc={note.content} />
                     </div>
                   )}
-                  {!['text', 'drawing'].includes(note.kind) && <p className="rf-note-small">{label} notes open in a later version.</p>}
+                  {['equation', 'code', 'figure'].includes(note.kind) && (
+                    <BlockNote note={note} reference={ref} onChange={(change) => onChange(note.id, change)} />
+                  )}
                 </div>
                 <NoteState status={statuses[note.id]?.status} onRetry={() => onRetry(note.id)}
                   onKeepMine={() => onKeepMine(note.id)} onTakeTheirs={() => onTakeTheirs(note.id)} />

@@ -3999,3 +3999,38 @@ the panel at 560 px or more and back to 380 px after Done.
 ### Commit
 `feat(notes): Excalidraw drawing blocks with thumbnails` (C22.3, fixed before
 committing)
+## 2026-11-14 C22.6 — an equation's LaTeX that arrived just after its note was saved was lost
+
+### Symptom
+Design review: after adding an equation, a code listing and a figure in a row,
+the equation note's LaTeX field stayed empty once in Paper (filled in
+Lamplight), though /steve/latex had answered.
+
+### Repro
+Not reproduced on demand: it depends on /steve/latex answering in the moment
+between POST /books/{id}/notes resolving and the next render.
+
+### Hypotheses
+1. `useNotes.edit(key)` looked the key up in a copy of the list refreshed by
+   an effect after render; in that gap the note still looked pending, so the
+   change went to the pending-drafts map, which is read only once, when the
+   note is created. Result: confirmed by reading the code (the drafts map is
+   read before the edit can land there).
+2. /steve/latex refused the second call. Result: ruled out (the fixture
+   answers every call; the e2e test of one equation passes).
+
+### Root cause
+The key -> id mapping was read from state that lags a render behind.
+
+### Fix
+`useNotes.js`: a key -> id map set in the create promise the moment the
+server answers; `edit` resolves keys through it.
+
+### Regression test
+`notes-blocks.spec.js` checks the LaTeX reaches the saved note; three adds in
+a row were run twice with the screenshot spec and filled the field each time.
+No test forces the exact timing.
+
+### Commit
+`feat(notes): add equations, code, figures, highlights and Steve answers to
+notes` (C22.6, fixed before committing)

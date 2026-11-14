@@ -100,7 +100,7 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
-  onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null,
+  onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -423,7 +423,7 @@ export function Reader({
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}
-          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} />
+          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} onNote={onAnnotationNote} />
       )}
       {kind === 'pdf' && regions && bookBox && (
         // C20.8b: equations, code and figures offer Explain, Copy code and Copy as LaTeX.
@@ -433,6 +433,7 @@ export function Reader({
       {kind === 'epub' && (
         // C20.8c: the same actions in an EPUB's sections; Copy as LaTeX and Copy code stay on the device.
         <EpubBlockActions sections={sections} spineOf={(doc) => book.current?.sectionIndex?.(doc) ?? null} bookId={bookId}
+          placeOf={(doc, el, text) => book.current?.elementPlace?.(doc, el, text) ?? null}
           paused={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
       )}
       <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{ending ? "End of today's reading" : opening ? '' : place?.folio ?? ''}</p>

@@ -7,6 +7,9 @@ import { imageToPng } from './crop';
 import { latexOf } from './latexLocal';
 import { LatexDialog } from './LatexDialog';
 import { useSteveActions } from './SteveContext';
+import { useNotesActions } from '../notes/NotesContext';
+import { noteLanguage } from '../notes/fromBook';
+import { NoteGrip } from './NoteGrip';
 import './BlockActions.css';
 
 const HIDE_MS = 350;
@@ -30,9 +33,11 @@ function blockOf(target) {
  * LaTeX and Copy code stay on the device; Explain asks Steve with the region the server knows at that place (found
  * by section and element path), the source itself when there is none, and a figure's image file.
  */
-export function EpubBlockActions({ sections, spineOf, bookId, paused }) {
+export function EpubBlockActions({ sections, spineOf, placeOf, bookId, paused }) {
   const steve = useSteveActions();
+  const notes = useNotesActions(); // C22.6: Add to notes
   const { toast } = useToast();
+  const dragging = useRef(false); // the bar stays up while its grip is dragged
   const [active, setActive] = useState(null); // { doc, el, kind }
   const [latex, setLatex] = useState(null);
   const hide = useRef(0);
@@ -41,6 +46,7 @@ export function EpubBlockActions({ sections, spineOf, bookId, paused }) {
 
   const later = useCallback(() => {
     clearTimeout(hide.current);
+    if (dragging.current) return;
     hide.current = setTimeout(() => setActive(null), HIDE_MS);
   }, []);
   const stay = useCallback(() => clearTimeout(hide.current), []);
@@ -96,8 +102,30 @@ export function EpubBlockActions({ sections, spineOf, bookId, paused }) {
     }
   };
 
+  // C22.6: the block as a note, all on the device: an equation by its own LaTeX, a listing by its text, a figure
+  // by its image and caption. `placeOf(doc, el, text)` is the element's range as an anchor.
+  const addBlock = async (block) => {
+    if (block.kind === 'math') {
+      const tex = await latexOf(block.el);
+      await notes.add({ kind: 'equation', place: placeOf(block.doc, block.el, tex), content: { latex: tex.slice(0, 4000), image_path: null } });
+    } else if (block.kind === 'code') {
+      const code = block.el.textContent;
+      const language = noteLanguage(block.el.querySelector('code')?.className.match(/language-([\w+#-]+)/)?.[1]);
+      await notes.add({ kind: 'code', place: placeOf(block.doc, block.el, code), content: { code: code.slice(0, 20000), language } });
+    } else {
+      const img = block.el.localName === 'img' ? block.el : block.el.querySelector('img');
+      const caption = (block.el.querySelector?.('figcaption')?.textContent ?? img?.alt ?? '').replace(/\s+/g, ' ').trim();
+      await notes.add({ kind: 'figure', place: placeOf(block.doc, block.el, caption), imageB64: img ? await imageToPng(img, 250 * 1024) : null,
+        content: { caption: caption.slice(0, 1000), image_path: null } });
+    }
+  };
+
   const run = async (action, block) => {
     try {
+      if (action === 'add_note') {
+        await addBlock(block);
+        return;
+      }
       if (action === 'copy_code') {
         await navigator.clipboard.writeText(block.el.textContent);
         toast({ kind: 'success', message: 'Code copied.' });
@@ -133,7 +161,7 @@ export function EpubBlockActions({ sections, spineOf, bookId, paused }) {
     const frame = shown.doc.defaultView?.frameElement?.getBoundingClientRect() ?? { left: 0, top: 0 };
     const r = shown.el.getBoundingClientRect();
     const style = { left: frame.left + r.left, top: frame.top + r.top, width: r.width, height: r.height };
-    const actions = actionsFor(shown.kind, { steve: Boolean(steve), format: 'epub' });
+    const actions = actionsFor(shown.kind, { steve: Boolean(steve), format: 'epub', notes: Boolean(notes && placeOf) });
     if (actions.length) {
       barNode = createPortal(
         <div className="rf-block rf-block--fixed" style={style}>
@@ -153,6 +181,10 @@ export function EpubBlockActions({ sections, spineOf, bookId, paused }) {
                 {ACTION_LABEL[action]}
               </button>
             ))}
+            {notes && placeOf && shown.kind !== 'figure' && (
+              <NoteGrip onAdd={() => run('add_note', shown)}
+                onDragging={(on) => { dragging.current = on; if (on) stay(); else later(); }} />
+            )}
           </div>
         </div>,
         document.body,

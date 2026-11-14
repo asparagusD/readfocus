@@ -356,3 +356,64 @@
 @media (max-width: 759px) {
   .rf-notes-filter button, .rf-notes-jump { min-height: 44px; }
 }
+
+/* C22.6: equation, code and figure notes, and the notepad as a drop target for a dragged equation or listing. */
+.rf-note-block { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+
+.rf-note-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 240px;
+  border-radius: var(--radius-page);
+  background-color: #fff; /* a crop of the page as printed */
+}
+
+.rf-note-math { overflow-x: auto; color: var(--ink); }
+
+.rf-note-lang {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
+}
+
+.rf-note-field { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.rf-note-field label {
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
+}
+
+.rf-note-field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-input);
+  background-color: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: var(--text-label);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.rf-note-field textarea[data-mono] { font-family: var(--font-mono); white-space: pre; overflow-x: auto; tab-size: 4; }
+
+.rf-note-field textarea:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.rf-notes[data-drop] { outline: 2px dashed var(--accent); outline-offset: -6px; background-color: color-mix(in srgb, var(--accent-soft) 40%, transparent); }
+
+.rf-block-grip { display: inline-grid; place-items: center; min-width: 32px; padding: 0 var(--space-1); cursor: grab; }
+
+@media (max-width: 759px), (pointer: coarse) {
+  .rf-block-grip { display: none; } /* dragging is for a desktop; Add to notes is there on every screen */
+}

@@ -163,6 +163,19 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         }
         return [...byId].map(([id, rects]) => ({ id, rects }));
       },
+      // C22.6: a whole element of a shown section (an equation, listing or figure) as a note's place: its range CFI
+      // and characters, with `text` (a selection) or without (the view scope).
+      elementPlace: (doc, el, text) => {
+        const shown = (now()?.contents() ?? []).find((c) => c.doc === doc);
+        if (!shown) return null;
+        const range = doc.createRange();
+        range.selectNode(el);
+        const cfi = now().cfiFor(doc, range);
+        if (!cfi) return null;
+        const [start, end] = now().charsOf(doc, range);
+        const words = String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, 2000);
+        return { scope: words ? 'selection' : 'view', anchors: [epubAnchor(cfi, words)], ...epubPositions(shown.index, start, end) };
+      },
       // C22.4: where each note's passage is on the page shown, for its margin marker: its first line inside
       // `within` (the book's box), and the page of the spread it is on.
       noteSpots: (notes, within) => {

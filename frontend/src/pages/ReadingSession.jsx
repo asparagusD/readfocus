@@ -30,6 +30,8 @@ import { Notepad } from '../notes/Notepad';
 import { useNotes } from '../notes/useNotes';
 import { chapterOf } from '../notes/place';
 import { shownRange } from '../notes/sync';
+import { NotesContext } from '../notes/NotesContext';
+import { answerDoc, quoteDoc } from '../notes/fromBook';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -258,6 +260,50 @@ export function ReadingSession() {
     notepad.relink(note.id, place);
     toast({ kind: 'neutral', message: 'Note linked to the selection.' });
   };
+  // C22.6: notes made from the book (block actions, a highlight's chip, a Steve answer, a dragged region): a crop
+  // goes to the notes bucket first, then the note shows at once; `open` reveals it ('focus') or opens it ('edit').
+  const { create: createNote, edit: editNote, uploadImage } = notepad;
+  const dragged = useRef(null);
+  const addFromBook = useCallback(async ({ kind, place, content, imageB64 = null, regionId = null, annotationId = null, open = 'focus' }) => {
+    if (!place) {
+      toast({ kind: 'warning', message: "That wasn't added to your notes. Try again." });
+      return { key: null, content };
+    }
+    let body = content;
+    let local = {};
+    if (imageB64) {
+      try {
+        const { path, url } = await uploadImage(imageB64);
+        body = { ...content, image_path: path };
+        local = { urls: { [path]: url } };
+      } catch {
+        toast({ kind: 'warning', message: "The picture wasn't saved, so the note is added without it." });
+      }
+    }
+    const key = createNote({ kind, scope: place.scope, anchors: place.anchors, position_start: place.start, position_end: place.end,
+      content: body, ...(regionId ? { region_id: regionId } : {}), ...(annotationId ? { annotation_id: annotationId } : {}) }, local);
+    if (open) {
+      setSide((now) => { if (!now) opener.current = notesButton.current; return 'notes'; });
+      setNoteRequest(open === 'edit' ? { type: 'edit', key, n: Date.now() } : { type: 'focus', ids: [key], n: Date.now() });
+    }
+    return { key, content: body };
+  }, [createNote, uploadImage, toast]);
+  const notesActions = useMemo(() => ({
+    add: addFromBook,
+    edit: editNote,
+    drag: (make) => { dragged.current = make; },
+    drop: () => { const make = dragged.current; dragged.current = null; make?.(); },
+  }), [addFromBook, editNote]);
+  const noteOnHighlight = useCallback((annotation) => addFromBook({
+    kind: 'text', open: 'edit', annotationId: annotation.id, content: quoteDoc(annotation.anchors.map((a) => a.text).join(' ')),
+    place: { scope: 'selection', anchors: annotation.anchors, start: annotation.position_start, end: annotation.position_end },
+  }), [addFromBook]);
+  const saveAnswer = useCallback(async ({ text, citations, heading }) => {
+    const place = await reader.current?.notePlace(); // the passage asked about if still selected, else the pages shown
+    const { key } = await addFromBook({ kind: 'text', place, content: answerDoc(text, citations, heading), open: false });
+    if (key) toast({ kind: 'neutral', message: 'Saved to your notes.' });
+    return key;
+  }, [addFromBook, toast]);
   const { ask: askSteve } = steve;
   const steveOn = steve.state.enabled !== false; // C21.4: Ask Steve entry points hide once his settings say he is off
   const steveActions = useMemo(() => ({
@@ -438,6 +484,7 @@ export function ReadingSession() {
       </div>
 
       <SteveContext.Provider value={pagesOnly ? null : steveActions}>
+      <NotesContext.Provider value={notesActions}>
       <div className="rf-reading-body">
       <main className="rf-reading-area">
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
@@ -470,6 +517,7 @@ export function ReadingSession() {
           notes={notepad.state === 'ready' ? notepad.notes.filter((n) => !n.pending) : null}
           onNewNote={newNote}
           onOpenNotes={onOpenNotes}
+          onAnnotationNote={noteOnHighlight}
         />
       </main>
       {side && (
@@ -485,7 +533,7 @@ export function ReadingSession() {
           wide={side === 'notes' && drawingOpen}
         >
           {side === 'steve' ? (
-            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} />
+            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer} />
           ) : (
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
               onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}
@@ -495,6 +543,7 @@ export function ReadingSession() {
         </SidePanel>
       )}
       </div>
+      </NotesContext.Provider>
       </SteveContext.Provider>
 
       <ContentsDrawer

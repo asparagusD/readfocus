@@ -1963,6 +1963,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/notes-blocks.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/notes-drawing.spec.js",
       "type": "file",
       "role": "config",
@@ -1976,6 +1982,12 @@
     },
     {
       "id": "file:frontend/e2e/notes-sync.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/notes.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2833,6 +2845,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/notes/BlockNote.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/notes/DrawingEditor.jsx",
       "type": "file",
       "role": "asset",
@@ -2873,6 +2891,12 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/NotesContext.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/notes/SidePanel.css",
@@ -2930,6 +2954,18 @@
     },
     {
       "id": "file:frontend/src/notes/excalidrawFonts.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/fromBook.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/fromBook.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -3548,6 +3584,12 @@
     },
     {
       "id": "file:frontend/src/steve/LatexDialog.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/NoteGrip.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -8074,6 +8116,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/notes-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/notes-drawing.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8085,6 +8132,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/notes-sync.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notes.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -8914,6 +8966,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/notes/BlockNote.jsx",
+      "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/notes/DrawingEditor.jsx",
       "to": "file:frontend/src/notes/drawing.js"
     },
@@ -8955,6 +9012,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/BlockNote.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/notes/DrawingNote.jsx"
     },
     {
@@ -8966,6 +9028,11 @@
       "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/notes/Notepad.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
     },
     {
       "type": "imports",
@@ -9016,6 +9083,26 @@
       "type": "imports",
       "from": "file:frontend/src/notes/excalidrawFonts.test.js",
       "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/fromBook.js",
+      "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/fromBook.js",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/fromBook.test.js",
+      "to": "file:frontend/src/notes/fromBook.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/fromBook.test.js",
+      "to": "file:frontend/src/steve/blocks.js"
     },
     {
       "type": "imports",
@@ -9760,7 +9847,17 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/notes/SidePanel.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/fromBook.js"
     },
     {
       "type": "imports",
@@ -10120,12 +10217,27 @@
     {
       "type": "imports",
       "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/notes/fromBook.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
       "to": "file:frontend/src/steve/BlockActions.css"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/steve/EpubBlockActions.jsx",
       "to": "file:frontend/src/steve/LatexDialog.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/NoteGrip.jsx"
     },
     {
       "type": "imports",
@@ -10166,6 +10278,11 @@
       "type": "imports",
       "from": "file:frontend/src/steve/LatexDialog.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/NoteGrip.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
     },
     {
       "type": "imports",
@@ -10210,6 +10327,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/notes/fromBook.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
       "to": "file:frontend/src/originalview/pdf/regions.js"
     },
     {
@@ -10221,6 +10348,11 @@
       "type": "imports",
       "from": "file:frontend/src/steve/PdfBlockActions.jsx",
       "to": "file:frontend/src/steve/LatexDialog.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/NoteGrip.jsx"
     },
     {
       "type": "imports",

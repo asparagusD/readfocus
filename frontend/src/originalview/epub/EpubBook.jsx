@@ -163,6 +163,26 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         }
         return [...byId].map(([id, rects]) => ({ id, rects }));
       },
+      // C22.4: where each note's passage is on the page shown, for its margin marker: its first line inside
+      // `within` (the book's box), and the page of the spread it is on.
+      noteSpots: (notes, within) => {
+        const out = [];
+        for (const { doc } of now()?.contents() ?? []) {
+          const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+          if (!frame) continue;
+          for (const note of notes) {
+            const anchor = note.anchors?.find((a) => a.kind === 'epub');
+            const range = anchor && now().rangeFor(doc, anchor.cfi);
+            if (!range) continue;
+            const line = [...range.getClientRects()].map((r) => ({ x: r.x + frame.x, y: r.y + frame.y, height: r.height, width: r.width }))
+              .find((r) => r.height > 0 && r.x + r.width > within.left && r.x < within.right && r.y + r.height > within.top && r.y < within.bottom);
+            if (!line) continue;
+            const side = wide && line.x + line.width / 2 < within.left + within.width / 2 ? 'left' : 'right';
+            out.push({ id: note.id, top: line.y, height: line.height, side });
+          }
+        }
+        return out;
+      },
       // C20.8c: a shown section's spine index, for the region map's EPUB places.
       sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
       panning: () => false,
@@ -171,7 +191,7 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         title: item.label?.trim() || 'Untitled', target: item.href, loc: { kind: 'epub', index: now().sectionOf(item.href) ?? 0, char: 0 },
       })),
     };
-  }, [opened]);
+  }, [opened, wide]);
 
   return (
     <EpubView bookId={bookId} load={load} animated={false} wide={wide}

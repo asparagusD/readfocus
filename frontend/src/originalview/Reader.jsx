@@ -10,6 +10,7 @@ import { useAnnotationChip } from '../annotations/useAnnotationChip';
 import { cycle } from '../annotations/hover';
 import { PdfBlockActions } from '../steve/PdfBlockActions';
 import { EpubBlockActions } from '../steve/EpubBlockActions';
+import { MarginMarkers } from '../notes/MarginMarkers';
 import { EpubBook } from './epub/EpubBook';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
@@ -99,7 +100,7 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
-  onAnnotationChange = null, onAnnotationDelete = null,
+  onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -216,6 +217,11 @@ export function Reader({
       return;
     }
     if (onAnnotate && toolbar.current?.onKey(event)) return;
+    if (onNewNote && (event.key === 'n' || event.key === 'N') && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault(); // C22.4: a new note at the selection, else the pages shown
+      onNewNote();
+      return;
+    }
     if (chipActive && !selected && (event.key === 'a' || event.key === 'A') && !event.ctrlKey && !event.metaKey && !event.altKey
       && cycleChip(event.shiftKey ? -1 : 1)) {
       event.preventDefault();
@@ -234,7 +240,7 @@ export function Reader({
     if (!action || (action === 'ribbon' && !onBookmark)) return;
     event.preventDefault();
     act(action);
-  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip]);
+  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip, onNewNote]);
 
   const onKeyRef = useRef(null);
   const swipeStart = useRef(null);
@@ -340,6 +346,12 @@ export function Reader({
             </aside>
           )}
           {ending && <div className="rf-ov-end" data-no-lookup><div className="rf-end">{closing}</div></div>}
+          {notes && onOpenNotes && (
+            // C22.4: a count circle in the margin beside each passage with notes; it opens them.
+            <MarginMarkers book={book} box={bookBox} notes={notes} wide={wide} onOpen={onOpenNotes}
+              layout={`${zoom}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${sheet?.width}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`}
+              hidden={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
+          )}
           {onBookmark && place && !failure && !ending && (
             <button type="button" className="rf-ov-ribbon" onClick={() => act('ribbon')} aria-label="Save my place"
               aria-keyshortcuts="B" title="Save my place (B)">
@@ -375,7 +387,7 @@ export function Reader({
       )}
       {onAnnotate && (
         // C21.2: colours, underline and Ask Steve over a selection.
-        <SelectionToolbar ref={toolbar} place={selected} onAnnotate={onAnnotate} onDismiss={dismissSelection} returnFocusTo={stage} />
+        <SelectionToolbar ref={toolbar} place={selected} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}

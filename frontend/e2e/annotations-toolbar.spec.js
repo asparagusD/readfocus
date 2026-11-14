@@ -33,7 +33,7 @@ for (const kind of ['pdf', 'epub']) {
       for (const name of ['Honey', 'Sage', 'Sky', 'Rose', 'Lilac']) await expect(bar.getByRole('button', { name: `${name} highlight` })).toBeVisible();
       await expect(bar.getByRole('button', { name: 'Underline', exact: true })).toHaveAttribute('aria-pressed', 'false');
       await expect(bar.getByRole('button', { name: 'Ask Steve' })).toBeVisible();
-      await expect(bar.getByRole('button', { name: /note/i })).toHaveCount(0); // C22
+      await expect(bar.getByRole('button', { name: 'Add note' })).toBeVisible(); // C22.4
       expect(clearOf(await bar.boundingBox(), lines)).toBe(true);
       // The word card for the phrase (lookup on, as before) and the toolbar do not cover each other.
       const card = page.locator('.rf-wordcard');

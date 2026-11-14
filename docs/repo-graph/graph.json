@@ -1957,6 +1957,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/notes-anchor.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/notes-drawing.spec.js",
       "type": "file",
       "role": "config",
@@ -2833,6 +2839,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/notes/MarginMarkers.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/notes/MarginMarkers.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/notes/NoteDoc.jsx",
       "type": "file",
       "role": "asset",
@@ -2906,6 +2924,18 @@
     },
     {
       "id": "file:frontend/src/notes/excalidrawFonts.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/markers.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/markers.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -8021,6 +8051,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/notes-anchor.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/notes-drawing.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8871,6 +8906,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/notes/MarginMarkers.jsx",
+      "to": "file:frontend/src/notes/MarginMarkers.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/MarginMarkers.jsx",
+      "to": "file:frontend/src/notes/markers.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/notes/NoteDoc.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
     },
@@ -8938,6 +8983,11 @@
       "type": "imports",
       "from": "file:frontend/src/notes/excalidrawFonts.test.js",
       "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/markers.test.js",
+      "to": "file:frontend/src/notes/markers.js"
     },
     {
       "type": "imports",
@@ -9063,6 +9113,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/notes/MarginMarkers.jsx"
     },
     {
       "type": "imports",
@@ -9228,6 +9283,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/notes/markers.js"
     },
     {
       "type": "imports",

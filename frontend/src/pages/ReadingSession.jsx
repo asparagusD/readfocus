@@ -228,6 +228,29 @@ export function ReadingSession() {
     return notepad.create({ kind, scope: place.scope, anchors: place.anchors, position_start: place.start,
       position_end: place.end, content: kind === 'drawing' ? { elements: [] } : { type: 'doc', content: [{ type: 'paragraph' }] } });
   };
+  // C22.4: N or the selection toolbar's Note: a text note at the selection (read before it is cleared), else the
+  // pages shown, opened in the notepad; a margin marker opens the notepad at its notes.
+  const [noteRequest, setNoteRequest] = useState(null);
+  const openNotes = () => setSide((now) => { if (!now) opener.current = notesButton.current; return 'notes'; });
+  const newNote = async () => {
+    const key = await addNote('text');
+    if (!key) return;
+    openNotes();
+    setNoteRequest({ type: 'edit', key, n: Date.now() });
+  };
+  const onOpenNotes = (ids) => {
+    openNotes();
+    setNoteRequest({ type: 'focus', ids, n: Date.now() });
+  };
+  const relinkNote = async (note) => {
+    const place = await reader.current?.notePlace();
+    if (place?.scope !== 'selection') {
+      toast({ kind: 'neutral', message: 'Select a passage in the book first, then link the note to it.' });
+      return;
+    }
+    notepad.relink(note.id, place);
+    toast({ kind: 'neutral', message: 'Note linked to the selection.' });
+  };
   const { ask: askSteve } = steve;
   const steveOn = steve.state.enabled !== false; // C21.4: Ask Steve entry points hide once his settings say he is off
   const steveActions = useMemo(() => ({
@@ -437,6 +460,9 @@ export function ReadingSession() {
           annotations={notes.annotations}
           onAnnotationChange={notes.update}
           onAnnotationDelete={notes.remove}
+          notes={notepad.state === 'ready' ? notepad.notes.filter((n) => !n.pending) : null}
+          onNewNote={newNote}
+          onOpenNotes={onOpenNotes}
         />
       </main>
       {side && (
@@ -456,7 +482,8 @@ export function ReadingSession() {
           ) : (
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
               onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}
-              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit} onAdd={addNote} onThumbnail={notepad.attachThumbnail} onDrawing={setDrawingOpen} />
+              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit} onAdd={addNote} onThumbnail={notepad.attachThumbnail} onDrawing={setDrawingOpen}
+              onRelink={relinkNote} request={noteRequest} />
           )}
         </SidePanel>
       )}

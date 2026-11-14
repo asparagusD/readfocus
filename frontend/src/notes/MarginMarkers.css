@@ -1,0 +1,44 @@
+/* C22.4 margin markers (handoff screen 19 `.mk`): a count circle beside a passage with notes. */
+.rf-note-marker {
+  position: absolute;
+  z-index: 7; /* over the page-turn edges and the ribbon's shadow */
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent-text);
+  font: 600 11px/1 var(--font-ui);
+  cursor: pointer;
+  animation: rf-note-marker-in var(--dur-4) var(--ease-settle) both;
+}
+
+/* A 44 px target around the 26 px circle. */
+.rf-note-marker::before {
+  position: absolute;
+  inset: -9px;
+  content: "";
+}
+
+.rf-note-marker:hover { border-color: var(--accent); }
+
+.rf-note-marker:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@keyframes rf-note-marker-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes rf-note-marker-in { from { opacity: 0; } }
+}
+
+@media (max-width: 759px) {
+  .rf-note-marker { width: 22px; height: 22px; font-size: 10px; }
+  .rf-note-marker::before { inset: -11px; }
+}

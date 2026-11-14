@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 795,
-    "inventoried": 652,
+    "tracked": 800,
+    "inventoried": 657,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15112,
+      "size_bytes": 15146,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1737,8 +1737,8 @@
     {
       "path": "docs/ANCHORS.md",
       "language": "markdown",
-      "lines": 187,
-      "size_bytes": 9084,
+      "lines": 217,
+      "size_bytes": 10915,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
     },
@@ -1834,7 +1834,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4905,
-      "size_bytes": 870964,
+      "size_bytes": 874911,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1890,7 +1890,7 @@
       "path": "frontend/e2e/annotations-toolbar.spec.js",
       "language": "javascript",
       "lines": 156,
-      "size_bytes": 8379,
+      "size_bytes": 8383,
       "role": "config",
       "purpose": "E2E for the selection toolbar (C21.2) on the PDF and the EPUB: shown above the selection and clear of the word card, a colour saves a highlight, the underline toggle, Shift+arrows with H and U, Escape, toolbar arrow keys, rollback with a toast, Ask Steve in explain_highlight, 375 px in Lamplight."
     },
@@ -2045,6 +2045,14 @@
       "size_bytes": 11751,
       "role": "config",
       "purpose": "E2E for the notepad (C22.2): Notes beside the book in book order without loading an editor, references go to their passage (PDF and EPUB), tabs and keyboard, empty and failed load, delete and Undo, a queued offline change sent on load, a stale one as a conflict with Keep mine, the phone sheet in Lamplight."
+    },
+    {
+      "path": "frontend/e2e/notes-anchor.spec.js",
+      "language": "javascript",
+      "lines": 148,
+      "size_bytes": 7841,
+      "role": "config",
+      "purpose": "E2E for note anchoring (C22.4): the toolbar's Note and N anchor to the selection or the pages shown (PDF and EPUB), markers beside the passage after zoom or larger text, a marker opens and focuses its note, Link to current selection re-anchors, a 22 px marker on a phone."
     },
     {
       "path": "frontend/e2e/notes-drawing.spec.js",
@@ -2321,8 +2329,8 @@
     {
       "path": "frontend/src/annotations/SelectionToolbar.jsx",
       "language": "jsx",
-      "lines": 119,
-      "size_bytes": 5731,
+      "lines": 136,
+      "size_bytes": 6471,
       "role": "asset",
       "purpose": "The selection toolbar (C21.2, handoff screen 18): five colour dots, an Underline toggle and Ask Steve (explain_highlight) above a mouse selection or below a touch one, never on it; a colour saves at once and clears the selection; H and U from the book, Tab into the bar, arrows along it, Escape back; a polite status line."
     },
@@ -3215,6 +3223,22 @@
       "purpose": "Drawing notes in the notepad (C22.3): the list thumbnail (inverted in Lamplight) and the open drawing, inline on wide screens or a full-screen dialog under the passage reference on phones; loads Excalidraw only when opened, after serveOwnFonts."
     },
     {
+      "path": "frontend/src/notes/MarginMarkers.css",
+      "language": "css",
+      "lines": 44,
+      "size_bytes": 1178,
+      "role": "asset",
+      "purpose": "Styles for margin markers (C22.4, handoff .mk): 26 px count circle with a 44 px target, accent border on hover, focus ring, fade-in, 22 px on phones, reduced motion."
+    },
+    {
+      "path": "frontend/src/notes/MarginMarkers.jsx",
+      "language": "jsx",
+      "lines": 63,
+      "size_bytes": 3504,
+      "role": "asset",
+      "purpose": "Margin markers beside passages with notes (C22.4, handoff screen 19): measures through the renderer's noteSpots, lays out with markers.js, redraws on move, resize, zoom, text size and scroll, and opens the notes on click."
+    },
+    {
       "path": "frontend/src/notes/NoteDoc.jsx",
       "language": "jsx",
       "lines": 51,
@@ -3225,16 +3249,16 @@
     {
       "path": "frontend/src/notes/Notepad.css",
       "language": "css",
-      "lines": 288,
-      "size_bytes": 10071,
+      "lines": 289,
+      "size_bytes": 10289,
       "role": "asset",
       "purpose": "Styles for the notepad's list and note cards (C22.2): reference, kind, delete, the drawn TipTap document, checklists, math, alerts and 44 px targets on phones."
     },
     {
       "path": "frontend/src/notes/Notepad.jsx",
       "language": "jsx",
-      "lines": 154,
-      "size_bytes": 8130,
+      "lines": 182,
+      "size_bytes": 10097,
       "role": "asset",
       "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note; C22.2b: a note opens in the lazy editor on click or Enter, Done in its header, and Text adds a note at the selection or the pages shown."
     },
@@ -3319,6 +3343,22 @@
       "purpose": "Unit tests for the font source filter: other origins dropped, ours, relative and local() kept, unchanged when nothing would remain, FontFace wrapped once."
     },
     {
+      "path": "frontend/src/notes/markers.js",
+      "language": "javascript",
+      "lines": 41,
+      "size_bytes": 2092,
+      "role": "asset",
+      "purpose": "Margin marker layout for notes (C22.4, pure): a PDF note's first anchor on the pages shown and its quad's top, markers grouped per line, pushed apart and below the ribbon's tail, and the count label."
+    },
+    {
+      "path": "frontend/src/notes/markers.test.js",
+      "language": "javascript",
+      "lines": 50,
+      "size_bytes": 2682,
+      "role": "asset",
+      "purpose": "Unit tests for margin markers: grouping by line, spacing on each side of a spread, the ribbon obstacle, labels, PDF note tops for selection and view notes."
+    },
+    {
       "path": "frontend/src/notes/mathNodes.js",
       "language": "javascript",
       "lines": 123,
@@ -3393,8 +3433,8 @@
     {
       "path": "frontend/src/notes/useNotes.js",
       "language": "javascript",
-      "lines": 123,
-      "size_bytes": 5964,
+      "lines": 131,
+      "size_bytes": 6548,
       "role": "asset",
       "purpose": "The reader's note blocks in a book (C22.2): load in book order, optimistic create, edit with 800 ms autosave, offline queue retried on load, online and before the tab hides, conflict choices, delete with Undo."
     },
@@ -3409,8 +3449,8 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 397,
-      "size_bytes": 22352,
+      "lines": 409,
+      "size_bytes": 23258,
       "role": "asset",
       "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions."
     },
@@ -3449,8 +3489,8 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 182,
-      "size_bytes": 9422,
+      "lines": 202,
+      "size_bytes": 10617,
       "role": "asset",
       "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places."
     },
@@ -3545,8 +3585,8 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 203,
-      "size_bytes": 10720,
+      "lines": 217,
+      "size_bytes": 11599,
       "role": "asset",
       "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor."
     },
@@ -3777,8 +3817,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 487,
-      "size_bytes": 23621,
+      "lines": 514,
+      "size_bytes": 24872,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -5161,8 +5201,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 654,
-      "size_bytes": 196989,
+      "lines": 659,
+      "size_bytes": 198218,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -61,6 +61,7 @@
 /* C22.2b: a note added on this visit rises in with an accent edge (handoff); the one being edited keeps it. */
 .rf-note[data-new] { animation: rf-note-in var(--dur-5) var(--ease-arrive) both; }
 .rf-note[data-editing] { border-color: var(--accent); }
+.rf-note[data-focused] { border-color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); } /* C22.4: opened from a margin marker */
 @keyframes rf-note-in { from { opacity: 0; transform: translateY(8px); } }
 
 .rf-note-read {
@@ -211,7 +212,7 @@
 
 .rf-note-kind { display: inline-grid; place-items: center; margin-left: auto; width: 28px; height: 28px; color: var(--ink-2); }
 
-.rf-note-delete {
+.rf-note-delete, .rf-note-link {
   display: grid;
   place-items: center;
   width: 32px;
@@ -224,10 +225,10 @@
   transition: background-color var(--dur-1) var(--ease-settle);
 }
 
-.rf-note-delete:hover { background-color: var(--paper-2); color: var(--ink); }
+.rf-note-delete:hover, .rf-note-link:hover { background-color: var(--paper-2); color: var(--ink); }
 .rf-note-delete:disabled { opacity: 0.4; cursor: default; }
 
-.rf-note-ref:focus-visible, .rf-note-delete:focus-visible {
+.rf-note-ref:focus-visible, .rf-note-delete:focus-visible, .rf-note-link:focus-visible {
   outline: var(--focus-ring-width) solid var(--accent);
   outline-offset: var(--focus-ring-offset);
 }
@@ -277,7 +278,7 @@
   .rf-notes { padding: var(--space-3) var(--space-3) var(--space-5); }
   .rf-note { padding: var(--space-2) var(--space-3) var(--space-3); }
   .rf-note-delete, .rf-note-ref, .rf-note-done { min-height: 44px; }
-  .rf-note-delete { width: 44px; height: 44px; }
+  .rf-note-delete, .rf-note-link { width: 44px; height: 44px; }
   .rf-notes-pill { min-height: 44px; }
   .rf-note-read { min-height: 44px; }
 }

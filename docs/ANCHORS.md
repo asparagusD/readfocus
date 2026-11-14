@@ -185,3 +185,33 @@ document.
   re-finding moved anchors, and flagging `orphaned` (A5). An EPUB anchor
   that no longer resolves is listed but not drawn.
 
+
+## A11. Note anchors and margin markers as built (C22)
+
+- **Storage** (migration 027): a `note_blocks` row carries `anchors` and
+  `position_start` / `position_end` exactly as A10, plus `scope`.
+- **Scope `selection`**: "Note" in the selection toolbar, N with a
+  selection, or the notepad's Text / Drawing pills while text is selected.
+  The anchors and positions are the selection's, as for a highlight (one
+  PDF anchor per page with a quad per line, or one EPUB range CFI), with
+  their text.
+- **Scope `view`**: the same actions with nothing selected. PDF: one anchor
+  per page shown, a single quad covering the whole page in points, `text:
+  ''`. EPUB: the range CFI of the page shown (foliate's location), `text:
+  ''`. The server checks text only for `selection`.
+- **Re-anchoring**: a note's "Link to current selection" sends `scope:
+  'selection'` with the new anchors and both positions in one PATCH
+  (If-Match); without a selection nothing is sent and the reader is told to
+  select a passage first.
+- **Margin markers**: each renderer reports where a note's passage is on
+  the pages shown (`noteSpots`): a PDF note at its first anchor's first
+  quad on a shown page (a view note at the page top), beside the page's
+  outer edge in the frame margin; an EPUB note at the first line of its
+  range that is inside the book's box, in the page margin of the spread
+  page it is on. Notes on one line (16 px) share a marker with their count;
+  markers never overlap and move below the ribbon's tail when they would
+  sit on it; 22 px at the right edge below 760 px. Markers are measured
+  again on every move, resize, zoom, text-size change and PDF scroll.
+- **Not yet built:** re-finding a moved passage (A5) and flagging
+  `orphaned`; an EPUB note whose CFI no longer resolves has no marker but
+  stays in the notepad.

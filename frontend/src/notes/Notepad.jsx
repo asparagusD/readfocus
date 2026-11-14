@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Bookmark, Code2, Image, PenLine, Plus, Sigma, Trash2, Type } from 'lucide-react';
+import { Bookmark, Code2, Image, Link2, PenLine, Plus, Sigma, Trash2, Type } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NoteDoc } from './NoteDoc';
 import { DrawingFrame, DrawingThumb } from './DrawingNote';
@@ -47,10 +47,29 @@ const TextEditor = lazy(() => import('./TextEditor'));
  * edited in TipTap, loaded the first time one is opened (C22.2b): a click, or Enter on a focused note, opens it;
  * Escape or Done closes it. "Text" adds a note at the selection or the pages shown and opens it. C22.3: drawings
  * show their thumbnail and open in Excalidraw (DrawingNote.jsx); "Drawing" adds one. Loading, error and empty
- * states; one save line, announced politely; a conflict or a refused save on its note.
+ * states; one save line, announced politely; a conflict or a refused save on its note. C22.4: `request` from the
+ * book ({ type: 'edit', key } for a new note by N or the selection toolbar, { type: 'focus', ids } from a margin
+ * marker) opens or focuses notes; each note's link button moves its anchor to the selection (`onRelink`).
  */
-export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd, onThumbnail, onDrawing }) {
+export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd, onThumbnail, onDrawing, onRelink, request = null }) {
   const [editing, setEditing] = useState(null); // a note's key (or id)
+  const [focused, setFocused] = useState(null); // { ids } opened from a margin marker
+  const [seen, setSeen] = useState(null); // the last request taken, so each is taken once, when the list is ready
+  if (request && state === 'ready' && seen !== request.n) {
+    setSeen(request.n);
+    setEditing(request.type === 'edit' ? request.key : null);
+    setFocused(request.type === 'focus' ? { ids: request.ids, n: request.n } : null);
+  }
+  useEffect(() => {
+    if (!focused) return undefined;
+    const frame = requestAnimationFrame(() => requestAnimationFrame(() => { // after the panel has focused its tab
+      const first = document.querySelector(`.rf-note[data-id="${focused.ids[0]}"]`);
+      first?.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+      (first?.querySelector('.rf-note-read') ?? first?.querySelector('.rf-note-ref'))?.focus();
+    }));
+    const clear = setTimeout(() => setFocused(null), 4000);
+    return () => { cancelAnimationFrame(frame); clearTimeout(clear); };
+  }, [focused]);
   const drawingOpen = notes.some((n) => (n.key ?? n.id) === editing && n.kind === 'drawing');
   useEffect(() => { onDrawing?.(drawingOpen); }, [drawingOpen, onDrawing]); // the side panel widens for it
   useEffect(() => () => onDrawing?.(false), [onDrawing]);
@@ -94,7 +113,8 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
             const open = editing === key && (note.kind === 'text' || note.kind === 'drawing');
             return (
               <li key={key} className="rf-note" data-kind={note.kind} data-id={note.id} data-key={key}
-                data-new={note.key ? 'true' : undefined} data-editing={open || undefined}>
+                data-new={note.key ? 'true' : undefined} data-editing={open || undefined}
+                data-focused={focused?.ids.includes(note.id) || undefined}>
                 <div className="rf-note-head">
                   <button type="button" className="rf-note-ref" onClick={() => onGoTo(note)} aria-label={`Go to ${ref}`}>
                     <Bookmark size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -105,6 +125,14 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
                     <Icon size={15} strokeWidth={1.75} aria-hidden="true" />
                     <span className="rf-note-hidden">{label} note</span>
                   </span>
+                  {onRelink && (
+                    // C22.4: a press here keeps the book's selection, which the note moves to.
+                    <button type="button" className="rf-note-link" onPointerDown={(event) => event.preventDefault()}
+                      onMouseDown={(event) => event.preventDefault()} onClick={() => onRelink(note)}
+                      aria-label={`Link note at ${ref} to the current selection`} title="Link to current selection">
+                      <Link2 size={15} strokeWidth={1.75} aria-hidden="true" />
+                    </button>
+                  )}
                   <button type="button" className="rf-note-delete" onClick={() => onRemove(note.id)} disabled={note.pending}
                     aria-label={`Delete note at ${ref}`}>
                     <Trash2 size={15} strokeWidth={1.75} aria-hidden="true" />

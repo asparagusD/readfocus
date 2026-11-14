@@ -81,6 +81,14 @@ export function useNotes(bookId) {
     else autosave.edit(id, change);
   }, [autosave]);
 
+  /** C22.4: a note moved to another passage ({ scope, anchors, start, end }), saved at once, in book order again. */
+  const relink = useCallback((id, place) => {
+    const change = { scope: place.scope, anchors: place.anchors, position_start: place.start, position_end: place.end };
+    setNotes((list) => inBookOrder(list.map((n) => (n.id === id ? { ...n, ...change } : n))));
+    if (String(id).startsWith('pending-')) drafts.current.set(id, { ...(drafts.current.get(id) ?? {}), ...change });
+    else { autosave.edit(id, change); autosave.flush(id); }
+  }, [autosave]);
+
   const remove = useCallback(async (id) => {
     const before = notes.find((n) => n.id === id);
     if (!before || before.pending) return;
@@ -119,5 +127,5 @@ export function useNotes(bookId) {
     setNotes((list) => list.map((n) => (n.id === id ? theirs : n)));
   }, [bookId, autosave]);
 
-  return { notes, state, statuses, reload, create, edit, remove, keepMine, takeTheirs, attachThumbnail, flush: autosave.flush };
+  return { notes, state, statuses, reload, create, edit, relink, remove, keepMine, takeTheirs, attachThumbnail, flush: autosave.flush };
 }

@@ -40,3 +40,22 @@ test('a failed request skips nothing and is tried again later', async () => {
   await source.load(1);
   assert.equal(calls, 2);
 });
+
+test('C20.8: whole regions with ids are found by point; inline math is not; listeners hear each batch', async () => {
+  const { api } = fakeApi([
+    { page: 2, kind: 'math', bbox: [100, 150, 300, 170], id: 'r-eq', inline: false },
+    { page: 2, kind: 'math', bbox: [80, 100, 90, 112], id: 'r-block', inline: true },
+    { page: 2, kind: 'code', bbox: [60, 200, 400, 260], id: 'r-code', inline: false },
+  ]);
+  const source = createRegionSource(api, 'book-1');
+  let heard = 0;
+  const off = source.subscribe(() => { heard += 1; });
+  await source.load(2);
+  assert.equal(heard, 1);
+  assert.deepEqual(source.regionsOf(2).map((r) => r.id), ['r-eq', 'r-code']);
+  assert.equal(source.regionAt(2, 150, 160).id, 'r-eq');
+  assert.equal(source.regionAt(2, 85, 105), null); // inline math: lookup skips it, but it has no actions
+  assert.equal(source.hits(2, 85, 105), true);
+  assert.deepEqual(source.boxesOf(2).length, 3);
+  off();
+});

@@ -78,3 +78,16 @@ export async function askSteve({ url, token, body, signal, onEvent, fetchImpl = 
   }
   for (const event of feed(decoder.decode() + '\n\n')) onEvent(event);
 }
+
+/** POST JSON to a /steve endpoint with the reader's token; the parsed answer, or a typed SteveError (C20.8). */
+export async function postSteve({ url, token, body, fetchImpl = fetch }) {
+  const response = await fetchImpl(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify(body),
+  });
+  let parsed = null;
+  try { parsed = await response.json(); } catch { /* not JSON */ }
+  if (!response.ok) throw errorFrom(response.status, parsed);
+  return parsed;
+}

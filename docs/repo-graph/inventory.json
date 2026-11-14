@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 722,
-    "inventoried": 579,
+    "tracked": 730,
+    "inventoried": 587,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14589,
+      "size_bytes": 14625,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1697,8 +1697,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3464,
-      "size_bytes": 152709,
+      "lines": 3505,
+      "size_bytes": 154223,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1762,7 +1762,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4310,
-      "size_bytes": 780774,
+      "size_bytes": 783227,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1833,8 +1833,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 283,
-      "size_bytes": 17225,
+      "lines": 294,
+      "size_bytes": 17937,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -1973,6 +1973,14 @@
       "size_bytes": 6984,
       "role": "config",
       "purpose": "Playwright e2e for the app shell (C13.2a): the current page marked and every page titled, the skip link first and leading to main, the account panel (initials, text size and accent saved, Esc returning focus, a press outside), sign out to /login, and at 375 px the links in the bar, no sideways scroll, 44 px targets and the theme inside the panel; with and without reduced motion, the account panel and a page change carry a transform only when motion is allowed."
+    },
+    {
+      "path": "frontend/e2e/steve-blocks.spec.js",
+      "language": "javascript",
+      "lines": 119,
+      "size_bytes": 6769,
+      "role": "config",
+      "purpose": "E2E for the PDF block actions (C20.8b): equation Explain sends a PNG crop, Copy as LaTeX previews and copies, refusals in the dialog, code copied exactly with no Steve call and explained by region id, figure crops, inline math has none, the bar leaves with the pointer, keyboard focus, Tab and Esc."
     },
     {
       "path": "frontend/e2e/steve-key.spec.js",
@@ -2929,10 +2937,10 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 309,
-      "size_bytes": 16858,
+      "lines": 315,
+      "size_bytes": 17246,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -3145,16 +3153,16 @@
     {
       "path": "frontend/src/originalview/pdf/regions.js",
       "language": "javascript",
-      "lines": 52,
-      "size_bytes": 2238,
+      "lines": 62,
+      "size_bytes": 2924,
       "role": "asset",
-      "purpose": "Where PDF word lookup stays quiet (C18.6d): createRegionSource(api, bookId) asks GET /books/{id}/regions 20 pages at a time (a failure skips nothing and is asked again), hits(page, x, y) in PDF points; batchOf, toPagePoint, skipPdfPoint(source, x, y) finds the shown .rf-pdf-page under a client point."
+      "purpose": "Where PDF word lookup stays quiet (C18.6d): createRegionSource(api, bookId) asks GET /books/{id}/regions 20 pages at a time (a failure skips nothing and is asked again), hits(page, x, y) in PDF points; batchOf, toPagePoint, skipPdfPoint(source, x, y) finds the shown .rf-pdf-page under a client point. C20.8b: keeps each region's id, kind and inline flag; regionsOf, regionAt and subscribe for the block actions."
     },
     {
       "path": "frontend/src/originalview/pdf/regions.test.js",
       "language": "javascript",
-      "lines": 42,
-      "size_bytes": 1693,
+      "lines": 61,
+      "size_bytes": 2629,
       "role": "asset",
       "purpose": "Node tests for originalview/pdf/regions.js: batches of 20 pages, client point to PDF points, boxes skipped once loaded and asked for once per batch, a failed request skipping nothing and asked again."
     },
@@ -3599,6 +3607,30 @@
       "purpose": "node --test: word under an offset, apostrophes and hyphens, stopwords/short words/numbers skipped, sentence starts, proper nouns, phrases of 2-5 words, the lookup path."
     },
     {
+      "path": "frontend/src/steve/BlockActions.css",
+      "language": "css",
+      "lines": 78,
+      "size_bytes": 2278,
+      "role": "asset",
+      "purpose": "Styles for the block actions (C20.8b): outlines, the action bar on the region's side of the page, 44 px targets, fade-and-rise or fade under reduced motion."
+    },
+    {
+      "path": "frontend/src/steve/LatexDialog.css",
+      "language": "css",
+      "lines": 24,
+      "size_bytes": 858,
+      "role": "asset",
+      "purpose": "Styles for the Copy as LaTeX dialog (C20.8b): preview, source and actions; tokens only."
+    },
+    {
+      "path": "frontend/src/steve/LatexDialog.jsx",
+      "language": "jsx",
+      "lines": 36,
+      "size_bytes": 1792,
+      "role": "asset",
+      "purpose": "Copy as LaTeX (C20.8b): a modal with a KaTeX preview, the LaTeX source, where it came from and Copy LaTeX; loading and refusal states."
+    },
+    {
       "path": "frontend/src/steve/OwnKeyForm.css",
       "language": "css",
       "lines": 81,
@@ -3613,6 +3645,14 @@
       "size_bytes": 4548,
       "role": "asset",
       "purpose": "\"Use your own free Gemini key\" (C20.3, handoff screen 17): a disclosure in the account panel with a password field, the Google AI Studio link and Save key (checked with Google by PUT /steve/key), then the last four and Remove key; the key is dropped once sent."
+    },
+    {
+      "path": "frontend/src/steve/PdfBlockActions.jsx",
+      "language": "jsx",
+      "lines": 173,
+      "size_bytes": 7888,
+      "role": "asset",
+      "purpose": "Block actions on a PDF (C20.8b): a focusable outline over each equation, code listing and figure of the shown pages (pointer events pass through) and a bar of actions on hover, tap or focus: Explain (a crop or the region id to Steve), Copy code (exact text) and Copy as LaTeX (/steve/latex, KaTeX preview)."
     },
     {
       "path": "frontend/src/steve/SteveAnswer.jsx",
@@ -3663,6 +3703,30 @@
       "purpose": "Steve's answer as blocks (C20.7a): paragraphs, lists, fenced code, display and inline math, inline code, emphasis and citation chips for sent labels only, from the answer's Markdown without any HTML; works on half-written answers."
     },
     {
+      "path": "frontend/src/steve/blocks.js",
+      "language": "javascript",
+      "lines": 91,
+      "size_bytes": 3834,
+      "role": "asset",
+      "purpose": "Block actions' pure parts (C20.8b): the actions of each region kind (device-only copies without Steve), labels, the canvas crop rectangle at 2x CSS size, shrink steps to fit 500 KB, an element's CFI step path, base64 helpers."
+    },
+    {
+      "path": "frontend/src/steve/blocks.test.js",
+      "language": "javascript",
+      "lines": 50,
+      "size_bytes": 2496,
+      "role": "asset",
+      "purpose": "Unit tests for frontend/src/steve/blocks.js: actions per kind and without Steve, crop geometry and clamping, shrink steps, element paths, base64 sizes."
+    },
+    {
+      "path": "frontend/src/steve/crop.js",
+      "language": "javascript",
+      "lines": 39,
+      "size_bytes": 1991,
+      "role": "asset",
+      "purpose": "Crops for Steve (C20.8b): a PDF region from its page's own canvas, padded, at twice its CSS size, as a PNG under 500 KB; an image element (EPUB figures) downscaled the same way."
+    },
+    {
       "path": "frontend/src/steve/highlight.js",
       "language": "javascript",
       "lines": 51,
@@ -3697,8 +3761,8 @@
     {
       "path": "frontend/src/steve/sse.js",
       "language": "javascript",
-      "lines": 80,
-      "size_bytes": 3247,
+      "lines": 93,
+      "size_bytes": 3814,
       "role": "asset",
       "purpose": "Steve's stream client (C20.7a): parses POST /steve/ask's Server-Sent Events across chunks, turns refusals into typed SteveError (code, status, until) and askSteve() posts a question and streams events to a callback."
     },
@@ -4577,8 +4641,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 581,
-      "size_bytes": 177270,
+      "lines": 589,
+      "size_bytes": 179313,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

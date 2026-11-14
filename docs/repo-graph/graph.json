@@ -1840,6 +1840,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/steve-blocks.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/steve-key.spec.js",
       "type": "file",
       "role": "config",
@@ -3058,6 +3064,24 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/steve/BlockActions.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/steve/LatexDialog.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/steve/LatexDialog.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/steve/OwnKeyForm.css",
       "type": "file",
       "role": "asset",
@@ -3065,6 +3089,12 @@
     },
     {
       "id": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/PdfBlockActions.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -3101,6 +3131,24 @@
     },
     {
       "id": "file:frontend/src/steve/answer.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/blocks.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/blocks.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/crop.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4156,6 +4204,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/steve/OwnKeyForm.jsx",
       "to": "endpoint:PUT /steve/key"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "endpoint:GET /books/{book_id}/regions/{region_id}"
     },
     {
       "type": "calls_endpoint",
@@ -7282,6 +7335,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/steve-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/steve-key.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8039,6 +8097,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/useLamplight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/steve/PdfBlockActions.jsx"
     },
     {
       "type": "imports",
@@ -8867,6 +8930,26 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/steve/LatexDialog.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/LatexDialog.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/LatexDialog.jsx",
+      "to": "file:frontend/src/steve/LatexDialog.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/LatexDialog.jsx",
+      "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/steve/OwnKeyForm.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -8889,6 +8972,56 @@
       "type": "imports",
       "from": "file:frontend/src/steve/OwnKeyForm.jsx",
       "to": "file:frontend/src/steve/ownKey.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/lib/supabase.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/originalview/pdf/regions.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/BlockActions.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/LatexDialog.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/crop.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/sse.js"
     },
     {
       "type": "imports",
@@ -8944,6 +9077,16 @@
       "type": "imports",
       "from": "file:frontend/src/steve/StevePanel.jsx",
       "to": "file:frontend/src/steve/suggest.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/blocks.test.js",
+      "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/crop.js",
+      "to": "file:frontend/src/steve/blocks.js"
     },
     {
       "type": "imports",

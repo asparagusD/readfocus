@@ -133,6 +133,16 @@ async function mockBackend(page, api, book) {
       if (reply.status) return json(route, { detail: reply.detail }, reply.status);
       return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': 'text/event-stream' }, body: reply.sse });
     }
+    if (path === '/steve/latex') { // C20.8: a PDF equation as LaTeX, or the queued refusal
+      api.steve.latexAsks.push(request.postDataJSON());
+      const reply = api.steve.latexReplies.shift() ?? { latex: String.raw`a_n = \frac{1}{\pi}`, cached: false, model: 'gemini-test' };
+      if (reply.status) return json(route, { detail: reply.detail }, reply.status);
+      return json(route, reply);
+    }
+    if (path.startsWith(`/books/${BOOK}/regions/`)) { // C20.8: one region's details
+      const detail = api.regionDetails[path.split('/').pop()];
+      return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
+    }
     if (path === '/steve/key') { // C20.3: GOOD_KEY is accepted, anything else is what Google refuses
       if (request.method() === 'PUT') {
         const { key } = request.postDataJSON();
@@ -168,7 +178,8 @@ export const test = base.extend({
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
-      steve: { consented: false, enabled: true, puts: [], asks: [], replies: [] } };
+      steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
+      regionDetails: {} };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

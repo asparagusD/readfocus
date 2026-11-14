@@ -90,3 +90,98 @@
   font-family: var(--font-ui);
   font-size: var(--text-ui);
 }
+
+/* C21.5: Contents and Annotations tabs, the colour filter and the annotation rows. */
+.rf-contents-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-3) var(--space-2) var(--space-4);
+  border-bottom: var(--border-hair) solid var(--line);
+}
+.rf-contents-tab {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-bottom: var(--border-strong) solid transparent;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  cursor: pointer;
+}
+.rf-contents-tab[aria-selected="true"] { border-bottom-color: var(--accent); color: var(--ink); }
+.rf-contents-tab:hover { color: var(--ink); }
+.rf-contents-count { color: var(--accent-text); font-size: var(--text-label); }
+.rf-contents-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: var(--space-2);
+}
+
+.rf-anno-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-3) var(--space-2) var(--space-4);
+}
+.rf-anno-filter button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  cursor: pointer;
+}
+.rf-anno-filter .rf-anno-filter-all { padding-inline: var(--space-3); }
+.rf-anno-filter [aria-checked="true"] { background: var(--accent-soft); color: var(--accent-text); }
+.rf-anno-filter-dot > span {
+  inline-size: 20px;
+  block-size: 20px;
+  border: var(--border-strong) solid var(--surface);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 var(--border-hair) var(--line-field);
+}
+.rf-anno-filter-dot[data-colour="honey"] > span { background: var(--dot-honey); }
+.rf-anno-filter-dot[data-colour="sage"] > span { background: var(--dot-sage); }
+.rf-anno-filter-dot[data-colour="sky"] > span { background: var(--dot-sky); }
+.rf-anno-filter-dot[data-colour="rose"] > span { background: var(--dot-rose); }
+.rf-anno-filter-dot[data-colour="lilac"] > span { background: var(--dot-lilac); }
+.rf-anno-filter button:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
+
+.rf-contents-item.rf-anno-item { align-items: flex-start; justify-content: flex-start; }
+.rf-anno-mark {
+  flex: none;
+  inline-size: 12px;
+  block-size: 16px;
+  margin-block-start: 3px;
+  border-radius: var(--radius-hair);
+}
+.rf-anno-mark[data-style="underline"] { block-size: 2px; margin-block-start: 16px; }
+.rf-anno-mark[data-style="highlight"][data-colour="honey"] { background: var(--hl-honey); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-honey); }
+.rf-anno-mark[data-style="highlight"][data-colour="sage"] { background: var(--hl-sage); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-sage); }
+.rf-anno-mark[data-style="highlight"][data-colour="sky"] { background: var(--hl-sky); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-sky); }
+.rf-anno-mark[data-style="highlight"][data-colour="rose"] { background: var(--hl-rose); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-rose); }
+.rf-anno-mark[data-style="highlight"][data-colour="lilac"] { background: var(--hl-lilac); box-shadow: inset 0 0 0 var(--border-hair) var(--ul-lilac); }
+.rf-anno-mark[data-style="underline"][data-colour="honey"] { background: var(--ul-honey); }
+.rf-anno-mark[data-style="underline"][data-colour="sage"] { background: var(--ul-sage); }
+.rf-anno-mark[data-style="underline"][data-colour="sky"] { background: var(--ul-sky); }
+.rf-anno-mark[data-style="underline"][data-colour="rose"] { background: var(--ul-rose); }
+.rf-anno-mark[data-style="underline"][data-colour="lilac"] { background: var(--ul-lilac); }
+.rf-anno-text {
+  flex: 1;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}

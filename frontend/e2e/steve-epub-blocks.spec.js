@@ -112,3 +112,14 @@ test('keyboard: a block takes focus, Enter moves to its actions, Esc puts them a
   await page.keyboard.press('Escape');
   await expect(actions).toHaveCount(0);
 });
+
+test('with Steve switched off, an equation keeps Copy as LaTeX and loses Explain', async ({ page, api }) => {
+  api.steve.enabled = false; // C21.4 follow-up (steve-guardrails S2)
+  await openReader(page);
+  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await expect(page.getByPlaceholder('Turn on Steve to ask')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await hover(page, await find(page, 'math'));
+  await expect(page.getByRole('toolbar', { name: 'Equation, this page' }).getByRole('button')).toHaveText(['Copy as LaTeX']);
+  expect(api.steve.asks).toHaveLength(0);
+});

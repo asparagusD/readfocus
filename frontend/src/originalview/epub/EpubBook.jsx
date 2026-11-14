@@ -1,7 +1,8 @@
-import { useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { epubThemeCss, locationAt } from '../frame';
 import { EpubView } from './EpubView';
-import { epubAnchor } from '../../anchors';
+import { epubAnchor, epubPositions } from '../../anchors';
+import { paintedIn, paintSection, readPalette } from '../../annotations/epubPaint';
 
 /** "p. 34 of ~210" or "pp. 34–35 of ~210"; "~" because the numbers count characters, not printed pages. */
 function epubFolio(locations, place) {
@@ -31,7 +32,7 @@ function deferred() {
  * { index, char }; both wait for the engine, which can report a first place before it
  * is handed over.
  */
-export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, onDocument, onError, ref }) {
+export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, onDocument, onError, annotations = null, ref }) {
   const [locations, setLocations] = useState(null);
   const [opened] = useState(deferred);
   const engine = useRef(null);
@@ -46,8 +47,12 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
     });
   }, [onRelocate]);
 
+  const counted = useRef(null); // the locations, for page labels asked through the ref (C21.5)
+  useEffect(() => { counted.current = locations; }, [locations]);
+  const [loads, setLoads] = useState(0); // the engine opening, then each section loaded: a reason to paint again
   const onReady = useCallback((made) => {
     engine.current = made;
+    setLoads((n) => n + 1);
     opened.resolve(made);
     made.locations(bookId).then((locs) => {
       setLocations(locs);
@@ -58,6 +63,15 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
     last.current = place;
     send(place, locations);
   }, [send, locations]);
+
+  // C21.3: highlights and underlines in each shown section's document (CSS Custom Highlights; epubPaint.js),
+  // again when one loads, the list changes or the colours do. A new text size keeps the document: the marks follow.
+  useEffect(() => {
+    const made = engine.current;
+    if (!made || !annotations) return;
+    const palette = readPalette(Boolean(colours));
+    for (const { doc, index } of made.contents()) paintSection(doc, index, annotations, made.rangeFor, palette);
+  }, [annotations, colours, loads]);
 
   useImperativeHandle(ref, () => {
     const now = () => engine.current;
@@ -95,6 +109,19 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         }
         return [];
       },
+      // C21.2: the selection as one range anchor with its A4 positions, plus the range and its document.
+      selectionPlace: () => {
+        for (const { doc, index } of now()?.contents() ?? []) {
+          const selection = doc.getSelection();
+          if (!selection?.rangeCount || selection.isCollapsed) continue;
+          const range = selection.getRangeAt(0);
+          const cfi = now().cfiFor(doc, range);
+          if (!cfi) return null;
+          const [start, end] = now().charsOf(doc, range);
+          return { anchors: [epubAnchor(cfi, range.toString())], ...epubPositions(index, start, end), range, doc };
+        }
+        return null;
+      },
       getSelection: () => {
         for (const { doc } of now()?.contents() ?? []) {
           const selection = doc.getSelection();
@@ -103,6 +130,24 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         return null;
       },
       documents: () => (now()?.contents() ?? []).map(({ doc }) => doc),
+      // C21.5: "p. 34" for an annotation, from its A4 position (spine item and characters) and the counted pages.
+      pageLabel: (annotation) => {
+        const page = locationAt(counted.current, Math.floor(annotation.position_start / 1e6), annotation.position_start % 1e6);
+        return page ? `p. ${page}` : '';
+      },
+      // C21.4: where each painted annotation is, in the page's coordinates (each section's frame shifts it).
+      annotationEntries: () => {
+        const byId = new Map();
+        for (const { doc } of now()?.contents() ?? []) {
+          const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+          if (!frame) continue;
+          for (const { id, range } of paintedIn(doc)) {
+            const rects = [...range.getClientRects()].map((r) => new DOMRect(r.x + frame.x, r.y + frame.y, r.width, r.height));
+            byId.set(id, [...(byId.get(id) ?? []), ...rects]);
+          }
+        }
+        return [...byId].map(([id, rects]) => ({ id, rects }));
+      },
       // C20.8c: a shown section's spine index, for the region map's EPUB places.
       sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
       panning: () => false,
@@ -117,6 +162,6 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
     <EpubView bookId={bookId} load={load} animated={false} wide={wide}
       style={settings.style} fontSize={settings.fontSize} lineHeight={settings.lineHeight} margins={settings.margins}
       themeCss={colours ? epubThemeCss(colours) : ''}
-      onReady={onReady} onRelocate={relocate} onLoad={({ doc }) => onDocument?.(doc)} onError={onError} label="Book pages" />
+      onReady={onReady} onRelocate={relocate} onLoad={({ doc }) => { onDocument?.(doc); setLoads((n) => n + 1); }} onError={onError} label="Book pages" />
   );
 }

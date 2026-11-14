@@ -2,6 +2,13 @@
   "version": 1,
   "nodes": [
     {
+      "id": "endpoint:DELETE /annotations/{annotation_id}",
+      "type": "endpoint",
+      "method": "DELETE",
+      "path": "/annotations/{annotation_id}",
+      "handler": "delete_annotation"
+    },
+    {
       "id": "endpoint:DELETE /books/{book_id}",
       "type": "endpoint",
       "method": "DELETE",
@@ -35,6 +42,13 @@
       "method": "GET",
       "path": "/books/{book_id}",
       "handler": "get_book_details"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/annotations",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/annotations",
+      "handler": "list_annotations"
     },
     {
       "id": "endpoint:GET /books/{book_id}/file",
@@ -149,6 +163,13 @@
       "handler": "get_thread"
     },
     {
+      "id": "endpoint:PATCH /annotations/{annotation_id}",
+      "type": "endpoint",
+      "method": "PATCH",
+      "path": "/annotations/{annotation_id}",
+      "handler": "restyle_annotation"
+    },
+    {
       "id": "endpoint:POST /auth/profile/calibrate",
       "type": "endpoint",
       "method": "POST",
@@ -161,6 +182,13 @@
       "method": "POST",
       "path": "/books/upload",
       "handler": "upload_book"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/annotations",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/annotations",
+      "handler": "create_annotation"
     },
     {
       "id": "endpoint:POST /books/{book_id}/ocr",
@@ -760,6 +788,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/annotations.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/auth.py",
       "type": "file",
       "role": "router",
@@ -1079,6 +1113,12 @@
     },
     {
       "id": "file:backend/tests/test_agent_state.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_annotations_api.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1720,6 +1760,30 @@
       "language": "markdown"
     },
     {
+      "id": "file:frontend/e2e/annotations-hover.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/annotations-render.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/annotations-toolbar.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/annotations.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/calibration.spec.js",
       "type": "file",
       "role": "config",
@@ -1991,6 +2055,102 @@
     },
     {
       "id": "file:frontend/src/anchors/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/SelectionToolbar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/epubPaint.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/hover.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/hover.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/list.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/list.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/paint.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/paint.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/palette.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/palette.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/roving.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/useAnnotationChip.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/useAnnotations.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/useSelection.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -3826,6 +3986,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/026_annotations.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3998,6 +4164,10 @@
       "type": "table"
     },
     {
+      "id": "table:annotations",
+      "type": "table"
+    },
+    {
       "id": "table:books",
       "type": "table"
     },
@@ -4141,6 +4311,26 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/023_steve.sql",
       "to": "table:profiles"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "endpoint:DELETE /annotations/{annotation_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "endpoint:GET /books/{book_id}/annotations"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "endpoint:PATCH /annotations/{annotation_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "endpoint:POST /books/{book_id}/annotations"
     },
     {
       "type": "calls_endpoint",
@@ -4476,6 +4666,26 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/annotations.py",
+      "to": "endpoint:DELETE /annotations/{annotation_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/annotations.py",
+      "to": "endpoint:GET /books/{book_id}/annotations"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/annotations.py",
+      "to": "endpoint:PATCH /annotations/{annotation_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/annotations.py",
+      "to": "endpoint:POST /books/{book_id}/annotations"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/auth.py",
       "to": "endpoint:GET /auth/profile"
     },
@@ -4773,6 +4983,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/025_equation_latex.sql",
       "to": "table:equation_latex"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/026_annotations.sql",
+      "to": "table:annotations"
     },
     {
       "type": "graph_edge",
@@ -5243,6 +5458,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/annotations.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/auth.py"
     },
     {
@@ -5359,6 +5579,26 @@
       "type": "imports",
       "from": "file:backend/regions/prose.py",
       "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/annotations.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/annotations.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/annotations.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/annotations.py",
+      "to": "file:backend/services/supabase_client.py"
     },
     {
       "type": "imports",
@@ -5954,6 +6194,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_agent_state.py",
       "to": "file:backend/agents/state.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_annotations_api.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_annotations_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_annotations_api.py",
+      "to": "file:backend/routers/annotations.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_annotations_api.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -6753,6 +7013,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_migrations.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_migrations.py",
       "to": "file:backend/nlp/embedder.py"
     },
     {
@@ -7302,6 +7567,26 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/annotations-hover.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/annotations-render.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/annotations-toolbar.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/annotations.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/calibration.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -7469,6 +7754,106 @@
       "type": "imports",
       "from": "file:frontend/src/anchors/anchors.test.js",
       "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/annotations/roving.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/annotations/roving.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/epubPaint.js",
+      "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/epubPaint.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/hover.test.js",
+      "to": "file:frontend/src/annotations/hover.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/list.test.js",
+      "to": "file:frontend/src/annotations/list.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/paint.js",
+      "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/paint.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/paint.test.js",
+      "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/palette.test.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useAnnotationChip.js",
+      "to": "file:frontend/src/annotations/hover.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "file:frontend/src/lib/api.js"
     },
     {
       "type": "imports",
@@ -8103,6 +8488,31 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/AnnotationChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/hover.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/useAnnotationChip.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/useSelection.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
     {
@@ -8193,6 +8603,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/annotations/epubPaint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
       "to": "file:frontend/src/originalview/epub/EpubView.jsx"
     },
     {
@@ -8263,6 +8678,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/annotations/list.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/frame.js"
     },
     {
@@ -8289,6 +8714,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/useBoxSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/annotations/paint.js"
     },
     {
       "type": "imports",
@@ -8633,6 +9063,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/useAnnotations.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/components/CalibrationFlow.jsx"
     },
     {
@@ -8869,6 +9304,21 @@
       "type": "imports",
       "from": "file:frontend/src/prerender.jsx",
       "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/annotations/list.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/annotations/roving.js"
     },
     {
       "type": "imports",
@@ -9797,6 +10247,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/annotations.py",
+      "to": "table:annotations"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/annotations.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/auth.py",
       "to": "table:profiles"
     },
@@ -10219,6 +10679,11 @@
       "type": "writes_table",
       "from": "file:backend/agents/workflow.py",
       "to": "table:agent_decisions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/annotations.py",
+      "to": "table:annotations"
     },
     {
       "type": "writes_table",

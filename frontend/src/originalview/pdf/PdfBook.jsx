@@ -1,14 +1,16 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
 import { squeeze } from '../today';
-import { pdfAnchor, quadsFromRects } from '../../anchors';
+import { pdfAnchor, pdfPositions, quadsFromRects } from '../../anchors';
+import { forPages } from '../../annotations/paint';
+import { pdfPagesLabel } from '../../annotations/list';
 
 /**
  * PDF anchors for a selection (ANCHORS A1, A2): one per page it touches, each with a quad
  * per line in points from the page's top-left (the page's own scale undone, so any zoom
  * gives the same quads) and that page's part of the text.
  */
-function selectionAnchors(range, box) {
+function selectionAnchors(range, box, widths = []) {
   const out = [];
   for (const page of box.querySelectorAll('.rf-pdf-page[data-scale]')) {
     if (!range.intersectsNode(page)) continue;
@@ -19,7 +21,9 @@ function selectionAnchors(range, box) {
     if (!page.contains(range.endContainer)) part.setEnd(layer, layer.childNodes.length);
     const at = page.getBoundingClientRect();
     const quads = quadsFromRects(part.getClientRects(), at, Number(page.dataset.scale));
-    if (quads.length) out.push(pdfAnchor(Number(page.dataset.page), quads, part.toString()));
+    if (!quads.length) continue;
+    out.push(pdfAnchor(Number(page.dataset.page), quads, part.toString()));
+    widths.push(at.width / Number(page.dataset.scale)); // the page's width in points, for A4 positions
   }
   return out;
 }
@@ -37,7 +41,7 @@ const SHEET_INSET = 16; // px kept clear around the pages inside the frame
  * renderer interface the frame uses (Reader.jsx); onRelocate(place) fires on
  * every move with { pages, folio, entry, atStart, atEnd }.
  */
-export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null, onRelocate, onError, onSheet, ocr = null, ref }) {
+export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null, onRelocate, onError, onSheet, ocr = null, annotations = null, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
   useEffect(() => { if (ocr && doc) ocr.attach(doc); }, [ocr, doc]); // C19.4: scanned pages read with the open PDF
   const box = useRef(null);
@@ -70,6 +74,7 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
     ? pdfScale(zoom, size, { width: frame.width - SHEET_INSET * 2, height: frame.height - SHEET_INSET * 2 }, pages.length)
     : null;
   const cache = usePageCache(doc, scale, pages[0], colours);
+  const drawn = annotations ? forPages(annotations, pages) : null; // C21.3: the pages shown and one either side
   // The frame hugs the paper (C17.4 review): the spread's width at fit-page or fit-width.
   const sheetWidth = scale && size ? Math.round(size.width * scale * pages.length + SHEET_INSET * 2) : null;
   const sheetHeight = scale && size ? Math.round(size.height * scale + SHEET_INSET * 2) : null;
@@ -126,12 +131,30 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       if (!selection?.rangeCount || selection.isCollapsed || !box.current?.contains(selection.anchorNode)) return [];
       return selectionAnchors(selection.getRangeAt(0), box.current);
     },
+    // C21.2: the selection's anchors with their A4 positions, plus the range and its document.
+    selectionPlace: () => {
+      const selection = document.getSelection();
+      if (!selection?.rangeCount || selection.isCollapsed || !box.current?.contains(selection.anchorNode)) return null;
+      const range = selection.getRangeAt(0);
+      const widths = [];
+      const anchors = selectionAnchors(range, box.current, widths);
+      return anchors.length ? { anchors, ...pdfPositions(anchors, widths), range, doc: document } : null;
+    },
     getSelection: () => {
       const selection = document.getSelection();
       if (!selection?.rangeCount || !box.current?.contains(selection.anchorNode)) return null;
       return { text: selection.toString(), range: selection.getRangeAt(0), document };
     },
     documents: () => [document],
+    pageLabel: (annotation) => pdfPagesLabel(annotation, meta.labels), // C21.5: "p. 12" by the printed labels
+    // C21.4: where each drawn annotation is, in this page's coordinates, for hover, taps and the chip.
+    annotationEntries: () => {
+      const byId = new Map();
+      for (const el of box.current?.querySelectorAll('.rf-anno[data-id]') ?? []) {
+        byId.set(el.dataset.id, [...(byId.get(el.dataset.id) ?? []), el.getBoundingClientRect()]);
+      }
+      return [...byId].map(([id, rects]) => ({ id, rects }));
+    },
     panning: () => Boolean(box.current && (box.current.scrollWidth > box.current.clientWidth + 1 || box.current.scrollHeight > box.current.clientHeight + 1)),
     find,
     toc: () => meta.outline.map((entry) => ({ title: entry.title, target: { page: entry.page }, loc: { kind: 'pdf', page: entry.page } })),
@@ -160,7 +183,7 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       <div className="rf-pdf-spread" data-pages={pages.length}>
         {cache && pages.map((n, i) => (
           <PdfPage key={n} cache={cache} pageNumber={n} side={pages.length > 1 ? (i ? 'right' : 'left') : 'single'}
-            label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} />
+            label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} annotations={drawn} dark={Boolean(colours)} />
         ))}
       </div>
     </div>

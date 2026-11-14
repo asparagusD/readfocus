@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 737,
-    "inventoried": 594,
+    "tracked": 760,
+    "inventoried": 617,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14712,
+      "size_bytes": 14919,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 333,
-      "size_bytes": 13417,
+      "lines": 345,
+      "size_bytes": 14030,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -401,10 +401,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 62,
-      "size_bytes": 2035,
+      "lines": 64,
+      "size_bytes": 2113,
       "role": "entry",
-      "purpose": "FastAPI app: CORS through backend/cors.py, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
+      "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -533,6 +533,14 @@
       "size_bytes": 52,
       "role": "router",
       "purpose": "Empty APIRouter mounted at /agent; defines no endpoints."
+    },
+    {
+      "path": "backend/routers/annotations.py",
+      "language": "python",
+      "lines": 153,
+      "size_bytes": 7559,
+      "role": "router",
+      "purpose": "Highlights and underlines (C21.1, docs/ANCHORS.md): GET /books/{id}/annotations (reading order, from/to overlap filter), POST (anchors checked against A1/A2, positions against A4, text snapshot), PATCH /annotations/{id} (style, color), DELETE; owner only, 404 otherwise."
     },
     {
       "path": "backend/routers/auth.py",
@@ -967,6 +975,14 @@
       "purpose": "Pytest: AgentState declares the pipeline keys and keeps the old ones, decisions and errors are append-only through a compiled graph, event takes only start or submit, every key a node returns is declared, and the evaluator returns only its own decision."
     },
     {
+      "path": "backend/tests/test_annotations_api.py",
+      "language": "python",
+      "lines": 148,
+      "size_bytes": 7909,
+      "role": "test",
+      "purpose": "Pytest for the annotations API: PDF across two pages and EPUB ranges stored; bad colours, styles, point anchors, quads, page order, mixed kinds and positions that disagree with the anchors refused; reading order and range filter; another reader sees and changes nothing; restyle; delete."
+    },
+    {
       "path": "backend/tests/test_answer_fixtures.py",
       "language": "python",
       "lines": 61,
@@ -1345,8 +1361,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 609,
-      "size_bytes": 26716,
+      "lines": 655,
+      "size_bytes": 29096,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
@@ -1681,16 +1697,16 @@
     {
       "path": "docs/ANCHORS.md",
       "language": "markdown",
-      "lines": 163,
-      "size_bytes": 7683,
+      "lines": 187,
+      "size_bytes": 9084,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
     },
     {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
-      "lines": 272,
-      "size_bytes": 15614,
+      "lines": 292,
+      "size_bytes": 16957,
       "role": "doc",
       "purpose": "Architecture of 2.0 (C15.4): the system, the five agents' pure decide() contracts (inputs, outputs, what each decides), the LangGraph diagram copied from docs/repo-graph/AGENT_GRAPH.md with its routing conditions, event flows per endpoint, ingestion, the data model by migration, the book reader and the word-lookup path, and the security layers."
     },
@@ -1713,8 +1729,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3651,
-      "size_bytes": 161331,
+      "lines": 3824,
+      "size_bytes": 167918,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1777,8 +1793,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4311,
-      "size_bytes": 792901,
+      "lines": 4561,
+      "size_bytes": 828440,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1815,6 +1831,38 @@
       "purpose": "Unedited Vite React template README; says nothing about ReadFocus."
     },
     {
+      "path": "frontend/e2e/annotations-hover.spec.js",
+      "language": "javascript",
+      "lines": 180,
+      "size_bytes": 8828,
+      "role": "config",
+      "purpose": "E2E for the annotation chip (C21.4) on PDF and EPUB: lookup off shows it at the highlight's end clear of the line and Ask Steve sends explain_highlight with the anchor; lookup on keeps the word card; consent notice first; recolour, underline, delete with Undo; refused change put back; A, arrows, Escape, reduced motion; a tap on touch."
+    },
+    {
+      "path": "frontend/e2e/annotations-render.spec.js",
+      "language": "javascript",
+      "lines": 127,
+      "size_bytes": 6656,
+      "role": "config",
+      "purpose": "E2E for drawn annotations (C21.3): a PDF highlight on its words at fit and after zooming and a reload, darken in Paper and lighten in Lamplight with the token colour, a 2 px underline, nothing off the shown pages; an EPUB highlight's range through a text-size change, a resize and a reload; the lookup mark above it."
+    },
+    {
+      "path": "frontend/e2e/annotations-toolbar.spec.js",
+      "language": "javascript",
+      "lines": 156,
+      "size_bytes": 8379,
+      "role": "config",
+      "purpose": "E2E for the selection toolbar (C21.2) on the PDF and the EPUB: shown above the selection and clear of the word card, a colour saves a highlight, the underline toggle, Shift+arrows with H and U, Escape, toolbar arrow keys, rollback with a toast, Ask Steve in explain_highlight, 375 px in Lamplight."
+    },
+    {
+      "path": "frontend/e2e/annotations.spec.js",
+      "language": "javascript",
+      "lines": 167,
+      "size_bytes": 8239,
+      "role": "config",
+      "purpose": "E2E for C21 end to end: PDF and EPUB highlights through zoom, a resize, a text-size change and a reload; the Annotations tab's order, snippets, pages, colour filter and jump; the chip's Ask Steve (mocked) with lookup off and the word card with it on; delete; the empty states."
+    },
+    {
       "path": "frontend/e2e/calibration.spec.js",
       "language": "javascript",
       "lines": 60,
@@ -1849,8 +1897,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 299,
-      "size_bytes": 18382,
+      "lines": 325,
+      "size_bytes": 19969,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -1993,16 +2041,16 @@
     {
       "path": "frontend/e2e/steve-blocks.spec.js",
       "language": "javascript",
-      "lines": 119,
-      "size_bytes": 6769,
+      "lines": 134,
+      "size_bytes": 7684,
       "role": "config",
       "purpose": "E2E for the PDF block actions (C20.8b): equation Explain sends a PNG crop, Copy as LaTeX previews and copies, refusals in the dialog, code copied exactly with no Steve call and explained by region id, figure crops, inline math has none, the bar leaves with the pointer, keyboard focus, Tab and Esc."
     },
     {
       "path": "frontend/e2e/steve-epub-blocks.spec.js",
       "language": "javascript",
-      "lines": 114,
-      "size_bytes": 5714,
+      "lines": 125,
+      "size_bytes": 6321,
       "role": "config",
       "purpose": "E2E for the EPUB block actions on the converted fixture (C20.8c): Copy as LaTeX from the TeX annotation with no call, Explain from the source or by region, Copy code exact, a figure's image as a PNG, keyboard focus, Enter and Esc."
     },
@@ -2113,8 +2161,8 @@
     {
       "path": "frontend/scripts/check-contrast.mjs",
       "language": "text",
-      "lines": 84,
-      "size_bytes": 3626,
+      "lines": 88,
+      "size_bytes": 3926,
       "role": "config",
       "purpose": "WCAG contrast check of every text, boundary and cover pair in styles/tokens.css for the four theme x accent combinations; exit 1 on a failure (npm run check:contrast)."
     },
@@ -2169,18 +2217,146 @@
     {
       "path": "frontend/src/anchors/anchors.test.js",
       "language": "javascript",
-      "lines": 70,
-      "size_bytes": 4468,
+      "lines": 85,
+      "size_bytes": 5582,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): PDF quads the same at 100% and 200% and drawn back at any zoom, the A1 shapes, CFI parsing, ordering across pages and sections, CFI to block on a figure's paths."
     },
     {
       "path": "frontend/src/anchors/index.js",
       "language": "javascript",
-      "lines": 113,
-      "size_bytes": 5610,
+      "lines": 137,
+      "size_bytes": 6793,
       "role": "asset",
       "purpose": "Anchors (docs/ANCHORS.md, C17.6), no DOM, shared by both renderers: textOf; quadsFromRects (one quad per line in PDF points from the page's top-left, the zoom undone) and rectsFromQuads; pdfAnchor (a point without quads) and epubAnchor; parseCfi (spine index, steps, offset; a range's start) and compareCfi; pdfPosition (A4's integer) and compareAnchors; blockForCfi (a CFI to its C12 block through chunks.block_paths)."
+    },
+    {
+      "path": "frontend/src/annotations/AnnotationChip.jsx",
+      "language": "jsx",
+      "lines": 103,
+      "size_bytes": 5128,
+      "role": "asset",
+      "purpose": "The chip on a highlight (C21.4): Ask Steve (explain_highlight with the first anchor), the five colours (current pressed), Underline and Delete, above the end of the last line; a toolbar with A / Shift+A to the next or previous highlight and Escape back to the book."
+    },
+    {
+      "path": "frontend/src/annotations/SelectionToolbar.css",
+      "language": "css",
+      "lines": 85,
+      "size_bytes": 3509,
+      "role": "asset",
+      "purpose": "Styles for the selection toolbar: surface, hairline and lift; 28 px dots in --dot-* with a --line-field ring, the last colour ringed; 36 px buttons (44 px on touch); rises 8 px, fade only under reduced motion; the Ask Steve word hidden under 480 px."
+    },
+    {
+      "path": "frontend/src/annotations/SelectionToolbar.jsx",
+      "language": "jsx",
+      "lines": 119,
+      "size_bytes": 5731,
+      "role": "asset",
+      "purpose": "The selection toolbar (C21.2, handoff screen 18): five colour dots, an Underline toggle and Ask Steve (explain_highlight) above a mouse selection or below a touch one, never on it; a colour saves at once and clears the selection; H and U from the book, Tab into the bar, arrows along it, Escape back; a polite status line."
+    },
+    {
+      "path": "frontend/src/annotations/epubPaint.js",
+      "language": "javascript",
+      "lines": 59,
+      "size_bytes": 2709,
+      "role": "asset",
+      "purpose": "EPUB highlights and underlines (C21.3) with the CSS Custom Highlight API inside each section document (no DOM changed; marks follow re-layout), priority under the lookup mark; the palette read from the tokens, Paper's on a light page."
+    },
+    {
+      "path": "frontend/src/annotations/hover.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 907,
+      "role": "asset",
+      "purpose": "Finding a drawn annotation (C21.4), pure: the one under a point (latest drawn first, 2 px slack) and the next or previous id in reading order, wrapping (the A key)."
+    },
+    {
+      "path": "frontend/src/annotations/hover.test.js",
+      "language": "javascript",
+      "lines": 24,
+      "size_bytes": 1148,
+      "role": "asset",
+      "purpose": "Unit tests for hover.js: hits with slack and stacking, misses, and A cycling forward, back and from a missing id."
+    },
+    {
+      "path": "frontend/src/annotations/list.js",
+      "language": "javascript",
+      "lines": 26,
+      "size_bytes": 1378,
+      "role": "asset",
+      "purpose": "The Annotations tab (C21.5), pure: the list in reading order with a colour filter, a PDF annotation's page label from the printed labels (p. or pp.), and the snippet cut at a word."
+    },
+    {
+      "path": "frontend/src/annotations/list.test.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1630,
+      "role": "asset",
+      "purpose": "Unit tests for list.js: reading order and the colour filter without changing the input, PDF page labels and ranges, snippets."
+    },
+    {
+      "path": "frontend/src/annotations/paint.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2583,
+      "role": "asset",
+      "purpose": "Drawing annotations (C21.3), pure: which ones a set of PDF pages (plus one either side) or an EPUB spine item shows, a PDF page's boxes from the quads at its scale (2 px underline bars), the ::highlight name per style and colour, and the section rules."
+    },
+    {
+      "path": "frontend/src/annotations/paint.test.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 2658,
+      "role": "asset",
+      "purpose": "Unit tests for paint.js: pages shown plus one either side, boxes in CSS px for highlights and underlines, EPUB annotations by spine item, the ::highlight rules."
+    },
+    {
+      "path": "frontend/src/annotations/palette.js",
+      "language": "javascript",
+      "lines": 27,
+      "size_bytes": 1210,
+      "role": "asset",
+      "purpose": "The highlight palette (C21.2): the five handoff colour names, their spoken names, the last colour picked on this device (honey by default, storage errors ignored) and the POST body for a selection."
+    },
+    {
+      "path": "frontend/src/annotations/palette.test.js",
+      "language": "javascript",
+      "lines": 32,
+      "size_bytes": 1491,
+      "role": "asset",
+      "purpose": "Unit tests for palette.js: the five colours in order, the remembered last colour with fallbacks, the API body."
+    },
+    {
+      "path": "frontend/src/annotations/roving.js",
+      "language": "javascript",
+      "lines": 15,
+      "size_bytes": 676,
+      "role": "asset",
+      "purpose": "Arrow keys, Home and End along a toolbar's buttons with one tab stop (WAI-ARIA toolbar), shared by the selection toolbar and the annotation chip."
+    },
+    {
+      "path": "frontend/src/annotations/useAnnotationChip.js",
+      "language": "javascript",
+      "lines": 77,
+      "size_bytes": 3485,
+      "role": "asset",
+      "purpose": "Hook for the annotation chip's state (C21.4): with lookup off, a mouse resting on a drawn annotation opens it and leaving both closes it after 250 ms; a tap opens it; a press elsewhere closes it; shut while a selection is live."
+    },
+    {
+      "path": "frontend/src/annotations/useAnnotations.js",
+      "language": "javascript",
+      "lines": 67,
+      "size_bytes": 3214,
+      "role": "asset",
+      "purpose": "Hook for a book's highlights and underlines (C21.2): loads them once; create() shows the new one at once, saves it through the C21.1 API and takes it back with a warning toast if the server refuses."
+    },
+    {
+      "path": "frontend/src/annotations/useSelection.js",
+      "language": "javascript",
+      "lines": 75,
+      "size_bytes": 3316,
+      "role": "asset",
+      "purpose": "Hook for the settled text selection in the book (C21.2): the renderer's selectionPlace() after the mouse is up and the selection stops moving (150 ms), in the page or any EPUB section; marks touch and running text (A8); dismiss() until it changes or a new press starts."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -2809,8 +2985,8 @@
     {
       "path": "frontend/src/lib/api.js",
       "language": "javascript",
-      "lines": 40,
-      "size_bytes": 1051,
+      "lines": 42,
+      "size_bytes": 1133,
       "role": "lib",
       "purpose": "fetchApi: adds the Supabase bearer token, calls VITE_API_URL, signs out on 401, throws on a non-OK response; exports API_BASE_URL for the /health poll."
     },
@@ -2961,8 +3137,8 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 321,
-      "size_bytes": 17662,
+      "lines": 395,
+      "size_bytes": 22178,
       "role": "asset",
       "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions."
     },
@@ -3001,8 +3177,8 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 122,
-      "size_bytes": 5897,
+      "lines": 167,
+      "size_bytes": 8560,
       "role": "asset",
       "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places."
     },
@@ -3017,8 +3193,8 @@
     {
       "path": "frontend/src/originalview/epub/engine.js",
       "language": "javascript",
-      "lines": 241,
-      "size_bytes": 11230,
+      "lines": 254,
+      "size_bytes": 11910,
       "role": "asset",
       "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made). C17.4: text size and line height in both styles, margins, theme CSS, animated off for the frame, wide from the frame, goToFraction, locations (character counts, cached per book), charStart and charEnd on relocate. C17.5: find(snippets) over each section's packaged text (squeezed, cached), goToChar({index, char}) in the shown section, sectionOf(href), pointCfi (a collapsed CFI); rangeAtChar exported. C17.6: cfiFor(doc, range), pointAt(index, char), goToPoint(cfi) aimed at the point's character."
     },
@@ -3081,32 +3257,32 @@
     {
       "path": "frontend/src/originalview/frame.js",
       "language": "javascript",
-      "lines": 114,
-      "size_bytes": 5312,
+      "lines": 115,
+      "size_bytes": 5408,
       "role": "asset",
       "purpose": "The book frame's rules (C17.4), no DOM: PDF spreads (page 1 alone, then even-left pairs) and turns, zoom scale (fit-page, fit-width, 125-200 % of printed size) and steps, PDF folios with page labels, EPUB stable location numbers from character counts (buildLocations, locationAt), the key map, the contents entry for a page, lamplight CSS for EPUB that never touches images, and timeAtProgress for the leaf."
     },
     {
       "path": "frontend/src/originalview/frame.test.js",
       "language": "javascript",
-      "lines": 100,
-      "size_bytes": 4955,
+      "lines": 103,
+      "size_bytes": 5175,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): spreads and turns at the ends, zoom scale and steps, PDF folios with labels, EPUB locations, keys (modifiers left to the browser), contents entry, lamplight CSS without filters, the leaf's edge time."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 168,
-      "size_bytes": 8296,
+      "lines": 191,
+      "size_bytes": 9806,
       "role": "asset",
       "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
       "language": "jsx",
-      "lines": 80,
-      "size_bytes": 3563,
+      "lines": 92,
+      "size_bytes": 4470,
       "role": "asset",
       "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen. C17.4: a side for spreads. C17.6: data-page and data-scale (CSS px per point) for anchors."
     },
@@ -3145,8 +3321,8 @@
     {
       "path": "frontend/src/originalview/pdf/pdf.css",
       "language": "css",
-      "lines": 104,
-      "size_bytes": 2639,
+      "lines": 130,
+      "size_bytes": 4233,
       "role": "asset",
       "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour. C17.4: the page paper follows --rf-pdf-paper (lamplight)."
     },
@@ -3329,8 +3505,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 417,
-      "size_bytes": 19736,
+      "lines": 436,
+      "size_bytes": 20864,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -3441,16 +3617,16 @@
     {
       "path": "frontend/src/reader/ContentsDrawer.css",
       "language": "css",
-      "lines": 92,
-      "size_bytes": 2068,
+      "lines": 187,
+      "size_bytes": 6025,
       "role": "asset",
       "purpose": "Contents drawer styles: a surface panel with a lift shadow, the bottom-sheet variant, Playfair heading, 44 px chapter rows in Lora, the current one on the accent wash, the 'today' label."
     },
     {
       "path": "frontend/src/reader/ContentsDrawer.jsx",
       "language": "jsx",
-      "lines": 86,
-      "size_bytes": 3666,
+      "lines": 151,
+      "size_bytes": 7427,
       "role": "asset",
       "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
     },
@@ -3697,8 +3873,8 @@
     {
       "path": "frontend/src/steve/SteveContext.js",
       "language": "javascript",
-      "lines": 10,
-      "size_bytes": 470,
+      "lines": 17,
+      "size_bytes": 735,
       "role": "asset",
       "purpose": "SteveContext (C20.7b): askAbout() for the reading page, so block actions (C20.8) and highlights (C21) open the panel and ask; null outside the reader."
     },
@@ -3841,8 +4017,8 @@
     {
       "path": "frontend/src/steve/useSteve.js",
       "language": "javascript",
-      "lines": 75,
-      "size_bytes": 3316,
+      "lines": 88,
+      "size_bytes": 3954,
       "role": "asset",
       "purpose": "Steve for one book (C20.7b): the panel reducer, settings loaded on first open, ask() streaming one answer, stop, retry, consent and the off switch."
     },
@@ -3873,8 +4049,8 @@
     {
       "path": "frontend/src/styles/tokens.css",
       "language": "css",
-      "lines": 252,
-      "size_bytes": 8393,
+      "lines": 283,
+      "size_bytes": 9376,
       "role": "asset",
       "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (and a swatch of each accent for the accent setting) (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
     },
@@ -4623,6 +4799,14 @@
       "purpose": "Migration 025 (C20.8, additive): equation_latex (file_sha256, page, bbox_hash, latex, model, created_at; key file + page + box hash) so each PDF equation costs one Gemini call ever; RLS with no policy, backend only."
     },
     {
+      "path": "supabase/migrations/026_annotations.sql",
+      "language": "sql",
+      "lines": 33,
+      "size_bytes": 1883,
+      "role": "migration",
+      "purpose": "Migration 026 (C21.1, additive): annotations (anchors jsonb list, position_start/end float8, style, color from the handoff palette, text_snapshot, orphaned, timestamps; positions ordered), index (user_id, book_id, position_start), RLS with an owner SELECT policy only; the backend writes."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -4697,8 +4881,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 596,
-      "size_bytes": 181622,
+      "lines": 619,
+      "size_bytes": 187998,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -4729,8 +4913,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 284,
-      "size_bytes": 11981,
+      "lines": 285,
+      "size_bytes": 12029,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

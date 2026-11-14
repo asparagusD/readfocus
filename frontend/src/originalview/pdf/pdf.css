@@ -102,3 +102,29 @@
   white-space: nowrap;
   pointer-events: none;
 }
+
+/* C21.3: highlights and underlines, between the canvas and the text layer (the lookup mark and the selection
+   stay above). Blending keeps ink its own colour: darken on a light page (the highlight shows on paper, dark
+   ink stays dark), lighten on a recoloured dark page (light ink stays light). */
+.rf-pdf-annos {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.rf-anno {
+  position: absolute;
+  mix-blend-mode: darken;
+}
+.rf-pdf-annos[data-dark] .rf-anno { mix-blend-mode: lighten; }
+.rf-anno[data-style="highlight"] { border-radius: var(--radius-hair); }
+.rf-anno[data-style="highlight"][data-colour="honey"] { background-color: var(--hl-honey); }
+.rf-anno[data-style="highlight"][data-colour="sage"] { background-color: var(--hl-sage); }
+.rf-anno[data-style="highlight"][data-colour="sky"] { background-color: var(--hl-sky); }
+.rf-anno[data-style="highlight"][data-colour="rose"] { background-color: var(--hl-rose); }
+.rf-anno[data-style="highlight"][data-colour="lilac"] { background-color: var(--hl-lilac); }
+.rf-anno[data-style="underline"][data-colour="honey"] { background-color: var(--ul-honey); }
+.rf-anno[data-style="underline"][data-colour="sage"] { background-color: var(--ul-sage); }
+.rf-anno[data-style="underline"][data-colour="sky"] { background-color: var(--ul-sky); }
+.rf-anno[data-style="underline"][data-colour="rose"] { background-color: var(--ul-rose); }
+.rf-anno[data-style="underline"][data-colour="lilac"] { background-color: var(--ul-lilac); }
+.rf-anno[data-style="underline"] { mix-blend-mode: normal; } /* a line under the text, drawn as it is */

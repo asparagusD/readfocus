@@ -70,6 +70,7 @@ export function locationAt(locations, index, charsBefore) {
 /** What a key does in the book; null leaves it to the browser (modifier shortcuts, typing). */
 export function keyAction({ key, shiftKey = false, ctrlKey = false, metaKey = false, altKey = false }) {
   if (ctrlKey || metaKey || altKey) return null;
+  if (shiftKey && key.startsWith('Arrow')) return null; // C21.2: Shift+arrows grow a selection
   if (key === 'ArrowRight' || key === 'PageDown' || (key === ' ' && !shiftKey)) return 'next';
   if (key === 'ArrowLeft' || key === 'PageUp' || (key === ' ' && shiftKey)) return 'prev';
   if (key === 'Home') return 'first';

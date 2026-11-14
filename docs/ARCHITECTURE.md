@@ -15,6 +15,7 @@ File paths are given so each claim can be checked.
 - [Data model](#data-model)
 - [The book reader](#the-book-reader)
 - [Word lookup](#word-lookup)
+- [Annotations](#annotations)
 - [Security](#security)
 
 ## System
@@ -209,6 +210,7 @@ below it.
 | `agent_decisions` | 009 | one row per node a run visited: agent, inputs and outputs summarised, reason, duration (read-only to readers) |
 | `processing_jobs` | 010 | ingestion jobs: status, cursor, progress, attempts (read-only to readers) |
 | `term_lookups` | 015 | shared cache of dictionary and Wikipedia answers; no personal data; readable by signed-in readers, written only by the backend |
+| `annotations` | 026 | a reader's highlights and underlines (C21): `anchors` (ANCHORS A1, one per page or spine item), `position_start`/`position_end` (A4), `style`, `color` (five palette names), `text_snapshot`, `orphaned`; readers read their own, only the backend writes |
 
 Search functions: `match_chunks_local` (pgvector, 005) and
 `search_chunks_text` (Postgres full-text, 006), both `SECURITY INVOKER`, fused
@@ -255,6 +257,24 @@ where available. Proper nouns and phrases of more than one word go to
 Wikipedia first. Touch devices use a
 long press and a Look up chip. Measured: about 360 ms from hover to card
 when cached, which is the hover intent plus the answer (BENCHMARKS, C12.10).
+
+## Annotations
+
+Highlights and underlines in the original view (C21; `docs/ANCHORS.md` A10):
+
+```
+selection (PDF text layer / EPUB section) ─► useSelection: anchors + A4 positions (selectionPlace)
+   └─► SelectionToolbar: colour, Underline, Ask Steve; H / U
+         └─► useAnnotations: shown at once, POST /books/{id}/annotations (rolled back on refusal)
+               └─► backend/routers/annotations.py: anchors and positions checked, owner only ─► annotations (026)
+drawn: PDF boxes between canvas and text layer (darken / lighten) · EPUB CSS Custom Highlights in the section
+lookup off: hover, tap or A ─► AnnotationChip: Ask Steve (explain_highlight), colour, Underline, Delete (PATCH, DELETE)
+contents drawer ─► Annotations tab: reading order, colour filter, page, jump
+```
+
+The book's DOM is never changed: the PDF layer is ours, and an EPUB section
+gets only `Highlight` objects and one `<style>` element. Steve's entry
+points hide while he is switched off, and a question waits for consent.
 
 ## Security
 

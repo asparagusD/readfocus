@@ -331,3 +331,15 @@ OCR_MAX_WORD_CHARS = 48
 OCR_MAX_WORDS_PER_PAGE = 4000
 # A figure covering at least this share of the page is the scan itself, not a drawing, so OCR may read it.
 OCR_FULL_PAGE_FIGURE = 0.8
+
+# --- Annotations (backend/routers/annotations.py, C21.1; docs/ANCHORS.md) -----
+
+# The handoff's highlight palette (tokens --hl-<name>) and the two styles; migration 026 checks the same lists.
+ANNOTATION_COLORS = ("honey", "sage", "sky", "rose", "lilac")
+ANNOTATION_STYLES = ("highlight", "underline")
+# Anchors one annotation may hold: one per PDF page or EPUB spine item it crosses (A2).
+ANNOTATION_ANCHORS_MAX = 16
+# Characters of text kept with an annotation (A1 text, whitespace collapsed).
+ANNOTATION_TEXT_MAX = 5_000
+# Annotations one list request returns, in reading order.
+ANNOTATIONS_LIST_MAX = 2_000

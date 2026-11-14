@@ -148,6 +148,32 @@ async function mockBackend(page, api, book) {
       const detail = api.regionDetails[path.split('/').pop()];
       return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
     }
+    if (path === `/books/${BOOK}/annotations`) { // C21.2: highlights and underlines, kept like the server keeps them
+      if (request.method() === 'POST') {
+        const body = request.postDataJSON();
+        api.annotationPosts.push(body);
+        if (api.annotationFail) return json(route, { detail: 'Not saved' }, api.annotationFail);
+        const row = { id: `ann-${api.annotations.length + 1}`, ...body, orphaned: false,
+          text_snapshot: body.anchors.map((a) => a.text).join(' ') };
+        api.annotations.push(row);
+        return json(route, row, 201);
+      }
+      return json(route, { annotations: api.annotations });
+    }
+    if (path.startsWith('/annotations/')) { // C21.4: restyle or delete one
+      const id = path.split('/').pop();
+      const row = api.annotations.find((a) => a.id === id);
+      if (request.method() === 'PATCH') api.annotationPatches.push({ id, ...request.postDataJSON() });
+      if (request.method() === 'DELETE') api.annotationDeletes.push(id);
+      if (api.annotationFail) return json(route, { detail: 'Not saved' }, api.annotationFail);
+      if (!row) return json(route, { detail: 'Annotation not found' }, 404);
+      if (request.method() === 'DELETE') {
+        api.annotations = api.annotations.filter((a) => a.id !== id);
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      Object.assign(row, request.postDataJSON(), { updated_at: '2026-11-14T20:00:00Z' });
+      return json(route, row);
+    }
     if (path === '/steve/key') { // C20.3: GOOD_KEY is accepted, anything else is what Google refuses
       if (request.method() === 'PUT') {
         const { key } = request.postDataJSON();
@@ -184,7 +210,7 @@ export const test = base.extend({
   api: [async ({ page, signedIn, book }, use, info) => {
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
-      regionDetails: {}, regionAt: {}, regionAtAsks: [] };
+      regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [] };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

@@ -3649,3 +3649,176 @@ is the check, and it is clean after this commit.
 
 ### Commit
 `fix(graph): refresh the inventory after the C20.G progress row`
+
+## 2026-11-14 C21.1 — repo-graph test and ruff fail after adding annotations
+
+**Status:** fixed
+
+### Symptom
+Standard checks before the C21.1 commit:
+
+    pytest tools/repo_graph/tests -q
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents
+    E  Extra items in the left set: 'table:annotations'
+    ruff check backend/
+    Found 28 errors.   (baseline 27; the new one RUF007 zip-instead-of-pairwise)
+
+### Repro
+`pytest tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents -q`
+fails with migration 026 present; `ruff check backend/routers/annotations.py` reports RUF007.
+
+### Hypotheses
+1. The test pins the exact set of tables the migrations define, and 026 adds
+   one. Evidence: 022, 023 and 025 each added their tables to that set in
+   their own commits. Result: confirmed.
+2. The graph builder misreads 026's SQL. Ruled out: the extra item is the
+   table 026 defines, nothing else.
+
+### Root cause
+The pinned table list in `test_build.py` was not updated with the new
+migration; and `zip(places, places[1:])` in the new router instead of
+`itertools.pairwise`.
+
+### Fix
+Add `"annotations"` (migration 026) to the test's table set; use
+`pairwise` in `backend/routers/annotations.py`.
+
+### Regression test
+The pinned set itself is the guard; it passes with the table listed
+(64 passed). Ruff back to 27.
+
+### Commit
+Fixed inside the C21.1 commit (`feat(annotations): add annotations table and API`); nothing was committed failing.
+
+## 2026-11-14 C21.2 — the toolbar stays hidden when the same words are selected again at once
+
+**Status:** fixed
+
+### Symptom
+`e2e/annotations-toolbar.spec.js` (keyboard test): after U underlined a
+double-clicked word, double-clicking the same word again showed no toolbar.
+
+    Error: expect(locator).toBeVisible() failed
+    > 96 |   await expect(toolbar(page)).toBeVisible();
+
+### Repro
+Select a word, press U, then double-click the same word within 150 ms.
+
+### Hypotheses
+1. Saving put the toolbar away with `dismiss()`, which remembers the
+   selection's key so Escape keeps it hidden; clearing the selection only
+   forgets that key when the settled read (150 ms later) finds no
+   selection. A new selection of the same words inside those 150 ms has
+   the remembered key and stays hidden. Result: confirmed (the same test
+   passes once the key is not remembered on save).
+2. The page lost the selection on the double-click. Ruled out: the
+   selection read "lamp " in the same run.
+
+### Root cause
+One `dismiss()` served two cases: Escape (keep the selection, hide the bar
+until it changes) and saving (the selection is cleared anyway).
+
+### Fix
+`dismiss(remember = true)`; a saved colour calls `dismiss(false)`; any new
+press forgets a remembered key (`frontend/src/annotations/useSelection.js`).
+
+### Regression test
+The keyboard test in `e2e/annotations-toolbar.spec.js` (U, then the same
+word again, toolbar visible).
+
+### Commit
+Fixed inside the C21.2 commit before it was made.
+
+## 2026-11-14 C21.2 — the phone-width toolbar test selected nothing
+
+**Status:** fixed (test)
+
+### Symptom
+At 375 px the PDF test's mouse drag left an empty selection, so no toolbar.
+
+### Root cause
+The PDF page fitted to 375 px draws its lines 7 px high; the drag's start
+point missed the text layer's span. Not a product fault: on a phone a PDF is
+read zoomed in.
+
+### Fix
+The 375 px test uses the EPUB, which reflows to a readable size. It also
+asserts Lamplight is on (`colorScheme: 'dark'`, as the other specs do; a
+stored `rf-theme` alone left System mode in Paper).
+
+## 2026-11-14 C21.4 — the chip passes over the line while it rises; A does not focus it
+
+**Status:** fixed
+
+### Symptom
+`e2e/annotations-hover.spec.js`: "not over the line" failed for PDF and
+EPUB (chip box bottom 253 px, line top 250.8 px); the keyboard test's chip
+opened with A but its Ask Steve button was not focused.
+
+### Repro
+Hover a highlight with lookup off and read the chip's box at once; press A
+on the book.
+
+### Hypotheses
+1. The box was read during the entrance: the chip's style said `top: 199px`
+   (5 px clear of the line) and the box said 207, the 8 px rise of the
+   shared `rf-seltool` animation, more than the 6 px gap. Result: confirmed
+   (style vs box in the probe). The C21.2 toolbar had the same moment.
+2. The placement reference was empty. Ruled out: `data-side` was `top`
+   and the left edge matched the highlight's end.
+3. Focus: `FloatingPortal` mounts its children after the chip's effect
+   ran, so the effect found no element. Result: confirmed (focus works when
+   asked from the ref callback).
+
+### Root cause
+An entrance rise larger than the gap to the line; focus asked for before
+the portal had mounted the chip.
+
+### Fix
+The bars rise 4 px (as the word card) with an 8 px gap, so they never pass
+over the line even mid-animation; the chip focuses its first button from
+its ref callback when the portal mounts it.
+
+### Regression test
+The two assertions in `annotations-hover.spec.js` (box read straight after
+hovering; Ask Steve focused after A).
+
+### Commit
+Fixed inside the C21.4 commit before it was made.
+
+## 2026-11-14 C21.4 follow-up — block actions offer Explain while Steve is off
+
+**Status:** fixed
+
+### Symptom
+With Steve switched off in his settings, hovering a PDF equation or code
+listing, or an EPUB equation, still showed Explain this equation / code
+(and on a PDF, Copy as LaTeX, which asks Gemini). steve-guardrails S2:
+while Steve is off, the "Ask Steve" entry points are hidden. Found while
+writing C21.4; the server already refused every such call.
+
+### Repro
+`api.steve.enabled = false`, open Steve's panel once (his settings load),
+hover a block: the bar lists the Explain buttons
+(`e2e/steve-blocks.spec.js`, `steve-epub-blocks.spec.js`, "switched off").
+
+### Hypotheses
+1. The block actions only ask whether a Steve context exists (null on a
+   pages-only book), never whether he is on. Result: confirmed
+   (`actionsFor(kind, { steve: Boolean(steve) })`).
+
+### Root cause
+`useSteveActions()` returned the context whether or not Steve was on.
+
+### Fix
+`useSteveActions()` returns null while the provider says `enabled: false`,
+so every caller (block actions, selection toolbar, annotation chip) drops
+its Steve entry points the same way (`frontend/src/steve/SteveContext.js`).
+
+### Regression test
+The two "switched off" tests: a PDF code block keeps only Copy code and a
+PDF equation shows no bar; an EPUB equation keeps only Copy as LaTeX; no
+ask is sent.
+
+### Commit
+`fix(steve): hide Explain block actions while Steve is off`

@@ -24,6 +24,7 @@ import { ReadingLamp } from '../illustrations';
 import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
 import { useSteve } from '../steve/useSteve';
+import { useAnnotations } from '../annotations/useAnnotations';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -86,6 +87,7 @@ export function ReadingSession() {
   const [chapter, setChapter] = useState('');
   const [toolbarFocused, setToolbarFocused] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
+  const [annotationPages, setAnnotationPages] = useState(() => new Map());
   // Steve (C20.7b): a panel beside the book; the book stays usable while it is open.
   const [steveOpen, setSteveOpen] = useState(false);
   const steveButton = useRef(null);
@@ -95,6 +97,7 @@ export function ReadingSession() {
   const contentsButton = useRef(null);
   const reader = useRef(null);
   const { toast } = useToast();
+  const notes = useAnnotations(bookId); // C21.2: highlights and underlines
   const kind = sessionData?.book?.format === 'epub' ? 'epub' : 'pdf';
   // C18.6d: a PDF's math, code and figure boxes, so lookup skips them (an EPUB's markup already says).
   const regions = useMemo(() => (kind === 'pdf' ? createRegionSource(fetchApi, bookId) : null), [kind, bookId]);
@@ -182,8 +185,15 @@ export function ReadingSession() {
   const openContents = () => {
     const today = (loc) => Boolean(bounds?.start && compare(loc, bounds.start) >= 0 && (!bounds.end || compare(loc, bounds.end) <= 0));
     setEntries((reader.current?.toc() ?? []).map((entry, i) => ({ ...entry, key: `${i}-${entry.title}`, today: today(entry.loc) })));
+    // C21.5: each annotation's page, read from the book as the drawer opens (the counted EPUB pages can change).
+    setAnnotationPages(new Map(notes.annotations.map((a) => [a.id, reader.current?.pageLabel(a) ?? ''])));
     setContentsOpen((open) => !open);
   };
+  const onPickAnnotation = useCallback((annotation) => {
+    setContentsOpen(false);
+    const [anchor] = annotation.anchors;
+    reader.current?.goTo(anchor.kind === 'epub' ? { cfi: anchor.cfi } : anchor);
+  }, []);
   const onPick = useCallback((entry) => {
     setContentsOpen(false);
     reader.current?.goTo(entry.target);
@@ -193,9 +203,11 @@ export function ReadingSession() {
   // A citation chip moves the book to its page or section; the panel stays open.
   const onCite = useCallback((anchor) => reader.current?.goTo(anchor?.kind === 'epub' ? { cfi: anchor.cfi } : anchor), []);
   const { ask: askSteve } = steve;
+  const steveOn = steve.state.enabled !== false; // C21.4: Ask Steve entry points hide once his settings say he is off
   const steveActions = useMemo(() => ({
     askAbout: (request) => { setSteveOpen(true); askSteve(request); },
-  }), [askSteve]);
+    enabled: steveOn,
+  }), [askSteve, steveOn]);
   const onLookupToggle = () => {
     storeLookupOn(user?.id, !hoverLookup);
     setSwitched({ userId: user?.id, on: !hoverLookup });
@@ -388,6 +400,10 @@ export function ReadingSession() {
           hoverLookup={hoverLookup}
           regions={regions}
           ocr={ocr}
+          onAnnotate={notes.create}
+          annotations={notes.annotations}
+          onAnnotationChange={notes.update}
+          onAnnotationDelete={notes.remove}
         />
       </main>
       {steveOpen && (
@@ -403,6 +419,9 @@ export function ReadingSession() {
         current={chapter}
         onPick={onPick}
         returnTo={contentsButton}
+        annotations={pagesOnly ? null : notes.annotations}
+        pageOf={(a) => annotationPages.get(a.id) ?? ''}
+        onPickAnnotation={onPickAnnotation}
       />
 
       <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)} title="Leave today's reading?">

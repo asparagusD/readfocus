@@ -9,6 +9,7 @@ from backend.cors import add_cors
 from backend.nlp import embedder
 from backend.routers import (
     agent,
+    annotations,
     auth,
     books,
     dashboard,
@@ -51,6 +52,7 @@ app.include_router(mastery.router, prefix="/mastery", tags=["Mastery"])
 app.include_router(lookup.router, prefix="/lookup", tags=["Lookup"])
 app.include_router(steve.router, prefix="/steve", tags=["Steve"])
 app.include_router(steve_ask.router, prefix="/steve", tags=["Steve"])
+app.include_router(annotations.router, tags=["Annotations"])
 
 @app.get("/health")
 def health_check():

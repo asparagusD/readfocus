@@ -3495,13 +3495,12 @@ Found on the third occurrence (C20.8c), with the output kept:
 
     python tools/repo_graph/inventory.py
     Traceback (most recent call last):
-      File "I:eadfocus	oolsepo_graph\inventory.py", line 194, in <module>
+      File "I:\readfocus\tools\repo_graph\inventory.py", line 194, in <module>
         sys.exit(main())
-      File "I:eadfocus	oolsepo_graph\inventory.py", line 184, in main
-        OUT_FILE.write_text(render(inventory), encoding="utf-8", newline="
-")
+      File "I:\readfocus\tools\repo_graph\inventory.py", line 184, in main
+        OUT_FILE.write_text(render(inventory), encoding="utf-8", newline="\n")
       ...
-    OSError: [Errno 22] Invalid argument: 'I:\readfocus\docs\repo-graph\inventory.json'
+    OSError: [Errno 22] Invalid argument: 'I:\\readfocus\\docs\\repo-graph\\inventory.json'
     make: *** [Makefile:17: graph] Error 1
 
 Opening `docs/repo-graph/inventory.json` for writing fails on Windows

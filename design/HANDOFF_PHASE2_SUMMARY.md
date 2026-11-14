@@ -283,7 +283,20 @@ Visible in the images (mock defects, not intent): at 375 px the reader
 toolbar shows a horizontal scrollbar and clips its last buttons, page
 text runs past the right edge, and the selection toolbar runs off screen
 (`highlight-paper-375.png`); on desktop the locked-stopwatch popover
-covers the Preface heading (`focus-locked-paper-1440.png`).
+covers the Preface heading (`focus-locked-paper-1440.png`). With the
+380 px study panel open (`notes-*-1440.png` and the Steve screens), the
+right page's text, figure and code block run about 16 px past the page's
+right edge: `.spread` uses `grid-template-columns: 1fr 1fr`, and `1fr`
+is `minmax(auto, 1fr)`, so the right column cannot shrink below the
+min-content width of the `white-space: pre` code block (its
+`overflow-x: auto` is on a descendant, not the grid item) and the column
+grows past the spread. The fix would be `minmax(0, 1fr) minmax(0, 1fr)`
+(or `min-width: 0` on `.page`). The app does not inherit it: the PDF
+spread is canvases sized by script, EPUB `pre` wraps (`sanitize.js`),
+and `.rf-reading-area` has `min-width: 0`. Checked 2026-11-14 with a
+temporary Playwright test at 1440 x 900, PDF and EPUB, panel open: no
+page, frame or text-layer span past the reading area or its page, no
+sideways scroll.
 
 ## Questions
 

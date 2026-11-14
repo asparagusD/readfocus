@@ -4755,7 +4755,10 @@ each over ~200 lines is split a/b):
   tab; add a text note, type with bold and `$x^2$`, autosave PATCH after
   the pause, reload shows it; TipTap's chunk is not requested until a
   block is edited; 409 shows the conflict; delete + Undo; 375 px sheet;
-  Lamplight; keyboard through tabs and cards; reduced motion).
+  Lamplight; keyboard through tabs and cards; reduced motion; with the
+  panel open at 1440 px, no page, text-layer span or EPUB `pre` past its
+  page and no sideways scroll, so the mock's overflow (handoff summary,
+  "Visible in the images") never reaches the app).
 - Verify: unit, e2e, build sizes (budget above), design review against
   screen 19 at 1440 and 375, both themes. Cut: the format bar
   (shortcuts only), the math popover (edit the `$...$` source instead).

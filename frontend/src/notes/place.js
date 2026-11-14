@@ -6,7 +6,7 @@
 const PART = 1e6;
 
 /** A contents entry's A4 position: a PDF page's top, or an EPUB section's start plus its character. */
-const tocPosition = (loc) => (loc?.kind === 'epub' ? (loc.index ?? 0) * PART + (loc.char ?? 0) : (loc?.page ?? 0) * PART);
+export const tocPosition = (loc) => (loc?.kind === 'epub' ? (loc.index ?? 0) * PART + (loc.char ?? 0) : (loc?.page ?? 0) * PART);
 
 /** The title of the last contents entry at or before the note's start, or ''. */
 export function chapterOf(note, toc) {

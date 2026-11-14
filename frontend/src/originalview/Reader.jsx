@@ -117,6 +117,7 @@ export function Reader({
   const moveRef = useRef(null);
   const [ending, setEnding] = useState(false); // the closing page is shown
   const [noteHidden, setNoteHidden] = useState(false);
+  const [pulse, setPulse] = useState(null); // C22.5: { id, rects, whole } a note's passage, pulsed after a jump
   // Lookup (C17.5): where the book is drawn. A PDF is drawn in this page (its text layers in the
   // book box); an EPUB in one iframe per section shown, added as each loads.
   const [bookBox, setBookBox] = useState(null);
@@ -285,6 +286,29 @@ export function Reader({
     doc.addEventListener('pointerup', (e) => swipeEnd.current?.(e));
   }, []);
 
+  // C22.5: pulse a note's passage once the book shows it: asked again every 100 ms (pages draw and sections lay
+  // out after the move) for up to 2 s; rects in the book box's coordinates, only those inside it.
+  const pulseTimer = useRef(null);
+  useEffect(() => () => clearTimeout(pulseTimer.current), []);
+  const flash = useCallback((note) => {
+    let tries = 20;
+    const attempt = () => {
+      clearTimeout(pulseTimer.current);
+      const within = bookBox?.getBoundingClientRect();
+      const rects = within ? (book.current?.passageRects?.(note) ?? [])
+        .filter((r) => r.top + r.height > within.top && r.top < within.bottom && r.left + r.width > within.left && r.left < within.right)
+        .map((r) => ({ left: r.left - within.left, top: r.top - within.top, width: r.width, height: r.height })) : [];
+      if (!rects.length) {
+        tries -= 1;
+        if (tries > 0) pulseTimer.current = setTimeout(attempt, 100);
+        return;
+      }
+      setPulse({ id: Date.now(), rects: rects.slice(0, 60), whole: note.scope === 'view' });
+      pulseTimer.current = setTimeout(() => setPulse(null), prefersReducedMotion() ? 900 : 1700);
+    };
+    attempt();
+  }, [bookBox]);
+
   useImperativeHandle(ref, () => ({
     goTo: (anchor) => { setEnding(false); return book.current?.goTo(anchor); },
     find: (snippets, from) => book.current?.find(snippets, from) ?? Promise.resolve(null),
@@ -300,7 +324,8 @@ export function Reader({
     anchor: () => book.current?.anchor() ?? null,
     // C22.2b: { scope, anchors, start, end } for a new note: the selection, else the pages shown.
     notePlace: () => book.current?.notePlace?.() ?? Promise.resolve(null),
-  }), [move]);
+    flash, // C22.5
+  }), [move, flash]);
 
   const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
   return (
@@ -346,6 +371,13 @@ export function Reader({
             </aside>
           )}
           {ending && <div className="rf-ov-end" data-no-lookup><div className="rf-end">{closing}</div></div>}
+          {pulse && !turn && (
+            <div key={pulse.id} className="rf-passage-pulses" data-whole={pulse.whole || undefined} aria-hidden="true">
+              {pulse.rects.map((r, i) => (
+                <span key={i} className="rf-passage-pulse" style={{ left: r.left, top: r.top, width: r.width, height: r.height }} />
+              ))}
+            </div>
+          )}
           {notes && onOpenNotes && (
             // C22.4: a count circle in the margin beside each passage with notes; it opens them.
             <MarginMarkers book={book} box={bookBox} notes={notes} wide={wide} onOpen={onOpenNotes}

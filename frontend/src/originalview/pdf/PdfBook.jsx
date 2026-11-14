@@ -1,7 +1,7 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
 import { squeeze } from '../today';
-import { pdfAnchor, pdfPositions, quadsFromRects } from '../../anchors';
+import { pdfAnchor, pdfPositions, quadsFromRects, rectsFromQuads } from '../../anchors';
 import { forPages } from '../../annotations/paint';
 import { pdfPagesLabel } from '../../annotations/list';
 import { pdfNoteTop, shownAnchor } from '../../notes/markers';
@@ -165,6 +165,13 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       const [, y0 = 0, , y1 = 0] = anchor.quads?.[0] ?? [];
       const side = el.dataset.side === 'left' ? 'left' : 'right';
       return [{ id: note.id, top, height: (y1 - y0) * scale, side, edge: side === 'left' ? at.left : at.right }];
+    }),
+    // C22.5: a note's passage on the pages shown, as screen rects (one per quad), to pulse it.
+    passageRects: (note) => (note.anchors ?? []).flatMap((anchor) => {
+      const el = anchor.kind === 'pdf' && pages.includes(anchor.page) && box.current?.querySelector(`.rf-pdf-page[data-page="${anchor.page}"][data-scale]`);
+      if (!el) return [];
+      const at = el.getBoundingClientRect();
+      return rectsFromQuads(anchor.quads ?? [], { left: at.left, top: at.top }, Number(el.dataset.scale));
     }),
     getSelection: () => {
       const selection = document.getSelection();

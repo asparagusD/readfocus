@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 800,
-    "inventoried": 657,
+    "tracked": 803,
+    "inventoried": 660,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15146,
+      "size_bytes": 15180,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1834,7 +1834,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4905,
-      "size_bytes": 874911,
+      "size_bytes": 878208,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2069,6 +2069,14 @@
       "size_bytes": 10770,
       "role": "config",
       "purpose": "E2E for writing notes (C22.2b): Text adds a note at the pages shown and lazy-loads the editor; rich text, checklist and math autosave after 800 ms and draw as written; editing an equation; a selection-anchored note; offline edits queued in IndexedDB and saved on online; keyboard; EPUB; the phone sheet."
+    },
+    {
+      "path": "frontend/e2e/notes-sync.spec.js",
+      "language": "javascript",
+      "lines": 173,
+      "size_bytes": 9396,
+      "role": "config",
+      "purpose": "E2E for two-way sync (C22.5): page turns scroll the notepad to that spread's notes and mark them; while writing, a Jump to notes pill instead; a reference moves the book and pulses the passage with the list held; the filter with keys; EPUB notes stay with their page after larger text; reduced motion."
     },
     {
       "path": "frontend/e2e/ocr.spec.js",
@@ -3249,16 +3257,16 @@
     {
       "path": "frontend/src/notes/Notepad.css",
       "language": "css",
-      "lines": 289,
-      "size_bytes": 10289,
+      "lines": 358,
+      "size_bytes": 12316,
       "role": "asset",
       "purpose": "Styles for the notepad's list and note cards (C22.2): reference, kind, delete, the drawn TipTap document, checklists, math, alerts and 44 px targets on phones."
     },
     {
       "path": "frontend/src/notes/Notepad.jsx",
       "language": "jsx",
-      "lines": 182,
-      "size_bytes": 10097,
+      "lines": 261,
+      "size_bytes": 14958,
       "role": "asset",
       "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note; C22.2b: a note opens in the lazy editor on click or Enter, Done in its header, and Text adds a note at the selection or the pages shown."
     },
@@ -3394,7 +3402,7 @@
       "path": "frontend/src/notes/place.js",
       "language": "javascript",
       "lines": 29,
-      "size_bytes": 1176,
+      "size_bytes": 1183,
       "role": "asset",
       "purpose": "Where a note sits (C22.2): its chapter from the contents by A4 position, its reference line and book order."
     },
@@ -3431,6 +3439,22 @@
       "purpose": "The notepad's one save line (C22.2): the worst state among its notes."
     },
     {
+      "path": "frontend/src/notes/sync.js",
+      "language": "javascript",
+      "lines": 50,
+      "size_bytes": 2723,
+      "role": "asset",
+      "purpose": "Book <-> notepad sync (C22.5, pure): the A4 range shown for a PDF spread or EPUB page, notes overlapping it in book order, the chapter's range from the contents, the This page / This chapter / All filter, and whether to scroll, offer the jump pill or hold."
+    },
+    {
+      "path": "frontend/src/notes/sync.test.js",
+      "language": "javascript",
+      "lines": 85,
+      "size_bytes": 5739,
+      "role": "asset",
+      "purpose": "Unit tests for sync: shown ranges, overlaps in book order, zoom (spread to one page), font size and re-pagination of EPUB characters, chapter ranges, the filter, follow decisions while typing, after a jump or a hand scroll."
+    },
+    {
       "path": "frontend/src/notes/useNotes.js",
       "language": "javascript",
       "lines": 131,
@@ -3449,8 +3473,8 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 409,
-      "size_bytes": 23258,
+      "lines": 441,
+      "size_bytes": 24969,
       "role": "asset",
       "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions."
     },
@@ -3489,8 +3513,8 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 202,
-      "size_bytes": 10617,
+      "lines": 218,
+      "size_bytes": 11367,
       "role": "asset",
       "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places."
     },
@@ -3561,8 +3585,8 @@
     {
       "path": "frontend/src/originalview/frame.css",
       "language": "css",
-      "lines": 423,
-      "size_bytes": 13101,
+      "lines": 458,
+      "size_bytes": 14160,
       "role": "asset",
       "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion. C17.5: the note card over the foot of today's first page, the closing page over the book with its lamp's single pulse, and the blank page over the renderer while a session opens. C17.5: the lookup mark (::highlight rf-lookup) and no iOS callout on a held word."
     },
@@ -3585,8 +3609,8 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 217,
-      "size_bytes": 11599,
+      "lines": 224,
+      "size_bytes": 12125,
       "role": "asset",
       "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor."
     },
@@ -3817,8 +3841,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 514,
-      "size_bytes": 24872,
+      "lines": 521,
+      "size_bytes": 25191,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -5201,8 +5225,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 659,
-      "size_bytes": 198218,
+      "lines": 662,
+      "size_bytes": 199116,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

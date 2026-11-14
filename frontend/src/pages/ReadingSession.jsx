@@ -29,6 +29,7 @@ import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
 import { useNotes } from '../notes/useNotes';
 import { chapterOf } from '../notes/place';
+import { shownRange } from '../notes/sync';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -217,7 +218,13 @@ export function ReadingSession() {
   const onCite = useCallback((anchor) => reader.current?.goTo(anchor?.kind === 'epub' ? { cfi: anchor.cfi } : anchor), []);
   // C22.2: a note's reference names its page and chapter, read from the book as the list draws; it goes there.
   const describeNote = (note) => ({ page: reader.current?.pageLabel(note) ?? '', chapter: chapterOf(note, reader.current?.toc() ?? []) });
-  const goToNote = useCallback((note) => onCite(note.anchors?.[0]), [onCite]);
+  // C22.5: the book goes to the note's passage and pulses it.
+  const goToNote = useCallback((note) => {
+    onCite(note.anchors?.[0]);
+    reader.current?.flash(note);
+  }, [onCite]);
+  const shown = useMemo(() => shownRange(place), [place]);
+  const contentsOf = useCallback(() => reader.current?.toc() ?? [], []);
   // C22.2b: a new note (text, or C22.3 a drawing) at the selection, else the pages shown; its key, so it opens.
   const addNote = async (kind) => {
     const place = await reader.current?.notePlace();
@@ -483,7 +490,7 @@ export function ReadingSession() {
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
               onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}
               onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit} onAdd={addNote} onThumbnail={notepad.attachThumbnail} onDrawing={setDrawingOpen}
-              onRelink={relinkNote} request={noteRequest} />
+              onRelink={relinkNote} request={noteRequest} range={shown} contents={contentsOf} />
           )}
         </SidePanel>
       )}

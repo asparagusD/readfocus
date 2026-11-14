@@ -1,10 +1,12 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Bookmark, Code2, Image, Link2, PenLine, Plus, Sigma, Trash2, Type } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NoteDoc } from './NoteDoc';
 import { DrawingFrame, DrawingThumb } from './DrawingNote';
 import { reference } from './place';
 import { overallStatus } from './status';
+import { followAction, notesFor, overlapping } from './sync';
+import { prefersReducedMotion } from '../motion/presets';
 import './Notepad.css';
 
 const KINDS = {
@@ -50,8 +52,35 @@ const TextEditor = lazy(() => import('./TextEditor'));
  * states; one save line, announced politely; a conflict or a refused save on its note. C22.4: `request` from the
  * book ({ type: 'edit', key } for a new note by N or the selection toolbar, { type: 'focus', ids } from a margin
  * marker) opens or focuses notes; each note's link button moves its anchor to the selection (`onRelink`).
+ * C22.5: `range` is the A4 range the book shows (sync.js). The notes on it are marked; when it changes the list
+ * scrolls to the first of them, or, while a note is open or just after the reader scrolled the list, offers "Jump
+ * to notes for this page"; a move the notepad asked for (a reference) does not scroll it. A filter shows this
+ * page, this chapter (`contents()`, the book's entries) or all.
  */
-export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd, onThumbnail, onDrawing, onRelink, request = null }) {
+const FILTERS = [{ id: 'page', label: 'This page' }, { id: 'chapter', label: 'This chapter' }, { id: 'all', label: 'All' }];
+const EMPTY = { page: 'No notes on these pages yet', chapter: 'No notes in this chapter yet' };
+
+/** "This page | This chapter | All" as one radio group: one tab stop, arrows, Home and End pick. */
+function NotesFilter({ value, onChange }) {
+  const onKeyDown = (event) => {
+    const i = FILTERS.findIndex((f) => f.id === value);
+    const to = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: FILTERS.length - 1 }[event.key];
+    if (to === undefined) return;
+    event.preventDefault();
+    const next = FILTERS[(to + FILTERS.length) % FILTERS.length];
+    onChange(next.id);
+    event.currentTarget.querySelector(`[data-filter="${next.id}"]`)?.focus();
+  };
+  return (
+    <div className="rf-notes-filter" role="radiogroup" aria-label="Show notes" onKeyDown={onKeyDown}>
+      {FILTERS.map((f) => (
+        <button key={f.id} type="button" role="radio" data-filter={f.id} aria-checked={value === f.id}
+          tabIndex={value === f.id ? 0 : -1} onClick={() => onChange(f.id)}>{f.label}</button>
+      ))}
+    </div>
+  );
+}
+export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd, onThumbnail, onDrawing, onRelink, request = null, range = null, contents = () => [] }) {
   const [editing, setEditing] = useState(null); // a note's key (or id)
   const [focused, setFocused] = useState(null); // { ids } opened from a margin marker
   const [seen, setSeen] = useState(null); // the last request taken, so each is taken once, when the list is ready
@@ -70,6 +99,46 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
     const clear = setTimeout(() => setFocused(null), 4000);
     return () => { cancelAnimationFrame(frame); clearTimeout(clear); };
   }, [focused]);
+  // C22.5: following the book.
+  const [filter, setFilter] = useState('all');
+  const [pill, setPill] = useState(null); // the range key the jump pill is offered for
+  const root = useRef(null);
+  const jumpAt = useRef(-Infinity);
+  const handAt = useRef(-Infinity);
+  const first = useRef(true); // opening the notepad goes straight to the page's notes
+  const shown = notesFor(notes, filter, range, filter === 'chapter' ? contents() : []);
+  const hereIds = new Set(overlapping(notes, range).map((n) => n.id));
+  const rangeKey = range ? `${range.start}-${range.end}` : '';
+  const target = shown.find((n) => hereIds.has(n.id))?.id ?? null;
+  const scrollTo = useCallback((id, smooth) => {
+    const list = root.current;
+    const card = id && list?.querySelector(`.rf-note[data-id="${id}"]`);
+    if (!card) return;
+    const box = list.getBoundingClientRect();
+    const at = card.getBoundingClientRect();
+    if (at.top >= box.top && at.bottom <= box.bottom) return; // already in view: the header and filter stay
+    const top = at.top - box.top + list.scrollTop - 8;
+    list.scrollTo({ top: Math.max(0, top), behavior: smooth && !prefersReducedMotion() ? 'smooth' : 'auto' });
+  }, []);
+  const latest = useRef({});
+  const busy = Boolean(focused) || Boolean(request && seen !== request.n);
+  useEffect(() => { latest.current = { target, typing: editing !== null, busy }; });
+  useEffect(() => {
+    if (state !== 'ready' || !rangeKey) return undefined;
+    const frame = requestAnimationFrame(() => {
+      const { target: id, typing, busy } = latest.current;
+      if (busy) return;
+      const opening = first.current;
+      first.current = false;
+      const action = opening ? (id ? 'scroll' : 'none')
+        : followAction({ hasTarget: Boolean(id), typing, now: Date.now(), jumpAt: jumpAt.current, handAt: handAt.current });
+      if (action === 'scroll') { setPill(null); scrollTo(id, !opening); }
+      else setPill(action === 'pill' ? rangeKey : null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [rangeKey, state, scrollTo]);
+  const byHand = useCallback(() => { handAt.current = Date.now(); }, []);
+  const goTo = useCallback((note) => { jumpAt.current = Date.now(); setPill(null); onGoTo(note); }, [onGoTo]);
   const drawingOpen = notes.some((n) => (n.key ?? n.id) === editing && n.kind === 'drawing');
   useEffect(() => { onDrawing?.(drawingOpen); }, [drawingOpen, onDrawing]); // the side panel widens for it
   useEffect(() => () => onDrawing?.(false), [onDrawing]);
@@ -84,11 +153,18 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
     requestAnimationFrame(() => document.querySelector(`.rf-note[data-key="${note.key ?? note.id}"] .rf-note-read`)?.focus());
   };
   return (
-    <div className="rf-notes">
+    <div className="rf-notes" ref={root} onWheel={byHand} onTouchMove={byHand}
+      onKeyDown={(event) => { if (['PageUp', 'PageDown', 'ArrowUp', 'ArrowDown'].includes(event.key) && !event.target.closest('[contenteditable="true"]')) byHand(); }}>
       <div className="rf-notes-head">
-        <p className="rf-notes-count">{notes.length === 1 ? '1 note' : `${notes.length} notes`}</p>
+        <p className="rf-notes-count">{shown.length === 1 ? '1 note' : `${shown.length} notes`}</p>
         <p className="rf-notes-order">In book order</p>
       </div>
+      {state === 'ready' && notes.length > 0 && <NotesFilter value={filter} onChange={setFilter} />}
+      {pill && pill === rangeKey && target && (
+        <button type="button" className="rf-notes-jump" onClick={() => { setPill(null); scrollTo(target, true); }}>
+          Jump to notes for this page
+        </button>
+      )}
       <p className="rf-notes-status" role="status" aria-live="polite">{state === 'ready' ? status : ''}</p>
       {state === 'loading' && <p className="rf-note-small" role="status">Opening your notes…</p>}
       {state === 'error' && (
@@ -103,9 +179,12 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
           <p className="rf-note-small">A note sits beside the passage it is about: select a sentence first, or write about the pages you are on.</p>
         </div>
       )}
-      {notes.length > 0 && (
+      {state === 'ready' && notes.length > 0 && !shown.length && (
+        <p className="rf-note-small rf-notes-none">{EMPTY[filter]}. <button type="button" className="rf-notes-all" onClick={() => setFilter('all')}>Show all notes</button></p>
+      )}
+      {shown.length > 0 && (
         <ol className="rf-notes-list">
-          {notes.map((note) => {
+          {shown.map((note) => {
             const { label, Icon } = KINDS[note.kind] ?? KINDS.text;
             const where = describe(note);
             const ref = reference(where.page, where.chapter);
@@ -114,9 +193,9 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
             return (
               <li key={key} className="rf-note" data-kind={note.kind} data-id={note.id} data-key={key}
                 data-new={note.key ? 'true' : undefined} data-editing={open || undefined}
-                data-focused={focused?.ids.includes(note.id) || undefined}>
+                data-focused={focused?.ids.includes(note.id) || undefined} data-here={hereIds.has(note.id) || undefined}>
                 <div className="rf-note-head">
-                  <button type="button" className="rf-note-ref" onClick={() => onGoTo(note)} aria-label={`Go to ${ref}`}>
+                  <button type="button" className="rf-note-ref" onClick={() => goTo(note)} aria-label={`Go to ${ref}`}>
                     <Bookmark size={14} strokeWidth={1.75} aria-hidden="true" />
                     <span>{ref}</span>
                   </button>

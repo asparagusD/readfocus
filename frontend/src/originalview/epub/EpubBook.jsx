@@ -183,6 +183,22 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         }
         return out;
       },
+      // C22.5: a note's passage in the sections shown, as screen rects (each line), to pulse it.
+      passageRects: (note) => {
+        const out = [];
+        for (const { doc } of now()?.contents() ?? []) {
+          const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+          if (!frame) continue;
+          for (const anchor of note.anchors ?? []) {
+            const range = anchor.kind === 'epub' && now().rangeFor(doc, anchor.cfi);
+            if (!range) continue;
+            for (const r of range.getClientRects()) {
+              if (r.width > 0 && r.height > 0) out.push({ left: r.x + frame.x, top: r.y + frame.y, width: r.width, height: r.height });
+            }
+          }
+        }
+        return out;
+      },
       // C20.8c: a shown section's spine index, for the region map's EPUB places.
       sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
       panning: () => false,

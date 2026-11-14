@@ -1975,6 +1975,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/notes-sync.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/ocr.spec.js",
       "type": "file",
       "role": "config",
@@ -2990,6 +2996,18 @@
     },
     {
       "id": "file:frontend/src/notes/status.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/sync.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/sync.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -8066,6 +8084,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/notes-sync.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/ocr.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8927,6 +8950,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/notes/DrawingNote.jsx"
     },
     {
@@ -8948,6 +8976,11 @@
       "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/notes/status.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/sync.js"
     },
     {
       "type": "imports",
@@ -9023,6 +9056,16 @@
       "type": "imports",
       "from": "file:frontend/src/notes/queue.test.js",
       "to": "file:frontend/src/notes/queue.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/sync.js",
+      "to": "file:frontend/src/notes/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/sync.test.js",
+      "to": "file:frontend/src/notes/sync.js"
     },
     {
       "type": "imports",
@@ -9723,6 +9766,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/notes/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/sync.js"
     },
     {
       "type": "imports",

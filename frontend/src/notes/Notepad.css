@@ -61,6 +61,8 @@
 /* C22.2b: a note added on this visit rises in with an accent edge (handoff); the one being edited keeps it. */
 .rf-note[data-new] { animation: rf-note-in var(--dur-5) var(--ease-arrive) both; }
 .rf-note[data-editing] { border-color: var(--accent); }
+/* C22.5: notes on the pages shown carry a soft accent edge. */
+.rf-note[data-here] { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
 .rf-note[data-focused] { border-color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); } /* C22.4: opened from a margin marker */
 @keyframes rf-note-in { from { opacity: 0; transform: translateY(8px); } }
 
@@ -286,4 +288,71 @@
 @media (prefers-reduced-motion: reduce) {
   .rf-note[data-new] { animation-name: rf-note-fade; }
   @keyframes rf-note-fade { from { opacity: 0; } }
+}
+
+/* C22.5: the filter (one segmented control) and the jump pill, which rides at the top of the list. */
+.rf-notes-filter {
+  display: flex;
+  align-self: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-pill);
+  background-color: var(--paper-2);
+}
+
+.rf-notes-filter button {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  cursor: pointer;
+}
+
+.rf-notes-filter button:hover { color: var(--ink); }
+.rf-notes-filter button[aria-checked="true"] { background-color: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 var(--border-hair) var(--line); }
+
+.rf-notes-jump {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  align-self: center;
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border: var(--border-hair) solid var(--accent);
+  border-radius: var(--radius-pill);
+  background-color: var(--accent-soft);
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 600;
+  cursor: pointer;
+  animation: rf-notes-jump-in var(--dur-3) var(--ease-settle) both;
+}
+
+.rf-notes-all {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.rf-notes-filter button:focus-visible, .rf-notes-jump:focus-visible, .rf-notes-all:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@keyframes rf-notes-jump-in { from { opacity: 0; } }
+
+@media (max-width: 759px) {
+  .rf-notes-filter button, .rf-notes-jump { min-height: 44px; }
 }

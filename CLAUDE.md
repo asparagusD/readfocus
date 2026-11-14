@@ -41,7 +41,7 @@ your score.
 5. Render Free has tight RAM/CPU: measure memory (psutil RSS) before adding
    any model or heavy dependency.
 
-## Phase 2 (C16–C25, 38.25-hour budget)
+## Phase 2 (C16–C25, 39-hour budget)
 
 Adds Steve, highlights and underlines, a notepad, focus mode, gamification
 and the original view. English only: Bengali/Bangla books are out of scope.

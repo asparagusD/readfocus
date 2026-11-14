@@ -2984,10 +2984,11 @@ C20 prompt): Steve became C20, merging the stubs "Steve backend" and
 "Steve in the reader"; anchors and highlights C21, notepad C22, focus
 mode C23, XP and leagues C24, verification C25. Each chunk gets its full plan (what there is to
 build on, decisions, subchunks with verification and cuts, an estimate)
-at its own start, before any code. The phase 2 budget is 38.25 hours
+at its own start, before any code. The phase 2 budget is 39.0 hours
 (31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13, then
 36.5 h until the C20 start, raised by 1.75 h on 2026-11-14 for C20's
-7.75 h against the stubs' 6.0 h; C16
+7.75 h against the stubs' 6.0 h, then 38.25 h until the C21 start, raised
+by 0.75 h on 2026-11-14 for C21's 4.25 h against the stub's 3.5 h; C16
 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
 CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 `docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
@@ -4273,12 +4274,259 @@ on Render only when C20 ships (your C16 decision).
 | [x] C20.9 evaluation set | this commit (`test(steve): add grounded-answer evaluation set and runner`); fix `f9c10d5` | As the C20.9 prompt asked (it replaces the plan's ~30 items, `tools/` and BENCHMARKS): `backend/tests/fixtures/steve_eval.json` (new): 15 questions on the test shelf (5 session, 5 retrieval with a focus phrase standing in for the retriever's chunk, 3 not covered, 2 with a planted instruction, one in the session and one in a retrieved passage), page and section labels only, no book text stored. `scripts/steve_eval.py` (new): reads the pages from `samples/technical/` (pypdf, as the app does; ebooklib for the EPUB), lays them out with `context.py`'s own card, sections, window and cap, builds the `ask` prompt and calls `provider.generate` on our key; dry run by default, `--live` for at most 15 calls 6 s apart, stopping at the first error; no Supabase, no cache, quota or breaker. Scores raw answers: cited labels were sent, at most 250 words, answered from the book, "not covered" in the first 300 characters, canary absent. `backend/tests/test_steve_eval_set.py` (new, 12 tests): the set's mix and labels, the scoring, the runner never reads a key; prompts build under the cap when the shelf is fetched. `docs/STEVE.md` S11: bars set before the run, then the run. The first live attempt failed every item locally before reaching Google (provider bug, fixed and logged in `f9c10d5`, no quota spent) | Live run 2026-11-14 on `gemini-3.5-flash-lite` (your yes, twice): 15 calls, 15/15 passed (session 5/5, retrieval 5/5, not covered 3/3, injection 2/2), expected page cited 12/12, median 1.66 s, max 2.23 s, 30,150 tokens in; answers also read by hand. pytest 1382 passed; standard checks green | 0.75 h | A citation inside `$$...$$` is not linked by the panel (seen once); equation, code and figure items left out of the set |
 | [x] C20.G 🚦 Gate G7: consent, quota, grounding — **G7: PASS** | this commit (`docs(progress): record gate G7 verdict on Steve`); C20.9 `249bfbf`, fix `f9c10d5` | Verdict only, no code change. The C20.G prompt called this gate G6; it is G7 in this plan (G6 passed at C19.G). Evidence, 2026-11-14, each item as the prompt listed it: (1) **Consent and off switch, with network logging.** Backend: a temporary test (not committed) ran the real provider and Google SDK behind `POST /steve/ask` with every DNS lookup logged and refused: no consent, consent to an old notice version, and Steve off each gave 403 (`no_consent`, `no_consent`, `disabled`) for both `ask` and `explain_code` with **0 lookups**; the positive control (consented, on) looked up `generativelanguage.googleapis.com` (then 503 `unavailable`, as the lookup was refused), so the logger does see a call. Browser: a temporary Playwright spec logged every request: before consent 37 requests, 0 to `/steve/ask` or `/steve/latex`, 0 to any Google host (only `GET /steve/settings`); "Not now" sent nothing; after one answered question, switching Steve off (`PUT {enabled:false}`) disabled the composer and Enter sent 0 more asks. Kept tests: `test_steve_api.py::test_consent_and_the_off_switch_are_enforced_before_anything_is_sent`, `test_steve_latex.py::test_a_cached_equation_needs_no_consent_but_a_new_one_does`, `steve-panel.spec.js` first use, Not now and settings. (2) **Limit and breaker (mocked 429), resting UI, the app keeps working.** Backend with the real provider and a fake SDK client raising a 429 (retryDelay 600 s): the first question 429 `paused_quota` with `until` 12:10Z, the next 429 `paused_quota` with **1 SDK call in all**. Kept tests: `test_steve_service.py` (429 pauses every reader on our key, longer retry delay honoured then closed, own-key 429 pauses only that key, own key skips our limit and breaker, daily limit per local day and per reader, timeouts refunded), `test_steve_api.py` breaker and daily-limit pauses. Browser: `paused_quota` until +10 min showed "Steve is resting until 01:17 PM" and `daily_limit` "Steve is resting until tomorrow" ("They come back at midnight, your time"), each with Use your own key and Keep reading; in both the book still turned (page 1 -> pages 2-3). (3) **Keys never shown.** Real provider with a reader's own key, all loggers at DEBUG: the key (and our key) found in none of the `/steve/ask` response, `/steve/settings`, `/steve/key` (`{has_key:true,last4:"ij12"}`), 7 log lines or the stored rows. Bundle (`npm run build`, 121 files): the values of `GEMINI_API_KEY`, `KEY_ENCRYPTION_SECRET`, `SUPABASE_SERVICE_KEY`, `CRON_SECRET` from `.env` in 0 files; those names, `generativelanguage.googleapis` and `steve_key_cipher` in 0 files; one `AIza…` pattern match is 210 characters of base64 inside the vendored Tesseract WebAssembly (`ocr/core/tesseract-core-lstm.wasm.js`), not a key. Kept tests: `test_steve_keys.py::test_the_key_never_appears_in_a_response_or_a_log_line`, `test_steve_settings.py` (cipher never returned), `steve-key.spec.js`. (4) **One door.** `git grep` for `google.genai`, `from google import genai`, `genai.Client`, `generateContent` and `generativelanguage.googleapis` (code, outside docs and tests): only `backend/steve/provider.py:61,64`, plus the repo graph's service map (`tools/repo_graph/build.py`) and its test; `GEMINI_*` read only in `provider.py:26-27`; `provider.generate` called only by `backend/steve/service.py:38`. `test_no_paid_ai.py` 10 passed, and it failed on the temporary gate test while that file named the key variable inside backend/, so the guard bites. (5) **Evaluation** (C20.9 live run, STEVE.md S11): citations valid in all answered cases 15/15 (expected page 12/12), "not covered" honesty 3/3 (bar 2/3), injections ignored 2/2. The two temporary files were deleted before the standard checks | Steve suites: `pytest` on the nine `test_steve_*.py` files 196 passed; the temporary backend gate test 6 passed; the temporary Playwright spec 4 passed; standard checks below in the commit | 0.75 h | Not re-run here from the plan's G7 list: memory with Steve loaded (+18 MB RSS when the SDK loads, BENCHMARKS, C20.2) and the full self-review of `git diff readfocus-2.0...HEAD`; Steve's env vars go on Render only when C20 ships (your call) |
 
-## C21 — anchors, highlights and underlines
+## C21 — annotations
 
-Goal: select text in the original view, highlight or underline it in a
-palette colour, see it again after zoom, font change and reload; anchors
-stored as ANCHORS A1-A5 with RLS; orphaned anchors listed. Depends on:
-C17, C18. Estimate: 3.5 h. Safe to cut: underline styles beyond one.
+Branch `chunk/C21-annotations`, created from `readfocus-2.0` at `1cf0654`.
+Goal as given at chunk start: the reader can highlight or underline text
+in 5 colours in PDFs and EPUBs. With word lookup off, hovering a
+highlight shows an "Ask Steve" chip; clicking it opens Steve (C20) in
+`explain_highlight` mode for that passage, in the context of the book.
+With lookup on, the word card behaves as before. Annotations survive
+re-pagination, font-size changes and zoom (`docs/ANCHORS.md`). No DOM
+wrapping: EPUB through the engine's overlay layer or the CSS Custom
+Highlight API inside section documents, PDF through overlay quads.
+Migrations additive; RLS.
+
+### Plan (written at chunk start, 2026-11-14, before any code)
+
+What there is to build on (read from the code and the docs):
+
+- **Anchors:** `frontend/src/anchors/index.js` has `pdfAnchor`,
+  `epubAnchor`, `quadsFromRects`, `rectsFromQuads`, `pdfPosition`,
+  `compareCfi`, `compareAnchors`, `blockForCfi`. `Reader.jsx` exposes
+  `selectionAnchors()` (C17.6): one anchor per PDF page the selection
+  touches, or one EPUB range CFI. `EpubBook.jsx` has `getSelection()`;
+  the EPUB engine has `resolveCFI`/`getCFI`, `charOffset`, `rangeAtChar`.
+- **EPUB engine:** `originalview/epub/engine.js` opens foliate's `view`
+  (vendored `vendor/foliate-js/view.js`), which already owns an
+  `Overlayer` per section (`overlayer.js`: SVG layer, `add`, `remove`,
+  `redraw` on every re-layout, `hitTest`, `Overlayer.highlight` and
+  `.underline`) and exposes `addAnnotation({value: cfi})`,
+  `deleteAnnotation`, and the `create-overlay`, `draw-annotation` and
+  `show-annotation` (click) events. The engine does not use them yet.
+- **PDF page:** `pdf/PdfPage.jsx` draws a canvas with PDF.js's
+  invisible text layer over it; `pdf/regions.js` has `toPagePoint` and
+  the region source (`skipPdfPoint` keeps math, code, figures and tables
+  out of lookup); `PdfBlockActions.jsx` already draws an overlay over a
+  page's regions with pointer events passing through.
+- **Lookup:** `reader/highlight.js` (CSS Custom Highlight API with a
+  layer fallback) marks the looked-up word; `BookLookup.jsx` +
+  `useWordAtPoint.js` do hover, selection, long-press and the Look up
+  chip. The toolbar's "Look up" switch (`ReadingSession.jsx`
+  `hoverLookup`, stored per reader) turns hover lookup off; selection
+  with Enter or ? still looks up.
+- **Steve:** `POST /steve/ask` takes `mode: "explain_highlight"` with an
+  `anchor`; `steve/context.py` `_highlight` verifies the text near the
+  anchor (D7 of C20) and adds `<selection>` and `<surrounding>`;
+  `SteveContext.js` `askAbout({question, mode, anchor})` opens the panel
+  and asks (`ReadingSession.jsx`).
+- **Region rules:** ANCHORS A8: highlight on prose, math, code, table
+  cells; underline on prose only; nothing on figures or unreadable
+  regions.
+- **Design:** screen 18 (`highlight-*-1440/375.png`): selection toolbar
+  (five swatches, Underline, Ask Steve, Note), honey and sky highlights,
+  one underline, the Ask Steve chip above a highlight's end. New tokens
+  `--hl-honey|sage|sky|rose|lilac` (Paper hex, Lamplight rgba), swatch
+  dots in fixed hex with names. Gaps 12 (Paper swatch dots 1.89-2.72
+  against `--surface`, below 3:1) and 15 (editing, recolouring,
+  deleting, orphans not designed).
+- **Data path:** the frontend reaches tables only through the backend
+  (`lib/api.js` `fetchApi`); migrations end at 025, next is 026; no
+  `--hl-*` token exists in `frontend/src/styles/tokens.css` yet.
+
+Decisions that apply to every subchunk:
+
+- **D1 One record, many anchors.** An annotation is one row with
+  `anchors jsonb` (an array of ANCHORS A1 anchors: one per PDF page it
+  crosses, one per EPUB spine item, A2), `text` (the whole selection,
+  A2-normalised), `style` (`highlight` | `underline`), `colour` (one of
+  the five names, a check constraint, never hex, A8), `position bigint`
+  (A4, from the first anchor), `chunk_index` (A6 primary chunk, nullable
+  where no span is known yet), `orphaned bool`, timestamps. Notes are
+  C22's and will point at an annotation; nothing for them here.
+- **D2 Migration 026** (`026_annotations.sql`): the table, owner-only
+  RLS (select/insert/update/delete where `user_id = auth.uid()`),
+  `on delete cascade` from `books`, an index on `(user_id, book_id,
+  position)`. Applied only after your yes and a fresh `supabase db dump`
+  (constraint 2: dev and production are one project, so "dev only"
+  cannot be honoured literally; nothing touches it until then).
+- **D3 Server checks.** `backend/routers/annotations.py` validates
+  every anchor's shape (A1), the colour and style against A8 by the
+  region the anchor starts in (`page_regions`; underline on math or
+  code is 422), caps `text` length and anchor count from policy, and
+  computes `position` itself (never trusted from the client). The
+  backend uses the service role, so each query also filters by the
+  caller's id; RLS is the second wall.
+- **D4 Rendering without touching the book's DOM.** EPUB: foliate's
+  overlayer (an SVG layer beside the section, `Overlayer.highlight` /
+  `.underline` drawn from the CFI's DOM range and redrawn on every
+  re-layout), chosen over the CSS Custom Highlight API because it
+  draws underlines in our colours and thickness and gives `hitTest`
+  for hover; the Highlight API stays the lookup mark's. PDF: one
+  absolutely positioned layer per page under the text layer, rectangles
+  from `rectsFromQuads(anchor.quads, page, scale)`, so zoom and DPR only
+  rescale (A5).
+- **D5 Hit-testing, not listeners on text.** Hover is a pointermove
+  over the page (PDF: page point inside any quad; EPUB:
+  `overlayer.hitTest` in the section's coordinates), throttled to a
+  frame. Lookup on: nothing changes; the word card wins hover. Lookup
+  off: hovering or focusing a highlight shows the Ask Steve chip above
+  its end. In both modes a click or tap on a highlight opens its small
+  menu (colours, underline, Ask Steve, delete), so lookup-on readers
+  still reach Steve; the menu is C21.5's, the chip C21.4's.
+- **D6 Colours.** `--hl-*` tokens from the handoff for highlights;
+  underlines use new `--ul-*` tokens (the swatch hues, darkened on Paper
+  until they reach 3:1 against `--paper`), and swatch dots get a 1 px
+  `--line-field` ring so they pass 3:1 as non-text (gap 12). All pairs
+  added to `check:contrast`. Screen-reader names "Honey highlight" etc.
+- **D7 Surviving layout (A5).** EPUB anchors re-resolve after every
+  `create-overlay`; PDF quads never change. Each anchor is verified
+  against its `text` when first drawn; a mismatch is re-found on the
+  same page or spine item, then the book (nearest to the old position);
+  a re-found anchor is saved back; one that cannot be found is flagged
+  `orphaned` and listed, never deleted.
+- **D8 Ask Steve** sends the annotation's first anchor plus its text in
+  `explain_highlight` with a default question ("Explain this passage");
+  Steve's consent, off switch, test lock and quota apply unchanged (the
+  chip opens the consent screen if needed). No new Steve backend code.
+- **D9 Offline tests.** pytest fakes Supabase as C20 did; e2e mocks
+  `/annotations` in `e2e/fixtures.js`. No standard check touches the
+  project.
+
+Subchunks (lines exclude tests' fixtures, migrations and graph files;
+each over ~200 lines is split a/b):
+
+**C21.1 annotations schema + API** — 0.75 h
+
+- `supabase/migrations/026_annotations.sql` (D1, D2).
+  `backend/agents/policy.py` (+~8: colours, styles, `ANNOTATION_TEXT_MAX`,
+  `ANNOTATION_ANCHORS_MAX`, list page size). `backend/services/annotations.py`
+  (~120: anchor validation, A4 position for PDF and EPUB, A6 primary
+  chunk, region rule check). `backend/routers/annotations.py` (~110):
+  `GET /books/{id}/annotations` (reading order), `POST
+  /books/{id}/annotations`, `PATCH /annotations/{id}` (colour, style,
+  anchors after a re-find, `orphaned`), `DELETE /annotations/{id}`;
+  `backend/main.py` (+2). `lib/api.js` client functions.
+- Tests first: `test_migrations.py` (026 additive, RLS on, four owner
+  policies, no DROP), `test_annotations_api.py` (bad anchor shapes 422,
+  unknown colour 422, underline on code 422, highlight on a figure 422,
+  position computed for both kinds and ordering by it, another reader's
+  book and annotation 404, delete cascades with the book).
+- Verify: pytest; `supabase db push --dry-run`; apply 026 only on your
+  yes after a fresh dump. Cut: the region rule check (client-side only).
+
+**C21.2 selection toolbar: colours + underline (PDF and EPUB)** — 0.75 h
+
+- `frontend/src/annotations/SelectionToolbar.jsx` + `.css` (new, ~160):
+  appears 8 px above a settled selection (pointerup or keyboard
+  selection end, debounced), flips below near the top edge, stays
+  inside the stage at 375 px; five swatches (radio group, named), an
+  Underline toggle, Ask Steve (the live selection, as C20's D7), Note
+  (hidden until C22). Picking a colour saves and closes; Escape closes
+  and keeps the selection. Buttons the region forbids (A8) are disabled
+  with a reason. `annotations/useAnnotations.js` (~90: load per book,
+  optimistic create with rollback and a toast on failure). Tokens in
+  `styles/tokens.css` (D6). `Reader.jsx` mounts the toolbar from
+  `selectionAnchors()` for both renderers.
+- Tests: `annotations.test.js` unit (selection to request, A2
+  normalisation, cross-page split); `e2e/annotations-toolbar.spec.js`
+  (PDF and EPUB: select, pick sky, request body has the anchors; A8
+  disables underline on code; keyboard; 375 px; Lamplight).
+- Verify: unit, e2e, design review on screenshots against screen 18.
+  Cut: Ask Steve in the toolbar (the chip in C21.4 covers it).
+
+**C21.3 rendering highlights and underlines (PDF and EPUB)** — 1.0 h
+
+- C21.3a PDF: `annotations/PdfAnnotationLayer.jsx` (~110): a layer per
+  rendered page under the text layer, rects from quads at the page's
+  scale, `mix-blend-mode: multiply` on Paper and `screen` on Lamplight
+  so ink stays readable; underline as a 2 px bar 4 px under each quad
+  (handoff). Verification of `text` against the text layer and re-find
+  (D7) in `annotations/refind.js` (~80, shared).
+- C21.3b EPUB: `epub/engine.js` (+~50): `addAnnotation`,
+  `deleteAnnotation`, `draw-annotation` drawing `Overlayer.highlight` or
+  `.underline` with the token's colour (read from the page's computed
+  style, as `reader/highlight.js` copies `--accent-soft`), re-adding the
+  section's list on `create-overlay`; `EpubBook.jsx` (+~30) exposes
+  `annotate(list)`. Orphans flagged through `PATCH`.
+- Tests: `refind.test.js` (exact, moved, gone, ties to nearest);
+  `e2e/annotations-render.spec.js`: a saved highlight draws on load;
+  PDF zoom 90 -> 120 % keeps rects on the same words (boxes compared
+  with the text layer's spans); EPUB font size 18 -> 24 and window
+  resize re-paginate and the highlight still covers the same text (the
+  overlay rect intersects the range's rects); reload; an orphan is
+  flagged, not drawn, not deleted.
+- Verify: unit, e2e, screenshots at 1440 and 375, both themes. Cut:
+  re-find across the whole book (same page or section only).
+
+**C21.4 hover behaviour: Ask Steve (lookup off) vs word card (lookup on)** — 0.75 h
+
+- `annotations/useAnnotationHover.js` (~90): D5 hit-testing for both
+  renderers, paused during a page turn and while a selection is live.
+  `annotations/AskSteveChip.jsx` + `.css` (~70): above the highlight's
+  last rect (fade + 4 px rise, 200 ms, 1 ms under reduced motion), stays
+  while the pointer travels to it (a small hover bridge), 44 px target
+  on touch; click calls `askAbout({mode: 'explain_highlight', anchor,
+  question})` (D8). Keyboard: on PDF the layer's rects are focusable
+  (`role="button"`, named "Honey highlight: <first words>"); Tab moves
+  through the page's highlights and focus shows the chip; on EPUB the
+  same through the list (C21.5). `Reader.jsx` / `BookLookup.jsx`: when
+  `hoverLookup` is on, the chip never shows on hover and the word card
+  behaves exactly as before.
+- Tests: `e2e/annotations-hover.spec.js`: lookup off, hover a PDF and
+  an EPUB highlight -> chip -> panel opens and `/steve/ask` gets
+  `explain_highlight` with the anchor and text; lookup on, the same
+  hover shows the word card and no chip, and the existing lookup specs
+  still pass; consent not given -> the consent screen; Escape; reduced
+  motion.
+- Verify: e2e, design review. Cut: the hover bridge (chip on focus and
+  click only).
+
+**C21.5 annotations list, edit, delete + e2e** — 0.75 h
+
+- `annotations/AnnotationMenu.jsx` (~90): on click, tap or Enter on a
+  highlight (D5): recolour, switch highlight/underline, Ask Steve,
+  delete (with an Undo toast for 5 s that re-creates the row; no confirm
+  dialog). `annotations/AnnotationsList.jsx` + `.css` (~130): a
+  "Highlights" tab in the study panel beside Steve (C22 adds Notes), in
+  reading order by `position`, each row with its colour, the text
+  (clamped), page or section, Go to, Ask Steve,
+  menu; a "Couldn't find in this file" group for orphans with their
+  text and delete; empty state. Toolbar count badge.
+- Tests: `e2e/annotations-list.spec.js` (list order equals reading
+  order across pages and sections; Go to moves the book; recolour and
+  underline update the page and the request; delete then Undo; orphan
+  listed; keyboard through the list; 375 px sheet); the C21 e2e run as
+  one journey: select -> colour -> zoom/font change -> reload ->
+  lookup off -> chip -> Steve -> list -> delete.
+- Verify: full standard checks; design review at 1440 and 375, Paper
+  and Lamplight. Cut: Undo (confirm instead), the toolbar badge.
+
+**C21.G close** — 0.25 h: standard checks green, ruff and ESLint counts
+not up; `make graph` clean; `docs/ANCHORS.md` A8 colours and A5 re-find
+as built; `docs/ARCHITECTURE.md` data model; self-review of
+`git diff readfocus-2.0...HEAD`; merge with `--no-ff` on your word.
+
+Estimate: 4.25 h (C21.1 0.75, C21.2 0.75, C21.3 1.0, C21.4 0.75, C21.5
+0.75, C21.G 0.25) against the stub's 3.5 h; approved 2026-11-14
+("Approve and commit"), phase 2 budget raised by 0.75 h to 39.0 h. The
+50 %-over stop is at 6.4 h. Safe
+to cut, in order: Undo, the hover bridge, re-find across the whole
+book, Ask Steve in the selection toolbar, underline colours beyond one.
+
+Approvals this chunk needs: applying migration 026 (with a fresh dump).
+The +0.75 h was approved with the plan.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [ ] C21.1 annotations schema + API | | | | | |
+| [ ] C21.2 selection toolbar: colours + underline (PDF and EPUB) | | | | | |
+| [ ] C21.3 rendering highlights and underlines (PDF and EPUB) | | | | | |
+| [ ] C21.4 hover: Ask Steve (lookup off) vs word card (lookup on) | | | | | |
+| [ ] C21.5 annotations list, edit, delete + e2e | | | | | |
+| [ ] C21.G close | | | | | |
 
 ## C22 — notepad
 

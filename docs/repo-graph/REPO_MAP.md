@@ -959,7 +959,7 @@ Each use is the file and line of the first import of that service.
 | `docs/G4_PRODUCTION_MIGRATIONS.md` | 706 | Gate G4 (C14.4): outcome first (production is the dev project; 001-015 already applied, checked read-only; backfill dry runs found nothing; nothing written), then the review written before that was known: full SQL of 005-015 with sha256, read-only pre-checks, backup, apply and post-check steps, backfill plan. |
 | `docs/GAMIFICATION.md` | 100 | Phase 2 spec (C16.3): XP from focus points, daily goal, streaks with earned freezes, the badge catalogue, weekly book-themed leagues, opt-out and no dark patterns. |
 | `docs/MIGRATION_AUDIT.md` | 364 | Audit from the full read: verdicts on suspected issues, architecture, LLM calls with file:line, schema and RLS, background tasks, dead code, security, risks, files to change. |
-| `docs/PROGRESS.md` | 4311 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
+| `docs/PROGRESS.md` | 4559 | Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan. |
 | `docs/STEVE.md` | 440 | Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation. |
 | `frontend/README.md` | 16 | Unedited Vite React template README; says nothing about ReadFocus. |
 | `progress.md` | 65 | Pre-2.0 progress tracker, kept for history only. |

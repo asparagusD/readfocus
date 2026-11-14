@@ -3394,3 +3394,71 @@ passed.
 
 ### Commit
 fix(ingest): read OCR text only for books with no text of their own
+
+## 2026-11-14 C20.1 — repo graph tests fail after the C20.1 commit: purposes.json out of date
+
+**Status:** fixed
+
+### Symptom
+After `2d589ff` (`feat(steve): add Steve spec, consent and settings`), the
+repo graph tests fail; they passed in the C20.1 standard checks run before
+the commit. Expected: 62 passed.
+
+    pytest tools/repo_graph/tests -q
+    4 failed, 58 passed in 0.66s
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_covers_routers_and_pages
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents
+    FAILED tools/repo_graph/tests/test_inventory.py::test_repo_inventory_is_complete_and_deterministic
+    FAILED tools/repo_graph/tests/test_render.py::test_real_map_has_two_diagrams_and_is_deterministic
+    >           raise InventoryError(
+    E           tools.repo_graph.inventory.InventoryError: purposes.json is out of date.
+    tools\repo_graph\inventory.py:151: InventoryError
+
+    make graph
+    python tools/repo_graph/inventory.py
+    purposes.json is out of date.
+      No purpose (read the file, then add one): ['backend/routers/steve.py', 'backend/steve/__init__.py', 'backend/steve/consent.py', 'backend/tests/test_steve_settings.py', 'docs/STEVE.md', 'supabase/migrations/023_steve.sql']
+      Purpose for a file that is not inventoried: []
+    make: *** [Makefile:17: graph] Error 1
+
+### Repro
+    pytest tools/repo_graph/tests/test_inventory.py::test_repo_inventory_is_complete_and_deterministic -q
+
+### Hypotheses
+1. The inventory lists `git ls-files` only, so `make graph` and the graph
+   tests run while the six new files were untracked saw nothing missing;
+   committing them made them tracked without a purpose. Evidence:
+   `tools/repo_graph/inventory.py:77` `tracked_files` runs
+   `git ls-files -z`; the six paths listed are exactly the files C20.1
+   added. Ruled out if: the tests fail on `readfocus-2.0`'s tree too.
+   Result: confirmed (the failure names only the C20.1 files; the C20
+   plan commit `f6db534` passed the same tests).
+2. A stale purpose for a removed file. Ruled out if the "not inventoried"
+   list is empty. Result: ruled out (it is `[]`).
+
+### Root cause
+`tools/repo_graph/purposes.json` has no entry for the six files C20.1
+added; the C20.1 checks ran before the files were staged, so the
+inventory (tracked files only) did not see them.
+
+### Fix
+A purpose for each of the six files in `purposes.json` (appended, file
+order kept; a first attempt re-sorted the file and was reverted before
+any test), then `make graph` with the files tracked, and the regenerated
+`docs/repo-graph/` committed. That left one failure:
+`test_build.py::test_real_graph_has_the_schema_and_the_agents` lists the
+schema's tables exactly, and migration 023 adds `steve_usage`,
+`steve_threads` and `steve_messages`; they are added to its expected set
+(the test stays exact, as it was for `page_ocr` in C19.4).
+Process: run `make graph` and the graph tests after `git add`, or after
+`git add -N` for new files.
+
+### Regression test
+`tools/repo_graph/tests/test_inventory.py::test_repo_inventory_is_complete_and_deterministic`
+already guards this. Failed before the fix: yes
+(`git stash push -- tools/repo_graph/purposes.json`: 1 failed, the
+InventoryError above). Passes after: yes (`git stash pop`: 1 passed).
+`pytest tools/repo_graph/tests -q`: 62 passed.
+
+### Commit
+`fix(graph): add purposes for the C20.1 files`

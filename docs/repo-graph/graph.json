@@ -100,6 +100,13 @@
       "handler": "get_session"
     },
     {
+      "id": "endpoint:GET /steve/settings",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/steve/settings",
+      "handler": "get_settings"
+    },
+    {
       "id": "endpoint:POST /auth/profile/calibrate",
       "type": "endpoint",
       "method": "POST",
@@ -168,6 +175,13 @@
       "method": "PUT",
       "path": "/sessions/{session_id}/position",
       "handler": "save_position"
+    },
+    {
+      "id": "endpoint:PUT /steve/settings",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/steve/settings",
+      "handler": "put_settings"
     },
     {
       "id": "env:CRON_SECRET",
@@ -716,6 +730,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/steve.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/__init__.py",
       "type": "file",
       "role": "service",
@@ -803,6 +823,18 @@
       "id": "file:backend/services/supabase_client.py",
       "type": "file",
       "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/consent.py",
+      "type": "file",
+      "role": "lib",
       "language": "python"
     },
     {
@@ -1262,6 +1294,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_steve_settings.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_supabase_client.py",
       "type": "file",
       "role": "test",
@@ -1419,6 +1457,12 @@
     },
     {
       "id": "file:docs/PROGRESS.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
+      "id": "file:docs/STEVE.md",
       "type": "file",
       "role": "doc",
       "language": "markdown"
@@ -3338,6 +3382,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/023_steve.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3456,6 +3506,10 @@
       "type": "function"
     },
     {
+      "id": "function:steve_profile_guard",
+      "type": "function"
+    },
+    {
       "id": "graph_node:__end__",
       "type": "graph_node"
     },
@@ -3535,6 +3589,18 @@
     },
     {
       "id": "table:sessions",
+      "type": "table"
+    },
+    {
+      "id": "table:steve_messages",
+      "type": "table"
+    },
+    {
+      "id": "table:steve_threads",
+      "type": "table"
+    },
+    {
+      "id": "table:steve_usage",
       "type": "table"
     },
     {
@@ -3620,6 +3686,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/022_scanned_pages.sql",
       "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "table:profiles"
     },
     {
       "type": "calls_endpoint",
@@ -4019,6 +4090,16 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:GET /steve/settings"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:PUT /steve/settings"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/tests/test_cors.py",
       "to": "endpoint:GET /books"
     },
@@ -4041,6 +4122,11 @@
       "type": "defines_function",
       "from": "file:supabase/migrations/006_chunk_text_search.sql",
       "to": "function:search_chunks_text"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "function:steve_profile_guard"
     },
     {
       "type": "defines_table",
@@ -4111,6 +4197,21 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/022_scanned_pages.sql",
       "to": "table:page_ocr"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "table:steve_messages"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "table:steve_threads"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "table:steve_usage"
     },
     {
       "type": "graph_edge",
@@ -4576,11 +4677,6 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
-      "to": "file:backend/routers/__init__.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/main.py",
       "to": "file:backend/routers/agent.py"
     },
     {
@@ -4617,6 +4713,11 @@
       "type": "imports",
       "from": "file:backend/main.py",
       "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/steve.py"
     },
     {
       "type": "imports",
@@ -4822,6 +4923,21 @@
       "type": "imports",
       "from": "file:backend/routers/sessions.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/steve/consent.py"
     },
     {
       "type": "imports",
@@ -6157,6 +6273,36 @@
       "type": "imports",
       "from": "file:backend/tests/test_startup.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/routers/auth.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/routers/steve.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/steve/consent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -8445,6 +8591,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/steve.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/book_ingestor.py",
       "to": "table:books"
     },
@@ -8727,6 +8878,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/sessions.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/steve.py",
+      "to": "table:profiles"
     },
     {
       "type": "writes_table",

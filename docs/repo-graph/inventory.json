@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 670,
-    "inventoried": 527,
+    "tracked": 676,
+    "inventoried": 533,
     "excluded": 143
   },
   "files": [
@@ -591,6 +591,14 @@
       "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
     },
     {
+      "path": "backend/routers/steve.py",
+      "language": "python",
+      "lines": 73,
+      "size_bytes": 2854,
+      "role": "router",
+      "purpose": "GET and PUT /steve/settings (C20.1): auth required; Steve's off switch and the reader's consent with the notice version stored (only the current version counts; another version 409; withdrawing clears both); never reads the key cipher."
+    },
+    {
       "path": "backend/services/__init__.py",
       "language": "python",
       "lines": 1,
@@ -709,6 +717,22 @@
       "size_bytes": 1578,
       "role": "service",
       "purpose": "Creates the shared service-role Supabase client with its own HTTP/1.1 httpx pool (thread-safe; the default single HTTP/2 connection broke under threads, issue 29); fetch_all runs independent queries at once on worker threads; raises at import if the URL or key is missing."
+    },
+    {
+      "path": "backend/steve/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 105,
+      "role": "lib",
+      "purpose": "Package marker for backend.steve, Steve the opt-in study assistant (docs/STEVE.md); the only package that may reach Gemini (from C20.2)."
+    },
+    {
+      "path": "backend/steve/consent.py",
+      "language": "python",
+      "lines": 28,
+      "size_bytes": 1628,
+      "role": "lib",
+      "purpose": "Steve's consent notice (C20.1): CONSENT_VERSION, CONSENT_TEXT quoting Google's free-tier terms, and TERMS_URL; served by GET /steve/settings and kept identical to docs/STEVE.md by a test."
     },
     {
       "path": "backend/tests/__init__.py",
@@ -1319,6 +1343,14 @@
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
     },
     {
+      "path": "backend/tests/test_steve_settings.py",
+      "language": "python",
+      "lines": 129,
+      "size_bytes": 5425,
+      "role": "test",
+      "purpose": "Pytest for /steve/settings: consent stored with the current notice version, old or missing versions refused, withdraw clears, off keeps consent, unknown fields refused, only the caller's row, 404, the key cipher never returned by it or /auth/profile, the notice in code matches STEVE.md."
+    },
+    {
       "path": "backend/tests/test_supabase_client.py",
       "language": "python",
       "lines": 20,
@@ -1465,8 +1497,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3396,
-      "size_bytes": 149300,
+      "lines": 3456,
+      "size_bytes": 152191,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1533,6 +1565,14 @@
       "size_bytes": 759074,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
+    },
+    {
+      "path": "docs/STEVE.md",
+      "language": "markdown",
+      "lines": 168,
+      "size_bytes": 8018,
+      "role": "doc",
+      "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
     {
       "path": "frontend/.env.example",
@@ -4087,6 +4127,14 @@
       "purpose": "Migration 022 (C19.4, additive): books.scanned_pages integer[]; table page_ocr (book_id cascade, user_id, page, text, words jsonb, mean_confidence, engine, unique (book_id, page)) with RLS: a reader selects their own rows, the service role writes."
     },
     {
+      "path": "supabase/migrations/023_steve.sql",
+      "language": "sql",
+      "lines": 106,
+      "size_bytes": 5473,
+      "role": "migration",
+      "purpose": "Migration 023 (C20.1, additive): profiles.steve_enabled, steve_consent_at, steve_consent_version, steve_key_cipher, steve_key_last4 with a guard trigger so only the backend changes them; tables steve_usage, steve_threads, steve_messages with RLS: a reader selects their own rows, the service role writes."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -4161,8 +4209,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 529,
-      "size_bytes": 163440,
+      "lines": 535,
+      "size_bytes": 164982,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

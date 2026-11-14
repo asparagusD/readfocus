@@ -24,6 +24,7 @@ import { ReadingLamp } from '../illustrations';
 import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
 import { useSteve } from '../steve/useSteve';
+import { useAnnotations } from '../annotations/useAnnotations';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -95,6 +96,7 @@ export function ReadingSession() {
   const contentsButton = useRef(null);
   const reader = useRef(null);
   const { toast } = useToast();
+  const notes = useAnnotations(bookId); // C21.2: highlights and underlines
   const kind = sessionData?.book?.format === 'epub' ? 'epub' : 'pdf';
   // C18.6d: a PDF's math, code and figure boxes, so lookup skips them (an EPUB's markup already says).
   const regions = useMemo(() => (kind === 'pdf' ? createRegionSource(fetchApi, bookId) : null), [kind, bookId]);
@@ -388,6 +390,8 @@ export function ReadingSession() {
           hoverLookup={hoverLookup}
           regions={regions}
           ocr={ocr}
+          onAnnotate={notes.create}
+          annotations={notes.annotations}
         />
       </main>
       {steveOpen && (

@@ -148,6 +148,18 @@ async function mockBackend(page, api, book) {
       const detail = api.regionDetails[path.split('/').pop()];
       return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
     }
+    if (path === `/books/${BOOK}/annotations`) { // C21.2: highlights and underlines, kept like the server keeps them
+      if (request.method() === 'POST') {
+        const body = request.postDataJSON();
+        api.annotationPosts.push(body);
+        if (api.annotationFail) return json(route, { detail: 'Not saved' }, api.annotationFail);
+        const row = { id: `ann-${api.annotations.length + 1}`, ...body, orphaned: false,
+          text_snapshot: body.anchors.map((a) => a.text).join(' ') };
+        api.annotations.push(row);
+        return json(route, row, 201);
+      }
+      return json(route, { annotations: api.annotations });
+    }
     if (path === '/steve/key') { // C20.3: GOOD_KEY is accepted, anything else is what Google refuses
       if (request.method() === 'PUT') {
         const { key } = request.postDataJSON();
@@ -184,7 +196,7 @@ export const test = base.extend({
   api: [async ({ page, signedIn, book }, use, info) => {
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
-      regionDetails: {}, regionAt: {}, regionAtAsks: [] };
+      regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

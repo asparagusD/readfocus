@@ -3,6 +3,8 @@ import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { easing, prefersReducedMotion, seconds } from '../motion/presets';
 import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
+import { SelectionToolbar } from '../annotations/SelectionToolbar';
+import { useSelection } from '../annotations/useSelection';
 import { PdfBlockActions } from '../steve/PdfBlockActions';
 import { EpubBlockActions } from '../steve/EpubBlockActions';
 import { EpubBook } from './epub/EpubBook';
@@ -17,6 +19,16 @@ import { useLamplight } from './useLamplight';
 import './frame.css';
 
 const SWIPE_PX = 48;
+const EXTEND = { ArrowRight: 'forward', ArrowDown: 'forward', ArrowLeft: 'backward', ArrowUp: 'backward' };
+
+/** Shift+arrows grow or shrink a selection in the book (C21.2): by character, by word with Ctrl, by line up and down. */
+function extendSelection(found, event) {
+  const selection = found?.document?.getSelection();
+  if (!selection?.rangeCount || selection.isCollapsed || !selection.modify) return false;
+  const granularity = event.key === 'ArrowUp' || event.key === 'ArrowDown' ? 'line' : event.ctrlKey ? 'word' : 'character';
+  selection.modify('extend', EXTEND[event.key], granularity);
+  return true;
+}
 
 /** True from SPREAD_MIN_WIDTH up: two pages side by side (C12, handoff 11-12). */
 function useWide() {
@@ -83,7 +95,7 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null,
+  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -109,6 +121,10 @@ export function Reader({
     ? (bookBox ? [{ root: bookBox, doc: document, skip: regions ? (x, y) => skipPdfPoint(regions, x, y) : undefined }] : [])
     : sections.filter((doc) => doc.defaultView && doc.body).map((doc) => ({ root: doc.body, doc }))), [kind, bookBox, sections, regions]);
   const shownPages = place?.kind === 'pdf' ? place.pages.join() : '';
+  // C21.2: the settled selection, for the highlight toolbar: in this page for a PDF, in each section for an EPUB.
+  const selectionDocs = useMemo(() => (kind === 'pdf' ? [document] : sections.filter((doc) => doc.defaultView)), [kind, sections]);
+  const skipAt = useMemo(() => (kind === 'pdf' && regions ? (x, y) => skipPdfPoint(regions, x, y) : undefined), [kind, regions]);
+  const toolbar = useRef(null);
   useEffect(() => { // C18.6d: the boxes of the pages shown are asked for before a word is hovered
     if (regions && shownPages) shownPages.split(',').forEach((n) => regions.load(Number(n)));
   }, [regions, shownPages]);
@@ -118,6 +134,10 @@ export function Reader({
     onRelocate?.(next);
   }, [onRelocate]);
   useEffect(() => { if (place) onReady?.(); }, [Boolean(place)]); // eslint-disable-line react-hooks/exhaustive-deps -- first place only
+
+  const { place: selected, dismiss: dismissSelection } = useSelection({
+    book, docs: selectionDocs, skipAt, paused: !onAnnotate || !place || opening || ending || Boolean(turn) || Boolean(failure),
+  });
 
   const move = useCallback(async (dir) => {
     const renderer = book.current;
@@ -161,16 +181,24 @@ export function Reader({
 
   const onKey = useCallback((event) => {
     if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+    if (event.shiftKey && EXTEND[event.key] && !event.altKey && !event.metaKey && extendSelection(book.current?.getSelection(), event)) {
+      event.preventDefault();
+      return;
+    }
+    if (onAnnotate && toolbar.current?.onKey(event)) return;
     if (lookupClient && (event.key === 'Enter' || event.key === '?') && lookup.current?.lookUpSelection()) {
       event.preventDefault(); // the card opens with focus
       return;
     }
-    if (event.key === 'Escape') lookup.current?.clear();
+    if (event.key === 'Escape') {
+      lookup.current?.clear();
+      dismissSelection();
+    }
     const action = keyAction(event);
     if (!action || (action === 'ribbon' && !onBookmark)) return;
     event.preventDefault();
     act(action);
-  }, [act, onBookmark, lookupClient]);
+  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection]);
 
   const onKeyRef = useRef(null);
   const swipeStart = useRef(null);
@@ -233,7 +261,7 @@ export function Reader({
     <section className="rf-ov" aria-label={label ?? title} data-wide={wide} data-kind={kind}
       data-original={theme === 'lamplight' && original ? 'true' : undefined} data-loading={(!place || opening) && !failure}
       data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
-      data-ending={ending || undefined}
+      data-ending={ending || undefined} data-annotations={annotations ? annotations.length : undefined}
       style={{ ...(sheet ? { '--ov-sheet': `${sheet.width}px`, '--ov-sheet-h': `${sheet.height}px`, '--ov-sheet-pad': 'var(--space-4)' } : null), '--rf-leaf-paper': kind === 'pdf' ? (colours?.background ?? '#fff') : undefined }}>
       <header className="rf-ov-head" aria-hidden="true" data-empty={!place?.entry}>
         <span className="rf-ov-head-title">{title}</span>
@@ -304,6 +332,10 @@ export function Reader({
         <BookLookup ref={lookup} surfaces={surfaces} client={lookupClient} hover={hoverLookup} returnFocusTo={stage}
           paused={!place || opening || ending || Boolean(turn) || Boolean(failure)}
           page={place ? `${spot(placeStart(place))}-${spot(placeEnd(place))}` : ''} />
+      )}
+      {onAnnotate && (
+        // C21.2: colours, underline and Ask Steve over a selection.
+        <SelectionToolbar ref={toolbar} place={selected} onAnnotate={onAnnotate} onDismiss={dismissSelection} returnFocusTo={stage} />
       )}
       {kind === 'pdf' && regions && bookBox && (
         // C20.8b: equations, code and figures offer Explain, Copy code and Copy as LaTeX.

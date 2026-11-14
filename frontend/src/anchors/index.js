@@ -79,6 +79,30 @@ export function pdfPosition(anchor, pageWidth) {
   return anchor.page * 1e6 + Math.floor(y0) * 1e2 + Math.floor((99 * x0) / pageWidth);
 }
 
+const PART = 1e6; // A4: the page or spine index above, the line and offset below
+const xTerm = (x, width) => Math.min(99, Math.max(0, Math.floor((99 * x) / width)));
+
+/**
+ * A4 positions of a PDF range (C21.2): start from the first quad of its first page, end from the bottom-right of
+ * the last quad of its last page. `widths` are the pages' widths in points, one per anchor. The server checks the
+ * page and line parts against the anchors (backend/routers/annotations.py).
+ */
+export function pdfPositions(anchors, widths) {
+  const [x0, y0] = anchors[0].quads[0];
+  const last = anchors.at(-1);
+  const [, , x1, y1] = last.quads.at(-1);
+  return {
+    start: anchors[0].page * PART + Math.max(0, Math.floor(y0)) * 1e2 + xTerm(x0, widths[0]),
+    end: last.page * PART + Math.max(0, Math.floor(y1)) * 1e2 + xTerm(x1, widths.at(-1)),
+  };
+}
+
+/** A4 positions of an EPUB range in spine item `spine`: the characters of its text before each end, capped. */
+export function epubPositions(spine, startChar, endChar) {
+  const cap = (n) => Math.min(PART - 1, Math.max(0, n));
+  return { start: spine * PART + cap(startChar), end: spine * PART + cap(Math.max(startChar, endChar)) };
+}
+
 /** Reading order of two anchors of one book: PDF by page, then top, then left; EPUB by CFI. */
 export function compareAnchors(a, b) {
   if (a.kind === 'epub') return compareCfi(a.cfi, b.cfi);

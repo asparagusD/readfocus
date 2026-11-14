@@ -3689,3 +3689,59 @@ The pinned set itself is the guard; it passes with the table listed
 
 ### Commit
 Fixed inside the C21.1 commit (`feat(annotations): add annotations table and API`); nothing was committed failing.
+
+## 2026-11-14 C21.2 — the toolbar stays hidden when the same words are selected again at once
+
+**Status:** fixed
+
+### Symptom
+`e2e/annotations-toolbar.spec.js` (keyboard test): after U underlined a
+double-clicked word, double-clicking the same word again showed no toolbar.
+
+    Error: expect(locator).toBeVisible() failed
+    > 96 |   await expect(toolbar(page)).toBeVisible();
+
+### Repro
+Select a word, press U, then double-click the same word within 150 ms.
+
+### Hypotheses
+1. Saving put the toolbar away with `dismiss()`, which remembers the
+   selection's key so Escape keeps it hidden; clearing the selection only
+   forgets that key when the settled read (150 ms later) finds no
+   selection. A new selection of the same words inside those 150 ms has
+   the remembered key and stays hidden. Result: confirmed (the same test
+   passes once the key is not remembered on save).
+2. The page lost the selection on the double-click. Ruled out: the
+   selection read "lamp " in the same run.
+
+### Root cause
+One `dismiss()` served two cases: Escape (keep the selection, hide the bar
+until it changes) and saving (the selection is cleared anyway).
+
+### Fix
+`dismiss(remember = true)`; a saved colour calls `dismiss(false)`; any new
+press forgets a remembered key (`frontend/src/annotations/useSelection.js`).
+
+### Regression test
+The keyboard test in `e2e/annotations-toolbar.spec.js` (U, then the same
+word again, toolbar visible).
+
+### Commit
+Fixed inside the C21.2 commit before it was made.
+
+## 2026-11-14 C21.2 — the phone-width toolbar test selected nothing
+
+**Status:** fixed (test)
+
+### Symptom
+At 375 px the PDF test's mouse drag left an empty selection, so no toolbar.
+
+### Root cause
+The PDF page fitted to 375 px draws its lines 7 px high; the drag's start
+point missed the text layer's span. Not a product fault: on a phone a PDF is
+read zoomed in.
+
+### Fix
+The 375 px test uses the EPUB, which reflows to a readable size. It also
+asserts Lamplight is on (`colorScheme: 'dark'`, as the other specs do; a
+stored `rf-theme` alone left System mode in Paper).

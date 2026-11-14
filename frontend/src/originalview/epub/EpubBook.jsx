@@ -1,7 +1,7 @@
 import { useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { epubThemeCss, locationAt } from '../frame';
 import { EpubView } from './EpubView';
-import { epubAnchor } from '../../anchors';
+import { epubAnchor, epubPositions } from '../../anchors';
 
 /** "p. 34 of ~210" or "pp. 34–35 of ~210"; "~" because the numbers count characters, not printed pages. */
 function epubFolio(locations, place) {
@@ -94,6 +94,19 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
           return cfi ? [epubAnchor(cfi, range.toString())] : [];
         }
         return [];
+      },
+      // C21.2: the selection as one range anchor with its A4 positions, plus the range and its document.
+      selectionPlace: () => {
+        for (const { doc, index } of now()?.contents() ?? []) {
+          const selection = doc.getSelection();
+          if (!selection?.rangeCount || selection.isCollapsed) continue;
+          const range = selection.getRangeAt(0);
+          const cfi = now().cfiFor(doc, range);
+          if (!cfi) return null;
+          const [start, end] = now().charsOf(doc, range);
+          return { anchors: [epubAnchor(cfi, range.toString())], ...epubPositions(index, start, end), range, doc };
+        }
+        return null;
       },
       getSelection: () => {
         for (const { doc } of now()?.contents() ?? []) {

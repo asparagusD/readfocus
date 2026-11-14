@@ -1,14 +1,14 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
 import { squeeze } from '../today';
-import { pdfAnchor, quadsFromRects } from '../../anchors';
+import { pdfAnchor, pdfPositions, quadsFromRects } from '../../anchors';
 
 /**
  * PDF anchors for a selection (ANCHORS A1, A2): one per page it touches, each with a quad
  * per line in points from the page's top-left (the page's own scale undone, so any zoom
  * gives the same quads) and that page's part of the text.
  */
-function selectionAnchors(range, box) {
+function selectionAnchors(range, box, widths = []) {
   const out = [];
   for (const page of box.querySelectorAll('.rf-pdf-page[data-scale]')) {
     if (!range.intersectsNode(page)) continue;
@@ -19,7 +19,9 @@ function selectionAnchors(range, box) {
     if (!page.contains(range.endContainer)) part.setEnd(layer, layer.childNodes.length);
     const at = page.getBoundingClientRect();
     const quads = quadsFromRects(part.getClientRects(), at, Number(page.dataset.scale));
-    if (quads.length) out.push(pdfAnchor(Number(page.dataset.page), quads, part.toString()));
+    if (!quads.length) continue;
+    out.push(pdfAnchor(Number(page.dataset.page), quads, part.toString()));
+    widths.push(at.width / Number(page.dataset.scale)); // the page's width in points, for A4 positions
   }
   return out;
 }
@@ -125,6 +127,15 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       const selection = document.getSelection();
       if (!selection?.rangeCount || selection.isCollapsed || !box.current?.contains(selection.anchorNode)) return [];
       return selectionAnchors(selection.getRangeAt(0), box.current);
+    },
+    // C21.2: the selection's anchors with their A4 positions, plus the range and its document.
+    selectionPlace: () => {
+      const selection = document.getSelection();
+      if (!selection?.rangeCount || selection.isCollapsed || !box.current?.contains(selection.anchorNode)) return null;
+      const range = selection.getRangeAt(0);
+      const widths = [];
+      const anchors = selectionAnchors(range, box.current, widths);
+      return anchors.length ? { anchors, ...pdfPositions(anchors, widths), range, doc: document } : null;
     },
     getSelection: () => {
       const selection = document.getSelection();

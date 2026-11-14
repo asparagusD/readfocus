@@ -1760,6 +1760,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:frontend/e2e/annotations-toolbar.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/calibration.spec.js",
       "type": "file",
       "role": "config",
@@ -2031,6 +2037,42 @@
     },
     {
       "id": "file:frontend/src/anchors/index.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/SelectionToolbar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/palette.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/palette.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/useAnnotations.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/useSelection.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4191,6 +4233,16 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/023_steve.sql",
       "to": "table:profiles"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "endpoint:GET /books/{book_id}/annotations"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "endpoint:POST /books/{book_id}/annotations"
     },
     {
       "type": "calls_endpoint",
@@ -7427,6 +7479,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/annotations-toolbar.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/calibration.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -7594,6 +7651,41 @@
       "type": "imports",
       "from": "file:frontend/src/anchors/anchors.test.js",
       "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/palette.test.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useAnnotations.js",
+      "to": "file:frontend/src/lib/api.js"
     },
     {
       "type": "imports",
@@ -8228,6 +8320,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/useSelection.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
     {
@@ -8754,6 +8856,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/NotFound.jsx",
       "to": "file:frontend/src/components/ErrorScreen.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/useAnnotations.js"
     },
     {
       "type": "imports",

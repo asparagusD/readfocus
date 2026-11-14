@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  blockForCfi, compareAnchors, compareCfi, epubAnchor, parseCfi, pdfAnchor, pdfPosition, quadsFromRects, rectsFromQuads, textOf,
+  blockForCfi, compareAnchors, compareCfi, epubAnchor, epubPositions, parseCfi, pdfAnchor, pdfPosition, pdfPositions, quadsFromRects, rectsFromQuads, textOf,
 } from './index.js';
 
 // A US Letter page (612 x 792 pt) drawn at `scale` CSS px per point, its top-left at (100, 50) on screen.
@@ -67,4 +67,19 @@ test("a CFI maps to the C12 block whose element holds it, else the last block be
   assert.deepEqual(blockForCfi('epubcfi(/6/4!/4/6/2)', paths), { chunk_index: 0, block_id: '0.1' }); // the figure's image: before its caption
   assert.deepEqual(blockForCfi('epubcfi(/6/6!/4/2/1:0)', paths), { chunk_index: 1, block_id: '1.0' });
   assert.equal(blockForCfi('epubcfi(/6/2!/4/2/1:0)', paths), null); // the cover: no text, no block
+});
+
+test('a PDF range gets A4 positions: start from its first quad, end from the last quad of its last page', () => {
+  const first = pdfAnchor(12, [[72.5, 140.2, 500, 152], [72, 154, 300.4, 166.9]], 'The tide turns');
+  const second = pdfAnchor(13, [[72, 60.3, 200, 72.8]], 'at noon.');
+  assert.deepEqual(pdfPositions([first], [612]), { start: 12_014_011, end: 12_016_648 });
+  assert.deepEqual(pdfPositions([first, second], [612, 612]), { start: 12_014_011, end: 13_007_232 });
+  // the x term stays inside 0-99 even when a quad pokes past the page edge
+  assert.deepEqual(pdfPositions([pdfAnchor(2, [[-3, 10, 700, 20]], 'x')], [612]), { start: 2_001_000, end: 2_002_099 });
+});
+
+test('an EPUB range gets its spine index and character counts, capped below the next spine item', () => {
+  assert.deepEqual(epubPositions(6, 120, 142), { start: 6_000_120, end: 6_000_142 });
+  assert.deepEqual(epubPositions(0, 2_000_000, 2_000_010), { start: 999_999, end: 999_999 });
+  assert.deepEqual(epubPositions(3, 50, 40), { start: 3_000_050, end: 3_000_050 }); // never ends before it starts
 });

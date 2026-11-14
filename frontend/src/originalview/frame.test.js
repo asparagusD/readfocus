@@ -74,6 +74,9 @@ test('keys: arrows, Page Up/Down, Space and Shift+Space turn; Home, End and B', 
   assert.equal(keyAction({ key: 'b' }), 'ribbon');
   assert.equal(keyAction({ key: 'ArrowRight', ctrlKey: true }), null); // the browser's own shortcuts stay
   assert.equal(keyAction({ key: 'x' }), null);
+  // C21.2: Shift with an arrow extends a selection; it never turns the page
+  assert.equal(keyAction({ key: 'ArrowRight', shiftKey: true }), null);
+  assert.equal(keyAction({ key: 'ArrowLeft', shiftKey: true }), null);
 });
 
 test('the contents entry for a page is the last one that starts on or before it', () => {

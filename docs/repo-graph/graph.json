@@ -1024,6 +1024,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:backend/tests/fixtures/steve_eval.json",
+      "type": "file",
+      "role": "test",
+      "language": "json"
+    },
+    {
       "id": "file:backend/tests/fixtures/steve_prompts/ask.txt",
       "type": "file",
       "role": "test",
@@ -1481,6 +1487,12 @@
     },
     {
       "id": "file:backend/tests/test_steve_context.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_eval_set.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -3641,6 +3653,12 @@
     },
     {
       "id": "file:scripts/manual/test_sessions_api.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/steve_eval.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -9576,6 +9594,36 @@
       "type": "imports",
       "from": "file:scripts/manual/test_sessions_api.py",
       "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/prompts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/provider.py"
     },
     {
       "type": "imports",

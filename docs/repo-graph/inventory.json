@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 734,
-    "inventoried": 591,
+    "tracked": 737,
+    "inventoried": 594,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14661,
+      "size_bytes": 14712,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -801,8 +801,8 @@
     {
       "path": "backend/steve/provider.py",
       "language": "python",
-      "lines": 152,
-      "size_bytes": 6722,
+      "lines": 154,
+      "size_bytes": 6922,
       "role": "lib",
       "purpose": "The one door to Gemini (C20.2): the only module that imports Google's Gen AI SDK (lazily) or reads Steve's three Gemini variables; generate() streamed or not, with a timeout and one attempt (no retries), errors typed as SteveUnavailable, logs of counts and latency only."
     },
@@ -885,6 +885,14 @@
       "size_bytes": 799,
       "role": "test",
       "purpose": "Markdown fixture (C19.2a, written for the tests): two h1 chapters, inline and display math, money that is not math, a quote, lists, a table, fenced Python, two local images, one remote image, a relative and a remote link, raw HTML."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_eval.json",
+      "language": "json",
+      "lines": 66,
+      "size_bytes": 5772,
+      "role": "test",
+      "purpose": "Steve's evaluation set (C20.9): 15 questions on the test shelf (5 session, 5 retrieval with focus phrases, 3 not covered, 2 with a planted instruction and its canary), page and section labels only, no book text."
     },
     {
       "path": "backend/tests/fixtures/steve_prompts/ask.txt",
@@ -1503,6 +1511,14 @@
       "purpose": "Pytest for backend/steve/context.py on an in-memory 600-chunk book: session range to the reader's place, retrieval de-duplicated, never the whole book, the budget with huge chunks, the anchor kept when trimming, unverified selections, citations for pages and sections, regions, images, ownership, tag neutralising, the context hash."
     },
     {
+      "path": "backend/tests/test_steve_eval_set.py",
+      "language": "python",
+      "lines": 140,
+      "size_bytes": 6628,
+      "role": "test",
+      "purpose": "Pytest for C20.9's evaluation set and scripts/steve_eval.py, offline: the 5/5/3/2 mix, labels and expected pages per kind, injection canaries, label anchors, scoring of grounded, invented, uncovered, long and injected answers, the summary, no key read by the runner, prompts under the cap when the shelf is fetched."
+    },
+    {
       "path": "backend/tests/test_steve_keys.py",
       "language": "python",
       "lines": 178,
@@ -1529,10 +1545,10 @@
     {
       "path": "backend/tests/test_steve_provider.py",
       "language": "python",
-      "lines": 227,
-      "size_bytes": 9452,
+      "lines": 258,
+      "size_bytes": 10492,
       "role": "test",
-      "purpose": "Pytest for backend/steve/provider.py with a fake SDK client: answer and token counts, streaming, vision model and own key, 429 as paused_quota with Google's delay, timeouts, typed failures, not configured, no book text or key in logs or errors, the real client's timeout and single attempt."
+      "purpose": "Pytest for backend/steve/provider.py with a fake SDK client: answer and token counts, streaming, vision model and own key, 429 as paused_quota with Google's delay, timeouts, typed failures, not configured, no book text or key in logs or errors, the real client's timeout and single attempt, and the SDK client kept alive for the whole call."
     },
     {
       "path": "backend/tests/test_steve_service.py",
@@ -1697,8 +1713,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3505,
-      "size_bytes": 154223,
+      "lines": 3613,
+      "size_bytes": 159974,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1761,16 +1777,16 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4310,
-      "size_bytes": 785554,
+      "lines": 4311,
+      "size_bytes": 788638,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "docs/STEVE.md",
       "language": "markdown",
-      "lines": 395,
-      "size_bytes": 22935,
+      "lines": 440,
+      "size_bytes": 25581,
       "role": "doc",
       "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
@@ -4383,6 +4399,14 @@
       "purpose": "Manual end-to-end script: start, finish-reading and submit-answers through TestClient, authenticating with a raw UUID, which has been rejected with 401 since C3.1."
     },
     {
+      "path": "scripts/steve_eval.py",
+      "language": "python",
+      "lines": 295,
+      "size_bytes": 13834,
+      "role": "script",
+      "purpose": "Steve's grounded-answer evaluation (C20.9): builds each item's context from test-shelf pages the way context.py lays it out, the ask prompt, and (with --live, after the user's yes) one provider call per item, at most 15, stopping at the first error; scores cited labels sent, length, answered from the book, not covered, injection ignored."
+    },
+    {
       "path": "supabase/.gitignore",
       "language": "gitignore",
       "lines": 8,
@@ -4673,8 +4697,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 593,
-      "size_bytes": 180582,
+      "lines": 596,
+      "size_bytes": 181622,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

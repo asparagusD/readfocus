@@ -421,3 +421,38 @@
    section gets the same rule in its own document (highlight.js). No motion. */
 ::highlight(rf-lookup) { background-color: var(--accent-soft); }
 .rf-ov-book { -webkit-touch-callout: none; } /* C12.9: a held word opens its card, not the iOS callout */
+
+/* C22.5: a note's passage pulses after its reference is clicked: its lines in the accent, or the whole page's edge
+   for a note on the pages (the handoff's page flash). Opacity only; a single fade under reduced motion. */
+.rf-passage-pulses { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+
+.rf-passage-pulse {
+  position: absolute;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  opacity: 0;
+  animation: rf-passage-pulse calc(var(--dur-4) * 4) var(--ease-settle) both;
+}
+
+.rf-passage-pulses[data-whole] .rf-passage-pulse {
+  border-radius: var(--radius-page);
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+@keyframes rf-passage-pulse {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  45% { opacity: 0.35; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes rf-passage-fade {
+  0%, 30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-passage-pulse { animation: rf-passage-fade calc(var(--dur-4) * 2) linear both; }
+}

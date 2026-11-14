@@ -174,6 +174,43 @@ async function mockBackend(page, api, book) {
       Object.assign(row, request.postDataJSON(), { updated_at: '2026-11-14T20:00:00Z' });
       return json(route, row);
     }
+    if (path === `/books/${BOOK}/notes`) { // C22.2: note blocks, kept like the server keeps them
+      if (request.method() === 'POST') {
+        const body = request.postDataJSON();
+        api.notePosts.push(body);
+        if (api.noteFail) return json(route, { detail: 'Not saved' }, api.noteFail);
+        const row = { id: `note-${api.notes.length + 1}`, ...body, version: 1, orphaned: false, deleted_at: null,
+          created_at: `2026-11-14T20:00:${String(api.notes.length).padStart(2, '0')}Z`, urls: {} };
+        api.notes.push(row);
+        return json(route, row, 201);
+      }
+      api.noteLists += 1;
+      const urls = (n) => Object.fromEntries([n.thumbnail_path, n.content?.image_path].filter((p) => api.noteFiles[p]).map((p) => [p, api.noteFiles[p]]));
+      return json(route, { notes: api.notes.filter((n) => !n.deleted_at).map((n) => ({ ...n, urls: urls(n) })) });
+    }
+    if (path === `/books/${BOOK}/note-files`) { // C22.3: a drawing's thumbnail; "signed" as a data URL, no outside host
+      const body = request.postDataJSON();
+      api.noteFilePosts.push(body);
+      const filePath = `e2e-reader/${BOOK}/file-${api.noteFilePosts.length}.${body.content_type === 'image/png' ? 'png' : 'webp'}`;
+      api.noteFiles[filePath] = `data:${body.content_type};base64,${body.data}`;
+      return json(route, { path: filePath, url: api.noteFiles[filePath] }, 201);
+    }
+    if (path.startsWith('/notes/')) { // C22.2: autosave with If-Match, and soft delete
+      const id = path.split('/').pop();
+      const row = api.notes.find((n) => n.id === id && !n.deleted_at);
+      if (request.method() === 'DELETE') api.noteDeletes.push(id);
+      if (api.noteFail) return api.noteFail === 'abort' ? route.abort('internetdisconnected') : json(route, { detail: 'Not saved' }, api.noteFail);
+      if (!row) return json(route, { detail: 'Note not found' }, 404);
+      if (request.method() === 'DELETE') {
+        row.deleted_at = '2026-11-14T21:00:00Z';
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      const version = Number((request.headers()['if-match'] ?? '').replaceAll('"', ''));
+      api.notePatches.push({ id, version, ...request.postDataJSON() });
+      if (version !== row.version) return json(route, { detail: { message: 'This note changed since you opened it', version: row.version } }, 409);
+      Object.assign(row, request.postDataJSON(), { version: row.version + 1 });
+      return json(route, row);
+    }
     if (path === '/steve/key') { // C20.3: GOOD_KEY is accepted, anything else is what Google refuses
       if (request.method() === 'PUT') {
         const { key } = request.postDataJSON();
@@ -210,7 +247,8 @@ export const test = base.extend({
   api: [async ({ page, signedIn, book }, use, info) => {
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
-      regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [] };
+      regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
+      notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [] };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

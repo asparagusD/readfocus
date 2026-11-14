@@ -16,6 +16,13 @@
       "handler": "delete_book"
     },
     {
+      "id": "endpoint:DELETE /notes/{note_id}",
+      "type": "endpoint",
+      "method": "DELETE",
+      "path": "/notes/{note_id}",
+      "handler": "delete_note"
+    },
+    {
       "id": "endpoint:DELETE /steve/key",
       "type": "endpoint",
       "method": "DELETE",
@@ -56,6 +63,13 @@
       "method": "GET",
       "path": "/books/{book_id}/file",
       "handler": "get_book_file"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/notes",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/notes",
+      "handler": "list_notes"
     },
     {
       "id": "endpoint:GET /books/{book_id}/ocr",
@@ -170,6 +184,13 @@
       "handler": "restyle_annotation"
     },
     {
+      "id": "endpoint:PATCH /notes/{note_id}",
+      "type": "endpoint",
+      "method": "PATCH",
+      "path": "/notes/{note_id}",
+      "handler": "update_note"
+    },
+    {
       "id": "endpoint:POST /auth/profile/calibrate",
       "type": "endpoint",
       "method": "POST",
@@ -189,6 +210,20 @@
       "method": "POST",
       "path": "/books/{book_id}/annotations",
       "handler": "create_annotation"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/note-files",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/note-files",
+      "handler": "upload_note_file"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/notes",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/notes",
+      "handler": "create_note"
     },
     {
       "id": "endpoint:POST /books/{book_id}/ocr",
@@ -824,6 +859,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/notes.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/ocr.py",
       "type": "file",
       "role": "router",
@@ -849,6 +890,12 @@
     },
     {
       "id": "file:backend/services/__init__.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/anchor_checks.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -885,6 +932,12 @@
     },
     {
       "id": "file:backend/services/lookup.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/note_content.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -1424,6 +1477,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_note_content.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_notes_api.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_ocr_pages.py",
       "type": "file",
       "role": "test",
@@ -1886,6 +1951,48 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/notepad.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/notes-anchor.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/notes-blocks.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/notes-drawing.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/notes-editor.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/notes-sync.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/notes.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/ocr.spec.js",
       "type": "file",
       "role": "config",
@@ -2013,6 +2120,12 @@
     },
     {
       "id": "file:frontend/scripts/check-images.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/copy-excalidraw.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -2732,6 +2845,216 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/notes/BlockNote.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/DrawingEditor.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/DrawingNote.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/MarginMarkers.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/notes/MarginMarkers.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/NoteDoc.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/Notepad.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/notes/Notepad.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/NotesContext.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/SidePanel.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/notes/SidePanel.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/TextEditor.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/notes/TextEditor.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/notes/autosave.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/autosave.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/drawing.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/drawing.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/excalidrawFonts.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/excalidrawFonts.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/fromBook.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/fromBook.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/markers.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/markers.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/mathNodes.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/mathRules.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/mathRules.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notesApi.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/place.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/place.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/queue.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/queue.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/status.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/sync.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/sync.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/useNotes.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/BookLookup.jsx",
       "type": "file",
       "role": "asset",
@@ -3261,6 +3584,12 @@
     },
     {
       "id": "file:frontend/src/steve/LatexDialog.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/NoteGrip.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -3992,6 +4321,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/027_note_blocks.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -4184,6 +4519,10 @@
       "type": "table"
     },
     {
+      "id": "table:note_blocks",
+      "type": "table"
+    },
+    {
       "id": "table:page_ocr",
       "type": "table"
     },
@@ -4341,6 +4680,26 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
       "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/notes/notesApi.js",
+      "to": "endpoint:DELETE /notes/{note_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/notes/notesApi.js",
+      "to": "endpoint:PATCH /notes/{note_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/notes/notesApi.js",
+      "to": "endpoint:POST /books/{book_id}/note-files"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/notes/notesApi.js",
+      "to": "endpoint:POST /books/{book_id}/notes"
     },
     {
       "type": "calls_endpoint",
@@ -4766,6 +5125,31 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:DELETE /notes/{note_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:GET /books/{book_id}/notes"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:PATCH /notes/{note_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:POST /books/{book_id}/note-files"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:POST /books/{book_id}/notes"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/ocr.py",
       "to": "endpoint:GET /books/{book_id}/ocr"
     },
@@ -4988,6 +5372,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/026_annotations.sql",
       "to": "table:annotations"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/027_note_blocks.sql",
+      "to": "table:note_blocks"
     },
     {
       "type": "graph_edge",
@@ -5488,6 +5877,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/notes.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/ocr.py"
     },
     {
@@ -5593,7 +5987,7 @@
     {
       "type": "imports",
       "from": "file:backend/routers/annotations.py",
-      "to": "file:backend/routers/sessions.py"
+      "to": "file:backend/services/anchor_checks.py"
     },
     {
       "type": "imports",
@@ -5673,6 +6067,31 @@
     {
       "type": "imports",
       "from": "file:backend/routers/mastery.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
+      "to": "file:backend/services/anchor_checks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
+      "to": "file:backend/services/note_content.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -5812,6 +6231,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/anchor_checks.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -5904,6 +6328,16 @@
       "type": "imports",
       "from": "file:backend/services/lookup.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/note_content.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/note_content.py",
+      "to": "file:backend/routers/sessions.py"
     },
     {
       "type": "imports",
@@ -7042,6 +7476,41 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_note_content.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_note_content.py",
+      "to": "file:backend/services/note_content.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/routers/notes.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_ocr_pages.py",
       "to": "file:backend/dependencies.py"
     },
@@ -7633,6 +8102,41 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/login.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notepad.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notes-anchor.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notes-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notes-drawing.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notes-editor.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notes-sync.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notes.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -8462,6 +8966,226 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/notes/BlockNote.jsx",
+      "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/DrawingEditor.jsx",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/DrawingNote.jsx",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/DrawingNote.jsx",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/MarginMarkers.jsx",
+      "to": "file:frontend/src/notes/MarginMarkers.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/MarginMarkers.jsx",
+      "to": "file:frontend/src/notes/markers.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/NoteDoc.jsx",
+      "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/BlockNote.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/DrawingNote.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/NoteDoc.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/Notepad.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/status.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notepad.jsx",
+      "to": "file:frontend/src/notes/sync.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/SidePanel.jsx",
+      "to": "file:frontend/src/notes/SidePanel.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/TextEditor.jsx",
+      "to": "file:frontend/src/notes/TextEditor.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/TextEditor.jsx",
+      "to": "file:frontend/src/notes/mathNodes.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/autosave.test.js",
+      "to": "file:frontend/src/notes/autosave.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/autosave.test.js",
+      "to": "file:frontend/src/notes/queue.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/drawing.test.js",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/excalidrawFonts.test.js",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/fromBook.js",
+      "to": "file:frontend/src/anchors/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/fromBook.js",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/fromBook.test.js",
+      "to": "file:frontend/src/notes/fromBook.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/fromBook.test.js",
+      "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/markers.test.js",
+      "to": "file:frontend/src/notes/markers.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/mathNodes.js",
+      "to": "file:frontend/src/notes/mathRules.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/mathNodes.js",
+      "to": "file:frontend/src/steve/math.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/mathRules.test.js",
+      "to": "file:frontend/src/notes/mathRules.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notesApi.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/place.test.js",
+      "to": "file:frontend/src/notes/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/place.test.js",
+      "to": "file:frontend/src/notes/status.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/queue.test.js",
+      "to": "file:frontend/src/notes/queue.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/sync.js",
+      "to": "file:frontend/src/notes/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/sync.test.js",
+      "to": "file:frontend/src/notes/sync.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/useNotes.js",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/useNotes.js",
+      "to": "file:frontend/src/notes/autosave.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/useNotes.js",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/useNotes.js",
+      "to": "file:frontend/src/notes/notesApi.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/useNotes.js",
+      "to": "file:frontend/src/notes/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/useNotes.js",
+      "to": "file:frontend/src/notes/queue.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/BookLookup.jsx",
       "to": "file:frontend/src/reader/PhraseChip.jsx"
     },
@@ -8519,6 +9243,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/notes/MarginMarkers.jsx"
     },
     {
       "type": "imports",
@@ -8684,6 +9413,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/notes/markers.js"
     },
     {
       "type": "imports",
@@ -9108,6 +9842,41 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/Notepad.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/SidePanel.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/fromBook.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/sync.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/useNotes.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/Reader.jsx"
     },
     {
@@ -9448,12 +10217,27 @@
     {
       "type": "imports",
       "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/notes/fromBook.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
       "to": "file:frontend/src/steve/BlockActions.css"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/steve/EpubBlockActions.jsx",
       "to": "file:frontend/src/steve/LatexDialog.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/NoteGrip.jsx"
     },
     {
       "type": "imports",
@@ -9494,6 +10278,11 @@
       "type": "imports",
       "from": "file:frontend/src/steve/LatexDialog.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/NoteGrip.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
     },
     {
       "type": "imports",
@@ -9538,6 +10327,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/notes/NotesContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/notes/fromBook.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
       "to": "file:frontend/src/originalview/pdf/regions.js"
     },
     {
@@ -9549,6 +10348,11 @@
       "type": "imports",
       "from": "file:frontend/src/steve/PdfBlockActions.jsx",
       "to": "file:frontend/src/steve/LatexDialog.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/NoteGrip.jsx"
     },
     {
       "type": "imports",
@@ -10312,6 +11116,26 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:annotations"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:note_blocks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/ocr.py",
       "to": "table:books"
     },
@@ -10694,6 +11518,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/books.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:note_blocks"
     },
     {
       "type": "writes_table",

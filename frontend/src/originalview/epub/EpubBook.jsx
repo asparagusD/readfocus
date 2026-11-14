@@ -122,6 +122,21 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         }
         return null;
       },
+      // C22.2b: where a new note goes: the selection, else the page shown (its range CFI, no text).
+      notePlace: async () => {
+        for (const { doc, index } of now()?.contents() ?? []) {
+          const selection = doc.getSelection();
+          if (!selection?.rangeCount || selection.isCollapsed) continue;
+          const range = selection.getRangeAt(0);
+          const cfi = now().cfiFor(doc, range);
+          if (!cfi) break;
+          const [start, end] = now().charsOf(doc, range);
+          return { scope: 'selection', anchors: [epubAnchor(cfi, range.toString())], ...epubPositions(index, start, end) };
+        }
+        const place = last.current;
+        if (!place?.cfi?.includes(',')) return null;
+        return { scope: 'view', anchors: [epubAnchor(place.cfi)], ...epubPositions(place.index, place.charStart, place.charEnd) };
+      },
       getSelection: () => {
         for (const { doc } of now()?.contents() ?? []) {
           const selection = doc.getSelection();
@@ -148,6 +163,60 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         }
         return [...byId].map(([id, rects]) => ({ id, rects }));
       },
+      // C22.6: a whole element of a shown section (an equation, listing or figure) as a note's place: its range CFI
+      // and characters, with `text` (a selection) or without (the view scope).
+      elementPlace: (doc, el, text) => {
+        const shown = (now()?.contents() ?? []).find((c) => c.doc === doc);
+        if (!shown) return null;
+        const range = doc.createRange();
+        range.selectNode(el);
+        const cfi = now().cfiFor(doc, range);
+        if (!cfi) return null;
+        // A4 from the element's own characters: a selectNode range starts in the parent, which charsOf counts from
+        // the parent's first character (DEBUG_LOG C22.G); a range starting inside the element counts those before it.
+        const inside = doc.createRange();
+        inside.setStart(el, 0);
+        const [start] = now().charsOf(doc, inside);
+        const end = start + (el.textContent?.length ?? 0);
+        const words = String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, 2000);
+        return { scope: words ? 'selection' : 'view', anchors: [epubAnchor(cfi, words)], ...epubPositions(shown.index, start, end) };
+      },
+      // C22.4: where each note's passage is on the page shown, for its margin marker: its first line inside
+      // `within` (the book's box), and the page of the spread it is on.
+      noteSpots: (notes, within) => {
+        const out = [];
+        for (const { doc } of now()?.contents() ?? []) {
+          const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+          if (!frame) continue;
+          for (const note of notes) {
+            const anchor = note.anchors?.find((a) => a.kind === 'epub');
+            const range = anchor && now().rangeFor(doc, anchor.cfi);
+            if (!range) continue;
+            const line = [...range.getClientRects()].map((r) => ({ x: r.x + frame.x, y: r.y + frame.y, height: r.height, width: r.width }))
+              .find((r) => r.height > 0 && r.x + r.width > within.left && r.x < within.right && r.y + r.height > within.top && r.y < within.bottom);
+            if (!line) continue;
+            const side = wide && line.x + line.width / 2 < within.left + within.width / 2 ? 'left' : 'right';
+            out.push({ id: note.id, top: line.y, height: line.height, side });
+          }
+        }
+        return out;
+      },
+      // C22.5: a note's passage in the sections shown, as screen rects (each line), to pulse it.
+      passageRects: (note) => {
+        const out = [];
+        for (const { doc } of now()?.contents() ?? []) {
+          const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+          if (!frame) continue;
+          for (const anchor of note.anchors ?? []) {
+            const range = anchor.kind === 'epub' && now().rangeFor(doc, anchor.cfi);
+            if (!range) continue;
+            for (const r of range.getClientRects()) {
+              if (r.width > 0 && r.height > 0) out.push({ left: r.x + frame.x, top: r.y + frame.y, width: r.width, height: r.height });
+            }
+          }
+        }
+        return out;
+      },
       // C20.8c: a shown section's spine index, for the region map's EPUB places.
       sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
       panning: () => false,
@@ -156,7 +225,7 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         title: item.label?.trim() || 'Untitled', target: item.href, loc: { kind: 'epub', index: now().sectionOf(item.href) ?? 0, char: 0 },
       })),
     };
-  }, [opened]);
+  }, [opened, wide]);
 
   return (
     <EpubView bookId={bookId} load={load} animated={false} wide={wide}

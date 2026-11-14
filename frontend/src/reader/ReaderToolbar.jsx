@@ -1,4 +1,4 @@
-import { ArrowLeft, List, MessageSquareText } from 'lucide-react';
+import { ArrowLeft, List, MessageSquareText, NotebookPen } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
 import './ReaderToolbar.css';
@@ -13,7 +13,7 @@ import './ReaderToolbar.css';
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
-  lookupOn, onLookupToggle, controls, onSteve, steveOpen, steveRef, children,
+  lookupOn, onLookupToggle, controls, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef, children,
 }) {
   const index = SIZES.indexOf(size);
   return (
@@ -66,10 +66,19 @@ export function ReaderToolbar({
           <span className="rf-switch-track" aria-hidden="true"><span className="rf-switch-knob" /></span>
         </button>
       )}
+      {onNotes && (
+        // C22.2: the notepad, in the side panel beside the book, with its count (handoff screen 19).
+        <button type="button" className="rf-tool" ref={notesRef} onClick={onNotes} aria-expanded={notesOpen}
+          aria-controls={notesOpen ? 'rf-side-panel' : undefined} aria-label={notesCount ? `Notes, ${notesCount}` : 'Notes'}>
+          <NotebookPen size={18} strokeWidth={1.75} aria-hidden="true" />
+          <span className="rf-tool-label">Notes</span>
+          {notesCount > 0 && <span className="rf-tool-count" aria-hidden="true">{notesCount}</span>}
+        </button>
+      )}
       {onSteve && (
-        // C20.7b: Steve's panel beside the book; pressed while it is open.
+        // C20.7b: Steve's tab of the side panel; pressed while it is open.
         <button type="button" className="rf-tool" ref={steveRef} onClick={onSteve} aria-expanded={steveOpen}
-          aria-controls={steveOpen ? 'rf-steve-panel' : undefined} aria-label="Ask Steve">
+          aria-controls={steveOpen ? 'rf-side-panel' : undefined} aria-label="Ask Steve">
           <MessageSquareText size={18} strokeWidth={1.75} aria-hidden="true" />
           <span className="rf-tool-label">Steve</span>
         </button>

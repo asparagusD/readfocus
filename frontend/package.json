@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "predev": "node scripts/copy-ocr.mjs",
+    "predev": "node scripts/copy-ocr.mjs && node scripts/copy-excalidraw.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/copy-ocr.mjs",
+    "prebuild": "node scripts/copy-ocr.mjs && node scripts/copy-excalidraw.mjs",
     "build": "vite build && vite build --ssr src/prerender.jsx --outDir dist-ssr && node scripts/prerender.mjs",
     "lint": "eslint .",
     "check:contrast": "node scripts/check-contrast.mjs",
@@ -19,6 +19,7 @@
     "make:og": "node scripts/make-og.mjs"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "0.18.1",
     "@floating-ui/react": "0.27.20",
     "@fontsource-variable/dm-sans": "^5.3.0",
     "@fontsource-variable/lora": "^5.3.0",
@@ -26,6 +27,12 @@
     "@supabase/supabase-js": "^2.105.4",
     "@tailwindcss/vite": "^4.3.0",
     "@tesseract.js-data/eng": "1.0.0",
+    "@tiptap/core": "3.34.0",
+    "@tiptap/extension-list": "3.34.0",
+    "@tiptap/extensions": "3.34.0",
+    "@tiptap/pm": "3.34.0",
+    "@tiptap/react": "3.34.0",
+    "@tiptap/starter-kit": "3.34.0",
     "dompurify": "3.4.17",
     "katex": "0.19.1",
     "lucide-react": "^1.14.0",
@@ -52,5 +59,17 @@
     "globals": "^17.5.0",
     "sharp": "0.35.5",
     "vite": "^8.0.10"
+  },
+  "overrides": {
+    "@excalidraw/excalidraw": {
+      "nanoid": "3.3.20",
+      "@excalidraw/mermaid-to-excalidraw": {
+        "nanoid": "5.1.16",
+        "mermaid": {
+          "katex": "0.19.1"
+        }
+      }
+    },
+    "lodash-es": "4.18.1"
   }
 }

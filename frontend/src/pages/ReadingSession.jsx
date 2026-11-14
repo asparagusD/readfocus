@@ -25,6 +25,13 @@ import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
 import { useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
+import { SidePanel } from '../notes/SidePanel';
+import { Notepad } from '../notes/Notepad';
+import { useNotes } from '../notes/useNotes';
+import { chapterOf } from '../notes/place';
+import { shownRange } from '../notes/sync';
+import { NotesContext } from '../notes/NotesContext';
+import { answerDoc, quoteDoc } from '../notes/fromBook';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -88,10 +95,15 @@ export function ReadingSession() {
   const [toolbarFocused, setToolbarFocused] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
   const [annotationPages, setAnnotationPages] = useState(() => new Map());
-  // Steve (C20.7b): a panel beside the book; the book stays usable while it is open.
-  const [steveOpen, setSteveOpen] = useState(false);
+  // The side panel (C20.7b Steve, C22.2 Notes): tabs beside the book; the book stays usable while it is open.
+  const [side, setSide] = useState(null); // null | 'notes' | 'steve'
+  const steveOpen = side === 'steve';
   const steveButton = useRef(null);
+  const notesButton = useRef(null);
+  const opener = useRef(null); // the toolbar button that opened the panel gets focus back
   const steve = useSteve(bookId, steveOpen);
+  const notepad = useNotes(bookId);
+  const [drawingOpen, setDrawingOpen] = useState(false); // C22.3: the panel widens while a drawing is open
   const [entries, setEntries] = useState([]);
   const chromeVisible = useChromeVisible(toolbarFocused || showAbandonModal || contentsOpen);
   const contentsButton = useRef(null);
@@ -199,13 +211,106 @@ export function ReadingSession() {
     reader.current?.goTo(entry.target);
   }, []);
   const backToToday = () => reader.current?.goTo(todayAnchor.current ?? bounds?.start);
-  const closeSteve = useCallback(() => setSteveOpen(false), []);
+  const closeSide = useCallback(() => setSide(null), []);
+  const toggleSide = (tab, button) => {
+    if (!side) opener.current = button.current;
+    setSide((now) => (now === tab ? null : tab));
+  };
   // A citation chip moves the book to its page or section; the panel stays open.
   const onCite = useCallback((anchor) => reader.current?.goTo(anchor?.kind === 'epub' ? { cfi: anchor.cfi } : anchor), []);
+  // C22.2: a note's reference names its page and chapter, read from the book as the list draws; it goes there.
+  const describeNote = (note) => ({ page: reader.current?.pageLabel(note) ?? '', chapter: chapterOf(note, reader.current?.toc() ?? []) });
+  // C22.5: the book goes to the note's passage and pulses it.
+  const goToNote = useCallback((note) => {
+    onCite(note.anchors?.[0]);
+    reader.current?.flash(note);
+  }, [onCite]);
+  const shown = useMemo(() => shownRange(place), [place]);
+  const contentsOf = useCallback(() => reader.current?.toc() ?? [], []);
+  // C22.2b: a new note (text, or C22.3 a drawing) at the selection, else the pages shown; its key, so it opens.
+  const addNote = async (kind) => {
+    const place = await reader.current?.notePlace();
+    if (!place) {
+      toast({ kind: 'warning', message: 'The book is still opening. Try again in a moment.' });
+      return null;
+    }
+    return notepad.create({ kind, scope: place.scope, anchors: place.anchors, position_start: place.start,
+      position_end: place.end, content: kind === 'drawing' ? { elements: [] } : { type: 'doc', content: [{ type: 'paragraph' }] } });
+  };
+  // C22.4: N or the selection toolbar's Note: a text note at the selection (read before it is cleared), else the
+  // pages shown, opened in the notepad; a margin marker opens the notepad at its notes.
+  const [noteRequest, setNoteRequest] = useState(null);
+  const openNotes = () => setSide((now) => { if (!now) opener.current = notesButton.current; return 'notes'; });
+  const newNote = async () => {
+    const key = await addNote('text');
+    if (!key) return;
+    openNotes();
+    setNoteRequest({ type: 'edit', key, n: Date.now() });
+  };
+  const onOpenNotes = (ids) => {
+    openNotes();
+    setNoteRequest({ type: 'focus', ids, n: Date.now() });
+  };
+  const relinkNote = async (note) => {
+    const place = await reader.current?.notePlace();
+    if (place?.scope !== 'selection') {
+      toast({ kind: 'neutral', message: 'Select a passage in the book first, then link the note to it.' });
+      return;
+    }
+    notepad.relink(note.id, place);
+    toast({ kind: 'neutral', message: 'Note linked to the selection.' });
+  };
+  // C22.6: notes made from the book (block actions, a highlight's chip, a Steve answer, a dragged region): a crop
+  // goes to the notes bucket first, then the note shows at once; `open` reveals it ('focus') or opens it ('edit').
+  const { create: createNote, edit: editNote, uploadImage } = notepad;
+  const dragged = useRef(null);
+  const addFromBook = useCallback(async ({ kind, place, content, imageB64 = null, regionId = null, annotationId = null, open = 'focus' }) => {
+    if (!place) {
+      toast({ kind: 'warning', message: "That wasn't added to your notes. Try again." });
+      return { key: null, content };
+    }
+    let body = content;
+    let local = {};
+    if (imageB64) {
+      try {
+        const { path, url } = await uploadImage(imageB64);
+        body = { ...content, image_path: path };
+        local = { urls: { [path]: url } };
+      } catch {
+        toast({ kind: 'warning', message: "The picture wasn't saved, so the note is added without it." });
+      }
+    }
+    const key = createNote({ kind, scope: place.scope, anchors: place.anchors, position_start: place.start, position_end: place.end,
+      content: body, ...(regionId ? { region_id: regionId } : {}), ...(annotationId ? { annotation_id: annotationId } : {}) }, local);
+    if (open) {
+      setSide((now) => { if (!now) opener.current = notesButton.current; return 'notes'; });
+      setNoteRequest(open === 'edit' ? { type: 'edit', key, n: Date.now() } : { type: 'focus', ids: [key], n: Date.now() });
+    }
+    return { key, content: body };
+  }, [createNote, uploadImage, toast]);
+  const notesActions = useMemo(() => ({
+    add: addFromBook,
+    edit: editNote,
+    drag: (make) => { dragged.current = make; },
+    drop: () => { const make = dragged.current; dragged.current = null; make?.(); },
+  }), [addFromBook, editNote]);
+  const noteOnHighlight = useCallback((annotation) => addFromBook({
+    kind: 'text', open: 'edit', annotationId: annotation.id, content: quoteDoc(annotation.anchors.map((a) => a.text).join(' ')),
+    place: { scope: 'selection', anchors: annotation.anchors, start: annotation.position_start, end: annotation.position_end },
+  }), [addFromBook]);
+  const saveAnswer = useCallback(async ({ text, citations, heading }) => {
+    const place = await reader.current?.notePlace(); // the passage asked about if still selected, else the pages shown
+    const { key } = await addFromBook({ kind: 'text', place, content: answerDoc(text, citations, heading), open: false });
+    if (key) toast({ kind: 'neutral', message: 'Saved to your notes.' });
+    return key;
+  }, [addFromBook, toast]);
   const { ask: askSteve } = steve;
   const steveOn = steve.state.enabled !== false; // C21.4: Ask Steve entry points hide once his settings say he is off
   const steveActions = useMemo(() => ({
-    askAbout: (request) => { setSteveOpen(true); askSteve(request); },
+    askAbout: (request) => {
+      setSide((now) => { if (!now) opener.current = steveButton.current; return 'steve'; });
+      askSteve(request);
+    },
     enabled: steveOn,
   }), [askSteve, steveOn]);
   const onLookupToggle = () => {
@@ -338,7 +443,11 @@ export function ReadingSession() {
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
-          onSteve={pagesOnly ? undefined : () => setSteveOpen((open) => !open)}
+          onNotes={() => toggleSide('notes', notesButton)}
+          notesOpen={side === 'notes'}
+          notesRef={notesButton}
+          notesCount={notepad.notes.length}
+          onSteve={pagesOnly ? undefined : () => toggleSide('steve', steveButton)}
           steveOpen={steveOpen}
           steveRef={steveButton}
         >
@@ -375,6 +484,7 @@ export function ReadingSession() {
       </div>
 
       <SteveContext.Provider value={pagesOnly ? null : steveActions}>
+      <NotesContext.Provider value={notesActions}>
       <div className="rf-reading-body">
       <main className="rf-reading-area">
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
@@ -404,12 +514,36 @@ export function ReadingSession() {
           annotations={notes.annotations}
           onAnnotationChange={notes.update}
           onAnnotationDelete={notes.remove}
+          notes={notepad.state === 'ready' ? notepad.notes.filter((n) => !n.pending) : null}
+          onNewNote={newNote}
+          onOpenNotes={onOpenNotes}
+          onAnnotationNote={noteOnHighlight}
         />
       </main>
-      {steveOpen && (
-        <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSteve} returnTo={steveButton} />
+      {side && (
+        <SidePanel
+          tabs={[
+            { id: 'notes', label: 'Notes', count: notepad.notes.length },
+            ...(pagesOnly ? [] : [{ id: 'steve', label: 'Steve', mark: <span className="rf-steve-av rf-steve-av--sm" aria-hidden="true">S</span> }]),
+          ]}
+          current={side}
+          onTab={setSide}
+          onClose={closeSide}
+          returnTo={opener}
+          wide={side === 'notes' && drawingOpen}
+        >
+          {side === 'steve' ? (
+            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer} />
+          ) : (
+            <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
+              onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}
+              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit} onAdd={addNote} onThumbnail={notepad.attachThumbnail} onDrawing={setDrawingOpen}
+              onRelink={relinkNote} request={noteRequest} range={shown} contents={contentsOf} />
+          )}
+        </SidePanel>
       )}
       </div>
+      </NotesContext.Provider>
       </SteveContext.Provider>
 
       <ContentsDrawer

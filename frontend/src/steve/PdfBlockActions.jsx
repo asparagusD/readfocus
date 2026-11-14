@@ -9,9 +9,13 @@ import { cropPdfRegion } from './crop';
 import { LatexDialog } from './LatexDialog';
 import { postSteve } from './sse';
 import { useSteveActions } from './SteveContext';
+import { useNotesActions } from '../notes/NotesContext';
+import { noteLanguage, regionPlace } from '../notes/fromBook';
+import { NoteGrip } from './NoteGrip';
 import './BlockActions.css';
 
 const HIDE_MS = 350;
+const NOTE_IMAGE_BYTES = 250 * 1024; // the notes bucket takes 256 KB a file
 const QUESTION = {
   explain_equation: 'Explain this equation.',
   explain_code: 'Explain this code.',
@@ -37,7 +41,9 @@ function drawnPages(box, pages) {
  */
 export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
   const steve = useSteveActions();
+  const notes = useNotesActions(); // C22.6: Add to notes
   const { toast } = useToast();
+  const dragging = useRef(false); // the bar stays up while its grip is dragged
   const [, setVersion] = useState(0);
   const [active, setActive] = useState(null); // { page, region }
   const [latex, setLatex] = useState(null);
@@ -55,6 +61,7 @@ export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
 
   const later = useCallback(() => {
     clearTimeout(hide.current);
+    if (dragging.current) return;
     hide.current = setTimeout(() => setActive(null), HIDE_MS);
   }, []);
   const stay = useCallback(() => clearTimeout(hide.current), []);
@@ -93,10 +100,39 @@ export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
   // A turn or a pause puts the actions away: only a region on a page shown now keeps them.
   const shown = !paused && active && pagesNow.has(active.page) ? active : null;
 
+  // C22.6: the region as a note: code by its exact text, an equation or figure by a crop of the page (and the
+  // caption, or the LaTeX: known to the region map, else from /steve/latex while Steve is on, after the note).
+  const addRegion = async (page, region, pageEl) => {
+    const detail = await fetchApi(`/books/${bookId}/regions/${region.id}`).catch(() => ({}));
+    const width = pageEl.getBoundingClientRect().width / Number(pageEl.dataset.scale);
+    const words = region.kind === 'figure' ? detail.caption || detail.text : region.kind === 'math' ? detail.latex || detail.text : detail.text;
+    const place = regionPlace({ page, bbox: region.bbox }, width, words);
+    if (region.kind === 'code') {
+      await notes.add({ kind: 'code', place, regionId: region.id, content: { code: detail.text ?? '', language: noteLanguage(detail.language) } });
+      return;
+    }
+    const imageB64 = cropPdfRegion(pageEl, region.bbox, NOTE_IMAGE_BYTES);
+    if (region.kind === 'figure') {
+      await notes.add({ kind: 'figure', place, regionId: region.id, imageB64, content: { caption: (detail.caption ?? '').slice(0, 1000), image_path: null } });
+      return;
+    }
+    const { key, content } = await notes.add({ kind: 'equation', place, regionId: region.id, imageB64, content: { latex: detail.latex ?? '', image_path: null } });
+    if (content.latex || !steve) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const found = await postSteve({ url: `${API_BASE_URL}/steve/latex`, token: session?.access_token,
+      body: { book_id: bookId, region_id: region.id, image_png_b64: cropPdfRegion(pageEl, region.bbox), utc_offset_minutes: -new Date().getTimezoneOffset() } })
+      .catch(() => null); // no LaTeX: the field stays empty to fill in
+    if (found?.latex) notes.edit(key, { content: { ...content, latex: found.latex } });
+  };
+
   const run = async (action, { page, region }) => {
-    const pageEl = pagesNow.get(page);
+    const pageEl = pagesNow.get(page) ?? drawnPages(box, [page]).get(page);
     const label = regionLabel(region.kind, `p. ${page}`);
     try {
+      if (action === 'add_note') {
+        await addRegion(page, region, pageEl);
+        return;
+      }
       if (action === 'copy_code') {
         const detail = await fetchApi(`/books/${bookId}/regions/${region.id}`);
         await navigator.clipboard.writeText(detail.text ?? '');
@@ -124,7 +160,7 @@ export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
   for (const [page, pageEl] of pagesNow) {
     const scale = Number(pageEl.dataset.scale);
     for (const region of regions.regionsOf(page)) {
-      if (!actionsFor(region.kind, { steve: Boolean(steve) }).length) continue;
+      if (!actionsFor(region.kind, { steve: Boolean(steve), notes: Boolean(notes) }).length) continue;
       const [x0, top, x1, bottom] = region.bbox;
       const style = { left: x0 * scale, top: top * scale, width: (x1 - x0) * scale, height: (bottom - top) * scale };
       const on = shown?.region.id === region.id;
@@ -151,11 +187,15 @@ export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
               data-below={top * scale < 48} data-align={x1 * scale > pageEl.clientWidth / 2 ? 'end' : 'start'}
               onPointerEnter={stay} onPointerLeave={later} onFocus={stay}
               onBlur={(event) => { if (!event.currentTarget.parentElement.contains(event.relatedTarget)) later(); }}>
-              {actionsFor(region.kind, { steve: Boolean(steve) }).map((action) => (
+              {actionsFor(region.kind, { steve: Boolean(steve), notes: Boolean(notes) }).map((action) => (
                 <button key={action} type="button" className="rf-block-act" onClick={() => run(action, { page, region })}>
                   {ACTION_LABEL[action]}
                 </button>
               ))}
+              {region.kind !== 'figure' && (
+                <NoteGrip onAdd={() => run('add_note', { page, region })}
+                  onDragging={(on) => { dragging.current = on; if (on) stay(); else later(); }} />
+              )}
             </div>
           )}
         </div>,

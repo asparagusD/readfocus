@@ -1,9 +1,10 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
 import { squeeze } from '../today';
-import { pdfAnchor, pdfPositions, quadsFromRects } from '../../anchors';
+import { pdfAnchor, pdfPositions, quadsFromRects, rectsFromQuads } from '../../anchors';
 import { forPages } from '../../annotations/paint';
 import { pdfPagesLabel } from '../../annotations/list';
+import { pdfNoteTop, shownAnchor } from '../../notes/markers';
 
 /**
  * PDF anchors for a selection (ANCHORS A1, A2): one per page it touches, each with a quad
@@ -140,6 +141,38 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       const anchors = selectionAnchors(range, box.current, widths);
       return anchors.length ? { anchors, ...pdfPositions(anchors, widths), range, doc: document } : null;
     },
+    // C22.2b: where a new note goes: the selection, else the pages shown (one whole-page quad each, no text).
+    notePlace: async () => {
+      const selection = document.getSelection();
+      if (selection?.rangeCount && !selection.isCollapsed && box.current?.contains(selection.anchorNode)) {
+        const widths = [];
+        const anchors = selectionAnchors(selection.getRangeAt(0), box.current, widths);
+        if (anchors.length) return { scope: 'selection', anchors, ...pdfPositions(anchors, widths) };
+      }
+      const sizes = await Promise.all(pages.map((n) => doc.getPage(n).then((p) => [n, p.view[2] - p.view[0], p.view[3] - p.view[1]])));
+      const anchors = sizes.map(([n, w, h]) => ({ kind: 'pdf', page: n, quads: [[0, 0, Math.round(w * 100) / 100, Math.round(h * 100) / 100]], text: '' }));
+      return { scope: 'view', anchors, ...pdfPositions(anchors, sizes.map(([, w]) => w)) };
+    },
+    // C22.4: where each note's passage is on the pages shown, for its margin marker: the page's outer edge and side.
+    noteSpots: (notes, within) => notes.flatMap((note) => {
+      const anchor = shownAnchor(note, pages);
+      const el = anchor && box.current?.querySelector(`.rf-pdf-page[data-page="${anchor.page}"][data-scale]`);
+      if (!el) return [];
+      const at = el.getBoundingClientRect();
+      const scale = Number(el.dataset.scale);
+      const top = pdfNoteTop(anchor, at.top, scale);
+      if (top < within.top || top > within.bottom) return [];
+      const [, y0 = 0, , y1 = 0] = anchor.quads?.[0] ?? [];
+      const side = el.dataset.side === 'left' ? 'left' : 'right';
+      return [{ id: note.id, top, height: (y1 - y0) * scale, side, edge: side === 'left' ? at.left : at.right }];
+    }),
+    // C22.5: a note's passage on the pages shown, as screen rects (one per quad), to pulse it.
+    passageRects: (note) => (note.anchors ?? []).flatMap((anchor) => {
+      const el = anchor.kind === 'pdf' && pages.includes(anchor.page) && box.current?.querySelector(`.rf-pdf-page[data-page="${anchor.page}"][data-scale]`);
+      if (!el) return [];
+      const at = el.getBoundingClientRect();
+      return rectsFromQuads(anchor.quads ?? [], { left: at.left, top: at.top }, Number(el.dataset.scale));
+    }),
     getSelection: () => {
       const selection = document.getSelection();
       if (!selection?.rangeCount || !box.current?.contains(selection.anchorNode)) return null;

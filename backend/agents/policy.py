@@ -343,3 +343,28 @@ ANNOTATION_ANCHORS_MAX = 16
 ANNOTATION_TEXT_MAX = 5_000
 # Annotations one list request returns, in reading order.
 ANNOTATIONS_LIST_MAX = 2_000
+
+# --- Note blocks (backend/routers/notes.py, C22.1; docs/ANCHORS.md) -------------
+
+# Block kinds and anchoring scopes (a selection, or the pages shown); migration 027 checks the same lists.
+NOTE_KINDS = ("text", "drawing", "equation", "code", "figure")
+NOTE_SCOPES = ("selection", "view")
+# One block's content as JSON, also a check in 027 (octet_length of content::text).
+NOTE_CONTENT_MAX_BYTES = 262_144
+NOTE_TEXT_MAX = 20_000  # characters of text in a text block
+NOTE_DOC_DEPTH_MAX = 12  # nesting of a TipTap document
+NOTE_CODE_MAX = 20_000
+NOTE_LATEX_MAX = 4_000
+NOTE_CAPTION_MAX = 1_000
+NOTE_DRAWING_ELEMENTS_MAX = 2_000
+NOTE_DRAWING_FILES_MAX = 20
+# A code block's language ("" for none); the region map's language guesses (A9) are among them.
+NOTE_CODE_LANGUAGES = ("", "python", "javascript", "typescript", "java", "c", "cpp", "csharp", "go", "rust",
+                       "ruby", "php", "swift", "kotlin", "scala", "r", "matlab", "julia", "haskell", "scheme", "sql",
+                       "bash", "html", "css", "json", "yaml", "xml", "latex", "text")
+# Images and thumbnails in the private "notes" bucket (027 sets the same limit and types).
+NOTE_FILE_BYTES_MAX = 262_144
+NOTE_FILE_TYPES = ("image/webp", "image/png")
+NOTE_FILE_URL_SECONDS = 3_600
+# Note blocks one list request returns, in reading order.
+NOTES_LIST_MAX = 2_000

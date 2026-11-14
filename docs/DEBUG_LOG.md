@@ -3822,3 +3822,254 @@ ask is sent.
 
 ### Commit
 `fix(steve): hide Explain block actions while Steve is off`
+
+
+## 2026-11-14 C22.2a — a change queued offline was resent on the newest version
+
+### Symptom
+`e2e/notepad.spec.js` "a stale change is a conflict": a change left in the
+IndexedDB queue on version 1, with the server at version 3 (another tab
+saved twice), was sent with `If-Match: "3"` and saved over the other
+tab's text; no conflict was shown. Found while writing C22.2a, before
+any commit.
+
+### Repro
+List the note (version 3), put `{ id, change, version: 1 }` in the queue,
+reload: one PATCH with version 3, 200.
+
+### Hypotheses
+1. `retry()` keeps the version the list loaded and ignores the queued
+   one. Result: confirmed (`if (e.version === null) e.version = queued.version`;
+   `track()` had already set 3).
+
+### Root cause
+The queue stored the version a change was made on, but `retry()` only used
+it for notes it had never seen.
+
+### Fix
+`retry()` takes a queued change together with its own version whenever the
+note has no newer unsaved change in this tab, so a newer save on the server
+is a 409 and the reader chooses (`frontend/src/notes/autosave.js`).
+
+### Regression test
+`autosave.test.js` "a queued change keeps its own version even when the list
+loaded a newer one"; the e2e conflict test (versions sent 1, then 3 after
+Keep mine).
+
+### Commit
+`feat(notes): notepad panel beside the book with tabs and autosave` (C22.2a,
+fixed before committing)
+
+## 2026-11-14 C22.2b — typed math kept a stray "$"; checklist items broke onto two lines
+
+### Symptom
+Design review screenshot of the editor after typing `$a_n$` and
+`$$\sum_{k=1}^{n} k$$`: the equations drew, but "$" was left before the
+inline one and "$$"/"$$$" around the display one. Checklist items showed the
+box on its own line, the text below. Found before any commit.
+
+### Repro
+`e2e/notes-editor.spec.js` "rich text and math": the editor's text contains
+"$" after the input rules ran.
+
+### Hypotheses
+1. TipTap's `nodeInputRule` replaces only from the capture group's start,
+   keeping the text before it in the match. Result: confirmed (it keeps
+   `match[0]` up to `match[1]`; our capture is the LaTeX inside the dollars).
+2. The checklist CSS selector `li[data-type="taskItem"]` does not match
+   TipTap 3's markup. Result: confirmed (the `li` has `data-checked` only;
+   printed with a temporary spec).
+
+### Root cause
+`nodeInputRule` is made for rules whose capture is the whole replaced text;
+ours is not. The CSS targeted TipTap 2's attribute.
+
+### Fix
+Our own `InputRule` that replaces the whole match with the node
+(`replaceRangeWith` for display math, so it takes the paragraph's place)
+(`frontend/src/notes/mathNodes.js`); the checklist rules select
+`ul[data-type="taskList"] > li` (`TextEditor.css`).
+
+### Regression test
+`notes-editor.spec.js`: the editor's text has no "$" once both equations
+are drawn; the drawn note's checklist item reads its text alone.
+
+### Commit
+`feat(notes): notepad panel with rich-text blocks and math` (C22.2b, fixed
+before committing)
+
+## 2026-11-14 C22.3 — Excalidraw asked esm.sh for every font
+
+### Symptom
+Opening a drawing logged about 230 "Loading the font 'https://esm.sh/...'
+violates ... font-src" errors, one for every face of every family (Xiaolai's
+209 subsets too). The app's CSP blocked them, so nothing left the machine in
+a build, but each was an attempt at another host (constraint 1), and dev has
+no CSP. Found by the first run of `e2e/notes-drawing.spec.js`, before any
+commit.
+
+### Repro
+Open a drawing with request logging on: requests to esm.sh, none to
+`/excalidraw-assets/`.
+
+### Hypotheses
+1. `window.EXCALIDRAW_ASSET_PATH` is read before we set it. Result: confirmed
+   at first: set in DrawingEditor's module body, it ran after Excalidraw's
+   chunk (the bundler places a module's own code after the chunks it
+   imports), and the faces had only the esm.sh source. Setting it before the
+   lazy import fixed the faces (`url(ours), url(esm.sh)`, logged by wrapping
+   FontFace) but not the requests.
+2. Chrome asks every source in a FontFace's list, not only until one loads.
+   Result: confirmed with a hand-made face `url(local), url(esm.sh)`: both
+   were requested although the local one loaded.
+
+### Root cause
+Excalidraw always appends its CDN fallback to each font's sources, and Chrome
+requests every source listed.
+
+### Fix
+`frontend/src/notes/excalidrawFonts.js` `serveOwnFonts()`, run in the lazy
+loader before Excalidraw's chunk: sets the asset path and wraps FontFace so
+it keeps only sources on this origin (or local()). A build-time rewrite was
+considered and left out: Vite pre-bundles dependencies in dev without
+plugins, so dev would still ask esm.sh.
+
+### Regression test
+`excalidrawFonts.test.js` (3); every test in `notes-drawing.spec.js` that
+opens a drawing fails on a request to a host other than this machine.
+
+### Commit
+`feat(notes): Excalidraw drawing blocks with thumbnails` (C22.3, fixed before
+committing)
+
+## 2026-11-14 C22.3 — Escape after typing text in a drawing closed the panel
+
+### Symptom
+`notes-drawing.spec.js`: after typing a text element, Escape closed the
+whole side panel instead of ending the text.
+
+### Repro
+Text tool, click, type, Escape: the panel is gone.
+
+### Hypotheses
+1. Excalidraw removes its text box on Escape before the event reaches the
+   panel's document listener, so `closest('[data-own-escape]')` finds no
+   ancestor. Result: confirmed (the target is detached by then).
+
+### Root cause
+The panel's check looked only at the target's ancestors.
+
+### Fix
+`SidePanel.jsx` also ignores an Escape whose target is no longer in the
+document.
+
+### Regression test
+`notes-drawing.spec.js` first test: Escape after the text, the panel is
+still visible, then the text is saved.
+
+### Commit
+`feat(notes): Excalidraw drawing blocks with thumbnails` (C22.3, fixed before
+committing)
+
+## 2026-11-14 C22.3 — strokes right after the panel widened were lost
+
+### Symptom
+Once the panel widened for an open drawing (design review: 380 px was too
+narrow for Excalidraw's tools), shapes drawn straight away were not saved.
+
+### Repro
+Open a drawing and drag at once: no element; after 800 ms the same drag
+works (a temporary spec printed the scene).
+
+### Hypotheses
+1. Excalidraw keeps its canvas offsets from before the resize. Result:
+   confirmed (its API has `refresh()` for this).
+
+### Root cause
+The container changes size after Excalidraw mounts; Excalidraw is not told.
+
+### Fix
+`DrawingEditor.jsx`: a ResizeObserver on the drawing's box calls
+`refresh()`.
+
+### Regression test
+`notes-drawing.spec.js` draws right after the canvas stops resizing, with
+the panel at 560 px or more and back to 380 px after Done.
+
+### Commit
+`feat(notes): Excalidraw drawing blocks with thumbnails` (C22.3, fixed before
+committing)
+## 2026-11-14 C22.6 — an equation's LaTeX that arrived just after its note was saved was lost
+
+### Symptom
+Design review: after adding an equation, a code listing and a figure in a row,
+the equation note's LaTeX field stayed empty once in Paper (filled in
+Lamplight), though /steve/latex had answered.
+
+### Repro
+Not reproduced on demand: it depends on /steve/latex answering in the moment
+between POST /books/{id}/notes resolving and the next render.
+
+### Hypotheses
+1. `useNotes.edit(key)` looked the key up in a copy of the list refreshed by
+   an effect after render; in that gap the note still looked pending, so the
+   change went to the pending-drafts map, which is read only once, when the
+   note is created. Result: confirmed by reading the code (the drafts map is
+   read before the edit can land there).
+2. /steve/latex refused the second call. Result: ruled out (the fixture
+   answers every call; the e2e test of one equation passes).
+
+### Root cause
+The key -> id mapping was read from state that lags a render behind.
+
+### Fix
+`useNotes.js`: a key -> id map set in the create promise the moment the
+server answers; `edit` resolves keys through it.
+
+### Regression test
+`notes-blocks.spec.js` checks the LaTeX reaches the saved note; three adds in
+a row were run twice with the screenshot spec and filled the field each time.
+No test forces the exact timing.
+
+### Commit
+`feat(notes): add equations, code, figures, highlights and Steve answers to
+notes` (C22.6, fixed before committing)
+
+## 2026-11-14 C22.G — an EPUB block note's positions pointed at its parent's start
+
+### Symptom
+Chunk self-review: a note added from an EPUB equation, listing or figure
+(C22.6) got `position_start` and `position_end` equal to the first
+character of the element's parent (often the section's start), not the
+block's own characters. Its margin marker was right (it uses the CFI), but
+sync, which compares A4 positions with the page shown, would mark it on the
+wrong page and sort it at the top of its section.
+
+### Repro
+`notes-blocks.spec.js` EPUB test, extended: the listing's note had
+`position_end - position_start` 0 instead of the listing's length (68).
+
+### Hypotheses
+1. `elementPlace` built its range with `selectNode(el)`, whose ends are
+   (parent, index); `charOffset` counts characters up to a node in its
+   walk, and for an element container stops at the parent's first text.
+   Result: confirmed by reading `engine.js` `charOffset` and the failing
+   assertion.
+
+### Root cause
+Character offsets were taken from element-container range ends, which
+`charOffset` does not resolve to the child at that index.
+
+### Fix
+`EpubBook.jsx` `elementPlace`: start from `charsOf` on a range that starts
+inside the element (the characters before it), end = start + the element's
+text length. (Importing `charOffset` directly was tried first and dropped:
+`engine.js` is a lazy chunk with foliate, and a static import would have
+pulled it into the reading page's chunk.)
+
+### Regression test
+`notes-blocks.spec.js`: the EPUB listing's note spans exactly its text's
+length and starts past its section's start.
+
+### Commit
+`fix(notes): EPUB block notes keep their own characters` (C22.6)

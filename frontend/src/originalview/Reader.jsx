@@ -10,6 +10,7 @@ import { useAnnotationChip } from '../annotations/useAnnotationChip';
 import { cycle } from '../annotations/hover';
 import { PdfBlockActions } from '../steve/PdfBlockActions';
 import { EpubBlockActions } from '../steve/EpubBlockActions';
+import { MarginMarkers } from '../notes/MarginMarkers';
 import { EpubBook } from './epub/EpubBook';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
@@ -99,7 +100,7 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
-  onAnnotationChange = null, onAnnotationDelete = null,
+  onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -116,6 +117,7 @@ export function Reader({
   const moveRef = useRef(null);
   const [ending, setEnding] = useState(false); // the closing page is shown
   const [noteHidden, setNoteHidden] = useState(false);
+  const [pulse, setPulse] = useState(null); // C22.5: { id, rects, whole } a note's passage, pulsed after a jump
   // Lookup (C17.5): where the book is drawn. A PDF is drawn in this page (its text layers in the
   // book box); an EPUB in one iframe per section shown, added as each loads.
   const [bookBox, setBookBox] = useState(null);
@@ -216,6 +218,11 @@ export function Reader({
       return;
     }
     if (onAnnotate && toolbar.current?.onKey(event)) return;
+    if (onNewNote && (event.key === 'n' || event.key === 'N') && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault(); // C22.4: a new note at the selection, else the pages shown
+      onNewNote();
+      return;
+    }
     if (chipActive && !selected && (event.key === 'a' || event.key === 'A') && !event.ctrlKey && !event.metaKey && !event.altKey
       && cycleChip(event.shiftKey ? -1 : 1)) {
       event.preventDefault();
@@ -234,7 +241,7 @@ export function Reader({
     if (!action || (action === 'ribbon' && !onBookmark)) return;
     event.preventDefault();
     act(action);
-  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip]);
+  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip, onNewNote]);
 
   const onKeyRef = useRef(null);
   const swipeStart = useRef(null);
@@ -279,6 +286,29 @@ export function Reader({
     doc.addEventListener('pointerup', (e) => swipeEnd.current?.(e));
   }, []);
 
+  // C22.5: pulse a note's passage once the book shows it: asked again every 100 ms (pages draw and sections lay
+  // out after the move) for up to 2 s; rects in the book box's coordinates, only those inside it.
+  const pulseTimer = useRef(null);
+  useEffect(() => () => clearTimeout(pulseTimer.current), []);
+  const flash = useCallback((note) => {
+    let tries = 20;
+    const attempt = () => {
+      clearTimeout(pulseTimer.current);
+      const within = bookBox?.getBoundingClientRect();
+      const rects = within ? (book.current?.passageRects?.(note) ?? [])
+        .filter((r) => r.top + r.height > within.top && r.top < within.bottom && r.left + r.width > within.left && r.left < within.right)
+        .map((r) => ({ left: r.left - within.left, top: r.top - within.top, width: r.width, height: r.height })) : [];
+      if (!rects.length) {
+        tries -= 1;
+        if (tries > 0) pulseTimer.current = setTimeout(attempt, 100);
+        return;
+      }
+      setPulse({ id: Date.now(), rects: rects.slice(0, 60), whole: note.scope === 'view' });
+      pulseTimer.current = setTimeout(() => setPulse(null), prefersReducedMotion() ? 900 : 1700);
+    };
+    attempt();
+  }, [bookBox]);
+
   useImperativeHandle(ref, () => ({
     goTo: (anchor) => { setEnding(false); return book.current?.goTo(anchor); },
     find: (snippets, from) => book.current?.find(snippets, from) ?? Promise.resolve(null),
@@ -292,7 +322,10 @@ export function Reader({
     pageLabel: (annotation) => book.current?.pageLabel?.(annotation) ?? '', // C21.5: the Annotations tab
     documents: () => book.current?.documents() ?? [],
     anchor: () => book.current?.anchor() ?? null,
-  }), [move]);
+    // C22.2b: { scope, anchors, start, end } for a new note: the selection, else the pages shown.
+    notePlace: () => book.current?.notePlace?.() ?? Promise.resolve(null),
+    flash, // C22.5
+  }), [move, flash]);
 
   const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
   return (
@@ -338,6 +371,19 @@ export function Reader({
             </aside>
           )}
           {ending && <div className="rf-ov-end" data-no-lookup><div className="rf-end">{closing}</div></div>}
+          {pulse && !turn && (
+            <div key={pulse.id} className="rf-passage-pulses" data-whole={pulse.whole || undefined} aria-hidden="true">
+              {pulse.rects.map((r, i) => (
+                <span key={i} className="rf-passage-pulse" style={{ left: r.left, top: r.top, width: r.width, height: r.height }} />
+              ))}
+            </div>
+          )}
+          {notes && onOpenNotes && (
+            // C22.4: a count circle in the margin beside each passage with notes; it opens them.
+            <MarginMarkers book={book} box={bookBox} notes={notes} wide={wide} onOpen={onOpenNotes}
+              layout={`${zoom}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${sheet?.width}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`}
+              hidden={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
+          )}
           {onBookmark && place && !failure && !ending && (
             <button type="button" className="rf-ov-ribbon" onClick={() => act('ribbon')} aria-label="Save my place"
               aria-keyshortcuts="B" title="Save my place (B)">
@@ -373,11 +419,11 @@ export function Reader({
       )}
       {onAnnotate && (
         // C21.2: colours, underline and Ask Steve over a selection.
-        <SelectionToolbar ref={toolbar} place={selected} onAnnotate={onAnnotate} onDismiss={dismissSelection} returnFocusTo={stage} />
+        <SelectionToolbar ref={toolbar} place={selected} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}
-          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} />
+          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} onNote={onAnnotationNote} />
       )}
       {kind === 'pdf' && regions && bookBox && (
         // C20.8b: equations, code and figures offer Explain, Copy code and Copy as LaTeX.
@@ -387,6 +433,7 @@ export function Reader({
       {kind === 'epub' && (
         // C20.8c: the same actions in an EPUB's sections; Copy as LaTeX and Copy code stay on the device.
         <EpubBlockActions sections={sections} spineOf={(doc) => book.current?.sectionIndex?.(doc) ?? null} bookId={bookId}
+          placeOf={(doc, el, text) => book.current?.elementPlace?.(doc, el, text) ?? null}
           paused={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
       )}
       <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{ending ? "End of today's reading" : opening ? '' : place?.folio ?? ''}</p>

@@ -42,7 +42,7 @@ test('an equation copies as LaTeX from its TeX annotation, with no call', async 
   const math = await find(page, 'math');
   await hover(page, math);
   const actions = page.getByRole('toolbar', { name: 'Equation, this page' });
-  await expect(actions.getByRole('button')).toHaveText(['Explain this equation', 'Copy as LaTeX']);
+  await expect(actions.getByRole('button')).toHaveText(['Explain this equation', 'Copy as LaTeX', 'Add to notes', '']); // C22.6: Add to notes and the drag grip
   await actions.getByRole('button', { name: 'Copy as LaTeX' }).click();
   const dialog = page.getByRole('dialog', { name: 'Copy as LaTeX' });
   await expect(dialog.locator('.rf-latex-source')).toHaveText('E = mc^2');
@@ -120,6 +120,6 @@ test('with Steve switched off, an equation keeps Copy as LaTeX and loses Explain
   await expect(page.getByPlaceholder('Turn on Steve to ask')).toBeVisible();
   await page.keyboard.press('Escape');
   await hover(page, await find(page, 'math'));
-  await expect(page.getByRole('toolbar', { name: 'Equation, this page' }).getByRole('button')).toHaveText(['Copy as LaTeX']);
+  await expect(page.getByRole('toolbar', { name: 'Equation, this page' }).getByRole('button')).toHaveText(['Copy as LaTeX', 'Add to notes', '']);
   expect(api.steve.asks).toHaveLength(0);
 });

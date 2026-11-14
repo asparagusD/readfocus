@@ -9,15 +9,19 @@ export const CROP_SCALE = 2; // the crop is twice the box's CSS size: sharp enou
 
 const KIND_LABEL = { math: 'Equation', code: 'Code', figure: 'Figure' };
 
-/** The actions of a region kind, in order. Without Steve (a pages-only book) only the copies on the device stay. */
-export function actionsFor(kind, { steve = true, format = 'pdf' } = {}) {
+/**
+ * The actions of a region kind, in order. Without Steve (a pages-only book) only the copies on the device stay.
+ * C22.6: with a notepad (`notes`), every kind ends with Add to notes.
+ */
+export function actionsFor(kind, { steve = true, format = 'pdf', notes = false } = {}) {
   const all = {
     math: ['explain_equation', 'copy_latex'],
     code: ['copy_code', 'explain_code'],
     figure: ['explain_figure'],
   }[kind] ?? [];
   const local = new Set(['copy_code', ...(format === 'epub' ? ['copy_latex'] : [])]);
-  return steve ? all : all.filter((action) => local.has(action));
+  const mine = steve ? all : all.filter((action) => local.has(action));
+  return notes && KIND_LABEL[kind] ? [...mine, 'add_note'] : mine;
 }
 
 export const ACTION_LABEL = {
@@ -26,6 +30,7 @@ export const ACTION_LABEL = {
   copy_code: 'Copy code',
   explain_code: 'Explain this code',
   explain_figure: 'Explain this figure',
+  add_note: 'Add to notes',
 };
 
 /** "Equation, p. 4" for the question bubble and the overlay's name. */

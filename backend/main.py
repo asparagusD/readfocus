@@ -15,6 +15,7 @@ from backend.routers import (
     dashboard,
     lookup,
     mastery,
+    notes,
     ocr,
     sessions,
     steve,
@@ -53,6 +54,7 @@ app.include_router(lookup.router, prefix="/lookup", tags=["Lookup"])
 app.include_router(steve.router, prefix="/steve", tags=["Steve"])
 app.include_router(steve_ask.router, prefix="/steve", tags=["Steve"])
 app.include_router(annotations.router, tags=["Annotations"])
+app.include_router(notes.router, tags=["Notes"])
 
 @app.get("/health")
 def health_check():

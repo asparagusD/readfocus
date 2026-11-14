@@ -1129,6 +1129,82 @@ pages.
 
 ## Frontend: Lighthouse and image budgets
 
+### C22 close: the notepad (2026-11-14)
+
+`npm --prefix frontend run build` at the C22 close (after `f69a5fc`). Budget
+from the C22 plan: the entry chunk grows by at most 5 kB gzip over the chunk.
+
+| Chunk | Before C22 (gzip) | C22 close (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.74 kB (35.08 kB), C20.8c | 100.68 kB (36.45 kB): +1.37 kB gzip |
+| `ReadingSession-*.js` | 127.95 kB (42.14 kB) after C21 and C22.2 | 154.08 kB (50.64 kB): C22.3-C22.6 add 8.5 kB gzip (markers, sync, notes from the book) |
+| `TextEditor-*.js` (lazy, TipTap) | none | 406.77 kB (129.25 kB), budget 150 kB gzip |
+| `DrawingEditor-*.js` + Excalidraw core + CSS (lazy) | none | 558.28 + 533.35 + 142.02 kB (169.60 + 178.89 + 22.37 kB gzip), about 385 kB gzip with the small chunks, budget 1.2 MB |
+| `katex-*.js` (lazy, shared with Steve) | 259.69 kB (77.81 kB) | unchanged |
+
+Opening the reading page loads none of TipTap, Excalidraw or KaTeX; the
+notepad's list draws notes with NoteDoc, and KaTeX loads with the first math
+shown.
+
+### C22.3: drawing notes and Excalidraw (2026-11-14)
+
+`npm --prefix frontend run build` after C22.3; what opening a drawing loads was
+read from the e2e build's network log (a temporary spec), gzip sizes from the
+build. Budget from the C22 plan: Excalidraw at most 1.2 MB gzip, fonts apart.
+
+| Loaded when a drawing opens | Size (gzip) |
+|---|---|
+| `DrawingEditor-*.js` (our editor and Excalidraw's entry) | 558.28 kB (169.61 kB) |
+| `chunk-K2UTITRG-*.js` (Excalidraw's core) | 533.35 kB (178.89 kB) |
+| `DrawingEditor-*.css` (Excalidraw's styles) | 142.02 kB (22.37 kB) |
+| `chunk-6U3AYISY-*.js` | 22.44 kB (8.62 kB) |
+| nine small chunks (file and directory open/save, `en` locale, roundRect, …) | 5.48 kB gzip together |
+| **JS and CSS together** | **about 385 kB gzip** |
+| Excalidraw's UI font, Assistant Regular and Medium (bundled from its CSS) | 40.6 kB woff2 |
+| Excalifont faces, from `/excalidraw-assets/` only when text is drawn | about 25 kB each |
+
+Not loaded unless used: `chunk-EIO257PC-*.js` 1,821 kB (744.25 kB gzip) and
+`chunk-FOHPRMQF-*.js` 662.67 kB (143.23 kB gzip), with mermaid's diagram
+chunks and 50-odd locale files: Excalidraw's "Mermaid to Excalidraw" and its
+other languages. The entry chunk: 97.08 kB (35.20 kB gzip) after C22.2b, 100.68
+kB (36.46 kB gzip) now, +1.26 kB gzip (budget 5). `public/excalidraw-assets/`
+holds all nine font families, about 12.5 MB on disk (Xiaolai's 209 subsets
+most of it), fetched one face at a time; none is fetched from another host
+(`e2e/notes-drawing.spec.js`).
+
+`@excalidraw/excalidraw` 0.18.1 is MIT (package.json; it ships no licence
+file). `npm audit --omit=dev` after it: 17 findings (13 high, 1 moderate, 3
+low); new with Excalidraw: `nanoid` 3.3.3 (Excalidraw's element ids), and
+through `@excalidraw/mermaid-to-excalidraw`: `lodash-es` 4.17.21,
+`chevrotain`, `langium`, `@mermaid-js/parser`, `mermaid` 11 and its `katex`
+0.16. Already there before: vite, postcss, source-map-js, react-router.
+After the C22.3 follow-up (`package.json` `overrides`: nanoid 3.3.20 in
+Excalidraw, 5.1.16 in mermaid-to-excalidraw, lodash-es 4.18.1, mermaid's
+katex 0.19.1): 5 findings (4 high, 1 low), all of them the older ones; the
+build lost mermaid's own 259 kB (77.5 kB gzip) katex chunk, as it now shares
+ours. The Mermaid tool still converts, math labels included
+(`e2e/notes-drawing.spec.js`).
+
+### C22.2: the notepad and TipTap (2026-11-14)
+
+`npm --prefix frontend run build` after C22.2b. Budgets from the C22 plan:
+the entry chunk grows by at most 5 KB gzip, the TipTap chunk is at most
+150 KB gzip.
+
+| Chunk | Before (gzip) | After C22.2b (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.88 kB (35.13 kB), C22.2a | 97.08 kB (35.20 kB) |
+| `ReadingSession-*.js` | 90.03 kB (30.54 kB), C20.8c, before C21 | 127.95 kB (42.14 kB), with C21 and C22.2a/b |
+| `TextEditor-*.js` (new, lazy: TipTap 3.34.0, ProseMirror, our math nodes) | none | 406.76 kB (129.25 kB) |
+| `TextEditor-*.css` (new, lazy) | none | 2.96 kB (0.92 kB) |
+| `katex-*.js` (lazy since C20.7b, now also for notes) | — | 259.69 kB (77.81 kB) |
+
+The editor chunk loads only when a note is opened for editing or added
+(checked in `e2e/notes-editor.spec.js`: no `TextEditor` script before
+"Text"); drawn notes use NoteDoc and KaTeX only. The six `@tiptap/*`
+packages are MIT, pinned at 3.34.0; `npm audit` names none of them (its six
+findings are in vite and launch-editor, as before).
+
 ### C20.8b-c: block actions and mathml-to-latex (2026-11-14)
 
 `npm --prefix frontend run build` after C20.8c, against C20.7b above:

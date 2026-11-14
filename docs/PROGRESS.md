@@ -2984,11 +2984,13 @@ C20 prompt): Steve became C20, merging the stubs "Steve backend" and
 "Steve in the reader"; anchors and highlights C21, notepad C22, focus
 mode C23, XP and leagues C24, verification C25. Each chunk gets its full plan (what there is to
 build on, decisions, subchunks with verification and cuts, an estimate)
-at its own start, before any code. The phase 2 budget is 39.0 hours
+at its own start, before any code. The phase 2 budget is 40.75 hours
 (31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13, then
 36.5 h until the C20 start, raised by 1.75 h on 2026-11-14 for C20's
 7.75 h against the stubs' 6.0 h, then 38.25 h until the C21 start, raised
-by 0.75 h on 2026-11-14 for C21's 4.25 h against the stub's 3.5 h; C16
+by 0.75 h on 2026-11-14 for C21's 4.25 h against the stub's 3.5 h, then
+39.0 h until the C22 start, raised by 1.75 h on 2026-11-14 for C22's
+4.75 h against the stub's 3.0 h; C16
 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
 CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 `docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
@@ -4532,10 +4534,352 @@ The +0.75 h was approved with the plan.
 
 ## C22 — notepad
 
-Goal: typed notes and Excalidraw drawings anchored to passages or
-regions, in reading order by the sortable position (A4), with the
-drawing editor lazy-loaded and its bundle size recorded. Depends on: C21.
-Estimate: 3.0 h. Safe to cut: drawings on figures (notes only).
+Branch `chunk/C22-notepad`, created from `readfocus-2.0` at `fb7b135`.
+Goal as given at chunk start: a notepad beside the book (a pull-up sheet
+on mobile) made of note blocks: text (rich text with inline math),
+drawing (Excalidraw), equation (image + LaTeX), code, figure (image +
+caption). Every block is anchored to the exact passage it was written
+about: the current selection, or the visible page range if nothing is
+selected. Two-way sync: turning pages scrolls the notepad to that range's
+notes; clicking a note jumps to its passage; passages with notes get a
+margin marker. PDFs and EPUBs. Licence and size checked before adding
+Excalidraw and TipTap; both lazy-loaded; autosave; migrations additive;
+RLS. The stub's estimate was 3.0 h.
+
+### Plan (written at chunk start, 2026-11-14, before any code)
+
+What there is to build on (read from the code and the docs):
+
+- **Anchors:** `anchors/index.js` (`pdfAnchor`, `epubAnchor`,
+  `pdfPositions`, `epubPositions`, `compareAnchors`, `blockForCfi`);
+  both renderers' `selectionPlace()` (anchors, A4 positions, range,
+  document) from C21.2; `goTo(anchor)` for PDF pages and EPUB CFIs;
+  `onRelocate` gives the place shown. The EPUB engine has `rangeFor(doc,
+  cfi)`, `charsOf`; C21.4's `annotationEntries()` already maps PDF boxes
+  and EPUB ranges (shifted by their frame) to stage coordinates, which
+  margin markers need too.
+- **Annotations backend:** `backend/routers/annotations.py` (153 lines)
+  holds the anchor models' checks (`PdfAnchor`/`EpubAnchor` from
+  `sessions.py`, one kind, one per page or spine item, `spine_of_range`,
+  `_place`, position checks, `_owned`/`_mine`); migration 026 is the
+  pattern (SELECT-only owner RLS, writes through the service role, an
+  index on `(user_id, book_id, position_start)`). Migrations end at 026;
+  next is 027.
+- **Study panel:** `steve/StevePanel.jsx` + `.css`: 380 px beside the
+  book, a 64 % pull-up sheet under 760 px, opened from the toolbar's
+  Steve button (`ReadingSession.jsx` `steveOpen`). The handoff's panel
+  has two tabs, **Steve** and **Notes (count)** (screen 19,
+  `design/screens/phase2/notes-*-1440/375.png`). C21.5 put the
+  highlights list in the Contents drawer; it stays there.
+- **Blocks to note:** `steve/blocks.js` (region kinds and actions),
+  `PdfBlockActions.jsx` / `EpubBlockActions.jsx` (Copy code, Copy as
+  LaTeX, Explain), `steve/crop.js` `cropPdfRegion` (a page region from
+  the page's own canvas), `steve/latexLocal.js` (EPUB MathML -> LaTeX on
+  the device), `/steve/latex` + `equation_latex` (025, PDF LaTeX through
+  Gemini, consent required), region `meta.caption` for figures and
+  `meta.language_guess` for code (A9). The selection toolbar's "Note"
+  and Steve's "Add to notes" were left out until C22.
+- **Math:** `katex` 0.19.1 is already a dependency (`SteveMath.jsx`);
+  `dompurify` 3.4.17 too.
+- **Design:** screen 19: note cards (reference button "p. 44 · eq. 4.4",
+  kind label, Text in Lora 15 px, Equation rendered + LaTeX in mono,
+  Drawing on `--surface` with a tool strip, Code), list header "Chapter 4
+  · 5 notes", an add bar of dashed pills (Text, Drawing, Equation, Code),
+  margin markers (26 px circle with the count, 44 px into the outer
+  margin; 22 px at the right edge on mobile), new note with an accent
+  border rising 600 ms, page flash (2 px accent inset, 800 ms) on a jump.
+  Gaps: 9 (order: "Newest last" vs reading order), 16 (the editors, edit
+  and delete are not drawn).
+
+Dependencies, checked 2026-11-14 with `npm view` (nothing installed yet):
+
+| Package | Version | Licence | Unpacked | React peer | Notes |
+|---|---|---|---|---|---|
+| `@excalidraw/excalidraw` | 0.18.1 | MIT | 46.8 MB (all builds and fonts) | 17, 18, 19 | Fonts load from a CDN unless `EXCALIDRAW_ASSET_PATH` is set; "Text to diagram" calls Excalidraw's AI service unless `aiEnabled={false}`; export and library links reach excalidraw.com |
+| `@tiptap/react` | 3.34.0 | MIT | 590 KB | 17, 18, 19 | Peers `@tiptap/core`, `@tiptap/pm` at the same version |
+| `@tiptap/core` | 3.34.0 | MIT | 3.3 MB | — | |
+| `@tiptap/pm` | 3.34.0 | MIT | 15 KB (ProseMirror re-exports) | — | |
+| `@tiptap/starter-kit` | 3.34.0 | MIT | 54 KB | — | |
+| `@tiptap/extensions` (Placeholder) | 3.34.0 | MIT | 420 KB | — | |
+| `@tiptap/extension-mathematics` | 3.34.0 | MIT | 148 KB | — | **Not used:** its peer is `katex` ^0.16.4, ^0.17 or ^0.18, and we ship 0.19.1 |
+
+Unpacked size is not bundle size. The real gzip size of each lazy chunk
+is measured with `npm --prefix frontend run build` in the subchunk that
+adds the package, before it is committed, and recorded in
+`docs/BENCHMARKS.md`. Budget: the entry chunk grows by at most 5 KB gzip
+(the import calls); the TipTap chunk at most 150 KB gzip; the Excalidraw
+chunk at most 1.2 MB gzip, fonts apart. Over budget: stop and ask.
+
+Decisions that apply to every subchunk:
+
+- **D1 One row per block.** A `notes` row is one block: `kind` (`text`,
+  `drawing`, `equation`, `code`, `figure`), `anchors jsonb` (A1 anchors
+  in reading order, as annotations), `scope` (`selection` or `view`,
+  D4), `position_start` / `position_end` (A4, checked as in C21.1),
+  `content jsonb` (per kind, D2), `annotation_id` (nullable, `on delete
+  set null`, a note written on a highlight), `region_id` (nullable,
+  an equation, code or figure block's region), `version int` (D5),
+  `orphaned`, timestamps. Order in the notepad: reading order by
+  `position_start`, then `created_at` (newest last among notes on the
+  same spot), which settles gap 9 for sync's sake; whole book, grouped
+  under the book's contents entries ("Chapter 4 · 5 notes").
+- **D2 Content per kind**, validated by the server, each capped in
+  `policy.py`: text = a TipTap JSON document (never HTML) whose node and
+  mark types are on an allow-list (paragraph, text, hard break, bullet
+  and ordered lists, list item, blockquote, `inlineMath {latex}`; bold,
+  italic, strike, inline code; no links, no images), depth at most 12,
+  20,000 characters; drawing = the Excalidraw scene (`elements`, a
+  whitelisted `appState` subset, no `files`: the image tool is off), at
+  most 2,000 elements, plus an SVG preview (D7); equation = `latex` (at
+  most 4,000) and an image; code = `code` (at most 20,000) and
+  `language`; figure = `caption` (at most 1,000) and an image. Images
+  are WebP data URLs of at most 64 KB, cropped on the device
+  (`crop.js`, re-encoded smaller), at most 300 image blocks per book;
+  the row is at most 256 KB (also a check constraint on
+  `octet_length(content::text)`). Question 1 below offers a Storage
+  bucket instead.
+- **D3 Migration 027** (`027_notes.sql`): the table, `on delete cascade`
+  from `books` and `profiles`, an index on `(user_id, book_id,
+  position_start)`, RLS with one owner SELECT policy; writes only
+  through the backend, as 023 and 026. Applied only after your yes and a
+  fresh `supabase db dump`: dev and production are one project
+  (constraint 2), so "dev only" cannot be honoured literally; nothing
+  touches the project until then.
+- **D4 Anchoring a block** (`docs/ANCHORS.md` gets A11 in C22.4). With a
+  live selection: the selection's anchors and positions, exactly as a
+  highlight (`selectionPlace()`), `scope: 'selection'`. With none: the
+  pages shown, `scope: 'view'`: PDF two A3 point anchors, the top-left
+  of the first page shown and the bottom-right of the last (`text: ''`);
+  EPUB the range CFI of the page shown (foliate's location range) with
+  `text: ''`. Block actions anchor to their region (its bbox as one quad,
+  or its CFI) with `region_id`; a note on a highlight copies the
+  highlight's anchors and sets `annotation_id`.
+- **D5 Autosave.** Each block saves itself 800 ms after the last edit,
+  and at once on blur, on closing the panel, on `visibilitychange` to
+  hidden and on `pagehide` (`fetch` with `keepalive`). A save sends the
+  block's `version`; the server answers 409 when another tab saved
+  first, and the block shows "Changed in another tab" with Reload / Keep
+  mine. A failed save keeps the draft in `localStorage` (per note id,
+  try/catch), retries with backoff and shows "Not saved yet · Retry";
+  the status line reads Saving… / Saved, `aria-live="polite"`. Creating
+  is optimistic (as `useAnnotations`), rolled back with a toast.
+- **D6 Lazy-loading.** Notes are shown by our own small renderer
+  (TipTap JSON -> React from the allow-list, KaTeX for `inlineMath`), so
+  opening the notepad loads neither TipTap nor Excalidraw. TipTap loads
+  (`React.lazy` + `import()`) when a text block is focused for editing
+  or a new one is added; Excalidraw when a drawing is opened for
+  editing. A Suspense fallback holds the block's height, so nothing
+  jumps.
+- **D7 Excalidraw kept on the device.** `aiEnabled={false}`; `UIOptions`
+  with export, load, save-to-file, theme toggle and the library browser
+  off and the image tool removed; no collaboration; fonts self-hosted:
+  a `scripts/copy-excalidraw-assets.mjs` (like `copy-ocr.mjs`) copies
+  only the fonts used into `public/excalidraw-assets/` and
+  `window.EXCALIDRAW_ASSET_PATH` points there. Excalifont stands in for
+  the handoff's Caveat in drawings. On save the scene is also exported
+  with `exportToSvg({skipInliningFonts: true})` as the preview the
+  notepad shows (sanitised with DOMPurify's SVG profile when drawn, at
+  most 64 KB). An e2e test fails on any request to a host other than
+  the app's while drawing (constraint 1: no other AI, no outside
+  service).
+- **D8 Inline math** is our own TipTap node (`inlineMath`, an atom with a
+  `latex` attribute, KaTeX 0.19 with `throwOnError: false`), typed as
+  `$...$` (an input rule) or from a toolbar button, edited in a small
+  popover with a live preview; not `@tiptap/extension-mathematics`
+  (KaTeX peer, see the table). Display math lives in equation blocks.
+- **D9 Sync without loops.** Book -> notepad: on every relocate the
+  reader reports the shown range as A4 positions; the notepad scrolls
+  (smoothly; at once under reduced motion) to the first note whose range
+  overlaps it and marks the notes in view with an accent edge, but not
+  while a block has focus, not within 2 s of the reader scrolling the
+  notepad, and not right after a jump the notepad itself asked for.
+  Notepad -> book: a note's reference button calls `goTo` on its first
+  anchor, flashes the page (handoff, 800 ms) and briefly marks the
+  passage (PDF quads, EPUB range, as the lookup mark).
+- **D10 Offline tests.** pytest fakes Supabase as C21 did; e2e mocks
+  `/books/{id}/notes` and `/notes/{id}` in `e2e/fixtures.js` and aborts
+  every other host. No standard check touches the project.
+
+Subchunks (lines exclude tests, migrations, lockfiles and graph files;
+each over ~200 lines is split a/b):
+
+**C22.1 notes schema + API** — 0.75 h
+
+- C22.1a `refactor(api)`: the anchor checks move from
+  `routers/annotations.py` into `backend/services/anchor_checks.py`
+  (~90 moved, not new): shape, kind, order, spine part, position check,
+  ownership helpers. No behaviour change; `test_annotations_api.py`
+  passes unchanged.
+- C22.1b `supabase/migrations/027_notes.sql` (D1-D3).
+  `backend/agents/policy.py` (+~12: kinds, caps, image budget, languages).
+  `backend/services/note_content.py` (~110: D2 per-kind validation, the
+  TipTap allow-list walk, data-URL and size checks).
+  `backend/routers/notes.py` (~120): `GET /books/{id}/notes` (reading
+  order, `from`/`to` overlap as annotations), `POST /books/{id}/notes`,
+  `PATCH /notes/{id}` (content with `version`, 409 when stale; anchors
+  only for a re-anchor), `DELETE /notes/{id}`; `main.py` (+2);
+  `lib/api.js` client functions; `purposes.json`; the pinned table set
+  in `tools/repo_graph/tests/test_build.py`.
+- Tests first: `test_migrations.py` (027 additive, RLS on, one SELECT
+  owner policy, the size check, no DROP), `test_note_content.py` (each
+  kind's good and bad content, a `<script>`-like node type refused, an
+  oversized image refused, depth cap), `test_notes_api.py` (view and
+  selection scopes, position checks, ordering and overlap, version 409,
+  another reader 404 everywhere, `annotation_id` must be the caller's,
+  cascade with the book).
+- Verify: pytest; `supabase db push --dry-run`; apply 027 only on your
+  yes after a fresh dump. Cut: the per-book image count (size cap only).
+
+**C22.2 notepad shell + text blocks (TipTap + KaTeX inline math)** — 1.0 h
+
+- C22.2a shell (no new packages): `study/StudyPanel.jsx` + `.css`
+  (~110: the 380 px panel / pull-up sheet moved out of `StevePanel`,
+  tabs Steve and Notes (count) as a WAI-ARIA tablist; `StevePanel`
+  keeps its content); `notes/Notepad.jsx` + `.css` (~150: chapter
+  groups, header, add bar of dashed pills, empty state, note card with
+  reference button and kind label, delete with Undo);
+  `notes/useNotes.js` (~110: load, optimistic create, D5 autosave
+  queue); `notes/render.jsx` (~70: D6 renderer); `ReadingSession.jsx`
+  (+~25: a Notes toolbar button with count, the panel's tab state).
+  New blocks in this step use the `view` scope (D4); selection
+  anchoring comes in C22.4.
+- C22.2b editor: `npm i @tiptap/react @tiptap/core @tiptap/pm
+  @tiptap/starter-kit @tiptap/extensions` (exact versions);
+  `notes/TextEditor.jsx` (~110, lazy: StarterKit trimmed to the D2
+  allow-list, Placeholder, a small format bar, keyboard shortcuts);
+  `notes/inlineMath.js` (~80, D8) + `MathPopover.jsx` (~60).
+- Tests: `render.test.js` (allow-list, unknown nodes dropped, math),
+  `autosave.test.js` (debounce, flush on hide, retry, 409),
+  `inlineMath.test.js` (`$a^2$` becomes a node, bad LaTeX shows the
+  source); `e2e/notepad.spec.js` (open from the toolbar and the Steve
+  tab; add a text note, type with bold and `$x^2$`, autosave PATCH after
+  the pause, reload shows it; TipTap's chunk is not requested until a
+  block is edited; 409 shows the conflict; delete + Undo; 375 px sheet;
+  Lamplight; keyboard through tabs and cards; reduced motion; with the
+  panel open at 1440 px, no page, text-layer span or EPUB `pre` past its
+  page and no sideways scroll, so the mock's overflow (handoff summary,
+  "Visible in the images") never reaches the app).
+- Verify: unit, e2e, build sizes (budget above), design review against
+  screen 19 at 1440 and 375, both themes. Cut: the format bar
+  (shortcuts only), the math popover (edit the `$...$` source instead).
+
+**C22.3 drawing blocks (Excalidraw, lazy)** — 0.75 h
+
+- `npm i @excalidraw/excalidraw` (exact version);
+  `notes/DrawingEditor.jsx` (~120, lazy: D7 options, the paper or
+  lamplight theme from ours, `onChange` throttled to scene-version
+  changes, save as D5 with the SVG preview, a full-panel editing mode
+  with Done, Escape back to the card); `notes/DrawingPreview.jsx` (~40,
+  sanitised SVG); `scripts/copy-excalidraw-assets.mjs` (~30) wired into
+  `predev` / `prebuild`; `.gitignore` for the copied fonts.
+- Tests: `e2e/notes-drawing.spec.js` (Excalidraw's chunk not requested
+  until Drawing is pressed; draw a rectangle and an arrow, autosave
+  sends elements and a preview, reload shows the preview without
+  loading Excalidraw; no request leaves the app's host; no AI, export
+  or library button in the UI; 375 px; Lamplight).
+- Verify: e2e, build sizes and the copied fonts' total recorded in
+  BENCHMARKS, design review. Cut: the SVG preview (open the drawing in
+  view mode instead, which loads Excalidraw when a drawing scrolls in).
+
+**C22.4 anchoring new blocks + margin markers** — 0.75 h
+
+- `Reader.jsx` (+~30): `noteAnchors()` (D4: selection first, else the
+  view), `shownRange()` (A4 start and end of the pages shown);
+  `PdfBook.jsx` / `EpubBook.jsx` (+~25 each) for the view anchors.
+  `SelectionToolbar.jsx`: the Note button (handoff screen 18), N as its
+  key. `notes/markers.js` (~70, pure: group notes by line, PDF within
+  12 pt, EPUB by the range's first rect) and `notes/MarginMarkers.jsx`
+  + `.css` (~90: 26 px count circles in the outer margin of each page
+  shown, 22 px at the right edge under 760 px, accent border on hover,
+  a button named "2 notes on this passage", opening the Notes tab at
+  them; redrawn on relocate, zoom and EPUB re-layout). `docs/ANCHORS.md`
+  A11 (note anchors and scopes, as built).
+- Tests: `markers.test.js` (grouping, view-scope notes at the page
+  top); `anchors` unit (view anchors and positions for a spread and an
+  EPUB page); `e2e/notes-anchor.spec.js` (PDF and EPUB: a note with a
+  selection saves its anchors, one without saves the view; the marker
+  appears beside the passage and stays there after zoom and a font
+  change; clicking it opens the note; 375 px).
+- Verify: unit, e2e, screenshots. Cut: EPUB markers (list only).
+
+**C22.5 two-way sync (book <-> notepad)** — 0.5 h
+
+- `notes/useNotepadSync.js` (~90, D9) and `notes/sync.js` (~40, pure:
+  the first note for a range, notes in view, when to hold off);
+  `Notepad.jsx` (+~20: in-view edge, scroll target); `Reader.jsx` /
+  renderers (+~30: `flash(anchor)`, page flash and passage mark, 1 ms
+  under reduced motion).
+- Tests: `sync.test.js`; `e2e/notes-sync.spec.js` (turning pages in a
+  PDF and an EPUB scrolls the notepad to that range's notes and marks
+  them; no scroll while typing or after scrolling the notepad by hand;
+  a note's reference button moves the book and flashes the passage; no
+  loop between the two).
+- Verify: e2e, a screen recording read frame by frame for the scroll.
+  Cut: the passage mark (page flash only).
+
+**C22.6 equation/code/highlight -> note; e2e** — 0.75 h
+
+- C22.6a blocks from the book: `blocks.js` gains `add_note` for math,
+  code and figures (A8: notes allowed on every kind); the block actions
+  create an equation block (crop + LaTeX: on an EPUB from MathML on the
+  device; on a PDF the cached `equation_latex` or, only with Steve on
+  and consented, `/steve/latex`; otherwise the image with an empty,
+  editable LaTeX field), a code block (exact text, `language_guess`) or
+  a figure block (crop + `meta.caption`); `notes/EquationBlock.jsx`,
+  `CodeBlock.jsx`, `FigureBlock.jsx` (~140 together: show and edit).
+  Steve's "Add to notes" on an answer (a text block from the answer's
+  blocks, anchored to the asked passage).
+- C22.6b highlights: the annotation chip's "Add note" (a text block with
+  `annotation_id` and the highlight's anchors); the add bar's Equation
+  and Code pills create empty blocks at the view. The C22 e2e journey as
+  one spec: select -> Note -> type with math -> draw -> turn pages (the
+  notepad follows) -> back via the marker -> equation and code from
+  block actions -> highlight -> note -> reload -> all there, in reading
+  order.
+- Tests: `e2e/notes-blocks.spec.js` (each source, PDF and EPUB; Steve
+  off: no `/steve/latex` request, image only); the journey spec.
+- Verify: full standard checks; design review at 1440 and 375, Paper
+  and Lamplight. Cut: Steve's "Add to notes", figure blocks.
+
+**C22.G close** — 0.25 h: standard checks green, ruff and ESLint counts
+not up; `make graph` clean; `docs/ANCHORS.md` A11 and
+`docs/ARCHITECTURE.md` (notes table, notepad flow) as built;
+`docs/BENCHMARKS.md` bundle sizes; self-review of
+`git diff readfocus-2.0...HEAD`; merge with `--no-ff` on your word.
+
+Estimate: 4.75 h (C22.1 0.75, C22.2 1.0, C22.3 0.75, C22.4 0.75, C22.5
+0.5, C22.6 0.75, C22.G 0.25) against the stub's 3.0 h; approved
+2026-11-14 ("Approve and commit"), phase 2 budget raised by 1.75 h to
+40.75 h. The 50 %-over stop is at 7.1 h. Safe to cut, in order: Steve's "Add to notes", figure blocks, the
+math popover, EPUB margin markers, the drawing preview, the passage mark.
+
+Approvals this chunk needs: applying migration 027 (with a fresh dump).
+The plan, the +1.75 h and the TipTap and Excalidraw packages (licences
+above) were approved with the plan.
+
+Questions:
+
+1. Images in equation and figure blocks: small WebP data URLs in the row
+   (D2: 64 KB each, 300 per book, nothing new in Supabase), or a private
+   Storage bucket with RLS (sharper images, but a new bucket in the
+   shared project and signed URLs)?
+2. Notes order: reading order with newest last on the same spot (D1,
+   needed for sync), or the design's "Newest last" for the whole list?
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C22.1 notes schema + API | this commit (`feat(notes): add anchored note blocks with versioned updates`); plan `b9af7f2` | One commit as the C22.1 prompt asked (the plan's C22.1a refactor is folded in). Your answers at the start (2026-11-14): an `anchors` array (A2; the prompt had one `anchor`) and the plan's four extra columns. The prompt answers plan question 1: images in a private Storage bucket. `supabase/migrations/027_note_blocks.sql` (new, **not applied**; the prompt named `018_notes.sql`, but 018 exists): `note_blocks` (id, user_id, book_id, `anchors jsonb` non-empty array, `scope` selection/view, `position_start`/`position_end float8` ordered, `kind` text/drawing/equation/code/figure, `content jsonb` object of at most 256 KB, `thumbnail_path`, `annotation_id` and `region_id` set null on delete, `orphaned`, `version` >= 1, created/updated, `deleted_at`), index `(user_id, book_id, position_start)`, RLS with one owner SELECT policy (writes through the backend, as 026); private bucket `notes` (256 KB, WebP and PNG) with an owner-folder policy `FOR ALL` like `books` (001). `backend/services/anchor_checks.py` (new): the A1/A2/A4 checks moved out of `routers/annotations.py` (no behaviour change; `text=False` for the pages shown). `backend/services/note_content.py` (new): per-kind allow-list: TipTap JSON (doc, paragraph, text, hard break, bullet/ordered list, list item, blockquote, `inlineMath {latex}`; bold, italic, strike, code; no links, images or HTML; depth 12, 20,000 characters), Excalidraw scene (elements, three app-state keys, files only as `{path, mimeType}` in the reader's folder), equation `{latex, image_path}`, code `{code, language}`, figure `{image_path, caption, source_anchor}` (an A1 anchor). `backend/routers/notes.py` (new): `GET /books/{id}/notes` (live blocks by position then creation, `from`/`to` overlap, `urls` with signed file URLs), `POST` (version 1, ETag), `PATCH /notes/{id}` (needs `If-Match`: 428 without, 412 if not a number, 409 with the current version when stale; the update is conditional on the version, so nothing changes; content, anchors with both positions, scope, thumbnail, orphaned; a block keeps its kind), soft `DELETE` (sets `deleted_at`, bumps the version; then 404 for edits and hidden from lists), `POST /books/{id}/note-files` (base64 WebP/PNG, signature checked, at most 256 KB, stored at `<user_id>/<book_id>/<uuid>.<ext>`). `policy.py`: kinds, scopes, caps, languages, file types, URL lifetime. `main.py`: the router. `purposes.json`; `note_blocks` in the pinned table set. | Tests first: `test_note_content.py` and `test_notes_api.py` failed at collection, the five 027 tests failed (no file), before the code. After: `test_note_content.py` 31, `test_notes_api.py` 28 (two-page selection, view and EPUB notes stored; 16 bad bodies refused with nothing stored; highlight and region links; reading order with ties by creation and range listing; 428/409/412/422 on update, the stale save changes nothing; re-anchor, orphan, thumbnail; soft delete; another reader gets 404 everywhere and changes nothing; files in the reader's folder and signed in lists; 3 bad files), `test_migrations.py` +6 (027 additive; columns, kinds/scopes/size = policy, SELECT-only owner policy, index and only its table, the bucket's limits and owner-folder policy); `test_annotations_api.py` unchanged and passing after the move. RLS is checked statically (no database in pytest). `npx supabase db push --dry-run`: lists 027 (and 016-026, applied outside `db push`); nothing pushed. Standard checks: see the commit. | 2026-11-14 | Your step: approve, dump, then apply 027 (it also creates the `notes` bucket and its storage policy). The bucket policy is `FOR ALL` as the prompt asked ("like books"), so a signed-in reader could upload to their own folder directly; the bucket's size and type limits still apply. `ETag` is not in CORS `expose_headers`; the body's `version` carries it. No frontend client yet (`lib/api.js` comes with `useNotes` in C22.2). The server does not check A8 region kinds. Over ~200 lines (router 234, content 157, anchor checks 70 of which 52 moved; tests ~400) as one commit, as the prompt asked. |
+| [x] C22.1 apply migration 027 to the Supabase project (your approval, 2026-11-14: "Dump, then apply 027") | `docs(progress): record migration 027 applied`; C22.1 `79409f2` | Read-only check first: no `note_blocks` table (`to_regclass` null), no `notes` bucket, 0 of the two policies, 2 buckets, 9 books, 8 profiles, 0 annotations. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-14-pre-027\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (87,831 B; 026's `annotations`, no `note_blocks`), `readfocus_prod_data.sql` (42,615,354 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`). Then `npx supabase db query --linked -f` with `BEGIN;` + `027_note_blocks.sql` + `COMMIT;` (exit 0). | Read-only query after: `note_blocks` with the 17 columns as written (`scope` default 'selection', `content` default '{}', `orphaned` false, `version` 1, timestamps now(), `deleted_at` null); constraints `_anchors_check`, `_content_check`, `_kind_check`, `_scope_check`, `_position_start_check`, `_positions_ordered`, `_version_check`, primary key; foreign keys user and book ON DELETE CASCADE, annotation and region ON DELETE SET NULL; index `idx_note_blocks_user_book_position (user_id, book_id, position_start)`; RLS on, policy "Readers read their own note blocks" SELECT `auth.uid() = user_id`; bucket `notes` private, 262,144 B, `image/webp`, `image/png`; policy "Readers access their own note files" on `storage.objects` ALL, `bucket_id = 'notes'` and the first path segment = `auth.uid()`; 0 rows; 3 buckets; 9 books. | 2026-11-14 | Applied outside `db push`, as 016-026 were, so the remote's migration history still lacks 016-027 and `db push --dry-run` keeps listing them. |
+| [x] C22.2a notepad panel, list and autosave (no editor yet) | this commit (`feat(notes): notepad panel beside the book with tabs and autosave`); C22.1 `79409f2` | First half of the C22.2 prompt, split a/b as it allows. `notes/SidePanel.jsx` + `.css` (new): the side area beside the book with tabs **Notes \| Steve** (the prompt's order; the handoff draws Steve first), a WAI-ARIA tablist (arrows, Home, End), 380 px column or a 64 % pull-up sheet under 760 px, named after its tab, focus on the chosen tab when opened, Esc or close gives focus back to the toolbar button that opened it. `steve/StevePanel.jsx` + `.css`: now the Steve tab's content (its aside, header, focus and Esc moved to SidePanel; nothing else changed). `reader/ReaderToolbar.jsx` + `.css`: a Notes button with the count (accent text on its soft tint), `aria-controls` the panel. `notes/Notepad.jsx` + `.css`: the reader's notes in book order (A4 position, then oldest first), each with a reference button ("p. ii · Chapter", printed page labels and the contents entry before it; it goes to the passage) and a kind icon with a hidden label, delete with Undo (re-creates it); loading, failed load with Try again, empty state; one polite save line ("All notes saved", "Saving…", "Offline · kept on this device…", "Some notes are not saved"); a conflict on its note with "Use the saved one" / "Keep mine", a refused save with Try again. `notes/NoteDoc.jsx`: text notes drawn from their TipTap JSON as plain React (bold, italic, strike, code, lists, checklists, quotes, inline and display math through SteveMath's KaTeX MathML), so the panel loads no editor. `notes/autosave.js`, `queue.js`, `useNotes.js`, `notesApi.js`, `place.js`, `status.js`: autosave 800 ms after the last edit, one save at a time per note on the last version, flush on hide and pagehide; a save that cannot reach the server goes to an IndexedDB queue (try/catch, memory fallback) sent again on load, on `online` and before the tab hides; a 409 holds the note until the reader chooses. `lib/api.js`: a failed call carries `status` and `detail`. `ReadingSession.jsx`: one `side` state (notes / steve) replaces `steveOpen`; Ask Steve from the book opens the Steve tab. `e2e/fixtures.js`: `/books/{id}/notes` and `/notes/{id}` with If-Match and 409. `e2e/steve-panel.spec.js`: two expectations follow the panel (the Steve tab takes focus, the fade is `rf-side-fade`). | Tests first: the three unit files failed at import before the code. Unit +14: `autosave.test.js` 8 (debounce, flush during a save, offline queue and retry, an earlier visit's change, a queued version kept, 409 and Keep mine, 4xx not queued, pending), `queue.test.js` 2, `place.test.js` 4. `e2e/notepad.spec.js` 9: Notes beside the book, count on the button, the tab focused, two notes in book order with bold, inline and display math and a checklist, "All notes saved", no TipTap or ProseMirror script requested, the stage left of the panel; a reference moves the book; arrows to Steve and Home back, Tab to "Close notes", Esc closes and focus returns to Notes; empty, failed load, Try again; delete then Undo (DELETE, then a POST with the same anchors and content); a change left in IndexedDB from an earlier visit PATCHed on load with its version and the queue emptied; a stale one (server at 3, queued on 1) shown as a conflict, Keep mine sends it on 3; EPUB note under "Chapter 2", its reference goes there; 375 px Lamplight sheet at the bottom, full width, no sideways scroll, every button 44 px or more. `steve-panel.spec.js` 11 pass. Design review on screenshots (Playwright, mocked API, after the panel settles): Paper 1440, Lamplight 1440, Paper 375, Lamplight 375, the Steve tab at 1440, against screen 19. Standard checks: see the commit. | 2026-11-14 | One failure found and fixed before committing (DEBUG_LOG 2026-11-14 C22.2a): a queued change was resent on the newest version, overwriting another tab's save. Before/after: before, Steve's panel had its own header and no notes; after, Notes and Steve are tabs of one panel, and notes are listed, drawn and autosaved (no way to write one until C22.2b). Design review: the note cards' entrance animation was removed (it ran on every load; the handoff animates only a new note). The toolbar wraps to two rows at 1440 in Lamplight, as it already did with Original colours. Not done here: the editor, adding notes, offline e2e with a live edit (C22.2b). The three design skills were not run in full; the design-review checklist was. Over ~200 lines (about 880 of code, 280 of it CSS and about 100 moved from Steve's panel) as the a half. |
+| [x] C22.2 notepad shell + text blocks (TipTap + KaTeX inline math): C22.2b editor and math | this commit (`feat(notes): notepad panel with rich-text blocks and math`, the prompt's header); C22.2a `5aa6d6c` | Second half of the C22.2 prompt. `npm i --save-exact` `@tiptap/react`, `@tiptap/core`, `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/extension-list` (checklists) and `@tiptap/extensions` (placeholder), all 3.34.0, MIT. `notes/TextEditor.jsx` + `.css` (new, lazy): StarterKit with headings, code blocks, rules, links and underline off (the server's allow-list), task list and items (nested), a placeholder, our math nodes; a format bar (Bold Ctrl+B, Italic Ctrl+I, bulleted, numbered, checklist, inline math, display math; `aria-pressed`; one tab stop, arrows, Home, End; one row of 44 px tools on a phone, scrolling sideways rather than wrapping); every change to `onChange` as TipTap JSON; Escape back to the drawn note (not closing the panel). `notes/mathNodes.js` + `mathRules.js` (new): `inlineMath` and `blockMath` atoms drawn as KaTeX MathML (SteveMath's sanitised path), typed as `$x$` (no space at either end, not after `$` or `\`, so "$5 or $10" stays text) and `$$x$$` alone in a paragraph, our own InputRule replacing the whole match; a click or Enter opens the LaTeX field (Enter or blur keeps it, Escape drops the change, empty removes the equation); insert commands for the bar, opening the field at once. Not `@tiptap/extension-mathematics` (KaTeX peer, plan D8). `notes/Notepad.jsx` + `.css`: a text note opens in the editor on click or Enter (one at a time), Done in its header, Escape returns focus to the drawn note; "+ Text" (dashed pill, handoff add bar) adds a note at the selection, else the pages shown, and opens it; a note added on this visit rises in with an accent edge (handoff), the open one keeps the edge; 44 px targets on phones. `notes/useNotes.js`: `create` returns the note's key at once and keeps it after the server's id arrives (the editor stays open); edits before then are sent once it has. `originalview/pdf/PdfBook.jsx`, `epub/EpubBook.jsx`, `Reader.jsx`: `notePlace()`: the selection's anchors and A4 positions, else PDF one whole-page quad per page shown (`text: ''`, `scope: 'view'`) or the EPUB page's range CFI. `ReadingSession.jsx`: Text and edits wired. Backend `services/note_content.py`: the allow-list gains `taskList`, `taskItem {checked: bool}` and `blockMath {latex}` (a leaf). `docs/BENCHMARKS.md`: chunk sizes. | Tests first: `test_note_content.py` +5 (checklists, display math and ordered-list attrs kept; four bad ones refused), the keep test failed before the allow-list change; `mathRules.test.js` 2 (failed at import, then on "$5 or $" before the end-space rule). `e2e/notes-editor.spec.js` 8: Text on a PDF posts a view note (whole-page quads, `text: ''`, position on the first page shown), the editor focused, no `TextEditor` script until then; bold, `$a_n$`, a checklist item and `$$\sum…$$` typed, no "$" left, no PATCH within 500 ms, one PATCH on version 1 after the pause with the bold mark, inlineMath, taskItem and blockMath, "All notes saved", Escape to the drawn note (strong, display math, the checklist item), and after a reload; an equation's LaTeX edited on click, an empty display equation dropped with Escape, the editor still open; a double-clicked word anchors a selection note; offline: PATCH aborted, "Offline…", "Waiting to save", the change in IndexedDB, back online it is saved and the queue empties; keyboard: Enter on Text, Shift+Tab to the bar, arrows, End, Escape to the note, Enter reopens; EPUB view note (range CFI, `text: ''`) typed and saved; phone Lamplight: one row of 44 px tools, Done 44 px, no sideways scroll. `notepad.spec.js` 9 still pass (the phone test rounds 43.99997 px). Build: entry 35.20 kB gzip (+0.07 against C22.2a, budget 5), `TextEditor` 129.25 kB gzip (budget 150). Design review on screenshots: editor in Paper 1440 and Lamplight 375. Standard checks: see the commit. | 2026-11-14 | Two defects found by the design review and fixed before committing (DEBUG_LOG 2026-11-14 C22.2b): typed math kept a stray "$" (TipTap's nodeInputRule), checklist items broke onto two lines (TipTap 3 markup). Before/after: before, notes could be read but not written; after, "+ Text" writes one at the selection or the pages shown, with bold, italic, lists, checklists and math, autosaved, queued offline. The three design skills were not run in full; the design-review checklist was. Not done here: margin markers and the selection toolbar's Note (C22.4), sync (C22.5). `npm audit`: six findings in vite and launch-editor, as before; none in TipTap. About 560 lines of code with CSS; as the b half. |
+| [x] C22.3 drawing blocks (Excalidraw, lazy) | this commit (`feat(notes): Excalidraw drawing blocks with thumbnails`); C22.2 `f10bbd9` | As the C22.3 prompt asked (it replaces the plan's SVG preview in the row with a PNG thumbnail in the bucket). `npm i --save-exact @excalidraw/excalidraw@0.18.1` (MIT in package.json, no licence file shipped; 31 dependencies). `notes/DrawingEditor.jsx` (new, lazy): Excalidraw with `aiEnabled={false}`, export, open, save-to-file, save-as-image, background and theme toggles off, the image tool removed, a main menu with Clear canvas only; theme dark in Lamplight; its own shapes, arrows, freehand, text, eraser, undo and redo; every scene change (by `hashElementsVersion`) to `onChange` as `{ elements, appState: { viewBackgroundColor } }` (deleted and image elements dropped, no files: the server's allow-list); "Paste passage" adds the note's anchor text as a wrapped text element (`convertToExcalidrawElements`, one undo step); Done exports a PNG (`exportToBlob`, at most 480 px a side, shrinking to fit 250 KB); a ResizeObserver calls `refresh()`. `notes/DrawingNote.jsx` (new): the list's thumbnail (`<img>` with size, lazy, async decoding; inverted in Lamplight as Excalidraw's dark mode is; "Empty drawing" or "A drawing (its picture appears after Done)" without one); the open drawing inline in the note with a bar (Paste passage, disabled for a whole-page note, and Done), or under 760 px a full-screen dialog with the passage reference at the top. `notes/excalidrawFonts.js` (new): `serveOwnFonts()` in the lazy loader sets `EXCALIDRAW_ASSET_PATH` and wraps FontFace to keep only same-origin sources. `scripts/copy-excalidraw.mjs` (new) copies the fonts into `public/excalidraw-assets/` (ignored) before dev and build, with a NOTICE. `notes/drawing.js` (new): scene, passage lines, base64. `useNotes.attachThumbnail`: POST `/books/{id}/note-files` (PNG), then the path on the note and saved at once; a failure keeps the drawing and says so. `Notepad.jsx`: "+ Drawing", drawings open in place, the panel widens to `min(620px, 46vw)` while one is open (`SidePanel` `wide`), the list never scrolls sideways. `SidePanel.jsx`: Escape inside a drawing (or from a text box Excalidraw has just removed) stays with Excalidraw. `e2e/fixtures.js`: note files, signed as data URLs. | `e2e/notes-drawing.spec.js` was written before the code but first run after it (not seen failing first). 6 tests: no DrawingEditor script before Drawing; a view drawing posted with no elements; rectangle, arrow, freehand and a text element saved as a scene of those four types with only `viewBackgroundColor` and no files; Ctrl+Z removes the text and the next save has three; Excalidraw's menu is there and no AI, export, open or collaboration entry is; no request to any host but this machine while drawing; the panel 560 px or more with every tool inside the canvas and the list not scrolled, back to 380 px after Done; Done uploads a PNG (signature checked, at most 256 KB), the note gets `thumbnail_path`, the list shows the image (natural width > 0) and the canvas is gone; after a reload the thumbnail shows without loading DrawingEditor, and reopening keeps the rectangle (the next save holds it and a new ellipse); a double-clicked word's drawing pastes exactly those words; a whole-page drawing has Paste passage disabled; Lamplight: `.excalidraw.theme--dark`, Escape inside keeps the panel, no outside request; 375 px: a dialog at 0,0,375,812 named "Drawing at p. …", the reference under 60 px from the top, Done 44 px, Done closes it. Unit +6: `drawing.test.js` 3, `excalidrawFonts.test.js` 3. `notes-editor.spec.js`: its 800 ms check counts from the last key (it failed once under load). Bundle: about 385 kB gzip loads when a drawing opens (DrawingEditor 169.61, Excalidraw core 178.89, CSS 22.37, the rest small), the entry +1.26 kB gzip; BENCHMARKS. Design review on screenshots: drawing in Paper 1440, Lamplight 1440, the thumbnail in the list, the phone's full screen. Standard checks: see the commit. | 2026-11-14 | Three defects found and fixed before committing (DEBUG_LOG 2026-11-14 C22.3): Excalidraw asked esm.sh for every font (blocked by the CSP in a build; dev has none); Escape after typing text closed the panel; strokes right after the panel widened were lost. Design review: the 380 px panel was too narrow for Excalidraw's tools and focusing the canvas scrolled the list sideways, hence the wide panel and `overflow-x: hidden`. `npm audit --omit=dev`: 17 findings (13 high), most new with Excalidraw: `nanoid` 3.3.3 in Excalidraw, and `lodash-es`, `chevrotain`, `langium`, `mermaid`, an old `katex` through `@excalidraw/mermaid-to-excalidraw` (loaded only if "Mermaid to Excalidraw" is used); `npm audit fix` would go back to Excalidraw 0.17.6. Not done: old thumbnails stay in the bucket when a new one is saved (no delete endpoint); a drawing over the 256 KB row cap is refused by the server and shown as "could not be saved"; pasted images are dropped (the image tool is off); the three design skills were not run in full, the design-review checklist was. About 380 lines of code with CSS, over ~200, as the one commit the prompt asked for. |
+| [x] C22.3 follow-up: npm overrides for Excalidraw's vulnerable packages (your choice, 2026-11-14: "Try npm overrides") | this commit (`chore(frontend): override vulnerable packages under Excalidraw`); C22.3 `75ee200` | `frontend/package.json` `overrides`, each to the nearest patched version: under `@excalidraw/excalidraw` `nanoid` 3.3.20 (was 3.3.3; same major); under `@excalidraw/mermaid-to-excalidraw` `nanoid` 5.1.16 (was 4.0.2; no patched 4.x, same API) and, under its `mermaid`, `katex` 0.19.1 (was 0.16.47; the version the app already uses); `lodash-es` 4.18.1 (was 4.17.21). `package-lock.json`: npm kept the nested katex 0.16.47 pinned (`npm ls` "invalid"), so its one lockfile entry was removed and `npm install` resolved it to the shared 0.19.1. `e2e/notes-drawing.spec.js`: "Mermaid to Excalidraw" converts a flowchart with a `$$x^2$$` label and inserts it (the code the overrides touch), with no request to another host. | `npm ls nanoid lodash-es katex --all`: 3.3.20 and 5.1.16 overridden, lodash-es 4.18.1 everywhere, mermaid's katex 0.19.1 deduped. `npm audit --omit=dev`: 17 findings (13 high) before, 5 (4 high, 1 low) after: postcss, react-router, react-router-dom, source-map-js, vite, all there before C22.3. A temporary spec converted a plain and a math chart (five elements each, no console errors); the kept Mermaid test passed twice in a row (`--repeat-each 2`) and in the full run. Build: mermaid's own katex chunk (259 kB, 77.5 kB gzip) is gone; the drawing's chunks unchanged. Standard checks: see the commit. | 2026-11-14 | The five older findings are not touched here (vite and react-router upgrades are their own change). The Mermaid test waits 2 s for Excalidraw's debounced preview, which draws on a canvas the page cannot read. |
+| [x] C22.4 anchoring new blocks + margin markers | this commit (`feat(notes): anchor note blocks to passages with margin markers`); C22.3 follow-up `cd97476` | The C22.2b `notePlace()` (selection, else the view: PDF a whole-page quad per page shown, EPUB the page's range CFI) is now reached from three places: the notepad's Text and Drawing pills (as before), N in the book, and "Note" in the selection toolbar (`SelectionToolbar.jsx`: `onNote`, + Note between Underline and Ask Steve as handoff screen 18, N while the toolbar is up, `aria-keyshortcuts` H U N); the selection is read before the toolbar clears it, and the notepad opens with the new note in the editor (`Notepad` `request` prop, taken once during render, no effect setState). Each note's head has a link button, "Link to current selection" (`Link2`; a press keeps the book's selection): `useNotes.relink` PATCHes `scope`, `anchors` and both positions at once and re-sorts the list; without a selection a toast says to select a passage first and nothing is sent. Margin markers: `notes/markers.js` (new, pure: the note's first PDF anchor on a shown page, its quad's top, grouping per 16 px line, spacing, the ribbon's tail as an obstacle, the label), `notes/MarginMarkers.jsx` + `.css` (new, handoff `.mk`: 26 px count circle on `--surface`, `--line-2` border, `--accent-text` count, accent border on hover, a 44 px target, fade in with `--dur-4`/`--ease-settle`, fade only under reduced motion, 22 px at the right edge below 760 px); measured through the renderers' new `noteSpots(notes, within)` (`PdfBook.jsx`: page side and outer edge; `EpubBook.jsx`: the first line of the range inside the book's box, and which page of the spread); redrawn on relocate, notes, zoom, text settings, resize and a zoomed PDF's scroll, hidden while a leaf turns, opening, at the closing page or on failure. A marker opens the Notes tab with its notes edged in accent for 4 s and the first focused. `Reader.jsx` (`notes`, `onNewNote`, `onOpenNotes`), `ReadingSession.jsx` (`newNote`, `onOpenNotes`, `relinkNote`). `docs/ANCHORS.md` A11. `e2e/annotations-toolbar.spec.js`: the toolbar now has Add note (it asserted none "until C22"). | Tests first: `markers.test.js` failed (no module) and `e2e/notes-anchor.spec.js` 8 failed before the code; after: 5 unit and 8 e2e pass. E2E (PDF and EPUB): Add note posts `scope: 'selection'` with the selected text, the editor has focus, the toolbar goes, one marker named "1 note on this passage" within 14 px of the line and outside the PDF page (or at the EPUB page's edge), again after Zoom in / Larger text; N with nothing selected posts `scope: 'view'` (`text: ''`, an EPUB range CFI), the panel closed, the marker opens it with that note edged and its text focused; Link to current selection PATCHes the selection's anchors and the marker moves beside it; without a selection a toast and no PATCH; 375 px EPUB: a 22 px marker on the right half, inside the screen, no sideways scroll. Contrast measured: count on the marker 6.35:1 Paper (`#9a4526` on `#fffdf9`), 8.00:1 Lamplight. Design review on screenshots (temporary spec, deleted): PDF Paper 1440 (markers beside the ribbon's tail), EPUB Lamplight 1440 (left page margin, beside the heading and the paragraph), EPUB Paper 375 (a view marker moved below the ribbon), the toolbar's + Note, the link button in the note head, the focus ring on a marker. Standard checks: see the commit. | 2026-11-14 | PDF markers sit 6 px outside the page, between it and the ribbon's tail, not the handoff's 44 px: 44 px out would be on the ribbon. A PDF selection at 375 px was not driven in e2e (the 7 px lines, as C21.2); the phone test uses the EPUB. Real touch not tested. Markers are measured again 250 ms and 800 ms after each change as well as on resize, as pages draw and sections lay out after the move. The three design skills were not run in full; the design-review checklist was. About 260 lines of code with CSS, over ~200, as the one commit the prompt asked for. |
+| [x] C22.5 two-way sync (book <-> notepad) | this commit (`feat(notes): two-way sync between the book and the notepad`); C22.4 `675891d` | `notes/sync.js` (new, pure): `shownRange(place)` (whole PDF pages, or an EPUB page's characters in its spine item, A4), `overlapping(notes, range)` in book order, `chapterRange(toc, range)`, `notesFor(notes, filter, range, toc)`, `followAction` (scroll; the pill while a note is open or within 2 s of a hand scroll; hold within 1.5 s of the notepad's own jump). `Notepad.jsx` + `.css`: notes on the pages shown get a soft accent edge (`data-here`); when the range changes the list scrolls (smooth, instant under reduced motion) to the first of them unless it is already in view, never moving focus; while a note is open a sticky "Jump to notes for this page" pill appears instead; "This page | This chapter | All" as one radio group (one tab stop, arrows, Home, End; 44 px on a phone) with an empty line and "Show all notes"; opening the notepad goes to the page's notes. `place.js`: `tocPosition` exported. A reference click: `Reader.flash(note)` asks the renderer's new `passageRects(note)` (`PdfBook.jsx`: quads on the pages shown; `EpubBook.jsx`: the range's line rects) every 100 ms for up to 2 s and pulses them (`frame.css` `.rf-passage-pulse`: accent at 28 %, opacity twice over 4 x `--dur-4`; a whole-page note gets the handoff's 2 px inset page flash; a single fade under reduced motion). `ReadingSession.jsx`: `goToNote` flashes, `shownRange(place)` and the contents to the notepad. | Tests first: `sync.test.js` (7, incl. zoom from a spread to one page, EPUB font size and re-pagination over three pages, another spine item) and `e2e/notes-sync.spec.js` (6) failed before the code, then passed; with `notes-anchor.spec.js` 42 of 42 over `--repeat-each 3`. E2E: PDF page turns mark pages 1, 2-3, 4-5 and scroll page 4's first note into the upper half; on opening the list stays at the top with the filter on screen; writing a note keeps scrollTop and the editor open, the pill scrolls on click; a reference to page 5 moves the book, pulses the whole page (edges within 3 px) then fades out, the list holds within 2 px; filter counts 2 / 4 / chapter / 12 and Home by key; EPUB: a note made two pages on is marked, still marked after Larger text, and its reference returns to the first page with a pulse; reduced motion: no smooth scroll (in view within 600 ms), pulse `rf-passage-fade`. Design review on screenshots (temporary spec, deleted): follow and soft marks in Paper 1440, pulse in Lamplight 1440, the pill while writing in Paper 1440, the notepad sheet at 375 (no sideways scroll). Standard checks: see the commit. | 2026-11-14 | Found in review and fixed before committing: opening the notepad scrolled the page's first note to the top even when it was already in view, hiding the header and filter (now only a card out of view is scrolled to; e2e checks it). The filter resets to All on each visit (not stored). On a phone the sheet covers Previous/Next, as before this change; turning by swipe was not driven in e2e. A hand scroll is seen from wheel, touch and PageUp/PageDown/arrow keys on the list, not a dragged scrollbar. The three design skills were not run in full; the design-review checklist was. About 300 lines of code with CSS, over ~200, as the one commit the prompt asked for. |
+| [x] C22.6 equation/code/highlight -> note; e2e | this commit (`feat(notes): add equations, code, figures, highlights and Steve answers to notes`); C22.5 `ff9ea7f` | One commit as the C22.6 prompt asked (the plan's a/b split not used). `steve/blocks.js`: `add_note` ("Add to notes") ends every region kind's actions where there is a notepad (`notes` option; the gallery has none). `PdfBlockActions.jsx`: an equation becomes an equation note with a crop of the page (under 250 KB, uploaded to the notes bucket first) and its LaTeX: the region map's, else `/steve/latex` only while Steve is on (cached copies come back with no Gemini call), set on the note when it arrives; code a code note with the region's exact text and its language (`noteLanguage`: the API's list, aliases such as py and C++); a figure a figure note with its crop and caption; each with `region_id` and the box as its anchor (`regionPlace`: the region's text as a selection, else the view scope). `EpubBlockActions.jsx`: the same on the device: an equation by its TeX (`latexOf`), a listing by its text, a figure by its image and caption, anchored by the element's range (`EpubBook.elementPlace`). `steve/NoteGrip.jsx` (new): a grip in an equation's or listing's bar, dragged onto the notepad (a drop target with a dashed accent outline) or clicked; hidden on phones and touch screens; the bar stays up while dragging. `steve/crop.js`: a byte limit per caller. `AnnotationChip.jsx`: + Note (a text note quoting the passage in a blockquote, `annotation_id` and the highlight's anchors, opened in the editor). `StevePanel.jsx`: Save to notes beside Copy (then Saved to notes, disabled): `answerDoc` keeps text, bold, italic, inline and display math, lists, code lines (code marks and breaks) and citations as "[p. 2]" with a closing "Sources: p. 2" line, under "Steve · from page 2", anchored at the selection or the pages shown. `notes/fromBook.js`, `NotesContext.js` (add, edit by key, drag and drop), `BlockNote.jsx` (equation: crop, KaTeX, editable LaTeX; code: language, editable mono text; figure: crop, editable caption; all autosave) (new). `useNotes.js`: `create(body, local)` (signed URLs shown, never sent), `edit` by key through a key -> id map, `uploadImage`. `Notepad.jsx` + `.css`: the three kinds drawn, the drop target, a new note revealed by key. `ReadingSession.jsx`: `addFromBook`, the highlight and answer handlers, `NotesContext.Provider`. `e2e/steve-blocks.spec.js`, `steve-epub-blocks.spec.js`: the bars' button lists now end with Add to notes and the grip. | Tests first: `fromBook.test.js` (6) and `e2e/notes-blocks.spec.js` (8) failed before the code, then passed; `e2e/notes.spec.js` (4, the prompt's journey: text and drawing notes in a PDF and an EPUB, the page turn moving the notepad, a reference jumping back, an offline edit saved on reconnect, the merge prompt) passed before the code too, as it runs on C22.2-C22.5. Blocks e2e: the equation's PNG upload (under 256 KB), the POST (`region_id`, the quad, the region's text), one `/steve/latex` then the saved LaTeX, image and MathML in the card, an edited LaTeX autosaved; code exact with `python` and no Steve call; figure crop and caption; Steve off: no `/steve/latex`, empty LaTeX; dragging the grip onto the notepad posts the equation; EPUB equation with LaTeX and no image, listing text exact; a highlight's quote note with its anchors, positions and `annotation_id`, typed into at once; a Steve answer saved with "[p. 2]" and "Sources: p. 2". Design review on screenshots (temporary spec, deleted): the bar with Add to notes and the grip in Lamplight 1440, the three notes in Paper and Lamplight 1440, an equation note in the 375 sheet. Standard checks: see the commit. | 2026-11-14 | Found in review and fixed before committing (DEBUG_LOG 2026-11-14 C22.6): a LaTeX arriving just after its note was saved could be lost (key -> id map). EPUB equations carry no image (MathML has no raster to crop); a PDF crop at 375 px is soft (the canvas's own resolution). The block outline lets pointer events through to the text, so the drag starts from the grip, not the block. A region with no text anchors with the view scope. Steve's Save to notes anchors at the reader's place, not the passage first asked about. Dragging was driven in e2e on a PDF only. The three design skills were not run in full; the design-review checklist was. About 460 lines of code with CSS, over ~200, as the one commit the prompt asked for. |
+| [x] C22.G close | this commit (`docs(progress): close C22 notepad`); fix `f69a5fc` (`fix(notes): EPUB block notes keep their own characters`), C22.6 `2aa0abd` | `docs/ARCHITECTURE.md`: a Notes section (table, bucket, the flows: new notes, notes from the book, autosave, sync both ways, markers), the `note_blocks` table (027) and the `notes` bucket in the data model; `docs/ANCHORS.md` A11 (C22.4); `docs/BENCHMARKS.md`: the C22 bundle sizes. Self-review of `git diff readfocus-2.0...HEAD` (85 files, about 6,200 lines with tests and docs, graph and lockfile apart): one blocking finding, fixed in its own commit with a regression test (DEBUG_LOG 2026-11-14 C22.G: an EPUB block note's A4 positions were its parent's first character, so sync would have marked it on the wrong page). Checked and fine: `page_regions` has `user_id` (the region_id link check), math is sanitised with DOMPurify before `innerHTML`, no secrets or Gemini calls in the notes code. Non-blocking, left: the margin markers measure again on every reading-page render (the session timer re-renders each second; the result is compared and rarely changes, but it is work), `notes` is a new array per render; Undo after deleting a note drops its `annotation_id`, `region_id` and thumbnail; a region's details failing to load leaves a code note empty; old drawing thumbnails stay in the bucket. | Standard checks at HEAD before the fix and again after it: ruff 27 errors (baseline 27); pytest backend 1482 passed; ESLint 4 errors, 0 warnings (baseline 4); build ok; `import backend.main` ok; repo graph tests 64 passed; contrast 304 pairs, 0 failing; images 3 `<img>`, 0 failing; unit 211 passed; e2e 243 passed, the notes specs among them (`notepad` 8, `notes-editor`, `notes-drawing`, `notes-anchor` 8, `notes-sync` 6, `notes-blocks` 8, `notes` 4). `make graph`: no diff at the start (only the inventory's line counts change with this commit's docs). C22.1-C22.6 ticked: every note carries anchors and A4 positions (selection or view; regions, highlights and answers too), and sync runs both ways in PDFs and EPUBs (`notes-sync`, `notes` specs). | about 6.0 h (17:08-23:07 by the commits, plan to close, waits for approvals included) | Time: over the plan's approved 4.75 h by about 26 % and the close prompt's 4.0 h by about 50 %, under the 50 %-over stop of the approved plan (7.1 h). Not run against the real backend: the notes flows are covered by mocked e2e and offline pytest only (migration 027 is applied; creating rows in the shared project needs your approval, constraint 2). |
 
 ## C23 — focus mode
 

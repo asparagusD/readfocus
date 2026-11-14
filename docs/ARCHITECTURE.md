@@ -16,6 +16,7 @@ File paths are given so each claim can be checked.
 - [The book reader](#the-book-reader)
 - [Word lookup](#word-lookup)
 - [Annotations](#annotations)
+- [Notes](#notes)
 - [Security](#security)
 
 ## System
@@ -211,12 +212,13 @@ below it.
 | `processing_jobs` | 010 | ingestion jobs: status, cursor, progress, attempts (read-only to readers) |
 | `term_lookups` | 015 | shared cache of dictionary and Wikipedia answers; no personal data; readable by signed-in readers, written only by the backend |
 | `annotations` | 026 | a reader's highlights and underlines (C21): `anchors` (ANCHORS A1, one per page or spine item), `position_start`/`position_end` (A4), `style`, `color` (five palette names), `text_snapshot`, `orphaned`; readers read their own, only the backend writes |
+| `note_blocks` | 027 | a reader's note blocks (C22): `kind`, `scope`, `anchors` and A4 positions as `annotations`, `content` per kind, optional `annotation_id` / `region_id`, `thumbnail_path`, `version` (If-Match), `orphaned`, soft `deleted_at`; readers read their own, only the backend writes |
 
 Search functions: `match_chunks_local` (pgvector, 005) and
 `search_chunks_text` (Postgres full-text, 006), both `SECURITY INVOKER`, fused
 by reciprocal rank in `backend/services/retriever.py`. Indexes for the
 per-user reads are in 011. Storage: `books` (private, a reader's own folder
-only) and `covers` (public read).
+only), `covers` (public read) and `notes` (private, 027: note crops and drawing thumbnails in a reader's own folder).
 
 ## The book reader
 
@@ -275,6 +277,34 @@ contents drawer ─► Annotations tab: reading order, colour filter, page, jump
 The book's DOM is never changed: the PDF layer is ours, and an EPUB section
 gets only `Highlight` objects and one `<style>` element. Steve's entry
 points hide while he is switched off, and a question waits for consent.
+
+## Notes
+
+The notepad beside the book (C22; `docs/ANCHORS.md` A11). One `note_blocks`
+row (migration 027) per block: `kind` (text, drawing, equation, code,
+figure), `anchors` + A4 `position_start` / `position_end`, `scope`
+(selection or view), `content` checked per kind by
+`backend/services/note_content.py` (TipTap JSON from an allow-list, an
+Excalidraw scene, fixed fields), optional `annotation_id` / `region_id`,
+`version` for If-Match, soft `deleted_at`. Images (crops, drawing thumbnails)
+live in the private `notes` bucket under `<user>/<book>/`, served by signed
+URLs.
+
+```
+new note: Text / Drawing pills, N, selection toolbar Note ─► Reader.notePlace(): selection, else the pages shown
+from the book: block actions Add to notes (PDF crop + LaTeX, code, figure; EPUB on the device), highlight chip
+  Note (quote + annotation_id), Steve Save to notes (citations as text), a dragged equation or listing
+   └─► NotesContext.add ─► crop to POST /books/{id}/note-files ─► useNotes.create (shown at once) ─► POST /books/{id}/notes
+edits ─► autosave (800 ms, If-Match; 409 = "changed in another tab"; offline queue in IndexedDB, sent on reconnect)
+book ─► notepad: relocate ─► shownRange (A4) ─► sync.js: marks the notes on it, scrolls to the first,
+  or offers "Jump to notes for this page" while writing; filter This page / This chapter / All
+notepad ─► book: a reference ─► Reader.goTo + flash (the passage pulses); margin markers (noteSpots) open notes
+```
+
+TipTap and Excalidraw are lazy chunks loaded only when a note is edited or a
+drawing opened; the list draws notes with our own renderer (NoteDoc, KaTeX).
+Nothing in the notepad calls Gemini; a PDF equation's LaTeX comes from
+`/steve/latex` only while Steve is on (a cached result costs no call).
 
 ## Security
 

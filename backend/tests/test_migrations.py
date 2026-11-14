@@ -653,3 +653,67 @@ def test_026_has_the_range_index_and_touches_only_its_table():
     assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.annotations \(user_id, book_id, position_start\)", sql)
     assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == ["annotations"]
     assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)
+
+
+# --- 027: note blocks (C22.1) -----------------------------------------------------------------------
+
+def migration_027() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "027_note_blocks.sql"))
+
+
+def test_027_creates_note_blocks_with_the_agreed_columns():
+    assert table_definition(migration_027(), "note_blocks") == {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "user_id": OWNER,
+        "book_id": BOOK,
+        "anchors": "jsonb NOT NULL CHECK (jsonb_typeof(anchors) = 'array' AND jsonb_array_length(anchors) >= 1)",
+        "scope": "text NOT NULL DEFAULT 'selection' CHECK (scope IN ('selection', 'view'))",
+        "position_start": "float8 NOT NULL CHECK (position_start >= 0)",
+        "position_end": "float8 NOT NULL",
+        "kind": "text NOT NULL CHECK (kind IN ('text', 'drawing', 'equation', 'code', 'figure'))",
+        "content": "jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(content) = 'object' AND octet_length(content::text) <= 262144)",
+        "thumbnail_path": "text",
+        "annotation_id": "uuid REFERENCES public.annotations(id) ON DELETE SET NULL",
+        "region_id": "uuid REFERENCES public.page_regions(id) ON DELETE SET NULL",
+        "orphaned": "boolean NOT NULL DEFAULT false",
+        "version": "integer NOT NULL DEFAULT 1 CHECK (version >= 1)",
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+        "updated_at": "timestamptz NOT NULL DEFAULT now()",
+        "deleted_at": "timestamptz",
+        "CONSTRAINT": "note_blocks_positions_ordered CHECK (position_end >= position_start)",
+    }
+
+
+def test_027_kinds_scopes_and_size_match_policy():
+    from backend.agents import policy
+    sql = migration_027()
+    assert "kind IN ({})".format(", ".join(f"'{k}'" for k in policy.NOTE_KINDS)) in sql
+    assert "scope IN ({})".format(", ".join(f"'{s}'" for s in policy.NOTE_SCOPES)) in sql
+    assert f"octet_length(content::text) <= {policy.NOTE_CONTENT_MAX_BYTES}" in sql
+
+
+def test_027_readers_only_read_their_own_rows_and_never_write_them():
+    sql = migration_027()
+    assert "ALTER TABLE public.note_blocks ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(r"CREATE POLICY \"[^\"]+\" ON public\.note_blocks FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert policies == ["SELECT"]  # writes go through the backend, which checks anchors, content and versions
+    assert "SECURITY DEFINER" not in sql
+
+
+def test_027_has_the_range_index_and_touches_only_its_table():
+    sql = migration_027()
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.note_blocks \(user_id, book_id, position_start\)", sql)
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == ["note_blocks"]
+    assert not re.search(r"\bUPDATE public\.", sql)
+
+
+def test_027_adds_a_private_notes_bucket_with_owner_folders_like_books():
+    from backend.agents import policy
+    sql = migration_027()
+    bucket = re.search(r"INSERT INTO storage\.buckets \(id, name, public, file_size_limit, allowed_mime_types\) "
+                       r"VALUES \('notes', 'notes', false, (\d+), ARRAY\[([^\]]+)\]\) ON CONFLICT DO NOTHING", sql)
+    assert bucket and int(bucket.group(1)) == policy.NOTE_FILE_BYTES_MAX
+    assert re.findall(r"'([^']+)'", bucket.group(2)) == list(policy.NOTE_FILE_TYPES)
+    assert ('CREATE POLICY "Readers access their own note files" ON storage.objects FOR ALL USING '
+            "( bucket_id = 'notes' AND auth.uid()::text = (string_to_array(name, '/'))[1] )") in sql
+    assert sql.count("CREATE POLICY") == 2

@@ -1,58 +1,11 @@
-/* Steve's panel (C20.7b, handoff screens 13-17): a 380 px column beside the book from 760 px, a pull-up
-   sheet 64 % high below it. Tokens only; only transform and opacity move. */
+/* Steve's tab of the side panel (C20.7b, handoff screens 13-17; the panel itself is notes/SidePanel.css since
+   C22.2). Tokens only; only transform and opacity move. */
 .rf-steve {
   display: flex;
   flex-direction: column;
-  flex: none;
-  width: 380px;
+  flex: 1;
   min-height: 0;
-  border-left: var(--border-hair) solid var(--line);
-  background-color: var(--surface);
-  color: var(--ink);
-  animation: rf-steve-in var(--dur-4) var(--ease-arrive) both;
 }
-
-@keyframes rf-steve-in {
-  from { opacity: 0; transform: translateX(24px); }
-}
-
-.rf-steve-grab { display: none; }
-
-.rf-steve-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
-  border-bottom: var(--border-hair) solid var(--line);
-}
-
-.rf-steve-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-  font-family: var(--font-ui);
-  font-size: var(--text-ui);
-  font-weight: 600;
-}
-
-.rf-steve-title:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
-
-.rf-steve-x {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  margin-left: auto;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: none;
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-settle);
-}
-
-.rf-steve-x:hover { background-color: var(--paper-2); color: var(--ink); }
 
 .rf-steve-body {
   flex: 1;
@@ -321,28 +274,9 @@
 
 /* Below 760 px: a pull-up sheet over the lower part of the book; the top of the page stays readable. */
 @media (max-width: 759px) {
-  .rf-steve {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: var(--z-popover);
-    width: auto;
-    height: 64dvh;
-    border-left: 0;
-    border-top: var(--border-hair) solid var(--line-2);
-    border-radius: 18px 18px 0 0;
-    box-shadow: var(--shadow-lift);
-    animation-name: rf-steve-up;
-    animation-duration: var(--dur-5);
-  }
-  @keyframes rf-steve-up { from { opacity: 0; transform: translateY(24px); } }
-  .rf-steve-grab { display: block; width: 36px; height: 4px; margin: var(--space-2) auto 0; border-radius: var(--radius-pill); background-color: var(--line-2); }
   .rf-steve-body { padding: var(--space-4); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rf-steve { animation-name: rf-steve-fade; }
-  @keyframes rf-steve-fade { from { opacity: 0; } }
   .rf-steve-caret { animation: none; }
 }

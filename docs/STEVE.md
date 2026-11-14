@@ -361,3 +361,35 @@ focus returns to the button.
   mode, anchor, regionId, imagePngB64, label})`, which opens the panel and
   asks: C20.8's block actions and C21's highlights use it.
 
+## S14. Equations, code and figures
+
+Built in C20.8. Hovering (or tapping) an equation, a code listing or a
+figure in either renderer shows its actions:
+
+| Region | Actions | What is sent |
+|---|---|---|
+| equation, PDF | Explain this equation; Copy as LaTeX | a 2x crop of the rendered page around the box (PNG, at most 500 KB) and the region id |
+| equation, EPUB | Explain this equation; Copy as LaTeX | Explain: the region's MathML or LaTeX source (no image); Copy: nothing, converted on the device |
+| code | Copy code; Explain this code | Copy: nothing (the exact text); Explain: the region id, the server reads the code |
+| figure | Explain this figure | a crop (PDF) or the image file from the package (EPUB), downscaled to fit 500 KB, with the caption, label, alt text and the paragraph around the figure |
+
+- `GET /books/{id}/regions` now gives each box its region `id` (and
+  `inline` for inline math); `GET /books/{id}/regions/{region_id}` and
+  `GET /books/{id}/region-at?spine_index=&path=` give one region's
+  details (exact code, language, caption, label, alt, LaTeX, MathML,
+  equation number), the reader's own books only.
+- The context builder adds `<surrounding>` to a region: the paragraph
+  around its placeholder in the book's prose (400 tokens at most).
+- **Copy as LaTeX, PDF:** `POST /steve/latex {book_id, region_id,
+  image_png_b64}`. Migration 025's `equation_latex` keeps every answer by
+  file (sha256), page and box hash (the box rounded to a tenth of a
+  point), so each PDF equation costs at most one Gemini call, ever, for
+  every reader who owns that file. A known equation comes back with no
+  call and no consent (nothing is sent); a new one needs consent, the
+  daily limit and the crop, and uses `latex_equation` on the vision model.
+  The table has RLS and no policy: only the backend reads and writes it.
+- **Copy as LaTeX, EPUB:** on the device only: the TeX annotation if the
+  MathML has one, else `mathml-to-latex` (MIT), loaded on first use.
+- Copy shows a KaTeX preview of the LaTeX before it is copied.
+- "Add to notes" on a figure waits for the notepad (C22).
+

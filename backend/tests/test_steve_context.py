@@ -277,3 +277,21 @@ def test_the_question_is_the_last_part_and_the_hash_ignores_it(db, retrieval):
     assert first.context_hash == second.context_hash and len(first.context_hash) == 64
     db.tables["chunks"][101]["prose"] += " An edit."
     assert build(question="Why the tide?").context_hash != first.context_hash
+
+
+def test_a_figure_comes_with_the_paragraph_around_its_place_in_the_text(db, retrieval):
+    chunk = db.tables["chunks"][47]
+    chunk["prose"] = ("Earlier paragraph about boats.\n\nThe harbour empties twice a day, as "
+                      "[Figure 4.2: The harbour at low tide, p. 48] shows from the pier.\n\nA later paragraph.")
+    chunk["anchors"]["pages"] = [48, 48]
+    chunk["anchors"]["placeholders"] = [{"kind": "figure", "text": "[Figure 4.2: The harbour at low tide, p. 48]",
+                                         "page": 48, "order": 0}]
+    ctx = build(region_id="r-fig")
+    assert ctx.region.surrounding.startswith("The harbour empties twice a day")
+    assert "Earlier paragraph" not in ctx.region.surrounding and "A later paragraph" not in ctx.region.surrounding
+    assert "<surrounding>" in text_of(ctx).split('<region kind="figure"')[1]
+
+
+def test_a_region_without_a_placeholder_has_no_surrounding_text(db, retrieval):
+    ctx = build(region_id="r-code")
+    assert ctx.region.surrounding == ""

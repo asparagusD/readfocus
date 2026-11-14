@@ -68,6 +68,7 @@ class Region:
     text: str
     citations: dict = field(default_factory=dict)
     language: str = ""
+    surrounding: str = ""  # the paragraph around the region's placeholder in the book's prose (C20.8)
 
 
 @dataclass
@@ -328,7 +329,29 @@ async def _retrieved(book_id: str, query: str, skip: set, budget: int) -> list[P
     return passages
 
 
-def _region(row: dict) -> Region:
+def _surrounding(book_id: str, row: dict) -> str:
+    """The paragraph that holds a region's placeholder ("[Figure 4.2: ..., p. 47]") in its chunk's prose."""
+    spine = row.get("spine_index")
+    near = {"kind": "pdf", "page": row["page"]} if row.get("page") else (
+        {"kind": "epub", "cfi": f"epubcfi(/6/{2 * (spine + 1)}!/4)"} if spine is not None else None)
+    if near is None:
+        return ""
+    for chunk in _chunks_near(book_id, near):
+        for mark in (chunk.get("anchors") or {}).get("placeholders") or []:
+            same_place = mark.get("page") == row.get("page") if row.get("page") else mark.get("spine_index") == spine
+            if mark.get("kind") != row["kind"] or not same_place or mark.get("order") != row.get("order_in_page"):
+                continue
+            prose, text = _prose(chunk), mark.get("text") or ""
+            at = prose.find(text) if text else -1
+            if at < 0:
+                continue
+            start, end = prose.rfind("\n\n", 0, at), prose.find("\n\n", at)
+            paragraph = prose[start + 2 if start >= 0 else 0:end if end >= 0 else len(prose)].strip()
+            return _safe(_window(paragraph, max(paragraph.find(text), 0), len(text), policy.SURROUNDING_MAX_TOKENS))
+    return ""
+
+
+def _region(row: dict, book_id: str = "") -> Region:
     meta = row.get("meta") or {}
     if row.get("page"):
         label, cites = f"p. {row['page']}", {f"p. {row['page']}": {"kind": "pdf", "page": row["page"]}}
@@ -348,7 +371,9 @@ def _region(row: dict) -> Region:
         text = "\n".join("\t".join(str(c) for c in r) for r in meta.get("rows") or []) or row.get("text") or ""
     else:
         text = row.get("text") or ""
-    return Region(kind, label, _safe(_fit(text, policy.REGION_MAX_TOKENS)), cites, meta.get("language_guess") or "")
+    surrounding = _surrounding(book_id, row) if book_id else ""
+    return Region(kind, label, _safe(_fit(text, policy.REGION_MAX_TOKENS)), cites, meta.get("language_guess") or "",
+                  surrounding)
 
 
 def _render(card: str, session: list, highlight, retrieved: list, region) -> str:
@@ -367,7 +392,8 @@ def _render(card: str, session: list, highlight, retrieved: list, region) -> str
             f'<book_passage label="{p.label}">\n{p.text}\n</book_passage>' for p in retrieved) + "\n</retrieved>")
     if region:
         language = f' language="{region.language}"' if region.language else ""
-        out.append(f'<region kind="{region.kind}" label="{region.label}"{language}>\n{region.text}\n</region>')
+        around = f"<surrounding>\n{region.surrounding}\n</surrounding>\n" if region.surrounding else ""
+        out.append(f'<region kind="{region.kind}" label="{region.label}"{language}>\n{region.text}\n{around}</region>')
     return "\n".join(out)
 
 
@@ -393,7 +419,7 @@ async def build_context(*, user_id: str, book_id: str, question: str, anchor: di
     loaded = await asyncio.to_thread(_load, user_id, book_id, region_id)
     question_part = f"<question>\n{_safe(question)}\n</question>"
     card = _book_card(loaded["book"])
-    region = _region(loaded["region"]) if loaded["region"] else None
+    region = await asyncio.to_thread(_region, loaded["region"], book_id) if loaded["region"] else None
     highlight = await asyncio.to_thread(_highlight, book_id, anchor) if anchor else None
     image_tokens = policy.IMAGE_TOKENS if image_part else 0
     fixed = (estimate_tokens(_render(card, [], highlight, [], region)) + estimate_tokens(question_part)

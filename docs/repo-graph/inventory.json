@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 720,
-    "inventoried": 577,
+    "tracked": 722,
+    "inventoried": 579,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14570,
+      "size_bytes": 14589,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -545,10 +545,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 304,
-      "size_bytes": 15449,
+      "lines": 354,
+      "size_bytes": 18166,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -601,10 +601,10 @@
     {
       "path": "backend/routers/steve_ask.py",
       "language": "python",
-      "lines": 190,
-      "size_bytes": 9744,
+      "lines": 273,
+      "size_bytes": 14059,
       "role": "router",
-      "purpose": "POST /steve/ask (C20.6): consent, off switch, open test, image (PNG, 500 KB), thread and book checked first with typed errors; then context, prompt and service.ask streamed as Server-Sent Events (start, token, done with checked citations and usage, or error); GET /steve/threads?book_id and GET /steve/threads/{id}, the reader's own only."
+      "purpose": "POST /steve/ask (C20.6): consent, off switch, open test, image (PNG, 500 KB), thread and book checked first with typed errors; then context, prompt and service.ask streamed as Server-Sent Events (start, token, done with checked citations and usage, or error); GET /steve/threads?book_id and GET /steve/threads/{id}, the reader's own only. C20.8: POST /steve/latex, a PDF equation as LaTeX, cached per file, page and box in equation_latex (one Gemini call per equation ever)."
     },
     {
       "path": "backend/services/__init__.py",
@@ -761,8 +761,8 @@
     {
       "path": "backend/steve/context.py",
       "language": "python",
-      "lines": 426,
-      "size_bytes": 19641,
+      "lines": 452,
+      "size_bytes": 21265,
       "role": "lib",
       "purpose": "Steve's context builder (C20.4): build_context() returns delimited parts (book card, session prose to the reader's place, highlight with its paragraph, top-k retrieved passages minus the session and highlight, region source or code, image) and a {label: anchor} citations map, under a conservative 12k-token cap; never the whole book."
     },
@@ -785,8 +785,8 @@
     {
       "path": "backend/steve/policy.py",
       "language": "python",
-      "lines": 40,
-      "size_bytes": 2830,
+      "lines": 41,
+      "size_bytes": 2947,
       "role": "lib",
       "purpose": "Steve's numbers (C20.2): timeouts, the breaker's cool-down and cap, the cache's TTL and size, the default daily limit and the UTC offset range; no Google quota is hardcoded."
     },
@@ -1009,8 +1009,8 @@
     {
       "path": "backend/tests/test_api_regions.py",
       "language": "python",
-      "lines": 58,
-      "size_bytes": 2496,
+      "lines": 95,
+      "size_bytes": 5114,
       "role": "test",
       "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused."
     },
@@ -1337,8 +1337,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 583,
-      "size_bytes": 25613,
+      "lines": 609,
+      "size_bytes": 26716,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
@@ -1497,8 +1497,8 @@
     {
       "path": "backend/tests/test_steve_context.py",
       "language": "python",
-      "lines": 279,
-      "size_bytes": 13972,
+      "lines": 297,
+      "size_bytes": 14993,
       "role": "test",
       "purpose": "Pytest for backend/steve/context.py on an in-memory 600-chunk book: session range to the reader's place, retrieval de-duplicated, never the whole book, the budget with huge chunks, the anchor kept when trimming, unverified selections, citations for pages and sections, regions, images, ownership, tag neutralising, the context hash."
     },
@@ -1509,6 +1509,14 @@
       "size_bytes": 7236,
       "role": "test",
       "purpose": "Pytest for /steve/key and keys.py: a good key checked, encrypted and stored with its last four; refused, malformed and unchecked keys store nothing and are never echoed; delete; only the caller's row; no secret; key never in a response or log; rotated secret; the service uses the stored key and never counts it."
+    },
+    {
+      "path": "backend/tests/test_steve_latex.py",
+      "language": "python",
+      "lines": 119,
+      "size_bytes": 5781,
+      "role": "test",
+      "purpose": "Pytest for POST /steve/latex: one vision call stored as bare LaTeX, asking again and other readers of the same file get it with no call, consent only for new equations, the reader's own PDF equations only, typed pauses, empty answers and large images not stored."
     },
     {
       "path": "backend/tests/test_steve_prompts.py",
@@ -1753,16 +1761,16 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4308,
-      "size_bytes": 778490,
+      "lines": 4310,
+      "size_bytes": 780774,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "docs/STEVE.md",
       "language": "markdown",
-      "lines": 363,
-      "size_bytes": 20824,
+      "lines": 395,
+      "size_bytes": 22935,
       "role": "doc",
       "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
@@ -4487,6 +4495,14 @@
       "purpose": "Migration 024 (C20.2, additive): steve_take_quota (one atomic upsert that never passes the limit; -1 when reached) and steve_refund_quota (never below zero) over steve_usage, executable by the service role only."
     },
     {
+      "path": "supabase/migrations/025_equation_latex.sql",
+      "language": "sql",
+      "lines": 28,
+      "size_bytes": 1368,
+      "role": "migration",
+      "purpose": "Migration 025 (C20.8, additive): equation_latex (file_sha256, page, bbox_hash, latex, model, created_at; key file + page + box hash) so each PDF equation costs one Gemini call ever; RLS with no policy, backend only."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -4561,8 +4577,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 579,
-      "size_bytes": 176424,
+      "lines": 581,
+      "size_bytes": 177270,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -4593,8 +4609,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 283,
-      "size_bytes": 11930,
+      "lines": 284,
+      "size_bytes": 11981,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

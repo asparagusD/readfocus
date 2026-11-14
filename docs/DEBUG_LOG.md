@@ -3462,3 +3462,44 @@ InventoryError above). Passes after: yes (`git stash pop`: 1 passed).
 
 ### Commit
 `fix(graph): add purposes for the C20.1 files`
+
+## 2026-11-14 C20.8a — `make graph` exits 2 once, right after `git add`
+
+**Status:** open (intermittent)
+
+### Symptom
+Twice in C20 (C20.2 and C20.8a) the first `make graph` after staging a
+change exited 2 with its output sent to /dev/null; the next run exited 0
+and wrote a different `docs/repo-graph/REPO_MAP.md` (the failed run had
+stopped before render.py). Expected: exit 0 every time.
+
+    git add <files> ; make graph >/dev/null 2>&1 ; echo $?
+    2
+
+### Repro
+Not reproduced: `make graph` three times in a row with output captured,
+exit 0 each time (2026-11-14, after the C20.8a failure).
+
+### Hypotheses
+1. A race with git's index right after `git add` (inventory.py runs
+   `git ls-files`). Evidence: both failures came straight after a
+   `git add` in the same shell command. Ruled out if: it fails with no
+   `git add` before it. Result: untested.
+2. An inventory check that depends on staged versus working-tree text
+   (line endings: every `git add` warns LF will become CRLF). Ruled out
+   if: the captured output of a failing run names another cause.
+   Result: untested; the failing runs' output was discarded.
+
+### Root cause
+Unknown.
+
+### Fix
+None yet. Working rule until it is found: run `make graph` with its
+output kept, and run it again after staging until a second run leaves no
+diff (done for C20.2 and C20.8a; both commits' graphs are stable).
+
+### Regression test
+None (not reproduced).
+
+### Commit
+Recorded with `feat(steve): equation LaTeX cache, region details and figure context`.

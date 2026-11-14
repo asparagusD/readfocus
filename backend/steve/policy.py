@@ -24,6 +24,7 @@ SESSION_MAX_TOKENS = 4_500    # the session's text, from its start to the reader
 ANCHOR_WINDOW_TOKENS = 600    # kept around the anchor when the session is trimmed to its most recent part
 HIGHLIGHT_MAX_TOKENS = 1_000  # the selection and its paragraph
 REGION_MAX_TOKENS = 1_500     # an equation's source, a code listing, a figure's caption
+SURROUNDING_MAX_TOKENS = 400  # the paragraph around a figure, table, equation or listing in the book's text (C20.8)
 QUESTION_MAX_CHARS = 1_200
 RETRIEVE_K = 6                # passages from anywhere in the book (the hybrid retriever)
 RETRIEVE_CANDIDATES = 12      # asked of the retriever, before removing what the session and highlight hold

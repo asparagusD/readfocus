@@ -12,6 +12,7 @@ LaTeX). The question and the answer are kept in the thread; the image and any ke
 
 import base64
 import binascii
+import hashlib
 import json
 import logging
 from typing import Annotated, Literal
@@ -48,6 +49,10 @@ MESSAGES = {
     "unavailable": "Steve cannot answer right now. Try again soon.",
     "not_configured": "Steve is not set up on this server yet.",
     "key_rejected": "Google did not accept your key. Add it again in Steve's settings.",
+    "not_pdf_equation": "Only a PDF equation is turned into LaTeX by Steve; an EPUB's is copied on your device.",
+    "needs_image": "Steve needs the equation's picture to read it.",
+    "book_not_found": "That book was not found.",
+    "region_not_found": "That part of the page was not found.",
 }
 
 
@@ -188,3 +193,81 @@ async def get_thread(thread_id: str, user_id: str = Depends(get_current_user)):
     if found is None:
         raise fail(404, "thread_not_found")
     return found
+
+
+class LatexRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    book_id: str = Field(min_length=1, max_length=64)
+    region_id: str = Field(min_length=1, max_length=64)
+    image_png_b64: str | None = None
+    utc_offset_minutes: int = Field(default=0, ge=-policy.UTC_OFFSET_LIMIT_MINUTES,
+                                    le=policy.UTC_OFFSET_LIMIT_MINUTES)
+
+
+def bbox_hash(bbox) -> str:
+    """The equation's box rounded to a tenth of a point, hashed: the same box on any copy of the file."""
+    rounded = json.dumps([round(float(v), 1) for v in bbox], separators=(",", ":"))
+    return hashlib.sha256(rounded.encode()).hexdigest()[:32]
+
+
+def _pdf_equation(user_id: str, book_id: str, region_id: str) -> tuple[dict, dict]:
+    books = supabase.table("books").select("id, file_sha256").eq("id", book_id).eq("user_id", user_id).execute().data
+    if not books:
+        raise fail(404, "book_not_found")
+    rows = supabase.table("page_regions").select("id, kind, page, bbox").eq("id", region_id).eq(
+        "book_id", book_id).execute().data
+    if not rows:
+        raise fail(404, "region_not_found")
+    region = rows[0]
+    if region["kind"] != "math" or not region.get("page") or not region.get("bbox"):
+        raise fail(422, "not_pdf_equation")
+    return books[0], region
+
+
+def _cached(key: dict) -> dict | None:
+    if not key["file_sha256"]:
+        return None
+    rows = supabase.table("equation_latex").select("latex, model").eq("file_sha256", key["file_sha256"]).eq(
+        "page", key["page"]).eq("bbox_hash", key["bbox_hash"]).execute().data
+    return rows[0] if rows else None
+
+
+@router.post("/latex")
+async def equation_latex(req: LatexRequest, user_id: str = Depends(get_current_user)):
+    """A PDF equation as LaTeX (C20.8, docs/STEVE.md S14). Known for this file (any reader's copy): returned with
+    no call and no consent needed, since nothing is sent. Otherwise the reader's checks, then one non-streamed
+    latex_equation call on the vision model with the crop, stored for every reader of this file."""
+    book, region = await run_in_threadpool(_pdf_equation, user_id, req.book_id, req.region_id)
+    key = {"file_sha256": book.get("file_sha256"), "page": region["page"], "bbox_hash": bbox_hash(region["bbox"])}
+    known = await run_in_threadpool(_cached, key)
+    if known:
+        return {"latex": known["latex"], "cached": True, "model": known.get("model")}
+    await run_in_threadpool(_check_reader, user_id, req.book_id)
+    image = _image(req.image_png_b64)
+    if image is None:
+        raise fail(422, "needs_image")
+    try:
+        ctx = await build_context(user_id=user_id, book_id=req.book_id, question="Copy this equation as LaTeX.",
+                                  image=image, region_id=req.region_id)
+        prompt = prompts.build_prompt(ctx, "latex_equation")
+    except (ContextError, prompts.PromptError) as error:
+        raise fail(CONTEXT_STATUS.get(error.reason, 422), error.reason) from None
+    pieces, model = [], None
+    try:
+        async for piece in service.ask(user_id=user_id, book_id=req.book_id, question="latex_equation\nlatex",
+                                       context_hash=ctx.context_hash, parts=prompt.parts, system=prompt.system,
+                                       model="vision", stream=False, utc_offset_minutes=req.utc_offset_minutes):
+            pieces.append(piece.text)
+            model = piece.model
+    except SteveUnavailable as unavailable:
+        raise _paused(unavailable) from None
+    latex = prompts.clean_latex("".join(pieces))
+    if not latex:
+        raise fail(503, "unavailable")
+    if key["file_sha256"]:
+        await run_in_threadpool(lambda: supabase.table("equation_latex").upsert(
+            {**key, "latex": latex, "model": model}, on_conflict="file_sha256,page,bbox_hash",
+            ignore_duplicates=True).execute())
+    logger.info("steve.latex stored chars=%d model=%s", len(latex), model)
+    return {"latex": latex, "cached": False, "model": model}

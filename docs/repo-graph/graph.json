@@ -58,11 +58,25 @@
       "handler": "get_pages"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/region-at",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/region-at",
+      "handler": "get_region_at"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/regions",
       "type": "endpoint",
       "method": "GET",
       "path": "/books/{book_id}/regions",
       "handler": "get_regions"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/regions/{region_id}",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/regions/{region_id}",
+      "handler": "get_region"
     },
     {
       "id": "endpoint:GET /books/{book_id}/status",
@@ -203,6 +217,13 @@
       "method": "POST",
       "path": "/steve/ask",
       "handler": "ask"
+    },
+    {
+      "id": "endpoint:POST /steve/latex",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/steve/latex",
+      "handler": "equation_latex"
     },
     {
       "id": "endpoint:PUT /sessions/{session_id}/position",
@@ -1466,6 +1487,12 @@
     },
     {
       "id": "file:backend/tests/test_steve_keys.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_latex.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -3703,6 +3730,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/025_equation_latex.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3884,6 +3917,10 @@
     },
     {
       "id": "table:concepts",
+      "type": "table"
+    },
+    {
+      "id": "table:equation_latex",
       "type": "table"
     },
     {
@@ -4375,7 +4412,17 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/region-at"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}/regions"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/regions/{region_id}"
     },
     {
       "type": "defines_endpoint",
@@ -4491,6 +4538,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/steve_ask.py",
       "to": "endpoint:POST /steve/ask"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "endpoint:POST /steve/latex"
     },
     {
       "type": "defines_endpoint",
@@ -4616,6 +4668,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/023_steve.sql",
       "to": "table:steve_usage"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/025_equation_latex.sql",
+      "to": "table:equation_latex"
     },
     {
       "type": "graph_edge",
@@ -6992,6 +7049,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_steve_keys.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_latex.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_latex.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_latex.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_latex.py",
+      "to": "file:backend/tests/test_steve_api.py"
     },
     {
       "type": "imports",
@@ -9541,6 +9618,21 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/steve_ask.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:equation_latex"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/steve_ask.py",
       "to": "table:profiles"
     },
     {
@@ -9882,6 +9974,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/steve.py",
       "to": "table:profiles"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:equation_latex"
     },
     {
       "type": "writes_table",

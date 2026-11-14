@@ -581,3 +581,29 @@ def test_024_only_the_backend_may_call_the_functions():
         assert f"GRANT EXECUTE ON FUNCTION public.{name}({args}) TO service_role;" in sql
     assert "SECURITY DEFINER" not in sql
     assert not re.search(r"\b(CREATE TABLE|ALTER TABLE)\b", sql)
+
+
+# --- 025: one Gemini call per PDF equation, ever (C20.8) ---------------------------------------------------
+
+def migration_025() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "025_equation_latex.sql"))
+
+
+def test_025_creates_equation_latex_keyed_by_file_page_and_box():
+    definition = table_definition(migration_025(), "equation_latex")
+    assert definition == {
+        "file_sha256": "text NOT NULL",
+        "page": "integer NOT NULL CHECK (page >= 1)",
+        "bbox_hash": "text NOT NULL",
+        "latex": "text NOT NULL",
+        "model": "text",
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+        "PRIMARY": "KEY (file_sha256, page, bbox_hash)",
+    }
+
+
+def test_025_only_the_backend_reads_or_writes_it():
+    sql = migration_025()
+    assert "ALTER TABLE public.equation_latex ENABLE ROW LEVEL SECURITY" in sql
+    assert "CREATE POLICY" not in sql  # no policy: readers' roles see nothing; the service role bypasses RLS
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == ["equation_latex"]

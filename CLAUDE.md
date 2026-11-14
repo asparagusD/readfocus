@@ -41,7 +41,7 @@ your score.
 5. Render Free has tight RAM/CPU: measure memory (psutil RSS) before adding
    any model or heavy dependency.
 
-## Phase 2 (C16–C26, 36.5-hour budget)
+## Phase 2 (C16–C25, 38.25-hour budget)
 
 Adds Steve, highlights and underlines, a notepad, focus mode, gamification
 and the original view. English only: Bengali/Bangla books are out of scope.
@@ -88,7 +88,7 @@ and the original view. English only: Bengali/Bangla books are out of scope.
 | Data | Supabase: Postgres, pgvector, Storage, Auth, RLS (`supabase/migrations/`) |
 | Agents | LangGraph with five algorithmic agents: orchestrator, planner, test generator, evaluator, optimizer (`backend/agents/`) |
 | Embeddings | Local fastembed models, cached under `FASTEMBED_CACHE` |
-| Study assistant | Steve: Gemini through the backend, opt-in (from C22) |
+| Study assistant | Steve: Gemini through the backend, opt-in (from C20) |
 | Word lookup | Free Dictionary API and Wikipedia |
 | Hosting | Render Free (backend), Vercel (frontend) |
 

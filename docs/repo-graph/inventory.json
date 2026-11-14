@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14375,
+      "size_bytes": 14376,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1474,7 +1474,7 @@
       "path": "docs/DECISIONS.md",
       "language": "markdown",
       "lines": 70,
-      "size_bytes": 6252,
+      "size_bytes": 6275,
       "role": "doc",
       "purpose": "Decisions with their evidence, newest first: D-C17.3, foliate-js over epub.js for EPUB (licence, maintenance, size, pagination, spreads, CFI, fixed layout, images, MathML, section documents, scripts), accepted, with how its gaps are covered."
     },
@@ -1529,8 +1529,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4015,
-      "size_bytes": 739673,
+      "lines": 4308,
+      "size_bytes": 756171,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -4130,7 +4130,7 @@
       "path": "tools/no_paid_ai.py",
       "language": "python",
       "lines": 41,
-      "size_bytes": 2036,
+      "size_bytes": 2038,
       "role": "script",
       "purpose": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
     },

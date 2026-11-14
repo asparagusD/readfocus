@@ -26,7 +26,7 @@ BANNED_PACKAGES = frozenset({
 BANNED_KEYS = re.compile(r"GROQ|GOOGLE_AI_STUDIO|GEMINI|OPENAI|ANTHROPIC|CEREBRAS|SAMBANOVA|OPENROUTER")
 
 # Steve's env names (C16.4): the only provider names .env.example may declare. Backend code,
-# imports, requirements and render.yaml stay banned until Steve's backend chunk (C22).
+# imports, requirements and render.yaml stay banned until Steve's backend chunk (C20.2).
 STEVE_ENV_NAMES = frozenset({"GEMINI_API_KEY", "GEMINI_MODEL_CHAT", "GEMINI_MODEL_VISION"})
 
 

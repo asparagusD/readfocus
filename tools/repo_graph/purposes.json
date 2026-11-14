@@ -567,5 +567,13 @@
   "frontend/src/steve/highlight.js": "A small code highlighter for Steve's answers (C20.7a, handoff screen 15): keyword, comment and string tokens for common languages, no dependency, no HTML.",
   "frontend/src/steve/suggest.js": "Three suggested questions for Steve's empty state (C20.7a), templated from the current chapter's cleaned title.",
   "frontend/src/steve/steveState.js": "The Steve panel's state (C20.7a) as a pure reducer: loading, consent, off, chat with streaming answers, paused (quota) with when Steve is back, the key view and errors.",
-  "frontend/src/steve/steve.test.js": "Unit tests for the Steve client modules: SSE parsing and typed refusals, answer blocks and citations, no HTML, code tokens, suggestions, the panel reducer and backAt."
+  "frontend/src/steve/steve.test.js": "Unit tests for the Steve client modules: SSE parsing and typed refusals, answer blocks and citations, no HTML, code tokens, suggestions, the panel reducer and backAt.",
+  "frontend/src/steve/StevePanel.jsx": "Steve's side panel (C20.7b, handoff screens 13-17): a 380 px column beside the book or a pull-up sheet under 760 px; consent, off, empty with suggestions, the conversation with streaming answers, Stop, citations that move the book, errors, resting with the own-key link, and settings; Esc returns focus to the toolbar.",
+  "frontend/src/steve/StevePanel.css": "Styles for Steve's panel (C20.7b): column and sheet, identity seal, consent and resting cards, suggestions, answers, citation chips, display math, tinted code, the switch and the composer; tokens only, transform and opacity motion.",
+  "frontend/src/steve/SteveAnswer.jsx": "One answer from Steve as React elements (C20.7b): paragraphs, lists, KaTeX math, tinted code, citation chips for checked labels, a caret while streaming; never HTML.",
+  "frontend/src/steve/SteveMath.jsx": "Math in Steve's answers (C20.7b): loads KaTeX on the first equation and shows its sanitised MathML, or the TeX source as code until then.",
+  "frontend/src/steve/math.js": "KaTeX for Steve (C20.7b): loaded once, lazily; TeX to MathML output sanitised with DOMPurify's MathML profile.",
+  "frontend/src/steve/useSteve.js": "Steve for one book (C20.7b): the panel reducer, settings loaded on first open, ask() streaming one answer, stop, retry, consent and the off switch.",
+  "frontend/src/steve/SteveContext.js": "SteveContext (C20.7b): askAbout() for the reading page, so block actions (C20.8) and highlights (C21) open the panel and ask; null outside the reader.",
+  "frontend/e2e/steve-panel.spec.js": "E2E for Steve's panel (C20.7b): consent stored to its version, Not now, a streamed answer with KaTeX math, tinted code and a citation chip that moves the book, checked chips only, resting with the own key, errors and Try again, the off switch, keyboard and focus return, side by side at 1440, the sheet at 375, Lamplight with reduced motion."
 }

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 712,
-    "inventoried": 569,
+    "tracked": 720,
+    "inventoried": 577,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14552,
+      "size_bytes": 14570,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1681,8 +1681,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1482,
-      "size_bytes": 83840,
+      "lines": 1501,
+      "size_bytes": 84690,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
@@ -1754,15 +1754,15 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4308,
-      "size_bytes": 775580,
+      "size_bytes": 778490,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
     {
       "path": "docs/STEVE.md",
       "language": "markdown",
-      "lines": 332,
-      "size_bytes": 18997,
+      "lines": 363,
+      "size_bytes": 20824,
       "role": "doc",
       "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
@@ -1825,8 +1825,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 252,
-      "size_bytes": 14973,
+      "lines": 283,
+      "size_bytes": 17225,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -1973,6 +1973,14 @@
       "size_bytes": 4886,
       "role": "config",
       "purpose": "E2E for the own-key form (C20.3): save shows only the last four and the key leaves the page, a refused key shows why and is cleared, a non-key is caught before sending, 375 px fit and 44 px targets, a short phone in Lamplight scrolls the panel."
+    },
+    {
+      "path": "frontend/e2e/steve-panel.spec.js",
+      "language": "javascript",
+      "lines": 176,
+      "size_bytes": 9864,
+      "role": "config",
+      "purpose": "E2E for Steve's panel (C20.7b): consent stored to its version, Not now, a streamed answer with KaTeX math, tinted code and a citation chip that moves the book, checked chips only, resting with the own key, errors and Try again, the off switch, keyboard and focus return, side by side at 1440, the sheet at 375, Lamplight with reduced motion."
     },
     {
       "path": "frontend/e2e/test.spec.js",
@@ -3273,16 +3281,16 @@
     {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
-      "lines": 58,
-      "size_bytes": 1206,
+      "lines": 66,
+      "size_bytes": 1396,
       "role": "page",
       "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state; the leave dialog's text and actions."
     },
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 393,
-      "size_bytes": 18485,
+      "lines": 417,
+      "size_bytes": 19736,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -3425,8 +3433,8 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 74,
-      "size_bytes": 3347,
+      "lines": 82,
+      "size_bytes": 3894,
       "role": "asset",
       "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place."
     },
@@ -3594,9 +3602,49 @@
       "path": "frontend/src/steve/OwnKeyForm.jsx",
       "language": "jsx",
       "lines": 114,
-      "size_bytes": 4485,
+      "size_bytes": 4548,
       "role": "asset",
       "purpose": "\"Use your own free Gemini key\" (C20.3, handoff screen 17): a disclosure in the account panel with a password field, the Google AI Studio link and Save key (checked with Google by PUT /steve/key), then the last four and Remove key; the key is dropped once sent."
+    },
+    {
+      "path": "frontend/src/steve/SteveAnswer.jsx",
+      "language": "jsx",
+      "lines": 66,
+      "size_bytes": 3064,
+      "role": "asset",
+      "purpose": "One answer from Steve as React elements (C20.7b): paragraphs, lists, KaTeX math, tinted code, citation chips for checked labels, a caret while streaming; never HTML."
+    },
+    {
+      "path": "frontend/src/steve/SteveContext.js",
+      "language": "javascript",
+      "lines": 10,
+      "size_bytes": 470,
+      "role": "asset",
+      "purpose": "SteveContext (C20.7b): askAbout() for the reading page, so block actions (C20.8) and highlights (C21) open the panel and ask; null outside the reader."
+    },
+    {
+      "path": "frontend/src/steve/SteveMath.jsx",
+      "language": "jsx",
+      "lines": 19,
+      "size_bytes": 987,
+      "role": "asset",
+      "purpose": "Math in Steve's answers (C20.7b): loads KaTeX on the first equation and shows its sanitised MathML, or the TeX source as code until then."
+    },
+    {
+      "path": "frontend/src/steve/StevePanel.css",
+      "language": "css",
+      "lines": 348,
+      "size_bytes": 10999,
+      "role": "asset",
+      "purpose": "Styles for Steve's panel (C20.7b): column and sheet, identity seal, consent and resting cards, suggestions, answers, citation chips, display math, tinted code, the switch and the composer; tokens only, transform and opacity motion."
+    },
+    {
+      "path": "frontend/src/steve/StevePanel.jsx",
+      "language": "jsx",
+      "lines": 273,
+      "size_bytes": 12626,
+      "role": "asset",
+      "purpose": "Steve's side panel (C20.7b, handoff screens 13-17): a 380 px column beside the book or a pull-up sheet under 760 px; consent, off, empty with suggestions, the conversation with streaming answers, Stop, citations that move the book, errors, resting with the own-key link, and settings; Esc returns focus to the toolbar."
     },
     {
       "path": "frontend/src/steve/answer.js",
@@ -3613,6 +3661,14 @@
       "size_bytes": 3699,
       "role": "asset",
       "purpose": "A small code highlighter for Steve's answers (C20.7a, handoff screen 15): keyword, comment and string tokens for common languages, no dependency, no HTML."
+    },
+    {
+      "path": "frontend/src/steve/math.js",
+      "language": "javascript",
+      "lines": 12,
+      "size_bytes": 631,
+      "role": "asset",
+      "purpose": "KaTeX for Steve (C20.7b): loaded once, lazily; TeX to MathML output sanitised with DOMPurify's MathML profile."
     },
     {
       "path": "frontend/src/steve/ownKey.js",
@@ -3661,6 +3717,14 @@
       "size_bytes": 1047,
       "role": "asset",
       "purpose": "Three suggested questions for Steve's empty state (C20.7a), templated from the current chapter's cleaned title."
+    },
+    {
+      "path": "frontend/src/steve/useSteve.js",
+      "language": "javascript",
+      "lines": 75,
+      "size_bytes": 3316,
+      "role": "asset",
+      "purpose": "Steve for one book (C20.7b): the panel reducer, settings loaded on first open, ask() streaming one answer, stop, retry, consent and the off switch."
     },
     {
       "path": "frontend/src/styles/base.css",
@@ -4497,8 +4561,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 571,
-      "size_bytes": 174491,
+      "lines": 579,
+      "size_bytes": 176424,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

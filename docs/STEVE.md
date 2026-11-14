@@ -330,3 +330,34 @@ order. Every read is filtered by the reader as well as by RLS (023), since
 the backend's database client bypasses RLS. No key and no image is ever
 stored; logs hold counts only.
 
+## S13. The panel
+
+Built in C20.7 (`frontend/src/steve/`; handoff screens 13-17). The toolbar's
+"Steve" button opens a 380 px column beside the book (the book reflows
+and stays usable; it is not a modal); below 760 px it is a pull-up sheet
+64 % high. The heading takes focus; Esc or the close button closes it and
+focus returns to the button.
+
+- **Consent:** the notice text from `GET /steve/settings` (S2), the link to
+  Google's terms, "Turn on Steve" (stores consent to that version) or "Not
+  now", and "Use your own Gemini key". The composer is disabled until then.
+- **Empty:** three suggested questions from the current chapter
+  (templates, `suggest.js`); nothing is sent until one is picked.
+- **Answer:** the question, then "Steve · from pages N-M", the answer
+  streaming with a caret, "Steve is writing…" and Stop. When `done`
+  arrives its checked text replaces the stream: only the citations the
+  server kept become chips, and a chip moves the book to that page or
+  section with the panel still open. Math is KaTeX's MathML (loaded on
+  the first equation), code is tinted (keywords, comments, strings), and
+  nothing in an answer is parsed as HTML. Copy copies the text.
+- **Resting:** `daily_limit` shows "Steve is resting until tomorrow" (the
+  reader's midnight); `paused_quota` shows the time Google gave, or "for
+  now"; "Use your own key" and "Keep reading". No countdown, no upsell.
+- **Errors:** the message under the question and "Try again"; a stream that
+  breaks keeps what was written.
+- **Settings:** "Send book text to Gemini" (the off switch, `enabled`) and
+  the own-key form (S7).
+- `SteveContext` gives the rest of the reading page `askAbout({question,
+  mode, anchor, regionId, imagePngB64, label})`, which opens the panel and
+  asks: C20.8's block actions and C21's highlights use it.
+

@@ -10,12 +10,12 @@ import './OwnKeyForm.css';
  * "Use your own free Gemini key" (C20.3, handoff screen 17): a disclosure that opens a password field,
  * a link to Google AI Studio and Save key, which the server checks with Google before it encrypts and
  * stores the key. Once saved, only the last four characters are ever shown, with Remove key. The key
- * is held in this component only until it is sent. Used in the account panel; C20.7 reuses it in
- * Steve's panel.
+ * is held in this component only until it is sent. Used in the account panel and, open from the start
+ * (`defaultOpen`), in Steve's panel (C20.7b).
  */
-export function OwnKeyForm() {
+export function OwnKeyForm({ defaultOpen = false }) {
   const id = useId();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [status, setStatus] = useState(null); // {has_key, last4} from the server
   const [loadError, setLoadError] = useState('');
   const [value, setValue] = useState('');

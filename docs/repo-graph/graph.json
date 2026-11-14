@@ -1819,6 +1819,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/steve-panel.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/test.spec.js",
       "type": "file",
       "role": "config",
@@ -3037,6 +3043,36 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/steve/SteveAnswer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/SteveContext.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/SteveMath.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/StevePanel.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/steve/StevePanel.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/steve/answer.js",
       "type": "file",
       "role": "asset",
@@ -3044,6 +3080,12 @@
     },
     {
       "id": "file:frontend/src/steve/highlight.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/math.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -3080,6 +3122,12 @@
     },
     {
       "id": "file:frontend/src/steve/suggest.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/useSteve.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4071,6 +4119,16 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/steve/OwnKeyForm.jsx",
       "to": "endpoint:PUT /steve/key"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "endpoint:GET /steve/settings"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "endpoint:PUT /steve/settings"
     },
     {
       "type": "calls_external",
@@ -7152,6 +7210,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/steve-panel.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/test.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8477,6 +8540,21 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/steve/StevePanel.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/steve/useSteve.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -8737,6 +8815,61 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/steve/SteveAnswer.jsx",
+      "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/SteveAnswer.jsx",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/SteveAnswer.jsx",
+      "to": "file:frontend/src/steve/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/SteveMath.jsx",
+      "to": "file:frontend/src/steve/math.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/OwnKeyForm.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/SteveAnswer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/StevePanel.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/steveState.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/suggest.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/steve/ownKey.test.js",
       "to": "file:frontend/src/steve/ownKey.js"
     },
@@ -8764,6 +8897,26 @@
       "type": "imports",
       "from": "file:frontend/src/steve/steve.test.js",
       "to": "file:frontend/src/steve/suggest.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "file:frontend/src/lib/supabase.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "file:frontend/src/steve/sse.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "file:frontend/src/steve/steveState.js"
     },
     {
       "type": "imports",

@@ -7,6 +7,19 @@ import { test as base, expect } from '@playwright/test';
 
 export const BOOK = 'e2e-book';
 export const GOOD_KEY = 'AIzaSyReaderOwnKey-not-real-abcdefghij12'; // a made-up Gemini key (C20.3)
+export const STEVE_NOTICE = { version: '2026-11-14', terms_url: 'https://aistudio.google.com/docs/terms',
+  text: "Steve is a study assistant built on Google's Gemini.\n\nYou can turn Steve off at any time in his settings." };
+
+/** A whole /steve/ask stream (C20.7b): start, the text in a few tokens, done with the checked text and citations. */
+export function steveStream(text, citations = [], { pages = ['p. 1', 'p. 2'], tokens = 3, finalText = null } = {}) {
+  const size = Math.ceil(text.length / tokens);
+  const events = [['start', { thread_id: 'thread-1', pages }]];
+  for (let i = 0; i < text.length; i += size) events.push(['token', { text: text.slice(i, i + size) }]);
+  events.push(['done', { message_id: 'm-1', thread_id: 'thread-1', text: finalText ?? text, citations,
+    usage: { model: 'gemini-test', tokens_in: 100, tokens_out: 20, cached: false } }]);
+  return { sse: events.map(([name, data]) => `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`).join('') };
+}
+
 const API = 'http://localhost:8000';
 const SUPABASE_REF = 'lvfhuszvuiowyeizstru'; // frontend/.env's project, as baked into the build
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
@@ -103,6 +116,23 @@ async function mockBackend(page, api, book) {
       api.lookups.push({ term, proper: url.searchParams.get('proper') === '1' });
       return json(route, LOOKUPS[term] ?? { term, found: false, meanings: [], wiki: null, ambiguous: false });
     }
+    if (path === '/steve/settings') { // C20.7b: consent and the off switch, as the server keeps them
+      if (request.method() === 'PUT') {
+        const change = request.postDataJSON();
+        api.steve.puts.push(change);
+        if ('enabled' in change) api.steve.enabled = change.enabled;
+        if (change.consent === true) api.steve.consented = true;
+        if (change.consent === false) api.steve.consented = false;
+      }
+      return json(route, { enabled: api.steve.enabled, consent: { given: api.steve.consented, current: api.steve.consented,
+        at: null, version: api.steve.consented ? STEVE_NOTICE.version : null }, notice: STEVE_NOTICE });
+    }
+    if (path === '/steve/ask') { // C20.7b: the next queued reply, as SSE text or a refusal {status, detail}
+      api.steve.asks.push(request.postDataJSON());
+      const reply = api.steve.replies.shift() ?? steveStream('He counts twice [p. 2].', [{ label: 'p. 2', anchor: { kind: 'pdf', page: 2 } }]);
+      if (reply.status) return json(route, { detail: reply.detail }, reply.status);
+      return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': 'text/event-stream' }, body: reply.sse });
+    }
     if (path === '/steve/key') { // C20.3: GOOD_KEY is accepted, anything else is what Google refuses
       if (request.method() === 'PUT') {
         const { key } = request.postDataJSON();
@@ -137,7 +167,8 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [] };
+    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
+      steve: { consented: false, enabled: true, puts: [], asks: [], replies: [] } };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

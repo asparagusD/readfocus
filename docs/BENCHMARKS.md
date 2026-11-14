@@ -1129,6 +1129,25 @@ pages.
 
 ## Frontend: Lighthouse and image budgets
 
+### C20.7b: Steve's panel and KaTeX (2026-11-14)
+
+`npm --prefix frontend run build`, before (C20.7a's tree, the panel not
+imported) and after:
+
+| Chunk | Before (gzip) | After (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.70 kB (35.02 kB) | 96.74 kB (35.07 kB) |
+| `ReadingSession-*.js` | 53.56 kB (18.62 kB) | 77.47 kB (26.60 kB) |
+| `ReadingSession-*.css` | 17.06 kB (3.85 kB) | 26.16 kB (5.26 kB) |
+| `katex-*.js` (new, lazy) | none | 259.69 kB (77.81 kB) |
+
+KaTeX 0.19.1 (MIT, released 2026-10-23; its one dependency, `commander`, is
+for its command line only) is imported on the first equation Steve
+writes, with `output: "mathml"`, so no KaTeX fonts or CSS are shipped;
+the MathML goes through DOMPurify's MathML profile. Code in answers is
+tinted by `frontend/src/steve/highlight.js`, no dependency. `npm audit`
+names neither package.
+
 ### C17.5: page turns on the original view (2026-11-12)
 
 `e2e/reader.spec.js` "page-turn frame rate", Playwright on Edge against the

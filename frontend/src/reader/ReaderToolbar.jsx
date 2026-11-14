@@ -1,4 +1,4 @@
-import { ArrowLeft, List } from 'lucide-react';
+import { ArrowLeft, List, MessageSquareText } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
 import './ReaderToolbar.css';
@@ -8,12 +8,12 @@ import './ReaderToolbar.css';
  * chapter, smaller and larger text, theme, and the session's own controls
  * passed in as children. A floating pill that fades and lifts 8 px while
  * the reader reads; focus inside keeps it shown, so it is always reachable
- * by keyboard. Icons only on narrow screens. Without `onSize` the text-size pair
+ * by keyboard. Icons only on narrow screens. `onSteve` adds Steve's button (C20.7b). Without `onSize` the text-size pair
  * is left out and `controls` (the original view's, C17.4) take its place.
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
-  lookupOn, onLookupToggle, controls, children,
+  lookupOn, onLookupToggle, controls, onSteve, steveOpen, steveRef, children,
 }) {
   const index = SIZES.indexOf(size);
   return (
@@ -64,6 +64,14 @@ export function ReaderToolbar({
           onClick={onLookupToggle} aria-label="Look up words on hover">
           <span className="rf-tool-label" aria-hidden="true">Look up</span>
           <span className="rf-switch-track" aria-hidden="true"><span className="rf-switch-knob" /></span>
+        </button>
+      )}
+      {onSteve && (
+        // C20.7b: Steve's panel beside the book; pressed while it is open.
+        <button type="button" className="rf-tool" ref={steveRef} onClick={onSteve} aria-expanded={steveOpen}
+          aria-controls={steveOpen ? 'rf-steve-panel' : undefined} aria-label="Ask Steve">
+          <MessageSquareText size={18} strokeWidth={1.75} aria-hidden="true" />
+          <span className="rf-tool-label">Steve</span>
         </button>
       )}
       <ThemeToggle />

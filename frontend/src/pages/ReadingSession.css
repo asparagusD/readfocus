@@ -14,8 +14,16 @@
   padding-top: var(--space-3);
 }
 
+/* C20.7b: the book and Steve's panel side by side; below 760 px the panel is a sheet (StevePanel.css). */
+.rf-reading-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
 .rf-reading-area {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   padding: var(--space-3) 0 var(--space-2);
 }

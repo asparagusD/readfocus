@@ -44,7 +44,7 @@ book; C17.3b's first step is that check.
   `break-inside: avoid`). That is most of the C17.3 image rule; the
   rest is our CSS (figure and figcaption kept together, explicit sizes).
 - **Fixed layout, spreads and CFIs are first-class**, and the overlayer
-  already draws highlights for C20 (C19 until the C19 renumbering).
+  already draws highlights for C21 (C19 until the C19 renumbering, C20 until the C20 one).
 - **It is less than half the size**: 37–40 KB gzip against 92 KB.
 - **It is maintained**, more actively than epub.js, though by one person.
 

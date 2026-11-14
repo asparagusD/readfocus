@@ -1,5 +1,6 @@
 import hashlib
 import io
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import Any, Literal, cast
@@ -233,10 +234,59 @@ async def get_regions(book_id: str, first: int = Query(ge=1), last: int = Query(
     for row in sorted(rows, key=lambda r: (r["page"], r["order_in_page"])):
         meta = row.get("meta") or {}
         if row["kind"] in SKIPPED_KINDS and row.get("bbox"):
-            out.append({"page": row["page"], "kind": row["kind"], "bbox": row["bbox"]})
+            out.append({"page": row["page"], "kind": row["kind"], "bbox": row["bbox"], "id": row.get("id"),
+                        "inline": False})
         for box in [*(meta.get("inline_boxes") or []), *(meta.get("inline_drawn") or [])]:
-            out.append({"page": row["page"], "kind": "math", "bbox": box})
+            out.append({"page": row["page"], "kind": "math", "bbox": box, "id": row.get("id"), "inline": True})
     return {"regions": out}
+
+
+REGION_FIELDS = "id, kind, page, spine_index, bbox, text, meta, anchor"
+STEP_PATH = re.compile(r"^(/\d{1,4}){1,32}$")
+
+
+def region_detail(row: dict) -> dict:
+    """What the block actions need from one region (C20.8): exact code text, a figure's caption, label and alt,
+    an EPUB equation's LaTeX or MathML, the equation number. Classification internals stay on the server."""
+    meta = row.get("meta") or {}
+    return {
+        "id": row["id"], "kind": row["kind"], "page": row.get("page"), "spine_index": row.get("spine_index"),
+        "bbox": row.get("bbox"), "text": row.get("text") or "", "language": meta.get("language_guess"),
+        "caption": meta.get("caption"), "label": meta.get("label"), "alt": meta.get("alt"),
+        "latex": meta.get("latex"), "mathml": meta.get("mathml"), "equation_number": meta.get("equation_number"),
+    }
+
+
+def _owned(book_id: str, user_id: str) -> None:
+    owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
+    if not owned.data:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+
+@router.get("/{book_id}/regions/{region_id}")
+async def get_region(book_id: str, region_id: str, user_id: str = Depends(get_current_user)):
+    """One region of the caller's book, for Copy code, Explain and Copy as LaTeX (C20.8). Read-only."""
+    _owned(book_id, user_id)
+    rows = supabase.table("page_regions").select(REGION_FIELDS).eq("id", region_id).eq("book_id", book_id).execute()
+    if not rows.data:
+        raise HTTPException(status_code=404, detail="Region not found")
+    return region_detail(cast(dict[str, Any], rows.data[0]))
+
+
+@router.get("/{book_id}/region-at")
+async def get_region_at(book_id: str, spine_index: int = Query(ge=0, le=100_000), path: str = Query(max_length=200),
+                        user_id: str = Depends(get_current_user)):
+    """The EPUB region whose element is at `path` (CFI steps from the document root, as page_regions.anchor and
+    chunks.block_paths count them) in spine item `spine_index` (C20.8). Read-only."""
+    if not STEP_PATH.match(path):
+        raise HTTPException(status_code=422, detail="A path is CFI steps such as /4/6.")
+    _owned(book_id, user_id)
+    rows = (supabase.table("page_regions").select(REGION_FIELDS).eq("book_id", book_id).eq("spine_index", spine_index)
+            .execute().data or [])
+    found = next((r for r in rows if ((r.get("anchor") or {}).get("path")) == path), None)
+    if found is None:
+        raise HTTPException(status_code=404, detail="Region not found")
+    return region_detail(cast(dict[str, Any], found))
 
 
 JOB_FIELDS = ("status", "progress", "cursor", "attempts", "error", "updated_at")

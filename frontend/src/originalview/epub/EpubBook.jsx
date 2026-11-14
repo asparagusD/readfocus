@@ -103,6 +103,8 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         return null;
       },
       documents: () => (now()?.contents() ?? []).map(({ doc }) => doc),
+      // C20.8c: a shown section's spine index, for the region map's EPUB places.
+      sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
       panning: () => false,
       // The nav as one list, each entry with its section, for the contents drawer.
       toc: () => flatten(now()?.book.toc ?? []).map((item) => ({

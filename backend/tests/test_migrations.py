@@ -463,3 +463,147 @@ def test_020_adds_prose_anchors_and_garbled_count_to_chunks_only():
     assert ("ALTER TABLE public.chunks ADD COLUMN IF NOT EXISTS garbled_sentences integer "
             "CHECK (garbled_sentences >= 0);") in sql
     assert sql.count(";") == 3
+
+
+# --- 023: Steve's consent, settings, key, usage and threads (C20.1) -------------------------------
+
+def migration_023() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "023_steve.sql"))
+
+
+STEVE_PROFILE_COLUMNS = (
+    "steve_enabled boolean NOT NULL DEFAULT true",
+    "steve_consent_at timestamptz",
+    "steve_consent_version text",
+    "steve_key_cipher text",
+    "steve_key_last4 text CHECK (steve_key_last4 IS NULL OR char_length(steve_key_last4) = 4)",
+)
+STEVE_TABLES = {
+    "steve_usage": {
+        "user_id": OWNER,
+        "day": "date NOT NULL",
+        "requests": "integer NOT NULL DEFAULT 0 CHECK (requests >= 0)",
+        "PRIMARY": "KEY (user_id, day)",
+    },
+    "steve_threads": {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "user_id": OWNER,
+        "book_id": BOOK,
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+    },
+    "steve_messages": {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "thread_id": "uuid NOT NULL REFERENCES public.steve_threads(id) ON DELETE CASCADE",
+        "user_id": OWNER,
+        "role": "text NOT NULL CHECK (role IN ('reader', 'steve'))",
+        "content": "text NOT NULL",
+        "anchor": "jsonb",
+        "citations": "jsonb NOT NULL DEFAULT '[]'",
+        "model": "text",
+        "tokens_in": "integer CHECK (tokens_in >= 0)",
+        "tokens_out": "integer CHECK (tokens_out >= 0)",
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+    },
+}
+
+
+def test_023_adds_the_steve_columns_to_profiles():
+    sql = migration_023()
+    for column in STEVE_PROFILE_COLUMNS:
+        assert f"ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS {column};" in sql, column
+
+
+@pytest.mark.parametrize("table", sorted(STEVE_TABLES))
+def test_023_creates_the_table_with_the_agreed_columns_and_key(table):
+    definition = table_definition(migration_023(), table)
+    assert list(definition) == list(STEVE_TABLES[table])
+    for name, expected in STEVE_TABLES[table].items():
+        assert definition[name] == expected, f"{table}.{name}: {definition[name]}"
+
+
+@pytest.mark.parametrize("table", sorted(STEVE_TABLES))
+def test_023_readers_only_read_their_own_rows_and_never_write_them(table):
+    sql = migration_023()
+    assert f"ALTER TABLE public.{table} ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(rf"CREATE POLICY \"[^\"]+\" ON public\.{table} FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert "SELECT" in policies
+    assert not {"ALL", "INSERT", "UPDATE"} & set(policies)  # only the backend's service role writes
+    assert "SECURITY DEFINER" not in sql
+
+
+def test_023_only_the_backend_changes_a_readers_steve_columns():
+    sql = migration_023()
+    assert re.search(r"CREATE OR REPLACE TRIGGER \w+ BEFORE INSERT OR UPDATE ON public\.profiles "
+                     r"FOR EACH ROW EXECUTE FUNCTION public\.steve_profile_guard\(\)", sql)
+    guard = re.search(r"CREATE OR REPLACE FUNCTION public\.steve_profile_guard\(\).*?\$\$;", sql).group(0)
+    assert "current_user IN ('anon', 'authenticated')" in guard
+    for column in ("steve_enabled", "steve_consent_at", "steve_consent_version", "steve_key_cipher",
+                   "steve_key_last4"):
+        assert f"NEW.{column} IS DISTINCT FROM OLD.{column}" in guard, column
+    assert "RAISE EXCEPTION" in guard and "SET search_path = ''" in guard
+
+
+def test_023_has_the_lookup_indexes_and_touches_only_its_tables():
+    sql = migration_023()
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.steve_threads \(user_id, book_id\)", sql)
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.steve_messages \(thread_id, created_at\)", sql)
+    assert sorted(set(re.findall(r"ALTER TABLE public\.(\w+)", sql))) == sorted({"profiles", *STEVE_TABLES})
+    assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)
+
+
+# --- 024: Steve's atomic daily quota (C20.2) -------------------------------------------------------
+
+def migration_024() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "024_steve_quota.sql"))
+
+
+def test_024_takes_a_question_atomically_and_never_past_the_limit():
+    sql = migration_024()
+    take = re.search(r"CREATE OR REPLACE FUNCTION public\.steve_take_quota\(.*?\$\$;", sql).group(0)
+    assert "(p_user uuid, p_day date, p_limit integer) RETURNS integer" in take
+    assert ("INSERT INTO public.steve_usage (user_id, day, requests) VALUES (p_user, p_day, 1) "
+            "ON CONFLICT (user_id, day) DO UPDATE SET requests = public.steve_usage.requests + 1 "
+            "WHERE public.steve_usage.requests < p_limit RETURNING requests") in take
+    assert "IF p_limit <= 0 THEN RETURN -1;" in take and "SET search_path = ''" in take
+
+
+def test_024_refunds_without_going_below_zero():
+    sql = migration_024()
+    refund = re.search(r"CREATE OR REPLACE FUNCTION public\.steve_refund_quota\(.*?\$\$;", sql).group(0)
+    assert ("UPDATE public.steve_usage SET requests = requests - 1 "
+            "WHERE user_id = p_user AND day = p_day AND requests > 0") in refund
+
+
+def test_024_only_the_backend_may_call_the_functions():
+    sql = migration_024()
+    for name, args in (("steve_take_quota", "uuid, date, integer"), ("steve_refund_quota", "uuid, date")):
+        assert f"REVOKE ALL ON FUNCTION public.{name}({args}) FROM PUBLIC, anon, authenticated;" in sql
+        assert f"GRANT EXECUTE ON FUNCTION public.{name}({args}) TO service_role;" in sql
+    assert "SECURITY DEFINER" not in sql
+    assert not re.search(r"\b(CREATE TABLE|ALTER TABLE)\b", sql)
+
+
+# --- 025: one Gemini call per PDF equation, ever (C20.8) ---------------------------------------------------
+
+def migration_025() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "025_equation_latex.sql"))
+
+
+def test_025_creates_equation_latex_keyed_by_file_page_and_box():
+    definition = table_definition(migration_025(), "equation_latex")
+    assert definition == {
+        "file_sha256": "text NOT NULL",
+        "page": "integer NOT NULL CHECK (page >= 1)",
+        "bbox_hash": "text NOT NULL",
+        "latex": "text NOT NULL",
+        "model": "text",
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+        "PRIMARY": "KEY (file_sha256, page, bbox_hash)",
+    }
+
+
+def test_025_only_the_backend_reads_or_writes_it():
+    sql = migration_025()
+    assert "ALTER TABLE public.equation_latex ENABLE ROW LEVEL SECURITY" in sql
+    assert "CREATE POLICY" not in sql  # no policy: readers' roles see nothing; the service role bypasses RLS
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == ["equation_latex"]

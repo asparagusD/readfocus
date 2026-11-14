@@ -47,3 +47,14 @@ langchain-core==1.7.6
 
 # backend/mcp_server.py only. The app does not start it (C3.4); manual use.
 mcp==1.30.0
+
+# Steve (C20.2): Google's Gen AI SDK, imported only by backend/steve/provider.py
+# and only on first use (+18 MB RSS when loaded, docs/BENCHMARKS.md). Apache-2.0.
+# Its other dependencies (httpx, pydantic, google-auth, tenacity, websockets,
+# requests, anyio) are already here or installed through supabase and pdfminer.
+google-genai==2.34.0
+
+# Readers' own Gemini keys (C20.3): Fernet with an HKDF-derived key in
+# backend/steve/keys.py. Already installed through google-auth and
+# pdfminer.six; pinned here now that backend/ imports it directly.
+cryptography==50.0.2

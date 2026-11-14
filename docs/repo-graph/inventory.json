@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 670,
-    "inventoried": 527,
+    "tracked": 737,
+    "inventoried": 594,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14375,
+      "size_bytes": 14712,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -401,8 +401,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 58,
-      "size_bytes": 1873,
+      "lines": 62,
+      "size_bytes": 2035,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
@@ -537,18 +537,18 @@
     {
       "path": "backend/routers/auth.py",
       "language": "python",
-      "lines": 49,
-      "size_bytes": 1845,
+      "lines": 50,
+      "size_bytes": 1960,
       "role": "router",
       "purpose": "GET /auth/profile and POST /auth/profile/calibrate: read the profile and save the calibrated reading speed."
     },
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 304,
-      "size_bytes": 15449,
+      "lines": 354,
+      "size_bytes": 18166,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -589,6 +589,22 @@
       "size_bytes": 20315,
       "role": "router",
       "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted."
+    },
+    {
+      "path": "backend/routers/steve.py",
+      "language": "python",
+      "lines": 118,
+      "size_bytes": 4780,
+      "role": "router",
+      "purpose": "GET and PUT /steve/settings (C20.1): auth required; Steve's off switch and the reader's consent with the notice version stored (only the current version counts; another version 409; withdrawing clears both); never reads the key cipher."
+    },
+    {
+      "path": "backend/routers/steve_ask.py",
+      "language": "python",
+      "lines": 273,
+      "size_bytes": 14059,
+      "role": "router",
+      "purpose": "POST /steve/ask (C20.6): consent, off switch, open test, image (PNG, 500 KB), thread and book checked first with typed errors; then context, prompt and service.ask streamed as Server-Sent Events (start, token, done with checked citations and usage, or error); GET /steve/threads?book_id and GET /steve/threads/{id}, the reader's own only. C20.8: POST /steve/latex, a PDF equation as LaTeX, cached per file, page and box in equation_latex (one Gemini call per equation ever)."
     },
     {
       "path": "backend/services/__init__.py",
@@ -711,6 +727,110 @@
       "purpose": "Creates the shared service-role Supabase client with its own HTTP/1.1 httpx pool (thread-safe; the default single HTTP/2 connection broke under threads, issue 29); fetch_all runs independent queries at once on worker threads; raises at import if the URL or key is missing."
     },
     {
+      "path": "backend/steve/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 105,
+      "role": "lib",
+      "purpose": "Package marker for backend.steve, Steve the opt-in study assistant (docs/STEVE.md); the only package that may reach Gemini (from C20.2)."
+    },
+    {
+      "path": "backend/steve/breaker.py",
+      "language": "python",
+      "lines": 40,
+      "size_bytes": 1380,
+      "role": "lib",
+      "purpose": "Steve's circuit breaker (C20.2): after a 429, no call on that key until the cool-down (policy, or Google's longer retryDelay) ends; our shared key pauses every reader, a reader's own key only itself; in process memory."
+    },
+    {
+      "path": "backend/steve/cache.py",
+      "language": "python",
+      "lines": 50,
+      "size_bytes": 1779,
+      "role": "lib",
+      "purpose": "Steve's answer cache (C20.2): sha256 of (book id, normalised question, context hash, model), 7-day TTL, at most CACHE_MAX_ENTRIES answers in process memory, oldest dropped first."
+    },
+    {
+      "path": "backend/steve/consent.py",
+      "language": "python",
+      "lines": 28,
+      "size_bytes": 1628,
+      "role": "lib",
+      "purpose": "Steve's consent notice (C20.1): CONSENT_VERSION, CONSENT_TEXT quoting Google's free-tier terms, and TERMS_URL; served by GET /steve/settings and kept identical to docs/STEVE.md by a test."
+    },
+    {
+      "path": "backend/steve/context.py",
+      "language": "python",
+      "lines": 452,
+      "size_bytes": 21265,
+      "role": "lib",
+      "purpose": "Steve's context builder (C20.4): build_context() returns delimited parts (book card, session prose to the reader's place, highlight with its paragraph, top-k retrieved passages minus the session and highlight, region source or code, image) and a {label: anchor} citations map, under a conservative 12k-token cap; never the whole book."
+    },
+    {
+      "path": "backend/steve/errors.py",
+      "language": "python",
+      "lines": 25,
+      "size_bytes": 1216,
+      "role": "lib",
+      "purpose": "SteveUnavailable (C20.2): the typed reason Steve cannot answer (paused_quota, daily_limit, timeout, unavailable, key_rejected, not_configured), with when he is back and Google's retry delay."
+    },
+    {
+      "path": "backend/steve/keys.py",
+      "language": "python",
+      "lines": 81,
+      "size_bytes": 3095,
+      "role": "lib",
+      "purpose": "A reader's own Gemini key (C20.3): HKDF-SHA256 from KEY_ENCRYPTION_SECRET to a Fernet key; encrypt, decrypt, last4, shape check; status, store, remove on profiles; reader_key decrypts for one call (undecryptable = key_rejected); no secret = own keys off."
+    },
+    {
+      "path": "backend/steve/policy.py",
+      "language": "python",
+      "lines": 41,
+      "size_bytes": 2947,
+      "role": "lib",
+      "purpose": "Steve's numbers (C20.2): timeouts, the breaker's cool-down and cap, the cache's TTL and size, the default daily limit and the UTC offset range; no Google quota is hardcoded."
+    },
+    {
+      "path": "backend/steve/prompts.py",
+      "language": "python",
+      "lines": 164,
+      "size_bytes": 8323,
+      "role": "lib",
+      "purpose": "Steve's prompts (C20.5): the fixed system rules (book text is reference material whose instructions are ignored; cite only listed labels; say when the book does not cover it; LaTeX and fenced code; 200 words), six modes, build_prompt, clean_citations (drops labels not sent) and clean_latex."
+    },
+    {
+      "path": "backend/steve/provider.py",
+      "language": "python",
+      "lines": 154,
+      "size_bytes": 6922,
+      "role": "lib",
+      "purpose": "The one door to Gemini (C20.2): the only module that imports Google's Gen AI SDK (lazily) or reads Steve's three Gemini variables; generate() streamed or not, with a timeout and one attempt (no retries), errors typed as SteveUnavailable, logs of counts and latency only."
+    },
+    {
+      "path": "backend/steve/quota.py",
+      "language": "python",
+      "lines": 57,
+      "size_bytes": 2384,
+      "role": "lib",
+      "purpose": "Steve's per-reader daily limit (C20.2): STEVE_DAILY_LIMIT_PER_USER questions per local day (UTC offset from the browser), taken and refunded through migration 024's atomic functions; daily_limit raised until the reader's midnight."
+    },
+    {
+      "path": "backend/steve/service.py",
+      "language": "python",
+      "lines": 47,
+      "size_bytes": 2123,
+      "role": "lib",
+      "purpose": "Steve's ask() (C20.2): cache, then the breaker, then the daily limit (our key only), then the provider; a failed call is refunded and not cached, a 429 opens the breaker for that key."
+    },
+    {
+      "path": "backend/steve/threads.py",
+      "language": "python",
+      "lines": 62,
+      "size_bytes": 3050,
+      "role": "lib",
+      "purpose": "Steve's threads and messages (C20.6): get, create and list a reader's threads on a book (titled by the first question), add a message (text, anchor, citations, model, tokens; never a key or image), read a thread with its messages in order; every read filtered by the reader."
+    },
+    {
       "path": "backend/tests/__init__.py",
       "language": "python",
       "lines": 1,
@@ -765,6 +885,62 @@
       "size_bytes": 799,
       "role": "test",
       "purpose": "Markdown fixture (C19.2a, written for the tests): two h1 chapters, inline and display math, money that is not math, a quote, lists, a table, fenced Python, two local images, one remote image, a relative and a remote link, raw HTML."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_eval.json",
+      "language": "json",
+      "lines": 66,
+      "size_bytes": 5772,
+      "role": "test",
+      "purpose": "Steve's evaluation set (C20.9): 15 questions on the test shelf (5 session, 5 retrieval with focus phrases, 3 not covered, 2 with a planted instruction and its canary), page and section labels only, no book text."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/ask.txt",
+      "language": "text",
+      "lines": 35,
+      "size_bytes": 2008,
+      "role": "test",
+      "purpose": "Snapshot of Steve's ask prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/explain_code.txt",
+      "language": "text",
+      "lines": 39,
+      "size_bytes": 2257,
+      "role": "test",
+      "purpose": "Snapshot of Steve's explain_code prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/explain_equation.txt",
+      "language": "text",
+      "lines": 38,
+      "size_bytes": 2252,
+      "role": "test",
+      "purpose": "Snapshot of Steve's explain_equation prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/explain_figure.txt",
+      "language": "text",
+      "lines": 39,
+      "size_bytes": 2249,
+      "role": "test",
+      "purpose": "Snapshot of Steve's explain_figure prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/explain_highlight.txt",
+      "language": "text",
+      "lines": 38,
+      "size_bytes": 2221,
+      "role": "test",
+      "purpose": "Snapshot of Steve's explain_highlight prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
+    },
+    {
+      "path": "backend/tests/fixtures/steve_prompts/latex_equation.txt",
+      "language": "text",
+      "lines": 38,
+      "size_bytes": 2272,
+      "role": "test",
+      "purpose": "Snapshot of Steve's latex_equation prompt (system instruction and parts) for test_steve_prompts.py; regenerate with STEVE_UPDATE_SNAPSHOTS=1 and review the diff."
     },
     {
       "path": "backend/tests/memory_db.py",
@@ -841,8 +1017,8 @@
     {
       "path": "backend/tests/test_api_regions.py",
       "language": "python",
-      "lines": 58,
-      "size_bytes": 2496,
+      "lines": 95,
+      "size_bytes": 5114,
       "role": "test",
       "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused."
     },
@@ -1169,8 +1345,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 465,
-      "size_bytes": 20052,
+      "lines": 609,
+      "size_bytes": 26716,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
@@ -1185,8 +1361,8 @@
     {
       "path": "backend/tests/test_no_paid_ai.py",
       "language": "python",
-      "lines": 88,
-      "size_bytes": 3334,
+      "lines": 128,
+      "size_bytes": 5297,
       "role": "test",
       "purpose": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
     },
@@ -1297,8 +1473,8 @@
     {
       "path": "backend/tests/test_requirements.py",
       "language": "python",
-      "lines": 84,
-      "size_bytes": 3406,
+      "lines": 88,
+      "size_bytes": 3863,
       "role": "test",
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
     },
@@ -1317,6 +1493,78 @@
       "size_bytes": 643,
       "role": "test",
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
+    },
+    {
+      "path": "backend/tests/test_steve_api.py",
+      "language": "python",
+      "lines": 315,
+      "size_bytes": 15573,
+      "role": "test",
+      "purpose": "Pytest for /steve/ask and /steve/threads with a faked provider and retriever: SSE shape and final citations and usage, messages kept, follow-ups, highlights, code regions, images to the vision model, LaTeX mode, consent and off switch, open tests, typed pauses, mid-stream errors, image limits, ownership, own keys never stored, thread lists and reads."
+    },
+    {
+      "path": "backend/tests/test_steve_context.py",
+      "language": "python",
+      "lines": 297,
+      "size_bytes": 14993,
+      "role": "test",
+      "purpose": "Pytest for backend/steve/context.py on an in-memory 600-chunk book: session range to the reader's place, retrieval de-duplicated, never the whole book, the budget with huge chunks, the anchor kept when trimming, unverified selections, citations for pages and sections, regions, images, ownership, tag neutralising, the context hash."
+    },
+    {
+      "path": "backend/tests/test_steve_eval_set.py",
+      "language": "python",
+      "lines": 140,
+      "size_bytes": 6628,
+      "role": "test",
+      "purpose": "Pytest for C20.9's evaluation set and scripts/steve_eval.py, offline: the 5/5/3/2 mix, labels and expected pages per kind, injection canaries, label anchors, scoring of grounded, invented, uncovered, long and injected answers, the summary, no key read by the runner, prompts under the cap when the shelf is fetched."
+    },
+    {
+      "path": "backend/tests/test_steve_keys.py",
+      "language": "python",
+      "lines": 178,
+      "size_bytes": 7236,
+      "role": "test",
+      "purpose": "Pytest for /steve/key and keys.py: a good key checked, encrypted and stored with its last four; refused, malformed and unchecked keys store nothing and are never echoed; delete; only the caller's row; no secret; key never in a response or log; rotated secret; the service uses the stored key and never counts it."
+    },
+    {
+      "path": "backend/tests/test_steve_latex.py",
+      "language": "python",
+      "lines": 119,
+      "size_bytes": 5781,
+      "role": "test",
+      "purpose": "Pytest for POST /steve/latex: one vision call stored as bare LaTeX, asking again and other readers of the same file get it with no call, consent only for new equations, the reader's own PDF equations only, typed pauses, empty answers and large images not stored."
+    },
+    {
+      "path": "backend/tests/test_steve_prompts.py",
+      "language": "python",
+      "lines": 172,
+      "size_bytes": 8506,
+      "role": "test",
+      "purpose": "Pytest for backend/steve/prompts.py: snapshots of all six modes, every rule present, injected book text or questions never change the system instruction, modes refused without what they explain, citation clean-up (invalid, lists, ranges, section signs, code and math untouched), bare LaTeX, STEVE.md carries the rules."
+    },
+    {
+      "path": "backend/tests/test_steve_provider.py",
+      "language": "python",
+      "lines": 258,
+      "size_bytes": 10492,
+      "role": "test",
+      "purpose": "Pytest for backend/steve/provider.py with a fake SDK client: answer and token counts, streaming, vision model and own key, 429 as paused_quota with Google's delay, timeouts, typed failures, not configured, no book text or key in logs or errors, the real client's timeout and single attempt, and the SDK client kept alive for the whole call."
+    },
+    {
+      "path": "backend/tests/test_steve_service.py",
+      "language": "python",
+      "lines": 226,
+      "size_bytes": 8946,
+      "role": "test",
+      "purpose": "Pytest for backend/steve/service.py: answered and counted once, streaming, cache hits and TTL and eviction, the daily limit per local day and per reader, own-key bypass, the breaker for every reader on our key and per own key, refunds on failure, the limit from the environment."
+    },
+    {
+      "path": "backend/tests/test_steve_settings.py",
+      "language": "python",
+      "lines": 129,
+      "size_bytes": 5425,
+      "role": "test",
+      "purpose": "Pytest for /steve/settings: consent stored with the current notice version, old or missing versions refused, withdraw clears, off keeps consent, unknown fields refused, only the caller's row, 404, the key cipher never returned by it or /auth/profile, the notice in code matches STEVE.md."
     },
     {
       "path": "backend/tests/test_supabase_client.py",
@@ -1457,16 +1705,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1463,
-      "size_bytes": 82946,
+      "lines": 1515,
+      "size_bytes": 85328,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3396,
-      "size_bytes": 149300,
+      "lines": 3651,
+      "size_bytes": 161331,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1474,7 +1722,7 @@
       "path": "docs/DECISIONS.md",
       "language": "markdown",
       "lines": 70,
-      "size_bytes": 6252,
+      "size_bytes": 6275,
       "role": "doc",
       "purpose": "Decisions with their evidence, newest first: D-C17.3, foliate-js over epub.js for EPUB (licence, maintenance, size, pagination, spreads, CFI, fixed layout, images, MathML, section documents, scripts), accepted, with how its gaps are covered."
     },
@@ -1529,10 +1777,18 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 4015,
-      "size_bytes": 739673,
+      "lines": 4311,
+      "size_bytes": 792901,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
+    },
+    {
+      "path": "docs/STEVE.md",
+      "language": "markdown",
+      "lines": 440,
+      "size_bytes": 25581,
+      "role": "doc",
+      "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation."
     },
     {
       "path": "frontend/.env.example",
@@ -1593,8 +1849,8 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 241,
-      "size_bytes": 14258,
+      "lines": 299,
+      "size_bytes": 18382,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
     },
@@ -1735,6 +1991,38 @@
       "purpose": "Playwright e2e for the app shell (C13.2a): the current page marked and every page titled, the skip link first and leading to main, the account panel (initials, text size and accent saved, Esc returning focus, a press outside), sign out to /login, and at 375 px the links in the bar, no sideways scroll, 44 px targets and the theme inside the panel; with and without reduced motion, the account panel and a page change carry a transform only when motion is allowed."
     },
     {
+      "path": "frontend/e2e/steve-blocks.spec.js",
+      "language": "javascript",
+      "lines": 119,
+      "size_bytes": 6769,
+      "role": "config",
+      "purpose": "E2E for the PDF block actions (C20.8b): equation Explain sends a PNG crop, Copy as LaTeX previews and copies, refusals in the dialog, code copied exactly with no Steve call and explained by region id, figure crops, inline math has none, the bar leaves with the pointer, keyboard focus, Tab and Esc."
+    },
+    {
+      "path": "frontend/e2e/steve-epub-blocks.spec.js",
+      "language": "javascript",
+      "lines": 114,
+      "size_bytes": 5714,
+      "role": "config",
+      "purpose": "E2E for the EPUB block actions on the converted fixture (C20.8c): Copy as LaTeX from the TeX annotation with no call, Explain from the source or by region, Copy code exact, a figure's image as a PNG, keyboard focus, Enter and Esc."
+    },
+    {
+      "path": "frontend/e2e/steve-key.spec.js",
+      "language": "javascript",
+      "lines": 92,
+      "size_bytes": 4886,
+      "role": "config",
+      "purpose": "E2E for the own-key form (C20.3): save shows only the last four and the key leaves the page, a refused key shows why and is cleared, a non-key is caught before sending, 375 px fit and 44 px targets, a short phone in Lamplight scrolls the panel."
+    },
+    {
+      "path": "frontend/e2e/steve-panel.spec.js",
+      "language": "javascript",
+      "lines": 176,
+      "size_bytes": 9864,
+      "role": "config",
+      "purpose": "E2E for Steve's panel (C20.7b): consent stored to its version, Not now, a streamed answer with KaTeX math, tinted code and a citation chip that moves the book, checked chips only, resting with the own key, errors and Try again, the off switch, keyboard and focus return, side by side at 1440, the sheet at 375, Lamplight with reduced motion."
+    },
+    {
       "path": "frontend/e2e/test.spec.js",
       "language": "javascript",
       "lines": 162,
@@ -1785,8 +2073,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 54,
-      "size_bytes": 1767,
+      "lines": 56,
+      "size_bytes": 1822,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -1897,16 +2185,16 @@
     {
       "path": "frontend/src/components/AccountMenu.css",
       "language": "css",
-      "lines": 198,
-      "size_bytes": 4164,
+      "lines": 203,
+      "size_bytes": 4422,
       "role": "component",
       "purpose": "Account button and panel styles: 44 px round initials with a field border, a raised surface panel with a lift shadow (full width under 640 px), segmented radio rows on paper-2 with the checked one raised, accent swatches, the theme row only under 640 px, Sign out."
     },
     {
       "path": "frontend/src/components/AccountMenu.jsx",
       "language": "jsx",
-      "lines": 142,
-      "size_bytes": 5122,
+      "lines": 147,
+      "size_bytes": 5406,
       "role": "component",
       "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes; the panel slides down as it opens (pop) and fades out, opacity only under reduced motion."
     },
@@ -2673,10 +2961,10 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 309,
-      "size_bytes": 16858,
+      "lines": 321,
+      "size_bytes": 17662,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -2713,10 +3001,10 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 120,
-      "size_bytes": 5717,
+      "lines": 122,
+      "size_bytes": 5897,
       "role": "asset",
-      "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint."
+      "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places."
     },
     {
       "path": "frontend/src/originalview/epub/EpubView.jsx",
@@ -2761,10 +3049,10 @@
     {
       "path": "frontend/src/originalview/epub/sanitize.js",
       "language": "javascript",
-      "lines": 100,
-      "size_bytes": 5038,
+      "lines": 104,
+      "size_bytes": 5341,
       "role": "asset",
-      "purpose": "Cleans an EPUB section before it renders (C17.3): DOMPurify in place on the parsed XHTML, HTML or SVG (no scripts, handlers, forms, iframes, objects, media, or URLs leaving the book; metas cut to viewport), CSS and srcset cleaned, SVG 2 image href loaded from the package, width and height from each image's header, lazy loading; BOOK_CSS keeps figures whole and images in proportion."
+      "purpose": "Cleans an EPUB section before it renders (C17.3): DOMPurify in place on the parsed XHTML, HTML or SVG (no scripts, handlers, forms, iframes, objects, media, or URLs leaving the book; metas cut to viewport), CSS and srcset cleaned, SVG 2 image href loaded from the package, width and height from each image's header, lazy loading; BOOK_CSS keeps figures whole and images in proportion. C20.8c: keeps MathML <semantics> and text-only <annotation> (the TeX source); <annotation-xml> stays out."
     },
     {
       "path": "frontend/src/originalview/epub/urls.js",
@@ -2889,16 +3177,16 @@
     {
       "path": "frontend/src/originalview/pdf/regions.js",
       "language": "javascript",
-      "lines": 52,
-      "size_bytes": 2238,
+      "lines": 62,
+      "size_bytes": 2924,
       "role": "asset",
-      "purpose": "Where PDF word lookup stays quiet (C18.6d): createRegionSource(api, bookId) asks GET /books/{id}/regions 20 pages at a time (a failure skips nothing and is asked again), hits(page, x, y) in PDF points; batchOf, toPagePoint, skipPdfPoint(source, x, y) finds the shown .rf-pdf-page under a client point."
+      "purpose": "Where PDF word lookup stays quiet (C18.6d): createRegionSource(api, bookId) asks GET /books/{id}/regions 20 pages at a time (a failure skips nothing and is asked again), hits(page, x, y) in PDF points; batchOf, toPagePoint, skipPdfPoint(source, x, y) finds the shown .rf-pdf-page under a client point. C20.8b: keeps each region's id, kind and inline flag; regionsOf, regionAt and subscribe for the block actions."
     },
     {
       "path": "frontend/src/originalview/pdf/regions.test.js",
       "language": "javascript",
-      "lines": 42,
-      "size_bytes": 1693,
+      "lines": 61,
+      "size_bytes": 2629,
       "role": "asset",
       "purpose": "Node tests for originalview/pdf/regions.js: batches of 20 pages, client point to PDF points, boxes skipped once loaded and asked for once per batch, a failed request skipping nothing and asked again."
     },
@@ -3033,16 +3321,16 @@
     {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
-      "lines": 58,
-      "size_bytes": 1206,
+      "lines": 66,
+      "size_bytes": 1396,
       "role": "page",
       "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state; the leave dialog's text and actions."
     },
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 393,
-      "size_bytes": 18485,
+      "lines": 417,
+      "size_bytes": 19736,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -3185,8 +3473,8 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 74,
-      "size_bytes": 3347,
+      "lines": 82,
+      "size_bytes": 3894,
       "role": "asset",
       "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place."
     },
@@ -3341,6 +3629,222 @@
       "size_bytes": 3501,
       "role": "asset",
       "purpose": "node --test: word under an offset, apostrophes and hyphens, stopwords/short words/numbers skipped, sentence starts, proper nouns, phrases of 2-5 words, the lookup path."
+    },
+    {
+      "path": "frontend/src/steve/BlockActions.css",
+      "language": "css",
+      "lines": 81,
+      "size_bytes": 2442,
+      "role": "asset",
+      "purpose": "Styles for the block actions (C20.8b): outlines, the action bar on the region's side of the page, 44 px targets, fade-and-rise or fade under reduced motion."
+    },
+    {
+      "path": "frontend/src/steve/EpubBlockActions.jsx",
+      "language": "jsx",
+      "lines": 169,
+      "size_bytes": 7626,
+      "role": "asset",
+      "purpose": "Block actions in an EPUB (C20.8c): equations, code listings and figures in each section show their actions on hover, tap or focus (blocks made focusable; Enter moves to the bar, Esc back); Copy as LaTeX and Copy code on the device; Explain by the region at that section and element path, else the block's own source; figures with their image file as a PNG."
+    },
+    {
+      "path": "frontend/src/steve/LatexDialog.css",
+      "language": "css",
+      "lines": 24,
+      "size_bytes": 858,
+      "role": "asset",
+      "purpose": "Styles for the Copy as LaTeX dialog (C20.8b): preview, source and actions; tokens only."
+    },
+    {
+      "path": "frontend/src/steve/LatexDialog.jsx",
+      "language": "jsx",
+      "lines": 36,
+      "size_bytes": 1792,
+      "role": "asset",
+      "purpose": "Copy as LaTeX (C20.8b): a modal with a KaTeX preview, the LaTeX source, where it came from and Copy LaTeX; loading and refusal states."
+    },
+    {
+      "path": "frontend/src/steve/OwnKeyForm.css",
+      "language": "css",
+      "lines": 81,
+      "size_bytes": 1785,
+      "role": "asset",
+      "purpose": "Styles for the own-key form (C20.3): disclosure row, explanation, field, AI Studio link and buttons, from the project's tokens only."
+    },
+    {
+      "path": "frontend/src/steve/OwnKeyForm.jsx",
+      "language": "jsx",
+      "lines": 114,
+      "size_bytes": 4548,
+      "role": "asset",
+      "purpose": "\"Use your own free Gemini key\" (C20.3, handoff screen 17): a disclosure in the account panel with a password field, the Google AI Studio link and Save key (checked with Google by PUT /steve/key), then the last four and Remove key; the key is dropped once sent."
+    },
+    {
+      "path": "frontend/src/steve/PdfBlockActions.jsx",
+      "language": "jsx",
+      "lines": 173,
+      "size_bytes": 7888,
+      "role": "asset",
+      "purpose": "Block actions on a PDF (C20.8b): a focusable outline over each equation, code listing and figure of the shown pages (pointer events pass through) and a bar of actions on hover, tap or focus: Explain (a crop or the region id to Steve), Copy code (exact text) and Copy as LaTeX (/steve/latex, KaTeX preview)."
+    },
+    {
+      "path": "frontend/src/steve/SteveAnswer.jsx",
+      "language": "jsx",
+      "lines": 66,
+      "size_bytes": 3064,
+      "role": "asset",
+      "purpose": "One answer from Steve as React elements (C20.7b): paragraphs, lists, KaTeX math, tinted code, citation chips for checked labels, a caret while streaming; never HTML."
+    },
+    {
+      "path": "frontend/src/steve/SteveContext.js",
+      "language": "javascript",
+      "lines": 10,
+      "size_bytes": 470,
+      "role": "asset",
+      "purpose": "SteveContext (C20.7b): askAbout() for the reading page, so block actions (C20.8) and highlights (C21) open the panel and ask; null outside the reader."
+    },
+    {
+      "path": "frontend/src/steve/SteveMath.jsx",
+      "language": "jsx",
+      "lines": 19,
+      "size_bytes": 987,
+      "role": "asset",
+      "purpose": "Math in Steve's answers (C20.7b): loads KaTeX on the first equation and shows its sanitised MathML, or the TeX source as code until then."
+    },
+    {
+      "path": "frontend/src/steve/StevePanel.css",
+      "language": "css",
+      "lines": 348,
+      "size_bytes": 10999,
+      "role": "asset",
+      "purpose": "Styles for Steve's panel (C20.7b): column and sheet, identity seal, consent and resting cards, suggestions, answers, citation chips, display math, tinted code, the switch and the composer; tokens only, transform and opacity motion."
+    },
+    {
+      "path": "frontend/src/steve/StevePanel.jsx",
+      "language": "jsx",
+      "lines": 273,
+      "size_bytes": 12626,
+      "role": "asset",
+      "purpose": "Steve's side panel (C20.7b, handoff screens 13-17): a 380 px column beside the book or a pull-up sheet under 760 px; consent, off, empty with suggestions, the conversation with streaming answers, Stop, citations that move the book, errors, resting with the own-key link, and settings; Esc returns focus to the toolbar."
+    },
+    {
+      "path": "frontend/src/steve/answer.js",
+      "language": "javascript",
+      "lines": 98,
+      "size_bytes": 4385,
+      "role": "asset",
+      "purpose": "Steve's answer as blocks (C20.7a): paragraphs, lists, fenced code, display and inline math, inline code, emphasis and citation chips for sent labels only, from the answer's Markdown without any HTML; works on half-written answers."
+    },
+    {
+      "path": "frontend/src/steve/blocks.js",
+      "language": "javascript",
+      "lines": 91,
+      "size_bytes": 3834,
+      "role": "asset",
+      "purpose": "Block actions' pure parts (C20.8b): the actions of each region kind (device-only copies without Steve), labels, the canvas crop rectangle at 2x CSS size, shrink steps to fit 500 KB, an element's CFI step path, base64 helpers."
+    },
+    {
+      "path": "frontend/src/steve/blocks.test.js",
+      "language": "javascript",
+      "lines": 50,
+      "size_bytes": 2496,
+      "role": "asset",
+      "purpose": "Unit tests for frontend/src/steve/blocks.js: actions per kind and without Steve, crop geometry and clamping, shrink steps, element paths, base64 sizes."
+    },
+    {
+      "path": "frontend/src/steve/crop.js",
+      "language": "javascript",
+      "lines": 39,
+      "size_bytes": 1991,
+      "role": "asset",
+      "purpose": "Crops for Steve (C20.8b): a PDF region from its page's own canvas, padded, at twice its CSS size, as a PNG under 500 KB; an image element (EPUB figures) downscaled the same way."
+    },
+    {
+      "path": "frontend/src/steve/highlight.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 3699,
+      "role": "asset",
+      "purpose": "A small code highlighter for Steve's answers (C20.7a, handoff screen 15): keyword, comment and string tokens for common languages, no dependency, no HTML."
+    },
+    {
+      "path": "frontend/src/steve/latexLocal.js",
+      "language": "javascript",
+      "lines": 32,
+      "size_bytes": 1197,
+      "role": "asset",
+      "purpose": "An EPUB equation as LaTeX on the device (C20.8c): the MathML's TeX annotation, else mathml-to-latex loaded on first use; no Gemini call."
+    },
+    {
+      "path": "frontend/src/steve/latexLocal.test.js",
+      "language": "javascript",
+      "lines": 25,
+      "size_bytes": 1232,
+      "role": "asset",
+      "purpose": "Unit tests for frontend/src/steve/latexLocal.js: annotation found by encoding, MathML converted by mathml-to-latex, unreadable MathML gives an empty string."
+    },
+    {
+      "path": "frontend/src/steve/math.js",
+      "language": "javascript",
+      "lines": 12,
+      "size_bytes": 631,
+      "role": "asset",
+      "purpose": "KaTeX for Steve (C20.7b): loaded once, lazily; TeX to MathML output sanitised with DOMPurify's MathML profile."
+    },
+    {
+      "path": "frontend/src/steve/ownKey.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1148,
+      "role": "asset",
+      "purpose": "Pure helpers for the own-key form (C20.3): the AI Studio URL, cleaning a pasted key, whether it is worth sending, the last-four label and the error text."
+    },
+    {
+      "path": "frontend/src/steve/ownKey.test.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 1492,
+      "role": "asset",
+      "purpose": "Unit tests for frontend/src/steve/ownKey.js: pasted keys cleaned, only key-shaped values sent, the last-four label, error text, the AI Studio link."
+    },
+    {
+      "path": "frontend/src/steve/sse.js",
+      "language": "javascript",
+      "lines": 93,
+      "size_bytes": 3814,
+      "role": "asset",
+      "purpose": "Steve's stream client (C20.7a): parses POST /steve/ask's Server-Sent Events across chunks, turns refusals into typed SteveError (code, status, until) and askSteve() posts a question and streams events to a callback."
+    },
+    {
+      "path": "frontend/src/steve/steve.test.js",
+      "language": "javascript",
+      "lines": 190,
+      "size_bytes": 10564,
+      "role": "asset",
+      "purpose": "Unit tests for the Steve client modules: SSE parsing and typed refusals, answer blocks and citations, no HTML, code tokens, suggestions, the panel reducer and backAt."
+    },
+    {
+      "path": "frontend/src/steve/steveState.js",
+      "language": "javascript",
+      "lines": 96,
+      "size_bytes": 4199,
+      "role": "asset",
+      "purpose": "The Steve panel's state (C20.7a) as a pure reducer: loading, consent, off, chat with streaming answers, paused (quota) with when Steve is back, the key view and errors."
+    },
+    {
+      "path": "frontend/src/steve/suggest.js",
+      "language": "javascript",
+      "lines": 26,
+      "size_bytes": 1047,
+      "role": "asset",
+      "purpose": "Three suggested questions for Steve's empty state (C20.7a), templated from the current chapter's cleaned title."
+    },
+    {
+      "path": "frontend/src/steve/useSteve.js",
+      "language": "javascript",
+      "lines": 75,
+      "size_bytes": 3316,
+      "role": "asset",
+      "purpose": "Steve for one book (C20.7b): the panel reducer, settings loaded on first open, ask() streaming one answer, stop, retry, consent and the off switch."
     },
     {
       "path": "frontend/src/styles/base.css",
@@ -3617,8 +4121,8 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 49,
-      "size_bytes": 1506,
+      "lines": 60,
+      "size_bytes": 2076,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
@@ -3895,6 +4399,14 @@
       "purpose": "Manual end-to-end script: start, finish-reading and submit-answers through TestClient, authenticating with a raw UUID, which has been rejected with 401 since C3.1."
     },
     {
+      "path": "scripts/steve_eval.py",
+      "language": "python",
+      "lines": 295,
+      "size_bytes": 13834,
+      "role": "script",
+      "purpose": "Steve's grounded-answer evaluation (C20.9): builds each item's context from test-shelf pages the way context.py lays it out, the ask prompt, and (with --live, after the user's yes) one provider call per item, at most 15, stopping at the first error; scores cited labels sent, length, answered from the book, not covered, injection ignored."
+    },
+    {
       "path": "supabase/.gitignore",
       "language": "gitignore",
       "lines": 8,
@@ -4087,6 +4599,30 @@
       "purpose": "Migration 022 (C19.4, additive): books.scanned_pages integer[]; table page_ocr (book_id cascade, user_id, page, text, words jsonb, mean_confidence, engine, unique (book_id, page)) with RLS: a reader selects their own rows, the service role writes."
     },
     {
+      "path": "supabase/migrations/023_steve.sql",
+      "language": "sql",
+      "lines": 106,
+      "size_bytes": 5473,
+      "role": "migration",
+      "purpose": "Migration 023 (C20.1, additive): profiles.steve_enabled, steve_consent_at, steve_consent_version, steve_key_cipher, steve_key_last4 with a guard trigger so only the backend changes them; tables steve_usage, steve_threads, steve_messages with RLS: a reader selects their own rows, the service role writes."
+    },
+    {
+      "path": "supabase/migrations/024_steve_quota.sql",
+      "language": "sql",
+      "lines": 47,
+      "size_bytes": 1944,
+      "role": "migration",
+      "purpose": "Migration 024 (C20.2, additive): steve_take_quota (one atomic upsert that never passes the limit; -1 when reached) and steve_refund_quota (never below zero) over steve_usage, executable by the service role only."
+    },
+    {
+      "path": "supabase/migrations/025_equation_latex.sql",
+      "language": "sql",
+      "lines": 28,
+      "size_bytes": 1368,
+      "role": "migration",
+      "purpose": "Migration 025 (C20.8, additive): equation_latex (file_sha256, page, bbox_hash, latex, model, created_at; key file + page + box hash) so each PDF equation costs one Gemini call ever; RLS with no policy, backend only."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -4129,8 +4665,8 @@
     {
       "path": "tools/no_paid_ai.py",
       "language": "python",
-      "lines": 41,
-      "size_bytes": 2036,
+      "lines": 59,
+      "size_bytes": 3030,
       "role": "script",
       "purpose": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
     },
@@ -4145,8 +4681,8 @@
     {
       "path": "tools/repo_graph/build.py",
       "language": "python",
-      "lines": 386,
-      "size_bytes": 17182,
+      "lines": 397,
+      "size_bytes": 17863,
       "role": "script",
       "purpose": "Builds docs/repo-graph/graph.json: typed nodes and edges for files, endpoints, tables, functions, env vars, external services and LangGraph nodes; LangGraph wiring is read from non-test files only."
     },
@@ -4161,8 +4697,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 529,
-      "size_bytes": 163440,
+      "lines": 596,
+      "size_bytes": 181622,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -4193,8 +4729,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 264,
-      "size_bytes": 11007,
+      "lines": 284,
+      "size_bytes": 11981,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

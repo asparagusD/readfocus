@@ -3,6 +3,8 @@ import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { easing, prefersReducedMotion, seconds } from '../motion/presets';
 import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
+import { PdfBlockActions } from '../steve/PdfBlockActions';
+import { EpubBlockActions } from '../steve/EpubBlockActions';
 import { EpubBook } from './epub/EpubBook';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
@@ -302,6 +304,16 @@ export function Reader({
         <BookLookup ref={lookup} surfaces={surfaces} client={lookupClient} hover={hoverLookup} returnFocusTo={stage}
           paused={!place || opening || ending || Boolean(turn) || Boolean(failure)}
           page={place ? `${spot(placeStart(place))}-${spot(placeEnd(place))}` : ''} />
+      )}
+      {kind === 'pdf' && regions && bookBox && (
+        // C20.8b: equations, code and figures offer Explain, Copy code and Copy as LaTeX.
+        <PdfBlockActions box={bookBox} regions={regions} bookId={bookId} pages={shownPages}
+          paused={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
+      )}
+      {kind === 'epub' && (
+        // C20.8c: the same actions in an EPUB's sections; Copy as LaTeX and Copy code stay on the device.
+        <EpubBlockActions sections={sections} spineOf={(doc) => book.current?.sectionIndex?.(doc) ?? null} bookId={bookId}
+          paused={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
       )}
       <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{ending ? "End of today's reading" : opening ? '' : place?.folio ?? ''}</p>
     </section>

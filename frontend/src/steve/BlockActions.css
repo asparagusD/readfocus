@@ -1,0 +1,81 @@
+/* Block actions (C20.8, handoff "Block affordances"): an outline over each equation, listing or figure that
+   lets pointer events through, and a small bar of actions at its top right that fades and rises 4 px in. */
+.rf-block {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.rf-block-hit {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  pointer-events: none;
+}
+
+.rf-block-hit[data-on='true'] {
+  background-color: color-mix(in srgb, var(--paper-2) 45%, transparent);
+  outline: var(--border-hair) solid var(--line-2);
+}
+
+.rf-block-hit:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.rf-block:has(.rf-block-bar) { z-index: 8; }
+
+/* An EPUB block lives in a section's iframe: its bar is placed over it in this page (C20.8c). */
+.rf-block--fixed { position: fixed; z-index: var(--z-popover); }
+
+.rf-block-bar {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--space-1));
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-control);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-lift);
+  white-space: nowrap;
+  pointer-events: auto;
+  animation: rf-block-in var(--dur-2) var(--ease-settle) both;
+}
+
+.rf-block-bar[data-below='true'] { top: calc(100% + var(--space-1)); bottom: auto; }
+
+/* Aligned to the side of the page the region is on, so the bar never runs off the page. */
+.rf-block-bar[data-align='start'] { left: 0; right: auto; }
+
+@keyframes rf-block-in { from { opacity: 0; translate: 0 4px; } }
+
+.rf-block-act {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-block-act:hover { background-color: var(--paper-2); }
+
+@media (max-width: 559px) {
+  /* On a phone the bar stacks its actions, under the region, inside the page's width. */
+  .rf-block-bar { flex-direction: column; top: calc(100% + var(--space-1)); bottom: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-block-bar { animation-name: rf-block-fade; }
+  @keyframes rf-block-fade { from { opacity: 0; } }
+}

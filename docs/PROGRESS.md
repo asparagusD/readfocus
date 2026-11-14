@@ -2974,15 +2974,20 @@ applies: the terms summary, the leagues detail.
 |---|---|---|---|---|---|
 | [x] CD2.2 receive the phase-2 Claude Design handoff | this commit (`docs(design): add phase-2 Claude Design handoff and summary`) | `design/handoff-phase2/design_phase_2.html`: the bundle, unchanged (12 boards: the six phase-1 boards again plus six phase-2 boards). `design/handoff-phase2/extracted/`: `Study.dc.html` (the component behind all phase-2 screens) and `PhaseTwoComponents.dc.html`, decoded byte for byte, with a README. `design/screens/phase2/`: 75 PNGs from `readfocus_phase_2_images.zip`: 18 screens x Paper/Lamplight at 1440 (1440 x 900) and 375 (375 x 812, 1x), two components sheets, the prototype frame. `design/HANDOFF_PHASE2_SUMMARY.md`: contents, image table, eight new tokens with contrast, component inventory with states, screen notes, chunk mapping, 19 gaps and conflicts, nine questions. `tools/repo_graph/purposes.json` and `docs/repo-graph/`. No application code changed. | SHA-256 of the copied bundle equals the download (`7e123533…`); the four board copies of `Study.dc.html` hash equal. Artboard edges from a scratchpad projection script (coverage, then the sharpest step): desktop 1440 x 900 at x 64 / 1584, rows every 1040 from y 124; mobile 375 x 812 at x 64 + 415 n, y 148 / 1108; crops checked by eye (4 desktop, 4 mobile). Every phase-1 token in `Study.dc.html` compared with `frontend/src/styles/tokens.css` by script: equal; foundations board equal to `Main.dc.html` after normalizing. Contrast with the WCAG formula. Largest PNG 1,359,617 B; 44 MB in `design/screens/phase2/`. Standard checks: see commit. | 2026-11-12 | The design conflicts with CLAUDE.md (own key "kept on this device only"), FOCUS_RULES (points, quiz length) and GAMIFICATION (goal unit, badges, league size and rollover); chunk numbers in the CD2.2 prompt differ from this file's C19–C22. Nine questions in the summary. Sage accent not rendered; mobile mocks clip text |
 
-## Phase 2 chunks (C17-C26)
+## Phase 2 chunks (C17-C25)
 
 Stubs written in C16.4. Renumbered at the C19 start (2026-11-13, your
 choice: "Yes, renumber"): C19 converted sources was inserted, so the
 stubs written as C19-C25 are now C20-C26. Plans and logs written before
-that date keep the old numbers. Each chunk gets its full plan (what there is to
+that date keep the old numbers. Renumbered again at the C20 start (2026-11-14, the
+C20 prompt): Steve became C20, merging the stubs "Steve backend" and
+"Steve in the reader"; anchors and highlights C21, notepad C22, focus
+mode C23, XP and leagues C24, verification C25. Each chunk gets its full plan (what there is to
 build on, decisions, subchunks with verification and cuts, an estimate)
-at its own start, before any code. The phase 2 budget is 36.5 hours
-(31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13; C16
+at its own start, before any code. The phase 2 budget is 38.25 hours
+(31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13, then
+36.5 h until the C20 start, raised by 1.75 h on 2026-11-14 for C20's
+7.75 h against the stubs' 6.0 h; C16
 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
 CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 `docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
@@ -3955,51 +3960,342 @@ landmarks.
 | [x] C19.4 apply migration 022 to the Supabase project (your approval, 2026-11-13: "Dump, then apply 022") | `cbffbe8` (`docs: record migration 022 applied`); C19.4b `398ded5` | Read-only check first: no `books.scanned_pages`, no `page_ocr`, 9 books. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-13-pre-022\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (76,345 B; `source_format` from 021, nothing from 022), `readfocus_prod_data.sql` (42,614,397 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`). Then `npx supabase db query --linked -f` with `BEGIN;` + `022_scanned_pages.sql` + `COMMIT;` (exit 0). | Read-only query after (my first one failed on a missing `::text` cast, nothing written): `scanned_pages` integer[] nullable; `page_ocr` columns id, book_id, user_id, page, text, words, mean_confidence, engine, created_at as written; row-level security on; policy `page_ocr_select_own` (SELECT); constraints: book_id foreign key, unique (book_id, page), page check, primary key; 0 OCR rows; 9 books, none flagged. | 2026-11-13 | Applied with `db query` like 016 to 021, so the CLI's migration history does not list 022. Books ingested before today have no `scanned_pages` until they are ingested again; none of the 9 is known to be scanned. |
 | [x] C19.G 🚦 Gate G6: converted sources and scanned pages read like books — **G6: PASS** | this commit (`docs(progress): record gate G6 verdict`); gate tests `155b896`, review fix `105020c` | 1. **Converted books are standards-compliant and read like books:** a Markdown file zipped with its figures (`converted-md.epub`) and a notebook with a PNG plot and an SVG output (`converted-nb.epub`), each made through the upload's own converter (`tools/make_converted_fixture.py`), plus the builder's `converted.epub`: epubcheck 5.4.0 0 fatals / 0 errors / 0 warnings / 0 infos each; in the EPUB renderer (`e2e/gate-g6.spec.js`) Markdown 2/2 images loaded and 2/2 equations drawn, notebook 3/3 and 2/2 with "Output of cell 3" and "Output of cell 5" captions; `check_epub` clean; ingestion and the region map read them (math, code, table, figure regions, C19.2 tests). 2. **A scanned page becomes selectable:** `e2e/ocr.spec.js` with real tesseract.js: 185 words posted for a page, a text layer of OCR words, a word card on an OCR'd "lamp"; a fully scanned book reads both pages and prepares its first session. OCR speed: 1.2 s for the first page with the engine and model loading, 0.8 s a page after (headless Edge, this desktop, three runs). 3. **Memory and size:** no server dependency for OCR; Markdown/notebook conversion +2.5 MB RSS on import; pandoc measured and rejected (C19.3). 4. **Standard checks:** all ten green at `105020c` (ruff 27, ESLint 4, pytest 1159, unit 124, e2e 134); `make graph` leaves no diff. 5. **Self-review** of `git diff readfocus-2.0...HEAD`: one blocking finding, fixed in `105020c` (a resumed ingest would have taken OCR text into a mixed book's chunks; DEBUG_LOG 2026-11-13 C19.4). | `npx playwright test e2e/gate-g6.spec.js` (2 passed); epubcheck in Docker on the three EPUBs; the full standard checks at `155b896` and at `105020c`; `make graph` then `git status` clean. | 2026-11-13 | Non-blocking, left as is: a device-only scanned book is never re-ingested (no file on the server); a fully scanned book needs its tab open until every page is read; conversion runs inside the upload request (a large notebook makes a slow upload, within the 50 MB cap); OCR not measured on a phone or a real network; latex2mathml's TeX coverage is narrower than KaTeX's; pandas HTML tables show as text. Time: about 3.3 h of C19's 5.5 h (planning from about 18:50, close at 22:06). |
 
-## C20 — anchors, highlights and underlines
+## C20 — Steve
+
+Branch `chunk/C20-steve`, created from `readfocus-2.0` at `c27059c`.
+Goal as given at chunk start: Steve answers questions about the book
+being read, with whole-book awareness (the current session's text, the
+highlighted passage if any, the TOC and the top-k passages from the
+existing hybrid retriever; never the whole book), grounded, citing
+pages, saying when the book does not cover something, typesetting math,
+and explaining equations, code and figures. This chunk merges the C16.4
+stubs "Steve backend" and "Steve in the reader" (see D1).
+
+### Plan (written at chunk start, 2026-11-14, before any code)
+
+What there is to build on (read from the code and the docs):
+
+- **Retriever:** `services/retriever.py` `search(query_text, book_id, k)`
+  fuses pgvector and full-text results with RRF (`RRF_K` 60, 20
+  candidates each); local fastembed, no API.
+- **Session text and pages:** `sessions.chunk_start_index..chunk_end_index`;
+  `chunks.prose` (math, code, figures and tables as placeholders such as
+  "[Equation 3.2, p. 45]") and `chunks.anchors` (PDF `pages` and
+  `spans: [{page, char_start, char_end}]`, EPUB `{start, end:
+  {spine_index, cfi}}`, migration 020). Citations come from these spans.
+- **TOC:** `books.toc` (PDF outline `{title, page}`, EPUB nav
+  `{title, href, spine_index}`, each with `chunk_index`).
+- **Regions:** `page_regions` (018, 019): math `meta.latex`/`mathml`
+  (EPUB) or `meta.drawn` (PDF, no source), code `text` +
+  `language_guess`, figure `caption`/`label`/`images`, table `rows`.
+- **Libraries already pinned:** `httpx` 0.28.1, `latex2mathml` 3.81.1,
+  `cryptography` 50.0.2 (installed through `google-auth` and
+  `pdfminer.six`, not pinned directly); frontend `dompurify` 3.4.17.
+  No math renderer in the frontend; the EPUB renderer shows MathML
+  natively.
+- **Guard:** `tools/no_paid_ai.py` bans the Gemini SDKs and every
+  `GEMINI_*` name outside `.env.example` (`STEVE_ENV_NAMES`);
+  `backend/tests/test_no_paid_ai.py` enforces it.
+- **Models:** on 2026-11-12 `gemini-3.8-flash` and `gemini-3.6-flash`
+  returned 503 on the free tier; `gemini-3.5-flash-lite` answered
+  (DEBUG_LOG C16.4). `.env.example` already lists `GEMINI_API_KEY`,
+  `GEMINI_MODEL_CHAT`, `GEMINI_MODEL_VISION`,
+  `STEVE_DAILY_LIMIT_PER_USER`, `KEY_ENCRYPTION_SECRET`.
+- **No settings page** in the frontend yet; the reader toolbar
+  (`reader/ReaderToolbar.jsx`) and `originalview/Reader.jsx` host the
+  panel. Migrations end at 022; next is 023.
+- **Design:** screens 13-18 (`design/HANDOFF_PHASE2_SUMMARY.md`): study
+  panel, consent, empty, streaming answer with citation chips, paused,
+  own key, selection toolbar "Ask Steve", block affordances.
+
+Decisions that apply to every subchunk:
+
+- **D1 Numbering.** C20 is Steve (the prompt's order); the stubs move:
+  anchors and highlights C21, notepad C22, focus mode C23, XP and
+  leagues C24, verification and release C25 (phase 2 is C17-C25). Gate
+  G6 was C19's, so this chunk's gate is **G7**. The highlighted passage
+  is the reader's live selection (D7), so Steve does not wait for C21;
+  "Add to notes" waits for the notepad (C22) and is hidden until then.
+- **D2 No SDK.** `backend/steve/provider.py` calls the Gemini REST API
+  (`generateContent`, `streamGenerateContent?alt=sse`) with `httpx`,
+  key in the `x-goog-api-key` header (never in a URL). No new
+  dependency; RSS measured before and after import anyway.
+- **D3 One door.** `provider.py` is the only file that reads `GEMINI_*`
+  or names Google's host. The guard is narrowed to that one file (the
+  skill allows `backend/steve/`; one file is stricter), test first, in
+  the provider's commit.
+- **D4 Answers are typed blocks, never HTML.** Gemini is asked for
+  Markdown with `$...$`/`$$...$$`; the server splits the stream into
+  complete blocks (`para`, `math`, `code`, `list`, `quote`), converts
+  TeX to MathML with `latex2mathml` (bad TeX stays as source in a code
+  block) and turns `[p. 44]` / `[§4.2]` into citation objects checked
+  against the context's citation map (unknown ones dropped). The
+  frontend renders blocks as React elements; only MathML goes through
+  DOMPurify's MathML profile. No new frontend dependency.
+- **D5 Where state lives.** The per-reader quota is in Postgres (an
+  atomic SQL function, so two tabs cannot both take the last question).
+  The 429 breaker and the response cache live in process memory: Render
+  Free runs one instance; a restart empties both, and Google's next 429
+  reopens the breaker.
+- **D6 Own key on the server, encrypted** (CLAUDE.md beats the mock's
+  "kept on this device only"; handoff question 2): Fernet with a key
+  derived (HKDF) from `KEY_ENCRYPTION_SECRET`; last 4 shown; the copy
+  changes to "Stored encrypted on our server".
+- **D7 Highlighted passage** = the selection the reader sends (text plus
+  an ANCHORS A1 anchor), checked server-side to occur in that book's
+  text near the anchor, capped by policy; anything else is refused.
+- **D8 Equations, code and figures:** the server reads LaTeX/MathML,
+  code text and captions from `page_regions` by `region_id` (never from
+  the client). An image (a PDF equation with no source, any figure) is
+  cropped in the browser from the rendered page (PDF.js canvas) or the
+  EPUB image resource to a PNG under policy pixel and byte caps, and
+  goes to `GEMINI_MODEL_VISION`.
+- **D9 Quota day** is the reader's local day (an IANA `tz` validated
+  with `zoneinfo`, UTC if absent), so "back at midnight, your time" is
+  true (handoff question 10). Our key also has a global daily budget
+  from policy, sized from Google's free-tier limits read at C20.2.
+- **D10 Threads:** one thread per book per reader, messages stored
+  (question, blocks, citations, mode), owner-only RLS, deleted with the
+  book; the reader can clear a thread.
+- **D11 Not during tests:** a `testing` session or open bookmark quiz on
+  the book makes every Steve call 409 on the server; the panel closes.
+- **D12 Migration 023** holds all of C20's schema, applied once, only
+  after your yes and a fresh `supabase db dump` (constraint 2: dev and
+  production are one project, so "dev only" is not possible).
+- **D13 Offline:** pytest fakes the provider (`httpx.MockTransport`);
+  live calls happen only by hand through `tools/steve_ping.py` and the
+  C20.9 runner, never in the standard checks, and never with a reader's
+  data.
+
+Subchunks (lines exclude tests' fixtures, migrations and graph files;
+each over ~200 lines is split a/b):
+
+**C20.1 docs/STEVE.md, consent and settings (schema + API)** — 0.75 h
+
+- C20.1a `docs/STEVE.md` (new, ~200): S1 scope; S2 consent copy with
+  Google's current terms quoted and linked (fetched that day); S3
+  context budget; S4 prompt layout and delimiters; S5 grounding and
+  citations; S6 quota, breaker, cache, paused states; S7 keys; S8
+  logging; S9 explain actions; S10 free-tier limits and models with the
+  date read; S11 evaluation. `supabase/migrations/023_steve.sql` (new,
+  ~110): `profiles.steve_consent_at`, `steve_consent_version`,
+  `steve_enabled` (default true); `books.steve_off` (per-book switch the
+  consent copy promises); tables `steve_keys` (no client policy),
+  `steve_usage` (user, day, count) + `steve_take_quota()`,
+  `steve_threads`, `steve_messages`; RLS on all. Tests:
+  `test_migrations.py` (additive, RLS present, no DROP) (+15).
+- C20.1b `backend/steve/__init__.py`, `backend/steve/policy.py` (~60,
+  every number), `backend/steve/access.py` (~70: `require_steve`
+  dependency: consent, enabled, book not off, no open test),
+  `backend/routers/steve.py` (~80: `GET /steve/settings`,
+  `POST/DELETE /steve/consent`, `PUT /steve/settings`),
+  `backend/main.py` (+2). Tests: `test_steve_settings.py` (~130: no
+  call without consent, withdraw clears it, off and per-book off refuse,
+  409 during a test, another reader's book 404).
+- Verify: pytest; `supabase db push --dry-run`; apply 023 only on your
+  yes after a fresh dump. Cut: per-book switch (global only).
+
+**C20.2 provider module: Gemini client, quotas, breaker, cache** — 1.0 h
+
+- C20.2a guard first: `tools/no_paid_ai.py`,
+  `backend/tests/test_no_paid_ai.py`, `tools/repo_graph/build.py`
+  (~40): `GEMINI_*` and the Google host allowed in
+  `backend/steve/provider.py` only; a test proves a second file is
+  still caught. Then `backend/steve/provider.py` (~170): `generate()`
+  and `stream()` (SSE parse), timeouts, model from env, our key or a
+  passed key, errors mapped to `Paused(reason, until)` / `Failed`; logs
+  status, latency, token counts only. Tests: `test_steve_provider.py`
+  (~150, MockTransport: stream parse, 429, 503, timeout, key absent from
+  logs, exceptions and URLs).
+- C20.2b `backend/steve/quota.py` (~60, per-reader local day + global
+  budget), `backend/steve/breaker.py` (~50, opens on 429 for
+  `Retry-After` or policy cool-down, per key), `backend/steve/cache.py`
+  (~50, LRU + TTL keyed by book, normalised question, context hash,
+  mode, model). Tests: `test_steve_quota.py`, `test_steve_breaker.py`,
+  `test_steve_cache.py` (~160).
+- `tools/steve_ping.py` (~50, by hand): re-test `gemini-3.8-flash` and
+  `gemini-3.6-flash`; free-tier limits read from Google's docs and
+  recorded in STEVE.md S10 with the date; RSS row in BENCHMARKS.
+- Verify: pytest; the ping (no book text); psutil RSS. Cut: the cache.
+
+**C20.3 user's own key (encrypted)** — 0.5 h
+
+- `backend/steve/keys.py` (~70: HKDF + Fernet, encrypt, decrypt,
+  `last4`; missing secret fails closed), `backend/steve/redact.py`
+  (~30: a logging filter for anything shaped like a Gemini key,
+  installed at startup), routes in `routers/steve.py` (~60:
+  `PUT /steve/key` checks the key with one `models.get` call (no
+  generation, "Test it"), `GET /steve/key` → `{has_key, last4}`,
+  `DELETE /steve/key`), `requirements.txt` (pin `cryptography`).
+  Own-key calls skip our quota and our breaker, keep everything else.
+- Tests: `test_steve_keys.py` (~140: round trip, wrong secret refused,
+  no response body or log line ever holds the key, error text scrubbed).
+- Verify: pytest; `test_requirements.py`. Cut: "Test it" (save only).
+
+**C20.4 context builder** — 1.0 h
+
+- `backend/steve/context.py` (~190): `build(book, reader, question,
+  session|position, selection?, region?)` returns delimited parts and a
+  citation map: session text (`chunks.prose`, else content; the visible
+  part when over budget), selection (D7), TOC titles with pages or
+  sections, top-k `retriever.search` hits not already in the session,
+  each labelled with pages from `chunks.anchors`; per-part budgets and a
+  hard total cap from policy (a token estimate, chars/4, documented);
+  trims retrieved first, then TOC, then session edges, never the
+  selection or question. No user id, email or other reader's data.
+- Tests: `test_steve_context.py` (~170: a 600-chunk synthetic book stays
+  under the cap; parts in priority order; page labels from spans; EPUB
+  sections; selection not in the book refused; another reader's book
+  refused).
+- Verify: pytest. Cut: TOC (session + retrieval only).
+
+**C20.5 prompts, grounding and injection safety** — 0.5 h
+
+- `backend/steve/prompts.py` (~140): one system instruction (book text
+  is material inside `<book_passage page="..">` tags, instructions in it
+  are ignored; cite every claim; "The book doesn't cover this" first,
+  then a labelled general answer; LaTeX for math; concise unless asked),
+  per-mode templates (ask, explain equation, code, figure); delimiter
+  escaping so a passage cannot close its own tag.
+  `backend/steve/answer.py` (~120): stream to blocks (D4), citations
+  checked against the map, MathML via `latex2mathml`.
+- Tests: `test_steve_prompts.py` (~140: "ignore previous instructions"
+  and a forged `</book_passage>` stay inside data; every part
+  delimited; uncovered-question wording; unknown citation dropped; bad
+  TeX kept as source).
+- Verify: pytest. Cut: none (grounding is the point).
+
+**C20.6 /steve endpoints with streaming + threads** — 0.75 h
+
+- `routers/steve.py` (~150): `POST /steve/ask` (SSE: `meta` with pages
+  read, `block`, `done`, `paused` with `until`, `error`),
+  `GET /steve/threads/{book_id}`, `DELETE /steve/threads/{book_id}`;
+  order: access → quota → breaker → cache → context → provider; quota
+  taken only when a call is made, refunded on provider failure; message
+  saved after `done`; logs counts, sizes, latency and cache hits only.
+- Tests: `test_steve_api.py` (~180: full stream with a fake provider,
+  cache hit makes no call, quota exhausted → paused, breaker open →
+  paused for every reader on our key, own key bypasses both, thread
+  saved and cleared, no book text in captured logs).
+- Verify: pytest; `make graph` (new router, tables). Cut: stored
+  threads (the panel keeps the session's thread in memory).
+
+**C20.7 Steve panel UI** — 1.25 h
+
+- C20.7a `frontend/src/steve/api.js` (~90, SSE over `fetch`, abort for
+  Stop), `steve/blocks.jsx` (~110: blocks to React, citation chips that
+  jump to the page with the page flash, MathML through DOMPurify),
+  `steve/useSteve.js` (~90 state machine: off, consent, empty, asking,
+  streaming, paused, error, offline). Unit tests for parsing, blocks
+  and states (+12).
+- C20.7b `steve/StudyPanel.jsx` + `.css` (~200: 380 px panel / 64 %
+  sheet under 760 px; consent, empty with suggestions, answer, paused
+  with the lamp and "back at HH:MM", own-key form, composer states and
+  fine print), wiring in `ReaderToolbar.jsx` and `originalview/Reader.jsx`
+  (~40), "Ask Steve" on the selection toolbar. e2e
+  `e2e/steve.spec.js` (+8: consent gate, ask and stream, citation jump,
+  Stop, paused, own key masked, off hides entry points, closed during a
+  test).
+- Verify: design-review at 375 and 1440 px, both themes;
+  `check:contrast`; lint; build; unit; e2e. Cut: suggestion buttons.
+
+**C20.8 equations, code and figures** — 1.0 h
+
+- `originalview/regionActions.jsx` (~140: hover/focus/tap affordances
+  per ANCHORS A8: "Explain this equation", "Copy as LaTeX" (EPUB source;
+  PDF only when a source is known, else hidden), "Copy code", "Explain
+  this code", "Explain this figure"), `steve/crop.js` (~70: region crop
+  to PNG under the caps), backend modes in `routers/steve.py` and
+  `context.py` (~60: region read by id, image size and type checked,
+  vision model for images). Tests: `test_steve_regions.py` (~100),
+  unit `crop.test.js`, e2e (+3).
+- Verify: as C20.7; one live run per mode by hand on a fixture book.
+  Cut: "Explain this figure" (vision), as the C16.4 stub allowed.
+
+**C20.9 evaluation set** — 0.5 h
+
+- `backend/tests/fixtures/steve_eval.json` (~30 items over the existing
+  fixture books: covered questions with expected pages, uncovered
+  questions, injection passages, equation, code, figure items),
+  `tools/steve_eval.py` (~120, by hand on our key: citation accuracy,
+  "not covered" recall, injection resistance, math blocks that parse,
+  latency, calls used), offline `test_steve_eval_set.py` (~50: the set
+  is well-formed, every expected page exists). Results in
+  `docs/BENCHMARKS.md`.
+- Verify: the runner once (about 30 free-tier calls, within the day's
+  budget), offline test in pytest. Cut: figure items.
+
+**C20.G 🚦 Gate G7: consent, quota, grounding** — 0.5 h
+
+1. No Gemini call without consent, while off or per-book off, or during
+   a test (server tests plus one e2e).
+2. Quota and breaker: the N+1th question pauses; a forced 429 pauses
+   every reader on our key; own key bypasses both; paused UI shows when
+   Steve is back.
+3. Grounding: C20.9 numbers meet the bars in STEVE.md S11 (set before
+   the run); injection items 100 %.
+4. Keys and logs: a reader's key never in a response, log or error; no
+   book text in production logs.
+5. Memory: RSS with Steve loaded within Render Free (BENCHMARKS).
+6. Standard checks green, ruff and ESLint counts not up; `make graph`
+   clean; self-review of `git diff readfocus-2.0...HEAD`.
+
+Estimate: 7.75 h (C20.1 0.75, C20.2 1.0, C20.3 0.5, C20.4 1.0, C20.5
+0.5, C20.6 0.75, C20.7 1.25, C20.8 1.0, C20.9 0.5, C20.G 0.5) against
+the stubs' 6.0 h (3.5 + 2.5); approved 2026-11-14 ("Approve and
+commit"), phase 2 budget raised to 38.25 h. The 50 %-over stop is at
+11.6 h. Safe to
+cut, in order: the response cache, "Explain this figure", stored
+threads, the per-book switch, suggestion buttons.
+
+Approvals this chunk needs: applying migration 023 (with a fresh dump);
+`GEMINI_API_KEY`, `KEY_ENCRYPTION_SECRET` and the other Steve variables
+on Render only when C20 ships (your C16 decision).
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C20.1 Steve spec, consent and settings | this commit (`feat(steve): add Steve spec, consent and settings`) | One commit as the C20.1 prompt asked (the plan had a/b). `docs/STEVE.md` (new): S1 persona (calm, scholarly; explains clearly, cites the book, admits uncertainty, never claims the book says what it doesn't), S2 consent, off switch and the notice text (version `2026-11-14`, quoting Google's free-tier terms read 2026-11-14 at aistudio.google.com/docs/terms, effective 2026-03-23), S3 scope, S4 context rules, S5 answers, S6 quota and paused states, S7 keys, S8 logging, S9 data kept, S10 models, S11 evaluation. `supabase/migrations/023_steve.sql` (new, not applied): `profiles.steve_enabled` (default true), `steve_consent_at`, `steve_consent_version`, `steve_key_cipher`, `steve_key_last4`; tables `steve_usage` (user_id, day, requests; key user_id+day), `steve_threads`, `steve_messages` (thread_id, user_id, role reader/steve, content, anchor, citations, model, tokens_in, tokens_out); RLS on all three with SELECT-only own-row policies (only the service role writes); trigger `steve_profile_guard` refuses a reader's own role changing the Steve columns on `profiles` (whose 001 policy is FOR ALL) and resets them on a client insert. `backend/steve/__init__.py`, `backend/steve/consent.py` (notice text, version, terms URL), `backend/routers/steve.py`: `GET /steve/settings` (enabled, consent given/at/version/current, the notice), `PUT /steve/settings` (`enabled` and/or `consent`; consent needs the current `consent_version`, else 409; withdrawing clears both columns; unknown fields 422); `backend/main.py` mounts it at `/steve`; `backend/routers/auth.py` `/auth/profile` strips `steve_key_cipher`. | Tests first (collection failed before the code): `test_steve_settings.py` 16 (consent stored with version, old or missing version refused, withdraw clears, off keeps consent, empty/unknown update refused, only the caller's row, 404, cipher never returned by either route, notice in code = notice in STEVE.md); `test_migrations.py` +10 for 023. Standard checks below. | 2026-11-14 | Prompt said `015_steve.sql`; 015 is `015_term_lookups.sql` and migrations end at 022, so it is 023. Added `steve_consent_version` (the prompt asks for the version stored) and the guard trigger (else a reader could set consent or the key cipher through the Supabase client). The plan's `steve_keys` table, `books.steve_off` (per-book switch) and `steve_take_quota()` are not in 023: the key lives on `profiles` as the prompt specifies; the per-book switch is cut for now (the notice does not promise it); the atomic quota function comes with C20.2b in a later additive migration. `require_steve` (consent + enabled + no open test) moves to C20.6, where the first Steve call is made. The SQL was not executed anywhere (no local Postgres; the shared project needs your approval and a fresh dump to apply 023). Over the ~200-line guide: about 490 lines without the migration, half of it the spec and tests. |
+| [x] C20.1 apply migration 023 to the Supabase project (your approval, 2026-11-14: "Dump, then apply 023") | `docs: record migration 023 applied`; C20.1 `2d589ff`, graph fix `fix(graph): add purposes for the C20.1 files` | Read-only check first: no `steve_*` columns or tables, 8 profiles, no triggers and 1 policy on `profiles`, Postgres 17.6. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-14-pre-023\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (77,617 B; no `steve`), `readfocus_prod_data.sql` (42,614,555 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`). Then `npx supabase db query --linked -f` with `BEGIN;` + `023_steve.sql` + `COMMIT;` (exit 0). | Read-only query after: the five `profiles` columns as written (`steve_enabled` boolean not null default true, the rest nullable); `steve_usage`, `steve_threads`, `steve_messages` with every column as written, primary keys, `idx_steve_threads_user_book`, `idx_steve_messages_thread`; RLS on all three, one SELECT policy each; `profiles` still has only "Users can CRUD own profile" (ALL); trigger `steve_profile_guard` on `profiles`, enabled; 8 profiles, 8 with Steve on, 0 consented. | 2026-11-14 | Applied with `db query` like 016 to 022, so the CLI's migration history does not list 023. The trigger's refusal of a reader-role update was not exercised on the project (that would be a write); the migration tests cover its SQL. After `2d589ff` the repo graph tests failed (purposes for the new files missing; DEBUG_LOG 2026-11-14 C20.1), fixed before this record. |
+| [x] C20.2 Gemini provider with per-user limits, circuit breaker and cache | this commit (`feat(steve): Gemini provider with per-user limits, circuit breaker and cache`) | One commit as the C20.2 prompt asked (the plan had a/b). The prompt chose Google's SDK over the plan's plain httpx (D2): `google-genai` 2.34.0 (Apache-2.0, 2026-10-29, the newest release at least two weeks old; Google's libraries page names it the official library), pinned in `requirements.txt`, imported lazily. Guard narrowed test first to one file: `tools/no_paid_ai.py` (`STEVE_PROVIDER`, `steve_sdk_allowed`, `steve_gate_text`, `STEVE_PACKAGES`), `test_no_paid_ai.py` (also catches `from google import genai` now; a second file is still caught). `backend/steve/provider.py`: `generate(parts, model, api_key, stream, system)` with a timeout (30 s; 60 s per stream) and `retry_options.attempts = 1`, 429 as `paused_quota` with Google's retryDelay, `timeout`, `unavailable`, `key_rejected`, `not_configured`; logs counts and latency only; the SDK's logger at WARNING. `errors.py` (`SteveUnavailable`), `policy.py`, `quota.py` (local day from a UTC offset; `steve_take_quota` / `steve_refund_quota`), `breaker.py` (per key; ours pauses every reader), `cache.py` (sha256 of book, normalised question, context hash, model; 7 days; 500 entries), `service.py` `ask()` (cache, breaker, limit, provider; refund and no cache on failure). `supabase/migrations/024_steve_quota.sql` (not applied): the two functions, service role only. Graph: `tools/repo_graph/build.py` maps dotted imports (`google.genai` -> `gemini`, allowed). `test_requirements.py` knows the namespaced import. `docs/STEVE.md` S6 and S10, `docs/BENCHMARKS.md` RSS row. | Tests first (collection failed before the modules): `test_steve_provider.py` 16, `test_steve_service.py` 21 (success, 429 opens the breaker, per-user limit, own-key bypass, cache hit, timeout, and more), `test_no_paid_ai.py` +3, `test_migrations.py` +4, graph +2. RSS: `import backend.main` 130.4 / 130.4 / 130.8 MB, with the SDK 148.6 / 148.4 / 148.5 MB. Google's rate-limits page read 2026-11-14 (per project; RPD resets midnight Pacific; per-model numbers only in AI Studio). Standard checks below. | 2026-11-14 | No live Gemini call was made (the chat models were not re-tested; both env models stay `gemini-3.5-flash-lite`). The plan's global daily budget for our key is not built: Google's per-project daily limit returns 429 and the breaker pauses everyone. Breaker and cache live in process memory (one Render instance; a restart empties them). 024 needs your approval and a fresh dump to apply; until then no endpoint uses it (the first is C20.6). About 900 changed lines without the migration, over the ~200 guide, because the prompt asked for one commit; most are tests. |
+| [x] C20.2 apply migration 024 to the Supabase project (your approval, 2026-11-14: "Dump, then apply 024") | `docs: record migration 024 applied`; C20.2 `a0158bd` | Read-only check first: no `steve_*quota` functions, `steve_usage` present with 0 rows, 8 profiles. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-14-pre-024\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (83,299 B; 023's tables, no quota functions), `readfocus_prod_data.sql` (42,615,171 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`). Then `npx supabase db query --linked -f` with `BEGIN;` + `024_steve_quota.sql` + `COMMIT;` (exit 0). | Read-only query after: `steve_take_quota(p_user uuid, p_day date, p_limit integer) -> integer` (plpgsql) and `steve_refund_quota(p_user uuid, p_day date) -> void` (sql), both security invoker with `search_path=""`; EXECUTE for `service_role` only, not `anon` or `authenticated`; `steve_usage` 0 rows; 8 profiles. | 2026-11-14 | Applied with `db query` like 016 to 023, so the CLI's migration history does not list 024. The functions were not called on the project (a call writes `steve_usage`); their behaviour is covered by the offline tests only until C20.6 uses them. |
+| [x] C20.3 reader's own key, encrypted | this commit (`feat(steve): let users add their own encrypted Gemini key`) | `backend/steve/keys.py` (new): HKDF-SHA256 from `KEY_ENCRYPTION_SECRET` (at least 32 characters, else own keys are off) to a Fernet key; encrypt, decrypt, last4, shape check; status, store, remove; `reader_key` decrypts for one call (a cipher that no longer decrypts is `key_rejected`). `backend/steve/provider.py`: `check_key` reads the chat model's details with the key (no generation, no quota; timeout; typed errors). `backend/routers/steve.py`: `GET /steve/key` -> `{has_key, last4}`; `PUT /steve/key` reads its body by hand (FastAPI's 422 echoes input), 422 for anything but `{"key": "<key-shaped>"}`, then Google: refused 400, busy 503, accepted encrypted and stored; `DELETE /steve/key`. `backend/steve/service.py`: `ask()` uses the reader's stored key when there is one (never counted; its own breaker). `requirements.txt`: `cryptography==50.0.2` (already installed, now imported directly). Frontend: `steve/OwnKeyForm.jsx` + `.css`, `steve/ownKey.js` + test; "Steve" section in the account panel (`AccountMenu.jsx`); the panel now scrolls inside itself on short screens (`AccountMenu.css`, the bar is sticky). `e2e/fixtures.js` mocks `/steve/key`. `docs/STEVE.md` S7. | Tests first: `test_steve_keys.py` 22 (key never in a response or a log line with caplog at DEBUG; wrong key rejected; delete works; malformed bodies, incl. the key under another name, never echoed; Google busy stores nothing; no secret; rotated secret; the service uses the stored key and never counts it), `test_steve_provider.py` +6 (check_key), service tests now feed the key through `keys.reader_key`; unit `ownKey.test.js` 5; e2e `steve-key.spec.js` 5. Design review: handoff screen 17, screenshots at 1440 (form, saved, refused), 375 x 812 and 375 x 667 in Lamplight; 44 px targets, no sideways scroll, keyboard (disclosure, field, Enter submits), contrast from existing token pairs (`check:contrast` 204 pairs, 0 failing). Standard checks below. | 2026-11-14 | Mounted in the account panel for now; C20.7 reuses the form in Steve's panel ("Use your own key" from the paused state). The handoff's "Send book text to Gemini" switch is not here (C20.1's off switch has no UI yet; C20.7). Edge shows its own reveal (eye) button in the password field. The design chain's three skills (impeccable, taste, ui-ux-pro-max) were not run in full; the checklist was. No live Google call was made. |
+| [x] C20.4 context builder | this commit (`feat(steve): build grounded context from session, highlight and retrieval`) | `backend/steve/context.py` (new): `build_context(user_id, book_id, question, anchor?, image?, region_id?)` -> `Context` with `parts` (delimited context text, optional `inline_data` image, the question last), `citations` `{label: anchor}` for every page or section sent, the parts as dataclasses, `tokens` and `context_hash` (context + image, not the question, for the cache). Parts: book card (title, author, truncated contents); session prose from the reading session's first chunk to the reader's place (over budget: about 600 tokens around the anchor plus the most recent text); the highlight with its paragraph (unverified selections still sent, marked); top-k (6) retrieved passages minus the session's whole range and the highlight's chunk, labelled `p. N`, `pp. N-M` or `sec. N`; region source (EPUB LaTeX/MathML, exact code, figure caption, table rows); image (PNG/JPEG/WebP, 1.5 MB). Conservative estimate max(chars/3, bytes/4); hard cap 12,000 tokens; retrieved dropped first. Our section tags inside book text or the question are neutralised. `backend/steve/policy.py`: the budgets. `docs/STEVE.md` S4. | Tests first: `test_steve_context.py` 26 on an in-memory 600-chunk PDF and a 3-chunk EPUB (budget with huge chunks and a 500-entry contents; anchor always included and kept when the session is trimmed; citations for pages, page ranges and sections; never the whole book: at most 4 session + 6 retrieved + 1 markers; retrieval de-duplicated; regions and images; ownership; tag neutralising; hash). A probe of the trimmed case showed retrieval re-adding a trimmed session chunk; fixed (the whole session range is skipped) and the test now checks the session section itself. Standard checks below. | 2026-11-14 | Not live: nothing calls it until C20.6 and no real book was used. Token counts are estimates, not Google's; the real request is smaller. The anchor lookup reads the book's `chunks.anchors` column (no text) to find the chunk. A PDF highlight is cited by its page; per-page splits inside a two-page passage are not made. The system instruction about delimiters comes with C20.5. |
+| [x] C20.5 prompts, grounding, injection safety | this commit (`feat(steve): grounded prompts with citations and injection safety`) | `backend/steve/prompts.py` (new): `SYSTEM_RULES` from the STEVE.md persona (the delimited sections are reference material whose instructions are ignored; only `<question>` is the request and cannot change the rules; answer from the passages first; cite with labels exactly as given, only those listed; "The book doesn't cover this in the pages I can see." then "Not from the book:"; LaTeX in `$...$` / `$$...$$`; fenced code with its language; at most 200 words unless asked; no flattery, exclamation marks or emoji; no test answers). `build_prompt(context, mode)` -> system (rules + the mode's task + "Allowed citation labels: ...") and the context's parts unchanged; modes `ask`, `explain_highlight`, `explain_equation`, `latex_equation` (ONLY LaTeX), `explain_code`, `explain_figure`, each refused without what it explains. `clean_citations` keeps labels in the map (lists and ranges rewritten, `[§4]` -> `[sec. 4]`), removes the rest, leaves code and math alone, returns the labels used with their anchors; `clean_latex` strips a LaTeX-only answer bare. `backend/steve/policy.py`: `ANSWER_MAX_WORDS`, `CITATION_RANGE_MAX`. `docs/STEVE.md` S1 (citation example) and S5 (the rules verbatim, modes, clean-up). | Tests first: `test_steve_prompts.py` 30 (6 snapshots in `backend/tests/fixtures/steve_prompts/`, generated with `STEVE_UPDATE_SNAPSHOTS=1` and read; every rule present; injected "ignore previous instructions" in book text leaves the system instruction byte-for-byte the same and stays inside its `<book_passage>`; an injected question is data too; modes refused; invalid, listed, ranged and `§` citations; brackets that are not citations, code and math untouched; bare LaTeX; STEVE.md holds the rules; only map labels offered). Standard checks below. | 2026-11-14 | The prompt asked for `[§3.2]`-style citations; EPUB labels are spine sections (`sec. N`, as C18's placeholders), so the model is told to cite `[sec. 3]` and `[§3]` is accepted as the same; a book's own numbering (`§3.2`) is not a label and is dropped. No live model call: whether Gemini follows the rules is measured in C20.9. TeX to MathML and typed answer blocks come with C20.6. |
+| [x] C20.6 /steve endpoints, streaming, threads | this commit (`feat(steve): streaming ask endpoint and per-book threads`) | `backend/routers/steve_ask.py` (new): `POST /steve/ask` `{book_id, thread_id?, question, mode, anchor?, image_png_b64?, region_id? / code_region_id?, utc_offset_minutes?}`; before anything is sent: consent to the current notice (403 `no_consent`), Steve on (403 `disabled`), no test open on the book (409 `in_test`), PNG of at most 500 KB (413 `too_large`, 422 `bad_image`), thread and book and region the reader's (404), mode complete (422 `needs_*`); then `build_context`, `build_prompt`, `service.ask(stream=True)` (an image goes to the vision model; the cache key includes the mode); the first piece is awaited before the response so a pause is a typed JSON error (429 `paused_quota` / `daily_limit` with `until`, 503 `timeout` / `unavailable` / `not_configured`, 400 `key_rejected`). SSE: `start` {thread_id, pages}, `token` {text}, `done` {message_id, thread_id, text (citations checked; latex mode bare), citations [{label, anchor}], usage {model, tokens_in, tokens_out, cached}}, or `error` {code, message} mid-stream. `GET /steve/threads?book_id` (newest first, titled by the first question), `GET /steve/threads/{id}` (messages in order). `backend/steve/threads.py` (new): threads and messages, every read filtered by the reader; `created_at` set by the backend. `backend/main.py` mounts it; `prompts.label_key` made public; `policy.ASK_IMAGE_MAX_BYTES`. `docs/STEVE.md` S12. | Tests first: `test_steve_api.py` 31 (SSE shape with a mocked provider: start, tokens, done with citations and usage; messages kept; follow-ups join their thread; highlight anchor kept; code region; image to the vision model and not stored; LaTeX mode; consent missing, old notice and off switch refused with no call; open test; typed pauses before the first token; breaker pauses the next reader with `until`; daily limit; mid-stream error saves no answer; image limits; ownership of book, thread and region; own key never in the stream, stored rows or logs; thread lists and reads only the reader's). RLS on the tables: migration 023's tests (SELECT-only own rows); the API filters by the reader as well. Standard checks below. | 2026-11-14 | No live model call. The streamed tokens are raw; the `done` text is the checked one, which the panel shows in their place (C20.7). TeX to MathML and typed answer blocks for display are left to the panel (C20.7), which renders the `done` text. A thread's messages are saved only once the first token arrives, so a refused question leaves nothing. |
+| [x] C20.7a Steve client, blocks, state | this commit (`feat(steve): stream client, answer blocks and panel state`) | Split from C20.7 as its prompt allows ("split a/b if over budget"): the pure client logic, no UI yet. `frontend/src/steve/sse.js`: an SSE parser that survives chunk boundaries, `SteveError` with the server's typed code, status and `until`, `askSteve()` (POST with the bearer token, streams `start` / `token` / `done` / `error` to a callback; a refusal throws before any event). `answer.js`: the answer's Markdown as blocks (paragraphs, lists, fenced code with language, `$$` display math; inline `$math$`, `code`, bold, italic, citation chips for sent labels only), never HTML, and readable half-written. `highlight.js`: keyword, comment and string tokens (the handoff's three tints) for Python, JS/TS, Java/C#/Kotlin, C/C++, Go, Rust, SQL and shell, no dependency. `suggest.js`: three chapter-based suggested questions. `steveState.js`: the panel reducer (loading, load_error, consent, off, chat with waiting / streaming / done / stopped / error answers, paused with `until`, key view and back) and `backAt()`. | `steve.test.js` 19 (chunked SSE, unreadable event, typed refusals, askSteve with a fake fetch; blocks, chips only for sent labels, lists, fences, display math, half-written answers, `<script>` stays text; tokens keep the text exact; suggestions; every reducer path). Standard checks below. | 2026-11-14 | Nothing renders these yet (C20.7b). KaTeX is installed in the working tree but not committed here; it comes with C20.7b, where it is first imported. |
+| [x] C20.7b Steve panel UI | this commit (`feat(steve): side panel with consent, streaming answers and citations`); C20.7a `d51899c` | `frontend/src/steve/StevePanel.jsx` + `.css` (new): a 380 px column beside the book (the book reflows and stays usable; `complementary`, not a modal), a pull-up sheet 64 % high under 760 px; states: consent (the server's notice text, terms link, Turn on Steve stores consent to that version, Not now, own-key link), off, empty with three chapter suggestions, the conversation (question, "Steve · from pages N-M", streaming with a caret, Steve is writing… and Stop, checked text on `done`, citation chips that move the book with the panel open, Copy, errors with Try again), resting ("until tomorrow" for the daily limit, Google's time or "for now"; Use your own key / Keep reading), settings ("Send book text to Gemini" switch + the own-key form open). `SteveAnswer.jsx`, `SteveMath.jsx`, `math.js` (KaTeX 0.19.1, MathML output, lazy, DOMPurify MathML profile), `useSteve.js`, `SteveContext.js` (`askAbout` for C20.8/C21). `ReaderToolbar.jsx`: the Steve button (`aria-expanded`); `ReadingSession.jsx` + `.css`: the panel beside the book, `onCite` -> `reader.goTo`. `OwnKeyForm.jsx`: `defaultOpen`. `frontend/package.json`: `katex` 0.19.1 (exact). `e2e/fixtures.js`: `/steve/settings`, `/steve/ask` mocks and `steveStream()`. `docs/STEVE.md` S13, `docs/BENCHMARKS.md` (bundle). | `e2e/steve-panel.spec.js` 11: consent stored to its version and nothing asked; Not now returns focus; a streamed answer with KaTeX MathML (inline and display), tinted code and a chip that moves the book to p. 2 with the panel open; only server-kept citations become chips; resting heading, placeholder and the own-key view and back; error and Try again; the off switch; keyboard (heading focused, Tab, Esc, focus back on the toolbar button); side by side at 1440 (stage ends before the 380 px panel); 375 sheet (full width, below the top of the book, no sideways scroll, 44 px targets, nothing drawn over the composer); Lamplight + reduced motion (fade only). Design review on screenshots: consent, answer, resting at 1440 paper, answer at 1440 Lamplight, empty sheet at 375. Contrast pairs used (accent text on accent soft, ink-2 on paper-2, ink-3 on paper) are in `check:contrast`. Bundle: initial `index` +0.05 kB gzip, `ReadingSession` +8.0 kB gzip, KaTeX a lazy 77.8 kB gzip chunk. Standard checks below. | 2026-11-14 | Found in review and fixed before committing: the toolbar button and the composer were both named "Ask Steve" (the input is now "Your question for Steve"); a far-off `until` read "resting until soon". Not built: "Add to notes" (notepad, C22), the per-book switch, reopening an earlier thread (the API has it; the panel keeps the visit's thread), the page flash on a citation jump. The design chain's three skills were not run in full; the checklist was. No live Gemini call; e2e mocks every `/steve` call. |
+| [x] C20.8a block actions backend: equation LaTeX cache, region details, figure context | this commit (`feat(steve): equation LaTeX cache, region details and figure context`) | Split from C20.8 (its prompt allows a/b): the server side first. `supabase/migrations/025_equation_latex.sql` (new, not applied; the prompt named `016_equation_latex.sql`, but 016 exists): `equation_latex` (file_sha256, page, bbox_hash, latex, model, created_at; key file + page + box hash), RLS with no policy (backend only). `backend/routers/steve_ask.py`: `POST /steve/latex {book_id, region_id, image_png_b64?}`: the reader's own PDF math region (else 404 / 422 `not_pdf_equation`); a known equation for that file returns with no call and no consent; else consent, off switch, open test, the crop (422 `needs_image`, 413), `latex_equation` on the vision model through `service.ask` (quota, breaker), `clean_latex`, stored (an empty answer is not); `bbox_hash` rounds the box to 0.1 pt. `backend/routers/books.py`: each box of `GET /books/{id}/regions` carries its region `id` and `inline`; `GET /books/{id}/regions/{region_id}` and `GET /books/{id}/region-at?spine_index&path` return one region's details (exact code, language, caption, label, alt, LaTeX, MathML, equation number). `backend/steve/context.py`: a region's `<surrounding>` paragraph from its placeholder in the chunk's prose (`SURROUNDING_MAX_TOKENS` 400). `docs/STEVE.md` S14. | Tests first (21 failed before the code): `test_steve_latex.py` 12 (one vision call stored as bare LaTeX; again: cached, no image; another reader with the same file: cached, a box within rounding is the same; a different file: needs its image; cached needs no consent, new does; only the reader's PDF equations; another's book; typed pause stores nothing; empty answer not stored; 413), `test_api_regions.py` +6 and the list now with ids, `test_steve_context.py` +2 (figure's paragraph, none without a placeholder), `test_migrations.py` +2, graph table list +1. Standard checks below. | 2026-11-14 | Migration 025 needs your approval and a fresh dump to apply; until then `/steve/latex` fails on the missing table (no UI calls it before C20.8b). |
+| [x] C20.8b PDF block actions: explain, copy as LaTeX, copy code, crops | this commit (`feat(steve): block actions on PDF equations, code and figures`); C20.8a `9ccc0ed` | `frontend/src/steve/PdfBlockActions.jsx` + `BlockActions.css` (new): each whole equation, code listing and figure of the shown PDF pages gets a focusable outline (pointer events pass through to the text layer) and, on hover, a tap or keyboard focus, a bar of actions on the region's side of the page (handoff "Block affordances"): Explain this equation / figure (a crop of the page's own canvas, padded 6 pt, at twice the box's CSS size, PNG under 500 KB) and Explain this code (the region id) through `SteveContext.askAbout` (the panel opens with "Equation, p. 1: Explain this equation."); Copy code (the region's exact text from `GET /books/{id}/regions/{id}`, no Steve call); Copy as LaTeX (`POST /steve/latex` with the crop) in `LatexDialog.jsx` (KaTeX preview, source, Copy LaTeX; loading and refusals). Without Steve (a pages-only book) only Copy code is offered. `blocks.js` (actions, crop geometry, shrink steps, element paths), `crop.js`, `sse.js` `postSteve()` (typed errors). `originalview/pdf/regions.js` keeps ids, kinds and the inline flag, with `regionsOf`, `regionAt`, `subscribe`; `Reader.jsx` mounts the actions. `e2e/fixtures.js`: region details and `/steve/latex` mocks. | `blocks.test.js` 5, `regions.test.js` +1, `e2e/steve-blocks.spec.js` 7 (equation Explain sends a PNG crop with the region id and the panel opens; the bar stays on the page; Copy as LaTeX previews in MathML and copies; a refusal shows in the dialog; code copied exactly with no Steve call, Explain by region id with no image; figure crop; inline math has no actions; the bar leaves with the pointer; keyboard: focus an outline, Tab to its actions, Esc puts them away without reopening). Fixed in review before committing: the bar ran off the page's left edge for a region on the left (now aligned to the region's side); Tab went to the next outline instead of the bar (outline and bar now share a wrapper); the bar stayed after the pointer left the book. Screenshots at 1440 (bar, LaTeX dialog). Standard checks below. | 2026-11-14 | On Windows the clipboard reads back CRLF; the e2e normalises line ends, the text copied is exact. Not checked on a real phone; at 375 px the bar stacks its actions below the region (CSS only, not in e2e). "Add to notes" on figures waits for C22. Migration 025 is not applied, so Copy as LaTeX fails against the real backend until it is. |
+| [x] C20.8c EPUB block actions: local LaTeX, code, figure images | this commit (`feat(steve): block actions in EPUB sections, LaTeX on the device`); C20.8b `6a7baa6` | `frontend/src/steve/EpubBlockActions.jsx` (new): in each shown section, `<math>`, `<pre>` and figures (or a lone image) show the same action bar on hover, a tap or keyboard focus (blocks get `tabindex="0"`; Enter moves to the bar, Esc back without reopening), placed over the block in this page. Copy as LaTeX on the device (`latexLocal.js`: the MathML's TeX annotation, else `mathml-to-latex` 1.8.0, MIT, lazy) with the KaTeX preview; Copy code (`textContent`, exact); Explain this equation / code by the region the map has at that section and element path (`GET /books/{id}/region-at`), else with the block's own source in the question; Explain this figure with the image file downscaled to a PNG under 500 KB. `originalview/epub/sanitize.js`: MathML `<semantics>` and text-only `<annotation>` are kept (DOMPurify drops both by default, so the TeX was lost and left as stray text; `<annotation-xml>` stays out). `EpubBook.jsx`: `sectionIndex(doc)`; `Reader.jsx` mounts the actions. `frontend/package.json`: `mathml-to-latex` 1.8.0 (exact). `e2e/fixtures.js`: `region-at` mock. `docs/BENCHMARKS.md`. | `latexLocal.test.js` 3 (annotation by encoding; `\frac{a}{b}` and `c^{2}` converted; unreadable gives ''), `e2e/steve-epub-blocks.spec.js` 6 on the converted fixture (Copy as LaTeX gives `E = mc^2` from the annotation with no request; Explain from source when the map has no region, by region id when it has; Copy code exact; the plot explained with a PNG; keyboard). `converted.spec.js` and `reader.spec.js` still pass with the sanitiser change. Found while testing: the first EPUB runs hovered during a page turn, when the actions are paused (the spec now waits for the turn to settle; DEBUG notes in this row, no product change); Esc reopened the bar through `focusin` (fixed). Bundle: `ReadingSession` +3.9 kB gzip; `mathml-to-latex` + `@xmldom/xmldom` a lazy 52.2 kB gzip chunk; initial unchanged. Standard checks below. | 2026-11-14 | A pointer already resting on a block when a page turn ends shows nothing until it moves. A figure drawn as inline SVG (no `<img>`) has no Explain. The bar is placed from the block's rect when shown and does not follow a scroll inside the section (pages do not scroll; a turn puts it away). |
+| [x] C20.8 apply migration 025 to the Supabase project (your approval, 2026-11-14: "Dump, then apply 025") | `docs: record migration 025 applied`; C20.8a `9ccc0ed` | Read-only check first: no `equation_latex` table; 9 books, 7 with `file_sha256`; 1,659 PDF math regions. Fresh backup, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-14-pre-025\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (84,828 B; 024's functions, no `equation_latex`), `readfocus_prod_data.sql` (42,615,171 B), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`). Then `npx supabase db query --linked -f` with `BEGIN;` + `025_equation_latex.sql` + `COMMIT;` (exit 0). | Read-only query after: `equation_latex` with `file_sha256` text, `page` integer, `bbox_hash` text, `latex` text (all not null), `model` text nullable, `created_at` timestamptz not null default now(); `equation_latex_page_check` (page >= 1); primary key (file_sha256, page, bbox_hash); RLS on, 0 policies; 0 rows; 9 books. | 2026-11-14 | Applied with `db query` like 016 to 024, so the CLI's migration history does not list 025. Two of the 9 books have no `file_sha256`: their equations are still read by Steve but not cached (each Copy as LaTeX on them is a call). |
+| [x] C20.9 evaluation set | this commit (`test(steve): add grounded-answer evaluation set and runner`); fix `f9c10d5` | As the C20.9 prompt asked (it replaces the plan's ~30 items, `tools/` and BENCHMARKS): `backend/tests/fixtures/steve_eval.json` (new): 15 questions on the test shelf (5 session, 5 retrieval with a focus phrase standing in for the retriever's chunk, 3 not covered, 2 with a planted instruction, one in the session and one in a retrieved passage), page and section labels only, no book text stored. `scripts/steve_eval.py` (new): reads the pages from `samples/technical/` (pypdf, as the app does; ebooklib for the EPUB), lays them out with `context.py`'s own card, sections, window and cap, builds the `ask` prompt and calls `provider.generate` on our key; dry run by default, `--live` for at most 15 calls 6 s apart, stopping at the first error; no Supabase, no cache, quota or breaker. Scores raw answers: cited labels were sent, at most 250 words, answered from the book, "not covered" in the first 300 characters, canary absent. `backend/tests/test_steve_eval_set.py` (new, 12 tests): the set's mix and labels, the scoring, the runner never reads a key; prompts build under the cap when the shelf is fetched. `docs/STEVE.md` S11: bars set before the run, then the run. The first live attempt failed every item locally before reaching Google (provider bug, fixed and logged in `f9c10d5`, no quota spent) | Live run 2026-11-14 on `gemini-3.5-flash-lite` (your yes, twice): 15 calls, 15/15 passed (session 5/5, retrieval 5/5, not covered 3/3, injection 2/2), expected page cited 12/12, median 1.66 s, max 2.23 s, 30,150 tokens in; answers also read by hand. pytest 1382 passed; standard checks green | 0.75 h | A citation inside `$$...$$` is not linked by the panel (seen once); equation, code and figure items left out of the set |
+| [x] C20.G 🚦 Gate G7: consent, quota, grounding — **G7: PASS** | this commit (`docs(progress): record gate G7 verdict on Steve`); C20.9 `249bfbf`, fix `f9c10d5` | Verdict only, no code change. The C20.G prompt called this gate G6; it is G7 in this plan (G6 passed at C19.G). Evidence, 2026-11-14, each item as the prompt listed it: (1) **Consent and off switch, with network logging.** Backend: a temporary test (not committed) ran the real provider and Google SDK behind `POST /steve/ask` with every DNS lookup logged and refused: no consent, consent to an old notice version, and Steve off each gave 403 (`no_consent`, `no_consent`, `disabled`) for both `ask` and `explain_code` with **0 lookups**; the positive control (consented, on) looked up `generativelanguage.googleapis.com` (then 503 `unavailable`, as the lookup was refused), so the logger does see a call. Browser: a temporary Playwright spec logged every request: before consent 37 requests, 0 to `/steve/ask` or `/steve/latex`, 0 to any Google host (only `GET /steve/settings`); "Not now" sent nothing; after one answered question, switching Steve off (`PUT {enabled:false}`) disabled the composer and Enter sent 0 more asks. Kept tests: `test_steve_api.py::test_consent_and_the_off_switch_are_enforced_before_anything_is_sent`, `test_steve_latex.py::test_a_cached_equation_needs_no_consent_but_a_new_one_does`, `steve-panel.spec.js` first use, Not now and settings. (2) **Limit and breaker (mocked 429), resting UI, the app keeps working.** Backend with the real provider and a fake SDK client raising a 429 (retryDelay 600 s): the first question 429 `paused_quota` with `until` 12:10Z, the next 429 `paused_quota` with **1 SDK call in all**. Kept tests: `test_steve_service.py` (429 pauses every reader on our key, longer retry delay honoured then closed, own-key 429 pauses only that key, own key skips our limit and breaker, daily limit per local day and per reader, timeouts refunded), `test_steve_api.py` breaker and daily-limit pauses. Browser: `paused_quota` until +10 min showed "Steve is resting until 01:17 PM" and `daily_limit` "Steve is resting until tomorrow" ("They come back at midnight, your time"), each with Use your own key and Keep reading; in both the book still turned (page 1 -> pages 2-3). (3) **Keys never shown.** Real provider with a reader's own key, all loggers at DEBUG: the key (and our key) found in none of the `/steve/ask` response, `/steve/settings`, `/steve/key` (`{has_key:true,last4:"ij12"}`), 7 log lines or the stored rows. Bundle (`npm run build`, 121 files): the values of `GEMINI_API_KEY`, `KEY_ENCRYPTION_SECRET`, `SUPABASE_SERVICE_KEY`, `CRON_SECRET` from `.env` in 0 files; those names, `generativelanguage.googleapis` and `steve_key_cipher` in 0 files; one `AIza…` pattern match is 210 characters of base64 inside the vendored Tesseract WebAssembly (`ocr/core/tesseract-core-lstm.wasm.js`), not a key. Kept tests: `test_steve_keys.py::test_the_key_never_appears_in_a_response_or_a_log_line`, `test_steve_settings.py` (cipher never returned), `steve-key.spec.js`. (4) **One door.** `git grep` for `google.genai`, `from google import genai`, `genai.Client`, `generateContent` and `generativelanguage.googleapis` (code, outside docs and tests): only `backend/steve/provider.py:61,64`, plus the repo graph's service map (`tools/repo_graph/build.py`) and its test; `GEMINI_*` read only in `provider.py:26-27`; `provider.generate` called only by `backend/steve/service.py:38`. `test_no_paid_ai.py` 10 passed, and it failed on the temporary gate test while that file named the key variable inside backend/, so the guard bites. (5) **Evaluation** (C20.9 live run, STEVE.md S11): citations valid in all answered cases 15/15 (expected page 12/12), "not covered" honesty 3/3 (bar 2/3), injections ignored 2/2. The two temporary files were deleted before the standard checks | Steve suites: `pytest` on the nine `test_steve_*.py` files 196 passed; the temporary backend gate test 6 passed; the temporary Playwright spec 4 passed; standard checks below in the commit | 0.75 h | Not re-run here from the plan's G7 list: memory with Steve loaded (+18 MB RSS when the SDK loads, BENCHMARKS, C20.2) and the full self-review of `git diff readfocus-2.0...HEAD`; Steve's env vars go on Render only when C20 ships (your call) |
+
+## C21 — anchors, highlights and underlines
 
 Goal: select text in the original view, highlight or underline it in a
 palette colour, see it again after zoom, font change and reload; anchors
 stored as ANCHORS A1-A5 with RLS; orphaned anchors listed. Depends on:
 C17, C18. Estimate: 3.5 h. Safe to cut: underline styles beyond one.
 
-## C21 — notepad
+## C22 — notepad
 
 Goal: typed notes and Excalidraw drawings anchored to passages or
 regions, in reading order by the sortable position (A4), with the
-drawing editor lazy-loaded and its bundle size recorded. Depends on: C19.
+drawing editor lazy-loaded and its bundle size recorded. Depends on: C21.
 Estimate: 3.0 h. Safe to cut: drawings on figures (notes only).
 
-## C22 — Steve backend
-
-Goal: `backend/steve/` with `provider.py` as the one door to Gemini, the
-consent column (`profiles.steve_consent_at`) and off switch, the context
-builder under a policy cap, readers' own keys encrypted with
-`KEY_ENCRYPTION_SECRET`, per-reader quota, the 429 circuit breaker and
-the response cache; the guard narrowed test first so only `backend/steve/`
-may import the SDK or read `GEMINI_*`; `GEMINI_API_KEY` added on Render
-when Steve ships (the user's decision at C16); re-test `gemini-3.8-flash`
-and `gemini-3.6-flash` for chat (both 503 on 2026-11-12, DEBUG_LOG) and
-size the global daily budget: on Flash-Lite's 500 requests a day, a
-per-reader limit of 15 serves about 33 readers. Depends on: C16 (and C20
-for highlighted passages). Estimate: 3.5 h. Safe to cut: the response
-cache.
-
-## C23 — Steve in the reader
-
-Goal: the consent notice, "Ask Steve" from a highlight, a side panel with
-grounded answers (page or section citations, LaTeX), the paused state,
-the own-key setting (last 4 shown). Depends on: C21. Estimate: 2.5 h.
-Safe to cut: image questions on figures (`GEMINI_MODEL_VISION`).
-
-## C24 — focus mode
+## C23 — focus mode
 
 Goal: FOCUS_RULES F1-F14: body start, the server-timed stopwatch,
 idle and hidden-tab pauses, page and 3-hour caps, the bookmark quiz from
 the question bank, server-scored points; "Quiz me" outside focus mode.
-Depends on: C17 (C20 for bookmarks as anchors). Estimate: 3.5 h. Safe
+Depends on: C17 (C21 for bookmarks as anchors). Estimate: 3.5 h. Safe
 to cut: "Quiz me".
 
-## C25 — XP, streaks, badges and leagues
+## C24 — XP, streaks, badges and leagues
 
 Goal: GAMIFICATION G1-G15: XP from final focus points, the daily goal,
 streaks with earned freezes, the badge catalogue, weekly leagues with the
@@ -4007,7 +4303,7 @@ streaks with earned freezes, the badge catalogue, weekly leagues with the
 on: C23. Estimate: 3.0 h. Safe to cut: leagues (XP, streaks and badges
 only).
 
-## C26 — phase 2 verification and release
+## C25 — phase 2 verification and release
 
 Goal: live journey and isolation checks extended to highlights, notes,
 Steve (consent, quota, no book text in logs) and focus scoring; docs and

@@ -21,6 +21,9 @@ import { createLookupClient, readLookupOn, storeLookupOn } from '../reader/looku
 import { useAuth } from '../hooks/useAuth';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { ReadingLamp } from '../illustrations';
+import { StevePanel } from '../steve/StevePanel';
+import { SteveContext } from '../steve/SteveContext';
+import { useSteve } from '../steve/useSteve';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -83,6 +86,10 @@ export function ReadingSession() {
   const [chapter, setChapter] = useState('');
   const [toolbarFocused, setToolbarFocused] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
+  // Steve (C20.7b): a panel beside the book; the book stays usable while it is open.
+  const [steveOpen, setSteveOpen] = useState(false);
+  const steveButton = useRef(null);
+  const steve = useSteve(bookId, steveOpen);
   const [entries, setEntries] = useState([]);
   const chromeVisible = useChromeVisible(toolbarFocused || showAbandonModal || contentsOpen);
   const contentsButton = useRef(null);
@@ -182,6 +189,13 @@ export function ReadingSession() {
     reader.current?.goTo(entry.target);
   }, []);
   const backToToday = () => reader.current?.goTo(todayAnchor.current ?? bounds?.start);
+  const closeSteve = useCallback(() => setSteveOpen(false), []);
+  // A citation chip moves the book to its page or section; the panel stays open.
+  const onCite = useCallback((anchor) => reader.current?.goTo(anchor?.kind === 'epub' ? { cfi: anchor.cfi } : anchor), []);
+  const { ask: askSteve } = steve;
+  const steveActions = useMemo(() => ({
+    askAbout: (request) => { setSteveOpen(true); askSteve(request); },
+  }), [askSteve]);
   const onLookupToggle = () => {
     storeLookupOn(user?.id, !hoverLookup);
     setSwitched({ userId: user?.id, on: !hoverLookup });
@@ -312,6 +326,9 @@ export function ReadingSession() {
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
+          onSteve={pagesOnly ? undefined : () => setSteveOpen((open) => !open)}
+          steveOpen={steveOpen}
+          steveRef={steveButton}
         >
           {outside && (
             <button type="button" className="rf-tool" onClick={backToToday}>
@@ -345,6 +362,8 @@ export function ReadingSession() {
         </ReaderToolbar>
       </div>
 
+      <SteveContext.Provider value={pagesOnly ? null : steveActions}>
+      <div className="rf-reading-body">
       <main className="rf-reading-area">
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
         <h1 className="sr-only">{bookTitle}: today's reading</h1>
@@ -371,6 +390,11 @@ export function ReadingSession() {
           ocr={ocr}
         />
       </main>
+      {steveOpen && (
+        <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSteve} returnTo={steveButton} />
+      )}
+      </div>
+      </SteveContext.Provider>
 
       <ContentsDrawer
         open={contentsOpen}

@@ -33,6 +33,11 @@
   right: 0;
   z-index: var(--z-popover);
   width: 320px;
+  /* The bar is sticky, so the panel cannot scroll with the page: on a short screen it
+     scrolls inside itself instead (C20.3 made it taller with the own-key form). */
+  max-height: calc(100dvh - 88px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-4);
   border: var(--border-hair) solid var(--line);
   border-radius: var(--radius-surface);

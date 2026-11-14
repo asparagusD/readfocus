@@ -9,6 +9,13 @@
       "handler": "delete_book"
     },
     {
+      "id": "endpoint:DELETE /steve/key",
+      "type": "endpoint",
+      "method": "DELETE",
+      "path": "/steve/key",
+      "handler": "delete_key"
+    },
+    {
       "id": "endpoint:GET /auth/profile",
       "type": "endpoint",
       "method": "GET",
@@ -51,11 +58,25 @@
       "handler": "get_pages"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/region-at",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/region-at",
+      "handler": "get_region_at"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/regions",
       "type": "endpoint",
       "method": "GET",
       "path": "/books/{book_id}/regions",
       "handler": "get_regions"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/regions/{region_id}",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/regions/{region_id}",
+      "handler": "get_region"
     },
     {
       "id": "endpoint:GET /books/{book_id}/status",
@@ -98,6 +119,34 @@
       "method": "GET",
       "path": "/sessions/{session_id}",
       "handler": "get_session"
+    },
+    {
+      "id": "endpoint:GET /steve/key",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/steve/key",
+      "handler": "get_key"
+    },
+    {
+      "id": "endpoint:GET /steve/settings",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/steve/settings",
+      "handler": "get_settings"
+    },
+    {
+      "id": "endpoint:GET /steve/threads",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/steve/threads",
+      "handler": "list_threads"
+    },
+    {
+      "id": "endpoint:GET /steve/threads/{thread_id}",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/steve/threads/{thread_id}",
+      "handler": "get_thread"
     },
     {
       "id": "endpoint:POST /auth/profile/calibrate",
@@ -163,11 +212,39 @@
       "handler": "submit_answers"
     },
     {
+      "id": "endpoint:POST /steve/ask",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/steve/ask",
+      "handler": "ask"
+    },
+    {
+      "id": "endpoint:POST /steve/latex",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/steve/latex",
+      "handler": "equation_latex"
+    },
+    {
       "id": "endpoint:PUT /sessions/{session_id}/position",
       "type": "endpoint",
       "method": "PUT",
       "path": "/sessions/{session_id}/position",
       "handler": "save_position"
+    },
+    {
+      "id": "endpoint:PUT /steve/key",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/steve/key",
+      "handler": "put_key"
+    },
+    {
+      "id": "endpoint:PUT /steve/settings",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/steve/settings",
+      "handler": "put_settings"
     },
     {
       "id": "env:CRON_SECRET",
@@ -230,6 +307,10 @@
       "type": "env"
     },
     {
+      "id": "env:STEVE_UPDATE_SNAPSHOTS",
+      "type": "env"
+    },
+    {
       "id": "env:SUPABASE_ANON_KEY",
       "type": "env"
     },
@@ -256,6 +337,11 @@
     {
       "id": "env:VITE_SUPABASE_URL",
       "type": "env"
+    },
+    {
+      "id": "external:gemini",
+      "type": "external",
+      "banned": false
     },
     {
       "id": "external:google_fonts",
@@ -716,6 +802,18 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/steve.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/steve_ask.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/__init__.py",
       "type": "file",
       "role": "service",
@@ -806,6 +904,84 @@
       "language": "python"
     },
     {
+      "id": "file:backend/steve/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/breaker.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/cache.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/consent.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/context.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/errors.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/keys.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/policy.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/prompts.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/provider.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/quota.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/service.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/steve/threads.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/__init__.py",
       "type": "file",
       "role": "test",
@@ -846,6 +1022,48 @@
       "type": "file",
       "role": "test",
       "language": "markdown"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_eval.json",
+      "type": "file",
+      "role": "test",
+      "language": "json"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/ask.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/explain_code.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/explain_equation.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/explain_figure.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/explain_highlight.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/latex_equation.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
     },
     {
       "id": "file:backend/tests/memory_db.py",
@@ -1262,6 +1480,60 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_steve_api.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_context.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_eval_set.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_keys.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_latex.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_prompts.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_provider.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_service.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_steve_settings.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_supabase_client.py",
       "type": "file",
       "role": "test",
@@ -1424,6 +1696,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:docs/STEVE.md",
+      "type": "file",
+      "role": "doc",
+      "language": "markdown"
+    },
+    {
       "id": "file:frontend/.env.example",
       "type": "file",
       "role": "config",
@@ -1569,6 +1847,30 @@
     },
     {
       "id": "file:frontend/e2e/shell.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/steve-blocks.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/steve-epub-blocks.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/steve-key.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/steve-panel.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2780,6 +3082,168 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/steve/BlockActions.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/LatexDialog.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/steve/LatexDialog.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/OwnKeyForm.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/SteveAnswer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/SteveContext.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/SteveMath.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/StevePanel.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/steve/StevePanel.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/steve/answer.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/blocks.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/blocks.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/crop.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/highlight.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/latexLocal.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/latexLocal.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/math.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/ownKey.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/ownKey.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/sse.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/steve.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/steveState.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/suggest.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/useSteve.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/styles/base.css",
       "type": "file",
       "role": "asset",
@@ -3194,6 +3658,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/steve_eval.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:supabase/.gitignore",
       "type": "file",
       "role": "config",
@@ -3338,6 +3808,24 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/023_steve.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/024_steve_quota.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/025_equation_latex.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -3456,6 +3944,18 @@
       "type": "function"
     },
     {
+      "id": "function:steve_profile_guard",
+      "type": "function"
+    },
+    {
+      "id": "function:steve_refund_quota",
+      "type": "function"
+    },
+    {
+      "id": "function:steve_take_quota",
+      "type": "function"
+    },
+    {
       "id": "graph_node:__end__",
       "type": "graph_node"
     },
@@ -3510,6 +4010,10 @@
       "type": "table"
     },
     {
+      "id": "table:equation_latex",
+      "type": "table"
+    },
+    {
       "id": "table:page_ocr",
       "type": "table"
     },
@@ -3535,6 +4039,18 @@
     },
     {
       "id": "table:sessions",
+      "type": "table"
+    },
+    {
+      "id": "table:steve_messages",
+      "type": "table"
+    },
+    {
+      "id": "table:steve_threads",
+      "type": "table"
+    },
+    {
+      "id": "table:steve_usage",
       "type": "table"
     },
     {
@@ -3620,6 +4136,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/022_scanned_pages.sql",
       "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "table:profiles"
     },
     {
       "type": "calls_endpoint",
@@ -3712,6 +4233,41 @@
       "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "endpoint:GET /books/{book_id}/region-at"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "endpoint:DELETE /steve/key"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "endpoint:GET /steve/key"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "endpoint:PUT /steve/key"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "endpoint:GET /books/{book_id}/regions/{region_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "endpoint:GET /steve/settings"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "endpoint:PUT /steve/settings"
+    },
+    {
       "type": "calls_external",
       "from": "file:backend/agents/graph.py",
       "to": "external:langgraph",
@@ -3734,6 +4290,12 @@
       "from": "file:backend/services/supabase_client.py",
       "to": "external:supabase",
       "line": 16
+    },
+    {
+      "type": "calls_external",
+      "from": "file:backend/steve/provider.py",
+      "to": "external:gemini",
+      "line": 61
     },
     {
       "type": "calls_external",
@@ -3786,6 +4348,16 @@
       "type": "calls_function",
       "from": "file:backend/services/retriever.py",
       "to": "function:search_chunks_text"
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/steve/quota.py",
+      "to": "function:steve_refund_quota"
+    },
+    {
+      "type": "calls_function",
+      "from": "file:backend/steve/quota.py",
+      "to": "function:steve_take_quota"
     },
     {
       "type": "declares_env",
@@ -3940,7 +4512,17 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/region-at"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}/regions"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/regions/{region_id}"
     },
     {
       "type": "defines_endpoint",
@@ -4019,6 +4601,51 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:DELETE /steve/key"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:GET /steve/key"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:GET /steve/settings"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:PUT /steve/key"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve.py",
+      "to": "endpoint:PUT /steve/settings"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "endpoint:GET /steve/threads"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "endpoint:GET /steve/threads/{thread_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "endpoint:POST /steve/ask"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "endpoint:POST /steve/latex"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/tests/test_cors.py",
       "to": "endpoint:GET /books"
     },
@@ -4041,6 +4668,21 @@
       "type": "defines_function",
       "from": "file:supabase/migrations/006_chunk_text_search.sql",
       "to": "function:search_chunks_text"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "function:steve_profile_guard"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/024_steve_quota.sql",
+      "to": "function:steve_refund_quota"
+    },
+    {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/024_steve_quota.sql",
+      "to": "function:steve_take_quota"
     },
     {
       "type": "defines_table",
@@ -4111,6 +4753,26 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/022_scanned_pages.sql",
       "to": "table:page_ocr"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "table:steve_messages"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "table:steve_threads"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/023_steve.sql",
+      "to": "table:steve_usage"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/025_equation_latex.sql",
+      "to": "table:equation_latex"
     },
     {
       "type": "graph_edge",
@@ -4616,6 +5278,16 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/steve.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/steve_ask.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/services/ingestion_worker.py"
     },
     {
@@ -4817,6 +5489,86 @@
       "type": "imports",
       "from": "file:backend/routers/sessions.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/steve/consent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/steve/keys.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/steve/consent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/steve/prompts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/steve/service.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/steve/threads.py"
     },
     {
       "type": "imports",
@@ -5031,6 +5783,121 @@
     {
       "type": "imports",
       "from": "file:backend/services/retriever.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/breaker.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/breaker.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/cache.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/services/retriever.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/keys.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/keys.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/prompts.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/prompts.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/provider.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/provider.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/quota.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/quota.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/quota.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/breaker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/cache.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/keys.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/service.py",
+      "to": "file:backend/steve/quota.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/threads.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -6155,6 +7022,251 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/routers/steve_ask.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/breaker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/cache.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/consent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/keys.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/quota.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/service.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/steve/threads.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_api.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_context.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_context.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_context.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/routers/auth.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/routers/steve.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/steve/keys.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/steve/service.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_keys.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_latex.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_latex.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_latex.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_latex.py",
+      "to": "file:backend/tests/test_steve_api.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_prompts.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_prompts.py",
+      "to": "file:backend/steve/prompts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_provider.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_provider.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_provider.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/breaker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/cache.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/keys.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/quota.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_service.py",
+      "to": "file:backend/steve/service.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/routers/auth.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/routers/steve.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/steve/consent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_steve_settings.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_supabase_client.py",
       "to": "file:backend/services/supabase_client.py"
     },
@@ -6270,6 +7382,26 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/steve-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/steve-epub-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/steve-key.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/steve-panel.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/test.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -6367,6 +7499,11 @@
       "type": "imports",
       "from": "file:frontend/src/components/AccountMenu.jsx",
       "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/AccountMenu.jsx",
+      "to": "file:frontend/src/steve/OwnKeyForm.jsx"
     },
     {
       "type": "imports",
@@ -7015,6 +8152,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/steve/EpubBlockActions.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/steve/PdfBlockActions.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/ReaderControls.jsx",
       "to": "file:frontend/src/originalview/frame.js"
     },
@@ -7590,6 +8737,21 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/steve/StevePanel.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/steve/useSteve.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -7822,6 +8984,261 @@
       "type": "imports",
       "from": "file:frontend/src/reader/wordAt.test.js",
       "to": "file:frontend/src/reader/wordAt.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/BlockActions.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/LatexDialog.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/crop.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
+      "to": "file:frontend/src/steve/latexLocal.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/LatexDialog.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/LatexDialog.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/LatexDialog.jsx",
+      "to": "file:frontend/src/steve/LatexDialog.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/LatexDialog.jsx",
+      "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/components/ui/TextInput.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/steve/OwnKeyForm.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/OwnKeyForm.jsx",
+      "to": "file:frontend/src/steve/ownKey.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/lib/supabase.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/originalview/pdf/regions.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/BlockActions.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/LatexDialog.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/crop.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
+      "to": "file:frontend/src/steve/sse.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/SteveAnswer.jsx",
+      "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/SteveAnswer.jsx",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/SteveAnswer.jsx",
+      "to": "file:frontend/src/steve/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/SteveMath.jsx",
+      "to": "file:frontend/src/steve/math.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/illustrations/index.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/OwnKeyForm.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/SteveAnswer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/StevePanel.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/steveState.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/StevePanel.jsx",
+      "to": "file:frontend/src/steve/suggest.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/blocks.test.js",
+      "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/crop.js",
+      "to": "file:frontend/src/steve/blocks.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/latexLocal.test.js",
+      "to": "file:frontend/src/steve/latexLocal.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/ownKey.test.js",
+      "to": "file:frontend/src/steve/ownKey.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/sse.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/steveState.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/suggest.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "file:frontend/src/lib/supabase.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "file:frontend/src/steve/sse.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/useSteve.js",
+      "to": "file:frontend/src/steve/steveState.js"
     },
     {
       "type": "imports",
@@ -8180,6 +9597,36 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/errors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/prompts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/steve_eval.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
       "from": "file:tools/make_converted_fixture.py",
       "to": "file:backend/convert/epub_builder.py"
     },
@@ -8440,6 +9887,36 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/steve.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:equation_latex"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/book_ingestor.py",
       "to": "table:books"
     },
@@ -8477,6 +9954,46 @@
       "type": "reads_table",
       "from": "file:backend/services/region_job.py",
       "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/context.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/keys.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/threads.py",
+      "to": "table:steve_messages"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/steve/threads.py",
+      "to": "table:steve_threads"
     },
     {
       "type": "reads_table",
@@ -8582,6 +10099,11 @@
       "type": "uses_env",
       "from": "file:backend/services/supabase_client.py",
       "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/tests/test_steve_prompts.py",
+      "to": "env:STEVE_UPDATE_SNAPSHOTS"
     },
     {
       "type": "uses_env",
@@ -8725,6 +10247,16 @@
     },
     {
       "type": "writes_table",
+      "from": "file:backend/routers/steve.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/steve_ask.py",
+      "to": "table:equation_latex"
+    },
+    {
+      "type": "writes_table",
       "from": "file:backend/services/book_ingestor.py",
       "to": "table:books"
     },
@@ -8782,6 +10314,21 @@
       "type": "writes_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/steve/keys.py",
+      "to": "table:profiles"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/steve/threads.py",
+      "to": "table:steve_messages"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/steve/threads.py",
+      "to": "table:steve_threads"
     },
     {
       "type": "writes_table",

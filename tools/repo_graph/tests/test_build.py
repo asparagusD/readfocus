@@ -237,6 +237,8 @@ def test_real_graph_has_the_schema_and_the_agents():
         "profiles", "books", "chunks", "sessions", "test_results", "reading_progress", "question_bank",
         "concepts", "user_concept_mastery", "agent_decisions", "processing_jobs", "term_lookups",
         "page_regions", "page_ocr",  # page_ocr: migration 022 (C19.4)
+        "steve_usage", "steve_threads", "steve_messages",  # migration 023 (C20.1)
+        "equation_latex",  # migration 025 (C20.8)
     }
     assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
     # The tooling and its fixtures must not leak into the graph.
@@ -250,6 +252,24 @@ def test_real_graph_has_the_schema_and_the_agents():
         f"graph_node:{n}" for n in ("planner", "test_generator", "evaluator", "knowledge_state", "optimizer")
     }
     assert {n["type"] for n in graph["nodes"]} == set(build.NODE_TYPES)
+
+
+def test_real_graph_has_gemini_only_from_steves_provider():
+    """C20.2: Gemini is an allowed external service, reached from backend/steve/provider.py alone."""
+    graph = build.build_repo()
+    assert {f for f, to in edges(graph, "calls_external") if to == "external:gemini"} == {
+        "file:backend/steve/provider.py"}
+    nodes = {n["id"]: n for n in graph["nodes"]}
+    assert nodes["external:gemini"]["banned"] is False
+    assert "external:google_ai_studio" not in nodes
+
+
+def test_dotted_imports_find_their_service():
+    assert build.service_for("google.genai") == "gemini"
+    assert build.service_for("google.genai.types") == "gemini"
+    assert build.service_for("google.generativeai") == "google_ai_studio"
+    assert build.service_for("google.auth") is None
+    assert build.service_for("supabase.client") == "supabase"
 
 
 def test_a_graph_built_in_a_test_file_is_not_wiring():

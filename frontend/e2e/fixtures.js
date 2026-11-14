@@ -6,6 +6,20 @@ import { readFileSync } from 'node:fs';
 import { test as base, expect } from '@playwright/test';
 
 export const BOOK = 'e2e-book';
+export const GOOD_KEY = 'AIzaSyReaderOwnKey-not-real-abcdefghij12'; // a made-up Gemini key (C20.3)
+export const STEVE_NOTICE = { version: '2026-11-14', terms_url: 'https://aistudio.google.com/docs/terms',
+  text: "Steve is a study assistant built on Google's Gemini.\n\nYou can turn Steve off at any time in his settings." };
+
+/** A whole /steve/ask stream (C20.7b): start, the text in a few tokens, done with the checked text and citations. */
+export function steveStream(text, citations = [], { pages = ['p. 1', 'p. 2'], tokens = 3, finalText = null } = {}) {
+  const size = Math.ceil(text.length / tokens);
+  const events = [['start', { thread_id: 'thread-1', pages }]];
+  for (let i = 0; i < text.length; i += size) events.push(['token', { text: text.slice(i, i + size) }]);
+  events.push(['done', { message_id: 'm-1', thread_id: 'thread-1', text: finalText ?? text, citations,
+    usage: { model: 'gemini-test', tokens_in: 100, tokens_out: 20, cached: false } }]);
+  return { sse: events.map(([name, data]) => `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`).join('') };
+}
+
 const API = 'http://localhost:8000';
 const SUPABASE_REF = 'lvfhuszvuiowyeizstru'; // frontend/.env's project, as baked into the build
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
@@ -102,6 +116,48 @@ async function mockBackend(page, api, book) {
       api.lookups.push({ term, proper: url.searchParams.get('proper') === '1' });
       return json(route, LOOKUPS[term] ?? { term, found: false, meanings: [], wiki: null, ambiguous: false });
     }
+    if (path === '/steve/settings') { // C20.7b: consent and the off switch, as the server keeps them
+      if (request.method() === 'PUT') {
+        const change = request.postDataJSON();
+        api.steve.puts.push(change);
+        if ('enabled' in change) api.steve.enabled = change.enabled;
+        if (change.consent === true) api.steve.consented = true;
+        if (change.consent === false) api.steve.consented = false;
+      }
+      return json(route, { enabled: api.steve.enabled, consent: { given: api.steve.consented, current: api.steve.consented,
+        at: null, version: api.steve.consented ? STEVE_NOTICE.version : null }, notice: STEVE_NOTICE });
+    }
+    if (path === '/steve/ask') { // C20.7b: the next queued reply, as SSE text or a refusal {status, detail}
+      api.steve.asks.push(request.postDataJSON());
+      const reply = api.steve.replies.shift() ?? steveStream('He counts twice [p. 2].', [{ label: 'p. 2', anchor: { kind: 'pdf', page: 2 } }]);
+      if (reply.status) return json(route, { detail: reply.detail }, reply.status);
+      return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': 'text/event-stream' }, body: reply.sse });
+    }
+    if (path === '/steve/latex') { // C20.8: a PDF equation as LaTeX, or the queued refusal
+      api.steve.latexAsks.push(request.postDataJSON());
+      const reply = api.steve.latexReplies.shift() ?? { latex: String.raw`a_n = \frac{1}{\pi}`, cached: false, model: 'gemini-test' };
+      if (reply.status) return json(route, { detail: reply.detail }, reply.status);
+      return json(route, reply);
+    }
+    if (path === `/books/${BOOK}/region-at`) { // C20.8c: an EPUB region by section and element path
+      const detail = api.regionAt[`${url.searchParams.get('spine_index')}:${url.searchParams.get('path')}`];
+      api.regionAtAsks.push(`${url.searchParams.get('spine_index')}:${url.searchParams.get('path')}`);
+      return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
+    }
+    if (path.startsWith(`/books/${BOOK}/regions/`)) { // C20.8: one region's details
+      const detail = api.regionDetails[path.split('/').pop()];
+      return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
+    }
+    if (path === '/steve/key') { // C20.3: GOOD_KEY is accepted, anything else is what Google refuses
+      if (request.method() === 'PUT') {
+        const { key } = request.postDataJSON();
+        api.steveKeyPuts.push(key);
+        if (key !== GOOD_KEY) return json(route, { detail: 'Google did not accept this key. Check that you copied all of it, from Google AI Studio.' }, 400);
+        api.steveKey = key.slice(-4);
+      }
+      if (request.method() === 'DELETE') api.steveKey = null;
+      return json(route, { has_key: api.steveKey !== null, last4: api.steveKey });
+    }
     api.unmocked.push(`${request.method()} ${path}`);
     return json(route, { detail: 'not mocked' }, 404);
   });
@@ -126,7 +182,9 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [] };
+    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
+      steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
+      regionDetails: {}, regionAt: {}, regionAtAsks: [] };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

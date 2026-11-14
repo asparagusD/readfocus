@@ -3394,3 +3394,258 @@ passed.
 
 ### Commit
 fix(ingest): read OCR text only for books with no text of their own
+
+## 2026-11-14 C20.1 — repo graph tests fail after the C20.1 commit: purposes.json out of date
+
+**Status:** fixed
+
+### Symptom
+After `2d589ff` (`feat(steve): add Steve spec, consent and settings`), the
+repo graph tests fail; they passed in the C20.1 standard checks run before
+the commit. Expected: 62 passed.
+
+    pytest tools/repo_graph/tests -q
+    4 failed, 58 passed in 0.66s
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_covers_routers_and_pages
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents
+    FAILED tools/repo_graph/tests/test_inventory.py::test_repo_inventory_is_complete_and_deterministic
+    FAILED tools/repo_graph/tests/test_render.py::test_real_map_has_two_diagrams_and_is_deterministic
+    >           raise InventoryError(
+    E           tools.repo_graph.inventory.InventoryError: purposes.json is out of date.
+    tools\repo_graph\inventory.py:151: InventoryError
+
+    make graph
+    python tools/repo_graph/inventory.py
+    purposes.json is out of date.
+      No purpose (read the file, then add one): ['backend/routers/steve.py', 'backend/steve/__init__.py', 'backend/steve/consent.py', 'backend/tests/test_steve_settings.py', 'docs/STEVE.md', 'supabase/migrations/023_steve.sql']
+      Purpose for a file that is not inventoried: []
+    make: *** [Makefile:17: graph] Error 1
+
+### Repro
+    pytest tools/repo_graph/tests/test_inventory.py::test_repo_inventory_is_complete_and_deterministic -q
+
+### Hypotheses
+1. The inventory lists `git ls-files` only, so `make graph` and the graph
+   tests run while the six new files were untracked saw nothing missing;
+   committing them made them tracked without a purpose. Evidence:
+   `tools/repo_graph/inventory.py:77` `tracked_files` runs
+   `git ls-files -z`; the six paths listed are exactly the files C20.1
+   added. Ruled out if: the tests fail on `readfocus-2.0`'s tree too.
+   Result: confirmed (the failure names only the C20.1 files; the C20
+   plan commit `f6db534` passed the same tests).
+2. A stale purpose for a removed file. Ruled out if the "not inventoried"
+   list is empty. Result: ruled out (it is `[]`).
+
+### Root cause
+`tools/repo_graph/purposes.json` has no entry for the six files C20.1
+added; the C20.1 checks ran before the files were staged, so the
+inventory (tracked files only) did not see them.
+
+### Fix
+A purpose for each of the six files in `purposes.json` (appended, file
+order kept; a first attempt re-sorted the file and was reverted before
+any test), then `make graph` with the files tracked, and the regenerated
+`docs/repo-graph/` committed. That left one failure:
+`test_build.py::test_real_graph_has_the_schema_and_the_agents` lists the
+schema's tables exactly, and migration 023 adds `steve_usage`,
+`steve_threads` and `steve_messages`; they are added to its expected set
+(the test stays exact, as it was for `page_ocr` in C19.4).
+Process: run `make graph` and the graph tests after `git add`, or after
+`git add -N` for new files.
+
+### Regression test
+`tools/repo_graph/tests/test_inventory.py::test_repo_inventory_is_complete_and_deterministic`
+already guards this. Failed before the fix: yes
+(`git stash push -- tools/repo_graph/purposes.json`: 1 failed, the
+InventoryError above). Passes after: yes (`git stash pop`: 1 passed).
+`pytest tools/repo_graph/tests -q`: 62 passed.
+
+### Commit
+`fix(graph): add purposes for the C20.1 files`
+
+## 2026-11-14 C20.8a — `make graph` exits 2 once, right after `git add`
+
+**Status:** open (intermittent; cause found in C20.8c, fix not made)
+
+### Symptom
+Twice in C20 (C20.2 and C20.8a) the first `make graph` after staging a
+change exited 2 with its output sent to /dev/null; the next run exited 0
+and wrote a different `docs/repo-graph/REPO_MAP.md` (the failed run had
+stopped before render.py). Expected: exit 0 every time.
+
+    git add <files> ; make graph >/dev/null 2>&1 ; echo $?
+    2
+
+### Repro
+Not reproduced: `make graph` three times in a row with output captured,
+exit 0 each time (2026-11-14, after the C20.8a failure).
+
+### Hypotheses
+1. A race with git's index right after `git add` (inventory.py runs
+   `git ls-files`). Evidence: both failures came straight after a
+   `git add` in the same shell command. Ruled out if: it fails with no
+   `git add` before it. Result: untested.
+2. An inventory check that depends on staged versus working-tree text
+   (line endings: every `git add` warns LF will become CRLF). Ruled out
+   if: the captured output of a failing run names another cause.
+   Result: untested; the failing runs' output was discarded.
+
+### Root cause
+Found on the third occurrence (C20.8c), with the output kept:
+
+    python tools/repo_graph/inventory.py
+    Traceback (most recent call last):
+      File "I:\readfocus\tools\repo_graph\inventory.py", line 194, in <module>
+        sys.exit(main())
+      File "I:\readfocus\tools\repo_graph\inventory.py", line 184, in main
+        OUT_FILE.write_text(render(inventory), encoding="utf-8", newline="\n")
+      ...
+    OSError: [Errno 22] Invalid argument: 'I:\\readfocus\\docs\\repo-graph\\inventory.json'
+    make: *** [Makefile:17: graph] Error 1
+
+Opening `docs/repo-graph/inventory.json` for writing fails on Windows
+right after `git add` has staged it: hypothesis 1 (a race), as a
+sharing violation that Windows reports as EINVAL while another process
+(git, or a file scanner) still holds the file. Not a logic error: the
+content written by the next run is the same.
+
+### Fix
+Not made (tooling, outside C20; your call): retry the write a few times
+in `inventory.py` (and build.py, render.py) on OSError. Working rule
+meanwhile: run `make graph` with its
+output kept, and run it again after staging until a second run leaves no
+diff (done for C20.2 and C20.8a; both commits' graphs are stable).
+
+### Regression test
+None (not reproduced).
+
+### Commit
+Recorded with `feat(steve): equation LaTeX cache, region details and figure context`.
+
+## 2026-11-14 C20.9 — every live Steve call fails with `unavailable`
+
+**Status:** fixed
+
+### Symptom
+The first live run of the C20.9 evaluation (your yes, 15 calls) returned
+`unavailable` for all 15 items; expected 15 answers. The provider re-raises
+every SDK error as `SteveUnavailable` and drops the original (on purpose: it
+may echo input), so the run showed only:
+
+    python scripts/steve_eval.py --live --out <scratch>/steve_eval_run1.json
+    session-alice-box: unavailable
+    ... (the same for all 15 items)
+    "passed": "0/15", "tokens_in": 0, "tokens_out": 0
+
+The original exception, from one item re-run with DNS blocked (so nothing
+could reach Google) and `provider._unavailable` wrapped to print it (key
+redacted; nothing printed one):
+
+    File "I:\readfocus\.venv\Lib\site-packages\google\genai\_api_client.py", line 2119, in async_request
+      result = await self._async_request(
+    File "I:\readfocus\.venv\Lib\site-packages\google\genai\_api_client.py", line 2052, in _async_request
+      return await self._async_retry(  # type: ignore[no-any-return]
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 112, in __call__
+      do = await self.iter(retry_state=retry_state)
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 157, in iter
+      result = await action(retry_state)
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\_utils.py", line 111, in inner
+      return call(*args, **kwargs)
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\__init__.py", line 393, in <lambda>
+      self._add_action_func(lambda rs: rs.outcome.result())
+    File "C:\Users\avash\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+      return self.__get_result()
+    File "C:\Users\avash\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+      raise self._exception
+    File "I:\readfocus\.venv\Lib\site-packages\tenacity\asyncio\__init__.py", line 116, in __call__
+      result = await fn(*args, **kwargs)
+    File "I:\readfocus\.venv\Lib\site-packages\google\genai\_api_client.py", line 1965, in _async_request_once
+      response = await session.request(  # type: ignore[union-attr]
+    File "I:\readfocus\.venv\Lib\site-packages\aiohttp\client.py", line 900, in _request
+      resp = await handler(req)
+    File "I:\readfocus\.venv\Lib\site-packages\aiohttp\client.py", line 850, in _connect_and_send_request
+      assert self._connector is not None
+    AssertionError
+
+It fails before any connection is made, so the 15 attempts spent no quota
+(Google reported no tokens either).
+
+### Repro
+One item, offline (DNS blocked; scratch script, not committed):
+`python <scratch>/repro.py`: `ORIGINAL: builtins AssertionError`, every time.
+In pytest: `backend/tests/test_steve_provider.py::test_the_sdk_client_lives_for_the_whole_call`.
+
+### Hypotheses
+1. The SDK client is garbage-collected mid-call. `generate()` does
+   `models = _make_client(key).aio.models` and `check_key()` does
+   `await _make_client(api_key).aio.models.get(...)`: nothing keeps the
+   `genai.Client`, its `__del__` calls `close()`, which closes the HTTP
+   session that `aio.models` still uses (aiohttp: `_connector` is None).
+   Ruled out if: keeping a reference to the client changes nothing.
+   Result: confirmed. The same repro with `_make_client` wrapped to keep
+   each client in a list gets past the session and fails only at DNS
+   (`ClientConnectorDNSError ... generativelanguage.googleapis.com`).
+2. The key or model name is wrong. Ruled out: the error is raised before a
+   request is sent, and the key and model are only read from `.env`.
+3. A Windows event-loop issue with aiohttp. Ruled out by 1: the same loop
+   connects once the client is kept.
+
+Why the tests missed it: `FakeSdk.client()` returns a `SimpleNamespace`
+whose `models` does not depend on the client living. aiohttp is in the
+local virtualenv only through `langchain-community` (not in
+requirements.txt); without it the SDK uses httpx, where the effect of
+`close()` differs, but relying on the collector either way is the bug.
+
+### Root cause
+`backend/steve/provider.py` (`generate` and `check_key`) used the SDK
+client as a temporary, so CPython freed it (and closed its HTTP session)
+before the request was sent.
+
+### Fix
+Hold the client in a local for the whole call in both functions.
+
+### Regression test
+`backend/tests/test_steve_provider.py::test_the_sdk_client_lives_for_the_whole_call`:
+a fake client that closes its models when collected. Failed before the fix
+(stashed provider.py), passes after: see the commit's How verified.
+
+### Commit
+`fix(steve): keep the Gemini client alive for the whole call`
+
+## 2026-11-14 C20.G — `make graph` leaves a diff at the C20 close
+
+**Status:** fixed
+
+### Symptom
+The C20 close requires `make graph` to leave no diff. It rewrote one line:
+
+    make graph
+    git diff --stat docs/repo-graph
+     docs/repo-graph/inventory.json | 2 +-
+    -      "size_bytes": 788638,
+    +      "size_bytes": 792901,      (docs/PROGRESS.md)
+
+### Repro
+`make graph && git diff --exit-code docs/repo-graph` exits 1 at `5ef5eb1`.
+
+### Hypotheses
+1. The C20.G commit changed `docs/PROGRESS.md` and did not regenerate the
+   graph, which records each file's size. Evidence: the only changed entry
+   is PROGRESS.md's `size_bytes`; its line count is unchanged because the
+   verdict replaced one row with one longer row. Ruled out if: the size
+   differs from `wc -c` of the committed file. Result: confirmed.
+
+### Root cause
+Process: the gate commit was docs-only and `make graph` was not run before
+it (the atomic-commit checklist asks for it only when files are added,
+removed or rewired), so the generated inventory kept the old size.
+
+### Fix
+Regenerate with `make graph` and commit `docs/repo-graph/inventory.json`.
+
+### Regression test
+None automated: the close step's `make graph` plus `git diff --exit-code`
+is the check, and it is clean after this commit.
+
+### Commit
+`fix(graph): refresh the inventory after the C20.G progress row`

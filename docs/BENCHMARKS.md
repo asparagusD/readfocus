@@ -119,6 +119,25 @@ and the provider clients.
 Not measured: Linux or Render, where there is no launcher process and the
 numbers will differ; memory under load; memory during book ingestion.
 
+### C20.2: Google's Gen AI SDK for Steve (2026-11-14)
+
+`python -c "import psutil, os; import backend.main; ...; print(rss)"`, three
+runs each, Windows, `.venv` Python 3.11, no server started:
+
+| | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| `import backend.main` | 130.4 MB | 130.4 MB | 130.8 MB |
+| `import backend.main` + `from google import genai` + `types`, `errors` | 148.6 MB | 148.4 MB | 148.5 MB |
+
+`google-genai` 2.34.0 costs about 18 MB when loaded. `backend/steve/provider.py`
+imports it on the first Steve call only, so the idle server is unchanged
+until someone asks Steve something. No new transitive package: `.venv` already
+held `google-genai` 3.0.0 (C16.4's throwaway check), which the 2.34.0 pin
+replaced; `pip freeze` before and after differ only in that line, and
+`pip check` reports no broken requirements.
+
+Not measured: Linux or Render; memory during a streamed answer.
+
 ## Local models and dependencies
 
 One row per model or heavy dependency (the memory rule in the
@@ -1109,6 +1128,39 @@ Not measured: a phone, a real network download of the 7 MB, long dense
 pages.
 
 ## Frontend: Lighthouse and image budgets
+
+### C20.8b-c: block actions and mathml-to-latex (2026-11-14)
+
+`npm --prefix frontend run build` after C20.8c, against C20.7b above:
+
+| Chunk | C20.7b (gzip) | C20.8c (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.74 kB (35.07 kB) | 96.74 kB (35.08 kB) |
+| `ReadingSession-*.js` | 77.47 kB (26.60 kB) | 90.03 kB (30.54 kB) |
+| `dist-*.js` (new, lazy: `mathml-to-latex` + `@xmldom/xmldom`) | none | 172.48 kB (52.17 kB) |
+
+`mathml-to-latex` 1.8.0 (MIT, released 2026-06-10; one dependency,
+`@xmldom/xmldom` 0.9.12, MIT) is imported only when an EPUB equation with
+no TeX annotation is copied or explained; `npm audit` names neither.
+
+### C20.7b: Steve's panel and KaTeX (2026-11-14)
+
+`npm --prefix frontend run build`, before (C20.7a's tree, the panel not
+imported) and after:
+
+| Chunk | Before (gzip) | After (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.70 kB (35.02 kB) | 96.74 kB (35.07 kB) |
+| `ReadingSession-*.js` | 53.56 kB (18.62 kB) | 77.47 kB (26.60 kB) |
+| `ReadingSession-*.css` | 17.06 kB (3.85 kB) | 26.16 kB (5.26 kB) |
+| `katex-*.js` (new, lazy) | none | 259.69 kB (77.81 kB) |
+
+KaTeX 0.19.1 (MIT, released 2026-10-23; its one dependency, `commander`, is
+for its command line only) is imported on the first equation Steve
+writes, with `output: "mathml"`, so no KaTeX fonts or CSS are shipped;
+the MathML goes through DOMPurify's MathML profile. Code in answers is
+tinted by `frontend/src/steve/highlight.js`, no dependency. `npm audit`
+names neither package.
 
 ### C17.5: page turns on the original view (2026-11-12)
 

@@ -172,7 +172,12 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         range.selectNode(el);
         const cfi = now().cfiFor(doc, range);
         if (!cfi) return null;
-        const [start, end] = now().charsOf(doc, range);
+        // A4 from the element's own characters: a selectNode range starts in the parent, which charsOf counts from
+        // the parent's first character (DEBUG_LOG C22.G); a range starting inside the element counts those before it.
+        const inside = doc.createRange();
+        inside.setStart(el, 0);
+        const [start] = now().charsOf(doc, inside);
+        const end = start + (el.textContent?.length ?? 0);
         const words = String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, 2000);
         return { scope: words ? 'selection' : 'view', anchors: [epubAnchor(cfi, words)], ...epubPositions(shown.index, start, end) };
       },

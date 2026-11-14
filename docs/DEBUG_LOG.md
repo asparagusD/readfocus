@@ -4034,3 +4034,42 @@ No test forces the exact timing.
 ### Commit
 `feat(notes): add equations, code, figures, highlights and Steve answers to
 notes` (C22.6, fixed before committing)
+
+## 2026-11-14 C22.G — an EPUB block note's positions pointed at its parent's start
+
+### Symptom
+Chunk self-review: a note added from an EPUB equation, listing or figure
+(C22.6) got `position_start` and `position_end` equal to the first
+character of the element's parent (often the section's start), not the
+block's own characters. Its margin marker was right (it uses the CFI), but
+sync, which compares A4 positions with the page shown, would mark it on the
+wrong page and sort it at the top of its section.
+
+### Repro
+`notes-blocks.spec.js` EPUB test, extended: the listing's note had
+`position_end - position_start` 0 instead of the listing's length (68).
+
+### Hypotheses
+1. `elementPlace` built its range with `selectNode(el)`, whose ends are
+   (parent, index); `charOffset` counts characters up to a node in its
+   walk, and for an element container stops at the parent's first text.
+   Result: confirmed by reading `engine.js` `charOffset` and the failing
+   assertion.
+
+### Root cause
+Character offsets were taken from element-container range ends, which
+`charOffset` does not resolve to the child at that index.
+
+### Fix
+`EpubBook.jsx` `elementPlace`: start from `charsOf` on a range that starts
+inside the element (the characters before it), end = start + the element's
+text length. (Importing `charOffset` directly was tried first and dropped:
+`engine.js` is a lazy chunk with foliate, and a static import would have
+pulled it into the reading page's chunk.)
+
+### Regression test
+`notes-blocks.spec.js`: the EPUB listing's note spans exactly its text's
+length and starts past its section's start.
+
+### Commit
+`fix(notes): EPUB block notes keep their own characters` (C22.6)

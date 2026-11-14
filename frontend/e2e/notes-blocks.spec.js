@@ -149,7 +149,12 @@ test.describe('epub regions', () => {
     await page.getByRole('toolbar', { name: 'Code, this page' }).getByRole('button', { name: 'Add to notes' }).click();
     await expect.poll(() => api.notePosts.length).toBe(2);
     expect(api.notePosts[1].kind).toBe('code');
-    expect(api.notePosts[1].content.code).toBe(await pre.textContent());
+    const code = await pre.textContent();
+    expect(api.notePosts[1].content.code).toBe(code);
+    // Its own characters (A4), not its parent's start: what sync compares with the page shown.
+    const { position_start: start, position_end: end } = api.notePosts[1];
+    expect(end - start).toBe(code.length);
+    expect(start % 1e6).toBeGreaterThan(0);
   });
 });
 

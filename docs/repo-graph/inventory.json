@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 737,
-    "inventoried": 594,
+    "tracked": 740,
+    "inventoried": 597,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14709,
+      "size_bytes": 14727,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 333,
-      "size_bytes": 13417,
+      "lines": 345,
+      "size_bytes": 14030,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -401,10 +401,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 62,
-      "size_bytes": 2035,
+      "lines": 64,
+      "size_bytes": 2113,
       "role": "entry",
-      "purpose": "FastAPI app: CORS through backend/cors.py, the seven routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
+      "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
     },
     {
       "path": "backend/mcp_server.py",
@@ -533,6 +533,14 @@
       "size_bytes": 52,
       "role": "router",
       "purpose": "Empty APIRouter mounted at /agent; defines no endpoints."
+    },
+    {
+      "path": "backend/routers/annotations.py",
+      "language": "python",
+      "lines": 153,
+      "size_bytes": 7559,
+      "role": "router",
+      "purpose": "Highlights and underlines (C21.1, docs/ANCHORS.md): GET /books/{id}/annotations (reading order, from/to overlap filter), POST (anchors checked against A1/A2, positions against A4, text snapshot), PATCH /annotations/{id} (style, color), DELETE; owner only, 404 otherwise."
     },
     {
       "path": "backend/routers/auth.py",
@@ -967,6 +975,14 @@
       "purpose": "Pytest: AgentState declares the pipeline keys and keeps the old ones, decisions and errors are append-only through a compiled graph, event takes only start or submit, every key a node returns is declared, and the evaluator returns only its own decision."
     },
     {
+      "path": "backend/tests/test_annotations_api.py",
+      "language": "python",
+      "lines": 148,
+      "size_bytes": 7909,
+      "role": "test",
+      "purpose": "Pytest for the annotations API: PDF across two pages and EPUB ranges stored; bad colours, styles, point anchors, quads, page order, mixed kinds and positions that disagree with the anchors refused; reading order and range filter; another reader sees and changes nothing; restyle; delete."
+    },
+    {
       "path": "backend/tests/test_answer_fixtures.py",
       "language": "python",
       "lines": 61,
@@ -1345,8 +1361,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 609,
-      "size_bytes": 26716,
+      "lines": 655,
+      "size_bytes": 29096,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox."
     },
@@ -1713,8 +1729,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 3651,
-      "size_bytes": 161331,
+      "lines": 3691,
+      "size_bytes": 162843,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1778,7 +1794,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4559,
-      "size_bytes": 807540,
+      "size_bytes": 810587,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -4623,6 +4639,14 @@
       "purpose": "Migration 025 (C20.8, additive): equation_latex (file_sha256, page, bbox_hash, latex, model, created_at; key file + page + box hash) so each PDF equation costs one Gemini call ever; RLS with no policy, backend only."
     },
     {
+      "path": "supabase/migrations/026_annotations.sql",
+      "language": "sql",
+      "lines": 33,
+      "size_bytes": 1883,
+      "role": "migration",
+      "purpose": "Migration 026 (C21.1, additive): annotations (anchors jsonb list, position_start/end float8, style, color from the handoff palette, text_snapshot, orphaned, timestamps; positions ordered), index (user_id, book_id, position_start), RLS with an owner SELECT policy only; the backend writes."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -4697,8 +4721,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 596,
-      "size_bytes": 181622,
+      "lines": 599,
+      "size_bytes": 182597,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -4729,8 +4753,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 284,
-      "size_bytes": 11981,
+      "lines": 285,
+      "size_bytes": 12029,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

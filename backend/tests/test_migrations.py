@@ -607,3 +607,49 @@ def test_025_only_the_backend_reads_or_writes_it():
     assert "ALTER TABLE public.equation_latex ENABLE ROW LEVEL SECURITY" in sql
     assert "CREATE POLICY" not in sql  # no policy: readers' roles see nothing; the service role bypasses RLS
     assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == ["equation_latex"]
+
+
+# --- 026: highlights and underlines (C21.1) ---------------------------------------------------------
+
+def migration_026() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "026_annotations.sql"))
+
+
+def test_026_creates_annotations_with_the_agreed_columns():
+    assert table_definition(migration_026(), "annotations") == {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "user_id": OWNER,
+        "book_id": BOOK,
+        "anchors": "jsonb NOT NULL CHECK (jsonb_typeof(anchors) = 'array' AND jsonb_array_length(anchors) >= 1)",
+        "position_start": "float8 NOT NULL CHECK (position_start >= 0)",
+        "position_end": "float8 NOT NULL",
+        "style": "text NOT NULL CHECK (style IN ('highlight', 'underline'))",
+        "color": "text NOT NULL CHECK (color IN ('honey', 'sage', 'sky', 'rose', 'lilac'))",
+        "text_snapshot": "text NOT NULL DEFAULT ''",
+        "orphaned": "boolean NOT NULL DEFAULT false",
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+        "updated_at": "timestamptz NOT NULL DEFAULT now()",
+        "CONSTRAINT": "annotations_positions_ordered CHECK (position_end >= position_start)",
+    }
+
+
+def test_026_the_palette_and_styles_match_policy():
+    from backend.agents import policy
+    sql = migration_026()
+    assert "color IN ({})".format(", ".join(f"'{c}'" for c in policy.ANNOTATION_COLORS)) in sql
+    assert "style IN ({})".format(", ".join(f"'{s}'" for s in policy.ANNOTATION_STYLES)) in sql
+
+
+def test_026_readers_only_read_their_own_rows_and_never_write_them():
+    sql = migration_026()
+    assert "ALTER TABLE public.annotations ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(r"CREATE POLICY \"[^\"]+\" ON public\.annotations FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert policies == ["SELECT"]  # writes go through the backend, which checks anchors and positions
+    assert sql.count("CREATE POLICY") == 1 and "SECURITY DEFINER" not in sql
+
+
+def test_026_has_the_range_index_and_touches_only_its_table():
+    sql = migration_026()
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.annotations \(user_id, book_id, position_start\)", sql)
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == ["annotations"]
+    assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)

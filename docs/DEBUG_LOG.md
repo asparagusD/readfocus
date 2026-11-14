@@ -3649,3 +3649,43 @@ is the check, and it is clean after this commit.
 
 ### Commit
 `fix(graph): refresh the inventory after the C20.G progress row`
+
+## 2026-11-14 C21.1 — repo-graph test and ruff fail after adding annotations
+
+**Status:** fixed
+
+### Symptom
+Standard checks before the C21.1 commit:
+
+    pytest tools/repo_graph/tests -q
+    FAILED tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents
+    E  Extra items in the left set: 'table:annotations'
+    ruff check backend/
+    Found 28 errors.   (baseline 27; the new one RUF007 zip-instead-of-pairwise)
+
+### Repro
+`pytest tools/repo_graph/tests/test_build.py::test_real_graph_has_the_schema_and_the_agents -q`
+fails with migration 026 present; `ruff check backend/routers/annotations.py` reports RUF007.
+
+### Hypotheses
+1. The test pins the exact set of tables the migrations define, and 026 adds
+   one. Evidence: 022, 023 and 025 each added their tables to that set in
+   their own commits. Result: confirmed.
+2. The graph builder misreads 026's SQL. Ruled out: the extra item is the
+   table 026 defines, nothing else.
+
+### Root cause
+The pinned table list in `test_build.py` was not updated with the new
+migration; and `zip(places, places[1:])` in the new router instead of
+`itertools.pairwise`.
+
+### Fix
+Add `"annotations"` (migration 026) to the test's table set; use
+`pairwise` in `backend/routers/annotations.py`.
+
+### Regression test
+The pinned set itself is the guard; it passes with the table listed
+(64 passed). Ruff back to 27.
+
+### Commit
+Fixed inside the C21.1 commit (`feat(annotations): add annotations table and API`); nothing was committed failing.

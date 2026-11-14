@@ -1129,6 +1129,23 @@ pages.
 
 ## Frontend: Lighthouse and image budgets
 
+### C22 close: the notepad (2026-11-14)
+
+`npm --prefix frontend run build` at the C22 close (after `f69a5fc`). Budget
+from the C22 plan: the entry chunk grows by at most 5 kB gzip over the chunk.
+
+| Chunk | Before C22 (gzip) | C22 close (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.74 kB (35.08 kB), C20.8c | 100.68 kB (36.45 kB): +1.37 kB gzip |
+| `ReadingSession-*.js` | 127.95 kB (42.14 kB) after C21 and C22.2 | 154.08 kB (50.64 kB): C22.3-C22.6 add 8.5 kB gzip (markers, sync, notes from the book) |
+| `TextEditor-*.js` (lazy, TipTap) | none | 406.77 kB (129.25 kB), budget 150 kB gzip |
+| `DrawingEditor-*.js` + Excalidraw core + CSS (lazy) | none | 558.28 + 533.35 + 142.02 kB (169.60 + 178.89 + 22.37 kB gzip), about 385 kB gzip with the small chunks, budget 1.2 MB |
+| `katex-*.js` (lazy, shared with Steve) | 259.69 kB (77.81 kB) | unchanged |
+
+Opening the reading page loads none of TipTap, Excalidraw or KaTeX; the
+notepad's list draws notes with NoteDoc, and KaTeX loads with the first math
+shown.
+
 ### C22.3: drawing notes and Excalidraw (2026-11-14)
 
 `npm --prefix frontend run build` after C22.3; what opening a drawing loads was

@@ -3,6 +3,7 @@ import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../fr
 import { squeeze } from '../today';
 import { pdfAnchor, pdfPositions, quadsFromRects } from '../../anchors';
 import { forPages } from '../../annotations/paint';
+import { pdfPagesLabel } from '../../annotations/list';
 
 /**
  * PDF anchors for a selection (ANCHORS A1, A2): one per page it touches, each with a quad
@@ -145,6 +146,7 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       return { text: selection.toString(), range: selection.getRangeAt(0), document };
     },
     documents: () => [document],
+    pageLabel: (annotation) => pdfPagesLabel(annotation, meta.labels), // C21.5: "p. 12" by the printed labels
     // C21.4: where each drawn annotation is, in this page's coordinates, for hover, taps and the chip.
     annotationEntries: () => {
       const byId = new Map();

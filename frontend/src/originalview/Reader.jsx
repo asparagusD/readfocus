@@ -289,6 +289,7 @@ export function Reader({
     getSelection: () => book.current?.getSelection() ?? null,
     // C17.6: the selection as anchors (docs/ANCHORS.md), one per PDF page it touches, or one EPUB range.
     selectionAnchors: () => book.current?.selectionAnchors() ?? [],
+    pageLabel: (annotation) => book.current?.pageLabel?.(annotation) ?? '', // C21.5: the Annotations tab
     documents: () => book.current?.documents() ?? [],
     anchor: () => book.current?.anchor() ?? null,
   }), [move]);

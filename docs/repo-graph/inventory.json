@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 757,
-    "inventoried": 614,
+    "tracked": 760,
+    "inventoried": 617,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14885,
+      "size_bytes": 14919,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1794,7 +1794,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4561,
-      "size_bytes": 824309,
+      "size_bytes": 826889,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1853,6 +1853,14 @@
       "size_bytes": 8379,
       "role": "config",
       "purpose": "E2E for the selection toolbar (C21.2) on the PDF and the EPUB: shown above the selection and clear of the word card, a colour saves a highlight, the underline toggle, Shift+arrows with H and U, Escape, toolbar arrow keys, rollback with a toast, Ask Steve in explain_highlight, 375 px in Lamplight."
+    },
+    {
+      "path": "frontend/e2e/annotations.spec.js",
+      "language": "javascript",
+      "lines": 167,
+      "size_bytes": 8239,
+      "role": "config",
+      "purpose": "E2E for C21 end to end: PDF and EPUB highlights through zoom, a resize, a text-size change and a reload; the Annotations tab's order, snippets, pages, colour filter and jump; the chip's Ask Steve (mocked) with lookup off and the word card with it on; delete; the empty states."
     },
     {
       "path": "frontend/e2e/calibration.spec.js",
@@ -2269,6 +2277,22 @@
       "size_bytes": 1148,
       "role": "asset",
       "purpose": "Unit tests for hover.js: hits with slack and stacking, misses, and A cycling forward, back and from a missing id."
+    },
+    {
+      "path": "frontend/src/annotations/list.js",
+      "language": "javascript",
+      "lines": 26,
+      "size_bytes": 1378,
+      "role": "asset",
+      "purpose": "The Annotations tab (C21.5), pure: the list in reading order with a colour filter, a PDF annotation's page label from the printed labels (p. or pp.), and the snippet cut at a word."
+    },
+    {
+      "path": "frontend/src/annotations/list.test.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1630,
+      "role": "asset",
+      "purpose": "Unit tests for list.js: reading order and the colour filter without changing the input, PDF page labels and ranges, snippets."
     },
     {
       "path": "frontend/src/annotations/paint.js",
@@ -3113,8 +3137,8 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 394,
-      "size_bytes": 22072,
+      "lines": 395,
+      "size_bytes": 22178,
       "role": "asset",
       "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions."
     },
@@ -3153,8 +3177,8 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 160,
-      "size_bytes": 8070,
+      "lines": 167,
+      "size_bytes": 8560,
       "role": "asset",
       "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places."
     },
@@ -3249,8 +3273,8 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 189,
-      "size_bytes": 9639,
+      "lines": 191,
+      "size_bytes": 9806,
       "role": "asset",
       "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor."
     },
@@ -3481,8 +3505,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 425,
-      "size_bytes": 20192,
+      "lines": 436,
+      "size_bytes": 20864,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
     },
@@ -3593,16 +3617,16 @@
     {
       "path": "frontend/src/reader/ContentsDrawer.css",
       "language": "css",
-      "lines": 92,
-      "size_bytes": 2068,
+      "lines": 187,
+      "size_bytes": 6025,
       "role": "asset",
       "purpose": "Contents drawer styles: a surface panel with a lift shadow, the bottom-sheet variant, Playfair heading, 44 px chapter rows in Lora, the current one on the accent wash, the 'today' label."
     },
     {
       "path": "frontend/src/reader/ContentsDrawer.jsx",
       "language": "jsx",
-      "lines": 86,
-      "size_bytes": 3666,
+      "lines": 151,
+      "size_bytes": 7427,
       "role": "asset",
       "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
     },
@@ -4857,8 +4881,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 616,
-      "size_bytes": 187286,
+      "lines": 619,
+      "size_bytes": 187998,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

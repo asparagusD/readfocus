@@ -47,6 +47,8 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
     });
   }, [onRelocate]);
 
+  const counted = useRef(null); // the locations, for page labels asked through the ref (C21.5)
+  useEffect(() => { counted.current = locations; }, [locations]);
   const [loads, setLoads] = useState(0); // the engine opening, then each section loaded: a reason to paint again
   const onReady = useCallback((made) => {
     engine.current = made;
@@ -128,6 +130,11 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         return null;
       },
       documents: () => (now()?.contents() ?? []).map(({ doc }) => doc),
+      // C21.5: "p. 34" for an annotation, from its A4 position (spine item and characters) and the counted pages.
+      pageLabel: (annotation) => {
+        const page = locationAt(counted.current, Math.floor(annotation.position_start / 1e6), annotation.position_start % 1e6);
+        return page ? `p. ${page}` : '';
+      },
       // C21.4: where each painted annotation is, in the page's coordinates (each section's frame shifts it).
       annotationEntries: () => {
         const byId = new Map();

@@ -87,6 +87,7 @@ export function ReadingSession() {
   const [chapter, setChapter] = useState('');
   const [toolbarFocused, setToolbarFocused] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
+  const [annotationPages, setAnnotationPages] = useState(() => new Map());
   // Steve (C20.7b): a panel beside the book; the book stays usable while it is open.
   const [steveOpen, setSteveOpen] = useState(false);
   const steveButton = useRef(null);
@@ -184,8 +185,15 @@ export function ReadingSession() {
   const openContents = () => {
     const today = (loc) => Boolean(bounds?.start && compare(loc, bounds.start) >= 0 && (!bounds.end || compare(loc, bounds.end) <= 0));
     setEntries((reader.current?.toc() ?? []).map((entry, i) => ({ ...entry, key: `${i}-${entry.title}`, today: today(entry.loc) })));
+    // C21.5: each annotation's page, read from the book as the drawer opens (the counted EPUB pages can change).
+    setAnnotationPages(new Map(notes.annotations.map((a) => [a.id, reader.current?.pageLabel(a) ?? ''])));
     setContentsOpen((open) => !open);
   };
+  const onPickAnnotation = useCallback((annotation) => {
+    setContentsOpen(false);
+    const [anchor] = annotation.anchors;
+    reader.current?.goTo(anchor.kind === 'epub' ? { cfi: anchor.cfi } : anchor);
+  }, []);
   const onPick = useCallback((entry) => {
     setContentsOpen(false);
     reader.current?.goTo(entry.target);
@@ -411,6 +419,9 @@ export function ReadingSession() {
         current={chapter}
         onPick={onPick}
         returnTo={contentsButton}
+        annotations={pagesOnly ? null : notes.annotations}
+        pageOf={(a) => annotationPages.get(a.id) ?? ''}
+        onPickAnnotation={onPickAnnotation}
       />
 
       <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)} title="Leave today's reading?">

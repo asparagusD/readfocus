@@ -1778,6 +1778,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/annotations.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/calibration.spec.js",
       "type": "file",
       "role": "config",
@@ -2085,6 +2091,18 @@
     },
     {
       "id": "file:frontend/src/annotations/hover.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/list.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/list.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -7564,6 +7582,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/annotations.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/calibration.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -7791,6 +7814,11 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/hover.test.js",
       "to": "file:frontend/src/annotations/hover.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/list.test.js",
+      "to": "file:frontend/src/annotations/list.js"
     },
     {
       "type": "imports",
@@ -8650,6 +8678,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/annotations/list.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/annotations/paint.js"
     },
     {
@@ -9271,6 +9304,21 @@
       "type": "imports",
       "from": "file:frontend/src/prerender.jsx",
       "to": "file:frontend/src/theme/themeContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/annotations/list.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/annotations/roving.js"
     },
     {
       "type": "imports",

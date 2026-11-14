@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 706,
-    "inventoried": 563,
+    "tracked": 712,
+    "inventoried": 569,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 14534,
+      "size_bytes": 14552,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1754,7 +1754,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 4308,
-      "size_bytes": 774044,
+      "size_bytes": 775580,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2025,8 +2025,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 54,
-      "size_bytes": 1767,
+      "lines": 55,
+      "size_bytes": 1790,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -3599,6 +3599,22 @@
       "purpose": "\"Use your own free Gemini key\" (C20.3, handoff screen 17): a disclosure in the account panel with a password field, the Google AI Studio link and Save key (checked with Google by PUT /steve/key), then the last four and Remove key; the key is dropped once sent."
     },
     {
+      "path": "frontend/src/steve/answer.js",
+      "language": "javascript",
+      "lines": 98,
+      "size_bytes": 4385,
+      "role": "asset",
+      "purpose": "Steve's answer as blocks (C20.7a): paragraphs, lists, fenced code, display and inline math, inline code, emphasis and citation chips for sent labels only, from the answer's Markdown without any HTML; works on half-written answers."
+    },
+    {
+      "path": "frontend/src/steve/highlight.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 3699,
+      "role": "asset",
+      "purpose": "A small code highlighter for Steve's answers (C20.7a, handoff screen 15): keyword, comment and string tokens for common languages, no dependency, no HTML."
+    },
+    {
       "path": "frontend/src/steve/ownKey.js",
       "language": "javascript",
       "lines": 28,
@@ -3613,6 +3629,38 @@
       "size_bytes": 1492,
       "role": "asset",
       "purpose": "Unit tests for frontend/src/steve/ownKey.js: pasted keys cleaned, only key-shaped values sent, the last-four label, error text, the AI Studio link."
+    },
+    {
+      "path": "frontend/src/steve/sse.js",
+      "language": "javascript",
+      "lines": 80,
+      "size_bytes": 3247,
+      "role": "asset",
+      "purpose": "Steve's stream client (C20.7a): parses POST /steve/ask's Server-Sent Events across chunks, turns refusals into typed SteveError (code, status, until) and askSteve() posts a question and streams events to a callback."
+    },
+    {
+      "path": "frontend/src/steve/steve.test.js",
+      "language": "javascript",
+      "lines": 190,
+      "size_bytes": 10564,
+      "role": "asset",
+      "purpose": "Unit tests for the Steve client modules: SSE parsing and typed refusals, answer blocks and citations, no HTML, code tokens, suggestions, the panel reducer and backAt."
+    },
+    {
+      "path": "frontend/src/steve/steveState.js",
+      "language": "javascript",
+      "lines": 96,
+      "size_bytes": 4199,
+      "role": "asset",
+      "purpose": "The Steve panel's state (C20.7a) as a pure reducer: loading, consent, off, chat with streaming answers, paused (quota) with when Steve is back, the key view and errors."
+    },
+    {
+      "path": "frontend/src/steve/suggest.js",
+      "language": "javascript",
+      "lines": 26,
+      "size_bytes": 1047,
+      "role": "asset",
+      "purpose": "Three suggested questions for Steve's empty state (C20.7a), templated from the current chapter's cleaned title."
     },
     {
       "path": "frontend/src/styles/base.css",
@@ -4449,8 +4497,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 565,
-      "size_bytes": 173210,
+      "lines": 571,
+      "size_bytes": 174491,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

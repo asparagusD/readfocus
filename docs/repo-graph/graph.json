@@ -3037,6 +3037,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/steve/answer.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/highlight.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/steve/ownKey.js",
       "type": "file",
       "role": "asset",
@@ -3044,6 +3056,30 @@
     },
     {
       "id": "file:frontend/src/steve/ownKey.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/sse.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/steve.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/steveState.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/steve/suggest.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -8703,6 +8739,31 @@
       "type": "imports",
       "from": "file:frontend/src/steve/ownKey.test.js",
       "to": "file:frontend/src/steve/ownKey.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/sse.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/steveState.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/steve/steve.test.js",
+      "to": "file:frontend/src/steve/suggest.js"
     },
     {
       "type": "imports",

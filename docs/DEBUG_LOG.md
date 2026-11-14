@@ -3611,3 +3611,41 @@ a fake client that closes its models when collected. Failed before the fix
 
 ### Commit
 `fix(steve): keep the Gemini client alive for the whole call`
+
+## 2026-11-14 C20.G — `make graph` leaves a diff at the C20 close
+
+**Status:** fixed
+
+### Symptom
+The C20 close requires `make graph` to leave no diff. It rewrote one line:
+
+    make graph
+    git diff --stat docs/repo-graph
+     docs/repo-graph/inventory.json | 2 +-
+    -      "size_bytes": 788638,
+    +      "size_bytes": 792901,      (docs/PROGRESS.md)
+
+### Repro
+`make graph && git diff --exit-code docs/repo-graph` exits 1 at `5ef5eb1`.
+
+### Hypotheses
+1. The C20.G commit changed `docs/PROGRESS.md` and did not regenerate the
+   graph, which records each file's size. Evidence: the only changed entry
+   is PROGRESS.md's `size_bytes`; its line count is unchanged because the
+   verdict replaced one row with one longer row. Ruled out if: the size
+   differs from `wc -c` of the committed file. Result: confirmed.
+
+### Root cause
+Process: the gate commit was docs-only and `make graph` was not run before
+it (the atomic-commit checklist asks for it only when files are added,
+removed or rewired), so the generated inventory kept the old size.
+
+### Fix
+Regenerate with `make graph` and commit `docs/repo-graph/inventory.json`.
+
+### Regression test
+None automated: the close step's `make graph` plus `git diff --exit-code`
+is the check, and it is clean after this commit.
+
+### Commit
+`fix(graph): refresh the inventory after the C20.G progress row`

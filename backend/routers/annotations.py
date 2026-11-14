@@ -7,52 +7,19 @@ anchors: the page or spine part always, the line (floor of the quad's top or bot
 (the x term, the EPUB character count) come from the reader, who has the page width and the section's text.
 """
 
-import re
 from datetime import UTC, datetime
-from itertools import pairwise
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from backend.agents import policy
 from backend.dependencies import get_current_user
-from backend.routers.sessions import EpubAnchor, PdfAnchor
+from backend.services.anchor_checks import MAX_POSITION, Anchor, check_anchors
 from backend.services.supabase_client import supabase
 
 router = APIRouter()
 
-PART = 1_000_000  # A4: the page or spine index sits above this, the line and offset below
-MAX_POSITION = 100_001 * PART
 COLUMNS = "id, book_id, anchors, position_start, position_end, style, color, text_snapshot, orphaned, created_at, updated_at"
-Anchor = Annotated[PdfAnchor | EpubAnchor, Field(discriminator="kind")]
-
-
-def _collapse(text: str) -> str:
-    return " ".join(text.split())
-
-
-def spine_of_range(cfi: str) -> int | None:
-    """The spine index of a range CFI (parent, start, end), or None for a point or an unreadable CFI."""
-    inner = re.fullmatch(r"epubcfi\((.*)\)", cfi)
-    parts = re.sub(r"\[[^\]]*\]", "", inner.group(1)).split(",") if inner else []
-    if len(parts) != 3 or "!" not in parts[0] or not all(parts):
-        return None
-    steps = parts[0].split("!")[0].split("/")[1:]
-    if len(steps) < 2 or not all(s.isdigit() for s in steps) or int(steps[-1]) % 2 or int(steps[-1]) < 2:
-        return None
-    return int(steps[-1]) // 2 - 1
-
-
-def _place(anchor: PdfAnchor | EpubAnchor) -> int:
-    if isinstance(anchor, PdfAnchor):
-        if any(x0 > x1 or y0 > y1 for x0, y0, x1, y1 in anchor.quads):
-            raise ValueError("each quad is [x0, y0, x1, y1] with x0 <= x1 and y0 <= y1")
-        return anchor.page
-    spine = spine_of_range(anchor.cfi)
-    if spine is None:
-        raise ValueError("an EPUB anchor is a range CFI inside one spine item")
-    return spine
 
 
 class Style(BaseModel):
@@ -78,24 +45,7 @@ class NewAnnotation(Style):
 
     @model_validator(mode="after")
     def anchors_match_positions(self):
-        if len({a.kind for a in self.anchors}) != 1:
-            raise ValueError("an annotation is all PDF or all EPUB")
-        places = [_place(a) for a in self.anchors]
-        if any(b <= a for a, b in pairwise(places)):
-            raise ValueError("one anchor per page or spine item, in reading order (A2)")
-        for anchor in self.anchors:
-            anchor.text = _collapse(anchor.text)
-            if not anchor.text:
-                raise ValueError("a highlight covers text: point anchors are not annotations (A3)")
-        start, end = self.position_start, self.position_end
-        if not (start.is_integer() and end.is_integer()) or end < start:
-            raise ValueError("positions are whole numbers, start before end (A4)")
-        if start // PART != places[0] or end // PART != places[-1]:
-            raise ValueError("a position's page or spine part is its anchor's (A4)")
-        first, last = self.anchors[0], self.anchors[-1]
-        if isinstance(first, PdfAnchor) and isinstance(last, PdfAnchor) and (
-                start % PART // 100 != int(first.quads[0][1]) or end % PART // 100 != int(last.quads[-1][3])):
-            raise ValueError("a PDF position's line is floor(y) of the first quad's top or the last quad's bottom")
+        check_anchors(self.anchors, self.position_start, self.position_end)
         return self
 
 

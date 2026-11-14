@@ -16,6 +16,13 @@
       "handler": "delete_book"
     },
     {
+      "id": "endpoint:DELETE /notes/{note_id}",
+      "type": "endpoint",
+      "method": "DELETE",
+      "path": "/notes/{note_id}",
+      "handler": "delete_note"
+    },
+    {
       "id": "endpoint:DELETE /steve/key",
       "type": "endpoint",
       "method": "DELETE",
@@ -56,6 +63,13 @@
       "method": "GET",
       "path": "/books/{book_id}/file",
       "handler": "get_book_file"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/notes",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/notes",
+      "handler": "list_notes"
     },
     {
       "id": "endpoint:GET /books/{book_id}/ocr",
@@ -170,6 +184,13 @@
       "handler": "restyle_annotation"
     },
     {
+      "id": "endpoint:PATCH /notes/{note_id}",
+      "type": "endpoint",
+      "method": "PATCH",
+      "path": "/notes/{note_id}",
+      "handler": "update_note"
+    },
+    {
       "id": "endpoint:POST /auth/profile/calibrate",
       "type": "endpoint",
       "method": "POST",
@@ -189,6 +210,20 @@
       "method": "POST",
       "path": "/books/{book_id}/annotations",
       "handler": "create_annotation"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/note-files",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/note-files",
+      "handler": "upload_note_file"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/notes",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/notes",
+      "handler": "create_note"
     },
     {
       "id": "endpoint:POST /books/{book_id}/ocr",
@@ -824,6 +859,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/notes.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/ocr.py",
       "type": "file",
       "role": "router",
@@ -849,6 +890,12 @@
     },
     {
       "id": "file:backend/services/__init__.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/anchor_checks.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -885,6 +932,12 @@
     },
     {
       "id": "file:backend/services/lookup.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/note_content.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -1419,6 +1472,18 @@
     },
     {
       "id": "file:backend/tests/test_no_paid_ai.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_note_content.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_notes_api.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -3992,6 +4057,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/027_note_blocks.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -4181,6 +4252,10 @@
     },
     {
       "id": "table:equation_latex",
+      "type": "table"
+    },
+    {
+      "id": "table:note_blocks",
       "type": "table"
     },
     {
@@ -4766,6 +4841,31 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:DELETE /notes/{note_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:GET /books/{book_id}/notes"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:PATCH /notes/{note_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:POST /books/{book_id}/note-files"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/notes.py",
+      "to": "endpoint:POST /books/{book_id}/notes"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/ocr.py",
       "to": "endpoint:GET /books/{book_id}/ocr"
     },
@@ -4988,6 +5088,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/026_annotations.sql",
       "to": "table:annotations"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/027_note_blocks.sql",
+      "to": "table:note_blocks"
     },
     {
       "type": "graph_edge",
@@ -5488,6 +5593,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/notes.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/ocr.py"
     },
     {
@@ -5593,7 +5703,7 @@
     {
       "type": "imports",
       "from": "file:backend/routers/annotations.py",
-      "to": "file:backend/routers/sessions.py"
+      "to": "file:backend/services/anchor_checks.py"
     },
     {
       "type": "imports",
@@ -5673,6 +5783,31 @@
     {
       "type": "imports",
       "from": "file:backend/routers/mastery.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
+      "to": "file:backend/services/anchor_checks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
+      "to": "file:backend/services/note_content.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -5812,6 +5947,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/anchor_checks.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -5904,6 +6044,16 @@
       "type": "imports",
       "from": "file:backend/services/lookup.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/note_content.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/note_content.py",
+      "to": "file:backend/routers/sessions.py"
     },
     {
       "type": "imports",
@@ -7039,6 +7189,41 @@
       "type": "imports",
       "from": "file:backend/tests/test_no_paid_ai.py",
       "to": "file:tools/no_paid_ai.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_note_content.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_note_content.py",
+      "to": "file:backend/services/note_content.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/routers/notes.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_notes_api.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -10312,6 +10497,26 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:annotations"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:note_blocks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/ocr.py",
       "to": "table:books"
     },
@@ -10694,6 +10899,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/books.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/notes.py",
+      "to": "table:note_blocks"
     },
     {
       "type": "writes_table",

@@ -12157,6 +12157,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/dashboard.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
       "to": "table:reading_progress"
     },
     {

@@ -11,6 +11,7 @@ const day = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.
 export const DASHBOARD = {
   reading_streak: 12,
   words_this_week: 18420,
+  focus_this_week: { seconds: 4200, points: 1540, sessions: 2 }, // C23.7c
   score_over_time: Array.from({ length: 10 }, (_, i) => ({ date: day(30 - i * 3), score_pct: 50 + i * 2.5, book_id: 'walden', book_title: 'Walden' })),
   book_progress: [
     { book_id: 'walden', title: 'Walden', author: 'Henry David Thoreau', total_chunks: 10, chunks_completed: 6, progress_pct: 60, avg_score: 72, sessions_completed: 6, est_sessions_to_finish: 3 },
@@ -41,6 +42,29 @@ export async function mockDashboard(page, body = DASHBOARD, { status = 200, mast
   });
   return calls;
 }
+
+test('C23.7c: focused time and points this week, from the server', async ({ page }) => {
+  await mockDashboard(page);
+  await page.goto('/dashboard');
+  const card = page.getByRole('region', { name: 'Focus this week' });
+  await expect(card).toContainText('1 h 10 min');
+  await expect(card).toContainText('focused');
+  await expect(card).toContainText('1,540');
+  await expect(card).toContainText('points');
+  await expect(card).toContainText('From 2 focus sessions since Monday.');
+  if (shots) await page.screenshot({ path: `${shots}/dashboard-focus-1440.png`, fullPage: true });
+});
+
+test('C23.7c: with no focus yet the card says how to start, at 375 too', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await mockDashboard(page, { ...DASHBOARD, focus_this_week: { seconds: 0, points: 0, sessions: 0 } });
+  await page.goto('/dashboard');
+  const card = page.getByRole('region', { name: 'Focus this week' });
+  await expect(card).toContainText('0 min');
+  await expect(card).toContainText('Turn on Focus mode in a book and your focused time and points gather here.');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
+  if (shots) await page.screenshot({ path: `${shots}/dashboard-focus-375.png`, fullPage: true });
+});
 
 test('greeting, streak, four figures, the trend with its table, books and feedback', async ({ page }) => {
   await mockDashboard(page);

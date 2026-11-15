@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15641,
+      "size_bytes": 15678,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -617,10 +617,10 @@
     {
       "path": "backend/routers/dashboard.py",
       "language": "python",
-      "lines": 174,
-      "size_bytes": 7558,
+      "lines": 187,
+      "size_bytes": 8425,
       "role": "router",
-      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found."
+      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found. C23.7c: focus_this_week {seconds, points, sessions}: counted seconds (active minus voided) of this week's focus sessions except discarded ones, and points of the scored ones, from focus_sessions."
     },
     {
       "path": "backend/routers/focus.py",
@@ -1105,8 +1105,8 @@
     {
       "path": "backend/tests/test_api_dashboard.py",
       "language": "python",
-      "lines": 138,
-      "size_bytes": 6097,
+      "lines": 157,
+      "size_bytes": 7212,
       "role": "test",
       "purpose": "Pytest on the in-memory database with a frozen clock: GET /dashboard returns the response recorded from the pre-C9.4 endpoint, reads answers only for a page of the newest results, pages on until it has three feedback quotes, and issues its reads at once."
     },
@@ -1153,8 +1153,8 @@
     {
       "path": "backend/tests/test_api_quiz_me.py",
       "language": "python",
-      "lines": 84,
-      "size_bytes": 4213,
+      "lines": 92,
+      "size_bytes": 4246,
       "role": "test",
       "purpose": "API tests for POST /focus/quiz-me (C23.7b): this chapter from its contents entry, graded by submit-answers with mastery moved and no points; since the last focus bookmark, the body start, or after a test's chunks; nothing to ask refused with 409; another reader's book, a bad scope and extra keys refused."
     },
@@ -1978,7 +1978,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5208,
-      "size_bytes": 939445,
+      "size_bytes": 941202,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2073,8 +2073,8 @@
     {
       "path": "frontend/e2e/dashboard.spec.js",
       "language": "javascript",
-      "lines": 168,
-      "size_bytes": 10042,
+      "lines": 192,
+      "size_bytes": 11413,
       "role": "config",
       "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here and GET /mastery (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375; concept mastery (tabs by keyboard, weakest first, Show more, the weak rule, the exact /mastery requests) and a failed mastery load; For tonight; the candle, bar and trend motion with and without reduced motion."
     },
@@ -3417,16 +3417,16 @@
     {
       "path": "frontend/src/lib/dashboard.js",
       "language": "javascript",
-      "lines": 63,
-      "size_bytes": 2656,
+      "lines": 82,
+      "size_bytes": 3404,
       "role": "lib",
-      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday, needsRevisiting (tested and under the planner's 0.5), nextBook (started and unfinished with the most read, else the first not started)."
+      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday, needsRevisiting (tested and under the planner's 0.5), nextBook (started and unfinished with the most read, else the first not started). C23.7c: focusedTime ('1 h 10 min') and focusWeek (the focus card's time, points and line)."
     },
     {
       "path": "frontend/src/lib/dashboard.test.js",
       "language": "javascript",
-      "lines": 43,
-      "size_bytes": 2213,
+      "lines": 56,
+      "size_bytes": 2923,
       "role": "lib",
       "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday, needs revisiting."
     },
@@ -4121,18 +4121,18 @@
     {
       "path": "frontend/src/pages/Dashboard.css",
       "language": "css",
-      "lines": 284,
-      "size_bytes": 5712,
+      "lines": 302,
+      "size_bytes": 6128,
       "role": "page",
       "purpose": "Dashboard styles: header with the streak pill, the four-figure row with hairlines (2 x 2 under 640 px), two columns (one under 1024 px), the trend's token colours for Recharts' grid, axis, area, line and dots, cards, book rows, the feedback quote on paper-2, the hidden table, skeleton shapes, the For tonight card, the candle's flicker (2 x 2.4 s)."
     },
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 240,
-      "size_bytes": 9667,
+      "lines": 250,
+      "size_bytes": 10371,
       "role": "page",
-      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24."
     },
     {
       "path": "frontend/src/pages/Landing.css",
@@ -5626,7 +5626,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 712,
-      "size_bytes": 217215,
+      "size_bytes": 217693,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

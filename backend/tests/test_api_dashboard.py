@@ -65,6 +65,7 @@ def data():
             result("s2", 25, "2026-11-10", [feedback("Missed the key term.", 3)]),
             result("s3", 20, "2026-11-11", []),
         ],
+        "focus_sessions": [],
     }
 
 
@@ -106,6 +107,7 @@ EXPECTED = {  # recorded from the pre-C9.4 endpoint (83b4f1f) on data() with the
          "date": "2026-11-09"},
         {"feedback": "Orphan result", "score": 5, "max_score": 10, "book_title": "Unknown", "date": "2026-11-08"},
     ],
+    "focus_this_week": {"seconds": 0, "points": 0, "sessions": 0},  # C23.7c: no focus sessions in this data set
 }
 
 
@@ -136,3 +138,20 @@ def test_feedback_pages_on_until_it_has_three_quotes(db, monkeypatch):
     assert get(db)["recent_feedback"] == EXPECTED["recent_feedback"]
     pages = [s for s in db.selects if s[0] == "test_results" and "answers" in s[1]]
     assert len(pages) == 4  # s3 has no feedback, then s2, s1 and the orphan result
+
+
+def focus(status, active, voided, points, started):
+    return {"user_id": USER, "status": status, "active_seconds": active, "voided_seconds": voided,
+            "points_total": points, "started_at": f"{started}T20:00:00+00:00"}
+
+
+def test_focus_this_week_counts_focused_time_and_scored_points(db):
+    """C23.7c: counted seconds of this week's sessions (not discarded ones), points only once scored."""
+    db.tables["focus_sessions"] = [
+        focus("scored", 3600, 600, 540, "2026-11-10"),  # 50 counted minutes, 540 points
+        focus("awaiting_quiz", 1200, 0, 0, "2026-11-11"),  # 20 minutes; provisional points not counted yet
+        focus("abandoned", 900, 0, 0, "2026-11-11"),  # discarded: nothing
+        focus("scored", 3600, 0, 700, "2026-11-08"),  # last week
+        {**focus("scored", 3600, 0, 700, "2026-11-10"), "user_id": "user-2"},  # another reader
+    ]
+    assert get(db)["focus_this_week"] == {"seconds": 4200, "points": 540, "sessions": 2}

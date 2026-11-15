@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 820,
-    "inventoried": 677,
+    "tracked": 822,
+    "inventoried": 679,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15281,
+      "size_bytes": 15299,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 389,
-      "size_bytes": 16869,
+      "lines": 410,
+      "size_bytes": 17915,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -1327,6 +1327,14 @@
       "purpose": "Pytest for backend/regions/figures.py through classify: vector and image figures with captions above or below and labels, icons, rules and single bars ignored, drawn display and inline math, tables with captions, one-cell boxes, graphics inside tables, two-column reading order, crop-box coordinates; and on the shelf Calculus tables, Figure 2.11 and drawn math, and the Circuits schematic taking its labels."
     },
     {
+      "path": "backend/tests/test_focus_policy.py",
+      "language": "python",
+      "lines": 35,
+      "size_bytes": 1595,
+      "role": "test",
+      "purpose": "Pytest: the focus defaults in policy.py equal docs/FOCUS_RULES.md's Defaults table; focus statuses, open statuses, event kinds and the rules version format."
+    },
+    {
       "path": "backend/tests/test_garble.py",
       "language": "python",
       "lines": 102,
@@ -1417,8 +1425,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 738,
-      "size_bytes": 33713,
+      "lines": 825,
+      "size_bytes": 38371,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -1866,7 +1874,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5202,
-      "size_bytes": 911138,
+      "size_bytes": 913777,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5287,6 +5295,14 @@
       "purpose": "Adds books.body_start (jsonb object) and books.body_start_source (outline, heading, prose or user), both nullable (C23.1)."
     },
     {
+      "path": "supabase/migrations/029_focus.sql",
+      "language": "sql",
+      "lines": 91,
+      "size_bytes": 4932,
+      "role": "migration",
+      "purpose": "Focus sessions and events (C23.2): focus_sessions (status, start and end anchors and positions, active and voided seconds, words in range, quiz ids and counts, points, rules version; one open session per reader) and append-only focus_events (kind, client event id, page key, position, had_input, client and server time; an UPDATE raises); owner SELECT-only RLS."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -5361,8 +5377,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 679,
-      "size_bytes": 204258,
+      "lines": 681,
+      "size_bytes": 204862,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -5393,8 +5409,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 286,
-      "size_bytes": 12077,
+      "lines": 287,
+      "size_bytes": 12144,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

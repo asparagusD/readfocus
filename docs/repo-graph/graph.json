@@ -1431,6 +1431,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_focus_policy.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_garble.py",
       "type": "file",
       "role": "test",
@@ -4401,6 +4407,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/029_focus.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -4503,6 +4515,10 @@
       "language": "python"
     },
     {
+      "id": "function:focus_events_append_only",
+      "type": "function"
+    },
+    {
       "id": "function:handle_new_user",
       "type": "function"
     },
@@ -4590,6 +4606,14 @@
     },
     {
       "id": "table:equation_latex",
+      "type": "table"
+    },
+    {
+      "id": "table:focus_events",
+      "type": "table"
+    },
+    {
+      "id": "table:focus_sessions",
       "type": "table"
     },
     {
@@ -5378,6 +5402,11 @@
       "to": "function:steve_take_quota"
     },
     {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/029_focus.sql",
+      "to": "function:focus_events_append_only"
+    },
+    {
       "type": "defines_table",
       "from": "file:supabase/migrations/001_initial.sql",
       "to": "table:books"
@@ -5476,6 +5505,16 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/027_note_blocks.sql",
       "to": "table:note_blocks"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/029_focus.sql",
+      "to": "table:focus_events"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/029_focus.sql",
+      "to": "table:focus_sessions"
     },
     {
       "type": "graph_edge",
@@ -7372,6 +7411,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_figures.py",
       "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_focus_policy.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",

@@ -387,3 +387,24 @@ BODY_START_HEADING_TOP = 3  # a numbered heading ("1 Springs") is among the firs
 BODY_START_CONTENTS_LINES = 3  # a page with this many chapter-like lines is a contents page
 BODY_START_SCAN_UNITS = 80  # (2) and (3) look at the first pages or EPUB sections only
 BODY_START_TITLE_MAX = 200
+
+# --- Focus mode (C23, docs/FOCUS_RULES.md: the defaults table there is the source; test_focus_policy.py checks) ---
+FOCUS_POINTS_PER_MINUTE = 10  # F4
+FOCUS_HEARTBEAT_S = 15  # F3
+FOCUS_IDLE_PROMPT_MIN = 10  # F6
+FOCUS_IDLE_ANSWER_S = 60  # F6
+FOCUS_PAGE_CAP_MIN = 30  # F7
+FOCUS_SESSION_CAP_MIN = 180  # F8
+QUIZ_WORDS_PER_QUESTION = 400  # F10
+QUIZ_MIN_QUESTIONS = 3  # F10
+QUIZ_MAX_QUESTIONS = 15  # F10
+QUIZ_POINTS_PER_CORRECT = 20  # F11
+QUIZ_PASS_SCORE = 0.40  # F12
+# focus_sessions.status and focus_events.kind (029 checks the same values). Open sessions: one per reader.
+FOCUS_STATUSES = ("active", "paused", "awaiting_quiz", "scored", "abandoned")
+FOCUS_OPEN_STATUSES = ("active", "paused")
+FOCUS_EVENT_KINDS = ("start", "heartbeat", "page_turn", "hidden", "visible", "idle_prompt", "idle_confirm",
+                     "pause", "resume", "end")
+FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" or "s3:4"
+# Stored on each session, so a session is always scored by the rules it was read under.
+FOCUS_RULES_VERSION = "2026-11-15"

@@ -736,3 +736,90 @@ def test_028_adds_two_nullable_columns_to_books_and_nothing_else():
     assert f"ADD COLUMN IF NOT EXISTS body_start_source text CHECK (body_start_source IN ({sources}))" in sql
     assert "NOT NULL" not in sql and "DEFAULT" not in sql  # existing rows keep null until detected or backfilled
     assert not re.search(r"\bUPDATE\b|\bINSERT\b|\bPOLICY\b", sql)
+
+
+# --- 029: focus sessions and events (C23.2) ----------------------------------------------------------------
+
+def migration_029() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "029_focus.sql"))
+
+
+def _in_list(values) -> str:
+    return ", ".join(f"'{v}'" for v in values)
+
+
+def test_029_creates_focus_sessions_with_the_agreed_columns():
+    from backend.agents import policy
+    count = "integer NOT NULL DEFAULT 0 CHECK ({} >= 0)"
+    assert table_definition(migration_029(), "focus_sessions") == {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "user_id": OWNER,
+        "book_id": BOOK,
+        "status": f"text NOT NULL DEFAULT 'active' CHECK (status IN ({_in_list(policy.FOCUS_STATUSES)}))",
+        "start_anchor": "jsonb NOT NULL CHECK (jsonb_typeof(start_anchor) = 'object')",
+        "start_position": "float8 NOT NULL CHECK (start_position >= 0)",
+        "end_anchor": "jsonb CHECK (end_anchor IS NULL OR jsonb_typeof(end_anchor) = 'object')",
+        "end_position": "float8 CHECK (end_position >= 0)",
+        "started_at": "timestamptz NOT NULL DEFAULT now()",
+        "ended_at": "timestamptz",
+        "active_seconds": count.format("active_seconds"),
+        "voided_seconds": count.format("voided_seconds"),
+        "words_in_range": "integer CHECK (words_in_range >= 0)",
+        "quiz_question_ids": "uuid[]",
+        "quiz_correct": "integer CHECK (quiz_correct >= 0)",
+        "quiz_total": "integer CHECK (quiz_total >= 0)",
+        "points_time": count.format("points_time"),
+        "points_bonus": count.format("points_bonus"),
+        "points_total": count.format("points_total"),
+        "rules_version": "text NOT NULL",
+        "updated_at": "timestamptz NOT NULL DEFAULT now()",
+        "CONSTRAINT": "focus_sessions_quiz_counts CHECK (quiz_correct IS NULL OR quiz_correct <= quiz_total)",
+    }
+
+
+def test_029_creates_focus_events_with_the_agreed_columns():
+    from backend.agents import policy
+    assert table_definition(migration_029(), "focus_events") == {
+        "id": "bigserial PRIMARY KEY",
+        "session_id": "uuid NOT NULL REFERENCES public.focus_sessions(id) ON DELETE CASCADE",
+        "user_id": OWNER,
+        "kind": f"text NOT NULL CHECK (kind IN ({_in_list(policy.FOCUS_EVENT_KINDS)}))",
+        "client_event_id": "uuid",
+        "page_key": f"text CHECK (char_length(page_key) <= {policy.FOCUS_PAGE_KEY_MAX})",
+        "position": "float8 CHECK (position >= 0)",
+        "had_input": "boolean",
+        "client_ts": "timestamptz",
+        "server_ts": "timestamptz NOT NULL DEFAULT now()",
+    }
+
+
+def test_029_one_open_session_per_reader_and_the_lookup_indexes():
+    from backend.agents import policy
+    sql = migration_029()
+    assert (f"CREATE UNIQUE INDEX IF NOT EXISTS focus_sessions_one_open ON public.focus_sessions (user_id) "
+            f"WHERE status IN ({_in_list(policy.FOCUS_OPEN_STATUSES)})") in sql
+    assert "CREATE INDEX IF NOT EXISTS idx_focus_sessions_user_book ON public.focus_sessions (user_id, book_id, started_at DESC)" in sql
+    assert "CREATE INDEX IF NOT EXISTS idx_focus_events_session ON public.focus_events (session_id, server_ts, id)" in sql
+    assert ("CREATE UNIQUE INDEX IF NOT EXISTS focus_events_client_id ON public.focus_events (session_id, client_event_id) "
+            "WHERE client_event_id IS NOT NULL") in sql
+
+
+def test_029_readers_only_read_their_own_rows_and_events_are_append_only():
+    sql = migration_029()
+    for table in ("focus_sessions", "focus_events"):
+        assert f"ALTER TABLE public.{table} ENABLE ROW LEVEL SECURITY" in sql
+        policies = re.findall(rf"CREATE POLICY \"[^\"]+\" ON public\.{table} FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+        assert policies == ["SELECT"]  # only the backend writes: it timestamps events and scores sessions
+    assert sql.count("CREATE POLICY") == 2 and "SECURITY DEFINER" not in sql
+    # Append-only even for the service role: an UPDATE raises; rows go only with their session, book or reader.
+    assert "CREATE OR REPLACE FUNCTION public.focus_events_append_only() RETURNS trigger" in sql
+    assert "RAISE EXCEPTION 'focus_events is append-only'" in sql
+    assert ("CREATE OR REPLACE TRIGGER focus_events_no_update BEFORE UPDATE ON public.focus_events "
+            "FOR EACH ROW EXECUTE FUNCTION public.focus_events_append_only()") in sql
+
+
+def test_029_touches_only_its_tables():
+    sql = migration_029()
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == [
+        "focus_events", "focus_sessions"]
+    assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)

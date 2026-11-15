@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 857,
-    "inventoried": 714,
+    "tracked": 859,
+    "inventoried": 716,
     "excluded": 143
   },
   "files": [
@@ -1199,6 +1199,14 @@
       "purpose": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development."
     },
     {
+      "path": "backend/tests/test_backfill_block_paths.py",
+      "language": "python",
+      "lines": 127,
+      "size_bytes": 6428,
+      "role": "test",
+      "purpose": "Tests for scripts/backfill_block_paths.py on the in-memory database: candidates (ready EPUBs with a file), a dry run writes nothing, a write rewrites only block_paths and a second run changes nothing, a book already right and one whose blocks differ are left alone, a failing book does not stop the run, the ENV guard."
+    },
+    {
       "path": "backend/tests/test_backfill_body_start.py",
       "language": "python",
       "lines": 53,
@@ -1985,8 +1993,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5209,
-      "size_bytes": 948541,
+      "lines": 5210,
+      "size_bytes": 949985,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5047,6 +5055,14 @@
       "purpose": "The C18 technical test shelf as fetched: file, title, author, what each book tests, licence, source URL, the page the licence was checked on, size and sha256 (the books themselves are git-ignored)."
     },
     {
+      "path": "scripts/backfill_block_paths.py",
+      "language": "python",
+      "lines": 120,
+      "size_bytes": 5565,
+      "role": "script",
+      "purpose": "Backfill (C23.G, DEBUG_LOG): rebuilds chunks.block_paths of ready EPUBs with a stored file from the file with the fixed code (paths stored before cd97676 were one step too deep for a <body> with attributes); writes block_paths only for chunks that differ, skips a book whose rebuilt blocks differ from the stored ones, never writes content, blocks or toc; dry run by default, --write, --limit, --book-id; refuses unless ENV=development (--allow-non-dev); idempotent."
+    },
+    {
       "path": "scripts/backfill_body_start.py",
       "language": "python",
       "lines": 81,
@@ -5657,8 +5673,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 716,
-      "size_bytes": 220450,
+      "lines": 718,
+      "size_bytes": 221327,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

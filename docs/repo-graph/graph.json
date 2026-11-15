@@ -1416,6 +1416,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_block_paths.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_backfill_body_start.py",
       "type": "file",
       "role": "test",
@@ -4300,6 +4306,12 @@
       "type": "file",
       "role": "doc",
       "language": "markdown"
+    },
+    {
+      "id": "file:scripts/backfill_block_paths.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
     },
     {
       "id": "file:scripts/backfill_body_start.py",
@@ -7677,6 +7689,31 @@
       "type": "imports",
       "from": "file:backend/tests/test_backfill.py",
       "to": "file:scripts/backfill_local_embeddings.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:backend/tests/test_book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:scripts/backfill_block_paths.py"
     },
     {
       "type": "imports",
@@ -11590,6 +11627,21 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/backfill_body_start.py",
       "to": "file:backend/services/body_start.py"
     },
@@ -12415,6 +12467,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_body_start.py",
       "to": "table:books"
     },
@@ -12562,6 +12624,11 @@
       "type": "uses_env",
       "from": "file:frontend/src/lib/supabase.js",
       "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "env:ENV"
     },
     {
       "type": "uses_env",
@@ -12797,6 +12864,11 @@
       "type": "writes_table",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "table:question_bank"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "table:chunks"
     },
     {
       "type": "writes_table",

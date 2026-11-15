@@ -207,7 +207,11 @@ async def focus_quiz(session_id: str, user_id: str = Depends(get_current_user)):
 async def focus_quiz_answers(session_id: str, req: AnswersRequest, user_id: str = Depends(get_current_user)):
     """Grade the quiz once (submit_answers: grades, test_results, mastery) and score the session (F11-F12)."""
     session, events = await run_in_threadpool(_awaiting, user_id, session_id)
-    result = await quiz.grade(session, events, req.answers, req.time_taken_seconds)
+    try:
+        result = await quiz.grade(session, events, req.answers, req.time_taken_seconds)
+    except quiz.NotGraded:  # C23.G: nothing scored; the reader's answers are kept in the browser
+        raise HTTPException(status_code=503,
+                            detail="Your answers couldn't be graded just now. They are kept; try again.") from None
     if result is None:
         raise HTTPException(status_code=409, detail="This quiz has not been asked yet, or is already answered.")
     return result

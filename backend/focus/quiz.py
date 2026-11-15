@@ -133,6 +133,10 @@ def build(session: dict) -> dict:
     return {"questions": questions, "words_in_range": round(words), "count": len(questions)}
 
 
+class NotGraded(Exception):
+    """Grading did not happen (the grader failed); the quiz row is released and nothing is scored."""
+
+
 async def grade(session: dict, events: list[dict], answers: list[str], seconds: int) -> dict | None:
     """Grade once through submit_answers and score the focus session. None when it was already graded."""
     claimed = supabase.table("sessions").update({"status": "completed", "completed_at": store.stamp(store.now())}).eq(
@@ -141,8 +145,20 @@ async def grade(session: dict, events: list[dict], answers: list[str], seconds: 
         return None
     row = claimed[0]
     indices = list(range(row["chunk_start_index"], row["chunk_end_index"] + 1))
-    final = await run_submit(session["id"], session["user_id"], session["book_id"], indices, row["test_questions"],
-                             answers, seconds)
+
+    def release() -> None:  # C23.G: grading did not happen; the quiz can be answered again, nothing is scored
+        supabase.table("sessions").update({"status": "testing", "completed_at": None}).eq("id", session["id"]).eq(
+            "user_id", session["user_id"]).execute()
+
+    try:
+        final = await run_submit(session["id"], session["user_id"], session["book_id"], indices,
+                                 row["test_questions"], answers, seconds)
+    except Exception:  # noqa: BLE001 - whatever failed, the claimed row is released and nothing is scored
+        release()
+        raise NotGraded from None
+    if not final or final.get("error") or not final.get("evaluation_result"):
+        release()
+        raise NotGraded
     per_question = ((final or {}).get("evaluation_result") or {}).get("per_question") or []
     weighted, whole = rq.weighted_correct(per_question)
     total = len(row["test_questions"])

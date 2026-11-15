@@ -4443,3 +4443,38 @@ backend/tests 1676 passed.
 
 ### Commit
 fix(api): keep focus quizzes off the test endpoints and never reopen a graded test
+
+## 2026-11-15 C23.G — a failed grading scores a focus session 0 for good, or leaves it stuck
+
+**Status:** fixed
+
+### Symptom
+C23 close review. `backend/focus/quiz.py` `grade()` claims the quiz row (`testing` -> `completed`) before
+grading. If `run_submit` raises, the row stays `completed` and the focus session `awaiting_quiz`: every retry is
+409 "already answered", for ever. If it returns an error or no `evaluation_result`, `per_question` is empty, the
+weighted score 0, and the session is written `scored` with 0 points.
+
+### Repro
+Every time: `backend/tests/test_api_focus_quiz.py::test_a_grading_failure_scores_nothing_and_can_be_retried`
+(run_submit raising, then returning an error).
+
+### Hypotheses
+1. `grade()` has no failure path, unlike `submit_answers` (which releases the row and returns 500). Result:
+   confirmed by the test.
+
+### Root cause
+`backend/focus/quiz.py` `grade()`: no release of the claimed row and no refusal when grading did not happen.
+
+### Fix
+On an exception, an error, or no `evaluation_result`, the row goes back to `testing`, nothing is scored, and the
+route answers 503 "Your answers couldn't be graded just now. They are kept; try again." The answers are still in
+the reader's browser (the quiz screen keeps them until a submit succeeds).
+
+### Regression test
+`backend/tests/test_api_focus_quiz.py::test_a_grading_failure_scores_nothing_and_can_be_retried`.
+Failed before the fix: yes (quiz.py and focus.py stashed: 2 failed, the RuntimeError escaping, and a 0 scored).
+Passes after: yes; pytest backend/tests 1678 passed. The quiz screen already keeps the answers and says "try
+Submit again" on a failed submit (C13.5), so the 503 needs no frontend change.
+
+### Commit
+fix(focus): release a focus quiz whose grading failed instead of scoring it

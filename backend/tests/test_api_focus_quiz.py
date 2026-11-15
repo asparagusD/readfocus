@@ -288,3 +288,26 @@ def test_the_test_endpoints_refuse_a_focus_quiz(api):
     # and a graded row is never reopened for a retake
     assert api.client.post(f"/sessions/{sid}/finish-reading", json={"actual_duration_minutes": 3}).status_code == 409
     assert next(s for s in api.db.tables["sessions"] if s["id"] == sid)["status"] == "completed"
+
+
+@pytest.mark.parametrize("failure", ["raises", "error"])
+def test_a_grading_failure_scores_nothing_and_can_be_retried(api, monkeypatch, failure):
+    """C23.G (DEBUG_LOG): grading that does not happen must not score 0 for good, nor leave the session stuck."""
+    sid = read_and_end(api)
+    api.client.post(f"/focus/{sid}/quiz")
+    answers = [q["answer"] for q in stored_questions(api, sid)]
+    real = quiz.run_submit
+
+    async def broken(*args, **kwargs):
+        if failure == "raises":
+            raise RuntimeError("grader down")
+        return {"error": "grader down"}
+
+    monkeypatch.setattr(quiz, "run_submit", broken)
+    failed = answer(api, sid, answers)
+    assert failed.status_code == 503
+    assert focus_row(api, sid)["status"] == "awaiting_quiz" and not focus_row(api, sid).get("points_total")
+    assert next(s for s in api.db.tables["sessions"] if s["id"] == sid)["status"] == "testing"
+    monkeypatch.setattr(quiz, "run_submit", real)
+    retried = answer(api, sid, answers)
+    assert retried.status_code == 200 and retried.json()["status"] == "scored" and retried.json()["passed"] is True

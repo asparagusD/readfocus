@@ -128,6 +128,13 @@
       "handler": "get_dashboard"
     },
     {
+      "id": "endpoint:GET /focus/{session_id}",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/focus/{session_id}",
+      "handler": "get_focus"
+    },
+    {
       "id": "endpoint:GET /health",
       "type": "endpoint",
       "method": "GET",
@@ -247,6 +254,41 @@
       "handler": "resume_book"
     },
     {
+      "id": "endpoint:POST /focus/start",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/start",
+      "handler": "start_focus"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/end",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/end",
+      "handler": "end_focus"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/event",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/event",
+      "handler": "focus_event"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/pause",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/pause",
+      "handler": "pause_focus"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/resume",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/resume",
+      "handler": "resume_focus"
+    },
+    {
       "id": "endpoint:POST /sessions/start",
       "type": "endpoint",
       "method": "POST",
@@ -349,6 +391,10 @@
     },
     {
       "id": "env:FASTEMBED_CACHE",
+      "type": "env"
+    },
+    {
+      "id": "env:FOCUS_SWEEP",
       "type": "env"
     },
     {
@@ -753,6 +799,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/focus/store.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/main.py",
       "type": "file",
       "role": "entry",
@@ -874,6 +926,12 @@
     },
     {
       "id": "file:backend/routers/dashboard.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/focus.py",
       "type": "file",
       "role": "router",
       "language": "python"
@@ -1234,6 +1292,12 @@
     },
     {
       "id": "file:backend/tests/test_api_dashboard.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_focus.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -4437,6 +4501,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/030_focus_ignored_events.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -4777,6 +4847,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/028_body_start.sql",
       "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/030_focus_ignored_events.sql",
+      "to": "table:focus_sessions"
     },
     {
       "type": "calls_endpoint",
@@ -5259,6 +5334,36 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/dashboard.py",
       "to": "endpoint:GET /dashboard"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:GET /focus/{session_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/start"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/end"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/event"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/pause"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/resume"
     },
     {
       "type": "defines_endpoint",
@@ -6003,8 +6108,28 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/focus/store.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/store.py",
+      "to": "file:backend/focus/scoring.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/main.py",
       "to": "file:backend/cors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/focus/store.py"
     },
     {
       "type": "imports",
@@ -6035,6 +6160,11 @@
       "type": "imports",
       "from": "file:backend/main.py",
       "to": "file:backend/routers/dashboard.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/focus.py"
     },
     {
       "type": "imports",
@@ -6224,6 +6354,36 @@
     {
       "type": "imports",
       "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -6889,6 +7049,36 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/routers/focus.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {
@@ -11333,6 +11523,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/focus/store.py",
+      "to": "table:focus_events"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/store.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/mcp_server.py",
       "to": "table:chunks"
     },
@@ -11395,6 +11595,11 @@
       "type": "reads_table",
       "from": "file:backend/routers/dashboard.py",
       "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/focus.py",
+      "to": "table:books"
     },
     {
       "type": "reads_table",
@@ -11643,6 +11848,11 @@
     },
     {
       "type": "uses_env",
+      "from": "file:backend/focus/store.py",
+      "to": "env:FOCUS_SWEEP"
+    },
+    {
+      "type": "uses_env",
       "from": "file:backend/mcp_server.py",
       "to": "env:SUPABASE_ANON_KEY"
     },
@@ -11813,6 +12023,16 @@
     },
     {
       "type": "writes_table",
+      "from": "file:backend/focus/store.py",
+      "to": "table:focus_events"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/focus/store.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "writes_table",
       "from": "file:backend/routers/annotations.py",
       "to": "table:annotations"
     },
@@ -11825,6 +12045,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/books.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/focus.py",
+      "to": "table:focus_sessions"
     },
     {
       "type": "writes_table",

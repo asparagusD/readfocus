@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 826,
-    "inventoried": 683,
+    "tracked": 830,
+    "inventoried": 687,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15317,
+      "size_bytes": 15335,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 412,
-      "size_bytes": 18114,
+      "lines": 415,
+      "size_bytes": 18430,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -409,8 +409,8 @@
     {
       "path": "backend/focus/policy.py",
       "language": "python",
-      "lines": 20,
-      "size_bytes": 878,
+      "lines": 24,
+      "size_bytes": 1067,
       "role": "lib",
       "purpose": "Focus mode's numbers by the scoring engine's names (C23.3), all read from backend/agents/policy.py (= docs/FOCUS_RULES.md Defaults); nothing set here."
     },
@@ -423,12 +423,20 @@
       "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page."
     },
     {
+      "path": "backend/focus/store.py",
+      "language": "python",
+      "lines": 167,
+      "size_bytes": 7575,
+      "role": "lib",
+      "purpose": "Focus sessions in the database (C23.4): places (point CFI steps, spine index, reading-order key, A4 position), session and event rows in server order, the live view from the scoring engine (state, active time, provisional points), the 3-hour cap moving a session to its quiz, and the two-hour abandoned sweep."
+    },
+    {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 66,
-      "size_bytes": 2173,
+      "lines": 77,
+      "size_bytes": 2755,
       "role": "entry",
-      "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process."
+      "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP)."
     },
     {
       "path": "backend/mcp_server.py",
@@ -589,6 +597,14 @@
       "size_bytes": 7558,
       "role": "router",
       "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found."
+    },
+    {
+      "path": "backend/routers/focus.py",
+      "language": "python",
+      "lines": 191,
+      "size_bytes": 9256,
+      "role": "router",
+      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only."
     },
     {
       "path": "backend/routers/lookup.py",
@@ -905,8 +921,8 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 94,
-      "size_bytes": 2688,
+      "lines": 95,
+      "size_bytes": 2761,
       "role": "test",
       "purpose": "Offline test setup: dummy environment (ingestion sweep and model preload off), a fake Supabase client, a guard that blocks non-loopback connections, and an autouse fixture that marks the embedding model ready."
     },
@@ -1069,6 +1085,14 @@
       "size_bytes": 6097,
       "role": "test",
       "purpose": "Pytest on the in-memory database with a frozen clock: GET /dashboard returns the response recorded from the pre-C9.4 endpoint, reads answers only for a page of the newest results, pages on until it has three feedback quotes, and issues its reads at once."
+    },
+    {
+      "path": "backend/tests/test_api_focus.py",
+      "language": "python",
+      "lines": 341,
+      "size_bytes": 16035,
+      "role": "test",
+      "purpose": "Pytest for the focus session API on a test clock: start rules (body start, one open session, the book's pages), rate limits and duplicates, client clock ignored, client numbers refused, the state machine, bookmark order, the 3-hour cap by event and by GET, the abandoned sweep (on GET and at startup), owner only."
     },
     {
       "path": "backend/tests/test_api_mastery.py",
@@ -1457,8 +1481,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 825,
-      "size_bytes": 38371,
+      "lines": 833,
+      "size_bytes": 38816,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -1873,8 +1897,8 @@
     {
       "path": "docs/FOCUS_RULES.md",
       "language": "markdown",
-      "lines": 104,
-      "size_bytes": 4806,
+      "lines": 114,
+      "size_bytes": 5371,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): focus mode rules F1-F14: body start, server-timed stopwatch, points per active minute, hidden-tab and idle pauses, page and 3-hour caps, the bookmark quiz and its pass mark."
     },
@@ -1906,7 +1930,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5203,
-      "size_bytes": 918761,
+      "size_bytes": 923087,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5335,6 +5359,14 @@
       "purpose": "Focus sessions and events (C23.2): focus_sessions (status, start and end anchors and positions, active and voided seconds, words in range, quiz ids and counts, points, rules version; one open session per reader) and append-only focus_events (kind, client event id, page key, position, had_input, client and server time; an UPDATE raises); owner SELECT-only RLS."
     },
     {
+      "path": "supabase/migrations/030_focus_ignored_events.sql",
+      "language": "sql",
+      "lines": 7,
+      "size_bytes": 370,
+      "role": "migration",
+      "purpose": "Adds focus_sessions.ignored_events (integer, default 0): events the focus API ignored (C23.4)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -5409,8 +5441,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 685,
-      "size_bytes": 205927,
+      "lines": 689,
+      "size_bytes": 207316,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

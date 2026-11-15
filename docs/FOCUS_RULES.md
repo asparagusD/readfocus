@@ -13,6 +13,9 @@ C16.3, before any code. Anchors and chunk mapping: `docs/ANCHORS.md`.
 | `FOCUS_HEARTBEAT_S` | 15 | F3 |
 | `FOCUS_MAX_GAP_S` | 45 | F3 |
 | `FOCUS_MIN_HEARTBEAT_GAP_S` | 5 | F3 |
+| `FOCUS_HEARTBEAT_RATE_S` | 25 | F3 |
+| `FOCUS_EVENT_RATE_S` | 2 | F3 |
+| `FOCUS_ABANDON_AFTER_MIN` | 120 | F1 |
 | `FOCUS_IDLE_PROMPT_MIN` | 10 | F6 |
 | `FOCUS_IDLE_ANSWER_S` | 60 | F6 |
 | `FOCUS_PAGE_CAP_MIN` | 30 | F7 |
@@ -26,7 +29,10 @@ C16.3, before any code. Anchors and chunk mapping: `docs/ANCHORS.md`.
 
 **F1. Toggle.** Focus mode can be turned on or off at any time from the
 reader. Turning it off pauses the stopwatch; turning it on again resumes
-the same focus session until a bookmark ends it (F9).
+the same focus session until a bookmark ends it (F9). An open
+session with no event for `FOCUS_ABANDON_AFTER_MIN` minutes is abandoned and
+earns 0 (checked when the server starts and whenever the session is read;
+C23.4, open question 2).
 
 **F2. Body start.** The stopwatch runs only in focus mode and only at or
 after the book's body start: the first block of chapter 1 as found by the
@@ -41,6 +47,9 @@ timestamps them on arrival, ignores duplicates, and accrues active time from
 its own clock, only between two heartbeats at most `FOCUS_MAX_GAP_S` apart;
 a heartbeat sooner than `FOCUS_MIN_HEARTBEAT_GAP_S` after the last one
 counted is ignored. The client's own timestamps are never scored (C23.3).
+The API stores at most one heartbeat per `FOCUS_HEARTBEAT_RATE_S` and one
+other event of the same kind per `FOCUS_EVENT_RATE_S`; a resent or extra
+event is not stored, only counted on the session (C23.4).
 
 **F4. Points.** Each active minute earns `FOCUS_POINTS_PER_MINUTE`
 points, provisionally; they become final only when the session's quiz
@@ -99,6 +108,7 @@ C7.4).
 
 1. ~~F7: the whole page's time earns 0, or only the minutes beyond the
    cap?~~ Only the minutes beyond (C23.3 prompt, 2026-11-15).
-2. F1/F9: a focus session left open without a bookmark resumes on the next
-   visit (as written); should it instead close after some hours?
+2. ~~F1/F9: a focus session left open without a bookmark resumes on the
+   next visit; should it instead close after some hours?~~ Abandoned after
+   two hours with no event (C23.4 prompt, 2026-11-15).
 3. F2: may the reader correct a wrongly detected body start?

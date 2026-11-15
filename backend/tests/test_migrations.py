@@ -823,3 +823,11 @@ def test_029_touches_only_its_tables():
     assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == [
         "focus_events", "focus_sessions"]
     assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)
+
+
+# --- 030: ignored focus events (C23.4) ---------------------------------------------------------------------
+
+def test_030_adds_only_the_ignored_events_counter():
+    sql = re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "030_focus_ignored_events.sql")).strip()
+    assert sql == ("ALTER TABLE public.focus_sessions ADD COLUMN IF NOT EXISTS ignored_events integer NOT NULL "
+                   "DEFAULT 0 CHECK (ignored_events >= 0);")

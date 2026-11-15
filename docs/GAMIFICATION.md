@@ -25,7 +25,8 @@ Points come from `docs/FOCUS_RULES.md`.
   (G7) count focus XP alone. "Quiz me" outside focus mode earns none.
 - **G5.** Daily goal: `DAILY_GOAL_XP` = 50 by default (five active
   minutes). The reader can change it in settings, within
-  `DAILY_GOAL_MIN_XP` 10 and `DAILY_GOAL_MAX_XP` 500.
+  `DAILY_GOAL_SET_MIN_XP` 20 and `DAILY_GOAL_SET_MAX_XP` 200 (C24.5); the
+  database accepts `DAILY_GOAL_MIN_XP` 10 to `DAILY_GOAL_MAX_XP` 500.
 - **G6.** Days are the reader's local calendar days, from the time zone
   stored in their profile (taken from the browser, editable).
 
@@ -117,6 +118,22 @@ the pass mark (FOCUS_RULES F12).
   quietly. A frozen day is not counted, so the next freeze takes 7 more
   counted days (G8). A session graded late for a day before the last goal
   day adds XP but does not move the streak. Code: `backend/xp/`.
+- **C24.5 APIs.** `GET /me/progress` (total XP, today's focus XP against
+  the goal in the reader's zone, the streak as of today with frozen days,
+  this week's tier or the carried one, badges held; writes nothing),
+  `PUT /me/progress` (`daily_goal` 20-200, `display_name` or null,
+  `leaderboard_opt_out`, `timezone` an IANA name; anything else refused),
+  `GET /badges` (the 14 with earned and when), `GET /leagues/current`
+  (runs a due rollover first; the reader's group ranked by this week's XP
+  from the ledger, zone markers, opted-out readers left off others'
+  boards). A row names a reader by a per-week pseudonym (12 hex of
+  sha256 of the week's id and the user id; the week id never leaves the
+  server) and their display name, else "Reader" and the pseudonym's first
+  4; the sign-in's name and emails are never used. Display names
+  (`backend/xp/names.py`): 1-40 characters after trimming, no control
+  characters, links or emails, no staff, ReadFocus or Steve names, and a
+  small local profanity check per word that undoes digit, "ph" and
+  spelled-out disguises.
 - **C24.4 Rollover.** `POST /internal/leagues/rollover` with
   `Authorization: Bearer <CRON_SECRET>` (constant-time compare; 503 when
   the secret is unset or under 32 characters, 401 otherwise) runs

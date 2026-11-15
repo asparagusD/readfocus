@@ -20,6 +20,7 @@ from backend.routers import (
     mastery,
     notes,
     ocr,
+    progress,
     sessions,
     steve,
     steve_ask,
@@ -68,6 +69,7 @@ app.include_router(annotations.router, tags=["Annotations"])
 app.include_router(notes.router, tags=["Notes"])
 app.include_router(focus.router, prefix="/focus", tags=["Focus"])
 app.include_router(internal.router, prefix="/internal", tags=["Internal"])  # C24.4: scheduled jobs
+app.include_router(progress.router, tags=["Progress"])  # C24.5: progress, badges, league
 
 @app.get("/health")
 def health_check():

@@ -45,12 +45,13 @@ def _ledger(since: datetime, until: datetime, user_ids: list[str] | None = None)
     return _all(build)
 
 
-def _close(week: dict, now: datetime) -> None:
-    rows = _all(lambda: supabase.table("league_members").select("*").eq("week_id", week["id"]).order("user_id"))
+def standings(rows: list[dict], since: datetime, until: datetime) -> dict[str, list[leagues.Result]]:
+    """Each group's ranked results for league_members rows, from the ledger's XP in [since, until) (C24.5: shared by
+    the close and the live board)."""
     totals: dict[str, int] = {}
     reached: dict[str, datetime] = {}
     if rows:
-        for event in _ledger(_when(week["starts_at"]), _when(week["ends_at"]), [r["user_id"] for r in rows]):
+        for event in _ledger(since, until, [r["user_id"] for r in rows]):
             totals[event["user_id"]] = totals.get(event["user_id"], 0) + int(event["amount"])
             reached[event["user_id"]] = _when(event["earned_at"])  # ordered: the last is when the total was reached
     groups: dict[str, list[leagues.Member]] = {}
@@ -58,8 +59,13 @@ def _close(week: dict, now: datetime) -> None:
         member = leagues.Member(r["user_id"], r["tier"], _when(r["joined_at"]), max(0, totals.get(r["user_id"], 0)),
                                 reached.get(r["user_id"]))
         groups.setdefault(r["group_id"], []).append(member)
-    for members in groups.values():
-        for result in leagues.outcomes(members):
+    return {gid: leagues.outcomes(members) for gid, members in groups.items()}
+
+
+def _close(week: dict, now: datetime) -> None:
+    rows = _all(lambda: supabase.table("league_members").select("*").eq("week_id", week["id"]).order("user_id"))
+    for results in standings(rows, _when(week["starts_at"]), _when(week["ends_at"])).values():
+        for result in results:
             m = result.member
             supabase.table("league_members").update({
                 "weekly_xp": m.weekly_xp, "xp_reached_at": m.xp_reached_at.isoformat() if m.xp_reached_at else None,
@@ -83,7 +89,7 @@ def _ensure_week(start: datetime) -> dict:
         return supabase.table("league_weeks").select("*").eq("starts_at", start.isoformat()).execute().data[0]
 
 
-def _tiers(user_ids: list[str], before: datetime) -> dict[str, str]:
+def tiers(user_ids: list[str], before: datetime) -> dict[str, str]:
     """Each reader's tier for a week starting at `before`: their latest earlier membership moved by its outcome."""
     starts = {w["id"]: _when(w["starts_at"]) for w in _all(lambda: supabase.table("league_weeks").select(
         "id, starts_at").order("starts_at"))}
@@ -113,8 +119,8 @@ def _form_groups(week: dict, now: datetime) -> int:
     joined: dict[str, datetime] = {}
     for event in _ledger(datetime.min.replace(tzinfo=UTC), start, active):
         joined.setdefault(event["user_id"], _when(event["earned_at"]))  # ordered: the first is when they joined
-    tiers = _tiers(active, start)
-    readers = [leagues.Reader(u, tiers[u], joined[u]) for u in active]
+    carried = tiers(active, start)
+    readers = [leagues.Reader(u, carried[u], joined[u]) for u in active]
     placed = 0
     for group in leagues.assign_groups(readers):
         made = supabase.table("league_groups").insert({"week_id": week["id"], "tier": group.tier}).execute().data
@@ -125,6 +131,16 @@ def _form_groups(week: dict, now: datetime) -> int:
              "outcome": None} for r in group.readers]).execute()
         placed += len(group.readers)
     return placed
+
+
+def due(now: datetime) -> bool:
+    """Whether a rollover has work to do: an open week that has ended, or a current week not yet formed (C24.5)."""
+    if supabase.table("league_weeks").select("id").eq("status", "open").lte("ends_at", now.isoformat()).range(
+            0, 0).execute().data:
+        return True
+    week = supabase.table("league_weeks").select("grouped_at").eq("starts_at", leagues.week_start(now).isoformat()
+                                                                   ).execute().data
+    return not week or not week[0].get("grouped_at")
 
 
 def _now() -> datetime:

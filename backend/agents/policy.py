@@ -437,3 +437,5 @@ LEAGUE_DEMOTE = 5  # G13: the bottom this many move down (scaled likewise)
 LEAGUE_DEMOTE_MIN_GROUP = 10  # G13 (C24.3): a group smaller than this demotes nobody
 LEAGUE_ACTIVE_DAYS = 14  # G12 (C24.3): readers with XP in this many days before a week are grouped for it
 CRON_SECRET_MIN_LENGTH = 32  # C24.4: /internal endpoints refuse to run (503) under a shorter CRON_SECRET
+DAILY_GOAL_SET_MIN_XP = 20  # C24.5: the goal a reader may set in settings (the database allows 10-500, G5)
+DAILY_GOAL_SET_MAX_XP = 200

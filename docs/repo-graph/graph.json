@@ -37,6 +37,13 @@
       "handler": "get_profile"
     },
     {
+      "id": "endpoint:GET /badges",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/badges",
+      "handler": "get_badges"
+    },
+    {
       "id": "endpoint:GET /books",
       "type": "endpoint",
       "method": "GET",
@@ -149,6 +156,13 @@
       "handler": "health_check"
     },
     {
+      "id": "endpoint:GET /leagues/current",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/leagues/current",
+      "handler": "current_league"
+    },
+    {
       "id": "endpoint:GET /lookup",
       "type": "endpoint",
       "method": "GET",
@@ -161,6 +175,13 @@
       "method": "GET",
       "path": "/mastery",
       "handler": "get_mastery"
+    },
+    {
+      "id": "endpoint:GET /me/progress",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/me/progress",
+      "handler": "get_progress"
     },
     {
       "id": "endpoint:GET /sessions/{session_id}",
@@ -385,6 +406,13 @@
       "method": "PUT",
       "path": "/books/{book_id}/body-start",
       "handler": "put_body_start"
+    },
+    {
+      "id": "endpoint:PUT /me/progress",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/me/progress",
+      "handler": "put_progress"
     },
     {
       "id": "endpoint:PUT /sessions/{session_id}/position",
@@ -1028,6 +1056,12 @@
     },
     {
       "id": "file:backend/routers/ocr.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/progress.py",
       "type": "file",
       "role": "router",
       "language": "python"
@@ -1783,6 +1817,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_progress_api.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_prose.py",
       "type": "file",
       "role": "test",
@@ -1970,6 +2010,12 @@
     },
     {
       "id": "file:backend/xp/leagues.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/xp/names.py",
       "type": "file",
       "role": "lib",
       "language": "python"
@@ -5826,6 +5872,26 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/progress.py",
+      "to": "endpoint:GET /badges"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/progress.py",
+      "to": "endpoint:GET /leagues/current"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/progress.py",
+      "to": "endpoint:GET /me/progress"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/progress.py",
+      "to": "endpoint:PUT /me/progress"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:GET /sessions/{session_id}"
     },
@@ -6733,6 +6799,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/progress.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/sessions.py"
     },
     {
@@ -7034,6 +7105,46 @@
       "type": "imports",
       "from": "file:backend/routers/ocr.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/progress.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/progress.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/progress.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/progress.py",
+      "to": "file:backend/xp/badges.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/progress.py",
+      "to": "file:backend/xp/league_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/progress.py",
+      "to": "file:backend/xp/leagues.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/progress.py",
+      "to": "file:backend/xp/names.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/progress.py",
+      "to": "file:backend/xp/streaks.py"
     },
     {
       "type": "imports",
@@ -8847,6 +8958,31 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_progress_api.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_progress_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_progress_api.py",
+      "to": "file:backend/routers/progress.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_progress_api.py",
+      "to": "file:backend/tests/test_league_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_progress_api.py",
+      "to": "file:backend/xp/league_store.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_prose.py",
       "to": "file:backend/regions/garble.py"
     },
@@ -9358,6 +9494,11 @@
     {
       "type": "imports",
       "from": "file:backend/xp/leagues.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/xp/names.py",
       "to": "file:backend/agents/policy.py"
     },
     {
@@ -12737,6 +12878,31 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/progress.py",
+      "to": "table:league_members"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/progress.py",
+      "to": "table:league_weeks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/progress.py",
+      "to": "table:user_badges"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/progress.py",
+      "to": "table:user_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/progress.py",
+      "to": "table:xp_events"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
       "to": "table:books"
     },
@@ -13244,6 +13410,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/ocr.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/progress.py",
+      "to": "table:user_progress"
     },
     {
       "type": "writes_table",

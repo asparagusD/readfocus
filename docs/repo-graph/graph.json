@@ -2237,6 +2237,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/dashboard-badges.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/dashboard.spec.js",
       "type": "file",
       "role": "config",
@@ -3155,6 +3161,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/gamification/BadgeShelf.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gamification/BadgeShelf.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/gamification/HeaderProgress.css",
       "type": "file",
       "role": "asset",
@@ -3174,6 +3192,18 @@
     },
     {
       "id": "file:frontend/src/gamification/progressMath.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/gamification/shelfMath.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/gamification/shelfMath.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -5358,6 +5388,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/focus/useFocusSession.js",
       "to": "endpoint:POST /focus/{session_id}/event"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/gamification/BadgeShelf.jsx",
+      "to": "endpoint:GET /badges"
     },
     {
       "type": "calls_endpoint",
@@ -9584,6 +9619,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/dashboard-badges.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/dashboard.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10504,6 +10544,31 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gamification/BadgeShelf.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/BadgeShelf.jsx",
+      "to": "file:frontend/src/gamification/BadgeShelf.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/BadgeShelf.jsx",
+      "to": "file:frontend/src/gamification/shelfMath.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/BadgeShelf.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/BadgeShelf.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gamification/HeaderProgress.jsx",
       "to": "file:frontend/src/gamification/HeaderProgress.css"
     },
@@ -10521,6 +10586,11 @@
       "type": "imports",
       "from": "file:frontend/src/gamification/progressMath.test.js",
       "to": "file:frontend/src/gamification/progressMath.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/shelfMath.test.js",
+      "to": "file:frontend/src/gamification/shelfMath.js"
     },
     {
       "type": "imports",
@@ -11276,6 +11346,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Dashboard.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/gamification/BadgeShelf.jsx"
     },
     {
       "type": "imports",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 888,
-    "inventoried": 745,
+    "tracked": 893,
+    "inventoried": 750,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16248,
+      "size_bytes": 16284,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2153,8 +2153,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5492,
-      "size_bytes": 996834,
+      "lines": 5493,
+      "size_bytes": 999843,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2247,6 +2247,14 @@
       "purpose": "E2E for the shared EPUB 3 builder (C19.1b): converted.epub opens in the original view's EPUB renderer with the API mocked; the contents are the builder's nav from the headings, both images load with the builder's width, height and alt ('Figure 2'), display MathML gets a box, and code keeps every space."
     },
     {
+      "path": "frontend/e2e/dashboard-badges.spec.js",
+      "language": "javascript",
+      "lines": 89,
+      "size_bytes": 5418,
+      "role": "config",
+      "purpose": "Playwright (C24.6b): the badge shelf's fourteen, earned and locked looks, the nudge, the once-only stamp, reduced motion, the error line, 375 px in both themes."
+    },
+    {
       "path": "frontend/e2e/dashboard.spec.js",
       "language": "javascript",
       "lines": 192,
@@ -2265,10 +2273,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 455,
-      "size_bytes": 28720,
+      "lines": 479,
+      "size_bytes": 30715,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null)."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned)."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -3471,6 +3479,22 @@
       "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery."
     },
     {
+      "path": "frontend/src/gamification/BadgeShelf.css",
+      "language": "css",
+      "lines": 144,
+      "size_bytes": 2932,
+      "role": "asset",
+      "purpose": "Styles for the badge shelf (C24.6b): the grid on a shelf edge, seal rims and bookplates, earned and locked looks, two columns on phones."
+    },
+    {
+      "path": "frontend/src/gamification/BadgeShelf.jsx",
+      "language": "jsx",
+      "lines": 104,
+      "size_bytes": 4632,
+      "role": "asset",
+      "purpose": "Badge shelf (C24.6b): GET /badges; habits as wax seals and books as 'Ex libris' bookplates, earned inked with their date, locked faint with how to earn them in full-contrast words; a newly earned badge stamps in once per device (none under reduced motion); loading and error states."
+    },
+    {
       "path": "frontend/src/gamification/HeaderProgress.css",
       "language": "css",
       "lines": 162,
@@ -3501,6 +3525,22 @@
       "size_bytes": 2254,
       "role": "asset",
       "purpose": "Unit tests for progressMath (C24.6a): level edges, share clamping, the flame's growth, label wording with a loss-word guard, the celebration key."
+    },
+    {
+      "path": "frontend/src/gamification/shelfMath.js",
+      "language": "javascript",
+      "lines": 26,
+      "size_bytes": 1075,
+      "role": "asset",
+      "purpose": "Pure badge-shelf helpers (C24.6b): the header line, the earned date, which badges are new on this device and which to remember."
+    },
+    {
+      "path": "frontend/src/gamification/shelfMath.test.js",
+      "language": "javascript",
+      "lines": 27,
+      "size_bytes": 1208,
+      "role": "asset",
+      "purpose": "Unit tests for shelfMath (C24.6b)."
     },
     {
       "path": "frontend/src/gamification/useProgress.js",
@@ -4377,10 +4417,10 @@
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 250,
-      "size_bytes": 10371,
+      "lines": 252,
+      "size_bytes": 10449,
       "role": "page",
-      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns."
     },
     {
       "path": "frontend/src/pages/Landing.css",
@@ -5905,8 +5945,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 747,
-      "size_bytes": 230879,
+      "lines": 752,
+      "size_bytes": 231990,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -64,6 +64,7 @@ export async function mockBackend(page, api, book) {
     if (path === '/auth/profile') return json(route, { id: 'e2e-reader', is_calibrated: true, wpm: 240 });
     if (path === '/books' && request.method() === 'GET') return json(route, []);
     if (path === '/dashboard') return json(route, { book_progress: [], score_over_time: [], reading_streak: 0, words_this_week: 0, recent_feedback: [] });
+    if (path === '/badges') return json(route, badgesBody(api.badgesEarned)); // C24.6b: the shelf
     if (path === '/me/progress' && request.method() === 'GET') { // C24.6a: the header's progress (a test may set api.progress)
       api.progressReads += 1;
       return api.progress ? json(route, api.progress) : json(route, { detail: 'down' }, 503);
@@ -254,6 +255,29 @@ export const PROGRESS = {
   badges: [{ id: 'first_focus', name: 'First focus session', awarded_at: '2026-11-10T20:00:00+00:00' }],
 };
 
+/** C24.6b: GET /badges, the catalogue of backend/xp/badges.py with the reader's awards ({id: awarded_at}). */
+const CATALOGUE = [
+  ['first_focus', 'First focus session', 'Finish a focus session and pass its quiz.', 20, 'seal'],
+  ['first_chapter', 'First chapter', 'Pass a focus session that reaches the end of a book’s first chapter.', 30, 'bookplate'],
+  ['focus_10h', '10 focused hours', 'Spend 10 hours in focus sessions you passed.', 100, 'seal'],
+  ['focus_50h', '50 focused hours', 'Spend 50 hours in focus sessions you passed.', 250, 'seal'],
+  ['focus_100h', '100 focused hours', 'Spend 100 hours in focus sessions you passed.', 500, 'seal'],
+  ['perfect_quiz', 'Perfect quiz', 'Answer every question of a bookmark quiz correctly.', 25, 'seal'],
+  ['streak_7', '7-day streak', 'Meet your daily goal 7 days running.', 50, 'seal'],
+  ['streak_30', '30-day streak', 'Meet your daily goal 30 days running.', 150, 'seal'],
+  ['streak_100', '100-day streak', 'Meet your daily goal 100 days running.', 500, 'seal'],
+  ['first_note', 'First note', 'Write your first typed note.', 10, 'seal'],
+  ['first_drawing', 'First drawing', 'Save your first drawing.', 10, 'seal'],
+  ['first_steve', 'First Ask Steve', 'Get your first answer from Steve.', 10, 'seal'],
+  ['finished_book', 'Finished a book', 'Reach the last page of a book.', 200, 'bookplate'],
+  ['technical_reader', 'Technical-book reader', 'Pass a focus session in a book where at least a fifth of the page regions are math or code.', 50, 'bookplate'],
+];
+export function badgesBody(earned = {}) {
+  const badges = CATALOGUE.map(([id, name, description, xp_reward, kind]) => ({
+    id, name, description, xp_reward, kind, earned: id in earned, awarded_at: earned[id] ?? null }));
+  return { total: badges.length, earned: badges.filter((b) => b.earned).length, badges };
+}
+
 /** C23.6b: the focus quiz the fake server builds: three questions, the first multiple choice. */
 const FOCUS_QUIZ = [
   { question: 'What did the lamp throw?\n(a) A shadow  (b) A small circle of light  (c) A spark', type: 'factual',
@@ -340,7 +364,7 @@ export const test = base.extend({
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
       bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
       focus: { session: null, active: 0, calls: [], events: [] },
-      progress: structuredClone(PROGRESS), progressReads: 0 };
+      progress: structuredClone(PROGRESS), progressReads: 0, badgesEarned: { first_focus: '2026-11-10T12:00:00+00:00' } };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

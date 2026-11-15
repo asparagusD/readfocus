@@ -273,7 +273,7 @@ def test_a_reader_not_grouped_this_week_sees_their_tier_and_no_rows(client, db):
     week = {"starts_at": WEEK.isoformat(), "ends_at": (WEEK + timedelta(days=7)).isoformat()}
     assert response.json() == {"week": week,
                                "tier": "Pamphlet", "in_group": False, "opted_out": False,
-                               "zones": None, "rows": []}
+                               "zones": None, "rows": [], "last_week": None}
     no_leak(response, ANN)
 
 
@@ -302,3 +302,23 @@ def test_the_endpoints_need_a_signed_in_reader(db):
     for method, url in (("get", "/me/progress"), ("put", "/me/progress"), ("get", "/badges"),
                         ("get", "/leagues/current")):
         assert getattr(plain, method)(url).status_code in (401, 403), url
+
+
+# --- last week's outcome (C24.6c) -------------------------------------------------------------------------------------
+
+def test_last_weeks_outcome_comes_from_my_latest_closed_week(client, db):
+    wid = week_row(db, LAST, gid="g0", status="closed")
+    member(db, wid, ME, gid="g0", tier="Paperback")
+    member(db, wid, ANN, gid="g0", tier="Paperback", n=1)
+    db.tables["league_members"][0].update(final_rank=2, outcome="promoted", weekly_xp=180)
+    db.tables["league_members"][1].update(final_rank=1, outcome="promoted", weekly_xp=200)
+    group_of_four(db)
+    response = client.get("/leagues/current")
+    assert response.json()["last_week"] == {"starts_at": LAST.isoformat(), "tier": "Paperback", "rank": 2, "size": 2,
+                                            "weekly_xp": 180, "outcome": "promoted", "now_in": "Hardcover"}
+    no_leak(response, ANN, BO, CY)
+
+
+def test_no_last_week_before_a_week_has_closed(client, db):
+    group_of_four(db)
+    assert client.get("/leagues/current").json()["last_week"] is None

@@ -139,13 +139,15 @@
   white-space: nowrap;
 }
 
-/* Phones: the candle and the ring only. */
+/* Phones: the candle and its count only (C24.6c: three nav links need the room); the link's name keeps the rest. */
 @media (max-width: 639px) {
   .rf-hp {
-    gap: var(--space-2);
+    justify-content: center;
+    min-width: 44px;
     padding: 0 var(--space-1);
   }
 
+  .rf-hp__goal,
   .rf-hp__level {
     display: none;
   }

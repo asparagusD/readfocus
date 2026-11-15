@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 893,
-    "inventoried": 750,
+    "tracked": 898,
+    "inventoried": 755,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16284,
+      "size_bytes": 16339,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -681,10 +681,10 @@
     {
       "path": "backend/routers/progress.py",
       "language": "python",
-      "lines": 167,
-      "size_bytes": 8625,
+      "lines": 182,
+      "size_bytes": 9615,
       "role": "router",
-      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned."
+      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to)."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -1689,10 +1689,10 @@
     {
       "path": "backend/tests/test_progress_api.py",
       "language": "python",
-      "lines": 304,
-      "size_bytes": 15704,
+      "lines": 324,
+      "size_bytes": 16752,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: progress defaults (nothing written), today's XP in the reader's zone, streak and frozen days, carried tier; settings saved, partial, cleared, 26 refused bodies, ordinary names passing; the badge catalogue with mine only; league ranks, zones, pseudonyms (shown, per week), opted-out hiding both ways, no group, a due rollover on read, none when not due; sign-in required; no emails, user ids or sign-in names in any response (C24.5)."
+      "purpose": "Pytest on the in-memory database: progress defaults (nothing written), today's XP in the reader's zone, streak and frozen days, carried tier; settings saved, partial, cleared, 26 refused bodies, ordinary names passing; the badge catalogue with mine only; league ranks, zones, pseudonyms (shown, per week), opted-out hiding both ways, no group, a due rollover on read, none when not due; sign-in required; no emails, user ids or sign-in names in any response (C24.5). C24.6c: last_week set, and null before a week closes."
     },
     {
       "path": "backend/tests/test_prose.py",
@@ -2153,8 +2153,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5493,
-      "size_bytes": 999843,
+      "lines": 5494,
+      "size_bytes": 1003665,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2273,10 +2273,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 479,
-      "size_bytes": 30715,
+      "lines": 494,
+      "size_bytes": 31814,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned)."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league)."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -2353,10 +2353,10 @@
     {
       "path": "frontend/e2e/gamification-header.spec.js",
       "language": "javascript",
-      "lines": 81,
-      "size_bytes": 4588,
+      "lines": 82,
+      "size_bytes": 4645,
       "role": "config",
-      "purpose": "Playwright (C24.6a): the header progress's name, level, drops and bar, keyboard to the Dashboard, a new reader's encouragement, the once-a-day celebration, reduced motion, a failed read, 375 px in both themes."
+      "purpose": "Playwright (C24.6a): the header progress's name, level, drops and bar, keyboard to the Dashboard, a new reader's encouragement, the once-a-day celebration, reduced motion, a failed read, 375 px in both themes. C24.6c: the ring is hidden at 375."
     },
     {
       "path": "frontend/e2e/gate-g5.spec.js",
@@ -2389,6 +2389,14 @@
       "size_bytes": 12242,
       "role": "config",
       "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset. Demo: hover opens the real card below the word's line and pointer-leave closes it with no lookup sent; Quadi shows the Wikipedia summary and link; Enter focuses the card and Esc returns to the word; a touch long-press opens the compact card. Features: the three sections and the isn't note; the five questions open with Enter and close with Space; the footer links GitHub, credits CC BY-SA sources, switches the theme and Start reading opens Create account."
+    },
+    {
+      "path": "frontend/e2e/league.spec.js",
+      "language": "javascript",
+      "lines": 82,
+      "size_bytes": 4829,
+      "role": "config",
+      "purpose": "Playwright (C24.6c): the league page, no group, opted out, the error, keyboard to the page, 375 px in both themes with three links in the top bar."
     },
     {
       "path": "frontend/e2e/library.spec.js",
@@ -2689,10 +2697,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 140,
-      "size_bytes": 6528,
+      "lines": 142,
+      "size_bytes": 6700,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4). C23.6b: /focus/:sessionId/quiz (FocusQuiz). C23.7b: /quiz/:sessionId (QuizMe)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4). C23.6b: /focus/:sessionId/quiz (FocusQuiz). C23.7b: /quiz/:sessionId (QuizMe). C24.6c: /league (lazy, signed in)."
     },
     {
       "path": "frontend/src/anchors/anchors.test.js",
@@ -2913,18 +2921,18 @@
     {
       "path": "frontend/src/components/Layout.css",
       "language": "css",
-      "lines": 136,
-      "size_bytes": 2737,
+      "lines": 145,
+      "size_bytes": 2930,
       "role": "component",
-      "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the main column at 1120 px of content."
+      "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the main column at 1120 px of content. C24.6c: tighter phone gaps for three links."
     },
     {
       "path": "frontend/src/components/Layout.jsx",
       "language": "jsx",
-      "lines": 48,
-      "size_bytes": 2003,
+      "lines": 49,
+      "size_bytes": 2075,
       "role": "component",
-      "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target. C24.6a: the reader's progress (candle, goal ring, level) before the theme toggle, fetched only when signed in."
+      "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target. C24.6a: the reader's progress (candle, goal ring, level) before the theme toggle, fetched only when signed in. C24.6c: a League link; under 640 px 8 px gaps so three links fit at 375."
     },
     {
       "path": "frontend/src/components/RouteErrorBoundary.jsx",
@@ -3497,10 +3505,10 @@
     {
       "path": "frontend/src/gamification/HeaderProgress.css",
       "language": "css",
-      "lines": 162,
-      "size_bytes": 2964,
+      "lines": 164,
+      "size_bytes": 3078,
       "role": "asset",
-      "purpose": "Styles for the header progress (C24.6a): candle, drops, ring, halo, level bar; phones show the candle and ring only; the flicker stops under reduced motion."
+      "purpose": "Styles for the header progress (C24.6a): candle, drops, ring, halo, level bar; phones show the candle and ring only; the flicker stops under reduced motion. C24.6c: phones show the candle and count only."
     },
     {
       "path": "frontend/src/gamification/HeaderProgress.jsx",
@@ -3509,6 +3517,22 @@
       "size_bytes": 3769,
       "role": "asset",
       "purpose": "Header progress (C24.6a): one 44 px link to the Dashboard with the streak candle (flame grows with the streak, freezes as wax drops), today's goal ring and, from 640 px, 'Level n' with a slim XP bar; a once-a-day goal-met halo and polite status, still under reduced motion."
+    },
+    {
+      "path": "frontend/src/gamification/leagueView.js",
+      "language": "javascript",
+      "lines": 68,
+      "size_bytes": 3080,
+      "role": "asset",
+      "purpose": "Pure league-page helpers (C24.6c): time left, ordinals, initials, tier chip states, standings with zone lines and gaps, last week's sentence."
+    },
+    {
+      "path": "frontend/src/gamification/leagueView.test.js",
+      "language": "javascript",
+      "lines": 65,
+      "size_bytes": 3761,
+      "role": "asset",
+      "purpose": "Unit tests for leagueView (C24.6c)."
     },
     {
       "path": "frontend/src/gamification/progressMath.js",
@@ -4437,6 +4461,22 @@
       "size_bytes": 3141,
       "role": "page",
       "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount; masthead with Sign in; hero with headline, positioning lead, Start reading (to /login?tab=signup) and See how it works (scrolls and moves focus), DuskWindow and ReadingLamp behind the BookSpread; then Contents, WordDemo, Features and Faq, and the LandingFooter."
+    },
+    {
+      "path": "frontend/src/pages/League.css",
+      "language": "css",
+      "lines": 257,
+      "size_bytes": 4941,
+      "role": "page",
+      "purpose": "Styles for the league page (C24.6c): crest, tier chips, standings with the reader's row tinted, zone lines, side cards; one column under 900 px."
+    },
+    {
+      "path": "frontend/src/pages/League.jsx",
+      "language": "jsx",
+      "lines": 125,
+      "size_bytes": 5508,
+      "role": "page",
+      "purpose": "Weekly league page (C24.6c): time left to Monday 00:00 UTC, tier crest and chips, the reader's group ranked with soft promotion and demotion lines and gaps for hidden readers, last week's outcome, how leagues work; no-group, opted-out, loading and error states."
     },
     {
       "path": "frontend/src/pages/Library.css",
@@ -5945,8 +5985,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 752,
-      "size_bytes": 231990,
+      "lines": 757,
+      "size_bytes": 233397,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

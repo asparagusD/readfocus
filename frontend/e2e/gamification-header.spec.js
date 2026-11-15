@@ -65,13 +65,14 @@ test('if progress cannot be read the header simply leaves it out', async ({ page
 });
 
 for (const theme of ['paper', 'lamplight']) {
-  test(`at 375 in ${theme} the candle and ring fit beside the links, with no sideways scroll`, async ({ page }) => {
+  test(`at 375 in ${theme} the candle fits beside the links, with no sideways scroll`, async ({ page }) => {
     await page.addInitScript((t) => localStorage.setItem('rf-theme', t), theme);
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/');
     const progress = link(page);
     await expect(progress).toBeVisible();
     await expect(progress.locator('.rf-hp__level')).toBeHidden();
+    await expect(progress.locator('.rf-hp__goal')).toBeHidden();
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
     const box = await progress.boundingBox();

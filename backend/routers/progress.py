@@ -136,6 +136,20 @@ def _pseudonym(week_id: str, user_id: str) -> str:
     return hashlib.sha256(f"{week_id}:{user_id}".encode()).hexdigest()[:12]
 
 
+def _last_week(user_id: str) -> dict | None:
+    """The reader's latest closed week (C24.6c): tier, rank among how many, XP, outcome and the tier it led to."""
+    closed = [r for r in supabase.table("league_members").select("*").eq("user_id", user_id).execute().data
+              if r.get("outcome")]
+    if not closed:
+        return None
+    weeks = {w["id"]: w["starts_at"] for w in supabase.table("league_weeks").select("id, starts_at").in_(
+        "id", [r["week_id"] for r in closed]).execute().data}
+    row = max(closed, key=lambda r: datetime.fromisoformat(weeks[r["week_id"]]))
+    size = len(supabase.table("league_members").select("user_id").eq("group_id", row["group_id"]).execute().data)
+    return {"starts_at": weeks[row["week_id"]], "tier": row["tier"], "rank": row["final_rank"], "size": size,
+            "weekly_xp": row["weekly_xp"], "outcome": row["outcome"], "now_in": leagues.next_tier(row["tier"], row["outcome"])}
+
+
 @router.get("/leagues/current")
 def current_league(user_id: str = Depends(get_current_user)):
     now = _now()
@@ -146,7 +160,8 @@ def current_league(user_id: str = Depends(get_current_user)):
     mine = _membership(week, user_id)
     out = {"week": {"starts_at": start.isoformat(), "ends_at": (start + timedelta(days=7)).isoformat()},
            "tier": _tier(user_id, start, mine), "in_group": mine is not None,
-           "opted_out": bool(prog["leaderboard_opt_out"]), "zones": None, "rows": []}
+           "opted_out": bool(prog["leaderboard_opt_out"]), "zones": None, "rows": [],
+           "last_week": _last_week(user_id)}
     if not mine:
         return out
     rows = supabase.table("league_members").select("*").eq("group_id", mine["group_id"]).execute().data

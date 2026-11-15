@@ -31,6 +31,7 @@ export function Layout({ children }) {
           <nav aria-label="Main" className="rf-topbar__nav">
             <NavLink to="/" end className={navClass}>Library</NavLink>
             <NavLink to="/dashboard" className={navClass}>Dashboard</NavLink>
+            <NavLink to="/league" className={navClass}>League</NavLink>
           </nav>
           <div className="rf-topbar__end">
             {user && progress && <HeaderProgress progress={progress} />}

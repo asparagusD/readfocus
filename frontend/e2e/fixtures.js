@@ -65,6 +65,9 @@ export async function mockBackend(page, api, book) {
     if (path === '/books' && request.method() === 'GET') return json(route, []);
     if (path === '/dashboard') return json(route, { book_progress: [], score_over_time: [], reading_streak: 0, words_this_week: 0, recent_feedback: [] });
     if (path === '/badges') return json(route, badgesBody(api.badgesEarned)); // C24.6b: the shelf
+    if (path === '/leagues/current') { // C24.6c
+      return api.league ? json(route, api.league) : json(route, { detail: 'down' }, 503);
+    }
     if (path === '/me/progress' && request.method() === 'GET') { // C24.6a: the header's progress (a test may set api.progress)
       api.progressReads += 1;
       return api.progress ? json(route, api.progress) : json(route, { detail: 'down' }, 503);
@@ -255,6 +258,18 @@ export const PROGRESS = {
   badges: [{ id: 'first_focus', name: 'First focus session', awarded_at: '2026-11-10T20:00:00+00:00' }],
 };
 
+/** C24.6c: GET /leagues/current: a Hardcover group of 12 this week (rank 7 keeps off others' boards), last week up. */
+export const LEAGUE = {
+  week: { starts_at: '2026-11-16T00:00:00+00:00', ends_at: '2026-11-23T00:00:00+00:00' },
+  tier: 'Hardcover', in_group: true, opted_out: false, zones: { size: 12, promote: 3, demote: 2 },
+  rows: [[1, 'Marginalia', 742], [2, 'Slow Reader', 690], [3, 'Inkwell', 655], [4, 'Quiet Owl', 502, true],
+    [5, 'Dogeared', 488], [6, 'Reader 3f2a', 470], [8, 'Folio Fox', 455], [9, 'Nightlamp', 300],
+    [10, 'Tea And Proofs', 160], [11, 'Reader 9c01', 40], [12, 'Heron', 0]].map(([rank, name, xp, you]) => (
+    { id: `p${rank}`.padEnd(12, '0'), rank, display_name: name, weekly_xp: xp, zone: null, you: Boolean(you) })),
+  last_week: { starts_at: '2026-11-09T00:00:00+00:00', tier: 'Paperback', rank: 2, size: 9, weekly_xp: 380,
+    outcome: 'promoted', now_in: 'Hardcover' },
+};
+
 /** C24.6b: GET /badges, the catalogue of backend/xp/badges.py with the reader's awards ({id: awarded_at}). */
 const CATALOGUE = [
   ['first_focus', 'First focus session', 'Finish a focus session and pass its quiz.', 20, 'seal'],
@@ -364,7 +379,7 @@ export const test = base.extend({
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
       bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
       focus: { session: null, active: 0, calls: [], events: [] },
-      progress: structuredClone(PROGRESS), progressReads: 0, badgesEarned: { first_focus: '2026-11-10T12:00:00+00:00' } };
+      progress: structuredClone(PROGRESS), progressReads: 0, league: structuredClone(LEAGUE), badgesEarned: { first_focus: '2026-11-10T12:00:00+00:00' } };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

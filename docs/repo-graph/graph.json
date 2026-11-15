@@ -2345,6 +2345,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/league.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/library.spec.js",
       "type": "file",
       "role": "config",
@@ -3185,6 +3191,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/gamification/leagueView.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/gamification/leagueView.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/gamification/progressMath.js",
       "type": "file",
       "role": "asset",
@@ -3876,6 +3894,18 @@
     },
     {
       "id": "file:frontend/src/pages/Landing.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/League.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/League.jsx",
       "type": "file",
       "role": "page",
       "language": "jsx"
@@ -5443,6 +5473,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Dashboard.jsx",
       "to": "endpoint:GET /dashboard"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/League.jsx",
+      "to": "endpoint:GET /leagues/current"
     },
     {
       "type": "calls_endpoint",
@@ -9674,6 +9709,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/league.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/library.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10584,6 +10624,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gamification/leagueView.test.js",
+      "to": "file:frontend/src/gamification/leagueView.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gamification/progressMath.test.js",
       "to": "file:frontend/src/gamification/progressMath.js"
     },
@@ -11436,6 +11481,31 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Landing.jsx",
       "to": "file:frontend/src/pages/landing/wake.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/League.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/League.jsx",
+      "to": "file:frontend/src/gamification/leagueView.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/League.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/League.jsx",
+      "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/League.jsx",
+      "to": "file:frontend/src/pages/League.css"
     },
     {
       "type": "imports",

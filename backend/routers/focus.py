@@ -9,8 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field
 
-from backend.dependencies import get_current_user
-from backend.focus import policy, store
+from backend.agents.question_generation.assembler import public_question
+from backend.dependencies import get_current_user, require_model
+from backend.focus import policy, quiz, store
 from backend.routers.sessions import EpubAnchor, PdfAnchor
 from backend.services import body_start
 from backend.services.supabase_client import supabase
@@ -35,6 +36,12 @@ class EventRequest(BaseModel):
     client_ts: datetime | None = None  # stored for diagnosis, never scored
     client_event_id: str | None = Field(default=None, pattern=r"^[0-9a-fA-F-]{36}$")
     had_input: bool | None = None
+
+
+class AnswersRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    answers: list[Annotated[str, Field(max_length=4_000)]] = Field(max_length=policy.QUIZ_MAX_QUESTIONS)
+    time_taken_seconds: int = Field(ge=0, le=24 * 3600)
 
 
 class EndRequest(BaseModel):
@@ -159,6 +166,37 @@ def _end(user_id: str, session_id: str, req: EndRequest) -> dict:
 def _get(user_id: str, session_id: str) -> dict:
     session, events = _owned(session_id, user_id)
     return store.view(session, events, store.settle(session, events, store.now()))
+
+
+def _awaiting(user_id: str, session_id: str) -> tuple[dict, list[dict]]:
+    session, events = _owned(session_id, user_id)
+    store.settle(session, events, store.now())  # a session past the cap is ready for its quiz
+    if session["status"] != "awaiting_quiz":
+        raise HTTPException(status_code=409, detail=f"This focus session is {session['status'].replace('_', ' ')}.")
+    return session, events
+
+
+def _quiz(user_id: str, session_id: str) -> dict:
+    """F10: the questions on the text from the session's start to its bookmark; no answers leave the server."""
+    session, _events = _awaiting(user_id, session_id)
+    built = quiz.build(session)
+    return {"questions": [public_question(q) for q in built["questions"]], "count": built["count"],
+            "words_in_range": built["words_in_range"]}
+
+
+@router.post("/{session_id}/quiz")
+async def focus_quiz(session_id: str, user_id: str = Depends(get_current_user)):
+    return await run_in_threadpool(_quiz, user_id, session_id)
+
+
+@router.post("/{session_id}/quiz/answers", dependencies=[Depends(require_model)])
+async def focus_quiz_answers(session_id: str, req: AnswersRequest, user_id: str = Depends(get_current_user)):
+    """Grade the quiz once (submit_answers: grades, test_results, mastery) and score the session (F11-F12)."""
+    session, events = await run_in_threadpool(_awaiting, user_id, session_id)
+    result = await quiz.grade(session, events, req.answers, req.time_taken_seconds)
+    if result is None:
+        raise HTTPException(status_code=409, detail="This quiz has not been asked yet, or is already answered.")
+    return result
 
 
 @router.post("/start")

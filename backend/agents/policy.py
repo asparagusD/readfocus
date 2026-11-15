@@ -404,6 +404,8 @@ FOCUS_MAX_GAP_S = 45  # F3: two heartbeats further apart than this credit nothin
 FOCUS_MIN_HEARTBEAT_GAP_S = 5  # F3: a heartbeat sooner than this after the last one counted is ignored
 FOCUS_HEARTBEAT_RATE_S = 25  # F3: the API stores at most one heartbeat per this many seconds; extras are counted
 FOCUS_EVENT_RATE_S = 2  # F3: and at most one other event of the same kind per this many seconds
+QUIZ_CORRECT_FROM = MASTERY_CORRECT_FROM  # F11: an answer scoring this share of its maximum is correct
+QUIZ_LOW_CONFIDENCE_WEIGHT = 0.5  # F11: a correct answer the grader is unsure of counts half
 FOCUS_ABANDON_AFTER_MIN = 120  # F1: an open session with no event for this long is abandoned (0 points)
 # focus_sessions.status and focus_events.kind (029 checks the same values). Open sessions: one per reader.
 FOCUS_STATUSES = ("active", "paused", "awaiting_quiz", "scored", "abandoned")

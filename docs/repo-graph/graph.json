@@ -282,6 +282,20 @@
       "handler": "pause_focus"
     },
     {
+      "id": "endpoint:POST /focus/{session_id}/quiz",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/quiz",
+      "handler": "focus_quiz"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/quiz/answers",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/quiz/answers",
+      "handler": "focus_quiz_answers"
+    },
+    {
       "id": "endpoint:POST /focus/{session_id}/resume",
       "type": "endpoint",
       "method": "POST",
@@ -788,6 +802,18 @@
     },
     {
       "id": "file:backend/focus/policy.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/quiz.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/range_quiz.py",
       "type": "file",
       "role": "lib",
       "language": "python"
@@ -1303,6 +1329,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_focus_quiz.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_mastery.py",
       "type": "file",
       "role": "test",
@@ -1688,6 +1720,12 @@
     },
     {
       "id": "file:backend/tests/test_question_strategies.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_range_quiz.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -5363,6 +5401,16 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/quiz"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/quiz/answers"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
       "to": "endpoint:POST /focus/{session_id}/resume"
     },
     {
@@ -6103,6 +6151,66 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/agents/workflow.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/focus/range_quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/focus/scoring.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/range_quiz.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/range_quiz.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/range_quiz.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/range_quiz.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/focus/scoring.py",
       "to": "file:backend/focus/policy.py"
     },
@@ -6359,12 +6467,22 @@
     {
       "type": "imports",
       "from": "file:backend/routers/focus.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
       "to": "file:backend/dependencies.py"
     },
     {
       "type": "imports",
       "from": "file:backend/routers/focus.py",
       "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/focus/quiz.py"
     },
     {
       "type": "imports",
@@ -7080,6 +7198,76 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_focus.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/workflow.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/focus/quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/routers/focus.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/tests/test_api_sessions.py"
     },
     {
       "type": "imports",
@@ -8135,6 +8323,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_question_strategies.py",
       "to": "file:backend/nlp/concepts.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_range_quiz.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_range_quiz.py",
+      "to": "file:backend/focus/range_quiz.py"
     },
     {
       "type": "imports",
@@ -11523,6 +11721,26 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/focus/store.py",
       "to": "table:focus_events"
     },
@@ -12020,6 +12238,16 @@
       "type": "writes_table",
       "from": "file:backend/agents/workflow.py",
       "to": "table:agent_decisions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:sessions"
     },
     {
       "type": "writes_table",

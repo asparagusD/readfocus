@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 830,
-    "inventoried": 687,
+    "tracked": 834,
+    "inventoried": 691,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15335,
+      "size_bytes": 15353,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 415,
-      "size_bytes": 18430,
+      "lines": 417,
+      "size_bytes": 18628,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -409,18 +409,34 @@
     {
       "path": "backend/focus/policy.py",
       "language": "python",
-      "lines": 24,
-      "size_bytes": 1067,
+      "lines": 25,
+      "size_bytes": 1117,
       "role": "lib",
       "purpose": "Focus mode's numbers by the scoring engine's names (C23.3), all read from backend/agents/policy.py (= docs/FOCUS_RULES.md Defaults); nothing set here."
     },
     {
+      "path": "backend/focus/quiz.py",
+      "language": "python",
+      "lines": 147,
+      "size_bytes": 9449,
+      "role": "lib",
+      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine."
+    },
+    {
+      "path": "backend/focus/range_quiz.py",
+      "language": "python",
+      "lines": 198,
+      "size_bytes": 9166,
+      "role": "lib",
+      "purpose": "Bookmark-range quiz, pure (C23.5, FOCUS_RULES F10-F11): question count clamp(round(words/400), 3, 15) with halves up; range slices by PDF pages (chunk anchors), EPUB blocks (block paths) or contents chapters; prose words without placeholders; a question's place from its evidence; selection stratified over the range with the scaled mix, unused, difficulty and quality; correct answers weighted by confidence."
+    },
+    {
       "path": "backend/focus/scoring.py",
       "language": "python",
-      "lines": 247,
-      "size_bytes": 10285,
+      "lines": 248,
+      "size_bytes": 10400,
       "role": "lib",
-      "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page."
+      "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page. C23.5: quiz correct answers may be halves (low-confidence answers count half)."
     },
     {
       "path": "backend/focus/store.py",
@@ -601,10 +617,10 @@
     {
       "path": "backend/routers/focus.py",
       "language": "python",
-      "lines": 191,
-      "size_bytes": 9256,
+      "lines": 229,
+      "size_bytes": 11208,
       "role": "router",
-      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only."
+      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored)."
     },
     {
       "path": "backend/routers/lookup.py",
@@ -1095,6 +1111,14 @@
       "purpose": "Pytest for the focus session API on a test clock: start rules (body start, one open session, the book's pages), rate limits and duplicates, client clock ignored, client numbers refused, the state machine, bookmark order, the 3-hour cap by event and by GET, the abandoned sweep (on GET and at startup), owner only."
     },
     {
+      "path": "backend/tests/test_api_focus_quiz.py",
+      "language": "python",
+      "lines": 234,
+      "size_bytes": 12148,
+      "role": "test",
+      "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only."
+    },
+    {
       "path": "backend/tests/test_api_mastery.py",
       "language": "python",
       "lines": 125,
@@ -1385,8 +1409,8 @@
     {
       "path": "backend/tests/test_focus_scoring.py",
       "language": "python",
-      "lines": 208,
-      "size_bytes": 10486,
+      "lines": 215,
+      "size_bytes": 10914,
       "role": "test",
       "purpose": "Pytest for the focus scoring engine: 25 table-driven scenarios (hidden tab, idle prompts, page stalls, the 3-hour cap, 39% vs 40% quizzes, forged ends, heartbeat spam and resends, client clock skew, pause, a reopened tab, events after the end) plus order, clock, breakdown and input-shape checks."
     },
@@ -1613,6 +1637,14 @@
       "size_bytes": 12670,
       "role": "test",
       "purpose": "Pytest on fixed text: verbatim sentence spans and each question strategy's prompt, answer and evidence, with no model or database."
+    },
+    {
+      "path": "backend/tests/test_range_quiz.py",
+      "language": "python",
+      "lines": 118,
+      "size_bytes": 7001,
+      "role": "test",
+      "purpose": "Pytest for the pure range quiz: the count formula, placeholders, PDF/EPUB/contents slices, positions in the range, stratified selection with mix, unused, difficulty and dedupe, confidence-weighted correct answers."
     },
     {
       "path": "backend/tests/test_region_job.py",
@@ -1897,8 +1929,8 @@
     {
       "path": "docs/FOCUS_RULES.md",
       "language": "markdown",
-      "lines": 114,
-      "size_bytes": 5371,
+      "lines": 125,
+      "size_bytes": 6156,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): focus mode rules F1-F14: body start, server-timed stopwatch, points per active minute, hidden-tab and idle pauses, page and 3-hour caps, the bookmark quiz and its pass mark."
     },
@@ -1930,7 +1962,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5204,
-      "size_bytes": 924171,
+      "size_bytes": 928797,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5441,8 +5473,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 689,
-      "size_bytes": 207316,
+      "lines": 693,
+      "size_bytes": 208904,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

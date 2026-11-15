@@ -23,6 +23,8 @@ C16.3, before any code. Anchors and chunk mapping: `docs/ANCHORS.md`.
 | `QUIZ_WORDS_PER_QUESTION` | 400 | F10 |
 | `QUIZ_MIN_QUESTIONS`, `QUIZ_MAX_QUESTIONS` | 3, 15 | F10 |
 | `QUIZ_POINTS_PER_CORRECT` | 20 | F11 |
+| `QUIZ_CORRECT_FROM` | 0.7 | F11 |
+| `QUIZ_LOW_CONFIDENCE_WEIGHT` | 0.5 | F11 |
 | `QUIZ_PASS_SCORE` | 0.40 | F12 |
 
 ## Rules
@@ -84,10 +86,19 @@ position to the bookmark, mapped to chunks (ANCHORS A6), with questions
 from the existing question bank for those chunks. Number of questions:
 `clamp(round(words / QUIZ_WORDS_PER_QUESTION), QUIZ_MIN_QUESTIONS,
 QUIZ_MAX_QUESTIONS)`, where `words` counts the covered text. Graded by the
-existing algorithmic grader. Steve is unavailable during the quiz.
+existing algorithmic grader. Steve is unavailable during the quiz. As built (C23.5): `words` are the
+prose words of the range (placeholders for equations, code, figures and
+tables do not count), a PDF's range taken by pages through the chunks'
+anchors, an EPUB's by blocks, and whole chapters by the contents when a
+book has neither; halves round up. The questions are spread over equal
+stretches of the range, follow the optimizer's question mix, and prefer
+unused questions near the reader's difficulty; a chunk of the range with no
+bank questions gets them generated first.
 
 **F11. Bonus.** Each correct answer earns `QUIZ_POINTS_PER_CORRECT`
-points.
+points. An answer is correct at `QUIZ_CORRECT_FROM` of its question's
+score; one the grader marks low-confidence counts `QUIZ_LOW_CONFIDENCE_WEIGHT`
+(half), for the bonus and for the pass mark (C23.5).
 
 **F12. Pass mark.** If the quiz score is below `QUIZ_PASS_SCORE`, the
 whole session earns 0 (time points and bonus). At or above it, time

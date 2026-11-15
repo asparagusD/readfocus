@@ -206,3 +206,10 @@ def test_the_page_cap_counts_active_time_on_the_page_not_the_clock():
     events = [ev(0, "start", page="p1"), *beats(0, 1200), ev(4800, "visible"), *beats(4800, 6000), ev(6000, "end")]
     out = decide(ScoringInput(events=events))
     assert (out.active_seconds, out.voided_seconds, out.counted_seconds) == (2400, 600, 1800)
+
+
+def test_half_credit_for_low_confidence_counts_toward_the_pass_mark_and_the_bonus():
+    out = decide(ScoringInput(events=normal(), quiz=Quiz(correct=1.5, total=4)))  # 37.5 %: below 40
+    assert (out.passed, out.points_total) == (False, 0)
+    out = decide(ScoringInput(events=normal(), quiz=Quiz(correct=2.5, total=5)))
+    assert (out.passed, out.points_bonus, out.lines[-1].label) == (True, 50, "Quiz: 2.5 of 5 correct")

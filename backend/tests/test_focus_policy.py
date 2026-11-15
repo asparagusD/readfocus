@@ -21,7 +21,7 @@ def documented_defaults() -> dict[str, str]:
 
 def test_every_documented_default_is_in_policy_with_the_same_value():
     defaults = documented_defaults()
-    assert len(defaults) == 16
+    assert len(defaults) == 18
     for name, value in defaults.items():
         assert float(getattr(policy, name)) == float(value), name
 

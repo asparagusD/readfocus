@@ -47,8 +47,9 @@ class Event(BaseModel):
 
 
 class Quiz(BaseModel):
+    """Correct answers (a low-confidence one counts half, C23.5) out of the questions asked."""
     model_config = ConfigDict(extra="forbid")
-    correct: int = Field(ge=0)
+    correct: float = Field(ge=0)
     total: int = Field(ge=1)
 
     @model_validator(mode="after")
@@ -82,7 +83,7 @@ class ScoringOutput(BaseModel):
     points_total: int
     passed: bool | None
     final: bool
-    quiz_correct: int | None
+    quiz_correct: float | None
     quiz_total: int | None
     rules_version: str
     lines: list[Line]
@@ -204,8 +205,8 @@ def decide(data: ScoringInput) -> ScoringOutput:
 
     quiz, passed, bonus = data.quiz, None, 0
     if quiz is not None:
-        passed = Fraction(quiz.correct, quiz.total) >= Fraction(str(policy.PASS_SCORE))
-        bonus = quiz.correct * policy.BONUS_PER_CORRECT if passed else 0
+        passed = Fraction(str(quiz.correct)) / quiz.total >= Fraction(str(policy.PASS_SCORE))
+        bonus = round(quiz.correct * policy.BONUS_PER_CORRECT) if passed else 0
     lines = _lines(counted_s, points_time, {k: _whole(v) for k, v in reasons.items()}, quiz, passed, bonus)
     if passed is False:
         points_time = 0
@@ -234,7 +235,7 @@ def _lines(counted: int, points_time: int, reasons: dict[str, int], quiz, passed
     lines += [Line(code=code, label=labels[code], seconds=reasons[code], points=0) for code in
               ("page_cap", "session_cap", "hidden", "paused", "idle", "no_heartbeat") if reasons[code]]
     if quiz is not None:
-        lines.append(Line(code="quiz_bonus", label=f"Quiz: {quiz.correct} of {quiz.total} correct", points=bonus))
+        lines.append(Line(code="quiz_bonus", label=f"Quiz: {quiz.correct:g} of {quiz.total} correct", points=bonus))
         if not passed:
             pass_pct = round(policy.PASS_SCORE * 100)
             lines.append(Line(code="quiz_failed", points=0,

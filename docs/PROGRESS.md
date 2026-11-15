@@ -2984,7 +2984,7 @@ C20 prompt): Steve became C20, merging the stubs "Steve backend" and
 "Steve in the reader"; anchors and highlights C21, notepad C22, focus
 mode C23, XP and leagues C24, verification C25. Each chunk gets its full plan (what there is to
 build on, decisions, subchunks with verification and cuts, an estimate)
-at its own start, before any code. The phase 2 budget is 43.25 hours
+at its own start, before any code. The phase 2 budget is 45.5 hours
 (31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13, then
 36.5 h until the C20 start, raised by 1.75 h on 2026-11-14 for C20's
 7.75 h against the stubs' 6.0 h, then 38.25 h until the C21 start, raised
@@ -2994,7 +2994,9 @@ by 0.75 h on 2026-11-14 for C21's 4.25 h against the stub's 3.5 h, then
 40.75 h until the C23 start, raised by 1.5 h on 2026-11-15 for C23's
 5.0 h against the stub's 3.5 h, then
 42.25 h until the C24 start, raised by 1.0 h on 2026-11-15 for C24's
-4.0 h against the stub's 3.0 h; C16
+4.0 h against the stub's 3.0 h, then
+43.25 h until the C25 start, raised by 2.25 h on 2026-11-15 for C25's
+4.0 h against the stub's 1.75 h; C16
 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
 CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 `docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
@@ -5701,8 +5703,10 @@ approval, dump and apply.
   stays the documented revert.
 
 Estimate: 4.0 h (C25.1 0.75, C25.2 0.75, C25.3 1.25, C25.4 0.5, C25.5
-0.75) against the stub's 1.75 h; this would raise the phase 2 budget by
-2.25 h to 45.5 h. Stop and propose cuts at 6.0 h. Safe to cut, in
+0.75) against the stub's 1.75 h; approved 2026-11-15 ("Approve and
+commit", with "do not start C25.1 yet"), phase 2 budget raised by 2.25 h
+to 45.5 h. Questions 1-7 below are still open: each is asked again before
+the subchunk that needs its answer. Stop and propose cuts at 6.0 h. Safe to cut, in
 order: Lighthouse, the drawing and Steve's live call in the journey,
 C25.3d (left as open issues), the bundle check's CI wiring, the
 account-menu privacy link.

@@ -31,7 +31,8 @@ export function breakdown(data) {
       rows.push({ key: line.code, title: 'Not counted', detail: `${line.label} · ${minutesOf(line.seconds)}`, value: '—', kind: 'void' });
     } else if (line.code === 'quiz_bonus') {
       const pct = total ? Math.round((correct / total) * 100) : 0;
-      rows.push({ key: 'quiz', title: passed ? 'Quiz bonus' : 'Quiz', detail: `${correct} of ${total} right · ${pct}%`, value: passed ? plus(line.points) : '—', kind: 'counted' });
+      const capped = passed && line.capped === true; // C23.8: the bonus is at most the time points
+      rows.push({ key: 'quiz', title: passed ? 'Quiz bonus' : 'Quiz', detail: `${correct} of ${total} right · ${pct}%${capped ? ' · up to your focus points' : ''}`, value: passed ? plus(line.points) : '—', kind: 'counted' });
     }
   }
   rows.push({ key: 'total', title: passed ? 'Total' : 'This session', detail: passed ? 'Points from this session' : 'No points this time', value: passed ? plus(data?.points_total ?? 0) : '0', kind: 'total' });

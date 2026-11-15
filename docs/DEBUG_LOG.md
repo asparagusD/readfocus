@@ -4285,3 +4285,40 @@ C23.8 test commit): the second tab sends nothing while the first writes, and wri
 
 ### Commit
 `e402c6b` fix(focus): a second tab on a focus session only watches
+
+## 2026-11-15 C23.8 — a short session with a far bookmark earns the whole range's quiz bonus
+
+**Status:** fixed
+
+### Symptom
+Left open by C23.8 and decided by the user ("Cap bonus at time points"). One focused minute (10 points), then
+the bookmark far ahead: the quiz covers the whole range (up to 15 questions), and 15 right earned a 300-point
+bonus for reading the server timed at one minute.
+
+    pytest backend/tests/test_focus_scoring.py -q
+    expected = {'passed': True, 'points_time': 10, 'points_bonus': 10, 'points_total': 20}
+    E           AssertionError: points_bonus: 300 != 10
+    backend\tests\test_focus_scoring.py:160: AssertionError
+
+### Repro
+Every time: the scenario "one focused minute, a bookmark far ahead, 15 of 15 right: bonus capped at 10" in
+`backend/tests/test_focus_scoring.py`.
+
+### Hypotheses
+1. The bonus scales with the quiz (the range), not with the timed reading. Evidence: `decide()` computes
+   `quiz.correct * BONUS_PER_CORRECT` with no bound but counted time > 0 (d28f936). Result: confirmed.
+
+### Root cause
+`backend/focus/scoring.py` `decide()`: the bonus had no bound tied to the reading the server timed.
+
+### Fix
+The user's rule: the bonus is at most the session's time points (F11). One `min()` in `decide()`; the quiz
+line carries `capped` when the cap applied; FOCUS_RULES F11, the ready dialog and the results row say so.
+
+### Regression test
+The scenario above, and "quiz 40 of 100 passes; the bonus is capped at the time points". Failed before the fix:
+yes (scoring.py stashed: 3 failed, 300 != 10 and 800 != 100, and the line's capped flag missing). Passes after:
+yes (37 passed); `test_a_capped_bonus_says_so_on_its_line` and `breakdown.test.js` check the flag and its words.
+
+### Commit
+fix(focus): cap the quiz bonus at a session's time points

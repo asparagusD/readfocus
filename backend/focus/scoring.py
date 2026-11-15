@@ -70,6 +70,7 @@ class Line(BaseModel):
     label: str
     seconds: int | None = None
     points: int
+    capped: bool = False  # C23.8: the quiz bonus held to the time points
 
 
 class ScoringOutput(BaseModel):
@@ -206,9 +207,12 @@ def decide(data: ScoringInput) -> ScoringOutput:
     quiz, passed, bonus = data.quiz, None, 0
     if quiz is not None:
         passed = Fraction(str(quiz.correct)) / quiz.total >= Fraction(str(policy.PASS_SCORE))
-        # F11 (C23.8): the bonus is for questions on pages read in focus; no counted time, no bonus.
-        bonus = round(quiz.correct * policy.BONUS_PER_CORRECT) if passed and counted_s > 0 else 0
-    lines = _lines(counted_s, points_time, {k: _whole(v) for k, v in reasons.items()}, quiz, passed, bonus)
+        # F11 (C23.8): the bonus is for questions on pages read in focus, so it is at most the time points
+        # (none without counted time); a far bookmark after a few minutes cannot buy a range's worth of bonus.
+        earned = round(quiz.correct * policy.BONUS_PER_CORRECT) if passed else 0
+        bonus = min(earned, points_time)
+    lines = _lines(counted_s, points_time, {k: _whole(v) for k, v in reasons.items()}, quiz, passed, bonus,
+                   capped_bonus=bool(passed) and bonus < earned)
     if passed is False:
         points_time = 0
     return ScoringOutput(
@@ -221,7 +225,8 @@ def decide(data: ScoringInput) -> ScoringOutput:
     )
 
 
-def _lines(counted: int, points_time: int, reasons: dict[str, int], quiz, passed, bonus) -> list[Line]:
+def _lines(counted: int, points_time: int, reasons: dict[str, int], quiz, passed, bonus,
+           capped_bonus: bool = False) -> list[Line]:
     """What each number came from, in plain words, for the results page."""
     page_min, cap_h = policy.PAGE_CAP_S // 60, policy.SESSION_CAP_S // 3600
     labels = {
@@ -236,7 +241,8 @@ def _lines(counted: int, points_time: int, reasons: dict[str, int], quiz, passed
     lines += [Line(code=code, label=labels[code], seconds=reasons[code], points=0) for code in
               ("page_cap", "session_cap", "hidden", "paused", "idle", "no_heartbeat") if reasons[code]]
     if quiz is not None:
-        lines.append(Line(code="quiz_bonus", label=f"Quiz: {quiz.correct:g} of {quiz.total} correct", points=bonus))
+        lines.append(Line(code="quiz_bonus", label=f"Quiz: {quiz.correct:g} of {quiz.total} correct", points=bonus,
+                          capped=capped_bonus))
         if not passed:
             pass_pct = round(policy.PASS_SCORE * 100)
             lines.append(Line(code="quiz_failed", points=0,

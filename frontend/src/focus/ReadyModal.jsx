@@ -36,8 +36,8 @@ export function ReadyModal({ open, sessionId, label, points, onLater, onStart })
       </p>
       {count > 0 && (
         <p className="rf-leave-text">
-          {points} points for your focus time so far, and {PER_CORRECT} for each right answer. Get {keep} of {count} right
-          to keep them.
+          {points} points for your focus time so far, and {PER_CORRECT} for each right answer, up to as many again.
+          Get {keep} of {count} right to keep them.
         </p>
       )}
       <div className="rf-leave-actions">

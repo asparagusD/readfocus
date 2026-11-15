@@ -38,6 +38,14 @@ test('under the pass mark: no figures, the total is 0 and the failed line is not
   assert.equal(out.total, 3);
 });
 
+test('C23.8: a bonus held to the time points says so', () => {
+  const lines = [{ code: 'counted', label: 'Focused reading', seconds: 60, points: 10 },
+    { code: 'quiz_bonus', label: 'Quiz: 15 of 15 correct', points: 10, capped: true }];
+  const out = breakdown({ passed: true, lines, quiz_correct: 15, quiz_total: 15, points_total: 20 });
+  assert.deepEqual(out.rows[1], { key: 'quiz', title: 'Quiz bonus', detail: '15 of 15 right · 100% · up to your focus points', value: '+10', kind: 'counted' });
+  assert.equal(breakdown({ passed: true, lines: [{ ...lines[1], capped: false }], quiz_correct: 1, quiz_total: 1 }).rows[0].detail, '1 of 1 right · 100%');
+});
+
 test('no lines still gives a total', () => {
   assert.deepEqual(breakdown({}).rows.map((r) => r.value), ['0']);
 });

@@ -41,7 +41,7 @@ test('End session: set the ribbon on a page, ready, the questions, the results',
   await expect(placing(page)).toHaveCount(0);
   await expect(ready(page)).toContainText(/The ribbon is on p\. \S+\. Three short questions/);
   await expect(ready(page)).toContainText('Three short questions on what you read, about 4 minutes.');
-  await expect(ready(page)).toContainText('250 points for your focus time so far, and 20 for each right answer. Get 2 of 3 right');
+  await expect(ready(page)).toContainText('250 points for your focus time so far, and 20 for each right answer, up to as many again. Get 2 of 3 right');
   await ready(page).getByRole('button', { name: 'Not now, keep my place' }).click();
   await expect(ready(page)).toHaveCount(0);
   await bar(page).getByRole('button', { name: 'End session' }).click(); // the ribbon is set: straight to ready

@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15733,
+      "size_bytes": 15848,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -441,10 +441,10 @@
     {
       "path": "backend/focus/scoring.py",
       "language": "python",
-      "lines": 249,
-      "size_bytes": 10519,
+      "lines": 255,
+      "size_bytes": 10885,
       "role": "lib",
-      "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page. C23.5: quiz correct answers may be halves (low-confidence answers count half)."
+      "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page. C23.5: quiz correct answers may be halves (low-confidence answers count half). C23.8: the quiz bonus is at most the time points (none without counted time); the quiz line carries capped when it was held."
     },
     {
       "path": "backend/focus/store.py",
@@ -1433,8 +1433,8 @@
     {
       "path": "backend/tests/test_focus_scoring.py",
       "language": "python",
-      "lines": 217,
-      "size_bytes": 11128,
+      "lines": 227,
+      "size_bytes": 11938,
       "role": "test",
       "purpose": "Pytest for the focus scoring engine: 25 table-driven scenarios (hidden tab, idle prompts, page stalls, the 3-hour cap, 39% vs 40% quizzes, forged ends, heartbeat spam and resends, client clock skew, pause, a reopened tab, events after the end) plus order, clock, breakdown and input-shape checks."
     },
@@ -1921,8 +1921,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4287,
-      "size_bytes": 189368,
+      "lines": 4324,
+      "size_bytes": 191171,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1954,7 +1954,7 @@
       "path": "docs/FOCUS_RULES.md",
       "language": "markdown",
       "lines": 125,
-      "size_bytes": 6217,
+      "size_bytes": 6326,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): focus mode rules F1-F14: body start, server-timed stopwatch, points per active minute, hidden-tab and idle pauses, page and 3-hour caps, the bookmark quiz and its pass mark."
     },
@@ -1986,7 +1986,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5209,
-      "size_bytes": 942521,
+      "size_bytes": 945026,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2154,7 +2154,7 @@
       "path": "frontend/e2e/focus-end.spec.js",
       "language": "javascript",
       "lines": 216,
-      "size_bytes": 12281,
+      "size_bytes": 12302,
       "role": "config",
       "purpose": "E2E for ending a focus session (C23.6b): the ribbon set by page button, by arrows and Enter, by dragging, Escape and Cancel; the ready dialog and Not now; the quiz page without a clock or Steve; answers to the results; the 3-hour stop and leaving taking the same path; the focus cards stepping aside; an EPUB point CFI; 375 px Lamplight."
     },
@@ -3114,7 +3114,7 @@
       "path": "frontend/src/focus/ReadyModal.jsx",
       "language": "jsx",
       "lines": 49,
-      "size_bytes": 2268,
+      "size_bytes": 2289,
       "role": "asset",
       "purpose": "\"Ready for your questions?\" (C23.6b): builds the focus quiz once to say how many questions and about how long, the points so far and how many right answers keep them; Not now, keep my place / Start questions."
     },
@@ -3169,16 +3169,16 @@
     {
       "path": "frontend/src/focus/breakdown.js",
       "language": "javascript",
-      "lines": 39,
-      "size_bytes": 2112,
+      "lines": 40,
+      "size_bytes": 2258,
       "role": "asset",
       "purpose": "Focus results' points breakdown (C23.7, handoff 24-25, pure): the server's scored lines as rows (Focused reading, Not counted with the reason and minutes, Quiz bonus, Total); under the pass mark no figures and a total of 0; minutesOf words seconds as minutes."
     },
     {
       "path": "frontend/src/focus/breakdown.test.js",
       "language": "javascript",
-      "lines": 43,
-      "size_bytes": 2019,
+      "lines": 51,
+      "size_bytes": 2686,
       "role": "asset",
       "purpose": "Unit tests for focus/breakdown.js: minutes in words, a passed quiz's rows, the rows under 40% and an empty breakdown."
     },
@@ -5658,7 +5658,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 716,
-      "size_bytes": 220048,
+      "size_bytes": 220173,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

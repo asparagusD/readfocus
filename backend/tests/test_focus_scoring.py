@@ -125,8 +125,10 @@ SCENARIOS = [
      {"active_seconds": 10800, "capped": True, "points_time": 1800, "reasons": {"session_cap": 1200}}),
     ("quiz 39 of 100 earns nothing", normal(), Quiz(correct=39, total=100),
      {"passed": False, "points_time": 0, "points_bonus": 0, "points_total": 0, "counted_seconds": 600}),
-    ("quiz 40 of 100 passes", normal(), Quiz(correct=40, total=100),
-     {"passed": True, "points_time": 100, "points_bonus": 800, "points_total": 900}),
+    ("quiz 40 of 100 passes; the bonus is capped at the time points (C23.8)", normal(), Quiz(correct=40, total=100),
+     {"passed": True, "points_time": 100, "points_bonus": 100, "points_total": 200}),
+    ("one focused minute, a bookmark far ahead, 15 of 15 right: bonus capped at 10", session(60),
+     Quiz(correct=15, total=15), {"passed": True, "points_time": 10, "points_bonus": 10, "points_total": 20}),
     ("quiz 2 of 5 is exactly the pass mark", normal(), Quiz(correct=2, total=5), {"passed": True, "points_total": 140}),
     ("quiz 5 of 13 fails", normal(), Quiz(correct=5, total=13), {"passed": False, "points_total": 0}),
     ("zero heartbeats, forged end an hour later", [ev(0, "start", page="p1"), ev(3600, "end")], None,
@@ -208,6 +210,14 @@ def test_the_page_cap_counts_active_time_on_the_page_not_the_clock():
     events = [ev(0, "start", page="p1"), *beats(0, 1200), ev(4800, "visible"), *beats(4800, 6000), ev(6000, "end")]
     out = decide(ScoringInput(events=events))
     assert (out.active_seconds, out.voided_seconds, out.counted_seconds) == (2400, 600, 1800)
+
+
+def test_a_capped_bonus_says_so_on_its_line():
+    """C23.8: the quiz line is marked when the bonus was held to the time points, and only then."""
+    capped = {line.code: line for line in decide(ScoringInput(events=session(60), quiz=Quiz(correct=15, total=15))).lines}
+    assert (capped["quiz_bonus"].points, capped["quiz_bonus"].capped) == (10, True)
+    full = {line.code: line for line in decide(ScoringInput(events=normal(), quiz=Quiz(correct=3, total=5))).lines}
+    assert (full["quiz_bonus"].points, full["quiz_bonus"].capped) == (60, False)
 
 
 def test_half_credit_for_low_confidence_counts_toward_the_pass_mark_and_the_bonus():

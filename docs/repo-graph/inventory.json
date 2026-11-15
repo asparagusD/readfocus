@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 902,
-    "inventoried": 759,
+    "tracked": 906,
+    "inventoried": 763,
     "excluded": 143
   },
   "files": [
@@ -121,8 +121,8 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 207,
-      "size_bytes": 9348,
+      "lines": 213,
+      "size_bytes": 9525,
       "role": "doc",
       "purpose": "Product overview for 2.0 (C15.4): the honest positioning (policy-driven LangGraph agents, on-device embeddings, rule-based knowledge tracing, no generative AI, $0 API cost), live URL, how it works in seven steps, the architecture in brief with links to docs/ARCHITECTURE.md and the repo graph, local setup, the standard and live checks, and limitations."
     },
@@ -1487,6 +1487,14 @@
       "purpose": "Pytest for the focus scoring engine: 25 table-driven scenarios (hidden tab, idle prompts, page stalls, the 3-hour cap, 39% vs 40% quizzes, forged ends, heartbeat spam and resends, client clock skew, pause, a reopened tab, events after the end) plus order, clock, breakdown and input-shape checks."
     },
     {
+      "path": "backend/tests/test_gamification_journey.py",
+      "language": "python",
+      "lines": 195,
+      "size_bytes": 9705,
+      "role": "test",
+      "purpose": "Pytest journey (C24.7): readers A, B and C on one in-memory database with the real keys and a fake clock, through the grade hooks, the progress, badge and league APIs and POST /internal/leagues/rollover: XP once per session, the goal moving the streak, a freeze over a missed day, each badge once, B's opt-out off A's board, A promoted at the rollover; the answers must equal frontend/e2e/fixtures/gamification-journey.json (UPDATE_JOURNEY=1 rewrites it)."
+    },
+    {
       "path": "backend/tests/test_garble.py",
       "language": "python",
       "lines": 102,
@@ -2327,6 +2335,14 @@
       "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): three chapters with every kind of image (img PNG/GIF/SVG, inline SVG image by xlink:href and href, CSS background, figure and caption, srcset, cover), MathML and a code block."
     },
     {
+      "path": "frontend/e2e/fixtures/gamification-journey.json",
+      "language": "json",
+      "lines": 568,
+      "size_bytes": 11409,
+      "role": "config",
+      "purpose": "The server's answers to A and B at each step of backend/tests/test_gamification_journey.py (C24.7), replayed by e2e/gamification.spec.js; generated, kept in step by that test."
+    },
+    {
       "path": "frontend/e2e/focus-end.spec.js",
       "language": "javascript",
       "lines": 216,
@@ -2357,6 +2373,14 @@
       "size_bytes": 4645,
       "role": "config",
       "purpose": "Playwright (C24.6a): the header progress's name, level, drops and bar, keyboard to the Dashboard, a new reader's encouragement, the once-a-day celebration, reduced motion, a failed read, 375 px in both themes. C24.6c: the ring is hidden at 375."
+    },
+    {
+      "path": "frontend/e2e/gamification.spec.js",
+      "language": "javascript",
+      "lines": 123,
+      "size_bytes": 7763,
+      "role": "config",
+      "purpose": "Playwright (C24.7): the server journey's answers replayed on Playwright's fake clock with two readers: XP added once over a reload, the goal and the streak, a freeze covering a missed day, two badges once on the shelf, B opting out in their own context and leaving A's board, the promotion on the League page."
     },
     {
       "path": "frontend/e2e/gate-g5.spec.js",
@@ -2617,8 +2641,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 75,
-      "size_bytes": 2389,
+      "lines": 76,
+      "size_bytes": 2458,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -2693,6 +2717,14 @@
       "size_bytes": 17409,
       "role": "config",
       "purpose": "Live cross-user isolation check (C15.2, npm run test:isolation; writes to the shared project, approval only): test user A uploads sample.pdf and reads, finishes and submits a session through the API; test user B then probes every id-taking API endpoint and, with supabase-js and the anon key, selects, updates and deletes in every per-user table, inserts a book as A, calls both search RPCs and probes A's Storage folder; term_lookups is readable by signed-in users and writable by none; no token and a raw user id are 401. Rows of B's own are reported but only A's count; A's row counts are compared before and after; A deletes the book and the rows and PDF left are reported. Exit 1 on any probe not denied."
+    },
+    {
+      "path": "frontend/scripts/live/check-xp-isolation.mjs",
+      "language": "text",
+      "lines": 146,
+      "size_bytes": 9123,
+      "role": "config",
+      "purpose": "Live gamification isolation check (C24.7, npm run test:xp-isolation; writes to the shared project, approval only): the service key seeds test user A an adjustment XP row dated 2000-01-01, an uncatalogued badge and, if missing, a progress row; A reads each (control); B and a token-less anon client try to select, update, delete and forge rows in xp_events, user_badges, user_progress and the league tables; the run deletes what it seeded and reports rows left. Exit 1 on any probe not denied."
     },
     {
       "path": "frontend/scripts/make-og.mjs",
@@ -6017,8 +6049,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 761,
-      "size_bytes": 234926,
+      "lines": 765,
+      "size_bytes": 236563,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

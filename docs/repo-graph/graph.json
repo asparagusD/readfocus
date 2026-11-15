@@ -516,6 +516,10 @@
       "type": "env"
     },
     {
+      "id": "env:UPDATE_JOURNEY",
+      "type": "env"
+    },
+    {
       "id": "env:VITE_API_URL",
       "type": "env"
     },
@@ -1667,6 +1671,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_gamification_journey.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_garble.py",
       "type": "file",
       "role": "test",
@@ -2297,6 +2307,12 @@
       "language": "text"
     },
     {
+      "id": "file:frontend/e2e/fixtures/gamification-journey.json",
+      "type": "file",
+      "role": "config",
+      "language": "json"
+    },
+    {
       "id": "file:frontend/e2e/focus-end.spec.js",
       "type": "file",
       "role": "config",
@@ -2316,6 +2332,12 @@
     },
     {
       "id": "file:frontend/e2e/gamification-header.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/gamification.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2568,6 +2590,12 @@
     },
     {
       "id": "file:frontend/scripts/live/check-isolation.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/live/check-xp-isolation.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -8668,6 +8696,41 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_gamification_journey.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_gamification_journey.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_gamification_journey.py",
+      "to": "file:backend/routers/progress.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_gamification_journey.py",
+      "to": "file:backend/tests/test_league_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_gamification_journey.py",
+      "to": "file:backend/xp/award.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_gamification_journey.py",
+      "to": "file:backend/xp/badge_award.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_gamification_journey.py",
+      "to": "file:backend/xp/league_store.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_garble.py",
       "to": "file:backend/regions/garble.py"
     },
@@ -9719,6 +9782,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/gamification-header.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/gamification.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -13555,6 +13623,11 @@
       "type": "uses_env",
       "from": "file:backend/services/supabase_client.py",
       "to": "env:SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/tests/test_gamification_journey.py",
+      "to": "env:UPDATE_JOURNEY"
     },
     {
       "type": "uses_env",

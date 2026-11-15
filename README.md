@@ -153,7 +153,7 @@ API call mocked). ruff and ESLint still report 27 and 4 errors in older
 code; CI fails a push that raises either count. The current numbers are in
 [CLAUDE.md](CLAUDE.md).
 
-Two live checks use real test users against a real backend and write to
+Three live checks use real test users against a real backend and write to
 the Supabase project, so they are run by hand, never in CI:
 
 ```bash
@@ -164,10 +164,16 @@ npm --prefix frontend run test:live
 npm --prefix frontend run test:isolation
 ```
 
+```bash
+npm --prefix frontend run test:xp-isolation
+```
+
 `test:live` is the full reading journey in a browser (sign in, upload,
 read, look up a word, test, results, dashboard, next plan); `test:isolation`
 checks with two users that neither can read or change the other's data
-through the API or Supabase. Both delete what they create. Grader agreement
+through the API or Supabase; `test:xp-isolation` does the same for XP,
+badges, progress and leagues (rows seeded for user A with the service key).
+Each deletes what it creates. Grader agreement
 with the labelled answers: `python scripts/eval_grader.py`.
 
 ## Limitations

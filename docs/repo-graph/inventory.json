@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 874,
-    "inventoried": 731,
+    "tracked": 876,
+    "inventoried": 733,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16138,
+      "size_bytes": 16157,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1535,6 +1535,14 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_league_store.py",
+      "language": "python",
+      "lines": 260,
+      "size_bytes": 11355,
+      "role": "test",
+      "purpose": "Pytest on an in-memory database with the league keys: the first grouping from 14 days of XP, nothing new on reruns or a week another run grouped, 35 readers in two groups, closing with ranks, outcomes and moved tiers, week bounds, ties to the earlier achiever, closing twice, missed weeks, a returning reader's tier, an unfinished week left open (C24.3b)."
+    },
+    {
       "path": "backend/tests/test_leagues.py",
       "language": "python",
       "lines": 172,
@@ -1887,6 +1895,14 @@
       "purpose": "Pure badge catalogue (C24.2, GAMIFICATION Badges): 14 badges with id, name, description, rule over Facts, XP reward, triggers and shelf kind; earned(), the first chapter's last chunk from the contents and body start, a place at a book's end, the technical-book share."
     },
     {
+      "path": "backend/xp/league_store.py",
+      "language": "python",
+      "lines": 139,
+      "size_bytes": 7239,
+      "role": "lib",
+      "purpose": "Weekly league rollover against the database (C24.3b): roll_over(now) closes every ended open week (weekly XP and when reached from the ledger, ranks and outcomes per group, then closed), ensures the current week (unique start) and forms its groups once (claimed by grouped_at) from readers with XP in the 14 days before, at their carried tier in first-XP order; idempotent, safe late or repeated; pages through PostgREST's 1000-row limit."
+    },
+    {
       "path": "backend/xp/leagues.py",
       "language": "python",
       "lines": 127,
@@ -2089,8 +2105,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5486,
-      "size_bytes": 979024,
+      "lines": 5487,
+      "size_bytes": 982050,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5793,8 +5809,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 733,
-      "size_bytes": 225795,
+      "lines": 735,
+      "size_bytes": 226668,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

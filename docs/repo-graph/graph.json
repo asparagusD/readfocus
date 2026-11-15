@@ -1668,6 +1668,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_league_store.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_leagues.py",
       "type": "file",
       "role": "test",
@@ -1927,6 +1933,12 @@
     },
     {
       "id": "file:backend/xp/badges.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/xp/league_store.py",
       "type": "file",
       "role": "lib",
       "language": "python"
@@ -8550,6 +8562,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_league_store.py",
+      "to": "file:backend/xp/league_store.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_leagues.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -9252,6 +9269,26 @@
       "type": "imports",
       "from": "file:backend/xp/badges.py",
       "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/xp/league_store.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/xp/league_store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/xp/league_store.py",
+      "to": "file:backend/xp/award.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/xp/league_store.py",
+      "to": "file:backend/xp/leagues.py"
     },
     {
       "type": "imports",
@@ -12825,6 +12862,21 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/xp/league_store.py",
+      "to": "table:league_members"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/xp/league_store.py",
+      "to": "table:league_weeks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/xp/league_store.py",
+      "to": "table:xp_events"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_block_paths.py",
       "to": "table:books"
     },
@@ -13237,6 +13289,21 @@
       "type": "writes_table",
       "from": "file:backend/xp/badge_award.py",
       "to": "table:user_badges"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/xp/league_store.py",
+      "to": "table:league_groups"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/xp/league_store.py",
+      "to": "table:league_members"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/xp/league_store.py",
+      "to": "table:league_weeks"
     },
     {
       "type": "writes_table",

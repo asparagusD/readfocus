@@ -119,19 +119,20 @@ for (const kind of ['pdf', 'epub']) {
         await page.waitForTimeout(700);
       }
       await expect(spoken(page)).toHaveText("End of today's reading");
-      const last = await shown(page);
+      const last = await settled(page);
       await expect(page.getByRole('button', { name: 'Next' }).first()).toBeEnabled();
       await page.keyboard.press('ArrowRight');
       await expect(page.locator('.rf-end')).toHaveCount(0);
-      await expect.poll(async () => JSON.stringify(await shown(page)), { timeout: 5000 }).not.toBe(JSON.stringify(last));
+      // Places are read once the turn has landed (settled): mid-turn an EPUB page briefly reports the previous
+      // page's end as its start (2:1317) before its own (2:1207), and a read in between made this test flaky.
+      const beyondPlace = await settled(page, last);
       await expect(page.locator('.rf-ov-folio')).toContainText("Beyond today's reading");
-      const beyondPlace = await shown(page);
       await page.keyboard.press('ArrowLeft'); // back inside, then on again: no closing page this time
-      await page.waitForTimeout(700);
+      await settled(page, beyondPlace);
       await page.keyboard.press('ArrowRight');
-      await page.waitForTimeout(700);
-      await expect(page.locator('.rf-end')).toHaveCount(0);
-      expect(await shown(page)).toEqual(beyondPlace);
+      const again = await settled(page);
+      await expect(page.locator('.rf-end')).toHaveCount(0); // checked after the turn has landed
+      expect(again).toEqual(beyondPlace);
     });
 
     test('a known word shows its card within 600 ms once cached, beside the word, and Esc closes it', async ({ page, api }) => {

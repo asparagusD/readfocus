@@ -4593,9 +4593,9 @@ changes, an unknown zone, empty and missing) fails without `tzdata` and passes w
 ### Commit
 feat(xp): XP ledger, daily goal and streaks with earned freezes
 
-## 2026-11-15 C24.6d — the EPUB "read on" e2e test fails now and then (pre-existing, open)
+## 2026-11-15 C24.6d — the EPUB "read on" e2e test fails now and then (pre-existing)
 
-**Status:** open (not caused by C24; recorded, not fixed)
+**Status:** fixed (in the test; the reader was right)
 
 ### Symptom
 C24.6d's full `npm --prefix frontend run test:e2e`: 302 passed, 1 failed:
@@ -4607,25 +4607,31 @@ C24.6d's full `npm --prefix frontend run test:e2e`: 302 passed, 1 failed:
 `npx playwright test e2e/reader.spec.js -g "closing page lets the reader read on" --repeat-each 5`: the EPUB case
 failed 1 of 5 (the PDF case 5 of 5 passed). C24 changes no reader code: `git diff 6cf4642 -- frontend/src/originalview
 frontend/src/pages/ReadingSession.jsx frontend/src/reader frontend/e2e/reader.spec.js` is empty, and `/read/:bookId`
-renders outside `Layout` (no header progress).
+renders outside `Layout`.
 
 ### Hypotheses
-1. The last snapshot is taken before the EPUB layout settles (the test waits a fixed 700 ms). Tried: polling the final
-   place for 5 s. Result: the EPUB case then failed 10 of 10, always settling at `2:1207`. So the place does settle,
-   and it is the test's reference (`beyondPlace`, taken 700 ms after the turn, usually `2:1317`) that is unsettled:
-   the view keeps re-laying out for longer than the test waits. Reverted (the spec is as it was).
-2. Not yet tried: the reference should be read after the view settles (poll until two reads 700 ms apart agree),
-   or the reader should report when a re-layout is done.
+1. The last read is taken before the EPUB layout settles (fixed 700 ms waits). Tried: polling the final place for 5 s.
+   Result: the EPUB case failed 10 of 10, always settling at `2:1207`; reverted. So the final place does settle, and
+   the test's reference (`beyondPlace`) was the unsettled read.
+2. The places should be read once each turn has landed. Evidence: a probe sampling `.rf-ov` every 100 ms after the
+   read-on turn (4 runs) showed `2:0-2:1317` with the turn's leaf at about 15 ms, `2:1317-2:1985` at about 125 ms
+   (in 2 of 4 runs), `2:1207-2:1985` from about 230 ms, and no leaf from about 700 ms; with the fixtures' `settled()`
+   (DEBUG_LOG C17.6: no leaf and the same place on two reads 300 ms apart) the places were, 4 of 4: read on
+   `2:1207-2:1985`, back `2:0-2:1317`, on again `2:1207-2:1985`. Confirmed.
 
 ### Root cause
-Not established. Most likely a re-layout of the EPUB view after the turn (column reflow) that takes longer than 700 ms
-under load; the reader's own behaviour may be right, the test's timing assumption wrong.
+`frontend/e2e/reader.spec.js` read `beyondPlace` as soon as the place first changed (often the mid-turn
+`2:1317-2:1985`, the previous page's end standing in as the start for about 100 ms) and the final place after a fixed
+700 ms; the test passed when both reads caught the mid-turn value and failed when one caught the landed `2:1207`. The
+reader lands on the same place every time.
 
 ### Fix
-None in C24.6d (out of scope; one attempt of three used). Next step: hypothesis 2, in its own `fix(frontend)` commit.
+The test reads the end page, the page beyond, the way back and the way on again with `settled()`, and checks that no
+closing page appears only after the last turn has landed. The comparison is unchanged (the exact place), so a reader
+that came back somewhere else still fails it.
 
 ### Regression test
-The test itself.
+The test itself: `--repeat-each 20`, 40 of 40 passed (EPUB and PDF), twice; before, about 1 in 5 EPUB runs failed.
 
 ### Commit
-feat(leagues): league settings for name, goal and opt-out (logged here; no fix)
+fix(frontend): read the EPUB read-on test's places once each turn has landed

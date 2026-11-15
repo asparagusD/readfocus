@@ -14,7 +14,7 @@ from backend.focus import store
 from backend.focus.scoring import Event, Quiz, ScoringInput, decide
 from backend.services import question_bank
 from backend.services.supabase_client import supabase
-from backend.xp import award
+from backend.xp import award, badge_award
 
 log = logging.getLogger(__name__)
 PART = store.PART
@@ -177,6 +177,7 @@ async def grade(session: dict, events: list[dict], answers: list[str], seconds: 
         award.award_focus_xp(session)
     except Exception:  # logged; the session stays scored and a later catch-up can credit it
         log.exception("XP award failed for focus session %s", session["id"])
+    badge_award.check_quietly(session["user_id"], "focus", session=session, passed=out.passed)  # C24.2
     public = ("score", "max_score", "feedback", "confidence")
     graded = (final or {}).get("evaluation_result") or {}
     return {**store.view(session, events, out), "passed": out.passed, "quiz_score": weighted / total,

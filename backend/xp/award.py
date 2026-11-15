@@ -28,7 +28,7 @@ def _insert_event(row: dict) -> None:
     supabase.table("xp_events").insert(row).execute()
 
 
-def _is_duplicate(error: Exception) -> bool:
+def is_duplicate(error: Exception) -> bool:
     return str(getattr(error, "code", "")) == UNIQUE_VIOLATION
 
 
@@ -42,16 +42,18 @@ def load_progress(user_id: str) -> dict:
     try:
         supabase.table("user_progress").insert(row).execute()
     except Exception as error:  # only a row made meanwhile by another award is expected here
-        if not _is_duplicate(error):
+        if not is_duplicate(error):
             raise
         return supabase.table("user_progress").select("*").eq("user_id", user_id).execute().data[0]
     return row
 
 
 def _amounts(user_id: str, day: str | None = None) -> int:
+    """The reader's total XP, or one day's focus XP: only focus counts towards the daily goal (C24.2: badge XP adds
+    to the total, never to a day's goal or the streak)."""
     query = supabase.table("xp_events").select("amount").eq("user_id", user_id)
     if day is not None:
-        query = query.eq("local_day", day)
+        query = query.eq("local_day", day).eq("source", "focus")
     return sum(int(r["amount"]) for r in query.execute().data)
 
 
@@ -86,7 +88,7 @@ def award_focus_xp(session: dict) -> dict | None:
         _insert_event({"user_id": user_id, "source": "focus", "source_id": source_id, "amount": amount,
                        "earned_at": earned_at, "local_day": day})
     except Exception as error:
-        if not _is_duplicate(error):
+        if not is_duplicate(error):
             raise
         return {**result, "total_xp": int(progress.get("total_xp") or 0)}
 
@@ -106,3 +108,21 @@ def award_focus_xp(session: dict) -> dict | None:
         progress = load_progress(user_id)
     log.warning("XP for focus session %s is in the ledger; its progress write lost %d races", source_id, RETRIES)
     return {**result, "awarded": True, "day_xp": day_xp, "total_xp": int(progress.get("total_xp") or 0)}
+
+
+def credit_badge(user_id: str, badge_id: str, amount: int, at: datetime) -> bool:
+    """A badge's one-time XP (C24.2): one ledger row keyed '<user_id>:<badge_id>', then the total. False when it
+    was already credited."""
+    progress = load_progress(user_id)
+    try:
+        day = streaks.local_day(at, progress.get("timezone")).isoformat()
+        _insert_event({"user_id": user_id, "source": "badge", "source_id": f"{user_id}:{badge_id}", "amount": amount,
+                       "earned_at": at.isoformat(), "local_day": day})
+    except Exception as error:
+        if not is_duplicate(error):
+            raise
+        return False
+    supabase.table("user_progress").update({"total_xp": max(0, _amounts(user_id)), "updated_at": at.isoformat()}).eq(
+        "user_id", user_id).execute()
+    return True
+

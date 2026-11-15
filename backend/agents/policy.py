@@ -426,3 +426,4 @@ STREAK_FREEZE_MAX = 2  # G8: freezes held at most
 STREAK_FREEZE_EVERY_DAYS = 7  # G8: one earned at every 7 consecutive counted days, while fewer than the max held
 XP_TIMEZONE_MAX = 64  # user_progress.timezone: an IANA name such as "America/Argentina/ComodRivadavia"
 DISPLAY_NAME_MAX = 40  # user_progress.display_name, shown on leaderboards (G3)
+TECH_BOOK_SHARE = 0.20  # Badges: a book is technical when this share of its page regions is math or code

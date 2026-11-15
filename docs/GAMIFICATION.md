@@ -19,8 +19,10 @@ Points come from `docs/FOCUS_RULES.md`.
 ## XP and daily goal
 
 - **G4.** XP = final focus points (FOCUS_RULES F12), credited to the day
-  the focus session ended. Nothing else earns XP; "Quiz me" outside focus
-  mode earns none.
+  the focus session ended, plus each badge's one-time reward (changed in
+  C24.2, at the prompt's request: until then nothing else earned XP).
+  Badge XP adds to the total only: the daily goal (G5) and the streak
+  (G7) count focus XP alone. "Quiz me" outside focus mode earns none.
 - **G5.** Daily goal: `DAILY_GOAL_XP` = 50 by default (five active
   minutes). The reader can change it in settings, within
   `DAILY_GOAL_MIN_XP` 10 and `DAILY_GOAL_MAX_XP` 500.
@@ -107,6 +109,22 @@ the pass mark (FOCUS_RULES F12).
   quietly. A frozen day is not counted, so the next freeze takes 7 more
   counted days (G8). A session graded late for a day before the last goal
   day adds XP but does not move the streak. Code: `backend/xp/`.
+- **C24.2 Badges.** The 14 above, in `backend/xp/badges.py` (id, name,
+  description, rule, XP reward, the triggers that check it, seal or
+  bookplate); held in `user_badges` (migration 032), one row per reader and
+  badge. `badge_award.evaluate_badges(user, trigger)` runs after a focus
+  quiz passes, a note is created, Steve answers and a reading place with an
+  anchor is saved; it reads only what the trigger's unheld badges need and
+  never fails the request (errors are logged). Rewards: first focus 20,
+  first chapter 30, 10/50/100 h 100/250/500, perfect quiz 25, 7/30/100-day
+  streak 50/150/500, first note, drawing and Ask Steve 10 each, finished a
+  book 200, technical-book reader 50. As read: "first chapter" is the quiz
+  range reaching the last chunk before the contents entry after chapter 1
+  (the entry at the body start); "finished a book" is a PDF's last page by
+  `page_count` (back matter counts as body) or an EPUB's last spine item
+  with text (being in it, not its last character); "passed" is a scored
+  session with points (or the one being scored); a typed note is kind
+  `text`; "First Ask Steve" is a saved Steve answer.
 
 ## Open questions
 

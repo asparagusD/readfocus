@@ -205,3 +205,28 @@ def test_bad_files_are_refused(client, db, content_type, data):
     body = {"content_type": content_type, "data": base64.b64encode(data).decode()}
     assert client.post(f"/books/{BOOK}/note-files", json=body).status_code == 422
     assert db.files == {}
+
+
+# --- badges (C24.2): a saved note asks for the note badges; their failure never fails the save ----------------------
+
+@pytest.fixture
+def badge_calls(monkeypatch):
+    from backend.xp import badge_award
+    calls = []
+    monkeypatch.setattr(badge_award, "evaluate_badges", lambda *args, **kwargs: calls.append((args, kwargs)) or [])
+    return calls
+
+
+def test_a_new_note_asks_for_the_note_badges(client, badge_calls):
+    assert post(client, note()).status_code == 201
+    assert badge_calls == [((USER, "note"), {})]
+
+
+def test_a_badge_failure_never_fails_the_note(client, db, monkeypatch, caplog):
+    from backend.xp import badge_award
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("user_badges is down")
+    monkeypatch.setattr(badge_award, "evaluate_badges", broken)
+    assert post(client, note()).status_code == 201
+    assert len(db.tables["note_blocks"]) == 1 and "Badge check failed" in caplog.text

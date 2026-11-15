@@ -21,6 +21,7 @@ from backend.dependencies import get_current_user
 from backend.services.anchor_checks import MAX_POSITION, Anchor, check_anchors
 from backend.services.note_content import check_content, owned_path
 from backend.services.supabase_client import supabase
+from backend.xp import badge_award
 
 router = APIRouter()
 
@@ -175,7 +176,9 @@ def create_note(book_id: str, req: NewNote, response: Response, user_id: str = D
            "thumbnail_path": req.thumbnail_path, "annotation_id": req.annotation_id, "region_id": req.region_id,
            "orphaned": False, "version": 1, "deleted_at": None, "created_at": datetime.now(UTC).isoformat()}
     _check_links(row, user_id, book_id)
-    return _with_etag(response, supabase.table("note_blocks").insert(row).execute().data[0])
+    saved = supabase.table("note_blocks").insert(row).execute().data[0]
+    badge_award.check_quietly(user_id, "note")  # C24.2: First note, First drawing
+    return _with_etag(response, saved)
 
 
 @router.patch("/notes/{note_id}")

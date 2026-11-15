@@ -894,3 +894,27 @@ def test_031_touches_only_its_tables():
     assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == [
         "user_progress", "xp_events"]
     assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)
+
+
+# --- 032: badges each reader holds (C24.2) --------------------------------------------------------------------------
+
+def migration_032() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "032_badges.sql"))
+
+
+def test_032_creates_user_badges_keyed_by_reader_and_badge():
+    assert table_definition(migration_032(), "user_badges") == {
+        "user_id": OWNER,
+        "badge_id": "text NOT NULL CHECK (char_length(badge_id) BETWEEN 1 AND 64)",
+        "awarded_at": "timestamptz NOT NULL DEFAULT now()",
+        "PRIMARY": "KEY (user_id, badge_id)",
+    }
+
+
+def test_032_readers_only_read_their_own_badges_and_it_touches_nothing_else():
+    sql = migration_032()
+    assert "ALTER TABLE public.user_badges ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(r"CREATE POLICY \"[^\"]+\" ON public\.user_badges FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert policies == ["SELECT"] and sql.count("CREATE POLICY") == 1  # only the server awards (G2)
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == ["user_badges"]
+    assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.|SECURITY DEFINER", sql)

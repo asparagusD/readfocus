@@ -28,6 +28,7 @@ from backend.services.supabase_client import supabase
 from backend.steve import consent, policy, prompts, service, threads
 from backend.steve.context import ContextError, build_context
 from backend.steve.errors import SteveUnavailable
+from backend.xp import badge_award
 
 router = APIRouter()
 logger = logging.getLogger("steve.ask")
@@ -177,6 +178,8 @@ async def ask(req: AskRequest, user_id: str = Depends(get_current_user)):
                     len(text), len(citations), usage["cached"], usage["tokens_in"], usage["tokens_out"])
         yield _event("done", {"message_id": saved["id"], "thread_id": thread["id"], "text": text,
                               "citations": citations, "usage": usage})
+        # C24.2: First Ask Steve, after the answer has reached the reader
+        await run_in_threadpool(badge_award.check_quietly, user_id, "steve")
 
     return StreamingResponse(stream(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

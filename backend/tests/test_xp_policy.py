@@ -26,3 +26,7 @@ def test_the_goal_default_lies_within_its_bounds_and_the_sources_are_the_ledgers
     assert policy.DAILY_GOAL_MIN_XP <= policy.DAILY_GOAL_XP <= policy.DAILY_GOAL_MAX_XP
     assert policy.XP_SOURCES == ("focus", "badge", "adjustment")
     assert policy.STREAK_FREEZE_MAX == 2 and policy.STREAK_FREEZE_EVERY_DAYS == 7
+
+
+def test_the_technical_book_share_is_the_documented_percentage():
+    assert round(policy.TECH_BOOK_SHARE * 100) == documented("TECH_BOOK_SHARE")

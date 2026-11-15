@@ -19,7 +19,8 @@ from backend.nlp import embedder
 from backend.routers import focus, sessions
 from backend.services import concept_store, question_bank
 from backend.tests.test_api_sessions import FakeDb
-from backend.xp import award
+from backend.xp import award, badge_award
+from backend.xp.badges import by_id
 
 USER, BOOK = "user-1", "book-1"
 T0 = datetime(2026, 11, 15, 9, 0, tzinfo=UTC)
@@ -60,10 +61,11 @@ def api(monkeypatch):
                               "chunk_indices": [0, 1, 2, 3], "weight": 1.0}]
     db.tables["reading_progress"] = [{"id": "rp", "user_id": USER, "book_id": BOOK, "chunks_completed": 0,
                                       "re_read_queue": [], "average_score": 60, "pace_recommendation": None}]
-    for table in ("focus_sessions", "focus_events", "sessions", "test_results", "xp_events", "user_progress"):
+    for table in ("focus_sessions", "focus_events", "sessions", "test_results", "xp_events", "user_progress",
+                  "user_badges"):
         db.tables[table] = []
     for module in (focus, sessions, store, quiz, question_bank, evaluator_agent, concept_store, knowledge_agent, planner_agent,
-                   optimizer_agent, workflow, award):
+                   optimizer_agent, workflow, award, badge_award):
         monkeypatch.setattr(module, "supabase", db)
 
     def fake_embed(texts):  # bag of words, as in test_api_sessions
@@ -238,12 +240,23 @@ def test_a_passed_quiz_credits_its_points_as_xp_once(api):
     answers = [q["answer"] for q in stored_questions(api, sid)]
     assert answer(api, sid, answers).status_code == 200
     assert answer(api, sid, answers).status_code == 409  # graded once, so awarded once
-    events = api.db.tables["xp_events"]
+    events = [e for e in api.db.tables["xp_events"] if e["source"] == "focus"]
     assert [(e["source"], e["source_id"], e["amount"], e["local_day"]) for e in events] == [
         ("focus", sid, 160, "2026-11-15")]
     progress = api.db.tables["user_progress"]
-    assert [(p["user_id"], p["total_xp"], p["streak_days"], p["last_goal_day"]) for p in progress] == [
-        (USER, 160, 1, "2026-11-15")]
+    assert [(p["user_id"], p["streak_days"], p["last_goal_day"]) for p in progress] == [(USER, 1, "2026-11-15")]
+
+
+def test_a_passed_quiz_earns_its_badges_with_their_xp(api):
+    sid = read_and_end(api)
+    api.client.post(f"/focus/{sid}/quiz")
+    assert answer(api, sid, [q["answer"] for q in stored_questions(api, sid)]).status_code == 200
+    badges = sorted(b["badge_id"] for b in api.db.tables["user_badges"])
+    assert badges == ["first_focus", "perfect_quiz"]  # 3 of 3
+    rewards = sum(by_id(b).xp_reward for b in badges)
+    assert sorted(e["source_id"] for e in api.db.tables["xp_events"] if e["source"] == "badge") == [
+        f"{USER}:first_focus", f"{USER}:perfect_quiz"]
+    assert api.db.tables["user_progress"][0]["total_xp"] == 160 + rewards
 
 
 def test_a_failed_quiz_credits_no_xp(api):
@@ -251,6 +264,7 @@ def test_a_failed_quiz_credits_no_xp(api):
     api.client.post(f"/focus/{sid}/quiz")
     answer(api, sid, [stored_questions(api, sid)[0]["answer"], "", ""])
     assert api.db.tables["xp_events"] == [] and api.db.tables["user_progress"] == []
+    assert api.db.tables["user_badges"] == []  # a failed quiz earns no badge
 
 
 def test_an_xp_failure_never_fails_the_grade(api, monkeypatch, caplog):

@@ -17,6 +17,7 @@ from backend.agents.workflow import (
 )
 from backend.dependencies import get_current_user, require_model
 from backend.services.supabase_client import supabase
+from backend.xp import badge_award
 
 router = APIRouter()
 
@@ -233,7 +234,8 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
 
 
 @router.put("/{session_id}/position")
-async def save_position(session_id: str, req: PositionRequest, user_id: str = Depends(get_current_user)):
+async def save_position(session_id: str, req: PositionRequest, background_tasks: BackgroundTasks,
+                        user_id: str = Depends(get_current_user)):
     """Save the reader's place (sent debounced as pages turn). Only reading_progress.position changes."""
     sess = await run_in_threadpool(
         supabase.table("sessions").select("book_id").eq("id", session_id).eq("user_id", user_id).execute)
@@ -250,6 +252,9 @@ async def save_position(session_id: str, req: PositionRequest, user_id: str = De
         "user_id", user_id).eq("book_id", book_id).execute)
     if not updated.data:
         raise HTTPException(status_code=409, detail="This book has no reading progress yet.")
+    if position.get("anchor"):  # C24.2: Finished a book, after the response (saves are sent as pages turn)
+        background_tasks.add_task(badge_award.check_quietly, user_id, "place", book_id=book_id,
+                                  anchor=position["anchor"])
     return {"position": position}
 
 def refuse_focus_quiz(session_id: str, user_id: str) -> None:

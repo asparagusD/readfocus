@@ -11,6 +11,7 @@ import { cycle } from '../annotations/hover';
 import { PdfBlockActions } from '../steve/PdfBlockActions';
 import { EpubBlockActions } from '../steve/EpubBlockActions';
 import { MarginMarkers } from '../notes/MarginMarkers';
+import { RibbonPlacer } from '../focus/RibbonPlacer';
 import { EpubBook } from './epub/EpubBook';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
@@ -101,6 +102,7 @@ export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
+  placing = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -309,6 +311,10 @@ export function Reader({
     attempt();
   }, [bookBox]);
 
+  // C23.6b: the pages shown as places for focus mode's ribbon: [{ anchor, label }] (an EPUB's label is its folio).
+  const folio = place?.folio;
+  const shownPlaces = useCallback(async () => (await (book.current?.shownPlaces?.() ?? [])).map((p) => ({
+    ...p, label: p.label ?? (folio ? folio.split(' of ')[0] : 'this page') })), [folio]);
   useImperativeHandle(ref, () => ({
     goTo: (anchor) => { setEnding(false); return book.current?.goTo(anchor); },
     find: (snippets, from) => book.current?.find(snippets, from) ?? Promise.resolve(null),
@@ -324,8 +330,9 @@ export function Reader({
     anchor: () => book.current?.anchor() ?? null,
     // C22.2b: { scope, anchors, start, end } for a new note: the selection, else the pages shown.
     notePlace: () => book.current?.notePlace?.() ?? Promise.resolve(null),
+    shownPlaces, // C23.6b
     flash, // C22.5
-  }), [move, flash]);
+  }), [move, flash, shownPlaces]);
 
   const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
   return (
@@ -384,7 +391,11 @@ export function Reader({
               layout={`${zoom}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${sheet?.width}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`}
               hidden={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
           )}
-          {onBookmark && place && !failure && !ending && (
+          {placing && place && !failure && !ending && (
+            <RibbonPlacer load={shownPlaces} placeKey={`${place.start ?? ''}|${place.pages ?? ''}|${place.cfi ?? ''}`}
+              onSet={placing.onSet} onCancel={placing.onCancel} />
+          )}
+          {!placing && onBookmark && place && !failure && !ending && (
             <button type="button" className="rf-ov-ribbon" onClick={() => act('ribbon')} aria-label="Save my place"
               aria-keyshortcuts="B" title="Save my place (B)">
               <span className="rf-ov-ribbon-tail" aria-hidden="true" />

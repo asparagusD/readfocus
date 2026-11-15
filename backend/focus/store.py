@@ -123,7 +123,7 @@ def view(session: dict, events: list[dict], out: ScoringOutput) -> dict:
         "voided_seconds": out.voided_seconds, "counted_seconds": out.counted_seconds, "capped": out.capped,
         "cap_remaining_s": max(0, policy.SESSION_CAP_S - out.active_seconds), "reasons": out.reasons,
         "points_time": 0 if lost else out.points_time, "points_total": 0 if lost else out.points_total,
-        "ignored_events": session.get("ignored_events") or 0,
+        "ignored_events": session.get("ignored_events") or 0, "bookmark_set": bool(session.get("end_anchor")),
     }
 
 

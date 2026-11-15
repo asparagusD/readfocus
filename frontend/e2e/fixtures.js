@@ -112,6 +112,10 @@ async function mockBackend(page, api, book) {
     }
     if (path === `/books/${BOOK}/status`) return json(route, { status: 'processing', total_chunks: 0 });
     if (path.startsWith('/focus/')) return focusRoute(route, request, api.focus, path); // C23.6
+    if (path === '/sessions/focus-1/evaluate-single') return json(route, { status: 'graded' }); // C23.6b
+    if (path === '/sessions/focus-1') { // C23.6b: a focus quiz is kept on a sessions row with the focus session's id
+      return json(route, { id: 'focus-1', book_id: BOOK, status: 'testing', test_questions: FOCUS_QUIZ });
+    }
     if (path === `/books/${BOOK}/body-start`) { // C23.1: none unless a test sets api.bodyStart; a PUT is the reader's
       if (api.bodyStartFail) return json(route, { detail: 'down' }, 503);
       if (request.method() === 'PUT') {
@@ -237,12 +241,21 @@ async function mockBackend(page, api, book) {
   });
 }
 
+/** C23.6b: the focus quiz the fake server builds: three questions, the first multiple choice. */
+const FOCUS_QUIZ = [
+  { question: 'What did the lamp throw?\n(a) A shadow  (b) A small circle of light  (c) A spark', type: 'factual',
+    options: ['A shadow', 'A small circle of light', 'A spark'] },
+  { question: 'What mattered inside the circle of light?', type: 'factual' },
+  { question: 'In your own words, what is the main idea of the pages you read?', type: 'summary' },
+];
+
 /** C23.6: focus sessions as the server keeps them; tests set `api.focus.active` to move the server's clock. */
 function focusRoute(route, request, focus, path) {
   const body = JSON.parse(request.postData() || 'null');
   const view = () => focus.session && { ...focus.session, active_seconds: focus.active,
-    cap_remaining_s: Math.max(0, 10800 - focus.active), capped: focus.active >= 10800 };
-  const [, , id, action] = path.split('/');
+    cap_remaining_s: Math.max(0, 10800 - focus.active), capped: focus.active >= 10800,
+    points_time: Math.floor(focus.active / 6), bookmark_set: Boolean(focus.session.end_anchor) };
+  const [, , id, action, sub] = path.split('/');
   focus.calls.push({ method: request.method(), path, body });
   if (path === '/focus/current') return json(route, { session: focus.session ? view() : null });
   if (path === '/focus/start') {
@@ -260,7 +273,22 @@ function focusRoute(route, request, focus, path) {
   }
   if (action === 'pause') Object.assign(s, { status: 'paused', state: 'paused' });
   if (action === 'resume') Object.assign(s, { status: 'active', state: 'running' });
-  if (action === 'end') Object.assign(s, { status: 'awaiting_quiz', state: 'awaiting_quiz', end_anchor: body.bookmark_anchor });
+  if (action === 'end') {
+    if (s.status === 'awaiting_quiz' && s.end_anchor) return json(route, { detail: 'This focus session is awaiting quiz.' }, 409);
+    Object.assign(s, { status: 'awaiting_quiz', state: 'awaiting_quiz', end_anchor: body.bookmark_anchor });
+  }
+  if (action === 'quiz' && !sub) {
+    return json(route, { questions: FOCUS_QUIZ, count: FOCUS_QUIZ.length, words_in_range: 1200 });
+  }
+  if (action === 'quiz' && sub === 'answers') {
+    focus.answers = body.answers;
+    Object.assign(s, { status: 'scored', state: 'scored' });
+    const pts = Math.floor(focus.active / 6);
+    return json(route, { ...view(), passed: true, quiz_score: 2 / 3, points_time: pts, points_bonus: 40, points_total: pts + 40,
+      total_score: 20, max_score: 30, percentage: 66.7, lines: [], per_question: [
+        { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' }, { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' },
+        { score: 0, max_score: 10, feedback: 'Say what the pages were about.', confidence: 'high' }] });
+  }
   if (action === 'discard') Object.assign(s, { status: 'abandoned', state: 'abandoned' });
   const out = view();
   if (action === 'discard') focus.session = null;

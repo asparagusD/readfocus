@@ -232,3 +232,31 @@ def test_another_readers_quiz_is_not_found(api):
     assert api.client.post(f"/focus/{sid}/quiz").status_code == 404
     assert answer(api, sid, ["x"]).status_code == 404
     assert api.db.tables["sessions"] == []
+
+
+# --- C23.6b: what the quiz screen and the ready modal need; Steve rests during the quiz (F10) ------------------
+
+def test_the_graded_quiz_carries_the_test_pages_totals_and_the_view_says_the_bookmark_is_set(api):
+    sid = read_and_end(api)
+    assert api.client.get(f"/focus/{sid}").json()["bookmark_set"] is True
+    api.client.post(f"/focus/{sid}/quiz")
+    body = answer(api, sid, [q["answer"] for q in stored_questions(api, sid)]).json()
+    assert body["max_score"] == 30 and body["total_score"] == 30 and body["percentage"] == 100
+
+
+def test_steve_is_refused_while_the_focus_quiz_is_open(api, monkeypatch):
+    from fastapi import HTTPException
+
+    from backend.routers import steve_ask
+    from backend.steve import consent
+    monkeypatch.setattr(steve_ask, "supabase", api.db)
+    api.db.tables["profiles"] = [{"user_id": USER, "steve_enabled": True, "steve_consent_at": "2026-11-15T09:00:00Z",
+                                  "steve_consent_version": consent.CONSENT_VERSION, "reading_goal_wpm": 240}]
+    steve_ask._check_reader(USER, BOOK)  # reading: Steve answers
+    sid = read_and_end(api)
+    api.client.post(f"/focus/{sid}/quiz")
+    with pytest.raises(HTTPException) as refused:
+        steve_ask._check_reader(USER, BOOK)
+    assert refused.value.status_code == 409 and "in_test" in str(refused.value.detail)
+    answer(api, sid, [q["answer"] for q in stored_questions(api, sid)])
+    steve_ask._check_reader(USER, BOOK)  # answered: Steve is back

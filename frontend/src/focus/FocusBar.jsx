@@ -12,6 +12,7 @@ import './FocusBar.css';
  */
 export function FocusBar({
   session, readAt, locked, startLabel, idle, idleLapsed, busy, onStart, onPause, onResume, onEnd, onLeave, onAnswerIdle,
+  placing = false,
 }) {
   const [now, setNow] = useState(() => Date.now());
   const [why, setWhy] = useState(false);
@@ -94,8 +95,9 @@ export function FocusBar({
         </div>
       </div>
 
+      {/* While the ribbon is being placed its bar is what the reader acts on: the cards step aside (C23.6b). */}
       <div className="rf-focus-notes" aria-live="polite">
-        {idle && (
+        {idle && !placing && (
           <div className="rf-focus-card" role="group" aria-label="Still with the book?">
             <Hourglass size={18} strokeWidth={1.75} aria-hidden="true" className="rf-focus-card-icon" />
             <div>
@@ -107,7 +109,7 @@ export function FocusBar({
             <button type="button" className="rf-focus-button" onClick={onAnswerIdle}>I&rsquo;m here</button>
           </div>
         )}
-        {notice && (
+        {notice && !placing && (
           <div className="rf-focus-card" role="group" aria-label="15 minutes left in this focus session">
             <Hourglass size={18} strokeWidth={1.75} aria-hidden="true" className="rf-focus-card-icon" />
             <div>
@@ -118,7 +120,7 @@ export function FocusBar({
             <button type="button" className="rf-focus-button" onClick={() => setNoticeClosed(true)}>OK</button>
           </div>
         )}
-        {capped && (
+        {capped && !placing && (
           <div className="rf-focus-card" role="group" aria-label="Three hours of focus">
             <Hourglass size={18} strokeWidth={1.75} aria-hidden="true" className="rf-focus-card-icon" />
             <div>

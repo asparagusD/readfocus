@@ -2105,6 +2105,12 @@
       "language": "text"
     },
     {
+      "id": "file:frontend/e2e/focus-end.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/focus-mode.spec.js",
       "type": "file",
       "role": "config",
@@ -2807,6 +2813,24 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/focus/ReadyModal.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/focus/RibbonPlacer.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/focus/RibbonPlacer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/focus/bodyStart.js",
       "type": "file",
       "role": "asset",
@@ -2814,6 +2838,18 @@
     },
     {
       "id": "file:frontend/src/focus/bodyStart.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/bookmark.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/bookmark.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4985,6 +5021,11 @@
     },
     {
       "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/ReadyModal.jsx",
+      "to": "endpoint:POST /focus/{session_id}/quiz"
+    },
+    {
+      "type": "calls_endpoint",
       "from": "file:frontend/src/focus/useBodyStart.js",
       "to": "endpoint:GET /books/{book_id}/body-start"
     },
@@ -5041,12 +5082,12 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
-      "to": "endpoint:POST /sessions/{session_id}/evaluate-single"
+      "to": "endpoint:POST /focus/{session_id}/quiz"
     },
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
-      "to": "endpoint:POST /sessions/{session_id}/submit-answers"
+      "to": "endpoint:POST /sessions/{session_id}/evaluate-single"
     },
     {
       "type": "calls_endpoint",
@@ -7344,12 +7385,22 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/routers/steve_ask.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
       "to": "file:backend/services/concept_store.py"
     },
     {
       "type": "imports",
       "from": "file:backend/tests/test_api_focus_quiz.py",
       "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/steve/consent.py"
     },
     {
       "type": "imports",
@@ -8798,6 +8849,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/focus-end.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/focus-mode.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -9433,6 +9489,31 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/focus/ReadyModal.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/ReadyModal.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/ReadyModal.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/RibbonPlacer.jsx",
+      "to": "file:frontend/src/focus/RibbonPlacer.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/RibbonPlacer.jsx",
+      "to": "file:frontend/src/focus/bookmark.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/focus/bodyStart.js",
       "to": "file:frontend/src/originalview/today.js"
     },
@@ -9440,6 +9521,11 @@
       "type": "imports",
       "from": "file:frontend/src/focus/bodyStart.test.js",
       "to": "file:frontend/src/focus/bodyStart.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/bookmark.test.js",
+      "to": "file:frontend/src/focus/bookmark.js"
     },
     {
       "type": "imports",
@@ -10009,6 +10095,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/focus/RibbonPlacer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/motion/presets.js"
     },
     {
@@ -10104,6 +10195,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/focus/bookmark.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
       "to": "file:frontend/src/originalview/epub/EpubView.jsx"
     },
     {
@@ -10180,6 +10276,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/focus/bookmark.js"
     },
     {
       "type": "imports",
@@ -10600,6 +10701,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/focus/FocusBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/ReadyModal.jsx"
     },
     {
       "type": "imports",

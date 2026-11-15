@@ -2,6 +2,7 @@
 // body start, then Start, a stopwatch from the server's time, heartbeats every 30 s while visible, page turns,
 // hidden and visible, pause and resume, "Still with the book?" after ten quiet minutes, the 2 h 45 notice, the
 // 3-hour stop, and leaving with a session open (end or discard). Mocked API; the page's clock is Playwright's.
+// The end flow (ribbon, ready, quiz) is focus-end.spec.js (C23.6b).
 import { book, expect, openReader, settled, test } from './fixtures';
 
 const bar = (page) => page.getByRole('region', { name: 'Focus mode' });
@@ -129,18 +130,6 @@ test('the 2 h 45 notice, and the 3-hour stop asking for the bookmark', async ({ 
   await page.clock.runFor(60_000);
   await expect(page.getByRole('group', { name: 'Three hours of focus' })).toBeVisible();
   await expect(bar(page).getByRole('timer')).toHaveText('3:00');
-});
-
-test('End session places the bookmark at the page shown', async ({ page, api }) => {
-  api.bodyStart = start(1);
-  await openReader(page);
-  await focusOn(page);
-  await bar(page).getByRole('button', { name: 'Start' }).click();
-  await page.clock.runFor(30_000);
-  await bar(page).getByRole('button', { name: 'End session' }).click();
-  await expect.poll(() => calls(api, '/end').length).toBe(1);
-  expect(calls(api, '/end')[0].body.bookmark_anchor.kind).toBe('pdf');
-  await expect(page.getByText(/Bookmark set at .+ Your questions come next\./)).toBeVisible();
 });
 
 test('leaving with a session open asks; discard ends it with nothing scored', async ({ page, api }) => {

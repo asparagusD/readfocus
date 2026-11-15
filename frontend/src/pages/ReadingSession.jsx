@@ -36,6 +36,7 @@ import { useBodyStart } from '../focus/useBodyStart';
 import { beforeBody, chosenStart, startLabel } from '../focus/bodyStart';
 import { useFocusSession } from '../focus/useFocusSession';
 import { FocusBar } from '../focus/FocusBar';
+import { ReadyModal } from '../focus/ReadyModal';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -125,6 +126,8 @@ export function ReadingSession() {
   const [focusWanted, setFocusWanted] = useState(false); // C23.6: the reader's Focus mode switch
   const [leavingFocus, setLeavingFocus] = useState(false);
   const [focusBusy, setFocusBusy] = useState(false);
+  const [placingRibbon, setPlacingRibbon] = useState(false); // C23.6b: the ribbon is being set
+  const [focusReady, setFocusReady] = useState(null); // C23.6b: { label } while "Ready for your questions?" is up
   const opened = Boolean(sessionData);
   const ocr = useMemo(() => (kind === 'pdf' && opened ? createOcrSource(fetchApi, bookId, {
     ahead: pagesOnly, skipFor: async (page) => { await regions?.load(page); return regions?.boxesOf(page) ?? []; },
@@ -252,12 +255,18 @@ export function ReadingSession() {
     }
   };
   const startFocus = () => focusDo(focus.start, '');
-  const endFocus = () => focusDo(async () => {
-    if (focus.session?.status === 'awaiting_quiz' && !focus.session.capped) return null; // C23.6b: the questions
-    const view = await focus.end(reader.current?.anchor());
-    toast({ kind: 'neutral', message: `Bookmark set at ${folioShort(place?.folio) || 'this page'}. Your questions come next.` });
-    return view;
-  }, 'Place the bookmark after where this session started.');
+  // C23.6b: End session (or the cap, or leaving): set the ribbon where the reader stopped, then the questions.
+  const endFocus = () => {
+    const current = focus.session;
+    if (!current) return;
+    if (current.status === 'awaiting_quiz' && current.bookmark_set) setFocusReady({ label: null });
+    else setPlacingRibbon(true);
+  };
+  const setRibbon = (chosen) => focusDo(async () => {
+    await focus.end(chosen.anchor);
+    setPlacingRibbon(false);
+    setFocusReady({ label: chosen.label });
+  }, 'Set the ribbon after the page this session started on.');
   const leaveFocus = () => {
     if (focus.live) setLeavingFocus(true);
     else setFocusWanted(false);
@@ -495,7 +504,7 @@ export function ReadingSession() {
           <FocusBar session={focus.session} readAt={focus.readAt} locked={focusLocked}
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
             onStart={startFocus} onPause={() => focusDo(focus.pause, '')} onResume={() => focusDo(focus.resume, '')}
-            onEnd={endFocus} onLeave={leaveFocus} onAnswerIdle={focus.answerIdle} />
+            onEnd={endFocus} onLeave={leaveFocus} onAnswerIdle={focus.answerIdle} placing={placingRibbon} />
         ) : (
         <ReaderToolbar
           bookTitle={bookTitle}
@@ -574,6 +583,7 @@ export function ReadingSession() {
           bounds={bounds}
           opening={!bounds}
           note={inFocus ? null : note}
+          placing={placingRibbon && inFocus ? { onSet: setRibbon, onCancel: () => setPlacingRibbon(false) } : null}
           closing={closing}
           status={outside ? "Beyond today's reading" : beforeBody(place, body.bodyStart) ? `Focus mode starts at ${startLabel(body.bodyStart)}` : null}
           label={outside ? `${bookTitle}: beyond today's reading, it does not count toward today's session` : `Today's reading from ${bookTitle}`}
@@ -631,6 +641,10 @@ export function ReadingSession() {
         startPage={startPage}
         onStartHere={pagesOnly ? null : startHere}
       />
+
+      <ReadyModal open={Boolean(focusReady)} sessionId={focus.session?.id} label={focusReady?.label}
+        points={focus.session?.points_time ?? 0} onLater={() => setFocusReady(null)}
+        onStart={() => navigate(`/focus/${focus.session.id}/quiz`)} />
 
       <Modal isOpen={leavingFocus} onClose={() => setLeavingFocus(false)} title="Leave focus mode?">
         <p className="rf-leave-text">End the session now and answer a few questions to keep its points, or discard it and

@@ -400,6 +400,8 @@ QUIZ_MIN_QUESTIONS = 3  # F10
 QUIZ_MAX_QUESTIONS = 15  # F10
 QUIZ_POINTS_PER_CORRECT = 20  # F11
 QUIZ_PASS_SCORE = 0.40  # F12
+FOCUS_MAX_GAP_S = 45  # F3: two heartbeats further apart than this credit nothing between them
+FOCUS_MIN_HEARTBEAT_GAP_S = 5  # F3: a heartbeat sooner than this after the last one counted is ignored
 # focus_sessions.status and focus_events.kind (029 checks the same values). Open sessions: one per reader.
 FOCUS_STATUSES = ("active", "paused", "awaiting_quiz", "scored", "abandoned")
 FOCUS_OPEN_STATUSES = ("active", "paused")

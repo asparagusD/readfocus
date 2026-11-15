@@ -11,6 +11,8 @@ C16.3, before any code. Anchors and chunk mapping: `docs/ANCHORS.md`.
 |---|---|---|
 | `FOCUS_POINTS_PER_MINUTE` | 10 | F4 |
 | `FOCUS_HEARTBEAT_S` | 15 | F3 |
+| `FOCUS_MAX_GAP_S` | 45 | F3 |
+| `FOCUS_MIN_HEARTBEAT_GAP_S` | 5 | F3 |
 | `FOCUS_IDLE_PROMPT_MIN` | 10 | F6 |
 | `FOCUS_IDLE_ANSWER_S` | 60 | F6 |
 | `FOCUS_PAGE_CAP_MIN` | 30 | F7 |
@@ -33,10 +35,12 @@ page whose region map shows prose after the front matter. Before body
 start the reader sees "The stopwatch starts at chapter 1".
 
 **F3. Server time.** The client sends events (heartbeat every
-`FOCUS_HEARTBEAT_S` with `visible` and `had_input` flags, page turn, idle
-answer, bookmark), each with an id. The server timestamps them on
-arrival, ignores duplicates, and accrues active time from its own clock:
-at most the wall-clock time between two accepted heartbeats, never more.
+`FOCUS_HEARTBEAT_S` with a `had_input` flag, page turn, hidden and visible,
+pause and resume, idle answer, bookmark), each with an id. The server
+timestamps them on arrival, ignores duplicates, and accrues active time from
+its own clock, only between two heartbeats at most `FOCUS_MAX_GAP_S` apart;
+a heartbeat sooner than `FOCUS_MIN_HEARTBEAT_GAP_S` after the last one
+counted is ignored. The client's own timestamps are never scored (C23.3).
 
 **F4. Points.** Each active minute earns `FOCUS_POINTS_PER_MINUTE`
 points, provisionally; they become final only when the session's quiz
@@ -51,9 +55,12 @@ appears. If it is not answered within `FOCUS_IDLE_ANSWER_S` seconds, the
 stopwatch pauses from the moment the prompt appeared; answering resumes
 it. The prompt never blocks reading.
 
-**F7. Page cap.** If a page goes more than `FOCUS_PAGE_CAP_MIN` minutes
-without a page turn, the time on that page earns 0 points. (A page is a
-PDF page, or an EPUB screen page between two turns.)
+**F7. Page cap.** Active time on one page beyond `FOCUS_PAGE_CAP_MIN`
+minutes without a page turn earns 0 points (voided); the first
+`FOCUS_PAGE_CAP_MIN` minutes still count. Time is active time on that page
+visit, not the clock, so a tab closed on a page and reopened later is not
+voided for the time it was closed. (A page is a PDF page, or an EPUB screen
+page between two turns.) Decided at C23.3 (open question 1).
 
 **F8. Session cap.** At `FOCUS_SESSION_CAP_MIN` minutes of active time
 the stopwatch stops and the bookmark quiz starts (F9-F10); no further
@@ -90,8 +97,8 @@ C7.4).
 
 ## Open questions
 
-1. F7: the whole page's time earns 0 (as written), or only the minutes
-   beyond the cap?
+1. ~~F7: the whole page's time earns 0, or only the minutes beyond the
+   cap?~~ Only the minutes beyond (C23.3 prompt, 2026-11-15).
 2. F1/F9: a focus session left open without a bookmark resumes on the next
    visit (as written); should it instead close after some hours?
 3. F2: may the reader correct a wrongly detected body start?

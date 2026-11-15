@@ -735,6 +735,24 @@
       "language": "python"
     },
     {
+      "id": "file:backend/focus/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/policy.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/scoring.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/main.py",
       "type": "file",
       "role": "entry",
@@ -1432,6 +1450,12 @@
     },
     {
       "id": "file:backend/tests/test_focus_policy.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_focus_scoring.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -5969,6 +5993,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/focus/policy.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/scoring.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/main.py",
       "to": "file:backend/cors.py"
     },
@@ -7416,6 +7450,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_focus_policy.py",
       "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_focus_scoring.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_focus_scoring.py",
+      "to": "file:backend/focus/scoring.py"
     },
     {
       "type": "imports",

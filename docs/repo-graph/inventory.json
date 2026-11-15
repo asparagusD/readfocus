@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 822,
-    "inventoried": 679,
+    "tracked": 826,
+    "inventoried": 683,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15299,
+      "size_bytes": 15317,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 410,
-      "size_bytes": 17915,
+      "lines": 412,
+      "size_bytes": 18114,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -397,6 +397,30 @@
       "size_bytes": 1620,
       "role": "lib",
       "purpose": "FastAPI dependencies: get_current_user resolves a Supabase JWT to a user id through supabase.auth.get_user (anything else is a 401); require_model waits up to EMBED_WAIT_SECONDS for the embedding model, starting a load if none is running, and answers 503 with Retry-After before the endpoint runs."
+    },
+    {
+      "path": "backend/focus/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 102,
+      "role": "lib",
+      "purpose": "Focus mode package (C23): server-side scoring of focus sessions from their events."
+    },
+    {
+      "path": "backend/focus/policy.py",
+      "language": "python",
+      "lines": 20,
+      "size_bytes": 878,
+      "role": "lib",
+      "purpose": "Focus mode's numbers by the scoring engine's names (C23.3), all read from backend/agents/policy.py (= docs/FOCUS_RULES.md Defaults); nothing set here."
+    },
+    {
+      "path": "backend/focus/scoring.py",
+      "language": "python",
+      "lines": 247,
+      "size_bytes": 10285,
+      "role": "lib",
+      "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page."
     },
     {
       "path": "backend/main.py",
@@ -1335,6 +1359,14 @@
       "purpose": "Pytest: the focus defaults in policy.py equal docs/FOCUS_RULES.md's Defaults table; focus statuses, open statuses, event kinds and the rules version format."
     },
     {
+      "path": "backend/tests/test_focus_scoring.py",
+      "language": "python",
+      "lines": 208,
+      "size_bytes": 10486,
+      "role": "test",
+      "purpose": "Pytest for the focus scoring engine: 25 table-driven scenarios (hidden tab, idle prompts, page stalls, the 3-hour cap, 39% vs 40% quizzes, forged ends, heartbeat spam and resends, client clock skew, pause, a reopened tab, events after the end) plus order, clock, breakdown and input-shape checks."
+    },
+    {
       "path": "backend/tests/test_garble.py",
       "language": "python",
       "lines": 102,
@@ -1841,8 +1873,8 @@
     {
       "path": "docs/FOCUS_RULES.md",
       "language": "markdown",
-      "lines": 97,
-      "size_bytes": 4310,
+      "lines": 104,
+      "size_bytes": 4806,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): focus mode rules F1-F14: body start, server-timed stopwatch, points per active minute, hidden-tab and idle pauses, page and 3-hour caps, the bookmark quiz and its pass mark."
     },
@@ -1874,7 +1906,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5203,
-      "size_bytes": 915257,
+      "size_bytes": 918761,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5377,8 +5409,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 681,
-      "size_bytes": 204862,
+      "lines": 685,
+      "size_bytes": 205927,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

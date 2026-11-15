@@ -831,3 +831,66 @@ def test_030_adds_only_the_ignored_events_counter():
     sql = re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "030_focus_ignored_events.sql")).strip()
     assert sql == ("ALTER TABLE public.focus_sessions ADD COLUMN IF NOT EXISTS ignored_events integer NOT NULL "
                    "DEFAULT 0 CHECK (ignored_events >= 0);")
+
+
+# --- 031: the XP ledger and each reader's progress (C24.1) ---------------------------------------------------------
+
+def migration_031() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "031_xp.sql"))
+
+
+def test_031_creates_the_xp_ledger_with_one_row_per_source_event():
+    from backend.agents import policy
+    assert table_definition(migration_031(), "xp_events") == {
+        "id": "bigserial PRIMARY KEY",
+        "user_id": OWNER,
+        "source": f"text NOT NULL CHECK (source IN ({_in_list(policy.XP_SOURCES)}))",
+        "source_id": "text NOT NULL CHECK (char_length(source_id) BETWEEN 1 AND 200)",
+        "amount": "integer NOT NULL CHECK (amount > 0 OR (source = 'adjustment' AND amount <> 0))",
+        "earned_at": "timestamptz NOT NULL",
+        "local_day": "date NOT NULL",
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+        "UNIQUE": "(source, source_id)",
+    }
+
+
+def test_031_creates_user_progress_with_the_agreed_columns_and_ranges():
+    from backend.agents import policy
+    assert table_definition(migration_031(), "user_progress") == {
+        "user_id": "uuid PRIMARY KEY REFERENCES public.profiles(user_id) ON DELETE CASCADE",
+        "total_xp": "integer NOT NULL DEFAULT 0 CHECK (total_xp >= 0)",
+        "daily_goal": (f"integer NOT NULL DEFAULT {policy.DAILY_GOAL_XP} CHECK (daily_goal BETWEEN "
+                       f"{policy.DAILY_GOAL_MIN_XP} AND {policy.DAILY_GOAL_MAX_XP})"),
+        "timezone": f"text NOT NULL DEFAULT 'UTC' CHECK (char_length(timezone) BETWEEN 1 AND {policy.XP_TIMEZONE_MAX})",
+        "streak_days": "integer NOT NULL DEFAULT 0 CHECK (streak_days >= 0)",
+        "streak_freezes": f"integer NOT NULL DEFAULT 0 CHECK (streak_freezes BETWEEN 0 AND {policy.STREAK_FREEZE_MAX})",
+        "last_goal_day": "date",
+        "display_name": (f"text CHECK (display_name IS NULL OR char_length(display_name) BETWEEN 1 AND "
+                         f"{policy.DISPLAY_NAME_MAX})"),
+        "leaderboard_opt_out": "boolean NOT NULL DEFAULT false",
+        "updated_at": "timestamptz NOT NULL DEFAULT now()",
+    }
+
+
+def test_031_indexes_a_readers_days():
+    assert "CREATE INDEX IF NOT EXISTS idx_xp_events_user_day ON public.xp_events (user_id, local_day)" in migration_031()
+
+
+def test_031_readers_only_read_their_own_rows_and_the_ledger_is_append_only():
+    sql = migration_031()
+    for table in ("xp_events", "user_progress"):
+        assert f"ALTER TABLE public.{table} ENABLE ROW LEVEL SECURITY" in sql
+        policies = re.findall(rf"CREATE POLICY \"[^\"]+\" ON public\.{table} FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+        assert policies == ["SELECT"]  # only the server writes XP and streaks (G2)
+    assert sql.count("CREATE POLICY") == 2 and "SECURITY DEFINER" not in sql
+    assert "CREATE OR REPLACE FUNCTION public.xp_events_append_only() RETURNS trigger" in sql
+    assert "RAISE EXCEPTION 'xp_events is append-only'" in sql
+    assert ("CREATE OR REPLACE TRIGGER xp_events_no_update BEFORE UPDATE ON public.xp_events "
+            "FOR EACH ROW EXECUTE FUNCTION public.xp_events_append_only()") in sql
+
+
+def test_031_touches_only_its_tables():
+    sql = migration_031()
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == [
+        "user_progress", "xp_events"]
+    assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.", sql)

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 859,
-    "inventoried": 716,
+    "tracked": 866,
+    "inventoried": 723,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16102,
+      "size_bytes": 16120,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 418,
-      "size_bytes": 18818,
+      "lines": 428,
+      "size_bytes": 19538,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -417,10 +417,10 @@
     {
       "path": "backend/focus/quiz.py",
       "language": "python",
-      "lines": 178,
-      "size_bytes": 11180,
+      "lines": 186,
+      "size_bytes": 11567,
       "role": "lib",
-      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it."
+      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade."
     },
     {
       "path": "backend/focus/quiz_me.py",
@@ -1121,8 +1121,8 @@
     {
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
-      "lines": 313,
-      "size_bytes": 16576,
+      "lines": 349,
+      "size_bytes": 18286,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only."
     },
@@ -1537,8 +1537,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 833,
-      "size_bytes": 38816,
+      "lines": 896,
+      "size_bytes": 42224,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -1807,6 +1807,54 @@
       "purpose": "Pytest for converted uploads (C19.2c): .md, .ipynb and a Markdown .zip stored as a sound EPUB (file_type/file_format epub, source_format set, sha256 of the EPUB, image counts), remote/missing images in the response notes, the typed title and author in the OPF, device mode refused, unconvertible files refused with a reason, other types still refused, upload kept when migration 021 is missing, zip rules and the unpacked-size cap."
     },
     {
+      "path": "backend/tests/test_xp_award.py",
+      "language": "python",
+      "lines": 240,
+      "size_bytes": 10166,
+      "role": "test",
+      "purpose": "Pytest on an in-memory database with the ledger's unique key: one XP row per session however often awarded, a duplicate refused by the key, no XP for unscored or 0-point sessions, the reader's local day and goal, streaks over days, a lost streak-write race redone (C24.1)."
+    },
+    {
+      "path": "backend/tests/test_xp_policy.py",
+      "language": "python",
+      "lines": 28,
+      "size_bytes": 1096,
+      "role": "test",
+      "purpose": "Pytest: the daily-goal and streak defaults in policy.py equal docs/GAMIFICATION.md; the XP sources (C24.1)."
+    },
+    {
+      "path": "backend/tests/test_xp_streaks.py",
+      "language": "python",
+      "lines": 123,
+      "size_bytes": 6593,
+      "role": "test",
+      "purpose": "Pytest, table-driven: local days across zones, midnight and daylight saving; goal met; on_goal_day (freezes earned, used, capped at 2, quiet reset); the streak view today and its agreement with the next goal day (C24.1)."
+    },
+    {
+      "path": "backend/xp/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 110,
+      "role": "lib",
+      "purpose": "XP package (C24): the XP ledger, each reader's progress, the daily goal, streaks and awards."
+    },
+    {
+      "path": "backend/xp/award.py",
+      "language": "python",
+      "lines": 108,
+      "size_bytes": 5306,
+      "role": "lib",
+      "purpose": "XP awards (C24.1, GAMIFICATION G2, G4-G8): award_focus_xp writes one xp_events row per scored focus session (idempotent by unique key), on the reader's local day of the session's end, then user_progress's total and, on the first award meeting the day's goal, the streak (a write conditional on the last goal day read)."
+    },
+    {
+      "path": "backend/xp/streaks.py",
+      "language": "python",
+      "lines": 82,
+      "size_bytes": 3478,
+      "role": "lib",
+      "purpose": "Pure day, goal and streak logic (C24.1, GAMIFICATION G5-G9): the reader's local day in their IANA zone, goal met, on_goal_day (missed days use held freezes or restart the streak; a freeze earned every 7 counted days, at most 2) and view (the streak today without writing)."
+    },
+    {
       "path": "design/HANDOFF_PHASE2_SUMMARY.md",
       "language": "markdown",
       "lines": 316,
@@ -1929,8 +1977,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4559,
-      "size_bytes": 203909,
+      "lines": 4594,
+      "size_bytes": 205607,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1977,8 +2025,8 @@
     {
       "path": "docs/GAMIFICATION.md",
       "language": "markdown",
-      "lines": 100,
-      "size_bytes": 4744,
+      "lines": 117,
+      "size_bytes": 5755,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): XP from focus points, daily goal, streaks with earned freezes, the badge catalogue, weekly book-themed leagues, opt-out and no dark patterns."
     },
@@ -1993,8 +2041,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5482,
-      "size_bytes": 967831,
+      "lines": 5483,
+      "size_bytes": 972188,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5041,8 +5089,8 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 60,
-      "size_bytes": 2076,
+      "lines": 65,
+      "size_bytes": 2293,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
@@ -5599,6 +5647,14 @@
       "purpose": "Adds focus_sessions.ignored_events (integer, default 0): events the focus API ignored (C23.4)."
     },
     {
+      "path": "supabase/migrations/031_xp.sql",
+      "language": "sql",
+      "lines": 68,
+      "size_bytes": 3630,
+      "role": "migration",
+      "purpose": "Creates xp_events (append-only XP ledger, unique (source, source_id), local_day) and user_progress (total XP, daily goal, time zone, stored streak and freezes, display name, leaderboard opt-out), both owner-read-only under RLS (C24.1)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -5673,8 +5729,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 718,
-      "size_bytes": 221327,
+      "lines": 725,
+      "size_bytes": 223225,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -5705,8 +5761,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 287,
-      "size_bytes": 12144,
+      "lines": 288,
+      "size_bytes": 12207,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

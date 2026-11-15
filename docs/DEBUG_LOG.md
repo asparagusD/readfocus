@@ -4557,3 +4557,38 @@ wait widened. If it recurs, the trace (`E2E_TRACE=1`) of that run is the next st
 
 ### Commit
 fix(frontend): let the focus e2e quiz tab finish opening before the first question
+
+## 2026-11-15 C24.1 — no time zone found, not even UTC, on Windows
+
+**Status:** fixed
+
+### Symptom
+First run of the new `backend/tests/test_xp_award.py` (C24.1, test first, code written): 41 failed, among them
+
+    zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key UTC'
+    ModuleNotFoundError: No module named 'tzdata'
+
+### Repro
+`.venv/Scripts/python -c "from zoneinfo import ZoneInfo; ZoneInfo('UTC')"` raises the same error.
+
+### Hypotheses
+1. `zoneinfo` reads the IANA database from the system (`TZPATH`) and falls back to the `tzdata` package; Windows
+   has no system database and `.venv` has no `tzdata`. Evidence: the error names `tzdata`. Ruled out if: the call
+   still fails with `tzdata` installed. Result: confirmed (installed, the call works).
+2. A bad zone name from the tests. Evidence against: it fails on "UTC", the fallback itself.
+
+### Root cause
+`backend/xp/streaks.py` uses `zoneinfo` for the readers' time zones (G6), and nothing in `requirements.txt`
+provided the database where the system does not (Windows; slim images are not guaranteed to either).
+
+### Fix
+`tzdata==2026.5` pinned in `requirements.txt` (pure data, Apache-2.0, ~350 KB wheel). psutil RSS after
+`import backend.main`, then loading five zones: 134.0 MiB before and after (+36 KiB). `streaks.zone()` still
+falls back to UTC for an unknown name; it relies on the database for UTC itself.
+
+### Regression test
+`test_xp_streaks.py::test_local_day` (16 rows: UTC, +6, -8, +14, -11, +5:45, London across both daylight-saving
+changes, an unknown zone, empty and missing) fails without `tzdata` and passes with it.
+
+### Commit
+feat(xp): XP ledger, daily goal and streaks with earned freezes

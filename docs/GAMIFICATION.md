@@ -91,6 +91,23 @@ the pass mark (FOCUS_RULES F12).
   time they choose, worded neutrally ("Your book is where you left
   it."). No streak warnings, no league taunts, no badges teased.
 
+## As built
+
+- **C24.1 XP, goal and streaks.** `xp_events` (migration 031) is the
+  ledger: one row per source event, unique `(source, source_id)`, so a
+  retried award writes nothing (G2). Sources `focus`, `badge` and
+  `adjustment`; only `focus` writes in C24.1 (G4). Each row keeps
+  `earned_at` (the focus session's end) and `local_day`, that moment's day
+  in the reader's time zone at award time (G6; an unknown zone counts as
+  UTC). `user_progress` holds the total, the goal, the zone and the stored
+  streak (days, freezes held, last goal day), which moves only when a day's
+  XP first reaches the goal (`backend/xp/streaks.py on_goal_day`). On any
+  other day `view()` works out the missed days since without writing:
+  today is never missed, freezes cover the rest or the streak shows 0,
+  quietly. A frozen day is not counted, so the next freeze takes 7 more
+  counted days (G8). A session graded late for a day before the last goal
+  day adds XP but does not move the streak. Code: `backend/xp/`.
+
 ## Open questions
 
 1. G8: is "one freeze per 7 counted days" the right way to earn them?

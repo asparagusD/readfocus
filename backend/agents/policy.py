@@ -416,3 +416,13 @@ FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" or "s3:4"
 # Stored on each session at its start and again when it is scored, so the row names the rules that scored it.
 # A date, with ".n" for a later revision the same day. 2026-11-15.2: the quiz bonus is capped at the time points.
 FOCUS_RULES_VERSION = "2026-11-15.2"
+
+# --- XP, the daily goal and streaks (C24.1, docs/GAMIFICATION.md G4-G9) ---
+XP_SOURCES = ("focus", "badge", "adjustment")  # xp_events.source (031 checks the same values); only focus earns in C24
+DAILY_GOAL_XP = 50  # G5: the default daily goal, in XP (five active minutes)
+DAILY_GOAL_MIN_XP = 10  # G5: the reader may set it within these bounds
+DAILY_GOAL_MAX_XP = 500
+STREAK_FREEZE_MAX = 2  # G8: freezes held at most
+STREAK_FREEZE_EVERY_DAYS = 7  # G8: one earned at every 7 consecutive counted days, while fewer than the max held
+XP_TIMEZONE_MAX = 64  # user_progress.timezone: an IANA name such as "America/Argentina/ComodRivadavia"
+DISPLAY_NAME_MAX = 40  # user_progress.display_name, shown on leaderboards (G3)

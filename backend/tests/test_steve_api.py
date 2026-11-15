@@ -313,3 +313,32 @@ def test_another_readers_thread_is_not_found(env):
     assert response.status_code == 404 and "private" not in response.text
     assert ask(env, thread_id="t-other").status_code == 404
     assert env.client.get("/steve/threads", params={"book_id": "theirs"}).json() == {"threads": []}
+
+
+# --- badges (C24.2): an answered ask asks for "First Ask Steve"; a failed one does not -----------------------------
+
+@pytest.fixture
+def badge_calls(monkeypatch):
+    from backend.xp import badge_award
+    calls = []
+    monkeypatch.setattr(badge_award, "evaluate_badges", lambda *args, **kwargs: calls.append((args, kwargs)) or [])
+    return calls
+
+
+def test_an_answer_asks_for_the_steve_badge(env, badge_calls):
+    assert events(ask(env))[-1][0] == "done"
+    assert badge_calls == [((USER, "steve"), {})]
+
+
+def test_a_badge_failure_never_fails_the_answer(env, monkeypatch, caplog):
+    from backend.xp import badge_award
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("user_badges is down")
+    monkeypatch.setattr(badge_award, "evaluate_badges", broken)
+    assert events(ask(env))[-1][0] == "done" and "Badge check failed" in caplog.text
+
+
+def test_an_answer_that_failed_mid_stream_asks_for_no_badge(env, badge_calls):
+    env.gemini.fail_after = 1
+    assert events(ask(env))[-1][0] == "error" and badge_calls == []

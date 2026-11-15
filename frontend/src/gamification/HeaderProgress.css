@@ -1,0 +1,164 @@
+/* The header's quiet progress (C24.6a): candle, goal ring, level bar; one 44 px link. */
+.rf-hp {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-control);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  text-decoration: none;
+  transition: color var(--dur-1) var(--ease-settle), background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-hp:hover {
+  color: var(--ink);
+  background-color: var(--paper-2);
+  text-decoration: none;
+}
+
+.rf-hp__streak,
+.rf-hp__level {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.rf-hp__days {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.rf-hp__wax {
+  fill: var(--surface);
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+}
+
+.rf-hp__wick {
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.rf-hp__flame {
+  fill: var(--accent);
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.rf-hp__flame path {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: rf-hp-flicker calc(var(--dur-6) * 3) var(--ease-breathe) infinite alternate;
+}
+
+@keyframes rf-hp-flicker {
+  from { transform: scale(1, 1); opacity: 1; }
+  to { transform: scale(0.94, 1.05); opacity: 0.88; }
+}
+
+/* Streak freezes: wax drops; a held one is filled, an empty slot a faint outline. */
+.rf-hp__drop {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1;
+}
+
+.rf-hp__drop.is-held {
+  fill: var(--accent-text);
+  stroke: var(--accent-text);
+}
+
+.rf-hp__goal {
+  position: relative;
+  display: inline-flex;
+}
+
+.rf-hp__goal svg {
+  transform: rotate(-90deg);
+}
+
+.rf-hp__track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 3;
+}
+
+.rf-hp__arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.rf-hp__goal.is-met .rf-hp__track {
+  fill: var(--accent-soft);
+}
+
+.rf-hp__halo {
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 2px var(--accent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rf-hp__level-name {
+  white-space: nowrap;
+}
+
+.rf-hp__bar {
+  display: block;
+  width: 72px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background-color: var(--line);
+}
+
+.rf-hp__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--accent);
+  transform-origin: left center;
+}
+
+.rf-hp__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Phones: the candle and its count only (C24.6c: three nav links need the room); the link's name keeps the rest. */
+@media (max-width: 639px) {
+  .rf-hp {
+    justify-content: center;
+    min-width: 44px;
+    padding: 0 var(--space-1);
+  }
+
+  .rf-hp__goal,
+  .rf-hp__level {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-hp__flame path {
+    animation: none;
+  }
+
+  .rf-hp {
+    transition: none;
+  }
+}

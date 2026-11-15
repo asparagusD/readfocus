@@ -416,3 +416,26 @@ FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" or "s3:4"
 # Stored on each session at its start and again when it is scored, so the row names the rules that scored it.
 # A date, with ".n" for a later revision the same day. 2026-11-15.2: the quiz bonus is capped at the time points.
 FOCUS_RULES_VERSION = "2026-11-15.2"
+
+# --- XP, the daily goal and streaks (C24.1, docs/GAMIFICATION.md G4-G9) ---
+XP_SOURCES = ("focus", "badge", "adjustment")  # xp_events.source (031 checks the same values); only focus earns in C24
+DAILY_GOAL_XP = 50  # G5: the default daily goal, in XP (five active minutes)
+DAILY_GOAL_MIN_XP = 10  # G5: the reader may set it within these bounds
+DAILY_GOAL_MAX_XP = 500
+STREAK_FREEZE_MAX = 2  # G8: freezes held at most
+STREAK_FREEZE_EVERY_DAYS = 7  # G8: one earned at every 7 consecutive counted days, while fewer than the max held
+XP_TIMEZONE_MAX = 64  # user_progress.timezone: an IANA name such as "America/Argentina/ComodRivadavia"
+DISPLAY_NAME_MAX = 40  # user_progress.display_name, shown on leaderboards (G3)
+TECH_BOOK_SHARE = 0.20  # Badges: a book is technical when this share of its page regions is math or code
+
+# --- weekly leagues (C24.3, docs/GAMIFICATION.md G10-G14) ---
+LEAGUE_TIERS = ("Pamphlet", "Paperback", "Hardcover", "Folio", "First Edition", "Illuminated")  # G10, lowest first
+LEAGUE_OUTCOMES = ("promoted", "stayed", "demoted")  # league_members.outcome (033 checks the same values)
+LEAGUE_GROUP_SIZE = 30  # G12: groups of about this many readers of one tier
+LEAGUE_PROMOTE = 7  # G13: the top this many of a full group move up (scaled by n / 30 in a smaller one)
+LEAGUE_DEMOTE = 5  # G13: the bottom this many move down (scaled likewise)
+LEAGUE_DEMOTE_MIN_GROUP = 10  # G13 (C24.3): a group smaller than this demotes nobody
+LEAGUE_ACTIVE_DAYS = 14  # G12 (C24.3): readers with XP in this many days before a week are grouped for it
+CRON_SECRET_MIN_LENGTH = 32  # C24.4: /internal endpoints refuse to run (503) under a shorter CRON_SECRET
+DAILY_GOAL_SET_MIN_XP = 20  # C24.5: the goal a reader may set in settings (the database allows 10-500, G5)
+DAILY_GOAL_SET_MAX_XP = 200

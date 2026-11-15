@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 859,
-    "inventoried": 716,
+    "tracked": 906,
+    "inventoried": 763,
     "excluded": 143
   },
   "files": [
@@ -79,6 +79,14 @@
       "purpose": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit."
     },
     {
+      "path": ".github/workflows/league-rollover.yml",
+      "language": "yaml",
+      "lines": 48,
+      "size_bytes": 1766,
+      "role": "config",
+      "purpose": "Weekly league rollover (C24.4): Mondays 00:05 UTC and by hand, curl POST /internal/leagues/rollover with the CRON_SECRET bearer token from repository secrets, retrying through Render's cold start; no checkout, no permissions."
+    },
+    {
       "path": ".gitignore",
       "language": "gitignore",
       "lines": 32,
@@ -90,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16102,
+      "size_bytes": 16472,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -113,8 +121,8 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 207,
-      "size_bytes": 9348,
+      "lines": 213,
+      "size_bytes": 9525,
       "role": "doc",
       "purpose": "Product overview for 2.0 (C15.4): the honest positioning (policy-driven LangGraph agents, on-device embeddings, rule-based knowledge tracing, no generative AI, $0 API cost), live URL, how it works in seven steps, the architecture in brief with links to docs/ARCHITECTURE.md and the repo graph, local setup, the standard and live checks, and limitations."
     },
@@ -249,8 +257,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 418,
-      "size_bytes": 18818,
+      "lines": 441,
+      "size_bytes": 20623,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -417,10 +425,10 @@
     {
       "path": "backend/focus/quiz.py",
       "language": "python",
-      "lines": 178,
-      "size_bytes": 11180,
+      "lines": 187,
+      "size_bytes": 11684,
       "role": "lib",
-      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it."
+      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly)."
     },
     {
       "path": "backend/focus/quiz_me.py",
@@ -457,10 +465,10 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 77,
-      "size_bytes": 2755,
+      "lines": 81,
+      "size_bytes": 2973,
       "role": "entry",
-      "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP)."
+      "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP). C24.4: the internal router under /internal (scheduled jobs). C24.5: the progress router (/me/progress, /badges, /leagues/current)."
     },
     {
       "path": "backend/mcp_server.py",
@@ -631,6 +639,14 @@
       "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet."
     },
     {
+      "path": "backend/routers/internal.py",
+      "language": "python",
+      "lines": 36,
+      "size_bytes": 1703,
+      "role": "router",
+      "purpose": "Internal endpoints for scheduled jobs (C24.4): POST /internal/leagues/rollover, Authorization: Bearer CRON_SECRET compared in constant time (503 when unset or under 32 characters, 401 otherwise, no reader sign-in), runs league_store.roll_over in a thread and returns counts only; never logs the secret."
+    },
+    {
       "path": "backend/routers/lookup.py",
       "language": "python",
       "lines": 28,
@@ -649,10 +665,10 @@
     {
       "path": "backend/routers/notes.py",
       "language": "python",
-      "lines": 234,
-      "size_bytes": 11180,
+      "lines": 237,
+      "size_bytes": 11316,
       "role": "router",
-      "purpose": "Note blocks (C22.1): GET /books/{id}/notes (live blocks in reading order, from/to overlap, signed file URLs), POST (anchors and positions checked, content allow-listed, version 1), PATCH /notes/{id} with If-Match (409 when stale, 428 without), soft DELETE, POST /books/{id}/note-files (WebP/PNG into the private notes bucket); owner only, 404 otherwise."
+      "purpose": "Note blocks (C22.1): GET /books/{id}/notes (live blocks in reading order, from/to overlap, signed file URLs), POST (anchors and positions checked, content allow-listed, version 1), PATCH /notes/{id} with If-Match (409 when stale, 428 without), soft DELETE, POST /books/{id}/note-files (WebP/PNG into the private notes bucket); owner only, 404 otherwise. C24.2: a created note checks the note badges."
     },
     {
       "path": "backend/routers/ocr.py",
@@ -663,12 +679,20 @@
       "purpose": "OCR endpoints (C19.4): POST /books/{id}/ocr stores one scanned page's tesseract.js words (owner only, flagged pages only, cleaned by ocr_pages) and, when that completes a fully scanned book with no chunks, requeues and runs ingestion from the OCR text; GET /books/{id}/ocr gives scanned_pages, done, and with first..last (at most 20) each page's words for the text layer."
     },
     {
+      "path": "backend/routers/progress.py",
+      "language": "python",
+      "lines": 182,
+      "size_bytes": 9615,
+      "role": "router",
+      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to)."
+    },
+    {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 408,
-      "size_bytes": 21293,
+      "lines": 413,
+      "size_bytes": 21652,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted. C23.7: start also returns the planner's mode for the reader's 'Suggested next' note."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted. C23.7: start also returns the planner's mode for the reader's 'Suggested next' note. C24.2: a saved place with an anchor checks 'Finished a book' after the response."
     },
     {
       "path": "backend/routers/steve.py",
@@ -681,10 +705,10 @@
     {
       "path": "backend/routers/steve_ask.py",
       "language": "python",
-      "lines": 273,
-      "size_bytes": 14059,
+      "lines": 276,
+      "size_bytes": 14245,
       "role": "router",
-      "purpose": "POST /steve/ask (C20.6): consent, off switch, open test, image (PNG, 500 KB), thread and book checked first with typed errors; then context, prompt and service.ask streamed as Server-Sent Events (start, token, done with checked citations and usage, or error); GET /steve/threads?book_id and GET /steve/threads/{id}, the reader's own only. C20.8: POST /steve/latex, a PDF equation as LaTeX, cached per file, page and box in equation_latex (one Gemini call per equation ever)."
+      "purpose": "POST /steve/ask (C20.6): consent, off switch, open test, image (PNG, 500 KB), thread and book checked first with typed errors; then context, prompt and service.ask streamed as Server-Sent Events (start, token, done with checked citations and usage, or error); GET /steve/threads?book_id and GET /steve/threads/{id}, the reader's own only. C20.8: POST /steve/latex, a PDF equation as LaTeX, cached per file, page and box in equation_latex (one Gemini call per equation ever). C24.2: after the done event, checks the First Ask Steve badge."
     },
     {
       "path": "backend/services/__init__.py",
@@ -1121,8 +1145,8 @@
     {
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
-      "lines": 313,
-      "size_bytes": 16576,
+      "lines": 363,
+      "size_bytes": 19119,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only."
     },
@@ -1145,8 +1169,8 @@
     {
       "path": "backend/tests/test_api_position.py",
       "language": "python",
-      "lines": 152,
-      "size_bytes": 7407,
+      "lines": 185,
+      "size_bytes": 8799,
       "role": "test",
       "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start. C17.5: PDF and EPUB anchors stored as sent and returned, a backfilled place keeps its C12 keys beside its anchor, malformed anchors 422, and start names the book's file format."
     },
@@ -1253,6 +1277,22 @@
       "size_bytes": 4637,
       "role": "test",
       "purpose": "Pytest for scripts/backfill_structure.py on the in-memory database: pending books (ready, no toc) in id order, blocks and toc stored and the book then done, dry run writes nothing, blocks from the stored text when the file now extracts differently, a PDF needs no file, a failing book does not stop the run, the dev-only guard."
+    },
+    {
+      "path": "backend/tests/test_badge_award.py",
+      "language": "python",
+      "lines": 270,
+      "size_bytes": 13019,
+      "role": "test",
+      "purpose": "Pytest on an in-memory database with user_badges' and xp_events' keys: each badge once with one XP row, a race refused by the key, facts from the reader's own rows for every trigger, badge XP outside the day's goal (C24.2)."
+    },
+    {
+      "path": "backend/tests/test_badges.py",
+      "language": "python",
+      "lines": 138,
+      "size_bytes": 6683,
+      "role": "test",
+      "purpose": "Pytest: the 14-badge catalogue, each rule at its edge, earned() per trigger, chapter 1's last chunk, a place at a book's end, the technical share (C24.2)."
     },
     {
       "path": "backend/tests/test_bench.py",
@@ -1447,6 +1487,14 @@
       "purpose": "Pytest for the focus scoring engine: 25 table-driven scenarios (hidden tab, idle prompts, page stalls, the 3-hour cap, 39% vs 40% quizzes, forged ends, heartbeat spam and resends, client clock skew, pause, a reopened tab, events after the end) plus order, clock, breakdown and input-shape checks."
     },
     {
+      "path": "backend/tests/test_gamification_journey.py",
+      "language": "python",
+      "lines": 195,
+      "size_bytes": 9705,
+      "role": "test",
+      "purpose": "Pytest journey (C24.7): readers A, B and C on one in-memory database with the real keys and a fake clock, through the grade hooks, the progress, badge and league APIs and POST /internal/leagues/rollover: XP once per session, the goal moving the streak, a freeze over a missed day, each badge once, B's opt-out off A's board, A promoted at the rollover; the answers must equal frontend/e2e/fixtures/gamification-journey.json (UPDATE_JOURNEY=1 rewrites it)."
+    },
+    {
       "path": "backend/tests/test_garble.py",
       "language": "python",
       "lines": 102,
@@ -1519,6 +1567,30 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_internal_api.py",
+      "language": "python",
+      "lines": 137,
+      "size_bytes": 5799,
+      "role": "test",
+      "purpose": "Pytest: the rollover endpoint's guard (unset, short, missing, wrong, other scheme, a reader token), constant-time compare, nothing logged, counts returned, a second call changing nothing, a failure without details; and league-rollover.yml (Monday 00:05 UTC, manual runs, repository secrets, no checkout, retries through a cold start) (C24.4)."
+    },
+    {
+      "path": "backend/tests/test_league_store.py",
+      "language": "python",
+      "lines": 260,
+      "size_bytes": 11355,
+      "role": "test",
+      "purpose": "Pytest on an in-memory database with the league keys: the first grouping from 14 days of XP, nothing new on reruns or a week another run grouped, 35 readers in two groups, closing with ranks, outcomes and moved tiers, week bounds, ties to the earlier achiever, closing twice, missed weeks, a returning reader's tier, an unfinished week left open (C24.3b)."
+    },
+    {
+      "path": "backend/tests/test_leagues.py",
+      "language": "python",
+      "lines": 172,
+      "size_bytes": 7926,
+      "role": "test",
+      "purpose": "Pytest, table-driven: week start, group sizes, grouping by tier and join order, zones by group size, standings and ties, outcomes at the tier edges, next tier, opted-out readers hidden from others (C24.3)."
+    },
+    {
       "path": "backend/tests/test_lookup.py",
       "language": "python",
       "lines": 318,
@@ -1537,8 +1609,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 833,
-      "size_bytes": 38816,
+      "lines": 978,
+      "size_bytes": 46498,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -1569,8 +1641,8 @@
     {
       "path": "backend/tests/test_notes_api.py",
       "language": "python",
-      "lines": 207,
-      "size_bytes": 10822,
+      "lines": 232,
+      "size_bytes": 11752,
       "role": "test",
       "purpose": "Pytest for the note blocks API: selection, view and EPUB notes stored at version 1 with an ETag; bad kinds, scopes, anchors, positions, content and links refused; reading order and range listing; If-Match versions (428, 409, 412) and bumps; re-anchor, orphan and thumbnail; soft delete; another reader sees nothing; files in the reader's folder, signed in lists, bad files refused."
     },
@@ -1621,6 +1693,14 @@
       "size_bytes": 4420,
       "role": "test",
       "purpose": "Pytest on the in-memory database: one queued job per book, the claimable rule at each boundary, a racing second claim gets nothing, advance records cursor and progress, finish and fail, which jobs the sweep sees as stale, and the stale window from INGEST_STALE_MINUTES."
+    },
+    {
+      "path": "backend/tests/test_progress_api.py",
+      "language": "python",
+      "lines": 324,
+      "size_bytes": 16752,
+      "role": "test",
+      "purpose": "Pytest on the in-memory database: progress defaults (nothing written), today's XP in the reader's zone, streak and frozen days, carried tier; settings saved, partial, cleared, 26 refused bodies, ordinary names passing; the badge catalogue with mine only; league ranks, zones, pseudonyms (shown, per week), opted-out hiding both ways, no group, a due rollover on read, none when not due; sign-in required; no emails, user ids or sign-in names in any response (C24.5). C24.6c: last_week set, and null before a week closes."
     },
     {
       "path": "backend/tests/test_prose.py",
@@ -1713,8 +1793,8 @@
     {
       "path": "backend/tests/test_steve_api.py",
       "language": "python",
-      "lines": 315,
-      "size_bytes": 15573,
+      "lines": 344,
+      "size_bytes": 16615,
       "role": "test",
       "purpose": "Pytest for /steve/ask and /steve/threads with a faked provider and retriever: SSE shape and final citations and usage, messages kept, follow-ups, highlights, code regions, images to the vision model, LaTeX mode, consent and off switch, open tests, typed pauses, mid-stream errors, image limits, ownership, own keys never stored, thread lists and reads."
     },
@@ -1805,6 +1885,94 @@
       "size_bytes": 5094,
       "role": "test",
       "purpose": "Pytest for converted uploads (C19.2c): .md, .ipynb and a Markdown .zip stored as a sound EPUB (file_type/file_format epub, source_format set, sha256 of the EPUB, image counts), remote/missing images in the response notes, the typed title and author in the OPF, device mode refused, unconvertible files refused with a reason, other types still refused, upload kept when migration 021 is missing, zip rules and the unpacked-size cap."
+    },
+    {
+      "path": "backend/tests/test_xp_award.py",
+      "language": "python",
+      "lines": 240,
+      "size_bytes": 10166,
+      "role": "test",
+      "purpose": "Pytest on an in-memory database with the ledger's unique key: one XP row per session however often awarded, a duplicate refused by the key, no XP for unscored or 0-point sessions, the reader's local day and goal, streaks over days, a lost streak-write race redone (C24.1)."
+    },
+    {
+      "path": "backend/tests/test_xp_policy.py",
+      "language": "python",
+      "lines": 38,
+      "size_bytes": 1558,
+      "role": "test",
+      "purpose": "Pytest: the daily-goal and streak defaults in policy.py equal docs/GAMIFICATION.md; the XP sources (C24.1)."
+    },
+    {
+      "path": "backend/tests/test_xp_streaks.py",
+      "language": "python",
+      "lines": 123,
+      "size_bytes": 6593,
+      "role": "test",
+      "purpose": "Pytest, table-driven: local days across zones, midnight and daylight saving; goal met; on_goal_day (freezes earned, used, capped at 2, quiet reset); the streak view today and its agreement with the next goal day (C24.1)."
+    },
+    {
+      "path": "backend/xp/__init__.py",
+      "language": "python",
+      "lines": 1,
+      "size_bytes": 110,
+      "role": "lib",
+      "purpose": "XP package (C24): the XP ledger, each reader's progress, the daily goal, streaks and awards."
+    },
+    {
+      "path": "backend/xp/award.py",
+      "language": "python",
+      "lines": 128,
+      "size_bytes": 6315,
+      "role": "lib",
+      "purpose": "XP awards (C24.1, GAMIFICATION G2, G4-G8): award_focus_xp writes one xp_events row per scored focus session (idempotent by unique key), on the reader's local day of the session's end, then user_progress's total and, on the first award meeting the day's goal, the streak (a write conditional on the last goal day read). C24.2: credit_badge writes a badge's one-time XP row ('<user>:<badge>') and the total; a day's goal counts focus XP only."
+    },
+    {
+      "path": "backend/xp/badge_award.py",
+      "language": "python",
+      "lines": 139,
+      "size_bytes": 6702,
+      "role": "lib",
+      "purpose": "Badge awarding (C24.2): evaluate_badges(user, trigger) gathers the facts the trigger's unheld badges need from the reader's rows (focus sessions, progress, quiz chunk range, contents, regions, notes, Steve answers, places), inserts each earned badge once (primary key) and credits its XP; check_quietly logs failures for callers."
+    },
+    {
+      "path": "backend/xp/badges.py",
+      "language": "python",
+      "lines": 113,
+      "size_bytes": 5570,
+      "role": "lib",
+      "purpose": "Pure badge catalogue (C24.2, GAMIFICATION Badges): 14 badges with id, name, description, rule over Facts, XP reward, triggers and shelf kind; earned(), the first chapter's last chunk from the contents and body start, a place at a book's end, the technical-book share."
+    },
+    {
+      "path": "backend/xp/league_store.py",
+      "language": "python",
+      "lines": 159,
+      "size_bytes": 8195,
+      "role": "lib",
+      "purpose": "Weekly league rollover against the database (C24.3b): roll_over(now) closes every ended open week (weekly XP and when reached from the ledger, ranks and outcomes per group, then closed), ensures the current week (unique start) and forms its groups once (claimed by grouped_at) from readers with XP in the 14 days before, at their carried tier in first-XP order; idempotent, safe late or repeated; pages through PostgREST's 1000-row limit. C24.4: _now() is the clock roll_over uses when given none. C24.5: standings() (shared with the live board), tiers() public, due() for the rollover a league read runs first."
+    },
+    {
+      "path": "backend/xp/leagues.py",
+      "language": "python",
+      "lines": 127,
+      "size_bytes": 4530,
+      "role": "lib",
+      "purpose": "Pure weekly leagues (C24.3, GAMIFICATION G10-G14): the Monday-UTC week, even groups of about 30 per tier in join order, zones scaled by group size (no demotion under 10, promotion needs XP), standings with ties to the earlier achiever, outcomes at the tier edges, the next tier, and boards that hide opted-out readers from others."
+    },
+    {
+      "path": "backend/xp/names.py",
+      "language": "python",
+      "lines": 56,
+      "size_bytes": 2856,
+      "role": "lib",
+      "purpose": "Display-name check (C24.5): 1-40 characters after trimming, no control characters, links or emails, no reserved staff/ReadFocus/Steve names, and a local profanity check per word that undoes digit, 'ph' and spelled-out disguises (ROT13-encoded lists; 'Scunthorpe' and 'Assassin' pass)."
+    },
+    {
+      "path": "backend/xp/streaks.py",
+      "language": "python",
+      "lines": 82,
+      "size_bytes": 3478,
+      "role": "lib",
+      "purpose": "Pure day, goal and streak logic (C24.1, GAMIFICATION G5-G9): the reader's local day in their IANA zone, goal met, on_goal_day (missed days use held freezes or restart the streak; a freeze earned every 7 counted days, at most 2) and view (the streak today without writing)."
     },
     {
       "path": "design/HANDOFF_PHASE2_SUMMARY.md",
@@ -1929,8 +2097,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4559,
-      "size_bytes": 203909,
+      "lines": 4637,
+      "size_bytes": 208211,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1945,8 +2113,8 @@
     {
       "path": "docs/DEPLOYMENT.md",
       "language": "markdown",
-      "lines": 218,
-      "size_bytes": 12952,
+      "lines": 228,
+      "size_bytes": 13699,
       "role": "doc",
       "purpose": "Deployment guide (C14.6): where each part runs (Vercel Hobby, Render Free readfocus-api, the shared Supabase Free project), env var names per provider, free-tier limits with doc links, cold start, Supabase pause, manual backups, the release step, redeploy, rollback, verification commands and what was verified."
     },
@@ -1977,8 +2145,8 @@
     {
       "path": "docs/GAMIFICATION.md",
       "language": "markdown",
-      "lines": 100,
-      "size_bytes": 4744,
+      "lines": 176,
+      "size_bytes": 9952,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): XP from focus points, daily goal, streaks with earned freezes, the badge catalogue, weekly book-themed leagues, opt-out and no dark patterns."
     },
@@ -1993,8 +2161,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5211,
-      "size_bytes": 951329,
+      "lines": 5499,
+      "size_bytes": 1016920,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2087,6 +2255,14 @@
       "purpose": "E2E for the shared EPUB 3 builder (C19.1b): converted.epub opens in the original view's EPUB renderer with the API mocked; the contents are the builder's nav from the headings, both images load with the builder's width, height and alt ('Figure 2'), display MathML gets a box, and code keeps every space."
     },
     {
+      "path": "frontend/e2e/dashboard-badges.spec.js",
+      "language": "javascript",
+      "lines": 89,
+      "size_bytes": 5418,
+      "role": "config",
+      "purpose": "Playwright (C24.6b): the badge shelf's fourteen, earned and locked looks, the nudge, the once-only stamp, reduced motion, the error line, 375 px in both themes."
+    },
+    {
       "path": "frontend/e2e/dashboard.spec.js",
       "language": "javascript",
       "lines": 192,
@@ -2105,10 +2281,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 442,
-      "size_bytes": 27934,
+      "lines": 502,
+      "size_bytes": 32339,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -2159,6 +2335,14 @@
       "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): three chapters with every kind of image (img PNG/GIF/SVG, inline SVG image by xlink:href and href, CSS background, figure and caption, srcset, cover), MathML and a code block."
     },
     {
+      "path": "frontend/e2e/fixtures/gamification-journey.json",
+      "language": "json",
+      "lines": 568,
+      "size_bytes": 11409,
+      "role": "config",
+      "purpose": "The server's answers to A and B at each step of backend/tests/test_gamification_journey.py (C24.7), replayed by e2e/gamification.spec.js; generated, kept in step by that test."
+    },
+    {
       "path": "frontend/e2e/focus-end.spec.js",
       "language": "javascript",
       "lines": 216,
@@ -2181,6 +2365,22 @@
       "size_bytes": 11913,
       "role": "config",
       "purpose": "E2E of focus mode with Playwright's fake clock on the mocked API (C23.8): locked before Chapter 1, start on the spread at Chapter 1 (start anchor p. 3), heartbeats, a page turn, a hidden tab sending nothing, the bookmark and a 5-question quiz (taken in a fresh context on the real clock) with 80% showing time and bonus; a 31-minute stall beating with input and no turn, its extra minute listed; under 40% with no points; two tabs, the second read-only until the first's lease lapses. The numbers are the engine's, tested in test_focus_anticheat.py."
+    },
+    {
+      "path": "frontend/e2e/gamification-header.spec.js",
+      "language": "javascript",
+      "lines": 82,
+      "size_bytes": 4645,
+      "role": "config",
+      "purpose": "Playwright (C24.6a): the header progress's name, level, drops and bar, keyboard to the Dashboard, a new reader's encouragement, the once-a-day celebration, reduced motion, a failed read, 375 px in both themes. C24.6c: the ring is hidden at 375."
+    },
+    {
+      "path": "frontend/e2e/gamification.spec.js",
+      "language": "javascript",
+      "lines": 123,
+      "size_bytes": 7763,
+      "role": "config",
+      "purpose": "Playwright (C24.7): the server journey's answers replayed on Playwright's fake clock with two readers: XP added once over a reload, the goal and the streak, a freeze covering a missed day, two badges once on the shelf, B opting out in their own context and leaving A's board, the promotion on the League page."
     },
     {
       "path": "frontend/e2e/gate-g5.spec.js",
@@ -2213,6 +2413,22 @@
       "size_bytes": 12242,
       "role": "config",
       "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset. Demo: hover opens the real card below the word's line and pointer-leave closes it with no lookup sent; Quadi shows the Wikipedia summary and link; Enter focuses the card and Esc returns to the word; a touch long-press opens the compact card. Features: the three sections and the isn't note; the five questions open with Enter and close with Space; the footer links GitHub, credits CC BY-SA sources, switches the theme and Start reading opens Create account."
+    },
+    {
+      "path": "frontend/e2e/league-settings.spec.js",
+      "language": "javascript",
+      "lines": 81,
+      "size_bytes": 4405,
+      "role": "config",
+      "purpose": "Playwright (C24.6d): saved values shown and only changes sent, the opt-out shown at once, a refused name, the goal bounds, the form by keyboard, 375 px in both themes."
+    },
+    {
+      "path": "frontend/e2e/league.spec.js",
+      "language": "javascript",
+      "lines": 82,
+      "size_bytes": 4829,
+      "role": "config",
+      "purpose": "Playwright (C24.6c): the league page, no group, opted out, the error, keyboard to the page, 375 px in both themes with three links in the top bar."
     },
     {
       "path": "frontend/e2e/library.spec.js",
@@ -2305,10 +2521,10 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 372,
-      "size_bytes": 19468,
+      "lines": 373,
+      "size_bytes": 19609,
       "role": "config",
-      "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books."
+      "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books. C24.G: the read-on test reads each place with settled(), after the turn has landed."
     },
     {
       "path": "frontend/e2e/reading.spec.js",
@@ -2383,6 +2599,14 @@
       "purpose": "Shared e2e data, not a spec: QUESTIONS (one multiple choice, one written) and mockTest, which answers GET /sessions/t1, evaluate-single and submit-answers and records what was sent."
     },
     {
+      "path": "frontend/e2e/time-zone.spec.js",
+      "language": "javascript",
+      "lines": 64,
+      "size_bytes": 3418,
+      "role": "config",
+      "purpose": "Playwright (C24.G, GAMIFICATION G6): the device's zone adopted once while UTC is stored, never changed silently after, the settings' zone line and switch, a refused switch, nothing on a UTC device."
+    },
+    {
       "path": "frontend/e2e/warmup.spec.js",
       "language": "javascript",
       "lines": 83,
@@ -2417,8 +2641,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 75,
-      "size_bytes": 2389,
+      "lines": 76,
+      "size_bytes": 2458,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -2495,6 +2719,14 @@
       "purpose": "Live cross-user isolation check (C15.2, npm run test:isolation; writes to the shared project, approval only): test user A uploads sample.pdf and reads, finishes and submits a session through the API; test user B then probes every id-taking API endpoint and, with supabase-js and the anon key, selects, updates and deletes in every per-user table, inserts a book as A, calls both search RPCs and probes A's Storage folder; term_lookups is readable by signed-in users and writable by none; no token and a raw user id are 401. Rows of B's own are reported but only A's count; A's row counts are compared before and after; A deletes the book and the rows and PDF left are reported. Exit 1 on any probe not denied."
     },
     {
+      "path": "frontend/scripts/live/check-xp-isolation.mjs",
+      "language": "text",
+      "lines": 146,
+      "size_bytes": 9123,
+      "role": "config",
+      "purpose": "Live gamification isolation check (C24.7, npm run test:xp-isolation; writes to the shared project, approval only): the service key seeds test user A an adjustment XP row dated 2000-01-01, an uncatalogued badge and, if missing, a progress row; A reads each (control); B and a token-less anon client try to select, update, delete and forge rows in xp_events, user_badges, user_progress and the league tables; the run deletes what it seeded and reports rows left. Exit 1 on any probe not denied."
+    },
+    {
       "path": "frontend/scripts/make-og.mjs",
       "language": "text",
       "lines": 84,
@@ -2513,10 +2745,10 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 140,
-      "size_bytes": 6528,
+      "lines": 142,
+      "size_bytes": 6700,
       "role": "entry",
-      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4). C23.6b: /focus/:sessionId/quiz (FocusQuiz). C23.7b: /quiz/:sessionId (QuizMe)."
+      "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4). C23.6b: /focus/:sessionId/quiz (FocusQuiz). C23.7b: /quiz/:sessionId (QuizMe). C24.6c: /league (lazy, signed in)."
     },
     {
       "path": "frontend/src/anchors/anchors.test.js",
@@ -2737,18 +2969,18 @@
     {
       "path": "frontend/src/components/Layout.css",
       "language": "css",
-      "lines": 136,
-      "size_bytes": 2737,
+      "lines": 145,
+      "size_bytes": 2930,
       "role": "component",
-      "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the main column at 1120 px of content."
+      "purpose": "Top bar styles: sticky, 72 px (60 on phones), hairline below, 44 px targets, the 2 px accent rule under the current link, the skip link shown on focus; under 640 px the mark is its icon and the theme toggle moves into the account panel; the main column at 1120 px of content. C24.6c: tighter phone gaps for three links."
     },
     {
       "path": "frontend/src/components/Layout.jsx",
       "language": "jsx",
-      "lines": 44,
-      "size_bytes": 1646,
+      "lines": 49,
+      "size_bytes": 2096,
       "role": "component",
-      "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target."
+      "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target. C24.6a: the reader's progress (candle, goal ring, level) before the theme toggle, fetched only when signed in. C24.6c: a League link; under 640 px 8 px gaps so three links fit at 375. C24.G: the header adopts the device's time zone."
     },
     {
       "path": "frontend/src/components/RouteErrorBoundary.jsx",
@@ -3301,6 +3533,110 @@
       "size_bytes": 462,
       "role": "asset",
       "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery."
+    },
+    {
+      "path": "frontend/src/gamification/BadgeShelf.css",
+      "language": "css",
+      "lines": 144,
+      "size_bytes": 2932,
+      "role": "asset",
+      "purpose": "Styles for the badge shelf (C24.6b): the grid on a shelf edge, seal rims and bookplates, earned and locked looks, two columns on phones."
+    },
+    {
+      "path": "frontend/src/gamification/BadgeShelf.jsx",
+      "language": "jsx",
+      "lines": 104,
+      "size_bytes": 4632,
+      "role": "asset",
+      "purpose": "Badge shelf (C24.6b): GET /badges; habits as wax seals and books as 'Ex libris' bookplates, earned inked with their date, locked faint with how to earn them in full-contrast words; a newly earned badge stamps in once per device (none under reduced motion); loading and error states."
+    },
+    {
+      "path": "frontend/src/gamification/HeaderProgress.css",
+      "language": "css",
+      "lines": 164,
+      "size_bytes": 3078,
+      "role": "asset",
+      "purpose": "Styles for the header progress (C24.6a): candle, drops, ring, halo, level bar; phones show the candle and ring only; the flicker stops under reduced motion. C24.6c: phones show the candle and count only."
+    },
+    {
+      "path": "frontend/src/gamification/HeaderProgress.jsx",
+      "language": "jsx",
+      "lines": 78,
+      "size_bytes": 3769,
+      "role": "asset",
+      "purpose": "Header progress (C24.6a): one 44 px link to the Dashboard with the streak candle (flame grows with the streak, freezes as wax drops), today's goal ring and, from 640 px, 'Level n' with a slim XP bar; a once-a-day goal-met halo and polite status, still under reduced motion."
+    },
+    {
+      "path": "frontend/src/gamification/LeagueSettings.css",
+      "language": "css",
+      "lines": 66,
+      "size_bytes": 1318,
+      "role": "asset",
+      "purpose": "Styles for the league settings card (C24.6d): the form grid and the 44 px opt-out row. C24.G: the zone line."
+    },
+    {
+      "path": "frontend/src/gamification/LeagueSettings.jsx",
+      "language": "jsx",
+      "lines": 105,
+      "size_bytes": 4831,
+      "role": "asset",
+      "purpose": "League settings card (C24.6d): display name, daily goal (20-200) and leaderboard opt-out; one PUT /me/progress with only what changed; the server's reason for a refused name on the field; a toast and a league reload after saving. C24.G: the zone the days follow, and a switch to this device's."
+    },
+    {
+      "path": "frontend/src/gamification/leagueView.js",
+      "language": "javascript",
+      "lines": 81,
+      "size_bytes": 3719,
+      "role": "asset",
+      "purpose": "Pure league-page helpers (C24.6c): time left, ordinals, initials, tier chip states, standings with zone lines and gaps, last week's sentence. C24.6d: goal bounds and changes() (only what changed is sent)."
+    },
+    {
+      "path": "frontend/src/gamification/leagueView.test.js",
+      "language": "javascript",
+      "lines": 75,
+      "size_bytes": 4531,
+      "role": "asset",
+      "purpose": "Unit tests for leagueView (C24.6c). C24.6d: changes()."
+    },
+    {
+      "path": "frontend/src/gamification/progressMath.js",
+      "language": "javascript",
+      "lines": 66,
+      "size_bytes": 2798,
+      "role": "asset",
+      "purpose": "Pure progress helpers (C24.6a): levels (250 x n XP per level, display only), shares, the candle flame's scale by streak length, the header's one-sentence label (encouraging, no loss words), the per-day celebration key. C24.G: deviceZone and zoneToAdopt (the browser's zone, only while UTC is stored, only a real place)."
+    },
+    {
+      "path": "frontend/src/gamification/progressMath.test.js",
+      "language": "javascript",
+      "lines": 66,
+      "size_bytes": 3247,
+      "role": "asset",
+      "purpose": "Unit tests for progressMath (C24.6a): level edges, share clamping, the flame's growth, label wording with a loss-word guard, the celebration key. C24.G: zone adoption."
+    },
+    {
+      "path": "frontend/src/gamification/shelfMath.js",
+      "language": "javascript",
+      "lines": 26,
+      "size_bytes": 1075,
+      "role": "asset",
+      "purpose": "Pure badge-shelf helpers (C24.6b): the header line, the earned date, which badges are new on this device and which to remember."
+    },
+    {
+      "path": "frontend/src/gamification/shelfMath.test.js",
+      "language": "javascript",
+      "lines": 27,
+      "size_bytes": 1208,
+      "role": "asset",
+      "purpose": "Unit tests for shelfMath (C24.6b)."
+    },
+    {
+      "path": "frontend/src/gamification/useProgress.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1467,
+      "role": "asset",
+      "purpose": "Hook (C24.6a): GET /me/progress once for a signed-in reader; null until it arrives or if it fails. C24.G: with adoptZone, saves the device's zone once while UTC is stored."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
@@ -4169,10 +4505,10 @@
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 250,
-      "size_bytes": 10371,
+      "lines": 252,
+      "size_bytes": 10449,
       "role": "page",
-      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns."
     },
     {
       "path": "frontend/src/pages/Landing.css",
@@ -4189,6 +4525,22 @@
       "size_bytes": 3141,
       "role": "page",
       "purpose": "Public landing page for signed-out visitors at / (C13.10): static, no backend wait; fires one fire-and-forget GET /health on mount; masthead with Sign in; hero with headline, positioning lead, Start reading (to /login?tab=signup) and See how it works (scrolls and moves focus), DuskWindow and ReadingLamp behind the BookSpread; then Contents, WordDemo, Features and Faq, and the LandingFooter."
+    },
+    {
+      "path": "frontend/src/pages/League.css",
+      "language": "css",
+      "lines": 257,
+      "size_bytes": 4941,
+      "role": "page",
+      "purpose": "Styles for the league page (C24.6c): crest, tier chips, standings with the reader's row tinted, zone lines, side cards; one column under 900 px."
+    },
+    {
+      "path": "frontend/src/pages/League.jsx",
+      "language": "jsx",
+      "lines": 128,
+      "size_bytes": 5769,
+      "role": "page",
+      "purpose": "Weekly league page (C24.6c): time left to Monday 00:00 UTC, tier crest and chips, the reader's group ranked with soft promotion and demotion lines and gaps for hidden readers, last week's outcome, how leagues work; no-group, opted-out, loading and error states. C24.6d: the settings card, and a reload after a save."
     },
     {
       "path": "frontend/src/pages/Library.css",
@@ -5041,8 +5393,8 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 60,
-      "size_bytes": 2076,
+      "lines": 65,
+      "size_bytes": 2293,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
@@ -5599,6 +5951,30 @@
       "purpose": "Adds focus_sessions.ignored_events (integer, default 0): events the focus API ignored (C23.4)."
     },
     {
+      "path": "supabase/migrations/031_xp.sql",
+      "language": "sql",
+      "lines": 68,
+      "size_bytes": 3630,
+      "role": "migration",
+      "purpose": "Creates xp_events (append-only XP ledger, unique (source, source_id), local_day) and user_progress (total XP, daily goal, time zone, stored streak and freezes, display name, leaderboard opt-out), both owner-read-only under RLS (C24.1)."
+    },
+    {
+      "path": "supabase/migrations/032_badges.sql",
+      "language": "sql",
+      "lines": 22,
+      "size_bytes": 1149,
+      "role": "migration",
+      "purpose": "Creates user_badges (user_id, badge_id, awarded_at; primary key per reader and badge), owner-read-only under RLS (C24.2)."
+    },
+    {
+      "path": "supabase/migrations/033_leagues.sql",
+      "language": "sql",
+      "lines": 63,
+      "size_bytes": 3458,
+      "role": "migration",
+      "purpose": "Creates league_weeks (Monday-UTC weeks, grouped_at, open/closed), league_groups (a week's group of one tier) and league_members (tier, join time, weekly XP, when reached, final rank, outcome); RLS on all three, readers read only their own memberships (C24.3)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -5673,8 +6049,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 718,
-      "size_bytes": 221327,
+      "lines": 765,
+      "size_bytes": 236563,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -5705,8 +6081,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 287,
-      "size_bytes": 12144,
+      "lines": 290,
+      "size_bytes": 12339,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

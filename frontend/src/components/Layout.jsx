@@ -3,6 +3,8 @@ import { BookOpen } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { AccountMenu } from './AccountMenu';
+import { HeaderProgress } from '../gamification/HeaderProgress';
+import { useProgress } from '../gamification/useProgress';
 import './Layout.css';
 
 const navClass = ({ isActive }) => (isActive ? 'rf-topbar__link is-active' : 'rf-topbar__link');
@@ -10,11 +12,12 @@ const navClass = ({ isActive }) => (isActive ? 'rf-topbar__link is-active' : 'rf
 /**
  * The quiet top bar (handoff screens 03 and 09): the mark, Library and
  * Dashboard (the current one underlined in the accent, aria-current from
- * NavLink), the theme toggle from 640 px up, and the account button. A
- * skip link leads past it to the page.
+ * NavLink), the reader's progress (C24.6a), the theme toggle from 640 px
+ * up, and the account button. A skip link leads past it to the page.
  */
 export function Layout({ children }) {
   const { user } = useAuth();
+  const progress = useProgress(Boolean(user), { adoptZone: true }); // C24.6a: null until it arrives (or if it fails): the header then shows nothing
 
   return (
     <div className="rf-layout-root">
@@ -28,8 +31,10 @@ export function Layout({ children }) {
           <nav aria-label="Main" className="rf-topbar__nav">
             <NavLink to="/" end className={navClass}>Library</NavLink>
             <NavLink to="/dashboard" className={navClass}>Dashboard</NavLink>
+            <NavLink to="/league" className={navClass}>League</NavLink>
           </nav>
           <div className="rf-topbar__end">
+            {user && progress && <HeaderProgress progress={progress} />}
             <div className="rf-topbar__theme"><ThemeToggle /></div>
             {user && <AccountMenu />}
           </div>

@@ -3,6 +3,8 @@ bank (generating questions for range chunks that have none), keep it on a `sessi
 session's, so the existing submit_answers flow grades it, stores test_results and moves mastery (event id = the
 focus session), then score the focus session with the C23.3 engine. Synchronous: run in a worker thread."""
 
+import logging
+
 from backend.agents import policy as agent_policy
 from backend.agents.question_generation import assembler
 from backend.agents.question_generation.assembler import BankQuestion
@@ -12,7 +14,9 @@ from backend.focus import store
 from backend.focus.scoring import Event, Quiz, ScoringInput, decide
 from backend.services import question_bank
 from backend.services.supabase_client import supabase
+from backend.xp import award, badge_award
 
+log = logging.getLogger(__name__)
 PART = store.PART
 
 
@@ -169,6 +173,11 @@ async def grade(session: dict, events: list[dict], answers: list[str], seconds: 
         "status": "scored", "quiz_correct": whole, "quiz_total": total, "points_time": out.points_time,
         "points_bonus": out.points_bonus, "points_total": out.points_total, "active_seconds": out.active_seconds,
         "voided_seconds": out.voided_seconds, "rules_version": out.rules_version, "updated_at": store.stamp(store.now())})
+    try:  # C24.1: final points become XP (GAMIFICATION G4), once; XP never undoes or fails a grade
+        award.award_focus_xp(session)
+    except Exception:  # logged; the session stays scored and a later catch-up can credit it
+        log.exception("XP award failed for focus session %s", session["id"])
+    badge_award.check_quietly(session["user_id"], "focus", session=session, passed=out.passed)  # C24.2
     public = ("score", "max_score", "feedback", "confidence")
     graded = (final or {}).get("evaluation_result") or {}
     return {**store.view(session, events, out), "passed": out.passed, "quiz_score": weighted / total,

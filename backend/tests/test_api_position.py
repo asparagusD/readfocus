@@ -150,3 +150,36 @@ def test_start_names_the_books_file_format_for_the_renderer(api, progress):  # n
     book = next(row for row in api.db.tables["books"] if row["id"] == BOOK)
     book.update(file_format="epub", storage_mode="device")
     assert start(api)["book"]["format"] == "epub" and start(api)["book"]["storage_mode"] == "device"
+
+
+# --- badges (C24.2): a saved place with an anchor asks for "Finished a book"; nothing else does -------------------
+
+@pytest.fixture
+def badge_calls(monkeypatch):
+    from backend.xp import badge_award
+    calls = []
+    monkeypatch.setattr(badge_award, "evaluate_badges", lambda *args, **kwargs: calls.append((args, kwargs)) or [])
+    return calls
+
+
+def test_a_place_with_an_anchor_asks_for_the_finished_book_badge(api, progress, badge_calls):  # noqa: F811
+    session_id = start(api)["session_id"]
+    assert put(api, session_id, PDF_PLACE).status_code == 200
+    assert badge_calls == [((USER, "place"), {"book_id": BOOK, "anchor": PDF_PLACE["anchor"]})]
+
+
+def test_a_place_without_an_anchor_asks_for_nothing(api, progress, badge_calls):  # noqa: F811
+    session_id = start(api)["session_id"]
+    assert put(api, session_id, PLACE).status_code == 200
+    assert badge_calls == []
+
+
+def test_a_badge_failure_never_fails_the_save(api, progress, monkeypatch, caplog):  # noqa: F811
+    from backend.xp import badge_award
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("user_badges is down")
+    monkeypatch.setattr(badge_award, "evaluate_badges", broken)
+    session_id = start(api)["session_id"]
+    assert put(api, session_id, PDF_PLACE).status_code == 200
+    assert api.db.tables["reading_progress"][0]["position"] == PDF_PLACE and "Badge check failed" in caplog.text

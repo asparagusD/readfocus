@@ -58,3 +58,8 @@ google-genai==2.34.0
 # backend/steve/keys.py. Already installed through google-auth and
 # pdfminer.six; pinned here now that backend/ imports it directly.
 cryptography==50.0.2
+
+# Readers' time zones (C24.1): zoneinfo reads the IANA database, which
+# Windows and some slim images lack. Pure data, Apache-2.0, ~350 KB;
+# loading five zones added 36 KiB RSS. Not imported by name.
+tzdata==2026.5

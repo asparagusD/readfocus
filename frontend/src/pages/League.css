@@ -1,0 +1,257 @@
+/* The weekly league (C24.6c, handoff screen 27). */
+.rf-league {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.rf-league__header {
+  margin-bottom: var(--space-7);
+}
+
+.rf-league__header .eyebrow {
+  margin: 0 0 var(--space-3);
+  color: var(--ink-2);
+}
+
+.rf-league__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.rf-league__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+}
+
+.rf-league__crest {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+}
+
+.rf-league__crest svg {
+  position: absolute;
+  inset: 0;
+}
+
+.rf-league__crest circle:first-child {
+  fill: var(--accent);
+}
+
+.rf-league__crest circle:last-child {
+  fill: none;
+  stroke: var(--accent-ink);
+  stroke-opacity: 0.55;
+}
+
+.rf-league__crest span {
+  position: relative;
+}
+
+.rf-league__tiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rf-tier {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--line-2);
+  border-left: 4px solid var(--line-2);
+  border-radius: var(--radius-input);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-tier.is-done {
+  border-left-color: var(--ink-2);
+}
+
+.rf-tier.is-current {
+  border-color: var(--accent);
+  background-color: var(--accent-soft);
+  color: var(--ink);
+}
+
+.rf-tier.is-next {
+  border-style: dashed;
+  border-left-style: solid;
+}
+
+.rf-league__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: var(--space-7);
+  align-items: start;
+}
+
+.rf-league__h2 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+}
+
+.rf-league__note,
+.rf-league__muted {
+  margin: 0 0 var(--space-4);
+  color: var(--ink-2);
+}
+
+.rf-standings {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.rf-standing {
+  display: grid;
+  grid-template-columns: 2.5rem 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.rf-standing__rank {
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rf-standing__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-running-head);
+}
+
+.rf-standing__name {
+  overflow: hidden;
+  font-family: var(--font-reading);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rf-standing__xp {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The reader's own row: the accent wash, the rank in --ink-2 (never --ink-3 on it: handoff gap 12). */
+.rf-standing.is-you {
+  border-radius: var(--radius-input);
+  background-color: var(--accent-soft);
+}
+
+.rf-standing.is-you .rf-standing__avatar {
+  border-color: var(--accent);
+  background-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.rf-standing__you {
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+}
+
+.rf-standing__marker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-standing__marker.is-promotion {
+  color: var(--accent-text);
+}
+
+.rf-standing__marker.is-demotion {
+  color: var(--ink-2);
+}
+
+.rf-standing__gap {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+  text-align: center;
+  letter-spacing: 0.3em;
+}
+
+.rf-league__side {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.rf-league__card {
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background-color: var(--surface);
+}
+
+.rf-league__card .eyebrow {
+  margin: 0 0 var(--space-3);
+  color: var(--ink-2);
+}
+
+.rf-league__card p {
+  margin: 0 0 var(--space-3);
+}
+
+.rf-league__card p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 899px) {
+  .rf-league__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .rf-league__title {
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+  }
+
+  .rf-standing {
+    grid-template-columns: 2rem 28px minmax(0, 1fr) auto;
+    gap: var(--space-2);
+    padding: 0 var(--space-2);
+  }
+
+  .rf-standing__avatar {
+    width: 28px;
+    height: 28px;
+  }
+}

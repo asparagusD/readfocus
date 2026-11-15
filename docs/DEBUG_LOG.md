@@ -4557,3 +4557,81 @@ wait widened. If it recurs, the trace (`E2E_TRACE=1`) of that run is the next st
 
 ### Commit
 fix(frontend): let the focus e2e quiz tab finish opening before the first question
+
+## 2026-11-15 C24.1 — no time zone found, not even UTC, on Windows
+
+**Status:** fixed
+
+### Symptom
+First run of the new `backend/tests/test_xp_award.py` (C24.1, test first, code written): 41 failed, among them
+
+    zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key UTC'
+    ModuleNotFoundError: No module named 'tzdata'
+
+### Repro
+`.venv/Scripts/python -c "from zoneinfo import ZoneInfo; ZoneInfo('UTC')"` raises the same error.
+
+### Hypotheses
+1. `zoneinfo` reads the IANA database from the system (`TZPATH`) and falls back to the `tzdata` package; Windows
+   has no system database and `.venv` has no `tzdata`. Evidence: the error names `tzdata`. Ruled out if: the call
+   still fails with `tzdata` installed. Result: confirmed (installed, the call works).
+2. A bad zone name from the tests. Evidence against: it fails on "UTC", the fallback itself.
+
+### Root cause
+`backend/xp/streaks.py` uses `zoneinfo` for the readers' time zones (G6), and nothing in `requirements.txt`
+provided the database where the system does not (Windows; slim images are not guaranteed to either).
+
+### Fix
+`tzdata==2026.5` pinned in `requirements.txt` (pure data, Apache-2.0, ~350 KB wheel). psutil RSS after
+`import backend.main`, then loading five zones: 134.0 MiB before and after (+36 KiB). `streaks.zone()` still
+falls back to UTC for an unknown name; it relies on the database for UTC itself.
+
+### Regression test
+`test_xp_streaks.py::test_local_day` (16 rows: UTC, +6, -8, +14, -11, +5:45, London across both daylight-saving
+changes, an unknown zone, empty and missing) fails without `tzdata` and passes with it.
+
+### Commit
+feat(xp): XP ledger, daily goal and streaks with earned freezes
+
+## 2026-11-15 C24.6d — the EPUB "read on" e2e test fails now and then (pre-existing)
+
+**Status:** fixed (in the test; the reader was right)
+
+### Symptom
+C24.6d's full `npm --prefix frontend run test:e2e`: 302 passed, 1 failed:
+
+    x 218 e2eeader.spec.js:113:5 › epub: pages and turns › the closing page lets the reader read on, and does not come back
+    Expected {"start": "2:1317", "end": "2:1985"}, received {"start": "2:1207", "end": "2:1985"}
+
+### Repro
+`npx playwright test e2e/reader.spec.js -g "closing page lets the reader read on" --repeat-each 5`: the EPUB case
+failed 1 of 5 (the PDF case 5 of 5 passed). C24 changes no reader code: `git diff 6cf4642 -- frontend/src/originalview
+frontend/src/pages/ReadingSession.jsx frontend/src/reader frontend/e2e/reader.spec.js` is empty, and `/read/:bookId`
+renders outside `Layout`.
+
+### Hypotheses
+1. The last read is taken before the EPUB layout settles (fixed 700 ms waits). Tried: polling the final place for 5 s.
+   Result: the EPUB case failed 10 of 10, always settling at `2:1207`; reverted. So the final place does settle, and
+   the test's reference (`beyondPlace`) was the unsettled read.
+2. The places should be read once each turn has landed. Evidence: a probe sampling `.rf-ov` every 100 ms after the
+   read-on turn (4 runs) showed `2:0-2:1317` with the turn's leaf at about 15 ms, `2:1317-2:1985` at about 125 ms
+   (in 2 of 4 runs), `2:1207-2:1985` from about 230 ms, and no leaf from about 700 ms; with the fixtures' `settled()`
+   (DEBUG_LOG C17.6: no leaf and the same place on two reads 300 ms apart) the places were, 4 of 4: read on
+   `2:1207-2:1985`, back `2:0-2:1317`, on again `2:1207-2:1985`. Confirmed.
+
+### Root cause
+`frontend/e2e/reader.spec.js` read `beyondPlace` as soon as the place first changed (often the mid-turn
+`2:1317-2:1985`, the previous page's end standing in as the start for about 100 ms) and the final place after a fixed
+700 ms; the test passed when both reads caught the mid-turn value and failed when one caught the landed `2:1207`. The
+reader lands on the same place every time.
+
+### Fix
+The test reads the end page, the page beyond, the way back and the way on again with `settled()`, and checks that no
+closing page appears only after the last turn has landed. The comparison is unchanged (the exact place), so a reader
+that came back somewhere else still fails it.
+
+### Regression test
+The test itself: `--repeat-each 20`, 40 of 40 passed (EPUB and PDF), twice; before, about 1 in 5 EPUB runs failed.
+
+### Commit
+fix(frontend): read the EPUB read-on test's places once each turn has landed

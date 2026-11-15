@@ -1,0 +1,568 @@
+[
+ {
+  "at": "2026-11-12T10:30:00+00:00",
+  "body": {
+   "badges": [
+    {
+     "awarded_at": "2026-11-12T10:00:00+00:00",
+     "id": "first_focus",
+     "name": "First focus session"
+    }
+   ],
+   "daily_goal": 50,
+   "display_name": "Quiet Owl",
+   "leaderboard_opt_out": false,
+   "streak": {
+    "days": 1,
+    "freezes": 0,
+    "frozen_days": []
+   },
+   "tier": "Pamphlet",
+   "timezone": "Europe/London",
+   "today": {
+    "day": "2026-11-12",
+    "goal": 50,
+    "met": true,
+    "xp": 60
+   },
+   "total_xp": 80
+  },
+  "path": "/me/progress",
+  "reader": "A",
+  "step": "xp-once"
+ },
+ {
+  "at": "2026-11-17T10:30:00+00:00",
+  "body": {
+   "badges": [
+    {
+     "awarded_at": "2026-11-12T10:00:00+00:00",
+     "id": "first_focus",
+     "name": "First focus session"
+    }
+   ],
+   "daily_goal": 50,
+   "display_name": "Quiet Owl",
+   "leaderboard_opt_out": false,
+   "streak": {
+    "days": 2,
+    "freezes": 0,
+    "frozen_days": []
+   },
+   "tier": "Pamphlet",
+   "timezone": "Europe/London",
+   "today": {
+    "day": "2026-11-17",
+    "goal": 50,
+    "met": true,
+    "xp": 60
+   },
+   "total_xp": 200
+  },
+  "path": "/me/progress",
+  "reader": "A",
+  "step": "goal-streak"
+ },
+ {
+  "at": "2026-11-22T10:30:00+00:00",
+  "body": {
+   "badges": [
+    {
+     "awarded_at": "2026-11-12T10:00:00+00:00",
+     "id": "first_focus",
+     "name": "First focus session"
+    },
+    {
+     "awarded_at": "2026-11-22T10:00:00+00:00",
+     "id": "streak_7",
+     "name": "7-day streak"
+    }
+   ],
+   "daily_goal": 50,
+   "display_name": "Quiet Owl",
+   "leaderboard_opt_out": false,
+   "streak": {
+    "days": 7,
+    "freezes": 1,
+    "frozen_days": []
+   },
+   "tier": "Pamphlet",
+   "timezone": "Europe/London",
+   "today": {
+    "day": "2026-11-22",
+    "goal": 50,
+    "met": true,
+    "xp": 60
+   },
+   "total_xp": 550
+  },
+  "path": "/me/progress",
+  "reader": "A",
+  "step": "streak-7"
+ },
+ {
+  "at": "2026-11-22T10:30:00+00:00",
+  "body": {
+   "badges": [
+    {
+     "awarded_at": "2026-11-12T10:00:00+00:00",
+     "description": "Finish a focus session and pass its quiz.",
+     "earned": true,
+     "id": "first_focus",
+     "kind": "seal",
+     "name": "First focus session",
+     "xp_reward": 20
+    },
+    {
+     "awarded_at": null,
+     "description": "Pass a focus session that reaches the end of a book's first chapter.",
+     "earned": false,
+     "id": "first_chapter",
+     "kind": "bookplate",
+     "name": "First chapter",
+     "xp_reward": 30
+    },
+    {
+     "awarded_at": null,
+     "description": "Spend 10 hours in focus sessions you passed.",
+     "earned": false,
+     "id": "focus_10h",
+     "kind": "seal",
+     "name": "10 focused hours",
+     "xp_reward": 100
+    },
+    {
+     "awarded_at": null,
+     "description": "Spend 50 hours in focus sessions you passed.",
+     "earned": false,
+     "id": "focus_50h",
+     "kind": "seal",
+     "name": "50 focused hours",
+     "xp_reward": 250
+    },
+    {
+     "awarded_at": null,
+     "description": "Spend 100 hours in focus sessions you passed.",
+     "earned": false,
+     "id": "focus_100h",
+     "kind": "seal",
+     "name": "100 focused hours",
+     "xp_reward": 500
+    },
+    {
+     "awarded_at": null,
+     "description": "Answer every question of a bookmark quiz correctly.",
+     "earned": false,
+     "id": "perfect_quiz",
+     "kind": "seal",
+     "name": "Perfect quiz",
+     "xp_reward": 25
+    },
+    {
+     "awarded_at": "2026-11-22T10:00:00+00:00",
+     "description": "Meet your daily goal 7 days running.",
+     "earned": true,
+     "id": "streak_7",
+     "kind": "seal",
+     "name": "7-day streak",
+     "xp_reward": 50
+    },
+    {
+     "awarded_at": null,
+     "description": "Meet your daily goal 30 days running.",
+     "earned": false,
+     "id": "streak_30",
+     "kind": "seal",
+     "name": "30-day streak",
+     "xp_reward": 150
+    },
+    {
+     "awarded_at": null,
+     "description": "Meet your daily goal 100 days running.",
+     "earned": false,
+     "id": "streak_100",
+     "kind": "seal",
+     "name": "100-day streak",
+     "xp_reward": 500
+    },
+    {
+     "awarded_at": null,
+     "description": "Write your first typed note.",
+     "earned": false,
+     "id": "first_note",
+     "kind": "seal",
+     "name": "First note",
+     "xp_reward": 10
+    },
+    {
+     "awarded_at": null,
+     "description": "Save your first drawing.",
+     "earned": false,
+     "id": "first_drawing",
+     "kind": "seal",
+     "name": "First drawing",
+     "xp_reward": 10
+    },
+    {
+     "awarded_at": null,
+     "description": "Get your first answer from Steve.",
+     "earned": false,
+     "id": "first_steve",
+     "kind": "seal",
+     "name": "First Ask Steve",
+     "xp_reward": 10
+    },
+    {
+     "awarded_at": null,
+     "description": "Reach the last page of a book.",
+     "earned": false,
+     "id": "finished_book",
+     "kind": "bookplate",
+     "name": "Finished a book",
+     "xp_reward": 200
+    },
+    {
+     "awarded_at": null,
+     "description": "Pass a focus session in a book where at least a fifth of the page regions are math or code.",
+     "earned": false,
+     "id": "technical_reader",
+     "kind": "bookplate",
+     "name": "Technical-book reader",
+     "xp_reward": 50
+    }
+   ],
+   "earned": 2,
+   "total": 14
+  },
+  "path": "/badges",
+  "reader": "A",
+  "step": "badges"
+ },
+ {
+  "at": "2026-11-22T10:30:00+00:00",
+  "body": {
+   "in_group": true,
+   "last_week": null,
+   "opted_out": false,
+   "rows": [
+    {
+     "display_name": "Quiet Owl",
+     "id": "1e4fe260ec45",
+     "rank": 1,
+     "weekly_xp": 470,
+     "you": true,
+     "zone": "promotion"
+    },
+    {
+     "display_name": "Marginalia",
+     "id": "42678aa1f3c8",
+     "rank": 2,
+     "weekly_xp": 30,
+     "you": false,
+     "zone": null
+    },
+    {
+     "display_name": "Reader 9a7f",
+     "id": "9a7f78791fa5",
+     "rank": 3,
+     "weekly_xp": 0,
+     "you": false,
+     "zone": null
+    }
+   ],
+   "tier": "Pamphlet",
+   "week": {
+    "ends_at": "2026-11-23T00:00:00+00:00",
+    "starts_at": "2026-11-16T00:00:00+00:00"
+   },
+   "zones": {
+    "demote": 0,
+    "promote": 1,
+    "size": 3
+   }
+  },
+  "path": "/leagues/current",
+  "reader": "A",
+  "step": "board"
+ },
+ {
+  "at": "2026-11-22T10:30:00+00:00",
+  "body": {
+   "badges": [
+    {
+     "awarded_at": "2026-11-12T10:00:00+00:00",
+     "id": "first_focus",
+     "name": "First focus session"
+    }
+   ],
+   "daily_goal": 50,
+   "display_name": "Marginalia",
+   "leaderboard_opt_out": false,
+   "streak": {
+    "days": 0,
+    "freezes": 0,
+    "frozen_days": []
+   },
+   "tier": "Pamphlet",
+   "timezone": "Europe/London",
+   "today": {
+    "day": "2026-11-22",
+    "goal": 50,
+    "met": false,
+    "xp": 0
+   },
+   "total_xp": 110
+  },
+  "path": "/me/progress",
+  "reader": "B",
+  "step": "b-progress"
+ },
+ {
+  "at": "2026-11-22T10:30:00+00:00",
+  "body": {
+   "in_group": true,
+   "last_week": null,
+   "opted_out": false,
+   "rows": [
+    {
+     "display_name": "Quiet Owl",
+     "id": "1e4fe260ec45",
+     "rank": 1,
+     "weekly_xp": 470,
+     "you": false,
+     "zone": "promotion"
+    },
+    {
+     "display_name": "Marginalia",
+     "id": "42678aa1f3c8",
+     "rank": 2,
+     "weekly_xp": 30,
+     "you": true,
+     "zone": null
+    },
+    {
+     "display_name": "Reader 9a7f",
+     "id": "9a7f78791fa5",
+     "rank": 3,
+     "weekly_xp": 0,
+     "you": false,
+     "zone": null
+    }
+   ],
+   "tier": "Pamphlet",
+   "week": {
+    "ends_at": "2026-11-23T00:00:00+00:00",
+    "starts_at": "2026-11-16T00:00:00+00:00"
+   },
+   "zones": {
+    "demote": 0,
+    "promote": 1,
+    "size": 3
+   }
+  },
+  "path": "/leagues/current",
+  "reader": "B",
+  "step": "b-board"
+ },
+ {
+  "at": "2026-11-22T10:30:00+00:00",
+  "body": {
+   "in_group": true,
+   "last_week": null,
+   "opted_out": false,
+   "rows": [
+    {
+     "display_name": "Quiet Owl",
+     "id": "1e4fe260ec45",
+     "rank": 1,
+     "weekly_xp": 470,
+     "you": true,
+     "zone": "promotion"
+    },
+    {
+     "display_name": "Reader 9a7f",
+     "id": "9a7f78791fa5",
+     "rank": 3,
+     "weekly_xp": 0,
+     "you": false,
+     "zone": null
+    }
+   ],
+   "tier": "Pamphlet",
+   "week": {
+    "ends_at": "2026-11-23T00:00:00+00:00",
+    "starts_at": "2026-11-16T00:00:00+00:00"
+   },
+   "zones": {
+    "demote": 0,
+    "promote": 1,
+    "size": 3
+   }
+  },
+  "path": "/leagues/current",
+  "reader": "A",
+  "step": "b-opted-out"
+ },
+ {
+  "at": "2026-11-22T10:30:00+00:00",
+  "body": {
+   "in_group": true,
+   "last_week": null,
+   "opted_out": true,
+   "rows": [
+    {
+     "display_name": "Quiet Owl",
+     "id": "1e4fe260ec45",
+     "rank": 1,
+     "weekly_xp": 470,
+     "you": false,
+     "zone": "promotion"
+    },
+    {
+     "display_name": "Marginalia",
+     "id": "42678aa1f3c8",
+     "rank": 2,
+     "weekly_xp": 30,
+     "you": true,
+     "zone": null
+    },
+    {
+     "display_name": "Reader 9a7f",
+     "id": "9a7f78791fa5",
+     "rank": 3,
+     "weekly_xp": 0,
+     "you": false,
+     "zone": null
+    }
+   ],
+   "tier": "Pamphlet",
+   "week": {
+    "ends_at": "2026-11-23T00:00:00+00:00",
+    "starts_at": "2026-11-16T00:00:00+00:00"
+   },
+   "zones": {
+    "demote": 0,
+    "promote": 1,
+    "size": 3
+   }
+  },
+  "path": "/leagues/current",
+  "reader": "B",
+  "step": "b-own-board"
+ },
+ {
+  "at": "2026-11-23T00:05:00+00:00",
+  "body": {
+   "in_group": true,
+   "last_week": {
+    "now_in": "Paperback",
+    "outcome": "promoted",
+    "rank": 1,
+    "size": 3,
+    "starts_at": "2026-11-16T00:00:00+00:00",
+    "tier": "Pamphlet",
+    "weekly_xp": 470
+   },
+   "opted_out": false,
+   "rows": [
+    {
+     "display_name": "Quiet Owl",
+     "id": "17b2db2cba20",
+     "rank": 1,
+     "weekly_xp": 0,
+     "you": true,
+     "zone": null
+    }
+   ],
+   "tier": "Paperback",
+   "week": {
+    "ends_at": "2026-11-30T00:00:00+00:00",
+    "starts_at": "2026-11-23T00:00:00+00:00"
+   },
+   "zones": {
+    "demote": 0,
+    "promote": 0,
+    "size": 1
+   }
+  },
+  "path": "/leagues/current",
+  "reader": "A",
+  "step": "promoted"
+ },
+ {
+  "at": "2026-11-24T09:00:00+00:00",
+  "body": {
+   "badges": [
+    {
+     "awarded_at": "2026-11-12T10:00:00+00:00",
+     "id": "first_focus",
+     "name": "First focus session"
+    },
+    {
+     "awarded_at": "2026-11-22T10:00:00+00:00",
+     "id": "streak_7",
+     "name": "7-day streak"
+    }
+   ],
+   "daily_goal": 50,
+   "display_name": "Quiet Owl",
+   "leaderboard_opt_out": false,
+   "streak": {
+    "days": 7,
+    "freezes": 0,
+    "frozen_days": [
+     "2026-11-23"
+    ]
+   },
+   "tier": "Paperback",
+   "timezone": "Europe/London",
+   "today": {
+    "day": "2026-11-24",
+    "goal": 50,
+    "met": false,
+    "xp": 0
+   },
+   "total_xp": 550
+  },
+  "path": "/me/progress",
+  "reader": "A",
+  "step": "frozen"
+ },
+ {
+  "at": "2026-11-24T10:30:00+00:00",
+  "body": {
+   "badges": [
+    {
+     "awarded_at": "2026-11-12T10:00:00+00:00",
+     "id": "first_focus",
+     "name": "First focus session"
+    },
+    {
+     "awarded_at": "2026-11-22T10:00:00+00:00",
+     "id": "streak_7",
+     "name": "7-day streak"
+    }
+   ],
+   "daily_goal": 50,
+   "display_name": "Quiet Owl",
+   "leaderboard_opt_out": false,
+   "streak": {
+    "days": 8,
+    "freezes": 0,
+    "frozen_days": []
+   },
+   "tier": "Paperback",
+   "timezone": "Europe/London",
+   "today": {
+    "day": "2026-11-24",
+    "goal": 50,
+    "met": true,
+    "xp": 60
+   },
+   "total_xp": 610
+  },
+  "path": "/me/progress",
+  "reader": "A",
+  "step": "streak-kept"
+ }
+]

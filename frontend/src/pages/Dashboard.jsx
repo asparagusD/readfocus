@@ -13,6 +13,7 @@ import { focusWeek, greeting, lastScore, lastScores, nextBook, streakLine, tests
 import { seconds } from '../motion/presets';
 import { splitFeedback } from '../lib/results';
 import { MasteryList } from '../components/dashboard/MasteryList';
+import { BadgeShelf } from '../gamification/BadgeShelf';
 import './Dashboard.css';
 
 /** A hollow point for each test, the last one filled (handoff chart). */
@@ -245,6 +246,7 @@ export function Dashboard() {
           )}
         </aside>
       </div>
+      <BadgeShelf />
     </div>
   );
 }

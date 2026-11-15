@@ -23,6 +23,7 @@ const ComprehensionTest = named(() => import('./pages/ComprehensionTest'), 'Comp
 const FocusQuiz = named(() => import('./pages/ComprehensionTest'), 'FocusQuiz'); // C23.6b
 const QuizMe = named(() => import('./pages/ComprehensionTest'), 'QuizMe'); // C23.7b
 const Results = named(() => import('./pages/Results'), 'Results');
+const League = named(() => import('./pages/League'), 'League'); // C24.6c
 const Login = named(() => import('./pages/Login'), 'Login');
 const NotFound = named(() => import('./pages/NotFound'), 'NotFound');
 const page = (Page) => <Suspense fallback={null}><Page /></Suspense>;
@@ -121,6 +122,7 @@ function App() {
                         <AnimatedRoutes scope={pageOf}>
                           <Route path="/" element={<AuthGuard>{page(Library)}</AuthGuard>} />
                           <Route path="dashboard" element={<AuthGuard>{page(Dashboard)}</AuthGuard>} />
+                          <Route path="league" element={<AuthGuard>{page(League)}</AuthGuard>} />
                           <Route path="results/:sessionId" element={<AuthGuard>{page(Results)}</AuthGuard>} />
                           <Route path="*" element={page(NotFound)} />
                         </AnimatedRoutes>

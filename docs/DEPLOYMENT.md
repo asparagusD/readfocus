@@ -44,6 +44,7 @@ Values live only in each provider's settings, never in git.
 | `FRONTEND_URL` | `https://readfocus-lake.vercel.app`; one origin or several, comma-separated, no trailing `/` (`backend/cors.py`) |
 | `FASTEMBED_CACHE` | `/app/.cache/fastembed`, where the image holds the model |
 | `ENV` | `production`: no localhost origins in CORS |
+| `CRON_SECRET` | 32+ random characters; the bearer token of `POST /internal/leagues/rollover` (C24.4); unset or shorter, the endpoint answers 503 |
 
 `PORT` is set by Render (10000); do not set it. No LLM or embedding key
 of any kind (CLAUDE.md constraint 1).
@@ -69,6 +70,15 @@ System Environment Variables" on, for `VERCEL=1`.
 | Name | What |
 |---|---|
 | `RENDER_DEPLOY_HOOK` | the deploy hook URL of `readfocus-api` (Render > Settings > Deploy Hook) |
+| `BACKEND_URL` | `https://readfocus-api.onrender.com`, for `league-rollover.yml` (C24.4) |
+| `CRON_SECRET` | the same value as Render's `CRON_SECRET`, for `league-rollover.yml` |
+
+`league-rollover.yml` runs the weekly league rollover every Monday at
+00:05 UTC (and by hand from the Actions tab), retrying through Render's
+cold start. GitHub runs schedules only from `main`, may delay or drop them,
+and pauses them after 60 days without repository activity; the rollover is
+idempotent and catches up on the next run (and, from C24.5, on any league
+read), so a missed Monday only delays the result.
 
 **Supabase (Authentication > URL Configuration):** Site URL
 `https://readfocus-lake.vercel.app`; redirect URLs

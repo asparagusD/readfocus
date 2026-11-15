@@ -64,6 +64,22 @@ export async function mockBackend(page, api, book) {
     if (path === '/auth/profile') return json(route, { id: 'e2e-reader', is_calibrated: true, wpm: 240 });
     if (path === '/books' && request.method() === 'GET') return json(route, []);
     if (path === '/dashboard') return json(route, { book_progress: [], score_over_time: [], reading_streak: 0, words_this_week: 0, recent_feedback: [] });
+    if (path === '/badges') return json(route, badgesBody(api.badgesEarned)); // C24.6b: the shelf
+    if (path === '/leagues/current') { // C24.6c
+      return api.league ? json(route, api.league) : json(route, { detail: 'down' }, 503);
+    }
+    if (path === '/me/progress' && request.method() === 'PUT') { // C24.6d: settings; a name with admin is refused
+      const body = request.postDataJSON();
+      api.progressPuts.push(body);
+      if (/admin/i.test(body.display_name ?? '')) return json(route, { detail: 'That name is reserved.' }, 422);
+      Object.assign(api.progress, body);
+      if ('leaderboard_opt_out' in body && api.league) api.league.opted_out = body.leaderboard_opt_out;
+      return json(route, api.progress);
+    }
+    if (path === '/me/progress' && request.method() === 'GET') { // C24.6a: the header's progress (a test may set api.progress)
+      api.progressReads += 1;
+      return api.progress ? json(route, api.progress) : json(route, { detail: 'down' }, 503);
+    }
     if (path === '/sessions/start') {
       api.starts += 1;
       if (BOOKS[book].pagesOnly) { // C19.4: a fully scanned book with no chunks opens pages-only
@@ -242,6 +258,49 @@ export async function mockBackend(page, api, book) {
   });
 }
 
+/** C24.6a: GET /me/progress for a reader part way through a week (GAMIFICATION; C24.5's shape). */
+export const PROGRESS = {
+  total_xp: 1240, daily_goal: 50, timezone: 'Europe/London', display_name: null, leaderboard_opt_out: false,
+  today: { day: '2026-11-18', xp: 30, goal: 50, met: false },
+  streak: { days: 7, freezes: 1, frozen_days: [] }, tier: 'Hardcover',
+  badges: [{ id: 'first_focus', name: 'First focus session', awarded_at: '2026-11-10T20:00:00+00:00' }],
+};
+
+/** C24.6c: GET /leagues/current: a Hardcover group of 12 this week (rank 7 keeps off others' boards), last week up. */
+export const LEAGUE = {
+  week: { starts_at: '2026-11-16T00:00:00+00:00', ends_at: '2026-11-23T00:00:00+00:00' },
+  tier: 'Hardcover', in_group: true, opted_out: false, zones: { size: 12, promote: 3, demote: 2 },
+  rows: [[1, 'Marginalia', 742], [2, 'Slow Reader', 690], [3, 'Inkwell', 655], [4, 'Quiet Owl', 502, true],
+    [5, 'Dogeared', 488], [6, 'Reader 3f2a', 470], [8, 'Folio Fox', 455], [9, 'Nightlamp', 300],
+    [10, 'Tea And Proofs', 160], [11, 'Reader 9c01', 40], [12, 'Heron', 0]].map(([rank, name, xp, you]) => (
+    { id: `p${rank}`.padEnd(12, '0'), rank, display_name: name, weekly_xp: xp, zone: null, you: Boolean(you) })),
+  last_week: { starts_at: '2026-11-09T00:00:00+00:00', tier: 'Paperback', rank: 2, size: 9, weekly_xp: 380,
+    outcome: 'promoted', now_in: 'Hardcover' },
+};
+
+/** C24.6b: GET /badges, the catalogue of backend/xp/badges.py with the reader's awards ({id: awarded_at}). */
+const CATALOGUE = [
+  ['first_focus', 'First focus session', 'Finish a focus session and pass its quiz.', 20, 'seal'],
+  ['first_chapter', 'First chapter', 'Pass a focus session that reaches the end of a book’s first chapter.', 30, 'bookplate'],
+  ['focus_10h', '10 focused hours', 'Spend 10 hours in focus sessions you passed.', 100, 'seal'],
+  ['focus_50h', '50 focused hours', 'Spend 50 hours in focus sessions you passed.', 250, 'seal'],
+  ['focus_100h', '100 focused hours', 'Spend 100 hours in focus sessions you passed.', 500, 'seal'],
+  ['perfect_quiz', 'Perfect quiz', 'Answer every question of a bookmark quiz correctly.', 25, 'seal'],
+  ['streak_7', '7-day streak', 'Meet your daily goal 7 days running.', 50, 'seal'],
+  ['streak_30', '30-day streak', 'Meet your daily goal 30 days running.', 150, 'seal'],
+  ['streak_100', '100-day streak', 'Meet your daily goal 100 days running.', 500, 'seal'],
+  ['first_note', 'First note', 'Write your first typed note.', 10, 'seal'],
+  ['first_drawing', 'First drawing', 'Save your first drawing.', 10, 'seal'],
+  ['first_steve', 'First Ask Steve', 'Get your first answer from Steve.', 10, 'seal'],
+  ['finished_book', 'Finished a book', 'Reach the last page of a book.', 200, 'bookplate'],
+  ['technical_reader', 'Technical-book reader', 'Pass a focus session in a book where at least a fifth of the page regions are math or code.', 50, 'bookplate'],
+];
+export function badgesBody(earned = {}) {
+  const badges = CATALOGUE.map(([id, name, description, xp_reward, kind]) => ({
+    id, name, description, xp_reward, kind, earned: id in earned, awarded_at: earned[id] ?? null }));
+  return { total: badges.length, earned: badges.filter((b) => b.earned).length, badges };
+}
+
 /** C23.6b: the focus quiz the fake server builds: three questions, the first multiple choice. */
 const FOCUS_QUIZ = [
   { question: 'What did the lamp throw?\n(a) A shadow  (b) A small circle of light  (c) A spark', type: 'factual',
@@ -327,7 +386,8 @@ export const test = base.extend({
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
       bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
-      focus: { session: null, active: 0, calls: [], events: [] } };
+      focus: { session: null, active: 0, calls: [], events: [] },
+      progress: structuredClone(PROGRESS), progressReads: 0, progressPuts: [], league: structuredClone(LEAGUE), badgesEarned: { first_focus: '2026-11-10T12:00:00+00:00' } };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

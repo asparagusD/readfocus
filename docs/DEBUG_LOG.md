@@ -4159,3 +4159,48 @@ clear of the selection". Without the wait: 3 of 5 failed (35.99998474121094). Wi
 
 ### Commit
 fix(frontend): measure the selection toolbar after its rise settles
+
+## 2026-11-15 C23.8 — a focus session with no heartbeats still earns the quiz bonus
+
+**Status:** fixed
+
+### Symptom
+A forged session (start, then the bookmark an hour later with not one heartbeat) has 0 active seconds, yet
+answering its quiz right earns the bonus. Expected: no focused reading, no points (C23.8 prompt, F14).
+
+    pytest "backend/tests/test_focus_anticheat.py::test_an_end_with_no_heartbeats_earns_nothing_even_with_every_answer_right" -q
+    >       assert (body["points_time"], body["points_bonus"], body["points_total"]) == (0, 0, 0)
+    E       assert (0, 60, 60) == (0, 0, 0)
+    E         At index 1 diff: 60 != 0
+    backend\tests\test_focus_anticheat.py:56: AssertionError
+    1 failed in 2.14s
+
+### Repro
+Every time, the test above; and the pure engine, scenario "zero heartbeats, then every quiz answer right":
+
+    pytest backend/tests/test_focus_scoring.py -q -k "zero heartbeats"
+
+### Hypotheses
+1. `decide()` gives the bonus whenever the quiz passes, whatever the counted time. Evidence: in
+   `backend/focus/scoring.py` the bonus is `round(quiz.correct * BONUS_PER_CORRECT) if passed`, with no other
+   condition. Ruled out if: the engine alone gives 0 for this input. Result: confirmed (the engine gives
+   points_bonus 60 for 3 of 3 with counted_seconds 0).
+2. The API scores with the client's numbers. Ruled out by: the endpoint takes no numbers (extra keys are refused,
+   F14), and `grade()` passes only stored events and the graded quiz. Result: ruled out.
+
+### Root cause
+`backend/focus/scoring.py` `decide()`: the quiz bonus (F11) did not require any focused reading, so a session
+with no counted time still earned it for the range between its start and its bookmark.
+
+### Fix
+The bonus needs counted time: a session with 0 counted seconds earns no bonus (and so 0 in all), passed or
+not; its breakdown line shows the quiz with 0 points. One condition in `decide()`; FOCUS_RULES F11 updated.
+
+### Regression test
+`backend/tests/test_focus_scoring.py` scenario "zero heartbeats, then every quiz answer right" and
+`backend/tests/test_focus_anticheat.py::test_an_end_with_no_heartbeats_earns_nothing_even_with_every_answer_right`.
+Failed before the fix: yes (`git stash push -- backend/focus/scoring.py`: "points_bonus: 60 != 0", 1 failed).
+Passes after: yes (2 passed with `-k zero`; 57 passed across scoring, anti-cheat and focus quiz tests).
+
+### Commit
+fix(focus): no quiz bonus for a session with no focused reading

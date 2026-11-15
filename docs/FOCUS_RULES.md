@@ -98,7 +98,7 @@ bank questions gets them generated first.
 **F11. Bonus.** Each correct answer earns `QUIZ_POINTS_PER_CORRECT`
 points. An answer is correct at `QUIZ_CORRECT_FROM` of its question's
 score; one the grader marks low-confidence counts `QUIZ_LOW_CONFIDENCE_WEIGHT`
-(half), for the bonus and for the pass mark (C23.5).
+(half), for the bonus and for the pass mark (C23.5). A session with no counted focus time earns no bonus (C23.8).
 
 **F12. Pass mark.** If the quiz score is below `QUIZ_PASS_SCORE`, the
 whole session earns 0 (time points and bonus). At or above it, time

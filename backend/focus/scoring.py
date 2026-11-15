@@ -206,7 +206,8 @@ def decide(data: ScoringInput) -> ScoringOutput:
     quiz, passed, bonus = data.quiz, None, 0
     if quiz is not None:
         passed = Fraction(str(quiz.correct)) / quiz.total >= Fraction(str(policy.PASS_SCORE))
-        bonus = round(quiz.correct * policy.BONUS_PER_CORRECT) if passed else 0
+        # F11 (C23.8): the bonus is for questions on pages read in focus; no counted time, no bonus.
+        bonus = round(quiz.correct * policy.BONUS_PER_CORRECT) if passed and counted_s > 0 else 0
     lines = _lines(counted_s, points_time, {k: _whole(v) for k, v in reasons.items()}, quiz, passed, bonus)
     if passed is False:
         points_time = 0

@@ -131,6 +131,8 @@ SCENARIOS = [
     ("quiz 5 of 13 fails", normal(), Quiz(correct=5, total=13), {"passed": False, "points_total": 0}),
     ("zero heartbeats, forged end an hour later", [ev(0, "start", page="p1"), ev(3600, "end")], None,
      {"active_seconds": 0, "points_total": 0, "reasons": {"no_heartbeat": 3600}}),
+    ("zero heartbeats, then every quiz answer right (C23.8)", [ev(0, "start", page="p1"), ev(3600, "end")],
+     Quiz(correct=3, total=3), {"passed": True, "points_time": 0, "points_bonus": 0, "points_total": 0}),
     ("heartbeats every second: no more than the clock", spam(), None,
      {"active_seconds": 600, "points_time": 100}),
     ("every heartbeat resent with its id", duplicates(), None, {"active_seconds": 600}),

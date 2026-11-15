@@ -2483,6 +2483,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/time-zone.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/warmup.spec.js",
       "type": "file",
       "role": "config",
@@ -5451,6 +5457,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/gamification/useProgress.js",
       "to": "endpoint:GET /me/progress"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/gamification/useProgress.js",
+      "to": "endpoint:PUT /me/progress"
     },
     {
       "type": "calls_endpoint",
@@ -9852,6 +9863,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/time-zone.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/warmup.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10678,6 +10694,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/gamification/LeagueSettings.jsx",
+      "to": "file:frontend/src/gamification/progressMath.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/LeagueSettings.jsx",
       "to": "file:frontend/src/gamification/useProgress.js"
     },
     {
@@ -10699,6 +10720,11 @@
       "type": "imports",
       "from": "file:frontend/src/gamification/shelfMath.test.js",
       "to": "file:frontend/src/gamification/shelfMath.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/useProgress.js",
+      "to": "file:frontend/src/gamification/progressMath.js"
     },
     {
       "type": "imports",

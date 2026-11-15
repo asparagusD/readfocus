@@ -260,7 +260,7 @@ export async function mockBackend(page, api, book) {
 
 /** C24.6a: GET /me/progress for a reader part way through a week (GAMIFICATION; C24.5's shape). */
 export const PROGRESS = {
-  total_xp: 1240, daily_goal: 50, timezone: 'UTC', display_name: null, leaderboard_opt_out: false,
+  total_xp: 1240, daily_goal: 50, timezone: 'Europe/London', display_name: null, leaderboard_opt_out: false,
   today: { day: '2026-11-18', xp: 30, goal: 50, met: false },
   streak: { days: 7, freezes: 1, frozen_days: [] }, tier: 'Hardcover',
   badges: [{ id: 'first_focus', name: 'First focus session', awarded_at: '2026-11-10T20:00:00+00:00' }],

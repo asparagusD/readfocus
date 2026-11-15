@@ -45,3 +45,22 @@ test('a new reader is encouraged, never warned', () => {
 test('the celebration is remembered per day', () => {
   assert.equal(celebratedKey('2026-11-18'), 'rf-goal-celebrated:2026-11-18');
 });
+
+test('the device zone is adopted only while the stored one is the default UTC', async () => {
+  const { zoneToAdopt } = await import('./progressMath.js');
+  assert.equal(zoneToAdopt('UTC', 'Asia/Dhaka'), 'Asia/Dhaka');
+  assert.equal(zoneToAdopt('', 'America/Los_Angeles'), 'America/Los_Angeles');
+  assert.equal(zoneToAdopt(null, 'Europe/London'), 'Europe/London');
+  assert.equal(zoneToAdopt('Europe/London', 'Asia/Dhaka'), null); // chosen or adopted before: never changed silently
+  assert.equal(zoneToAdopt('UTC', 'UTC'), null);
+  assert.equal(zoneToAdopt('UTC', 'Etc/UTC'), null);
+  assert.equal(zoneToAdopt('UTC', 'Etc/GMT+5'), null); // not a place
+  assert.equal(zoneToAdopt('UTC', undefined), null);
+  assert.equal(zoneToAdopt('UTC', 'not a zone'), null);
+});
+
+test('the device zone is read from the browser, or null', async () => {
+  const { deviceZone } = await import('./progressMath.js');
+  const zone = deviceZone();
+  assert.ok(zone === null || typeof zone === 'string');
+});

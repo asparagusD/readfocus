@@ -42,3 +42,25 @@ export function headerLabel(progress) {
 
 /** The localStorage key that remembers the goal was celebrated on a day, so it is celebrated once. */
 export const celebratedKey = (day) => `rf-goal-celebrated:${day}`;
+
+/** The browser's IANA time zone, or null when it cannot say (C24, GAMIFICATION G6). */
+export function deviceZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
+const PLACE = /^[A-Z][A-Za-z_]+(\/[A-Za-z0-9_+-]+)+$/;
+
+/**
+ * The device's zone to save for a reader, or null (G6: "taken from the browser, editable"). Only while the stored zone
+ * is still the default UTC (or missing), and only a real place ("Asia/Dhaka", not "Etc/GMT+5" or UTC itself): once a
+ * zone is stored it is never changed silently, so a trip does not move a reader's days.
+ */
+export function zoneToAdopt(stored, device) {
+  if (stored && stored !== 'UTC') return null;
+  if (!device || !PLACE.test(device) || device.startsWith('Etc/')) return null;
+  return device;
+}

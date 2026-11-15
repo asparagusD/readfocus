@@ -17,7 +17,7 @@ const navClass = ({ isActive }) => (isActive ? 'rf-topbar__link is-active' : 'rf
  */
 export function Layout({ children }) {
   const { user } = useAuth();
-  const progress = useProgress(Boolean(user)); // C24.6a: null until it arrives (or if it fails): the header then shows nothing
+  const progress = useProgress(Boolean(user), { adoptZone: true }); // C24.6a: null until it arrives (or if it fails): the header then shows nothing
 
   return (
     <div className="rf-layout-root">

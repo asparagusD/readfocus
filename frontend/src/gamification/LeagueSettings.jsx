@@ -5,7 +5,37 @@ import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/toastContext';
 import { useProgress } from './useProgress';
 import { changes, GOAL_MAX, GOAL_MIN } from './leagueView';
+import { deviceZone } from './progressMath';
 import './LeagueSettings.css';
+
+/** The zone the reader's days follow (G6), and a switch to this device's when they differ (a trip, a new device). */
+function Zone({ saved, onSaved }) {
+  const { toast } = useToast();
+  const [busy, setBusy] = useState(false);
+  const device = deviceZone();
+  async function use() {
+    setBusy(true);
+    try {
+      const next = await fetchApi('/me/progress', { method: 'PUT', body: JSON.stringify({ timezone: device }) });
+      toast({ kind: 'success', message: `Your days now follow ${device}.` });
+      onSaved(next);
+    } catch {
+      toast({ kind: 'warning', message: 'The time zone was not changed. Try again in a moment.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="rf-lset__zone">
+      <p>Your days and streak follow <strong>{saved.timezone}</strong>.</p>
+      {device && device !== saved.timezone && (
+        <Button variant="secondary" loading={busy} loadingLabel="Changing" onClick={use}>
+          Use this device’s time zone ({device})
+        </Button>
+      )}
+    </div>
+  );
+}
 
 function Form({ saved, onSaved }) {
   const { toast } = useToast();
@@ -50,13 +80,14 @@ function Form({ saved, onSaved }) {
         </span>
       </label>
       <Button type="submit" loading={busy} loadingLabel="Saving" disabled={Boolean(goalError)}>Save settings</Button>
+      <Zone saved={saved} onSaved={onSaved} />
     </form>
   );
 }
 
 /**
  * League settings (C24.6d, GAMIFICATION G3, G5, G14): the display name others see, the daily goal and the leaderboard
- * opt-out, sent as one PUT /me/progress with only what changed. The server's reason for a refused name is shown on
+ * opt-out, sent as one PUT /me/progress with only what changed; and (G6) the time zone the days follow. The server's reason for a refused name is shown on
  * the name field; a saved change is confirmed in a toast and handed to the page (which reloads the league).
  */
 export function LeagueSettings({ onSaved }) {

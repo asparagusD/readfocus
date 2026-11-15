@@ -118,6 +118,13 @@ the pass mark (FOCUS_RULES F12).
   quietly. A frozen day is not counted, so the next freeze takes 7 more
   counted days (G8). A session graded late for a day before the last goal
   day adds XP but does not move the streak. Code: `backend/xp/`.
+- **Time zone (after C24.6, G6).** While a reader's stored zone is still the
+  default UTC, the header (on every page, signed in) saves the browser's
+  IANA zone once (`zoneToAdopt`: a real place such as `Asia/Dhaka`, never
+  `Etc/...` or UTC itself). After that it is never changed silently, so a
+  trip does not move a reader's days; the league settings show "Your days
+  and streak follow <zone>" and offer "Use this device's time zone" when
+  the device's differs.
 - **C24.5 APIs.** `GET /me/progress` (total XP, today's focus XP against
   the goal in the reader's zone, the streak as of today with frozen days,
   this week's tier or the carried one, badges held; writes nothing),

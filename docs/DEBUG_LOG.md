@@ -4592,3 +4592,40 @@ changes, an unknown zone, empty and missing) fails without `tzdata` and passes w
 
 ### Commit
 feat(xp): XP ledger, daily goal and streaks with earned freezes
+
+## 2026-11-15 C24.6d — the EPUB "read on" e2e test fails now and then (pre-existing, open)
+
+**Status:** open (not caused by C24; recorded, not fixed)
+
+### Symptom
+C24.6d's full `npm --prefix frontend run test:e2e`: 302 passed, 1 failed:
+
+    x 218 e2eeader.spec.js:113:5 › epub: pages and turns › the closing page lets the reader read on, and does not come back
+    Expected {"start": "2:1317", "end": "2:1985"}, received {"start": "2:1207", "end": "2:1985"}
+
+### Repro
+`npx playwright test e2e/reader.spec.js -g "closing page lets the reader read on" --repeat-each 5`: the EPUB case
+failed 1 of 5 (the PDF case 5 of 5 passed). C24 changes no reader code: `git diff 6cf4642 -- frontend/src/originalview
+frontend/src/pages/ReadingSession.jsx frontend/src/reader frontend/e2e/reader.spec.js` is empty, and `/read/:bookId`
+renders outside `Layout` (no header progress).
+
+### Hypotheses
+1. The last snapshot is taken before the EPUB layout settles (the test waits a fixed 700 ms). Tried: polling the final
+   place for 5 s. Result: the EPUB case then failed 10 of 10, always settling at `2:1207`. So the place does settle,
+   and it is the test's reference (`beyondPlace`, taken 700 ms after the turn, usually `2:1317`) that is unsettled:
+   the view keeps re-laying out for longer than the test waits. Reverted (the spec is as it was).
+2. Not yet tried: the reference should be read after the view settles (poll until two reads 700 ms apart agree),
+   or the reader should report when a re-layout is done.
+
+### Root cause
+Not established. Most likely a re-layout of the EPUB view after the turn (column reflow) that takes longer than 700 ms
+under load; the reader's own behaviour may be right, the test's timing assumption wrong.
+
+### Fix
+None in C24.6d (out of scope; one attempt of three used). Next step: hypothesis 2, in its own `fix(frontend)` commit.
+
+### Regression test
+The test itself.
+
+### Commit
+feat(leagues): league settings for name, goal and opt-out (logged here; no fix)

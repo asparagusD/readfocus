@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { initials, lastWeekLine, ordinal, tierStates, timeLeft, withMarkers } from './leagueView.js';
+import { changes, initials, lastWeekLine, ordinal, tierStates, timeLeft, withMarkers } from './leagueView.js';
 
 const NOW = new Date('2026-11-18T15:00:00Z');
 
@@ -62,4 +62,14 @@ test('last week in a sentence that never scolds', () => {
   assert.equal(down, 'Last week you came 11th of 12 with 180 XP. This week you read in Pamphlet, a fresh start.');
   assert.doesNotMatch(down, /lost|fell|failed|dropped|relegat/i);
   assert.equal(lastWeekLine(null), null);
+});
+
+test('a save sends only what changed; an emptied name clears it', () => {
+  const saved = { display_name: 'Owl', daily_goal: 50, leaderboard_opt_out: false };
+  const draft = (over) => ({ display_name: 'Owl', daily_goal: '50', leaderboard_opt_out: false, ...over });
+  assert.deepEqual(changes(saved, draft({})), {});
+  assert.deepEqual(changes(saved, draft({ display_name: '  Quiet   Owl ' })), { display_name: 'Quiet Owl' });
+  assert.deepEqual(changes(saved, draft({ display_name: '  ' })), { display_name: null });
+  assert.deepEqual(changes(saved, draft({ daily_goal: '120', leaderboard_opt_out: true })), { daily_goal: 120, leaderboard_opt_out: true });
+  assert.deepEqual(changes({ ...saved, display_name: null }, draft({ display_name: '' })), {});
 });

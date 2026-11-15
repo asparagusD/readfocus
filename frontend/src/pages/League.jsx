@@ -4,6 +4,7 @@ import { fetchApi } from '../lib/api';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { initials, lastWeekLine, tierStates, timeLeft, withMarkers } from '../gamification/leagueView';
+import { LeagueSettings } from '../gamification/LeagueSettings';
 import './League.css';
 
 function Crest({ tier }) {
@@ -50,12 +51,13 @@ function Row({ row }) {
 export function League() {
   useDocumentTitle('League');
   const [state, setState] = useState({ status: 'loading' });
+  const [version, setVersion] = useState(0); // C24.6d: a saved setting reloads the league (the opt-out shows at once)
   useEffect(() => {
     let live = true;
     fetchApi('/leagues/current').then((body) => { if (live) setState({ status: 'ready', ...body }); })
       .catch(() => { if (live) setState({ status: 'error' }); });
     return () => { live = false; };
-  }, []);
+  }, [version]);
 
   if (state.status === 'loading') {
     return <div className="rf-league" aria-busy="true" aria-label="Loading your league"><Skeleton height={320} /></div>;
@@ -118,6 +120,7 @@ export function League() {
             <p>Each week you read alongside about 30 others at your tier. XP comes only from focused reading, its quizzes and badges. Nothing to buy, no extra lives.</p>
             <p>The top 7 move up and the bottom 5 move down; smaller groups move fewer, and a group under 10 moves nobody down. A quiet week just keeps you where you are.</p>
           </section>
+          <LeagueSettings onSaved={() => setVersion((v) => v + 1)} />
         </aside>
       </div>
     </div>

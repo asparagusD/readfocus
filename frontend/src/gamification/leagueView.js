@@ -66,3 +66,16 @@ export function lastWeekLine(last) {
   if (last.outcome === 'demoted') return `Last week ${place}. This week you read in ${last.now_in}, a fresh start.`;
   return `Last week ${place} and stayed in ${last.now_in}.`;
 }
+
+export const GOAL_MIN = 20; // C24.6d: PUT /me/progress takes 20 to 200 (C24.5)
+export const GOAL_MAX = 200;
+
+/** The settings that changed, so a save never rewrites the rest; an emptied name clears it (null). */
+export function changes(saved, draft) {
+  const out = {};
+  const name = draft.display_name.trim().replace(/\s+/g, ' ');
+  if (name !== (saved.display_name ?? '')) out.display_name = name || null;
+  if (Number(draft.daily_goal) !== saved.daily_goal) out.daily_goal = Number(draft.daily_goal);
+  if (draft.leaderboard_opt_out !== saved.leaderboard_opt_out) out.leaderboard_opt_out = draft.leaderboard_opt_out;
+  return out;
+}

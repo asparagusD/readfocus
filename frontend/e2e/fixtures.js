@@ -68,6 +68,14 @@ export async function mockBackend(page, api, book) {
     if (path === '/leagues/current') { // C24.6c
       return api.league ? json(route, api.league) : json(route, { detail: 'down' }, 503);
     }
+    if (path === '/me/progress' && request.method() === 'PUT') { // C24.6d: settings; a name with admin is refused
+      const body = request.postDataJSON();
+      api.progressPuts.push(body);
+      if (/admin/i.test(body.display_name ?? '')) return json(route, { detail: 'That name is reserved.' }, 422);
+      Object.assign(api.progress, body);
+      if ('leaderboard_opt_out' in body && api.league) api.league.opted_out = body.leaderboard_opt_out;
+      return json(route, api.progress);
+    }
     if (path === '/me/progress' && request.method() === 'GET') { // C24.6a: the header's progress (a test may set api.progress)
       api.progressReads += 1;
       return api.progress ? json(route, api.progress) : json(route, { detail: 'down' }, 503);
@@ -379,7 +387,7 @@ export const test = base.extend({
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
       bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
       focus: { session: null, active: 0, calls: [], events: [] },
-      progress: structuredClone(PROGRESS), progressReads: 0, league: structuredClone(LEAGUE), badgesEarned: { first_focus: '2026-11-10T12:00:00+00:00' } };
+      progress: structuredClone(PROGRESS), progressReads: 0, progressPuts: [], league: structuredClone(LEAGUE), badgesEarned: { first_focus: '2026-11-10T12:00:00+00:00' } };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

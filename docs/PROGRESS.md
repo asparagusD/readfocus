@@ -2984,13 +2984,15 @@ C20 prompt): Steve became C20, merging the stubs "Steve backend" and
 "Steve in the reader"; anchors and highlights C21, notepad C22, focus
 mode C23, XP and leagues C24, verification C25. Each chunk gets its full plan (what there is to
 build on, decisions, subchunks with verification and cuts, an estimate)
-at its own start, before any code. The phase 2 budget is 40.75 hours
+at its own start, before any code. The phase 2 budget is 42.25 hours
 (31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13, then
 36.5 h until the C20 start, raised by 1.75 h on 2026-11-14 for C20's
 7.75 h against the stubs' 6.0 h, then 38.25 h until the C21 start, raised
 by 0.75 h on 2026-11-14 for C21's 4.25 h against the stub's 3.5 h, then
 39.0 h until the C22 start, raised by 1.75 h on 2026-11-14 for C22's
-4.75 h against the stub's 3.0 h; C16
+4.75 h against the stub's 3.0 h, then
+40.75 h until the C23 start, raised by 1.5 h on 2026-11-15 for C23's
+5.0 h against the stub's 3.5 h; C16
 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
 CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 `docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
@@ -4888,6 +4890,299 @@ idle and hidden-tab pauses, page and 3-hour caps, the bookmark quiz from
 the question bank, server-scored points; "Quiz me" outside focus mode.
 Depends on: C17 (C21 for bookmarks as anchors). Estimate: 3.5 h. Safe
 to cut: "Quiz me".
+
+Branch `chunk/C23-focus-mode`, created from `readfocus-2.0` at `8bfd7a9`.
+Goal as given at chunk start: reading is free; focus mode can be toggled
+any time; the stopwatch exists only in focus mode and unlocks only after
+the book's body start; active time earns points; a hidden tab pauses it;
+"Still with the book?" after 10 min without input; a page's time beyond
+30 min without a turn earns 0; 3 active hours force the quiz; ending =
+placing the bookmark; the quiz covers session start -> bookmark with
+`clamp(round(words/400), 3, 15)` questions, a bonus per correct answer,
+and under 40 % the whole session earns 0; "Quiz me" outside focus mode
+earns nothing. The server computes points from events; the client
+stopwatch is display only. This replaces the old fixed reading timer.
+Migrations additive, not applied without approval; RLS; no dark patterns.
+
+### Plan (written at chunk start, 2026-11-15, before any code)
+
+What there is to build on (read from the code and the docs):
+
+- **Rules:** `docs/FOCUS_RULES.md` F1-F14 and its defaults; none of the
+  `FOCUS_*` / `QUIZ_*` names are in `backend/agents/policy.py` yet.
+- **The fixed timer:** `pages/ReadingSession.jsx` (570 lines): a
+  countdown from the planner's `focus_duration_minutes` (lines 82-138,
+  345-366, 468-475), "Today: about N minutes", Start/Pause/Resume and
+  "Start test" -> `POST /sessions/{id}/finish-reading` ->
+  `ComprehensionTest.jsx` -> `submit-answers` -> `Results.jsx`.
+- **Bookmark:** the ribbon (`originalview/Reader.jsx` `act('ribbon')`, key
+  B) calls `onBookmark(renderer.anchor())`, a point anchor (A3);
+  `ReadingSession.onBookmark` saves it as the reading place with a toast.
+- **Anchor -> chunk (A6):** `chunks.anchors` (migration 020): PDF
+  `{pages, spans: [{page, char_start, char_end}]}`, EPUB `{start, end:
+  {spine_index, cfi, location}}`, null until a book's regions job ran;
+  `books.toc` entries carry `chunk_index` and `block_id` (PDF `page`,
+  EPUB `spine_index`); the client's `today.js chunkAt` maps a place to a
+  chunk from the session's starts.
+- **Questions and grading:** `services/question_bank.py
+  assemble_session_test` (bank rows per chunk, generates missing ones,
+  `assembler.decide` with the planner's mix, stores `sessions.test_questions`
+  once); `TEST_QUESTION_COUNT` = 5 is fixed today; `evaluate-single` and
+  `submit-answers` grade algorithmically and feed mastery and the
+  optimizer through `run_submit`; `public_question` strips answers.
+- **Design:** handoff screens 20-25 (`focus-locked`, `focus`, quiz,
+  results): the Focus switch in the toolbar; the focus bar (stopwatch pill,
+  breathing dot, or a lock and "0:00:00 · starts at Chapter 1" with a
+  popover; "Focus · notes, Steve and badges are tucked away"; Pause focus,
+  End session); front matter labelled "the focus clock starts at Chapter
+  1"; margin markers at 35 % in focus mode; the side panel hidden; the
+  quiz one question at a time, no Steve. Gaps 2 (points: design 1 XP/min
+  and +30/+10, rules 10/min and 20/correct), 7 (quiz length and "Save and
+  finish later"), 13 (idle prompt, cap, body-start correction, Quiz me
+  have no screens).
+- Migrations end at 027; next are 028 and 029.
+
+Decisions that apply to every subchunk:
+
+- **D1 FOCUS_RULES wins over the design** on numbers: 10 points per
+  active minute, 20 per correct answer, no ribbon bonus (gap 2); the quiz
+  length is F10's clamp, not "always three" (gap 7).
+- **D2 Pure scoring engine.** `backend/agents/focus/scoring.py`
+  `decide(events, policy_view) -> Tally` (the free-intelligence pattern:
+  no I/O, no clock). The server stores raw events with its own
+  `received_at`; the tally is recomputed from all events on every
+  accepted event (for display) and once more at scoring (final). The
+  client never sends a duration, a count or a score (F14).
+- **D3 Time accrual (F3-F7).** An interval between two accepted
+  heartbeats (or a heartbeat and a page turn) is credited only when the
+  later event says `visible` and focus on, the place is at or after the
+  body start, the session is open, and the reader is not idle-paused; it
+  is capped at `FOCUS_MAX_GAP_S` = 2 x `FOCUS_HEARTBEAT_S` (30 s), so a
+  dropped connection or a sleeping laptop never earns its gap. Hidden and
+  visible changes send a heartbeat at once, so pauses are tight. Idle:
+  input = a heartbeat with `had_input`, a page turn or an idle answer; 10
+  min after the last input the prompt time is fixed; an idle answer within
+  60 s keeps the time, otherwise everything from the prompt time to the
+  next input earns 0. Page cap: a page visit (from one turn to the next)
+  longer than 30 min of wall time earns 0 for that whole visit (as
+  written; question 2). Session cap: credited time stops at 180 min and the
+  session moves to the quiz with the bookmark at the last known place.
+- **D4 Body start** is stored on the book (`books.body_start jsonb`
+  `{anchor, position, source: detected|reader}`), detected lazily on first
+  request and saved; the reader may correct it ("The book starts here",
+  FOCUS_RULES question 3); a change applies to new focus sessions only.
+- **D5 The quiz reuses a `sessions` row.** Ending a focus session (or
+  Quiz me) creates a `sessions` row with `source` focus / quiz_me, the
+  covered chunk range and its `test_questions`, so `evaluate-single`,
+  `submit-answers`, `ComprehensionTest.jsx`, mastery and the optimizer work
+  unchanged; the focus session points at it. `submit-answers` on a focus
+  quiz then scores the focus session once (idempotent: `scored_at` set by a
+  conditional update). Correct = an answer's score / max at or above
+  `QUIZ_CORRECT_FROM` = `MASTERY_CORRECT_FROM` (0.7); quiz score = mean of
+  score / max.
+- **D6 The fixed timer goes; the planner stays.** The countdown, "Today:
+  about N minutes" and "Start test" leave the reader; the planner still
+  chooses today's range (bounds, "Back to today"), and its test is
+  replaced by Quiz me (outside focus) and the bookmark quiz (inside).
+- **D7 No dark patterns.** No countdown pressure (the stopwatch counts up),
+  no sounds, the idle prompt never blocks reading and is worded neutrally,
+  the 15-minute cap notice is informative, a 0-point result is stated
+  plainly with what to do next, never with loss framing.
+- **D8 Open sessions resume** (F1/F9, FOCUS_RULES question 2 as written):
+  one open focus session per reader and book (a partial unique index);
+  time away never counts (D3's gap cap), so no auto-close is needed.
+
+Subchunks (lines are code; tests listed separately; ~200 lines per commit,
+split a/b where marked):
+
+**C23.1 body start detection + "The book starts here"** — 0.5 h
+- C23.1a backend (~150 + ~170 tests): `backend/services/body_start.py`
+  (new, pure): from `books.toc` the first entry titled chapter 1 / one / I
+  (or "Part 1" followed by one), else the first entry not in a front-matter
+  list (cover, title, copyright, contents, dedication, epigraph, preface,
+  foreword, acknowledg(e)ments, list of figures/tables, abbreviations,
+  about the author, praise), else (no toc) the first PDF page whose
+  `page_regions` hold prose of at least `BODY_MIN_PROSE_WORDS` = 120 after
+  pages that look like front matter; returns an A3 point anchor and its A4
+  position. `policy.py`: the title list and the threshold.
+  `supabase/migrations/028_body_start.sql` (new, not applied):
+  `books.body_start jsonb`. `routers/books.py`: `GET
+  /books/{id}/body-start` (detect, save, return) and `PUT` (the reader's
+  correction, anchor checked by `anchor_checks`). Tests:
+  `test_body_start.py` (PDF outline, EPUB nav, Roman numerals, a book
+  starting with "Introduction", no toc with regions, nothing found -> the
+  first page), `test_books_api.py` (+GET/PUT, another reader 404),
+  `test_migrations.py` (+028 additive).
+- C23.1b frontend (~120): front-matter pages labelled "Front matter · the
+  focus clock starts at Chapter 1" (handoff screen 20); a "The book starts
+  here" marker at the body start; "The book starts here" in the reader's
+  page menu to correct it, with Undo. Unit `bodyStart.test.js` (place
+  before/after), e2e `body-start.spec.js` (PDF and EPUB, correction PUT).
+
+**C23.2 focus schema (sessions, events)** — 0.25 h, ~40 + ~80 tests
+- `supabase/migrations/029_focus.sql` (new, not applied):
+  `focus_sessions` (id, user_id, book_id, status open / quiz / scored,
+  focus_on, start_anchor, start_position, body_start_position (frozen at
+  start), bookmark_anchor, bookmark_position, end_reason bookmark / cap,
+  ended_at, quiz_session_id -> sessions, words_covered, question_count,
+  tally jsonb, active_seconds, time_points, bonus_points, quiz_score,
+  final_points, scored_at, created/updated); partial unique index one
+  `open`/`quiz` per (user_id, book_id); `focus_events` (id, session,
+  user_id, client_event_id uuid, kind heartbeat / page_turn / idle_answer /
+  toggle / bookmark, visible, had_input, focus_on, position float8,
+  page_key text, received_at default now()), unique (session,
+  client_event_id), index (session, received_at); `sessions.source text
+  default 'planned'` and `sessions.focus_session_id`; RLS on both new
+  tables with an owner SELECT policy only (writes through the backend, as
+  026/027). `policy.py`: the FOCUS_RULES defaults plus `FOCUS_MAX_GAP_S`,
+  `QUIZ_CORRECT_FROM`, `FOCUS_CAP_NOTICE_MIN` = 15. Tests:
+  `test_migrations.py` (+029 additive, policies SELECT-only, the index),
+  `test_policy.py` (names = FOCUS_RULES table).
+
+**C23.3 scoring engine (pure) + scenario tests** — 0.75 h
+- C23.3a time (~120 + ~200 tests): `backend/agents/focus/scoring.py`
+  `decide()`: intervals, visible, focus on/off, body start, idle prompt
+  and answer, gap cap, duplicates ignored; `Tally` (active seconds,
+  per-reason zeroed seconds, state running / paused_hidden / paused_idle /
+  paused_off / locked / capped). `backend/tests/focus_scenarios.py`: named
+  scenarios as event lists with expected tallies (steady 10 min; hidden 3
+  min in the middle; idle 12 min answered in 40 s vs 90 s; toggle off and
+  on; reading front matter then crossing body start; a 10-minute network
+  gap; duplicate ids; heartbeats every 2 s).
+- C23.3b caps and points (~80 + ~150 tests): page cap per visit, session
+  cap at 180 min (state capped, the cap time), time points = floor(active
+  minutes) x 10, `final(tally, quiz)`: bonus 20 x correct, under 0.40 ->
+  everything 0, a breakdown list for the results page. Scenarios: one
+  page 31 min vs 29 min; 3 h 10 min of reading; quiz 2/5 (0.40, passes)
+  vs 1/3 (fails, 0); a perfect quiz.
+
+**C23.4 focus API: start, heartbeat, page turn, pause, end** — 0.75 h
+- C23.4a (~170 + ~200 tests): `backend/routers/focus.py` (new): `POST
+  /books/{id}/focus` (start, or return the open one; ownership; body start
+  frozen), `POST /focus/{id}/heartbeat`, `/page-turn`, `/pause` and
+  `/resume` (toggle events), `/idle-answer`; each takes a
+  `client_event_id` and a place (A1 point anchor, checked by
+  `anchor_checks`; the position computed on the server from the anchor
+  where it can be, else checked against the book's pages or spine), stores
+  the event (duplicates return the same answer), recomputes the tally and
+  returns `{state, active_seconds, points_provisional, cap_in_s,
+  idle_prompt_at}`; `GET /focus/{id}` for a reload. `main.py`: the router;
+  `purposes.json`; the repo graph.
+- C23.4b end (~90 + ~120 tests): `POST /focus/{id}/end` with the bookmark
+  anchor (or the server's own cap end): status quiz, `end_reason`, the
+  bookmark saved as the reading place too; refuses events after the end;
+  idempotent per session.
+
+**C23.5 range quiz: question selection by bookmark range** — 0.5 h
+- C23.5a (~130 + ~160 tests): `backend/services/range_quiz.py` (new):
+  start and bookmark anchors -> covered chunks through `chunks.anchors`
+  (PDF page spans, EPUB spine and location; a bookmark before the start
+  swaps them), falling back to `books.toc` chunk indices; words = the
+  covered chunks' `word_count`, the first and last prorated by their spans
+  when known; `n = clamp(round(words/400), 3, 15)`;
+  `assemble_session_test(..., count=n)` (the assembler gains a count;
+  fewer bank questions than n -> all there are, at least the fallback);
+  the `sessions` row (D5). `GET /focus/{id}/quiz` (public questions, "pp.
+  44-52 · about 3,200 words").
+- C23.5b (~90 + ~140 tests): `submit-answers` on a `source = focus`
+  session scores the focus session once (D5) and returns the breakdown;
+  `POST /books/{id}/quiz-me` (F13): from the last ended focus session's
+  bookmark (else the body start) to the current place, `source = quiz_me`,
+  no points. Steve refuses (423, "Steve is resting during your quiz") while
+  the reader's focus session for that book is in `quiz` (F10).
+
+**C23.6 focus UI: toggle, locked/unlocked stopwatch, warnings, end flow** —
+1.0 h
+- C23.6a (~200 + unit ~80 + e2e ~150): `frontend/src/focus/useFocusSession.js`
+  (new: start, a 15 s heartbeat, a heartbeat at once on visibilitychange,
+  `had_input` from scroll/key/pointer, page turns from `onRelocate`, an
+  outbox with client ids retried on failure, the server's tally as truth
+  and the display interpolated between replies), `focus/FocusBar.jsx` +
+  `.css` (handoff 20-21: running pill with the breathing dot (still under
+  reduced motion), locked pill "0:00:00 · starts at Chapter 1" with its
+  popover, Pause focus / Resume, End session; `role="timer"`, announced
+  only on state changes), the Focus switch in `ReaderToolbar.jsx`, the
+  side panel and badges tucked away and markers at 35 % in focus mode.
+  Unit `outbox.test.js`, `stopwatch.test.js`; e2e `focus-mode.spec.js`
+  (locked in front matter, unlocks at chapter 1, hidden tab pauses, toggle
+  keeps the session, reload resumes it).
+- C23.6b (~170 + e2e ~120): `focus/IdlePrompt.jsx` ("Still with the
+  book?" / "I'm here", polite, not modal, never covering the text on a
+  phone), the cap notice at 165 min ("Fifteen minutes left in this
+  session; the quiz follows"), the end flow: End session or the ribbon in
+  focus mode -> confirm "Place your bookmark here?" -> ready modal ("N
+  questions on pp. x-y") -> `ComprehensionTest.jsx` in quiz mode (eyebrow
+  "from the pages you just read", progress dots, no Steve); at the cap the
+  ready modal opens on its own.
+
+**C23.7 results with points breakdown; Quiz me; retire the fixed timer** —
+0.5 h
+- C23.7a (~150 + e2e ~100): `Results.jsx` + `.css`: the focus breakdown
+  (handoff 24-25: focused minutes x 10, quiz +20 each, total; minutes
+  zeroed by the page cap listed; under 40 % "This session earns 0 points.
+  Your notes and place are kept; a new session starts when you turn focus
+  on.") ; ReadingSession: the countdown, "Today: about N minutes", its
+  Start/Pause and "Start test" removed; existing e2e that drive the timer
+  updated.
+- C23.7b (~80 + e2e ~60): "Quiz me" in the toolbar outside focus mode ->
+  `POST /books/{id}/quiz-me` -> the quiz -> Results without points ("Quiz
+  me never earns points").
+
+**C23.8 anti-cheat + e2e** — 0.5 h (~100 + tests ~250)
+- Server: events faster than `FOCUS_MIN_EVENT_GAP_S` = 5 s ignored (not
+  errors); a place outside the book refused; a position jumping more than
+  `FOCUS_MAX_PAGES_PER_TURN` pages in one turn credits nothing for that
+  visit until the next turn (as a page-cap zero, listed in the
+  breakdown); events after the end refused; one open session per book
+  (the index); no client numbers accepted anywhere (a body with
+  `active_seconds` or `points` refused, extra keys forbidden); quiz
+  answers submitted once; scoring once; another reader 404 everywhere.
+  Tests: `test_focus_anticheat.py` (replayed ids, fast heartbeats, a
+  forged `received_at`, a 6-hour gap, two tabs on one session, an
+  out-of-book page, a second submit). E2E `focus.spec.js`: the whole
+  journey on a PDF and an EPUB (front matter locked -> chapter 1 -> 2
+  minutes of mocked heartbeats -> hidden tab -> idle prompt -> bookmark
+  -> quiz -> results with points), and a failed quiz with 0.
+
+**C23.G 🚦 Gate G8: scoring scenarios pass** — 0.25 h (the prompt says
+G7; G7 was C20's gate, question 1)
+- Every scenario in `focus_scenarios.py` passes, each named for its rule
+  (F2-F12) and listed in `docs/FOCUS_RULES.md` under "As built (C23)"
+  with the open questions answered; `docs/ARCHITECTURE.md` focus section;
+  self-review of the chunk diff; standard checks; the two migrations still
+  waiting for your approval (or applied with their dumps).
+
+Estimate: 5.0 h (stub 3.5 h; the phase 2 budget would rise by 1.5 h to
+42.25 h). Stop and propose cuts at 7.5 h. Safe to cut, in order: Quiz me
+(C23.7b, C23.5b's endpoint), the reader's body-start correction (C23.1b's
+menu item), the anti-cheat page-jump rule.
+
+Questions:
+
+1. The gate's number: G8 (G7 was C20's "consent, quota, grounding"), or
+   keep the prompt's G7?
+2. F7 page cap: the whole visit earns 0 (as written, and as the prompt
+   reads), or only the minutes beyond 30?
+3. Quiz me's range: from the last ended focus session's bookmark (else
+   the body start) to the current place (as C23.5b plans), or from the last saved
+   reading place?
+4. "Save and finish later" (design gap 7): leaving the quiz keeps the
+   session in `quiz` with provisional points until it is taken (no
+   deferral button), or add the button?
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [ ] C23.1 body start detection + "The book starts here" (a backend, b reader) | | | | | migration 028 needs your approval and a dump |
+| [ ] C23.2 focus schema (sessions, events) | | | | | migration 029 needs your approval and a dump |
+| [ ] C23.3 scoring engine (pure) + scenario tests (a time, b caps and points) | | | | | |
+| [ ] C23.4 focus API: start, heartbeat, page turn, pause, end (a events, b end) | | | | | |
+| [ ] C23.5 range quiz: question selection by bookmark range (a quiz, b scoring and Quiz me) | | | | | |
+| [ ] C23.6 focus UI: toggle, locked/unlocked stopwatch, warnings, end flow (a bar, b prompts and end) | | | | | |
+| [ ] C23.7 results with points breakdown; Quiz me; retire the fixed timer (a results and timer, b Quiz me) | | | | | |
+| [ ] C23.8 anti-cheat + e2e | | | | | |
+| [ ] C23.G 🚦 Gate G8: scoring scenarios pass | | | | | |
 
 ## C24 — XP, streaks, badges and leagues
 

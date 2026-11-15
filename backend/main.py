@@ -15,6 +15,7 @@ from backend.routers import (
     books,
     dashboard,
     focus,
+    internal,
     lookup,
     mastery,
     notes,
@@ -66,6 +67,7 @@ app.include_router(steve_ask.router, prefix="/steve", tags=["Steve"])
 app.include_router(annotations.router, tags=["Annotations"])
 app.include_router(notes.router, tags=["Notes"])
 app.include_router(focus.router, prefix="/focus", tags=["Focus"])
+app.include_router(internal.router, prefix="/internal", tags=["Internal"])  # C24.4: scheduled jobs
 
 @app.get("/health")
 def health_check():

@@ -127,9 +127,13 @@ def _form_groups(week: dict, now: datetime) -> int:
     return placed
 
 
+def _now() -> datetime:
+    return datetime.now(UTC)
+
+
 def roll_over(now: datetime | None = None) -> dict:
     """Close ended weeks, then form the current week's groups; safe to run any number of times, at any time."""
-    now = now or datetime.now(UTC)
+    now = now or _now()
     ended = _all(lambda: supabase.table("league_weeks").select("*").eq("status", "open").lte(
         "ends_at", now.isoformat()).order("starts_at"))
     for week in ended:

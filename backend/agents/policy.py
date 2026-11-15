@@ -436,3 +436,4 @@ LEAGUE_PROMOTE = 7  # G13: the top this many of a full group move up (scaled by 
 LEAGUE_DEMOTE = 5  # G13: the bottom this many move down (scaled likewise)
 LEAGUE_DEMOTE_MIN_GROUP = 10  # G13 (C24.3): a group smaller than this demotes nobody
 LEAGUE_ACTIVE_DAYS = 14  # G12 (C24.3): readers with XP in this many days before a week are grouped for it
+CRON_SECRET_MIN_LENGTH = 32  # C24.4: /internal endpoints refuse to run (503) under a shorter CRON_SECRET

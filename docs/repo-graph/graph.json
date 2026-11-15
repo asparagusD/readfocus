@@ -324,6 +324,13 @@
       "handler": "resume_focus"
     },
     {
+      "id": "endpoint:POST /internal/leagues/rollover",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/internal/leagues/rollover",
+      "handler": "league_rollover"
+    },
+    {
       "id": "endpoint:POST /sessions/start",
       "type": "endpoint",
       "method": "POST",
@@ -571,6 +578,12 @@
     },
     {
       "id": "file:.github/workflows/ci.yml",
+      "type": "file",
+      "role": "config",
+      "language": "yaml"
+    },
+    {
+      "id": "file:.github/workflows/league-rollover.yml",
       "type": "file",
       "role": "config",
       "language": "yaml"
@@ -985,6 +998,12 @@
     },
     {
       "id": "file:backend/routers/focus.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/internal.py",
       "type": "file",
       "role": "router",
       "language": "python"
@@ -1663,6 +1682,12 @@
     },
     {
       "id": "file:backend/tests/test_ingestor.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_internal_api.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -5751,6 +5776,11 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/internal.py",
+      "to": "endpoint:POST /internal/leagues/rollover"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/lookup.py",
       "to": "endpoint:GET /lookup"
     },
@@ -6678,6 +6708,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/internal.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/lookup.py"
     },
     {
@@ -6909,6 +6944,16 @@
       "type": "imports",
       "from": "file:backend/routers/focus.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/internal.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/internal.py",
+      "to": "file:backend/xp/league_store.py"
     },
     {
       "type": "imports",
@@ -8559,6 +8604,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_ingestor.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_internal_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_internal_api.py",
+      "to": "file:backend/routers/internal.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_internal_api.py",
+      "to": "file:backend/tests/test_league_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_internal_api.py",
+      "to": "file:backend/xp/league_store.py"
     },
     {
       "type": "imports",
@@ -12979,6 +13044,11 @@
       "type": "uses_env",
       "from": "file:backend/nlp/embedder.py",
       "to": "env:FASTEMBED_CACHE"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/routers/internal.py",
+      "to": "env:CRON_SECRET"
     },
     {
       "type": "uses_env",

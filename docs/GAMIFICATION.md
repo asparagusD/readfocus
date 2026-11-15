@@ -117,6 +117,15 @@ the pass mark (FOCUS_RULES F12).
   quietly. A frozen day is not counted, so the next freeze takes 7 more
   counted days (G8). A session graded late for a day before the last goal
   day adds XP but does not move the streak. Code: `backend/xp/`.
+- **C24.4 Rollover.** `POST /internal/leagues/rollover` with
+  `Authorization: Bearer <CRON_SECRET>` (constant-time compare; 503 when
+  the secret is unset or under 32 characters, 401 otherwise) runs
+  `league_store.roll_over`, idempotent: a second call closes and forms
+  nothing. Called by `.github/workflows/league-rollover.yml` (Mondays 00:05
+  UTC, chosen over Supabase Cron: no extensions or Vault secret in the
+  database, and curl retries through Render's cold start where pg_net's 2 s
+  default would time out). Streaks need no daily job: they are worked out
+  on read (C24.1).
 - **C24.2 Badges.** The 14 above, in `backend/xp/badges.py` (id, name,
   description, rule, XP reward, the triggers that check it, seal or
   bookplate); held in `user_badges` (migration 032), one row per reader and

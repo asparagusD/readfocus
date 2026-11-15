@@ -427,3 +427,12 @@ STREAK_FREEZE_EVERY_DAYS = 7  # G8: one earned at every 7 consecutive counted da
 XP_TIMEZONE_MAX = 64  # user_progress.timezone: an IANA name such as "America/Argentina/ComodRivadavia"
 DISPLAY_NAME_MAX = 40  # user_progress.display_name, shown on leaderboards (G3)
 TECH_BOOK_SHARE = 0.20  # Badges: a book is technical when this share of its page regions is math or code
+
+# --- weekly leagues (C24.3, docs/GAMIFICATION.md G10-G14) ---
+LEAGUE_TIERS = ("Pamphlet", "Paperback", "Hardcover", "Folio", "First Edition", "Illuminated")  # G10, lowest first
+LEAGUE_OUTCOMES = ("promoted", "stayed", "demoted")  # league_members.outcome (033 checks the same values)
+LEAGUE_GROUP_SIZE = 30  # G12: groups of about this many readers of one tier
+LEAGUE_PROMOTE = 7  # G13: the top this many of a full group move up (scaled by n / 30 in a smaller one)
+LEAGUE_DEMOTE = 5  # G13: the bottom this many move down (scaled likewise)
+LEAGUE_DEMOTE_MIN_GROUP = 10  # G13 (C24.3): a group smaller than this demotes nobody
+LEAGUE_ACTIVE_DAYS = 14  # G12 (C24.3): readers with XP in this many days before a week are grouped for it

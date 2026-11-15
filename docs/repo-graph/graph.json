@@ -1668,6 +1668,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_leagues.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_lookup.py",
       "type": "file",
       "role": "test",
@@ -1921,6 +1927,12 @@
     },
     {
       "id": "file:backend/xp/badges.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/xp/leagues.py",
       "type": "file",
       "role": "lib",
       "language": "python"
@@ -4788,6 +4800,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/033_leagues.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -4993,6 +5011,18 @@
     },
     {
       "id": "table:focus_sessions",
+      "type": "table"
+    },
+    {
+      "id": "table:league_groups",
+      "type": "table"
+    },
+    {
+      "id": "table:league_members",
+      "type": "table"
+    },
+    {
+      "id": "table:league_weeks",
       "type": "table"
     },
     {
@@ -6006,6 +6036,21 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/032_badges.sql",
       "to": "table:user_badges"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/033_leagues.sql",
+      "to": "table:league_groups"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/033_leagues.sql",
+      "to": "table:league_members"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/033_leagues.sql",
+      "to": "table:league_weeks"
     },
     {
       "type": "graph_edge",
@@ -8505,6 +8550,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_leagues.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_leagues.py",
+      "to": "file:backend/xp/leagues.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_lookup.py",
       "to": "file:backend/dependencies.py"
     },
@@ -9196,6 +9251,11 @@
     {
       "type": "imports",
       "from": "file:backend/xp/badges.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/xp/leagues.py",
       "to": "file:backend/agents/policy.py"
     },
     {

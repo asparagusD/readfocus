@@ -72,20 +72,28 @@ the pass mark (FOCUS_RULES F12).
 - **G11. Week.** Monday 00:00 UTC to the next Monday 00:00 UTC, for
   everyone (leagues ignore G6). The rollover runs on the server from a
   scheduled call authenticated with `CRON_SECRET`.
-- **G12. Groups.** Readers who earn XP in a week are placed, on their
-  first XP of that week, in a group of about `LEAGUE_GROUP_SIZE` = 30
-  readers of the same tier. Only real readers; a group may be smaller
-  than 30 when few readers are active.
-- **G13. Promotion and demotion.** At rollover the top
+- **G12. Groups.** At the start of each week (the rollover), readers with
+  XP in the `LEAGUE_ACTIVE_DAYS` = 14 days before it are placed in groups
+  of about `LEAGUE_GROUP_SIZE` = 30 readers of the same tier, in the order
+  they joined (their first XP), the groups of a tier as even as possible.
+  Only real readers; a group may be smaller than 30 when few readers are
+  active. A reader whose first XP comes mid-week joins at the next
+  rollover. (Changed in C24.3, at the prompt's request: until then readers
+  were placed on their first XP of the week.)
+- **G13. Promotion and demotion.** At rollover each group is ranked by the
+  week's XP, ties going to who reached it first. The top
   `LEAGUE_PROMOTE` = 7 move up a tier and the bottom `LEAGUE_DEMOTE` = 5
-  move down. In a group smaller than 30 these scale to
-  `round(n * 7 / 30)` and `round(n * 5 / 30)`. No promotion from
-  Illuminated, no demotion from Pamphlet. Ties are broken by who reached
-  the XP first. A reader with no XP in a week keeps their tier and joins
-  no group.
+  move down; in a group smaller than 30 these scale to `n * 7 / 30` and
+  `n * 5 / 30`, rounded half up. Only a reader with at least 1 XP that
+  week moves up, and a group smaller than `LEAGUE_DEMOTE_MIN_GROUP` = 10
+  demotes nobody (C24.3). No promotion from Illuminated, no demotion from
+  Pamphlet. A reader not active in the last 14 days keeps their tier and
+  joins no group.
 - **G14. Opt-out.** A reader can opt out of leaderboards in settings: they
-  are placed in no group and shown nowhere; XP, streaks and badges still
-  work. Opting back in starts at their last tier the next week.
+  keep their group, tier and movement but are shown on nobody else's board
+  (ranks keep their true numbers); they still see their own. XP, streaks
+  and badges still work. (Changed in C24.3, at the prompt's request: until
+  then opted-out readers were placed in no group.)
 
 ## Notifications
 

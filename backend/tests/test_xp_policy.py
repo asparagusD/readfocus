@@ -30,3 +30,9 @@ def test_the_goal_default_lies_within_its_bounds_and_the_sources_are_the_ledgers
 
 def test_the_technical_book_share_is_the_documented_percentage():
     assert round(policy.TECH_BOOK_SHARE * 100) == documented("TECH_BOOK_SHARE")
+
+
+def test_the_league_numbers_are_the_documented_ones():
+    for name in ("LEAGUE_GROUP_SIZE", "LEAGUE_PROMOTE", "LEAGUE_DEMOTE", "LEAGUE_DEMOTE_MIN_GROUP", "LEAGUE_ACTIVE_DAYS"):
+        assert getattr(policy, name) == documented(name), name
+    assert policy.LEAGUE_OUTCOMES == ("promoted", "stayed", "demoted")

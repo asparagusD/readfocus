@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 871,
-    "inventoried": 728,
+    "tracked": 874,
+    "inventoried": 731,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16120,
+      "size_bytes": 16138,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 429,
-      "size_bytes": 19644,
+      "lines": 438,
+      "size_bytes": 20381,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -1535,6 +1535,14 @@
       "purpose": "Pytest: chunk_text chunk counts, word bounds, paragraph integrity and content preservation."
     },
     {
+      "path": "backend/tests/test_leagues.py",
+      "language": "python",
+      "lines": 172,
+      "size_bytes": 7926,
+      "role": "test",
+      "purpose": "Pytest, table-driven: week start, group sizes, grouping by tier and join order, zones by group size, standings and ties, outcomes at the tier edges, next tier, opted-out readers hidden from others (C24.3)."
+    },
+    {
       "path": "backend/tests/test_lookup.py",
       "language": "python",
       "lines": 318,
@@ -1553,8 +1561,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 920,
-      "size_bytes": 43425,
+      "lines": 978,
+      "size_bytes": 46498,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -1833,8 +1841,8 @@
     {
       "path": "backend/tests/test_xp_policy.py",
       "language": "python",
-      "lines": 32,
-      "size_bytes": 1244,
+      "lines": 38,
+      "size_bytes": 1558,
       "role": "test",
       "purpose": "Pytest: the daily-goal and streak defaults in policy.py equal docs/GAMIFICATION.md; the XP sources (C24.1)."
     },
@@ -1877,6 +1885,14 @@
       "size_bytes": 5570,
       "role": "lib",
       "purpose": "Pure badge catalogue (C24.2, GAMIFICATION Badges): 14 badges with id, name, description, rule over Facts, XP reward, triggers and shelf kind; earned(), the first chapter's last chunk from the contents and body start, a place at a book's end, the technical-book share."
+    },
+    {
+      "path": "backend/xp/leagues.py",
+      "language": "python",
+      "lines": 127,
+      "size_bytes": 4530,
+      "role": "lib",
+      "purpose": "Pure weekly leagues (C24.3, GAMIFICATION G10-G14): the Monday-UTC week, even groups of about 30 per tier in join order, zones scaled by group size (no demotion under 10, promotion needs XP), standings with ties to the earlier achiever, outcomes at the tier edges, the next tier, and boards that hide opted-out readers from others."
     },
     {
       "path": "backend/xp/streaks.py",
@@ -2057,8 +2073,8 @@
     {
       "path": "docs/GAMIFICATION.md",
       "language": "markdown",
-      "lines": 135,
-      "size_bytes": 7098,
+      "lines": 143,
+      "size_bytes": 7724,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): XP from focus points, daily goal, streaks with earned freezes, the badge catalogue, weekly book-themed leagues, opt-out and no dark patterns."
     },
@@ -2073,8 +2089,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5484,
-      "size_bytes": 973760,
+      "lines": 5486,
+      "size_bytes": 979024,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5695,6 +5711,14 @@
       "purpose": "Creates user_badges (user_id, badge_id, awarded_at; primary key per reader and badge), owner-read-only under RLS (C24.2)."
     },
     {
+      "path": "supabase/migrations/033_leagues.sql",
+      "language": "sql",
+      "lines": 63,
+      "size_bytes": 3458,
+      "role": "migration",
+      "purpose": "Creates league_weeks (Monday-UTC weeks, grouped_at, open/closed), league_groups (a week's group of one tier) and league_members (tier, join time, weekly XP, when reached, final rank, outcome); RLS on all three, readers read only their own memberships (C24.3)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -5769,8 +5793,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 730,
-      "size_bytes": 224886,
+      "lines": 733,
+      "size_bytes": 225795,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -5801,8 +5825,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 289,
-      "size_bytes": 12255,
+      "lines": 290,
+      "size_bytes": 12339,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

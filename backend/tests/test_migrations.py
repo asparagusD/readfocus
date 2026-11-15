@@ -918,3 +918,61 @@ def test_032_readers_only_read_their_own_badges_and_it_touches_nothing_else():
     assert policies == ["SELECT"] and sql.count("CREATE POLICY") == 1  # only the server awards (G2)
     assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == ["user_badges"]
     assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.|SECURITY DEFINER", sql)
+
+
+# --- 033: weekly leagues (C24.3) --------------------------------------------------------------------------------------
+
+def migration_033() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "033_leagues.sql"))
+
+
+def test_033_creates_the_three_league_tables_with_the_agreed_columns():
+    from backend.agents import policy
+    sql = migration_033()
+    tier = f"text NOT NULL CHECK (tier IN ({_in_list(policy.LEAGUE_TIERS)}))"
+    assert table_definition(sql, "league_weeks") == {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "starts_at": "timestamptz NOT NULL UNIQUE",
+        "ends_at": "timestamptz NOT NULL",
+        "status": "text NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed'))",
+        "grouped_at": "timestamptz",
+        "closed_at": "timestamptz",
+        "CONSTRAINT": "league_weeks_order CHECK (ends_at > starts_at)",
+    }
+    assert table_definition(sql, "league_groups") == {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "week_id": "uuid NOT NULL REFERENCES public.league_weeks(id) ON DELETE CASCADE",
+        "tier": tier,
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+    }
+    assert table_definition(sql, "league_members") == {
+        "week_id": "uuid NOT NULL REFERENCES public.league_weeks(id) ON DELETE CASCADE",
+        "group_id": "uuid NOT NULL REFERENCES public.league_groups(id) ON DELETE CASCADE",
+        "user_id": OWNER,
+        "tier": tier,
+        "joined_at": "timestamptz NOT NULL",
+        "weekly_xp": "integer NOT NULL DEFAULT 0 CHECK (weekly_xp >= 0)",
+        "xp_reached_at": "timestamptz",
+        "final_rank": "integer CHECK (final_rank >= 1)",
+        "outcome": f"text CHECK (outcome IS NULL OR outcome IN ({_in_list(policy.LEAGUE_OUTCOMES)}))",
+        "PRIMARY": "KEY (week_id, user_id)",
+    }
+
+
+def test_033_indexes_a_groups_members_and_a_readers_weeks():
+    sql = migration_033()
+    assert "CREATE INDEX IF NOT EXISTS idx_league_members_group ON public.league_members (group_id)" in sql
+    assert "CREATE INDEX IF NOT EXISTS idx_league_members_user ON public.league_members (user_id, week_id)" in sql
+    assert "CREATE INDEX IF NOT EXISTS idx_league_groups_week ON public.league_groups (week_id, tier)" in sql
+
+
+def test_033_readers_read_only_their_own_membership_and_nothing_else():
+    sql = migration_033()
+    for table in ("league_weeks", "league_groups", "league_members"):
+        assert f"ALTER TABLE public.{table} ENABLE ROW LEVEL SECURITY" in sql
+    # Others' standings go only through the backend, which shows display name and XP alone (G3).
+    policies = re.findall(r"CREATE POLICY \"[^\"]+\" ON public\.(\w+) FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert policies == [("league_members", "SELECT")] and sql.count("CREATE POLICY") == 1
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == [
+        "league_groups", "league_members", "league_weeks"]
+    assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.|SECURITY DEFINER", sql)

@@ -5,7 +5,7 @@ session to its quiz on any event or GET; an open session with no event for two h
 from datetime import datetime
 from typing import Annotated, Any, Literal, cast
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -149,10 +149,16 @@ def _toggle(user_id: str, session_id: str, kind: str, want: str, becomes: str) -
 
 def _end(user_id: str, session_id: str, req: EndRequest) -> dict:
     session, events = _owned(session_id, user_id)
-    _require_open(session)
+    store.settle(session, events, store.now())
+    capped = session["status"] == "awaiting_quiz" and not session.get("end_anchor")
+    if not capped:
+        _require_open(session)
     bookmark, began = req.bookmark_anchor.model_dump(), session["start_anchor"]
     if bookmark["kind"] != began["kind"] or store.order_key(bookmark) <= store.order_key(began):
         raise HTTPException(status_code=422, detail="Place the bookmark after where this session started.")
+    if capped:  # the 3-hour cap ended it: the reader places the bookmark now, and no time is added (F8-F9)
+        store.update_session(session, {"end_anchor": bookmark, "end_position": store.position(bookmark)})
+        return store.view(session, events, store.tally(events))
     at = store.now()
     events.append(store.insert_event(session, "end", at, position=store.position(bookmark)))
     out = store.tally(events)  # frozen: no event is accepted after the end
@@ -197,6 +203,36 @@ async def focus_quiz_answers(session_id: str, req: AnswersRequest, user_id: str 
     if result is None:
         raise HTTPException(status_code=409, detail="This quiz has not been asked yet, or is already answered.")
     return result
+
+
+def _current(user_id: str, book_id: str) -> dict:
+    """The reader's open session or the one waiting for its quiz, in this book (C23.6: a reload picks it up)."""
+    _book(book_id, user_id)
+    rows = supabase.table("focus_sessions").select("id").eq("user_id", user_id).eq("book_id", book_id).in_(
+        "status", [*policy.OPEN_STATUSES, "awaiting_quiz"]).execute().data or []
+    if not rows:
+        return {"session": None}
+    session = _get(user_id, rows[0]["id"])
+    return {"session": session if session["status"] in (*policy.OPEN_STATUSES, "awaiting_quiz") else None}
+
+
+def _discard(user_id: str, session_id: str) -> dict:
+    """Leave focus mode without a quiz (C23.6): the session is abandoned and earns 0 (F12)."""
+    session, events = _owned(session_id, user_id)
+    if session["status"] not in (*policy.OPEN_STATUSES, "awaiting_quiz"):
+        raise HTTPException(status_code=409, detail=f"This focus session is {session['status'].replace('_', ' ')}.")
+    store.abandon(session, store.now())
+    return store.view(session, events, store.tally(events))
+
+
+@router.get("/current")
+async def current_focus(book_id: str = Query(max_length=64), user_id: str = Depends(get_current_user)):
+    return await run_in_threadpool(_current, user_id, book_id)
+
+
+@router.post("/{session_id}/discard")
+async def discard_focus(session_id: str, user_id: str = Depends(get_current_user)):
+    return await run_in_threadpool(_discard, user_id, session_id)
 
 
 @router.post("/start")

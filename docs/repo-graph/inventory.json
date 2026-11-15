@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 834,
-    "inventoried": 691,
+    "tracked": 840,
+    "inventoried": 697,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15353,
+      "size_bytes": 15390,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -250,7 +250,7 @@
       "path": "backend/agents/policy.py",
       "language": "python",
       "lines": 417,
-      "size_bytes": 18628,
+      "size_bytes": 18680,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -617,10 +617,10 @@
     {
       "path": "backend/routers/focus.py",
       "language": "python",
-      "lines": 229,
-      "size_bytes": 11208,
+      "lines": 265,
+      "size_bytes": 13103,
       "role": "router",
-      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored)."
+      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added."
     },
     {
       "path": "backend/routers/lookup.py",
@@ -1105,8 +1105,8 @@
     {
       "path": "backend/tests/test_api_focus.py",
       "language": "python",
-      "lines": 341,
-      "size_bytes": 16035,
+      "lines": 389,
+      "size_bytes": 18744,
       "role": "test",
       "purpose": "Pytest for the focus session API on a test clock: start rules (body start, one open session, the book's pages), rate limits and duplicates, client clock ignored, client numbers refused, the state machine, bookmark order, the 3-hour cap by event and by GET, the abandoned sweep (on GET and at startup), owner only."
     },
@@ -1961,8 +1961,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5204,
-      "size_bytes": 928797,
+      "lines": 5205,
+      "size_bytes": 933293,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2073,10 +2073,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 374,
-      "size_bytes": 23270,
+      "lines": 406,
+      "size_bytes": 25195,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail)."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events)."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -2125,6 +2125,14 @@
       "size_bytes": 6306,
       "role": "config",
       "purpose": "Generated EPUB fixture (tools/make_reader_fixtures.py): three chapters with every kind of image (img PNG/GIF/SVG, inline SVG image by xlink:href and href, CSS background, figure and caption, srcset, cover), MathML and a code block."
+    },
+    {
+      "path": "frontend/e2e/focus-mode.spec.js",
+      "language": "javascript",
+      "lines": 192,
+      "size_bytes": 9745,
+      "role": "config",
+      "purpose": "E2E for focus mode (C23.6a) on Playwright's clock: locked before the body start with its popover, Start with heartbeats at once and every 30 s, page turns, the server's minute read, hidden/visible, pause and resume, the idle prompt answered or resting, the 2 h 45 notice and 3-hour stop, End session, leaving (keep, discard), a reload resuming, 375 px Lamplight with reduced motion."
     },
     {
       "path": "frontend/e2e/gate-g5.spec.js",
@@ -3039,6 +3047,22 @@
       "purpose": "Node test (npm run test:unit): a complete env passes, missing and malformed variables are named, a secret or service-role key is refused, VITE_SITE_URL only warns, only Vercel builds are checked; vercel.json builds into dist and rewrites app routes but not /assets/ to index.html."
     },
     {
+      "path": "frontend/src/focus/FocusBar.css",
+      "language": "css",
+      "lines": 204,
+      "size_bytes": 5550,
+      "role": "asset",
+      "purpose": "Styles for the focus bar and its notice cards; margin markers at 35 % in focus mode; reduced motion stills the dot; a wrapped bar and icon-only exit under 760 px."
+    },
+    {
+      "path": "frontend/src/focus/FocusBar.jsx",
+      "language": "jsx",
+      "lines": 135,
+      "size_bytes": 7179,
+      "role": "asset",
+      "purpose": "Focus mode's bar (C23.6, handoff 20-21): the stopwatch pill (locked with a padlock and popover before the body start, Start, the running time with a breathing dot), Pause focus / Resume, End session, Exit focus; cards for \"Still with the book?\", the 15-minutes-left notice and the 3-hour stop."
+    },
+    {
       "path": "frontend/src/focus/bodyStart.js",
       "language": "javascript",
       "lines": 41,
@@ -3055,12 +3079,36 @@
       "purpose": "Unit tests for focus/bodyStart.js: PDF spreads and EPUB sections before the start, unknown starts lock nothing, labels, the start entry, the chosen page or section."
     },
     {
+      "path": "frontend/src/focus/clock.js",
+      "language": "javascript",
+      "lines": 50,
+      "size_bytes": 2283,
+      "role": "asset",
+      "purpose": "Focus mode's display clock (C23.6): mm:ss then h:mm, the time in words, the server's seconds running on between reads (capped at 3 h), the idle prompt, its answer window and the 2 h 45 notice due, page keys and A4 positions for events."
+    },
+    {
+      "path": "frontend/src/focus/clock.test.js",
+      "language": "javascript",
+      "lines": 46,
+      "size_bytes": 2079,
+      "role": "asset",
+      "purpose": "Unit tests for focus/clock.js: stopwatch format, spoken time, display between reads and at the cap, idle and notice thresholds, page keys and positions."
+    },
+    {
       "path": "frontend/src/focus/useBodyStart.js",
       "language": "javascript",
       "lines": 27,
       "size_bytes": 1163,
       "role": "asset",
       "purpose": "React hook (C23.1): GET /books/{id}/body-start once the reading session is known (a failure leaves it unknown) and choose() for the reader's PUT."
+    },
+    {
+      "path": "frontend/src/focus/useFocusSession.js",
+      "language": "javascript",
+      "lines": 168,
+      "size_bytes": 7592,
+      "role": "asset",
+      "purpose": "React hook for a focus session (C23.6): the reader's open session restored on load; start at the page shown, pause, resume, end, discard; heartbeats every 30 s while visible with had_input kept until accepted, hidden/visible, page turns, the idle prompt and its answer; the server's time read every minute."
     },
     {
       "path": "frontend/src/gallery/BookGallery.jsx",
@@ -4041,18 +4089,18 @@
     {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
-      "lines": 66,
-      "size_bytes": 1396,
+      "lines": 69,
+      "size_bytes": 1544,
       "role": "page",
       "purpose": "Styles for the reading page: a fixed-height column of the toolbar row (its space kept while it fades) and the book area, the countdown in tabular figures, and the loading state; the leave dialog's text and actions."
     },
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 593,
-      "size_bytes": 29360,
+      "lines": 654,
+      "size_bytes": 32629,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -4193,10 +4241,10 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 91,
-      "size_bytes": 4562,
+      "lines": 99,
+      "size_bytes": 5053,
       "role": "asset",
-      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place."
+      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place. C23.6a: a Focus mode switch (onFocusMode)."
     },
     {
       "path": "frontend/src/reader/WordCard.css",
@@ -5473,8 +5521,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 693,
-      "size_bytes": 208904,
+      "lines": 699,
+      "size_bytes": 211249,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

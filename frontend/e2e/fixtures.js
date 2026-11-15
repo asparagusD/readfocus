@@ -111,6 +111,7 @@ async function mockBackend(page, api, book) {
       return json(route, { scanned_pages: scanned, done: [...api.ocr.keys()], ...(pages ? { pages } : {}) });
     }
     if (path === `/books/${BOOK}/status`) return json(route, { status: 'processing', total_chunks: 0 });
+    if (path.startsWith('/focus/')) return focusRoute(route, request, api.focus, path); // C23.6
     if (path === `/books/${BOOK}/body-start`) { // C23.1: none unless a test sets api.bodyStart; a PUT is the reader's
       if (api.bodyStartFail) return json(route, { detail: 'down' }, 503);
       if (request.method() === 'PUT') {
@@ -236,6 +237,36 @@ async function mockBackend(page, api, book) {
   });
 }
 
+/** C23.6: focus sessions as the server keeps them; tests set `api.focus.active` to move the server's clock. */
+function focusRoute(route, request, focus, path) {
+  const body = JSON.parse(request.postData() || 'null');
+  const view = () => focus.session && { ...focus.session, active_seconds: focus.active,
+    cap_remaining_s: Math.max(0, 10800 - focus.active), capped: focus.active >= 10800 };
+  const [, , id, action] = path.split('/');
+  focus.calls.push({ method: request.method(), path, body });
+  if (path === '/focus/current') return json(route, { session: focus.session ? view() : null });
+  if (path === '/focus/start') {
+    focus.session = { id: 'focus-1', book_id: body.book_id, status: 'active', state: 'running', reasons: {},
+      points_time: 0, points_total: 0, ignored_events: 0, started_at: '2026-11-15T09:00:00Z', ended_at: null };
+    return json(route, view());
+  }
+  if (!focus.session || id !== focus.session.id) return json(route, { detail: 'Focus session not found' }, 404);
+  const s = focus.session;
+  if (action === 'event') {
+    if (body.kind === 'hidden') s.state = 'hidden';
+    if (body.kind === 'visible') s.state = 'running';
+    focus.events.push(body);
+    return json(route, { accepted: true, reason: null, session: view() });
+  }
+  if (action === 'pause') Object.assign(s, { status: 'paused', state: 'paused' });
+  if (action === 'resume') Object.assign(s, { status: 'active', state: 'running' });
+  if (action === 'end') Object.assign(s, { status: 'awaiting_quiz', state: 'awaiting_quiz', end_anchor: body.bookmark_anchor });
+  if (action === 'discard') Object.assign(s, { status: 'abandoned', state: 'abandoned' });
+  const out = view();
+  if (action === 'discard') focus.session = null;
+  return json(route, out);
+}
+
 /** A signed-in reader for the app: a session in Supabase's storage that is far from expiring. */
 async function signIn(page) {
   const session = {
@@ -259,7 +290,8 @@ export const test = base.extend({
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
-      bodyStart: null, bodyStartPuts: [], bodyStartFail: false };
+      bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
+      focus: { session: null, active: 0, calls: [], events: [] } };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

@@ -390,7 +390,7 @@ BODY_START_TITLE_MAX = 200
 
 # --- Focus mode (C23, docs/FOCUS_RULES.md: the defaults table there is the source; test_focus_policy.py checks) ---
 FOCUS_POINTS_PER_MINUTE = 10  # F4
-FOCUS_HEARTBEAT_S = 15  # F3
+FOCUS_HEARTBEAT_S = 30  # F3: the tab sends one every 30 s while visible (C23.6)
 FOCUS_IDLE_PROMPT_MIN = 10  # F6
 FOCUS_IDLE_ANSWER_S = 60  # F6
 FOCUS_PAGE_CAP_MIN = 30  # F7

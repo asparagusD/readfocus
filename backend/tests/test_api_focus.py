@@ -339,3 +339,51 @@ def test_another_readers_session_is_not_found_anywhere(client, db):
         assert client.post(f"/focus/{sid}/{path}").status_code == 404
     assert client.post(f"/focus/{sid}/end", json={"bookmark_anchor": pdf(9)}).status_code == 404
     assert len(stored(db)) == 1 and session_row(db, sid)["status"] == "active"
+
+
+# --- C23.6: the reader's current session, and discarding one ------------------------------------------------------
+
+def test_current_returns_the_open_or_waiting_session_for_a_book_or_none(client, db, clock):
+    assert client.get("/focus/current", params={"book_id": "pdf-book"}).json() == {"session": None}
+    sid = start(client).json()["id"]
+    body = client.get("/focus/current", params={"book_id": "pdf-book"}).json()["session"]
+    assert body["id"] == sid and body["status"] == "active" and body["state"] == "running"
+    assert client.get("/focus/current", params={"book_id": "epub-book"}).json() == {"session": None}
+    clock.t = 30
+    client.post(f"/focus/{sid}/end", json={"bookmark_anchor": pdf(9)})
+    assert client.get("/focus/current", params={"book_id": "pdf-book"}).json()["session"]["status"] == "awaiting_quiz"
+    session_row(db, sid)["status"] = "scored"
+    assert client.get("/focus/current", params={"book_id": "pdf-book"}).json() == {"session": None}
+    assert client.get("/focus/current", params={"book_id": "theirs"}).status_code == 404
+
+
+def test_discarding_a_session_abandons_it_with_no_points(client, db, clock):
+    sid = start(client).json()["id"]
+    read_for(client, clock, sid, 300)
+    body = client.post(f"/focus/{sid}/discard").json()
+    assert body["status"] == "abandoned" and body["points_total"] == 0
+    row = session_row(db, sid)
+    assert row["status"] == "abandoned" and row["points_total"] == 0 and row["ended_at"]
+    assert client.post(f"/focus/{sid}/discard").status_code == 409
+    assert start(client).status_code == 200
+
+
+def test_a_session_waiting_for_its_quiz_can_be_discarded_but_not_a_scored_one(client, db, clock):
+    sid = start(client).json()["id"]
+    clock.t = 30
+    client.post(f"/focus/{sid}/end", json={"bookmark_anchor": pdf(9)})
+    assert client.post(f"/focus/{sid}/discard").json()["status"] == "abandoned"
+    session_row(db, sid)["status"] = "scored"
+    assert client.post(f"/focus/{sid}/discard").status_code == 409
+
+
+def test_a_capped_session_takes_its_bookmark_afterwards_without_more_time(client, db, clock):
+    sid = start(client).json()["id"]
+    event(client, sid, had_input=True)
+    seed_heartbeats(db, sid, policy.SESSION_CAP_S + 600)
+    clock.t = policy.SESSION_CAP_S + 610
+    assert client.get(f"/focus/{sid}").json()["status"] == "awaiting_quiz"
+    assert session_row(db, sid).get("end_anchor") is None
+    body = client.post(f"/focus/{sid}/end", json={"bookmark_anchor": pdf(40)}).json()
+    assert body["active_seconds"] == policy.SESSION_CAP_S and session_row(db, sid)["end_anchor"] == pdf(40)
+    assert client.post(f"/focus/{sid}/end", json={"bookmark_anchor": pdf(41)}).status_code == 409  # set once

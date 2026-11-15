@@ -34,6 +34,8 @@ import { NotesContext } from '../notes/NotesContext';
 import { answerDoc, quoteDoc } from '../notes/fromBook';
 import { useBodyStart } from '../focus/useBodyStart';
 import { beforeBody, chosenStart, startLabel } from '../focus/bodyStart';
+import { useFocusSession } from '../focus/useFocusSession';
+import { FocusBar } from '../focus/FocusBar';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -120,6 +122,9 @@ export function ReadingSession() {
   // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
   const pagesOnly = Boolean(sessionData?.pages_only);
   const body = useBodyStart(bookId, Boolean(sessionData) && !pagesOnly); // C23.1: where focus mode starts
+  const [focusWanted, setFocusWanted] = useState(false); // C23.6: the reader's Focus mode switch
+  const [leavingFocus, setLeavingFocus] = useState(false);
+  const [focusBusy, setFocusBusy] = useState(false);
   const opened = Boolean(sessionData);
   const ocr = useMemo(() => (kind === 'pdf' && opened ? createOcrSource(fetchApi, bookId, {
     ahead: pagesOnly, skipFor: async (page) => { await regions?.load(page); return regions?.boxesOf(page) ?? []; },
@@ -176,6 +181,8 @@ export function ReadingSession() {
   }, [sessionData, kind, todayChunks, lastChunk, bookId]);
 
   const outside = beyond(place, bounds ?? {});
+  const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
+  const inFocus = !pagesOnly && focus.enabled;
   const placeFor = useCallback((at, anchor) => ({
     chunk_index: chunkAt(at, ready.current?.starts) ?? sessionData.chunk_indices[0], anchor,
   }), [sessionData]);
@@ -230,6 +237,42 @@ export function ReadingSession() {
       toast({ kind: 'warning', message: `The start wasn't changed: ${err.message}` });
     }
   }, [place, chapter, choose, toast]);
+  // C23.6: focus mode. Start at the page shown (after the body start), pause and resume, end at this page
+  // (C23.6b adds the ribbon), and leaving with a session open asks: end now with the quiz, or discard it.
+  const focusLocked = !focus.session && beforeBody(place, body.bodyStart);
+  const focusDo = async (work, failed) => {
+    setFocusBusy(true);
+    try {
+      return await work();
+    } catch (err) {
+      toast({ kind: 'warning', message: err.status === 422 ? failed : `That didn't work: ${err.message}` });
+      return null;
+    } finally {
+      setFocusBusy(false);
+    }
+  };
+  const startFocus = () => focusDo(focus.start, '');
+  const endFocus = () => focusDo(async () => {
+    if (focus.session?.status === 'awaiting_quiz' && !focus.session.capped) return null; // C23.6b: the questions
+    const view = await focus.end(reader.current?.anchor());
+    toast({ kind: 'neutral', message: `Bookmark set at ${folioShort(place?.folio) || 'this page'}. Your questions come next.` });
+    return view;
+  }, 'Place the bookmark after where this session started.');
+  const leaveFocus = () => {
+    if (focus.live) setLeavingFocus(true);
+    else setFocusWanted(false);
+  };
+  const discardFocus = () => focusDo(async () => {
+    await focus.discard();
+    focus.clear();
+    setLeavingFocus(false);
+    setFocusWanted(false);
+    toast({ kind: 'neutral', message: 'Focus session discarded. Nothing was scored.' });
+  }, '');
+  const turnFocusOn = () => {
+    setSide(null);
+    setFocusWanted(true);
+  };
   const backToToday = () => reader.current?.goTo(todayAnchor.current ?? bounds?.start);
   const closeSide = useCallback(() => setSide(null), []);
   const toggleSide = (tab, button) => {
@@ -446,8 +489,14 @@ export function ReadingSession() {
   const bookTitle = sessionData.book?.title || 'Your book';
 
   return (
-    <div className="rf-reading-page">
+    <div className="rf-reading-page" data-focus={inFocus}>
       <div className="rf-reading-chrome">
+        {inFocus ? (
+          <FocusBar session={focus.session} readAt={focus.readAt} locked={focusLocked}
+            startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
+            onStart={startFocus} onPause={() => focusDo(focus.pause, '')} onResume={() => focusDo(focus.resume, '')}
+            onEnd={endFocus} onLeave={leaveFocus} onAnswerIdle={focus.answerIdle} />
+        ) : (
         <ReaderToolbar
           bookTitle={bookTitle}
           chapter={chapter}
@@ -470,6 +519,7 @@ export function ReadingSession() {
           onSteve={pagesOnly ? undefined : () => toggleSide('steve', steveButton)}
           steveOpen={steveOpen}
           steveRef={steveButton}
+          onFocusMode={pagesOnly ? undefined : turnFocusOn}
         >
           {outside && (
             <button type="button" className="rf-tool" onClick={backToToday}>
@@ -501,6 +551,7 @@ export function ReadingSession() {
           </div>
           )}
         </ReaderToolbar>
+        )}
       </div>
 
       <SteveContext.Provider value={pagesOnly ? null : steveActions}>
@@ -522,7 +573,7 @@ export function ReadingSession() {
           onBack={() => navigate('/')}
           bounds={bounds}
           opening={!bounds}
-          note={note}
+          note={inFocus ? null : note}
           closing={closing}
           status={outside ? "Beyond today's reading" : beforeBody(place, body.bodyStart) ? `Focus mode starts at ${startLabel(body.bodyStart)}` : null}
           label={outside ? `${bookTitle}: beyond today's reading, it does not count toward today's session` : `Today's reading from ${bookTitle}`}
@@ -540,7 +591,7 @@ export function ReadingSession() {
           onAnnotationNote={noteOnHighlight}
         />
       </main>
-      {side && (
+      {side && !inFocus && (
         <SidePanel
           tabs={[
             { id: 'notes', label: 'Notes', count: notepad.notes.length },
@@ -580,6 +631,16 @@ export function ReadingSession() {
         startPage={startPage}
         onStartHere={pagesOnly ? null : startHere}
       />
+
+      <Modal isOpen={leavingFocus} onClose={() => setLeavingFocus(false)} title="Leave focus mode?">
+        <p className="rf-leave-text">End the session now and answer a few questions to keep its points, or discard it and
+          nothing is scored. Your place in the book is kept either way.</p>
+        <div className="rf-leave-actions rf-leave-actions--stack">
+          <Button onClick={() => { setLeavingFocus(false); endFocus(); }} disabled={focusBusy}>End and take the quiz</Button>
+          <Button variant="secondary" onClick={() => setLeavingFocus(false)}>Keep focusing</Button>
+          <Button variant="secondary" onClick={discardFocus} disabled={focusBusy}>Discard session</Button>
+        </div>
+      </Modal>
 
       <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)} title="Leave today's reading?">
         <p className="rf-leave-text">Your place in the book is kept. This session's reading time won't count, and its test won't open.</p>

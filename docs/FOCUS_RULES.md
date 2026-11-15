@@ -10,7 +10,7 @@ C16.3, before any code. Anchors and chunk mapping: `docs/ANCHORS.md`.
 | Name | Default | Rule |
 |---|---|---|
 | `FOCUS_POINTS_PER_MINUTE` | 10 | F4 |
-| `FOCUS_HEARTBEAT_S` | 15 | F3 |
+| `FOCUS_HEARTBEAT_S` | 30 | F3 |
 | `FOCUS_MAX_GAP_S` | 45 | F3 |
 | `FOCUS_MIN_HEARTBEAT_GAP_S` | 5 | F3 |
 | `FOCUS_HEARTBEAT_RATE_S` | 25 | F3 |

@@ -128,6 +128,13 @@
       "handler": "get_dashboard"
     },
     {
+      "id": "endpoint:GET /focus/current",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/focus/current",
+      "handler": "current_focus"
+    },
+    {
       "id": "endpoint:GET /focus/{session_id}",
       "type": "endpoint",
       "method": "GET",
@@ -259,6 +266,13 @@
       "method": "POST",
       "path": "/focus/start",
       "handler": "start_focus"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/discard",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/discard",
+      "handler": "discard_focus"
     },
     {
       "id": "endpoint:POST /focus/{session_id}/end",
@@ -2091,6 +2105,12 @@
       "language": "text"
     },
     {
+      "id": "file:frontend/e2e/focus-mode.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/gate-g5.spec.js",
       "type": "file",
       "role": "config",
@@ -2775,6 +2795,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/focus/FocusBar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/focus/FocusBar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/focus/bodyStart.js",
       "type": "file",
       "role": "asset",
@@ -2787,7 +2819,25 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/focus/clock.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/clock.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/focus/useBodyStart.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/useFocusSession.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4933,6 +4983,21 @@
     },
     {
       "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "endpoint:GET /focus/current"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "endpoint:GET /focus/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "endpoint:POST /focus/{session_id}/event"
+    },
+    {
+      "type": "calls_endpoint",
       "from": "file:frontend/src/notes/notesApi.js",
       "to": "endpoint:DELETE /notes/{note_id}"
     },
@@ -5376,12 +5441,22 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/focus.py",
+      "to": "endpoint:GET /focus/current"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
       "to": "endpoint:GET /focus/{session_id}"
     },
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/focus.py",
       "to": "endpoint:POST /focus/start"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/discard"
     },
     {
       "type": "defines_endpoint",
@@ -8711,6 +8786,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/focus-mode.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/gate-g5.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -9331,6 +9411,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/focus/FocusBar.jsx",
+      "to": "file:frontend/src/focus/FocusBar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/FocusBar.jsx",
+      "to": "file:frontend/src/focus/clock.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/focus/bodyStart.js",
       "to": "file:frontend/src/originalview/today.js"
     },
@@ -9341,7 +9431,22 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/focus/clock.test.js",
+      "to": "file:frontend/src/focus/clock.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/focus/useBodyStart.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "file:frontend/src/focus/clock.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/useFocusSession.js",
       "to": "file:frontend/src/lib/api.js"
     },
     {
@@ -10472,12 +10577,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/FocusBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/focus/bodyStart.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/focus/useBodyStart.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/useFocusSession.js"
     },
     {
       "type": "imports",
@@ -11818,6 +11933,11 @@
       "type": "reads_table",
       "from": "file:backend/routers/focus.py",
       "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/focus.py",
+      "to": "table:focus_sessions"
     },
     {
       "type": "reads_table",

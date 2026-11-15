@@ -387,3 +387,22 @@ def test_a_capped_session_takes_its_bookmark_afterwards_without_more_time(client
     body = client.post(f"/focus/{sid}/end", json={"bookmark_anchor": pdf(40)}).json()
     assert body["active_seconds"] == policy.SESSION_CAP_S and session_row(db, sid)["end_anchor"] == pdf(40)
     assert client.post(f"/focus/{sid}/end", json={"bookmark_anchor": pdf(41)}).status_code == 409  # set once
+
+
+@pytest.mark.parametrize("book, began, bookmark", [
+    ("epub-book", epub(4), {"kind": "epub", "cfi": "epubcfi(/6/11!/4)", "text": ""}),  # an odd spine step
+    ("pdf-book", pdf(6), {"kind": "pdf", "page": 8, "quads": [[50, -20_000, 50, -20_000]], "text": ""}),
+    ("pdf-book", pdf(6), {"kind": "pdf", "page": 400, "quads": [[50, 100, 50, 100]], "text": ""}),  # past the last page
+])
+def test_a_bookmark_that_is_not_a_place_in_the_book_is_refused(client, db, book, began, bookmark):
+    """C23.G (DEBUG_LOG): a bookmark the quiz cannot map, or the database refuses, is refused before anything is
+    stored, and the session stays open for a proper one."""
+    sid = start(client, book, began).json()["id"]
+    response = client.post(f"/focus/{sid}/end", json={"bookmark_anchor": bookmark})
+    assert response.status_code == 422
+    assert session_row(db, sid)["status"] == "active" and stored(db, "end") == []
+
+
+def test_a_start_with_quads_off_the_page_is_refused(client, db):
+    assert start(client, anchor={"kind": "pdf", "page": 6, "quads": [[50, -2_000, 50, 100]], "text": ""}).status_code == 422
+    assert start(client, anchor={"kind": "pdf", "page": 6, "quads": [[-0.5, 99.6, 50, 100]], "text": ""}).status_code == 200

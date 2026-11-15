@@ -65,12 +65,18 @@ def _book(book_id: str, user_id: str) -> dict:
     return cast(dict[str, Any], rows[0])
 
 
+QUAD_MIN, QUAD_MAX = -1_000, 100_000  # points: room for rounding at a page's edge, far from a negative A4 position
+
+
 def _check_place(book: dict, anchor: dict) -> None:
     pdf = str(book.get("file_type") or "").lower() == "pdf"
     if (anchor["kind"] == "pdf") != pdf or store.unit_of(anchor) is None:
         raise HTTPException(status_code=422, detail="That place is not in this book.")
     if pdf and book.get("page_count") and anchor["page"] > book["page_count"]:
         raise HTTPException(status_code=422, detail="That page is not in this book.")
+    # C23.G: quads are points on the page; numbers off it would make a negative A4 position (refused by the row).
+    if pdf and any(not QUAD_MIN <= value <= QUAD_MAX for quad in anchor["quads"] for value in quad):
+        raise HTTPException(status_code=422, detail="That place is not on the page.")
 
 
 def _before_body(book: dict, anchor: dict) -> str | None:
@@ -162,6 +168,7 @@ def _end(user_id: str, session_id: str, req: EndRequest) -> dict:
     if not capped:
         _require_open(session)
     bookmark, began = req.bookmark_anchor.model_dump(), session["start_anchor"]
+    _check_place(_book(session["book_id"], user_id), bookmark)  # C23.G: a place the quiz can map, like the start
     if bookmark["kind"] != began["kind"] or store.order_key(bookmark) <= store.order_key(began):
         raise HTTPException(status_code=422, detail="Place the bookmark after where this session started.")
     if capped:  # the 3-hour cap ended it: the reader places the bookmark now, and no time is added (F8-F9)

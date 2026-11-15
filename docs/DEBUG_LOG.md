@@ -4478,3 +4478,39 @@ Submit again" on a failed submit (C13.5), so the 503 needs no frontend change.
 
 ### Commit
 fix(focus): release a focus quiz whose grading failed instead of scoring it
+
+## 2026-11-15 C23.G — a malformed bookmark breaks a focus session's quiz for good
+
+**Status:** fixed
+
+### Symptom
+C23 close review. `POST /focus/{id}/end` checks only that the bookmark comes after the start (`order_key`), not
+that it is a place in the book. An EPUB bookmark like `epubcfi(/6/7!/4)` (an odd spine step) after a start in
+`/6/6!...` is stored, but `unit_of` gives None, and building the quiz then fails (`toc_slices` compares with None):
+every `POST /focus/{id}/quiz` is 500 and the session, `awaiting_quiz`, cannot take another bookmark. A PDF
+bookmark with a quad far above the page (y < -10,000) gives a negative `end_position`: the row's CHECK fails
+after the `end` event is already stored.
+
+### Repro
+Every time: `backend/tests/test_api_focus.py::test_a_bookmark_that_is_not_a_place_in_the_book_is_refused`.
+
+### Hypotheses
+1. `_end` skips `_check_place`, which `_start` runs. Evidence: the code. Result: confirmed by the test (200, and
+   the session awaiting a quiz that cannot be built).
+2. Quads are unbounded in `PdfAnchor` (no range on the numbers). Result: confirmed (a -20,000 y passes).
+
+### Root cause
+`backend/routers/focus.py` `_end` (no place check) and `_check_place` (no bound on a PDF quad's numbers).
+
+### Fix
+`_end` runs `_check_place` on the bookmark before anything is stored; `_check_place` also refuses a PDF quad with a
+number below -1,000 or above 100,000 points (start and bookmark alike; a little below 0 is left for rounding at a
+page's edge, and a negative position needs y below -10,000). Both answer 422 and change nothing.
+
+### Regression test
+`backend/tests/test_api_focus.py::test_a_bookmark_that_is_not_a_place_in_the_book_is_refused`.
+Failed before the fix: yes (focus.py stashed: 4 failed). Passes after: yes; a start at -0.5 points is still
+accepted.
+
+### Commit
+fix(focus): refuse a bookmark that is not a place in the book

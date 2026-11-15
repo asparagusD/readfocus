@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { HEARTBEAT_MS, SYNC_MS, answerLapsed, idleDue, pageKey, placePosition } from './clock';
+import { claim, heldElsewhere, release } from './writer';
 
 const OPEN = new Set(['active', 'paused']);
+const store = () => { try { return window.localStorage; } catch { return null; } };
 const uuid = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(16)}-0000-4000-8000-000000000000`.slice(0, 36));
 
 /**
@@ -11,7 +13,8 @@ const uuid = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(
  * the last one the server kept), hidden and visible as the tab changes, a page turn on each move, the idle
  * prompt and its answer. The display is the server's last answer, read again every minute. `restored` is true
  * once the reader's open session in this book (if any) has been looked up, so a reload carries on; `wanted` is the
- * reader's toggle, and a live session keeps focus mode on whatever it says.
+ * reader's toggle, and a live session keeps focus mode on whatever it says. C23.8: only one tab writes a session's
+ * events (writer.js); another tab on it is `readOnly`, showing the server's time, until the writer's lease lapses.
  */
 export function useFocusSession({ bookId, place, reader, wanted }) {
   const [session, setSession] = useState(null);
@@ -21,6 +24,9 @@ export function useFocusSession({ bookId, place, reader, wanted }) {
   const [error, setError] = useState(null);
   const input = useRef({ last: 0, since: false }); // `since`: input since the last heartbeat kept
   const prompted = useRef(null); // the idle prompt's time while it is up
+  const tab = useRef(uuid()); // this tab, for the one-writer lease
+  const [readOnly, setReadOnly] = useState(false);
+  const watching = useRef(false); // read-only last time this tab asked: taking over is a change worth a 'visible'
   const sid = session?.id;
   const open = Boolean(session && OPEN.has(session.status));
   const active = session?.status === 'active';
@@ -33,8 +39,17 @@ export function useFocusSession({ bookId, place, reader, wanted }) {
     setReadAt(Date.now());
   }, []);
 
+  // The lease: this tab writes only while it holds it (C23.8).
+  const mayWrite = useCallback(() => {
+    const ok = claim(store(), sid, tab.current, Date.now());
+    const tookOver = ok && watching.current;
+    watching.current = !ok;
+    setReadOnly(!ok);
+    return ok ? { tookOver } : null;
+  }, [sid]);
+
   const send = useCallback(async (kind, extra = {}) => {
-    if (!sid) return null;
+    if (!sid || !mayWrite()) return null;
     try {
       const body = { kind, client_event_id: uuid(), client_ts: new Date().toISOString(), ...extra };
       const reply = await fetchApi(`/focus/${sid}/event`, { method: 'POST', body: JSON.stringify(body) });
@@ -44,19 +59,36 @@ export function useFocusSession({ bookId, place, reader, wanted }) {
       if (err.status === 409) take(await fetchApi(`/focus/${sid}`).catch(() => null)); // ended or capped meanwhile
       return null;
     }
-  }, [sid, take]);
+  }, [sid, take, mayWrite]);
 
   const beat = useCallback(async () => {
     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    // A tab taking over from a writer that went away hidden says it is visible first, so the clock runs again.
+    if (session?.state === 'hidden' && mayWrite()?.tookOver) await send('visible');
     const reply = await send('heartbeat', { had_input: input.current.since });
     if (reply?.accepted) input.current.since = false; // a heartbeat the server ignored keeps its input
-  }, [send]);
+  }, [send, session?.state, mayWrite]);
+
+  // A reader tab shows whether another tab writes, and gives the lease up when it closes or the session ends.
+  useEffect(() => {
+    if (!sid) return undefined;
+    const me = tab.current;
+    const leave = () => release(store(), sid, me);
+    window.addEventListener('pagehide', leave);
+    return () => { window.removeEventListener('pagehide', leave); leave(); };
+  }, [sid]);
 
   // A reload finds the session where it was left.
   useEffect(() => {
     let live = true;
     fetchApi(`/focus/current?book_id=${encodeURIComponent(bookId)}`)
-      .then((data) => { if (live) take(data.session); })
+      .then((data) => {
+        if (!live) return;
+        take(data.session);
+        if (!data.session) return;
+        watching.current = heldElsewhere(store(), data.session.id, tab.current, Date.now()); // C23.8
+        setReadOnly(watching.current);
+      })
       .catch(() => {})
       .finally(() => { if (live) setRestored(true); });
     return () => { live = false; };
@@ -141,6 +173,8 @@ export function useFocusSession({ bookId, place, reader, wanted }) {
     if (!anchor) return null;
     try {
       const view = await act('/focus/start', { book_id: bookId, anchor, page_key: key });
+      claim(store(), view.id, tab.current, Date.now());
+      setReadOnly(false);
       turned.current = key;
       input.current = { last: Date.now(), since: true };
       await fetchApi(`/focus/${view.id}/event`, { method: 'POST', body: JSON.stringify({
@@ -155,7 +189,7 @@ export function useFocusSession({ bookId, place, reader, wanted }) {
   }, [act, bookId, key, reader, take]);
 
   return {
-    session, readAt, restored, idle, error, live, enabled,
+    session, readAt, restored, idle, error, live, enabled, readOnly,
     idleLapsed: (now) => Boolean(idle && answerLapsed(idle.at, now)),
     start,
     pause: () => act(`/focus/${sid}/pause`),

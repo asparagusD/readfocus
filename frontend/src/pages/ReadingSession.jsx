@@ -482,7 +482,8 @@ export function ReadingSession() {
           <FocusBar session={focus.session} readAt={focus.readAt} locked={focusLocked}
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
             onStart={startFocus} onPause={() => focusDo(focus.pause, '')} onResume={() => focusDo(focus.resume, '')}
-            onEnd={endFocus} onLeave={leaveFocus} onAnswerIdle={focus.answerIdle} placing={placingRibbon} />
+            onEnd={endFocus} onLeave={focus.readOnly ? () => navigate('/') : leaveFocus} onAnswerIdle={focus.answerIdle}
+            placing={placingRibbon} readOnly={focus.readOnly} />
         ) : (
         <ReaderToolbar
           bookTitle={bookTitle}

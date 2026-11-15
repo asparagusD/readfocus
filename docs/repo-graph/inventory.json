@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 853,
-    "inventoried": 710,
+    "tracked": 855,
+    "inventoried": 712,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15678,
+      "size_bytes": 15733,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -441,8 +441,8 @@
     {
       "path": "backend/focus/scoring.py",
       "language": "python",
-      "lines": 248,
-      "size_bytes": 10400,
+      "lines": 249,
+      "size_bytes": 10519,
       "role": "lib",
       "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page. C23.5: quiz correct answers may be halves (low-confidence answers count half)."
     },
@@ -1425,8 +1425,8 @@
     {
       "path": "backend/tests/test_focus_scoring.py",
       "language": "python",
-      "lines": 215,
-      "size_bytes": 10914,
+      "lines": 217,
+      "size_bytes": 11128,
       "role": "test",
       "purpose": "Pytest for the focus scoring engine: 25 table-driven scenarios (hidden tab, idle prompts, page stalls, the 3-hour cap, 39% vs 40% quizzes, forged ends, heartbeat spam and resends, client clock skew, pause, a reopened tab, events after the end) plus order, clock, breakdown and input-shape checks."
     },
@@ -1913,8 +1913,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4161,
-      "size_bytes": 182460,
+      "lines": 4287,
+      "size_bytes": 189358,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -1946,7 +1946,7 @@
       "path": "docs/FOCUS_RULES.md",
       "language": "markdown",
       "lines": 125,
-      "size_bytes": 6156,
+      "size_bytes": 6217,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): focus mode rules F1-F14: body start, server-timed stopwatch, points per active minute, hidden-tab and idle pauses, page and 3-hour caps, the bookmark quiz and its pass mark."
     },
@@ -1977,8 +1977,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5208,
-      "size_bytes": 941202,
+      "lines": 5209,
+      "size_bytes": 942521,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2090,7 +2090,7 @@
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
       "lines": 441,
-      "size_bytes": 27801,
+      "size_bytes": 27815,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events)."
     },
@@ -3089,10 +3089,10 @@
     {
       "path": "frontend/src/focus/FocusBar.jsx",
       "language": "jsx",
-      "lines": 137,
-      "size_bytes": 7348,
+      "lines": 140,
+      "size_bytes": 7636,
       "role": "asset",
-      "purpose": "Focus mode's bar (C23.6, handoff 20-21): the stopwatch pill (locked with a padlock and popover before the body start, Start, the running time with a breathing dot), Pause focus / Resume, End session, Exit focus; cards for \"Still with the book?\", the 15-minutes-left notice and the 3-hour stop. C23.6b: the cards step aside while the ribbon is placed (placing)."
+      "purpose": "Focus mode's bar (C23.6, handoff 20-21): the stopwatch pill (locked with a padlock and popover before the body start, Start, the running time with a breathing dot), Pause focus / Resume, End session, Exit focus; cards for \"Still with the book?\", the 15-minutes-left notice and the 3-hour stop. C23.6b: the cards step aside while the ribbon is placed (placing). C23.8: readOnly (another tab writes): the time only, 'Focus is running in another tab', no Pause, Resume, End or idle prompt."
     },
     {
       "path": "frontend/src/focus/ReadyModal.jsx",
@@ -3121,16 +3121,16 @@
     {
       "path": "frontend/src/focus/bodyStart.js",
       "language": "javascript",
-      "lines": 41,
-      "size_bytes": 1740,
+      "lines": 56,
+      "size_bytes": 2388,
       "role": "asset",
-      "purpose": "The body start on the reader's side (C23.1): whether the pages shown are before it, its label (the entry title or Chapter 1), whether a contents entry is it, and the PUT body for 'The book starts here'."
+      "purpose": "The body start on the reader's side (C23.1): whether the pages shown are before it, its label (the entry title or Chapter 1), whether a contents entry is it, and the PUT body for 'The book starts here'. C23.8: startAnchor: a start place before the body start (a straddling spread) becomes the body start's anchor."
     },
     {
       "path": "frontend/src/focus/bodyStart.test.js",
       "language": "javascript",
-      "lines": 47,
-      "size_bytes": 2504,
+      "lines": 60,
+      "size_bytes": 3427,
       "role": "asset",
       "purpose": "Unit tests for focus/bodyStart.js: PDF spreads and EPUB sections before the start, unknown starts lock nothing, labels, the start entry, the chosen page or section."
     },
@@ -3193,10 +3193,26 @@
     {
       "path": "frontend/src/focus/useFocusSession.js",
       "language": "javascript",
-      "lines": 168,
-      "size_bytes": 7592,
+      "lines": 202,
+      "size_bytes": 9448,
       "role": "asset",
-      "purpose": "React hook for a focus session (C23.6): the reader's open session restored on load; start at the page shown, pause, resume, end, discard; heartbeats every 30 s while visible with had_input kept until accepted, hidden/visible, page turns, the idle prompt and its answer; the server's time read every minute."
+      "purpose": "React hook for a focus session (C23.6): the reader's open session restored on load; start at the page shown, pause, resume, end, discard; heartbeats every 30 s while visible with had_input kept until accepted, hidden/visible, page turns, the idle prompt and its answer; the server's time read every minute. C23.8: events only while this tab holds the writer lease (writer.js), readOnly otherwise; a tab taking over a hidden session sends visible first; the lease is given up on pagehide and when the session goes. start() takes an anchor adjustment (bodyStart.startAnchor)."
+    },
+    {
+      "path": "frontend/src/focus/writer.js",
+      "language": "javascript",
+      "lines": 46,
+      "size_bytes": 1819,
+      "role": "asset",
+      "purpose": "One writer per focus session across a browser's tabs (C23.8, FOCUS_RULES F3): a localStorage lease (rf-focus-writer:<session id>, tab id and time) renewed with each event, lapsing after 75 s; claim, heldElsewhere, release; without storage every tab may write (the server still counts time once)."
+    },
+    {
+      "path": "frontend/src/focus/writer.test.js",
+      "language": "javascript",
+      "lines": 41,
+      "size_bytes": 1675,
+      "role": "asset",
+      "purpose": "Unit tests for focus/writer.js: the first tab writes and a second is read-only, a lapsed lease passes on, release only by the holder and per session, no or broken storage never blocks."
     },
     {
       "path": "frontend/src/gallery/BookGallery.jsx",
@@ -4201,8 +4217,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 636,
-      "size_bytes": 31820,
+      "lines": 637,
+      "size_bytes": 31965,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open."
     },
@@ -5625,8 +5641,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 712,
-      "size_bytes": 217693,
+      "lines": 714,
+      "size_bytes": 218757,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

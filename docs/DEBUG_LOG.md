@@ -4243,4 +4243,45 @@ anchor; ReadingSession passes it to `focus.start`, so a straddling spread starts
 `frontend/src/focus/bodyStart.test.js` (startAnchor) and every test in `frontend/e2e/focus.spec.js`.
 
 ### Commit
-fix(focus): start a spread across the body start at chapter 1
+`af51db4` fix(focus): start a spread across the body start at chapter 1
+
+## 2026-11-15 C23.8 — a second tab on a focus session writes events too
+
+**Status:** fixed
+
+### Symptom
+C23.8 asks for one active session per reader with a second tab read-only. A second tab opened on the same book
+adopts the open session through `GET /focus/current` and runs the same hook: its own heartbeats, page turns,
+`hidden`/`visible` and idle prompts. The server's 25 s heartbeat limit keeps the time from doubling
+(`test_focus_anticheat.py::test_two_tabs_on_one_session_count_the_time_once`), but a background second tab's
+`hidden` event stops the clock for the tab the reader is using, and its page turns start new page visits.
+
+    npx playwright test e2e/focus.spec.js -g "two tabs" --reporter=line
+    (before the fix) the second tab showed Pause focus and End session, and its page turn was posted
+
+### Repro
+Every time: the "two tabs" test in `frontend/e2e/focus.spec.js` (two pages in one browser context, the same
+fake server); before the fix the second tab's controls are there and its events reach the server.
+
+### Hypotheses
+1. Nothing in the client tells tabs apart: every mounted `useFocusSession` on an open session writes. Evidence:
+   `send()` has no condition beyond a session id. Ruled out if: the second tab sent nothing. Result: confirmed.
+2. The server could refuse a second writer. Ruled out as the place for it: the server cannot tell two tabs of
+   one reader apart without a client-chosen id, which a forger would copy; it already caps the time (F3).
+
+### Root cause
+`frontend/src/focus/useFocusSession.js`: no single-writer rule among a reader's tabs.
+
+### Fix
+`frontend/src/focus/writer.js` (new): a lease in localStorage (`rf-focus-writer:<session id>`, the tab's id and
+the time), renewed on each event the writer sends and lapsing after 75 s (two and a half heartbeats); given up on
+`pagehide` and when the hook lets go of the session. The hook sends an event only while it holds the lease; a
+tab that takes a lapsed lease over a hidden session says `visible` first. FocusBar `readOnly`: "Focus is running in
+another tab · this one only shows its time", no Pause, Resume, End or idle prompt; Exit goes to the library.
+
+### Regression test
+`frontend/src/focus/writer.test.js` (4) and `frontend/e2e/focus.spec.js` "two tabs on one session" (in the
+C23.8 test commit): the second tab sends nothing while the first writes, and writes once its lease has lapsed.
+
+### Commit
+fix(focus): a second tab on a focus session only watches

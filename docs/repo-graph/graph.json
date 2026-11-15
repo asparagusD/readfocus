@@ -2916,6 +2916,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/focus/writer.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/writer.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/gallery/BookGallery.jsx",
       "type": "file",
       "role": "asset",
@@ -9637,7 +9649,17 @@
     {
       "type": "imports",
       "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "file:frontend/src/focus/writer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/useFocusSession.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/writer.test.js",
+      "to": "file:frontend/src/focus/writer.js"
     },
     {
       "type": "imports",

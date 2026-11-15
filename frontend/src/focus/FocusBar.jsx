@@ -9,10 +9,11 @@ import './FocusBar.css';
  * says why), then 00:00 with Start, then the server's time running on between its reads (mm:ss, then h:mm;
  * a breathing dot, still under reduced motion). Right, Pause focus / Resume, End session and Exit focus.
  * Under it, "Still with the book?" after ten quiet minutes and the 2 h 45 notice; neither blocks reading.
+ * C23.8: `readOnly` (another tab writes the session): the time only, no Pause, Resume or End, no idle prompt.
  */
 export function FocusBar({
   session, readAt, locked, startLabel, idle, idleLapsed, busy, onStart, onPause, onResume, onEnd, onLeave, onAnswerIdle,
-  placing = false,
+  placing = false, readOnly = false,
 }) {
   const [now, setNow] = useState(() => Date.now());
   const [why, setWhy] = useState(false);
@@ -66,7 +67,9 @@ export function FocusBar({
               {session?.state === 'hidden' && status === 'active' && <span className="rf-focus-state">Paused while away</span>}
             </div>
           )}
-          <p className="rf-focus-caption">Focus · notes, Steve and badges are tucked away</p>
+          <p className="rf-focus-caption">{readOnly
+            ? 'Focus is running in another tab · this one only shows its time'
+            : 'Focus · notes, Steve and badges are tucked away'}</p>
         </div>
         <div className="rf-focus-actions">
           {!session && !locked && (
@@ -74,17 +77,17 @@ export function FocusBar({
               <Play size={16} strokeWidth={1.75} aria-hidden="true" /> Start
             </button>
           )}
-          {status === 'active' && (
+          {status === 'active' && !readOnly && (
             <button type="button" className="rf-focus-button" onClick={onPause} disabled={busy}>
               <Pause size={16} strokeWidth={1.75} aria-hidden="true" /> Pause focus
             </button>
           )}
-          {status === 'paused' && (
+          {status === 'paused' && !readOnly && (
             <button type="button" className="rf-focus-button" onClick={onResume} disabled={busy}>
               <Play size={16} strokeWidth={1.75} aria-hidden="true" /> Resume
             </button>
           )}
-          {(status === 'active' || status === 'paused' || status === 'awaiting_quiz') && (
+          {(status === 'active' || status === 'paused' || status === 'awaiting_quiz') && !readOnly && (
             <button type="button" className="rf-focus-button rf-focus-button--primary" onClick={onEnd} disabled={busy}>
               End session
             </button>
@@ -97,7 +100,7 @@ export function FocusBar({
 
       {/* While the ribbon is being placed its bar is what the reader acts on: the cards step aside (C23.6b). */}
       <div className="rf-focus-notes" aria-live="polite">
-        {idle && !placing && (
+        {idle && !placing && !readOnly && (
           <div className="rf-focus-card" role="group" aria-label="Still with the book?">
             <Hourglass size={18} strokeWidth={1.75} aria-hidden="true" className="rf-focus-card-icon" />
             <div>

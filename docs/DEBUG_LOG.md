@@ -4514,3 +4514,46 @@ accepted.
 
 ### Commit
 fix(focus): refuse a bookmark that is not a place in the book
+
+## 2026-11-15 C23.G — the focus e2e stall test failed once under a full-suite run
+
+**Status:** fixed (not reproducible on demand)
+
+### Symptom
+C23 close, full `npm --prefix frontend run test:e2e` (12 min): 274 passed, 1 failed:
+
+    x 71 e2e\focus.spec.js:138:1 › a 31-minute stall on one page: beats all along with no turn; the extra minute is listed as not counted (24.3s)
+    Error: expect(locator).toBeVisible() failed
+    Expected: visible
+    Error: element(s) not found
+        at endAndAnswer (I:\readfocus\frontend\e2e\focus.spec.js:98:73)
+
+The next full run on the same code plus backend-only fixes: 275 passed.
+
+### Repro
+Not on demand: `npx playwright test e2e/focus.spec.js -g "31-minute" --repeat-each 6`: 6 passed. Seen once in four
+full runs that included this test (273, 275, 274 + this failure, 275).
+
+### Hypotheses
+1. The quiz opens in a fresh browser context (cold cache: the app shell, the auth restore, the lazy quiz chunk,
+   then the quiz request) and, under the full suite's load, its first question can take longer than the default
+   5 s. Evidence: the failing line waits for a question right after `goto` in that new context; the test passes
+   whenever run alone. Ruled out if: it fails with a long first wait too. Result: not confirmable directly (the
+   failing run's artifacts were overwritten by the next run); the most likely by elimination.
+2. A click on Next was lost between questions. Evidence against: the other three quiz-taking tests use the same
+   loop and never failed in any run; each later question already waits up to 5 s after a click.
+
+### Root cause
+Most likely: `frontend/e2e/focus.spec.js` `endAndAnswer` gave a cold new browser context the same 5 s as a page
+already open.
+
+### Fix
+The quiz tab waits for its first question with its own 20 s limit after `goto` (opening a cold context), then each
+question as before. No app change, no assertion loosened.
+
+### Regression test
+The test itself; `--repeat-each` runs pass before and after, so the failure is not proven gone, only the cold-start
+wait widened. If it recurs, the trace (`E2E_TRACE=1`) of that run is the next step.
+
+### Commit
+fix(frontend): let the focus e2e quiz tab finish opening before the first question

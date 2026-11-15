@@ -1929,8 +1929,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4516,
-      "size_bytes": 201679,
+      "lines": 4559,
+      "size_bytes": 203909,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2177,8 +2177,8 @@
     {
       "path": "frontend/e2e/focus.spec.js",
       "language": "javascript",
-      "lines": 199,
-      "size_bytes": 11602,
+      "lines": 202,
+      "size_bytes": 11913,
       "role": "config",
       "purpose": "E2E of focus mode with Playwright's fake clock on the mocked API (C23.8): locked before Chapter 1, start on the spread at Chapter 1 (start anchor p. 3), heartbeats, a page turn, a hidden tab sending nothing, the bookmark and a 5-question quiz (taken in a fresh context on the real clock) with 80% showing time and bonus; a 31-minute stall beating with input and no turn, its extra minute listed; under 40% with no points; two tabs, the second read-only until the first's lease lapses. The numbers are the engine's, tested in test_focus_anticheat.py."
     },

@@ -94,6 +94,9 @@ async function endAndAnswer(page, api, right) {
   const quiz = await anotherTab(page, api, { fresh: true });
   await serveQuiz(quiz, api);
   await quiz.goto('/focus/focus-1/quiz');
+  // A cold new context (app shell, sign-in restore, the lazy quiz page, the quiz request) can take longer than a
+  // page already open, under the full suite's load (DEBUG_LOG 2026-11-15, C23.G); then each question as usual.
+  await expect(quiz.getByText(/^Question 1 of 5/)).toBeVisible({ timeout: 20_000 });
   for (let i = 0; i < 5; i += 1) {
     await expect(quiz.getByText(new RegExp(`^Question ${i + 1} of 5`))).toBeVisible();
     await quiz.getByRole('radio', { name: i < right ? /A small circle of light/ : /A shadow/ }).click();

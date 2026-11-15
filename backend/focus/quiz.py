@@ -152,7 +152,7 @@ async def grade(session: dict, events: list[dict], answers: list[str], seconds: 
     store.update_session(session, {
         "status": "scored", "quiz_correct": whole, "quiz_total": total, "points_time": out.points_time,
         "points_bonus": out.points_bonus, "points_total": out.points_total, "active_seconds": out.active_seconds,
-        "voided_seconds": out.voided_seconds, "updated_at": store.stamp(store.now())})
+        "voided_seconds": out.voided_seconds, "rules_version": out.rules_version, "updated_at": store.stamp(store.now())})
     public = ("score", "max_score", "feedback", "confidence")
     graded = (final or {}).get("evaluation_result") or {}
     return {**store.view(session, events, out), "passed": out.passed, "quiz_score": weighted / total,

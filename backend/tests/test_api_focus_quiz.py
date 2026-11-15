@@ -181,6 +181,7 @@ def test_all_correct_scores_the_session_moves_mastery_and_keeps_the_test(api):
     assert len(body["per_question"]) == 3 and all("answer" not in q for q in body["per_question"])
     row = focus_row(api, sid)
     assert (row["status"], row["quiz_correct"], row["quiz_total"], row["points_total"]) == ("scored", 3, 3, 160)
+    assert row["rules_version"] == store.policy.RULES_VERSION  # the rules that scored it
     mastery = {m["concept_key"]: m for m in api.db.tables["user_concept_mastery"]}
     assert mastery["gravel"]["last_event_id"] == sid and mastery["gravel"]["correct"] >= 1
     assert mastery["gravel"]["mastery"] > 0.3  # up from the prior
@@ -262,3 +263,12 @@ def test_steve_is_refused_while_the_focus_quiz_is_open(api, monkeypatch):
     assert refused.value.status_code == 409 and "in_test" in str(refused.value.detail)
     answer(api, sid, [q["answer"] for q in stored_questions(api, sid)])
     steve_ask._check_reader(USER, BOOK)  # answered: Steve is back
+
+
+def test_a_session_started_under_older_rules_is_stamped_with_the_rules_that_scored_it(api):
+    """C23.8: the version bump (the bonus cap). The engine scores with the current rules, so the row says them."""
+    sid = read_and_end(api)
+    focus_row(api, sid)["rules_version"] = "2026-11-15"  # started before the bump
+    api.client.post(f"/focus/{sid}/quiz")
+    answer(api, sid, [q["answer"] for q in stored_questions(api, sid)])
+    assert focus_row(api, sid)["rules_version"] == store.policy.RULES_VERSION == "2026-11-15.2"

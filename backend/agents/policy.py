@@ -413,5 +413,6 @@ FOCUS_OPEN_STATUSES = ("active", "paused")
 FOCUS_EVENT_KINDS = ("start", "heartbeat", "page_turn", "hidden", "visible", "idle_prompt", "idle_confirm",
                      "pause", "resume", "end")
 FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" or "s3:4"
-# Stored on each session, so a session is always scored by the rules it was read under.
-FOCUS_RULES_VERSION = "2026-11-15"
+# Stored on each session at its start and again when it is scored, so the row names the rules that scored it.
+# A date, with ".n" for a later revision the same day. 2026-11-15.2: the quiz bonus is capped at the time points.
+FOCUS_RULES_VERSION = "2026-11-15.2"

@@ -32,4 +32,5 @@ def test_statuses_and_event_kinds():
     assert policy.FOCUS_EVENT_KINDS == ("start", "heartbeat", "page_turn", "hidden", "visible", "idle_prompt",
                                         "idle_confirm", "pause", "resume", "end")
     assert set(policy.FOCUS_OPEN_STATUSES) <= set(policy.FOCUS_STATUSES)
-    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", policy.FOCUS_RULES_VERSION)
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}(\.\d+)?", policy.FOCUS_RULES_VERSION)
+    assert policy.FOCUS_RULES_VERSION == "2026-11-15.2"  # the bonus cap (F11); bump it with any scoring change

@@ -72,7 +72,8 @@ export async function mockBackend(page, api, book) {
           book: { title: 'Scanned', author: 'A Scanner', toc: [], format: 'pdf', storage_mode: 'cloud' } });
       }
       return json(route, {
-        session_id: 'e2e-session', chunks: today.map((i) => chunk(book, i)), chunk_indices: today, position: api.position,
+        // C23.G: a test may shorten today's reading (api.today) to leave pages beyond it.
+        session_id: 'e2e-session', chunks: (api.today ?? today).map((i) => chunk(book, i)), chunk_indices: api.today ?? today, position: api.position,
         focus_duration_minutes: 20, reason: 'A steady pace for this book.', chapter_before: '',
         book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' },
       });

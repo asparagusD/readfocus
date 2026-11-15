@@ -91,7 +91,8 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  *
  * A reading session (C17.5) passes `bounds` ({ start, end } locations, today.js): `note`
  * shows over the pages holding the start until hidden; past the end (Next, Space, End)
- * the `closing` page covers the book and Previous comes back; Home goes to the start.
+ * the `closing` page covers the book and Previous comes back; Next reads on past it (C23.G), and then it does
+ * not come back until Home or a jump; Home goes to the start.
  * `opening` keeps the blank page up while the session finds and opens its place; `status`
  * joins the folio ("Beyond today's reading"). `ref` also gets find(snippets, from) and toc().
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
@@ -118,6 +119,7 @@ export function Reader({
   const queued = useRef(0); // a turn asked for mid-turn runs when the leaf lands (C12)
   const moveRef = useRef(null);
   const [ending, setEnding] = useState(false); // the closing page is shown
+  const [readOn, setReadOn] = useState(false); // C23.G: the reader went on past it; it does not come back
   const [noteHidden, setNoteHidden] = useState(false);
   const [pulse, setPulse] = useState(null); // C22.5: { id, rects, whole } a note's passage, pulsed after a jump
   // Lookup (C17.5): where the book is drawn. A PDF is drawn in this page (its text layers in the
@@ -181,10 +183,11 @@ export function Reader({
       return true;
     }
     if (ending) {
-      if (dir < 0) setEnding(false);
-      return dir < 0;
-    }
-    if (dir > 0 && closing && (reached(place, bounds?.end) || place?.atEnd)) {
+      setEnding(false);
+      if (dir < 0) return true; // back to the last page of the reading, which lay under it
+      if (place?.atEnd) return false;
+      setReadOn(true); // C23.G: on into the book; the suggestion was only a suggestion
+    } else if (dir > 0 && closing && !readOn && (reached(place, bounds?.end) || place?.atEnd)) {
       setEnding(true);
       return true;
     }
@@ -193,7 +196,7 @@ export function Reader({
     busy.current = true;
     setTurn({ id: Date.now(), dir });
     return true;
-  }, [place, ending, closing, bounds]);
+  }, [place, ending, closing, bounds, readOn]);
   useEffect(() => { moveRef.current = move; });
 
   const act = useCallback((action) => {
@@ -203,6 +206,7 @@ export function Reader({
     else if (action === 'prev') move(-1);
     else if (action === 'first') {
       setEnding(false);
+      setReadOn(false);
       if (bounds?.start) renderer.goTo(bounds.start);
       else renderer.first();
     } else if (action === 'last' && closing) {
@@ -316,7 +320,7 @@ export function Reader({
   const shownPlaces = useCallback(async () => (await (book.current?.shownPlaces?.() ?? [])).map((p) => ({
     ...p, label: p.label ?? (folio ? folio.split(' of ')[0] : 'this page') })), [folio]);
   useImperativeHandle(ref, () => ({
-    goTo: (anchor) => { setEnding(false); return book.current?.goTo(anchor); },
+    goTo: (anchor) => { setEnding(false); setReadOn(false); return book.current?.goTo(anchor); },
     find: (snippets, from) => book.current?.find(snippets, from) ?? Promise.resolve(null),
     toc: () => book.current?.toc() ?? [],
     next: () => move(1),
@@ -368,7 +372,7 @@ export function Reader({
           <button type="button" className="rf-ov-edge" data-edge="back" tabIndex={-1} aria-hidden="true"
             onClick={() => move(-1)} disabled={place?.atStart} />
           <button type="button" className="rf-ov-edge" data-edge="forward" tabIndex={-1} aria-hidden="true"
-            onClick={() => move(1)} disabled={ending || (place?.atEnd && !closing)} />
+            onClick={() => move(1)} disabled={place?.atEnd && (ending || !closing || readOn)} />
           {note && !noteHidden && !ending && !opening && shows(place, bounds?.start) && (
             <aside className="rf-ov-note" aria-label="Today" data-no-lookup>
               <div className="rf-note">{note}</div>
@@ -419,7 +423,7 @@ export function Reader({
         </button>
         <p className="rf-ov-folio">{ending ? "End of today's reading"
           : place && !opening ? [place.folio, place.entry, status].filter(Boolean).join(' · ') : failure ? 'Not opened' : 'Opening the book…'}</p>
-        <button type="button" className="rf-ov-turn" onClick={() => move(1)} disabled={!place || ending || (place.atEnd && !closing)}>
+        <button type="button" className="rf-ov-turn" onClick={() => move(1)} disabled={!place || (place.atEnd && (ending || !closing || readOn))}>
           <span>Next</span><ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </footer>

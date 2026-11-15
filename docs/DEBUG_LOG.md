@@ -4372,3 +4372,38 @@ Failed before the fix: yes (book_structure.py stashed: 1 failed, '/4/2/2/4' for 
 
 ### Commit
 fix(ingest): count EPUB block paths from the body when ebooklib keeps its tag
+
+## 2026-11-15 C23.G — the reader cannot go past "That's today's suggested reading"
+
+**Status:** fixed
+
+### Symptom
+Gate G7 walk, focus mode on: past the last page of the suggested reading the closing page says "Read on as
+far as you like; your place is kept.", but Next is disabled and ArrowRight does nothing, so the session cannot
+go on into the book (C23.7 retired the timed session; the suggestion is only a suggestion now).
+
+### Repro
+Every time: `frontend/e2e/reader.spec.js` "the closing page lets the reader read on" (PDF and EPUB): from the
+closing page, ArrowRight leaves the closing page in place.
+
+### Hypotheses
+1. `Reader.jsx` `move()` returns early while `ending` for any direction but back, and both Next buttons are
+   `disabled={... ending ...}`. Evidence: the code; C17.5 built the closing page as the end of a timed session.
+   Result: confirmed (the closing page stays, `move(1)` returns false).
+
+### Root cause
+`frontend/src/originalview/Reader.jsx` treated the closing page as a dead end, from before C23.7.
+
+### Fix
+From the closing page, Next (and Space, ArrowRight, the edge) closes it and turns on into the book. Past the
+suggested reading the closing page is not shown again: it appears only when turning from inside the reading
+past its end. The folio says "Beyond today's reading" as before. A book's real last page still stops Next.
+
+### Regression test
+`frontend/e2e/reader.spec.js` "the closing page lets the reader read on, and does not come back" (PDF, EPUB).
+Failed before the fix: yes (Reader.jsx stashed: 2 failed, Next "disabled"). Passes after: yes (with the
+existing closing-page tests, 4 passed). The fixtures' suggested reading ran to the book's last page, so the test
+shortens it (`api.today`) to leave pages beyond.
+
+### Commit
+fix(reader): let the reader read on past today's suggested pages

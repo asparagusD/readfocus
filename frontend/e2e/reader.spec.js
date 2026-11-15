@@ -109,6 +109,31 @@ for (const kind of ['pdf', 'epub']) {
       expect(await shown(page)).toEqual(last); // the closing page lay over the book; the book did not move
     });
 
+    // C23.G (DEBUG_LOG): the suggested reading is a suggestion; the closing page is not a dead end.
+    test('the closing page lets the reader read on, and does not come back', async ({ page, api }) => {
+      api.today = kind === 'pdf' ? [0, 1] : [0]; // pages (or a chapter) left beyond today's reading
+      await openReader(page);
+      await book(page).focus();
+      for (let i = 0; i < 12 && !(await page.locator('.rf-end').count()); i += 1) {
+        await page.keyboard.press('ArrowRight');
+        await page.waitForTimeout(700);
+      }
+      await expect(spoken(page)).toHaveText("End of today's reading");
+      const last = await shown(page);
+      await expect(page.getByRole('button', { name: 'Next' }).first()).toBeEnabled();
+      await page.keyboard.press('ArrowRight');
+      await expect(page.locator('.rf-end')).toHaveCount(0);
+      await expect.poll(async () => JSON.stringify(await shown(page)), { timeout: 5000 }).not.toBe(JSON.stringify(last));
+      await expect(page.locator('.rf-ov-folio')).toContainText("Beyond today's reading");
+      const beyondPlace = await shown(page);
+      await page.keyboard.press('ArrowLeft'); // back inside, then on again: no closing page this time
+      await page.waitForTimeout(700);
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(700);
+      await expect(page.locator('.rf-end')).toHaveCount(0);
+      expect(await shown(page)).toEqual(beyondPlace);
+    });
+
     test('a known word shows its card within 600 ms once cached, beside the word, and Esc closes it', async ({ page, api }) => {
       await openReader(page);
       const lamp = await wordPoint(page, 'lamp');

@@ -4407,3 +4407,39 @@ shortens it (`api.today`) to leave pages beyond.
 
 ### Commit
 fix(reader): let the reader read on past today's suggested pages
+
+## 2026-11-15 C23.G — a focus quiz can be graded, reset and retaken through the test endpoints
+
+**Status:** fixed
+
+### Symptom
+Found by the C23 close review. A focus quiz is kept on a `sessions` row with the focus session's id (so
+`submit_answers` grades it). The old test endpoints accept that row: `POST /sessions/{id}/submit-answers` grades it
+and returns each answer's feedback (which quotes the evidence); `POST /sessions/{id}/finish-reading` sets any row
+back to `testing` with no status check. Repeating both, then `POST /focus/{id}/quiz/answers` with the right
+answers, turns a failed quiz (F12: 0 points) into a pass with time points and bonus.
+
+### Repro
+Every time: `backend/tests/test_api_focus_quiz.py::test_the_test_endpoints_refuse_a_focus_quiz`.
+
+### Hypotheses
+1. The `/sessions` routes do not know a row is a focus quiz. Evidence: `finish_reading` and `submit_answers` look
+   only at `sessions` by id and user. Result: confirmed by the test (200 from both).
+
+### Root cause
+`backend/routers/sessions.py` `finish_reading` and `submit_answers`: no check that the row belongs to a focus
+session, whose quiz is graded and scored only by `/focus/{id}/quiz/answers`.
+
+### Fix
+`submit-answers` refuses (409) a session id that is a focus session of the caller's; `finish-reading` reopens only
+a session still `reading` or `testing` (in the same single update, so its one round trip stays: issue 28), and
+says 409 for one already answered. `evaluate-single` stays open (the focus quiz screen caches answers through it;
+it returns nothing). A first attempt that also checked focus in `finish-reading` broke the one-round-trip test.
+
+### Regression test
+`backend/tests/test_api_focus_quiz.py::test_the_test_endpoints_refuse_a_focus_quiz`.
+Failed before the fix: yes (sessions.py stashed: 1 failed, `assert 200 == 409`). Passes after: yes; pytest
+backend/tests 1676 passed.
+
+### Commit
+fix(api): keep focus quizzes off the test endpoints and never reopen a graded test

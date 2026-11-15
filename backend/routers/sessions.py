@@ -252,16 +252,26 @@ async def save_position(session_id: str, req: PositionRequest, user_id: str = De
         raise HTTPException(status_code=409, detail="This book has no reading progress yet.")
     return {"position": position}
 
+def refuse_focus_quiz(session_id: str, user_id: str) -> None:
+    """C23.G: a focus session's quiz is answered and scored only through /focus/{id}/quiz/answers (F12, F14)."""
+    if supabase.table("focus_sessions").select("id").eq("id", session_id).eq("user_id", user_id).execute().data:
+        raise HTTPException(status_code=409, detail="This is a focus session's quiz; answer it in focus mode.")
+
+
 @router.post("/{session_id}/finish-reading")
 async def finish_reading(
     session_id: str, req: FinishReadingRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)
 ):
-    # 1. Mark the session as testing; the update returns the row, so this is the only round trip
+    # 1. Mark the session as testing; the update returns the row, so this is the only round trip. C23.G: only a
+    #    session still being read or tested: a graded one (a focus quiz's included) is never reopened for a retake.
     sess_resp = supabase.table("sessions").update({
         "status": "testing",
         "actual_duration_minutes": req.actual_duration_minutes
-    }).eq("id", session_id).eq("user_id", user_id).execute()
+    }).eq("id", session_id).eq("user_id", user_id).in_("status", ["reading", "testing"]).execute()
     if not sess_resp.data:
+        found = supabase.table("sessions").select("id").eq("id", session_id).eq("user_id", user_id).execute().data
+        if found:
+            raise HTTPException(status_code=409, detail="This test has been answered already.")
         raise HTTPException(status_code=404, detail="Session not found.")
 
     sess = cast(dict[str, Any], sess_resp.data[0])
@@ -306,6 +316,7 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
 async def submit_answers(
     session_id: str, req: SubmitAnswersRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)
 ):
+    await run_in_threadpool(refuse_focus_quiz, session_id, user_id)
     # 1. Claim the session: two submits at once cannot both grade it (issue 33), and the update returns
     #    the session row, so on the happy path this is the only round trip before grading (issue 28).
     claimed = supabase.table("sessions").update({

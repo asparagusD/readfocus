@@ -16,7 +16,7 @@ from backend.dependencies import get_current_user
 from backend.focus import quiz, store
 from backend.main import app
 from backend.nlp import embedder
-from backend.routers import focus
+from backend.routers import focus, sessions
 from backend.services import concept_store, question_bank
 from backend.tests.test_api_sessions import FakeDb
 
@@ -61,7 +61,7 @@ def api(monkeypatch):
                                       "re_read_queue": [], "average_score": 60, "pace_recommendation": None}]
     for table in ("focus_sessions", "focus_events", "sessions", "test_results"):
         db.tables[table] = []
-    for module in (focus, store, quiz, question_bank, evaluator_agent, concept_store, knowledge_agent, planner_agent,
+    for module in (focus, sessions, store, quiz, question_bank, evaluator_agent, concept_store, knowledge_agent, planner_agent,
                    optimizer_agent, workflow):
         monkeypatch.setattr(module, "supabase", db)
 
@@ -272,3 +272,19 @@ def test_a_session_started_under_older_rules_is_stamped_with_the_rules_that_scor
     api.client.post(f"/focus/{sid}/quiz")
     answer(api, sid, [q["answer"] for q in stored_questions(api, sid)])
     assert focus_row(api, sid)["rules_version"] == store.policy.RULES_VERSION == "2026-11-15.2"
+
+
+def test_the_test_endpoints_refuse_a_focus_quiz(api):
+    """C23.G (DEBUG_LOG): grading a focus quiz through /sessions, then resetting it, would allow a retake."""
+    sid = read_and_end(api)
+    api.client.post(f"/focus/{sid}/quiz")
+    answers = [q["answer"] for q in stored_questions(api, sid)]
+    graded = api.client.post(f"/sessions/{sid}/submit-answers", json={"answers": answers, "time_taken_seconds": 60})
+    assert graded.status_code == 409
+    row = next(s for s in api.db.tables["sessions"] if s["id"] == sid)
+    assert row["status"] == "testing" and api.db.tables["test_results"] == []
+    assert focus_row(api, sid)["status"] == "awaiting_quiz"
+    assert answer(api, sid, answers).json()["status"] == "scored"  # the focus route still grades it, once
+    # and a graded row is never reopened for a retake
+    assert api.client.post(f"/sessions/{sid}/finish-reading", json={"actual_duration_minutes": 3}).status_code == 409
+    assert next(s for s in api.db.tables["sessions"] if s["id"] == sid)["status"] == "completed"

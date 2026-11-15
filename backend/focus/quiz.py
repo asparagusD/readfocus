@@ -85,6 +85,38 @@ def _preferences(user_id: str, book_id: str) -> tuple[list | None, float]:
     return mix, agent_policy.PLANNER_TARGET_DIFFICULTY[band]
 
 
+def _assemble(user_id: str, book: dict, start: dict, end: dict | None) -> tuple[list[dict], float, list[int], list]:
+    """The range's questions (stored form), its prose words, its chunk indices and the bank questions picked."""
+    slices, texts = _slices(book, start, end) if end else ([], {})
+    words = sum(s.words for s in slices)
+    n = rq.question_count(words)
+    candidates = _candidates(user_id, book["id"], slices, texts)
+    # Top up: range chunks with no bank questions (too few in all, or a stretch of the range left uncovered)
+    # get them now from their prose, with the C5 strategies, and persisted.
+    asked = {c.question.chunk_index for c in candidates}
+    missing = [s.chunk_index for s in slices if s.chunk_index not in asked]
+    if missing and question_bank._generate_missing(book["id"], missing):
+        candidates = _candidates(user_id, book["id"], slices, texts)
+    mix, target = _preferences(user_id, book["id"])
+    picked = rq.select(candidates, n, words, mix, target)
+    questions = [assembler.session_question(c.question) for c in picked] or [assembler.fallback_question()]
+    indices = [s.chunk_index for s in slices] or [0]
+    question_bank._link_concepts(questions, user_id, book["id"], indices)
+    return questions, words, indices, picked
+
+
+def _keep(session_id: str, user_id: str, book_id: str, questions: list[dict], words: float, indices: list[int],
+          picked: list, started_at: str | None) -> None:
+    """The quiz on a sessions row, so submit_answers grades it and moves mastery; the picked questions counted."""
+    supabase.table("sessions").insert({
+        "id": session_id, "user_id": user_id, "book_id": book_id, "chunk_start_index": min(indices),
+        "chunk_end_index": max(indices), "assigned_words": round(words), "status": "testing",
+        "started_at": started_at, "test_questions": questions}).execute()
+    for c in picked:
+        supabase.table("question_bank").update({"times_used": (c.question.times_used or 0) + 1}).eq(
+            "id", c.question.id).execute()
+
+
 def build(session: dict) -> dict:
     """The session's quiz {questions (stored form), words_in_range, count}; built once and kept."""
     kept = supabase.table("sessions").select("test_questions").eq("id", session["id"]).eq(
@@ -93,31 +125,11 @@ def build(session: dict) -> dict:
         return {"questions": kept[0]["test_questions"], "words_in_range": session.get("words_in_range") or 0,
                 "count": session.get("quiz_total") or len(kept[0]["test_questions"])}
     book = supabase.table("books").select("id, file_type, toc").eq("id", session["book_id"]).execute().data[0]
-    start, end = session["start_anchor"], _end_anchor(session)
-    slices, texts = _slices(book, start, end) if end else ([], {})
-    words = sum(s.words for s in slices)
-    n = rq.question_count(words)
-    candidates = _candidates(session["user_id"], book["id"], slices, texts)
-    # Top up: range chunks with no bank questions (too few in all, or a stretch of the range left uncovered)
-    # get them now from their prose, with the C5 strategies, and persisted.
-    asked = {c.question.chunk_index for c in candidates}
-    missing = [s.chunk_index for s in slices if s.chunk_index not in asked]
-    if missing and question_bank._generate_missing(book["id"], missing):
-        candidates = _candidates(session["user_id"], book["id"], slices, texts)
-    mix, target = _preferences(session["user_id"], book["id"])
-    picked = rq.select(candidates, n, words, mix, target)
-    questions = [assembler.session_question(c.question) for c in picked] or [assembler.fallback_question()]
-    indices = [s.chunk_index for s in slices] or [0]
-    question_bank._link_concepts(questions, session["user_id"], book["id"], indices)
-    supabase.table("sessions").insert({
-        "id": session["id"], "user_id": session["user_id"], "book_id": book["id"], "chunk_start_index": min(indices),
-        "chunk_end_index": max(indices), "assigned_words": round(words), "status": "testing",
-        "started_at": session.get("started_at"), "test_questions": questions}).execute()
+    questions, words, indices, picked = _assemble(session["user_id"], book, session["start_anchor"],
+                                                  _end_anchor(session))
+    _keep(session["id"], session["user_id"], book["id"], questions, words, indices, picked, session.get("started_at"))
     store.update_session(session, {"words_in_range": round(words), "quiz_total": len(questions),
                                    "quiz_question_ids": [q["id"] for q in questions if q.get("id")]})
-    for c in picked:
-        supabase.table("question_bank").update({"times_used": (c.question.times_used or 0) + 1}).eq(
-            "id", c.question.id).execute()
     return {"questions": questions, "words_in_range": round(words), "count": len(questions)}
 
 

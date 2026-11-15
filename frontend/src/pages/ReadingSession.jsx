@@ -104,7 +104,9 @@ export function ReadingSession() {
   const notepad = useNotes(bookId);
   const [drawingOpen, setDrawingOpen] = useState(false); // C22.3: the panel widens while a drawing is open
   const [entries, setEntries] = useState([]);
-  const chromeVisible = useChromeVisible(toolbarFocused || contentsOpen);
+  const [quizMeOpen, setQuizMeOpen] = useState(false); // C23.7b
+  const [quizMeBusy, setQuizMeBusy] = useState(false);
+  const chromeVisible = useChromeVisible(toolbarFocused || contentsOpen || quizMeOpen);
   const contentsButton = useRef(null);
   const reader = useRef(null);
   const { toast } = useToast();
@@ -272,6 +274,20 @@ export function ReadingSession() {
     setFocusWanted(false);
     toast({ kind: 'neutral', message: 'Focus session discarded. Nothing was scored.' });
   }, '');
+  // C23.7b: Quiz me outside focus mode, to the end of the page(s) shown; no points.
+  const quizMe = async (scope) => {
+    setQuizMeBusy(true);
+    try {
+      const places = (await reader.current?.shownPlaces?.()) ?? [];
+      const anchor = places.at(-1)?.anchor ?? reader.current?.anchor();
+      const built = await fetchApi('/focus/quiz-me', { method: 'POST', body: JSON.stringify({ book_id: bookId, scope, anchor }) });
+      navigate(`/quiz/${built.session_id}`);
+    } catch (err) {
+      setQuizMeOpen(false);
+      setQuizMeBusy(false);
+      toast({ kind: 'neutral', message: err.status === 409 ? err.message : `The quiz couldn't be made just now: ${err.message}` });
+    }
+  };
   const turnFocusOn = () => {
     setSide(null);
     setFocusWanted(true);
@@ -498,6 +514,11 @@ export function ReadingSession() {
               <span>Today's reading</span>
             </button>
           )}
+          {!pagesOnly && (
+            <button type="button" className="rf-tool" onClick={() => setQuizMeOpen(true)}>
+              <span>Quiz me</span>
+            </button>
+          )}
           {pagesOnly ? (
             <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Pages read">
               <span className="rf-session-time" role="status">
@@ -591,6 +612,14 @@ export function ReadingSession() {
       <ReadyModal open={Boolean(focusReady)} sessionId={focus.session?.id} label={focusReady?.label}
         points={focus.session?.points_time ?? 0} onLater={() => setFocusReady(null)}
         onStart={() => navigate(`/focus/${focus.session.id}/quiz`)} />
+
+      <Modal isOpen={quizMeOpen} onClose={() => setQuizMeOpen(false)} title="Quiz me">
+        <p className="rf-leave-text">A few questions on what you’ve read. No points, and your answers still update what you’ve mastered.</p>
+        <div className="rf-leave-actions rf-leave-actions--stack">
+          <Button onClick={() => quizMe('chapter')} disabled={quizMeBusy}>This chapter</Button>
+          <Button variant="secondary" onClick={() => quizMe('since_last')} disabled={quizMeBusy}>Since my last quiz</Button>
+        </div>
+      </Modal>
 
       <Modal isOpen={leavingFocus} onClose={() => setLeavingFocus(false)} title="Leave focus mode?">
         <p className="rf-leave-text">End the session now and answer a few questions to keep its points, or discard it and

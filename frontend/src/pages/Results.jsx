@@ -188,6 +188,9 @@ export function Results() {
             <p>Your notes and your place in the book are kept.</p>
           </div>
         )}
+        {location.state?.quizMe && (
+          <p className="rf-results__unsure">Quiz me never earns points. Your answers still update what you’ve mastered.</p>
+        )}
         {unsure > 0 && (
           <p className="rf-results__unsure">
             We couldn’t judge {unsure === 1 ? 'one answer' : `${unsure} answers`} confidently, so {unsure === 1 ? 'it counts' : 'they count'} for less in your plan.

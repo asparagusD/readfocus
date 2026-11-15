@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from backend.agents.question_generation.assembler import public_question
 from backend.dependencies import get_current_user, require_model
-from backend.focus import policy, quiz, store
+from backend.focus import policy, quiz, quiz_me, store
 from backend.routers.sessions import EpubAnchor, PdfAnchor
 from backend.services import body_start
 from backend.services.supabase_client import supabase
@@ -42,6 +42,14 @@ class AnswersRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     answers: list[Annotated[str, Field(max_length=4_000)]] = Field(max_length=policy.QUIZ_MAX_QUESTIONS)
     time_taken_seconds: int = Field(ge=0, le=24 * 3600)
+
+
+class QuizMeRequest(BaseModel):
+    """C23.7b: the reader's place (the end of the page shown) and which stretch to ask about. No points, ever."""
+    model_config = ConfigDict(extra="forbid")
+    book_id: str = Field(max_length=64)
+    scope: quiz_me.Scope
+    anchor: Anchor
 
 
 class EndRequest(BaseModel):
@@ -223,6 +231,24 @@ def _discard(user_id: str, session_id: str) -> dict:
         raise HTTPException(status_code=409, detail=f"This focus session is {session['status'].replace('_', ' ')}.")
     store.abandon(session, store.now())
     return store.view(session, events, store.tally(events))
+
+
+def _quiz_me(user_id: str, req: QuizMeRequest) -> dict:
+    book = _book(req.book_id, user_id)
+    place = req.anchor.model_dump()
+    _check_place(book, place)
+    try:
+        built = quiz_me.build(user_id, book, req.scope, place)
+    except quiz_me.NothingToAsk:
+        raise HTTPException(status_code=409, detail="There is nothing to ask about yet. Read a little further first.") from None
+    return {"session_id": built["session_id"], "questions": [public_question(q) for q in built["questions"]],
+            "count": built["count"], "words_in_range": built["words_in_range"]}
+
+
+@router.post("/quiz-me")
+async def quiz_me_start(req: QuizMeRequest, user_id: str = Depends(get_current_user)):
+    """C23.7b (F13): a quiz from the chapter's start, or since the last quiz, to the reader's place; no points."""
+    return await run_in_threadpool(_quiz_me, user_id, req)
 
 
 @router.get("/current")

@@ -261,6 +261,13 @@
       "handler": "resume_book"
     },
     {
+      "id": "endpoint:POST /focus/quiz-me",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/quiz-me",
+      "handler": "quiz_me_start"
+    },
+    {
       "id": "endpoint:POST /focus/start",
       "type": "endpoint",
       "method": "POST",
@@ -827,6 +834,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/focus/quiz_me.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/focus/range_quiz.py",
       "type": "file",
       "role": "lib",
@@ -1362,6 +1375,12 @@
     },
     {
       "id": "file:backend/tests/test_api_position.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_quiz_me.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2196,6 +2215,12 @@
     },
     {
       "id": "file:frontend/e2e/ocr.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/quiz-me.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -5139,6 +5164,11 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:POST /focus/quiz-me"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:POST /sessions/start"
     },
     {
@@ -5507,6 +5537,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/focus.py",
       "to": "endpoint:GET /focus/{session_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/quiz-me"
     },
     {
       "type": "defines_endpoint",
@@ -6326,6 +6361,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/focus/quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/focus/range_quiz.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -6618,6 +6673,11 @@
       "type": "imports",
       "from": "file:backend/routers/focus.py",
       "to": "file:backend/focus/quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/focus/quiz_me.py"
     },
     {
       "type": "imports",
@@ -7473,6 +7533,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_position.py",
       "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_quiz_me.py",
+      "to": "file:backend/focus/quiz_me.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_quiz_me.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_quiz_me.py",
+      "to": "file:backend/tests/test_api_focus_quiz.py"
     },
     {
       "type": "imports",
@@ -8932,6 +9007,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/ocr.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/quiz-me.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11997,6 +12077,21 @@
     {
       "type": "reads_table",
       "from": "file:backend/focus/quiz.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz_me.py",
       "to": "table:sessions"
     },
     {

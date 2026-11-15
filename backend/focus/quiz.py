@@ -146,5 +146,5 @@ async def grade(session: dict, events: list[dict], answers: list[str], seconds: 
     return {**store.view(session, events, out), "passed": out.passed, "quiz_score": weighted / total,
             "total_score": graded.get("total_score"), "max_score": graded.get("max_score"),
             "percentage": graded.get("percentage", weighted / total * 100),
-            "points_bonus": out.points_bonus, "lines": [line.model_dump() for line in out.lines],
+            "points_bonus": out.points_bonus, "quiz_correct": whole, "quiz_total": total, "lines": [line.model_dump() for line in out.lines],
             "per_question": [{k: q.get(k) for k in public} for q in per_question]}

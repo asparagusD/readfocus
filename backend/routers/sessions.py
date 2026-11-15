@@ -224,6 +224,7 @@ async def start_session(req: StartSessionRequest, background_tasks: BackgroundTa
         "chunk_indices": chunk_indices,
         "focus_duration_minutes": getattr(plan, "focus_duration_minutes", 20),
         "reason": getattr(plan, "reason", ""),
+        "mode": getattr(plan, "mode", "new"),  # C23.7: "Suggested next: revisit ..." for a re-read or review
         "chunks": chunks_data,
         "position": position,  # the last saved place in this book, or None; the reader decides whether to resume
         "book": book,  # {title, author} for the running head, or None

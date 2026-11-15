@@ -2855,6 +2855,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/focus/breakdown.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/breakdown.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/focus/clock.js",
       "type": "file",
       "role": "asset",
@@ -5128,11 +5140,6 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:POST /sessions/start"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:POST /sessions/{session_id}/finish-reading"
     },
     {
       "type": "calls_endpoint",
@@ -9529,6 +9536,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/focus/breakdown.test.js",
+      "to": "file:frontend/src/focus/breakdown.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/focus/clock.test.js",
       "to": "file:frontend/src/focus/clock.js"
     },
@@ -10871,6 +10883,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/components/ui/Skeleton.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/focus/breakdown.js"
     },
     {
       "type": "imports",

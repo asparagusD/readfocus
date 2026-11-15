@@ -61,7 +61,53 @@ test('End session: set the ribbon on a page, ready, the questions, the results',
   await page.getByRole('button', { name: 'Submit answers' }).click();
   await expect(page).toHaveURL(/\/results\/focus-1$/);
   expect(api.focus.answers).toEqual(['(b) A small circle of light', 'The page mattered.', 'Reading by lamplight.']);
-  await expect(page.getByText('20 of 30 points')).toBeVisible();
+  await expect(page.getByText('Score: 67%')).toBeAttached();
+  await expect(page.getByText('20 of 30 points')).toHaveCount(0); // C23.7: only the session's points are shown
+  // C23.7: the points, row by row, from the server's lines.
+  const scored = page.getByRole('region', { name: 'How this session scored' });
+  const rows = scored.locator('.rf-points__row');
+  await expect(rows).toHaveCount(4);
+  await expect(rows.nth(0)).toContainText('Focused reading');
+  await expect(rows.nth(0)).toContainText('25 minutes');
+  await expect(rows.nth(0)).toContainText('+250');
+  await expect(rows.nth(1)).toContainText('Not counted');
+  await expect(rows.nth(1)).toContainText('Time on one page beyond 30 minutes without turning it · 10 minutes');
+  await expect(rows.nth(2)).toContainText('2 of 3 right · 67%');
+  await expect(rows.nth(2)).toContainText('+40');
+  await expect(rows.nth(3)).toContainText('+290');
+  await expect(scored).toContainText('It is never taken off what you earned.');
+  await expect(page.getByText(/No points this time/)).toHaveCount(0);
+  if (process.env.E2E_SHOTS) await page.screenshot({ path: `${process.env.E2E_SHOTS}/results-points-1440.png`, fullPage: true });
+});
+
+test('under 40% the results say so kindly, with no points', async ({ page, api }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  api.bodyStart = pdfStart;
+  api.focus.passed = false;
+  await startFocus(page, api);
+  api.focus.active = 1500;
+  await bar(page).getByRole('button', { name: 'End session' }).click();
+  await placing(page).getByRole('button', { name: /^Set ribbon on p\./ }).first().click();
+  await ready(page).getByRole('button', { name: 'Start questions' }).click();
+  await page.getByRole('radio', { name: /A small circle of light/ }).click();
+  await page.locator('[data-test-next]').click();
+  await page.getByLabel('Your answer').fill('Not sure.');
+  await page.locator('[data-test-next]').click();
+  await expect(page.getByText(/^Question 3 of 3/)).toBeVisible();
+  await page.getByRole('button', { name: 'Submit answers' }).click();
+  await expect(page).toHaveURL(/\/results\/focus-1$/);
+  await expect(page.getByRole('note')).toHaveText(/No points this time; you got 1 of 3\. Points return when you score 40% or more\./);
+  const rows = page.getByRole('region', { name: 'How this session scored' }).locator('.rf-points__row');
+  await expect(rows.last()).toContainText('This session');
+  await expect(rows.last().locator('dd')).toHaveText('0');
+  await expect(rows.first().locator('dd')).toHaveText('—');
+  if (process.env.E2E_SHOTS) {
+    await page.screenshot({ path: `${process.env.E2E_SHOTS}/results-low-1440.png`, fullPage: true });
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.screenshot({ path: `${process.env.E2E_SHOTS}/results-low-375.png`, fullPage: true });
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
 });
 
 test('the arrows and Enter choose the page; Escape cancels', async ({ page, api }) => {

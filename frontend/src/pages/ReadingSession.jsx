@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pause, Play, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
@@ -58,21 +58,21 @@ function useStored(key, fallback) {
   return [value, set];
 }
 
-const formatTime = (seconds) => {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
-};
+/** C23.7: the planner's next step in words; a re-read or review is "revisit §3.2". */
+function suggestion(mode, title) {
+  const where = title || 'these pages';
+  return `${mode === 're_read' || mode === 'review' ? 'revisit ' : ''}${where}.`;
+}
 
 /**
  * The reading page (C12.5a; the original view since C17.5): the whole book as
  * published, PDF or EPUB, opened at today's reading under a toolbar that fades
  * while reading. Today's chunks are found in the book by their text; the
  * planner's reason lies over the first page of them, and past their end the
- * closing page says "That's today's reading" with Start test. The place is
- * saved as an anchor in the file while inside today's reading. Calibration, the
- * countdown (Start, Pause, Resume, auto-pause at zero), Done reading and the
- * abandon modal behave as before.
+ * closing page says "That's today's reading". The place is saved as an anchor
+ * in the file while inside today's reading. C23.7: no fixed reading timer; the
+ * planner's choice is a gentle "Suggested next" note, and reading time is
+ * measured only in focus mode.
  */
 export function ReadingSession() {
   const { bookId } = useParams();
@@ -84,12 +84,6 @@ export function ReadingSession() {
   const [sessionData, setSessionData] = useState(null);
   useDocumentTitle(sessionData?.book?.title ? `${sessionData.book.title} · Reading` : 'Reading');
 
-  // Timer state, as before
-  const [timeLeft, setTimeLeft] = useState(0); // in seconds
-  const [timerStatus, setTimerStatus] = useState('idle'); // 'idle' | 'running' | 'paused'
-
-  const [showAbandonModal, setShowAbandonModal] = useState(false);
-  const [isFinishing, setIsFinishing] = useState(false);
   const [zoom, setZoom] = useStored('rf-pdf-zoom', 'fit-page');
   const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
@@ -110,7 +104,7 @@ export function ReadingSession() {
   const notepad = useNotes(bookId);
   const [drawingOpen, setDrawingOpen] = useState(false); // C22.3: the panel widens while a drawing is open
   const [entries, setEntries] = useState([]);
-  const chromeVisible = useChromeVisible(toolbarFocused || showAbandonModal || contentsOpen);
+  const chromeVisible = useChromeVisible(toolbarFocused || contentsOpen);
   const contentsButton = useRef(null);
   const reader = useRef(null);
   const { toast } = useToast();
@@ -414,7 +408,6 @@ export function ReadingSession() {
       try {
         const data = await fetchApi('/sessions/start', { method: 'POST', body: JSON.stringify({ book_id: bookId }) });
         setSessionData(data);
-        setTimeLeft(data.focus_duration_minutes * 60);
         setLoading(false);
       } catch (err) {
         toast({ kind: 'warning', message: `Today's reading couldn't be prepared: ${err.message}` });
@@ -424,47 +417,18 @@ export function ReadingSession() {
     startSession();
   }, [bookId, navigate, profileChecked, isCalibrated, toast]);
 
-  // Timer loop, as before
-  useEffect(() => {
-    let interval = null;
-    if (timerStatus === 'running' && timeLeft > 0) {
-      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    } else if (timeLeft === 0 && timerStatus === 'running') {
-      setTimerStatus('paused'); // Auto-pause at 0
-    }
-    return () => clearInterval(interval);
-  }, [timerStatus, timeLeft]);
-
-  const totalSeconds = sessionData?.focus_duration_minutes * 60 || 1;
-
-  const handleFinishReading = async () => {
-    if (!sessionData) return;
-    setIsFinishing(true);
-    const actualMinutes = Math.round((totalSeconds - timeLeft) / 60) || 1;
-    try {
-      await fetchApi(`/sessions/${sessionData.session_id}/finish-reading`, {
-        method: 'POST',
-        body: JSON.stringify({ actual_duration_minutes: actualMinutes }),
-      });
-      navigate(`/test/${sessionData.session_id}`);
-    } catch (err) {
-      toast({ kind: 'warning', message: `The test couldn't be opened just now: ${err.message}` });
-      setIsFinishing(false);
-    }
-  };
-
-  const handleAbandon = () => navigate('/');
-
-  // The planner's reason, as a note over the first page of today's reading; the closing page with the test.
+  // C23.7: the planner's choice as a gentle note over the first page of today's reading ("Suggested next:
+  // revisit §3.2"), named by the first contents entry inside it; no minutes, no clock.
+  const suggested = entries.find((e) => e.today)?.title || sessionData?.chapter_before || '';
   const note = useMemo(() => sessionData && !pagesOnly && (
     <>
       <ReadingLamp className="rf-note-lamp" />
       <p>
-        <strong>Today: about {sessionData.focus_duration_minutes} minutes.</strong>
+        <strong>Suggested next: {suggestion(sessionData.mode, suggested)}</strong>
         {sessionData.reason ? ` ${sessionData.reason}` : ''}
       </p>
     </>
-  ), [sessionData, pagesOnly]);
+  ), [sessionData, pagesOnly, suggested]);
   // The closing page mounts only when it is shown, so its lamp's one glow pulse (moment 3) lands then.
   const closing = pagesOnly ? (
     <>
@@ -475,9 +439,8 @@ export function ReadingSession() {
   ) : (
     <>
       <ReadingLamp className="rf-end-lamp" />
-      <h2 className="rf-end-title">That's today's reading.</h2>
-      <p className="rf-end-text">When you're ready, a short test on what you read.</p>
-      <Button onClick={handleFinishReading} loading={isFinishing} loadingLabel="Saving…">Start test</Button>
+      <h2 className="rf-end-title">That's today's suggested reading.</h2>
+      <p className="rf-end-text">Read on as far as you like; your place is kept.</p>
     </>
   );
 
@@ -494,7 +457,6 @@ export function ReadingSession() {
 
   if (loading) return preparing;
 
-  const running = timerStatus === 'running';
   const bookTitle = sessionData.book?.title || 'Your book';
 
   return (
@@ -542,23 +504,7 @@ export function ReadingSession() {
                 {preparingFirst ? 'Preparing your first session…' : `Reading this scan: ${readCount} of ${scannedCount} pages`}
               </span>
             </div>
-          ) : (
-          <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Session">
-            <span className="rf-session-time" role="timer" aria-label={`Time left ${formatTime(timeLeft)}`}>{formatTime(timeLeft)}</span>
-            <button type="button" className="rf-tool" onClick={() => setTimerStatus(running ? 'paused' : 'running')}
-              aria-label={running ? 'Pause the timer' : timerStatus === 'idle' ? 'Start the timer' : 'Resume the timer'}>
-              {running ? <Pause size={18} strokeWidth={1.75} aria-hidden="true" /> : <Play size={18} strokeWidth={1.75} aria-hidden="true" />}
-              {/* C13.9: a stopped clock says so in words, at every width (a play icon alone read as running). */}
-              {!running && <span className="rf-session-cue">{timerStatus === 'idle' ? 'Start' : 'Resume'}</span>}
-            </button>
-            <button type="button" className="rf-tool" onClick={handleFinishReading} disabled={isFinishing}>
-              {isFinishing ? 'Saving…' : 'Done reading'}
-            </button>
-            <button type="button" className="rf-tool" onClick={() => setShowAbandonModal(true)} aria-label="Abandon session">
-              <X size={18} strokeWidth={1.75} aria-hidden="true" />
-            </button>
-          </div>
-          )}
+          ) : null}
         </ReaderToolbar>
         )}
       </div>
@@ -656,13 +602,6 @@ export function ReadingSession() {
         </div>
       </Modal>
 
-      <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)} title="Leave today's reading?">
-        <p className="rf-leave-text">Your place in the book is kept. This session's reading time won't count, and its test won't open.</p>
-        <div className="rf-leave-actions">
-          <Button variant="secondary" onClick={handleAbandon}>Leave</Button>
-          <Button onClick={() => setShowAbandonModal(false)}>Keep reading</Button>
-        </div>
-      </Modal>
     </div>
   );
 }

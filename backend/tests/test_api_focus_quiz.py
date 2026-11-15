@@ -175,6 +175,7 @@ def test_all_correct_scores_the_session_moves_mastery_and_keeps_the_test(api):
     body = response.json()
     assert body["status"] == "scored" and body["passed"] is True
     assert (body["points_time"], body["points_bonus"], body["points_total"]) == (100, 60, 160)
+    assert (body["quiz_correct"], body["quiz_total"]) == (3, 3)
     # 600 s read; the 5 s between the last heartbeat and the bookmark had no heartbeat.
     assert [line["code"] for line in body["lines"]] == ["counted", "no_heartbeat", "quiz_bonus"]
     assert len(body["per_question"]) == 3 and all("answer" not in q for q in body["per_question"])
@@ -193,6 +194,7 @@ def test_under_40_percent_the_whole_session_earns_nothing(api):
     body = answer(api, sid, [first, "", ""]).json()  # 1 of 3
     assert body["passed"] is False and body["points_total"] == 0 and body["points_time"] == 0
     assert body["lines"][-1]["code"] == "quiz_failed"
+    assert (body["quiz_correct"], body["quiz_total"]) == (1, 3)  # C23.7: "you got 1 of 3"
     row = focus_row(api, sid)
     assert (row["status"], row["quiz_correct"], row["points_total"]) == ("scored", 1, 0)
 

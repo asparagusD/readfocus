@@ -284,9 +284,16 @@ function focusRoute(route, request, focus, path) {
     focus.answers = body.answers;
     Object.assign(s, { status: 'scored', state: 'scored' });
     const pts = Math.floor(focus.active / 6);
-    return json(route, { ...view(), passed: true, quiz_score: 2 / 3, points_time: pts, points_bonus: 40, points_total: pts + 40,
-      total_score: 20, max_score: 30, percentage: 66.7, lines: [], per_question: [
-        { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' }, { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' },
+    const passed = focus.passed !== false; // C23.7: a test can fail the quiz (1 of 3)
+    const lines = [{ code: 'counted', label: 'Focused reading', seconds: focus.active, points: pts },
+      { code: 'page_cap', label: 'Time on one page beyond 30 minutes without turning it', seconds: 600, points: 0 },
+      { code: 'quiz_bonus', label: `Quiz: ${passed ? 2 : 1} of 3 correct`, points: passed ? 40 : 0 },
+      ...(passed ? [] : [{ code: 'quiz_failed', label: 'Quiz below 40%: this session earns 0 points', points: 0 }])];
+    return json(route, { ...view(), passed, quiz_score: passed ? 2 / 3 : 1 / 3, points_time: passed ? pts : 0,
+      points_bonus: passed ? 40 : 0, points_total: passed ? pts + 40 : 0, quiz_correct: passed ? 2 : 1, quiz_total: 3,
+      total_score: passed ? 20 : 10, max_score: 30, percentage: passed ? 66.7 : 33.3, lines, per_question: [
+        { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' },
+        passed ? { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' } : { score: 0, max_score: 10, feedback: 'Not this time.', confidence: 'high' },
         { score: 0, max_score: 10, feedback: 'Say what the pages were about.', confidence: 'high' }] });
   }
   if (action === 'discard') Object.assign(s, { status: 'abandoned', state: 'abandoned' });

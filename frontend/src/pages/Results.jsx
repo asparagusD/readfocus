@@ -10,6 +10,7 @@ import { OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { useCountUp } from '../motion/useCountUp';
 import { OUTCOME_LABEL, conceptChips, outcome, splitFeedback, summary, verdict } from '../lib/results';
+import { breakdown } from '../focus/breakdown';
 import './Results.css';
 
 const ICONS = { right: Check, partial: Minus, wrong: RotateCcw, unsure: HelpCircle };
@@ -33,6 +34,25 @@ function Score({ pct }) {
       <span className="rf-results__pct" aria-hidden="true">%</span>
       <span className="rf-results__sr">Score: {pct}%</span>
     </p>
+  );
+}
+
+/** C23.7 (handoff 24-25): how a focus session scored, row by row, from the server's lines. */
+function FocusPoints({ scored }) {
+  const voided = scored.rows.some((r) => r.kind === 'void');
+  return (
+    <section className="rf-results__card" aria-labelledby="rf-points">
+      <h2 id="rf-points" className="eyebrow">How this session scored</h2>
+      <dl className="rf-points">
+        {scored.rows.map((r, i) => (
+          <div key={r.key} className="rf-points__row" data-kind={r.kind} style={{ '--rf-row': i }}>
+            <dt><b>{r.title}</b><span>{r.detail}</span></dt>
+            <dd>{r.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {voided && <p className="rf-points__note">Time that didn’t count is listed so you can see why. It is never taken off what you earned.</p>}
+    </section>
   );
 }
 
@@ -146,8 +166,8 @@ export function Results() {
   const unsure = grades.filter((g) => outcome(g) === 'unsure').length;
   const next = resultsData.next_session;
   const pace = resultsData.pace_recommendation;
-  const minutes = next?.focus_duration_minutes || pace?.focus_duration_minutes;
   const bookId = sessionData?.book_id;
+  const scored = location.state?.focus && resultsData.lines ? breakdown(resultsData) : null;
 
   return (
     <div className="rf-results">
@@ -158,9 +178,16 @@ export function Results() {
           <div className="rf-results__verdict">
             {grades.length > 0 && <p className="rf-results__summary">{summary(grades)}</p>}
             <p className="rf-results__line">{verdict(pct)}</p>
-            <p className="rf-results__points">{resultsData.total_score} of {resultsData.max_score} points</p>
+            {/* C23.7: a focus quiz's points are the session's (the card beside); the grader's marks would read as a second score. */}
+            {!scored && <p className="rf-results__points">{resultsData.total_score} of {resultsData.max_score} points</p>}
           </div>
         </div>
+        {scored && !scored.passed && (
+          <div className="rf-points__held" role="note">
+            <p>No points this time; you got {scored.correct} of {scored.total}. Points return when you score 40% or more.</p>
+            <p>Your notes and your place in the book are kept.</p>
+          </div>
+        )}
         {unsure > 0 && (
           <p className="rf-results__unsure">
             We couldn’t judge {unsure === 1 ? 'one answer' : `${unsure} answers`} confidently, so {unsure === 1 ? 'it counts' : 'they count'} for less in your plan.
@@ -196,6 +223,7 @@ export function Results() {
       </div>
 
       <aside className="rf-results__side">
+        {scored && <FocusPoints scored={scored} />}
         {(chips.strengthened.length > 0 || chips.revisit.length > 0) && (
           <section className="rf-results__card" aria-labelledby="rf-concepts">
             <h2 id="rf-concepts" className="eyebrow">Concepts from this session</h2>
@@ -225,17 +253,17 @@ export function Results() {
 
         <section className="rf-results__card rf-results__next" aria-labelledby="rf-next">
           <OpenBook size={72} />
-          <h2 id="rf-next" className="eyebrow">Next session</h2>
+          <h2 id="rf-next" className="eyebrow">Suggested next</h2>
           <p className="rf-results__next-title">
             {next ? NEXT_TITLE[next.mode] ?? NEXT_TITLE.new : pace?.re_read_mode ? NEXT_TITLE.re_read : NEXT_TITLE.new}
           </p>
+          {/* C23.7: a gentle suggestion, no fixed reading time. */}
           <p className="rf-results__next-line">
-            {minutes ? `About ${minutes} minutes.` : ''}
-            {next?.reason ? ` ${next.reason}` : pace?.re_read_mode ? ' Revisiting difficult material is how mastery is built.' : ''}
+            {next?.reason ? next.reason : pace?.re_read_mode ? 'Revisiting difficult material is how mastery is built.' : 'Read on whenever you like.'}
           </p>
           <div className="rf-results__actions">
             {bookId && (!next || next.mode !== 'finished') && (
-              <Button onClick={() => navigate(`/read/${bookId}`)}>Start next session</Button>
+              <Button onClick={() => navigate(`/read/${bookId}`)}>Back to the book</Button>
             )}
             <Link to="/dashboard" className="rf-btn rf-btn--ghost">See your dashboard</Link>
           </div>

@@ -259,3 +259,83 @@
     font-size: 80px;
   }
 }
+
+/* C23.7 (handoff 24-25): the focus session's points, row by row; the rows rise 60 ms apart. */
+.rf-points {
+  margin: 0;
+}
+
+.rf-points__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: baseline;
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-hair) solid var(--line);
+  animation: rf-points-rise var(--dur-4) var(--ease-arrive) both;
+  animation-delay: calc(var(--rf-row, 0) * var(--stagger));
+}
+
+.rf-points__row dt b {
+  display: block;
+  font-weight: 600;
+}
+
+.rf-points__row dt span {
+  color: var(--ink-2);
+  font-size: var(--text-label);
+}
+
+.rf-points__row dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.rf-points__row[data-kind='void'] dd {
+  color: var(--ink-2);
+}
+
+.rf-points__row[data-kind='total'] {
+  border-bottom: 0;
+}
+
+.rf-points__row[data-kind='total'] dd {
+  color: var(--accent-text);
+}
+
+.rf-points__note {
+  margin: var(--space-3) 0 0;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+}
+
+/* Under the pass mark: said once, kindly, in a dashed box (handoff 25). */
+.rf-points__held {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 0;
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-hair) dashed var(--line-field);
+  border-radius: var(--radius-surface);
+  max-width: 60ch;
+}
+
+.rf-points__held p {
+  margin: 0;
+  font-family: var(--font-reading);
+  line-height: 1.6;
+}
+
+@keyframes rf-points-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-points__row {
+    animation: none;
+  }
+}

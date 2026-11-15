@@ -95,24 +95,6 @@ for (const kind of ['pdf', 'epub']) {
       expect(during).toEqual({ leaf: 0, animations: 0 });
     });
 
-    test("End shows today's closing page; its Start test takes a mouse click and finishes reading", async ({ page }) => {
-      const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
-      const answer = (route, body) => route.request().method() === 'OPTIONS'
-        ? route.fulfill({ status: 204, headers: cors })
-        : route.fulfill({ status: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      let finished = 0;
-      await page.route('http://localhost:8000/sessions/e2e-session/finish-reading', (route) => { if (route.request().method() === 'POST') finished += 1; return answer(route, {}); });
-      await page.route('http://localhost:8000/sessions/e2e-session', (route) => answer(route, { id: 'e2e-session', test_questions: [{ question: 'What did the lamp do?', type: 'free_text' }] }));
-      await openReader(page);
-      await book(page).focus();
-      await page.keyboard.press('End');
-      await expect(spoken(page)).toHaveText("End of today's reading");
-      await expect(page.locator('.rf-end')).toHaveCount(1);
-      await page.locator('.rf-end').getByRole('button', { name: 'Start test' }).click({ timeout: 3000 });
-      await expect(page).toHaveURL(/\/test\/e2e-session$/);
-      expect(finished).toBe(1);
-    });
-
     test("turning past today's last page shows the closing page, and Previous comes back", async ({ page }) => {
       await openReader(page);
       await book(page).focus();
@@ -216,36 +198,15 @@ for (const kind of ['pdf', 'epub']) {
 test.describe('the toolbar at 375', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
-  // C13.9: the tools on one row (handoff 375 frame), the session's controls on one row under them.
-  test('the session controls sit under the tools, inside the screen', async ({ page }) => {
+  // C13.9: the tools on one row (handoff 375 frame); C23.7: no session row under them any more.
+  test('the tools fit inside the screen, with no session clock row', async ({ page }) => {
     await openReader(page);
-    const box = (locator) => locator.boundingBox();
     const toolbar = page.getByRole('toolbar', { name: 'Reading controls' });
-    const back = await box(toolbar.getByRole('button', { name: 'Back to the library' }));
-    const done = await box(toolbar.getByRole('button', { name: 'Done reading' }));
-    const abandon = await box(toolbar.getByRole('button', { name: 'Abandon session' }));
-    expect(done.y).toBeGreaterThan(back.y + back.height - 1); // the session row is under the tools
-    expect(Math.abs(abandon.y - done.y)).toBeLessThan(4);
+    await expect(toolbar.getByRole('button', { name: 'Back to the library' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Session' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
   });
 });
-
-// C13.9: a stopped session clock says so in words, at 1440 and at 375.
-for (const width of [1440, 375]) {
-  test(`the session clock reads Start, then Resume, at ${width}`, async ({ page }) => {
-    await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
-    await openReader(page);
-    const session = page.getByRole('group', { name: 'Session' });
-    await expect(session.getByRole('timer')).toHaveAccessibleName('Time left 20:00');
-    const start = session.getByRole('button', { name: 'Start the timer' });
-    await expect(start).toHaveText('Start');
-    await expect(start.getByText('Start')).toBeVisible();
-    await start.click();
-    await expect(session.getByRole('button', { name: 'Pause the timer' })).toHaveText('');
-    await session.getByRole('button', { name: 'Pause the timer' }).click();
-    await expect(session.getByRole('button', { name: 'Resume the timer' })).toHaveText('Resume');
-  });
-}
 
 // C13.9: one h1 that names the book, hidden from sight (the book's own headings are the publisher's).
 test('the reading page has one h1 naming the book', async ({ page }) => {

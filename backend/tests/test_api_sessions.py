@@ -500,7 +500,7 @@ def test_a_failing_decisions_insert_changes_no_response(api):
 def test_the_responses_keep_the_keys_the_pages_read(api):
     start = api.client.post("/sessions/start", json={"book_id": BOOK}).json()
     assert set(start) == {"session_id", "chunk_indices", "focus_duration_minutes", "reason", "chunks", "position", "book",
-                          "chapter_before"}
+                          "chapter_before", "mode"}
     finished = api.client.post(f"/sessions/{start['session_id']}/finish-reading", json={"actual_duration_minutes": 3})
     assert set(finished.json()) == {"test_id", "questions"}
     body = submit(api, start["session_id"]).json()
@@ -600,6 +600,12 @@ def test_start_reads_the_chunks_and_creates_the_session_at_once(api, monkeypatch
     assert resp.status_code == 200 and [c["chunk_index"] for c in resp.json()["chunks"]] == [0]
     (read_start, read_end), (insert_start, insert_end) = spans[("chunks", "select")], spans[("sessions", "insert")]
     assert read_start < insert_end and insert_start < read_end  # the two calls overlap in time
+
+
+def test_start_says_the_planners_mode_for_the_suggested_next_note(api):
+    """C23.7: the reader words the plan as "Suggested next: ..."; a re-read or review says "revisit"."""
+    resp = api.client.post("/sessions/start", json={"book_id": BOOK})
+    assert resp.status_code == 200 and resp.json()["mode"] in {"new", "re_read", "review"}
 
 
 # Issue 17 (C15.2): /sessions/start served any book whose id the caller knew.

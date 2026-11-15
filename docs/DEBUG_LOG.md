@@ -4284,4 +4284,4 @@ another tab · this one only shows its time", no Pause, Resume, End or idle prom
 C23.8 test commit): the second tab sends nothing while the first writes, and writes once its lease has lapsed.
 
 ### Commit
-fix(focus): a second tab on a focus session only watches
+`e402c6b` fix(focus): a second tab on a focus session only watches

@@ -1578,6 +1578,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_focus_anticheat.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_focus_policy.py",
       "type": "file",
       "role": "test",
@@ -2131,6 +2137,12 @@
     },
     {
       "id": "file:frontend/e2e/focus-mode.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/focus.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -8058,6 +8070,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_focus_anticheat.py",
+      "to": "file:backend/tests/test_api_focus_quiz.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_focus_policy.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -8949,6 +8966,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/focus-mode.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/focus.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {

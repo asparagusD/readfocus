@@ -52,7 +52,7 @@ const chunk = (book, chunk_index) => ({ id: `chunk-${chunk_index}`, chunk_index,
 const json = (route, body, status = 200) => route.fulfill({ status, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 /** Routes for one page: the API remembers the saved position across reloads, like the server. */
-async function mockBackend(page, api, book) {
+export async function mockBackend(page, api, book) {
   const { file, type, today, chunks } = BOOKS[book];
   await page.route(/supabase\.co/, (route) => { api.unmocked.push(route.request().url()); return route.abort(); });
   await page.route(`${API}/**`, async (route) => {
@@ -303,7 +303,7 @@ function focusRoute(route, request, focus, path) {
 }
 
 /** A signed-in reader for the app: a session in Supabase's storage that is far from expiring. */
-async function signIn(page) {
+export async function signIn(page) {
   const session = {
     access_token: 'e2e-token', refresh_token: 'e2e-refresh', token_type: 'bearer', expires_in: 3600,
     expires_at: Math.floor(Date.now() / 1000) + 24 * 3600,

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 855,
-    "inventoried": 712,
+    "tracked": 857,
+    "inventoried": 714,
     "excluded": 143
   },
   "files": [
@@ -1415,6 +1415,14 @@
       "purpose": "Pytest for backend/regions/figures.py through classify: vector and image figures with captions above or below and labels, icons, rules and single bars ignored, drawn display and inline math, tables with captions, one-cell boxes, graphics inside tables, two-column reading order, crop-box coordinates; and on the shelf Calculus tables, Figure 2.11 and drawn math, and the Circuits schematic taking its labels."
     },
     {
+      "path": "backend/tests/test_focus_anticheat.py",
+      "language": "python",
+      "lines": 142,
+      "size_bytes": 6501,
+      "role": "test",
+      "purpose": "Anti-cheat API tests (C23.8, FOCUS_RULES F3, F7, F12, F14) on the in-memory database with the real grader and engine: an end with no heartbeats earns 0 even with every answer right; heartbeat spam and a future tab clock buy no time; two tabs on one session count it once and cannot open a second session; a 31-minute stall voids only the minute past 30; under 40% earns 0 and 80% time plus bonus; no migration lets the anon or a reader's key write focus_sessions or focus_events (RLS on, SELECT policies only, no grants), and the frontend never writes them through Supabase."
+    },
+    {
       "path": "backend/tests/test_focus_policy.py",
       "language": "python",
       "lines": 35,
@@ -1914,7 +1922,7 @@
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
       "lines": 4287,
-      "size_bytes": 189358,
+      "size_bytes": 189368,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2092,7 +2100,7 @@
       "lines": 441,
       "size_bytes": 27815,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events)."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -2157,6 +2165,14 @@
       "size_bytes": 9246,
       "role": "config",
       "purpose": "E2E for focus mode (C23.6a) on Playwright's clock: locked before the body start with its popover, Start with heartbeats at once and every 30 s, page turns, the server's minute read, hidden/visible, pause and resume, the idle prompt answered or resting, the 2 h 45 notice and 3-hour stop, End session, leaving (keep, discard), a reload resuming, 375 px Lamplight with reduced motion."
+    },
+    {
+      "path": "frontend/e2e/focus.spec.js",
+      "language": "javascript",
+      "lines": 199,
+      "size_bytes": 11602,
+      "role": "config",
+      "purpose": "E2E of focus mode with Playwright's fake clock on the mocked API (C23.8): locked before Chapter 1, start on the spread at Chapter 1 (start anchor p. 3), heartbeats, a page turn, a hidden tab sending nothing, the bookmark and a 5-question quiz (taken in a fresh context on the real clock) with 80% showing time and bonus; a 31-minute stall beating with input and no turn, its extra minute listed; under 40% with no points; two tabs, the second read-only until the first's lease lapses. The numbers are the engine's, tested in test_focus_anticheat.py."
     },
     {
       "path": "frontend/e2e/gate-g5.spec.js",
@@ -5641,8 +5657,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 714,
-      "size_bytes": 218757,
+      "lines": 716,
+      "size_bytes": 220048,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

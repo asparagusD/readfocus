@@ -2984,7 +2984,7 @@ C20 prompt): Steve became C20, merging the stubs "Steve backend" and
 "Steve in the reader"; anchors and highlights C21, notepad C22, focus
 mode C23, XP and leagues C24, verification C25. Each chunk gets its full plan (what there is to
 build on, decisions, subchunks with verification and cuts, an estimate)
-at its own start, before any code. The phase 2 budget is 42.25 hours
+at its own start, before any code. The phase 2 budget is 43.25 hours
 (31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13, then
 36.5 h until the C20 start, raised by 1.75 h on 2026-11-14 for C20's
 7.75 h against the stubs' 6.0 h, then 38.25 h until the C21 start, raised
@@ -2992,7 +2992,9 @@ by 0.75 h on 2026-11-14 for C21's 4.25 h against the stub's 3.5 h, then
 39.0 h until the C22 start, raised by 1.75 h on 2026-11-14 for C22's
 4.75 h against the stub's 3.0 h, then
 40.75 h until the C23 start, raised by 1.5 h on 2026-11-15 for C23's
-5.0 h against the stub's 3.5 h; C16
+5.0 h against the stub's 3.5 h, then
+42.25 h until the C24 start, raised by 1.0 h on 2026-11-15 for C24's
+4.0 h against the stub's 3.0 h; C16
 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
 CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 `docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
@@ -5195,13 +5197,282 @@ Questions:
 | [x] C23.G EPUB block-path backfill: write on the Supabase project (your approval, 2026-11-15: "Dump, then write", then "Yes, write" after the dump) | this commit (`docs(progress): record the EPUB block-path backfill write`); script `1adb789` | Fresh backup first, outside the repo, in `C:\Users\avash\readfocus-backups\2026-11-15-pre-block-paths-backfill\`: `readfocus_prod_roles.sql` (358 B), `readfocus_prod_schema.sql` (98,229 B, 23 tables), `readfocus_prod_data.sql` (42,621,028 B; Walden's three chunk rows in it), from `npx supabase db dump --linked` (`--role-only`, default, `--data-only`; CLI 2.98.2). Correction to the plan: Walden's `block_paths` were not one step too deep but **empty** (`[]` in all three chunks, ingested before C17.6 stored paths); no book in the project had the too-deep paths (the gate's Alice copies were deleted). Then `python scripts/backfill_block_paths.py --write --book-id e607231c-039f-49fd-bf7b-dfd24e5a0486`: "rewrote 3 of 3 chunks". | Dry run after: "unchanged" (summary unchanged 1). Read-only checks: chunks 0-2 now hold 17, 11 and 7 paths, one per stored block (first `/4/2`, `/4/8`, `/4/16/2`); `content` and `blocks` unchanged (the content is the dump's); each of the 35 blocks' own CFI maps back to that block (`block_for_cfi`, 35 of 35). | 2026-11-15 | Undo: the data dump holds the empty `block_paths`. |
 | [x] C23 close: self-review | `176013a`, `41939ea`, `1f6c378` (fixes); this commit | `git diff readfocus-2.0...HEAD` (89 files, about 6,500 lines added): the frontend read by hand, the focus backend by an independent reviewer given only the code and FOCUS_RULES. Three BLOCKING findings, each confirmed in the code and fixed with a regression test (DEBUG_LOG): a focus quiz could be graded and reset through `/sessions/{id}/submit-answers` and `finish-reading`, then retaken through the focus route (`176013a`); a grading failure scored the session 0 for good or left it stuck (`41939ea`); a bookmark that is not a place in the book broke the quiz for good (`1f6c378`). | Standard checks after the fixes: ruff 27, pytest 1682, ESLint 3, build, import, graph 64, contrast 304/0, images 0 failing, unit 240, e2e in the close commit. | 2026-11-15 | Non-blocking, for C24 or later: (a) Steve stays refused for a book while a Quiz me row or a discarded session's quiz row is left `testing` (`steve_ask.py`), and `POST /focus/quiz-me` has no rate limit; (b) a capped session's quiz range comes from the last event's client `position`, unchecked (no points follow: the bonus is capped at the time points); (c) two concurrent quiz builds or same-id starts answer 500 rather than a clean 409; (d) a pause racing an end or a grade can write a stale status back (`_toggle`, and `abandon` has no status guard on its update). |
 
-## C24 — XP, streaks, badges and leagues
+## C24 — gamification
 
 Goal: GAMIFICATION G1-G15: XP from final focus points, the daily goal,
 streaks with earned freezes, the badge catalogue, weekly leagues with the
 `CRON_SECRET` rollover, leaderboard opt-out, no dark patterns. Depends
 on: C23. Estimate: 3.0 h. Safe to cut: leagues (XP, streaks and badges
 only).
+
+Branch `chunk/C24-gamification`, created from `readfocus-2.0` at `6cf4642`.
+Goal as given at chunk start: a strong reading habit: XP from focus
+points, a daily goal, streaks with earned streak freezes, a badge shelf,
+weekly leagues with our own book-themed tiers (Pamphlet, Paperback,
+Hardcover, Folio, First Edition, Illuminated), groups of ~30, top 7
+promote, bottom 5 demote, Monday 00:00 UTC rollover, and leaderboards. No
+dark patterns (no guilt notifications, no buying streaks, no fake users,
+leaderboard opt-out; display name + XP only, never emails); all awards
+server-side and idempotent; migrations additive; RLS; $0 scheduling
+(Supabase pg_cron if free, else a scheduled GitHub Action calling a
+`CRON_SECRET`-protected endpoint).
+
+### Plan (written at chunk start, 2026-11-15, before any code)
+
+What there is to build on (read from the code and the docs):
+
+- **Rules:** `docs/GAMIFICATION.md` G1-G15 (source of truth; three open
+  questions), `docs/FOCUS_RULES.md` F12/F14. None of the `DAILY_GOAL_*`,
+  `STREAK_*`, `LEAGUE_*`, `TECH_BOOK_SHARE` names are in
+  `backend/agents/policy.py` yet.
+- **Where XP comes from:** `backend/focus/quiz.py` `grade()` claims the quiz
+  row once, scores with `focus/scoring.decide()` and writes
+  `focus_sessions.status = 'scored'` with `points_total` (0 when the quiz
+  fails). That is the one award point; `ended_at` gives the day.
+- **Profiles:** `profiles` (001) has `display_name` (from the sign-in's
+  `full_name`, may be null) and no time zone, goal or opt-out columns.
+- **Badge sources:** `focus_sessions` (passed, active seconds, quiz
+  correct/total), `note_blocks` (027: typed notes and drawings),
+  `steve_messages` (023), the reading place (`usePlaceSaver` →
+  books router), `books.toc` and `body_start` (028), `page_regions` /
+  EPUB regions (018/019) for the technical-book share.
+- **UI:** `pages/Dashboard.jsx` already shows "Focus this week" (C23.7c,
+  comment "XP and levels come with C24"); `pages/Results.jsx` shows the
+  focus breakdown; `components/Layout.jsx` is the app bar;
+  `AccountMenu.jsx` the only settings entry. Handoff screens 24-28
+  (results points, progress, badges, league, celebration, app bar).
+- **Scheduling:** `.github/workflows/ci.yml` only; no cron anywhere.
+  Render Free sleeps, so a call wakes it (cold start ~1 min).
+
+Decisions (the specs win over the design where they conflict, as the
+handoff says, until you decide otherwise; see Questions):
+
+- **D1 XP is a ledger.** `xp_events` (one row per source event, unique
+  `(source_kind, source_id)`; only `focus_session` in C24), written with
+  `ON CONFLICT DO NOTHING`, so a retried grade, a lazy catch-up and a
+  backfill all award once (G2). A failed quiz (0 points) writes no row.
+  `xp_days` (user, local day, xp, goal snapshot) is a per-day sum kept
+  beside it for streaks; recomputable from the ledger.
+- **D2 Days and weeks.** XP is credited to the reader's local day of
+  `ended_at` (G4, G6: `profiles.time_zone`, IANA name from the browser,
+  default `UTC`, validated with `zoneinfo`) and to the UTC league week of
+  `ended_at` (G11).
+- **D3 Streaks are a pure replay.** `gamification/streaks.py decide(days,
+  today)` walks the counted days (xp >= that day's goal snapshot) and
+  returns streak, best, freezes held, and each day's state counted /
+  frozen / missed (G7-G9); no stored counter to drift. Today never counts
+  as missed. A goal change applies from the next award on.
+- **D4 Levels** (not in GAMIFICATION; the design shows "Level 7, 1,240 of
+  1,500"): level n → n+1 costs `LEVEL_XP_STEP` x n (250), a pure function;
+  written into GAMIFICATION.md as G16 in C24.1.
+- **D5 Badges:** GAMIFICATION's 14, a code catalogue (code, name, kind seal
+  for habits / bookplate for books and leagues, art, condition) and a pure
+  `evaluate(facts) -> codes`; `reader_badges` unique `(user_id, code)`.
+  Checked after each triggering write and again lazily on `GET
+  /me/badges`, so a missed trigger heals.
+- **D6 Leagues:** placement on the first XP of a week into the fullest open
+  group of the reader's tier under `LEAGUE_GROUP_SIZE` (else a new group);
+  a race may make 31, which "about 30" allows. Ties: earlier
+  `xp_reached_at` wins. Scaled counts use `floor(n * k / 30 + 0.5)`, not
+  Python's banker's `round`, and promote + demote never exceed n.
+- **D7 Rollover is idempotent and self-healing.** `league_rollovers` (week
+  PK) marks a week done; the endpoint and a lazy check on `GET /league`
+  both roll every finished, unrolled week in order. The schedule only
+  makes it timely; nothing breaks if it is late or skipped.
+- **D8 Scheduler: a GitHub Action**, not pg_cron. pg_cron is available on
+  Supabase Free, but calling our endpoint from it needs pg_net plus the
+  URL and secret stored in the database (Vault), or the rollover rewritten
+  in plpgsql outside the pure tested Python. The Action
+  (`league-rollover.yml`, `cron: '5 0 * * 1'` plus `workflow_dispatch`)
+  curls `POST /internal/league/rollover` with `X-Cron-Secret`, retrying
+  through the cold start. Caveats: GitHub runs schedules only from the
+  default branch (`main`), so it is live only after release, and pauses
+  schedules after 60 days without repo activity; D7 covers both.
+- **D9 Privacy.** Leaderboard rows carry rank, display name, initials, XP
+  and a "you" flag; never user ids, emails, books or reading details. The
+  reader can set the display name shown; null shows "A reader". All new
+  tables: RLS on, owner SELECT only; others' standings come only through
+  the backend (service role). Opted-out readers are placed nowhere and
+  hidden at once; opting back in places them, at their last tier, from
+  the next week (G14).
+- **D10 Calm UI.** No loss framing anywhere ("Your book is where you left
+  it"), frozen days shown as frozen, no streak or league warnings, no
+  confetti or sound; stamp-ins once, none under reduced motion. G15
+  reminders are not built (off by default and they need a push or mail
+  service); see cuts.
+
+Subchunks (lines are code; tests listed separately; ~200 lines per commit,
+split a/b where marked):
+
+**C24.1 XP ledger, daily goal and streaks (schema + pure logic)** — 0.6 h
+- C24.1a schema + policy (~90 + ~60 tests):
+  `supabase/migrations/031_gamification.sql` (new, **not applied**):
+  `profiles` + `time_zone text default 'UTC'`, `daily_goal_xp int default
+  50 check 10..500`, `leaderboard_opt_out bool default false`;
+  `xp_events` (id, user_id, source_kind, source_id, xp > 0, local_day
+  date, week_start date, earned_at, unique (source_kind, source_id));
+  `xp_days` (user_id, day, xp, goal_xp, PK (user_id, day)); RLS owner
+  SELECT only. `policy.py`: `DAILY_GOAL_XP`, `_MIN_`, `_MAX_`,
+  `STREAK_FREEZE_MAX`, `STREAK_FREEZE_EVERY_DAYS`, `LEVEL_XP_STEP`. Tests:
+  `test_migrations.py` (+031 additive, columns, checks, RLS),
+  `test_gamification_policy.py` (names = GAMIFICATION.md values).
+- C24.1b pure logic (~130 + ~200 tests): `backend/gamification/xp.py`
+  (local day, week start, level from total), `gamification/streaks.py`
+  `decide()`. Tests `test_streaks.py`: 7 counted days earn a freeze; 14
+  earn 2; 21 still 2 (max); one missed day frozen and the streak kept; two
+  missed with 1 held resets; streak ending yesterday kept, two days ago
+  lost; goal changed mid-history; time zone across midnight and DST;
+  `test_xp_levels.py`.
+- C24.1c award hook (~110 + ~150 tests): `gamification/award.py`
+  `award_focus(session)` (ledger insert, day upsert, then league placement
+  and badges once they exist; failures logged, never fail the grade),
+  called from `focus/quiz.py grade()` after `scored` and points > 0;
+  `catch_up(user)` awards any scored session missing from the ledger.
+  `docs/GAMIFICATION.md`: G16 levels, D2's day rule as built. Tests
+  `test_xp_award.py`: pass awards once; a regrade, a retry and catch-up
+  don't double; a fail awards nothing; day in the reader's zone.
+
+**C24.2 badges catalogue + awarding engine** — 0.5 h
+- C24.2a catalogue + pure engine (~170 + ~200 tests):
+  `supabase/migrations/032_badges.sql` (new, not applied):
+  `reader_badges` (user_id, code, awarded_at, source jsonb, PK (user_id,
+  code)), RLS owner SELECT. `gamification/badges.py`: the 14 entries and
+  `evaluate(facts)`; `policy.py` `TECH_BOOK_SHARE`, focus-hour thresholds.
+  Tests `test_badges.py`: each badge's edge (9 h 59 min vs 10 h; 6 vs 7
+  streak; 19% vs 20% technical; the end of chapter 1 reached vs one page
+  short; the last body page vs not), already-held badges not returned.
+- C24.2b triggers + facts (~150 + ~150 tests): `gamification/facts.py`
+  (reads totals for one reader), `award_badges(user, hint)` with `ON
+  CONFLICT DO NOTHING`; called from the award hook, note and drawing
+  saves (`routers/notes.py`), an answered Ask Steve (`routers/steve_ask.py`),
+  the reading-place save (books router). Tests: each trigger awards once;
+  a failing badge check never fails the note, Steve or place request.
+
+**C24.3 leagues: grouping, promotion/demotion (pure) + schema** — 0.5 h
+- C24.3a pure (~140 + ~200 tests): `gamification/leagues.py`: tiers,
+  `standings(members)` (xp desc, `xp_reached_at` asc), `zones(n)` (7/5 at
+  30, scaled below, 0/0 for 1, promote + demote <= n), `outcome(tier,
+  rank, n)` (no promotion from Illuminated, no demotion from Pamphlet),
+  `choose_group(groups, tier)`. Tests `test_leagues.py`: 30, 31, 17, 4, 1
+  readers; ties; top and bottom tiers; rounding at .5.
+- C24.3b schema + placement (~110 + ~120 tests):
+  `supabase/migrations/033_leagues.sql` (new, not applied): `profiles` +
+  `league_tier smallint default 0`; `league_groups` (id, week_start, tier,
+  created_at); `league_members` (user_id, week_start, group_id, tier, xp,
+  xp_reached_at, rank, last_seen_rank, outcome, seen_outcome_at, PK (user_id,
+  week_start)); `league_rollovers` (week_start PK, rolled_at, groups,
+  readers); RLS owner SELECT on members only, none readable on groups or
+  rollovers. `gamification/league_store.py` `place_and_add(user, week,
+  xp)`, wired into the award hook; opted-out readers skipped. Tests:
+  placement, fill order, opted-out skipped, XP added idempotently.
+
+**C24.4 weekly rollover scheduler (needs your approval)** — 0.3 h,
+~120 + ~120 tests
+- `backend/routers/internal.py` (new): `POST /internal/league/rollover`,
+  `X-Cron-Secret` checked with `hmac.compare_digest` against `CRON_SECRET`
+  (503 when unset, 401 when wrong, never logged); rolls every finished
+  week not in `league_rollovers`, writes ranks, outcomes and new
+  `profiles.league_tier`, then marks the week; returns counts only.
+  The same roll runs lazily from `GET /league`. `.github/workflows/
+  league-rollover.yml` (new): Monday 00:05 UTC + manual run, `curl
+  --retry 5 --retry-delay 30 --max-time 120`, secrets `BACKEND_URL` and
+  `CRON_SECRET`; no repo code checked out. `.env.example`: `CRON_SECRET`.
+  Tests `test_league_rollover.py`: no secret 503, wrong 401, a run twice
+  rolls once, two missed weeks roll in order, a tier never out of range,
+  the lazy path. **Your steps (each its own approval):** adding the two
+  GitHub secrets, `CRON_SECRET` on Render, and the first manual run
+  against the project.
+
+**C24.5 APIs: me, leaderboard, badges; privacy settings** — 0.5 h
+- C24.5a (~180 + ~200 tests): `backend/routers/progress.py` (new): `GET
+  /me/progress` (XP total, level and bar, today's XP and goal, streak,
+  best, freezes held, last 14 days' states; runs `catch_up`), `GET
+  /me/badges` (catalogue with earned dates or locked, lazy re-check),
+  `GET/PUT /me/settings` (`daily_goal_xp` in range, `time_zone` a real
+  IANA zone, `display_name` 1-40 chars trimmed, `leaderboard_opt_out`;
+  extra keys refused). `routers/dashboard.py`: the week's XP beside
+  "Focus this week". Tests `test_progress_api.py`: shapes, ranges, bad
+  zone, another reader cannot read or write.
+- C24.5b (~150 + ~180 tests): `GET /league` (tier chips, this week's group
+  standings as D9, zones, the reader's rank and "up n" (movement since
+  the reader's last view, `league_members.last_seen_rank`, added in 033),
+  last week's outcome until seen; opted-out: `{opted_out: true, tier}` and nothing
+  else), `POST /league/outcome-seen`. Tests `test_league_api.py`: rows
+  carry no id, email or book (asserted on the JSON keys), opted-out
+  readers absent from others' rows and served the opted-out shape, a
+  reader with no XP this week sees their tier and no group.
+
+**C24.6 UI** — 1.25 h (four commits, each through design-review:
+impeccable → taste-skill → ui-ux-pro-max, Paper and Lamplight, 375 and
+1440, keyboard, reduced motion)
+- C24.6a progress panel (~200): `pages/Dashboard.jsx` gains "Your reading,
+  lately" at the top (handoff 26): level panel with the XP bar (grows
+  800 ms), the daily-goal ring in XP, the candle streak (flame flicker,
+  still under reduced motion) with two bell jars (held / used), a
+  14-day strip with frozen days marked frozen. `gamification/` (new
+  folder): `progressApi.js`, `XpBar.jsx`, `GoalRing.jsx`,
+  `StreakCandle.jsx` + CSS.
+- C24.6b badge shelf (~180): `BadgeShelf.jsx`: SVG wax seals and
+  bookplates, earned or locked (dashed, 45%), each with its condition in
+  plain words; a new badge stamps in once (scale 1.25 → 1, 600 ms).
+- C24.6c league page (~200): route `/league` in `App.jsx`, `pages/
+  League.jsx` + CSS (handoff 27): tier chips, standings with the "you" row
+  (rank in `--ink-2`, not `--ink-3`: handoff gap 12), promotion and
+  demotion zone rows, "· · ·" gap, "How leagues work"; the opted-out
+  state ("You're not on the leaderboard" + how to rejoin), and the no-XP
+  state.
+- C24.6d app bar, results, settings, celebration (~200): `Layout.jsx` nav
+  League + "Level n" mini bar; `Results.jsx` "+N XP" counting up and "See
+  your league"; a "Goal & privacy" dialog from `AccountMenu.jsx` (goal,
+  time zone, display name with a preview of how others see it,
+  leaderboard opt-out); the calm promotion page (handoff 28: glow, seal,
+  "Welcome to Folio", no confetti, no sound) shown once per outcome.
+
+**C24.7 tests + e2e** — 0.35 h
+- Unit: `progress.test.js` (level bar, ring arc, day states),
+  `league.test.js` (zones, rank text). e2e (mocked, `e2e/fixtures.js`
+  routes): `progress.spec.js` (panel, frozen day, badges earned and
+  locked), `league.spec.js` (standings, you row, zones, opted-out,
+  no-XP, promotion page once, keyboard), `gamification-settings.spec.js`
+  (goal bounds, zone, name, opt-out PUT), Results "+N XP" and the league
+  link; each at 375 and 1440, Paper and Lamplight, no sideways scroll.
+- A copy check (`gamification-copy.test.js`): no loss or guilt words
+  ("lose", "losing", "don't break", "hurry", "last chance") in
+  `frontend/src/gamification` and the league page.
+- Close: GAMIFICATION.md "As built (C24)" and its three open questions
+  answered; ARCHITECTURE.md gamification section; repo graph; independent
+  self-review of the chunk diff; migrations 031-033 still waiting for your
+  approval (or applied with their dumps).
+
+Estimate: 4.0 h (C24.1 0.6, C24.2 0.5, C24.3 0.5, C24.4 0.3, C24.5 0.5,
+C24.6 1.25, C24.7 0.35) against the stub's 3.0 h; approved 2026-11-15
+("Approve and commit"), phase 2 budget raised by 1.0 h to 43.25 h. Stop and propose cuts at 6.0 h. Safe to cut, in order: the
+promotion celebration page (C24.6d), the GitHub Action (the lazy rollover
+alone, D7), the league UI and APIs (C24.3-C24.5b, C24.6c: XP, streaks
+and badges only). G15 reminders are not planned in C24.
+
+Questions:
+
+1. Specs or design where they conflict (handoff gaps 2-6): XP goal 50
+   (10-500) rather than minutes; streak credit only when the goal is met
+   (a failed quiz gives none); the 14 spec badges, not the design's 6; 30
+   / top 7 / bottom 5 / Monday 00:00 UTC. The plan follows the specs.
+2. GAMIFICATION's open questions: freezes one per 7 counted days (as
+   written)? Scale promotion and demotion below 30 (as written)? "Finished
+   a book" with no quiz requirement (as written)?
+3. Levels (D4): 250 x n XP per level, written as G16?
+4. Scheduler (D8): the GitHub Action with the lazy rollover, rather than
+   pg_cron + pg_net?
+5. Display name: default to the sign-in's full name (as now, so a real
+   name may show to strangers) or start everyone as "A reader" until they
+   set one?
+6. Progress on the Dashboard (as planned) or its own page (handoff gap
+   18)?
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
 
 ## C25 — phase 2 verification and release
 

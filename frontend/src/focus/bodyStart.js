@@ -20,6 +20,21 @@ export function beforeBody(place, start) {
   return compare(placeEnd(place), loc) < 0;
 }
 
+const spineOf = (cfi) => {
+  const m = /^epubcfi\(\/6\/(\d+)/.exec(cfi ?? '');
+  return m ? Number(m[1]) / 2 - 1 : null;
+};
+
+/**
+ * Where a focus session starts (C23.8): the place shown, or the body start's anchor when the place begins before
+ * it (a spread straddling the body start is unlocked, but its first page is front matter the server refuses).
+ */
+export function startAnchor(anchor, start) {
+  if (!anchor || !start?.anchor || start.kind !== anchor.kind) return anchor;
+  const before = anchor.kind === 'pdf' ? anchor.page < start.page : (spineOf(anchor.cfi) ?? Infinity) < start.spine_index;
+  return before ? start.anchor : anchor;
+}
+
 /** "Chapter 1", or the start entry's own title when it is short ("Part One"). */
 export function startLabel(start) {
   const title = start?.title?.trim();

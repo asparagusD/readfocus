@@ -4203,4 +4203,44 @@ Failed before the fix: yes (`git stash push -- backend/focus/scoring.py`: "point
 Passes after: yes (2 passed with `-k zero`; 57 passed across scoring, anti-cheat and focus quiz tests).
 
 ### Commit
-fix(focus): no quiz bonus for a session with no focused reading
+`d28f936` fix(focus): no quiz bonus for a session with no focused reading
+
+## 2026-11-15 C23.8 — Start on a spread across the body start sends a front-matter page
+
+**Status:** fixed
+
+### Symptom
+Found by the C23.8 e2e. On a PDF spread showing pp. 2-3 with Chapter 1 on p. 3, the focus bar is unlocked (a
+page shown is in the body) and Start is offered, but the start anchor is the spread's first page, p. 2. The real
+server refuses that (`_before_body`: 409 "Focus mode starts at Chapter 1."), so Start does nothing for the reader.
+
+    npx playwright test e2e/focus.spec.js --reporter=line
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+    Expected: >= 3
+    Received:    2
+        at startAtChapter1 (I:\readfocus\frontend\e2e\focus.spec.js:66:83)
+    4 failed
+
+### Repro
+Every time: any test in `frontend/e2e/focus.spec.js` (open the reader, focus mode on, one turn to pp. 2-3, Start).
+
+### Hypotheses
+1. The lock and the start disagree: `beforeBody()` unlocks when the spread's last page reaches the body start,
+   while `useFocusSession.start()` sends `reader.anchor()`, the spread's first page. Evidence: start body page 2,
+   body start p. 3. Ruled out if: the anchor sent were p. 3. Result: confirmed by the request body.
+2. Page numbers differ in base (0- vs 1-based). Ruled out by: docs/ANCHORS.md A3 and the body start both 1-based;
+   the server compares them directly. Result: ruled out.
+
+### Root cause
+`frontend/src/focus/useFocusSession.js` `start()` used the first page shown; on a spread straddling the body
+start that page is front matter, which the server rightly refuses.
+
+### Fix
+`bodyStart.js` `startAnchor(anchor, start)` (pure): a place before the body start becomes the body start's own
+anchor; ReadingSession passes it to `focus.start`, so a straddling spread starts at Chapter 1.
+
+### Regression test
+`frontend/src/focus/bodyStart.test.js` (startAnchor) and every test in `frontend/e2e/focus.spec.js`.
+
+### Commit
+fix(focus): start a spread across the body start at chapter 1

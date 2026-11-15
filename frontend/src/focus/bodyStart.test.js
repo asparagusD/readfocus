@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { beforeBody, chosenStart, isStartEntry, startLabel } from './bodyStart.js';
+import { beforeBody, chosenStart, isStartEntry, startAnchor, startLabel } from './bodyStart.js';
 
 const pdfStart = { kind: 'pdf', page: 9, title: 'Chapter 1' };
 const epubStart = { kind: 'epub', spine_index: 3, title: null };
@@ -44,4 +44,17 @@ test('"The book starts here" sends the first page or section shown and its chapt
   assert.deepEqual(chosenStart(epubPlace(4), ''), { spine_index: 4, title: null });
   assert.equal(chosenStart(pdfPlace(2), 'y'.repeat(300)).title.length, 200);
   assert.equal(chosenStart(null, 'x'), null);
+});
+
+test('C23.8: a start before the body start (a straddling spread) becomes the body start', () => {
+  const pdf = { kind: 'pdf', page: 3, title: 'Chapter 1', anchor: { kind: 'pdf', page: 3, quads: [[0, 0, 0, 0]], text: '' } };
+  const at = (page) => ({ kind: 'pdf', page, quads: [[0, 10, 0, 10]], text: '' });
+  assert.deepEqual(startAnchor(at(2), pdf), pdf.anchor);
+  assert.deepEqual(startAnchor(at(3), pdf), at(3));
+  assert.deepEqual(startAnchor(at(5), pdf), at(5));
+  const epub = { kind: 'epub', spine_index: 3, anchor: { kind: 'epub', cfi: 'epubcfi(/6/8!/4)', text: '' } };
+  assert.deepEqual(startAnchor({ kind: 'epub', cfi: 'epubcfi(/6/6!/4/2/1:0)', text: '' }, epub), epub.anchor);
+  const later = { kind: 'epub', cfi: 'epubcfi(/6/10!/4/2/1:0)', text: '' };
+  assert.equal(startAnchor(later, epub), later);
+  assert.deepEqual(startAnchor(at(1), null), at(1)); // no body start: the place as it is
 });

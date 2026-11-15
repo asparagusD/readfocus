@@ -136,8 +136,8 @@ export function useFocusSession({ bookId, place, reader, wanted }) {
     }
   }, [take]);
 
-  const start = useCallback(async () => {
-    const anchor = reader.current?.anchor();
+  const start = useCallback(async (adjust = (a) => a) => {
+    const anchor = adjust(reader.current?.anchor()); // C23.8: never before the body start (bodyStart.startAnchor)
     if (!anchor) return null;
     try {
       const view = await act('/focus/start', { book_id: bookId, anchor, page_key: key });

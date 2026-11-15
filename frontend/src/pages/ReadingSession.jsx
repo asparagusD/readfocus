@@ -33,7 +33,7 @@ import { shownRange } from '../notes/sync';
 import { NotesContext } from '../notes/NotesContext';
 import { answerDoc, quoteDoc } from '../notes/fromBook';
 import { useBodyStart } from '../focus/useBodyStart';
-import { beforeBody, chosenStart, startLabel } from '../focus/bodyStart';
+import { beforeBody, chosenStart, startAnchor, startLabel } from '../focus/bodyStart';
 import { useFocusSession } from '../focus/useFocusSession';
 import { FocusBar } from '../focus/FocusBar';
 import { ReadyModal } from '../focus/ReadyModal';
@@ -250,7 +250,7 @@ export function ReadingSession() {
       setFocusBusy(false);
     }
   };
-  const startFocus = () => focusDo(focus.start, '');
+  const startFocus = () => focusDo(() => focus.start((anchor) => startAnchor(anchor, body.bodyStart)), '');
   // C23.6b: End session (or the cap, or leaving): set the ribbon where the reader stopped, then the questions.
   const endFocus = () => {
     const current = focus.session;

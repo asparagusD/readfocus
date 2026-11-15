@@ -4322,3 +4322,53 @@ yes (37 passed); `test_a_capped_bonus_says_so_on_its_line` and `breakdown.test.j
 
 ### Commit
 fix(focus): cap the quiz bonus at a session's time points
+
+## 2026-11-15 C23.G — an EPUB focus quiz covers 12 words, not the pages read
+
+**Status:** fixed
+
+### Symptom
+Gate G7 walk (dev project, test reader B, Standard Ebooks' *Alice's Adventures in Wonderland*): 10.5 minutes
+read in Chapter I, ribbon on pp. 4-6. The quiz was built from 12 words in one chunk, so it had 1 question (F10's
+minimum is 3), and that question came from the chapter's end, past the bookmark:
+
+    focus_sessions: words_in_range 12, quiz_total 1
+    sessions: chunk_start_index 3, chunk_end_index 3, assigned_words 12
+    question: "Fill in the blank: So she set to work, and very soon finished off the _____."
+    start -> block (3, '3.3')   end -> block (3, '3.3')     (block_for_cfi on the book's chunks)
+    slices [(3, 0.26, 0.277, 12)]
+
+### Repro
+Every time, offline: the chapter's own body markup through `xhtml_blocks` gives paths one level too deep:
+
+    epub_documents(alice)[spine 5] markup starts '<body epub:type="bodymatter z3998:fiction">'
+    xhtml_blocks(markup, [4]) -> '/4/2/2/4' for the first <p>; the reader's CFI for it is /4/2[chapter-1]/4
+
+### Hypotheses
+1. The stored block paths count the `<body>` element as a child. Evidence: every Alice path starts `/4/2/2/`,
+   the XHTML is body > section#chapter-1 > hgroup, p...; ebooklib's `get_body_content()` strips `<body>` only when
+   the tag is exactly `<body>` (no attributes); Standard Ebooks put `epub:type` on it. Ruled out if: the markup
+   handed to `xhtml_blocks` had no body tag. Result: confirmed (the markup above).
+2. The reader's CFI is wrong (epub.js wrappers). Ruled out by: `/4/2[chapter-1]/4` names the section by its id
+   and matches the file's structure. Result: ruled out.
+3. `block_for_cfi` mis-parses id assertions. Ruled out by: test_block_paths passes on reflow.epub (whose body has
+   no attributes), and with the paths fixed the same CFIs map right. Result: ruled out.
+
+### Root cause
+`backend/services/book_structure.py` `xhtml_blocks()`: given body markup that still has its `<body>` tag, it
+walked `<body>` as a child of the body, adding a `/2` step to every path. Every EPUB whose `<body>` carries an
+attribute has wrong `chunks.block_paths`, so CFIs fall back to a neighbouring block (quiz ranges, A6 mapping).
+
+### Fix
+`xhtml_blocks` walks from the `<body>` element itself when the markup starts with one, so its children take the
+first steps under the body, as in the document. Books ingested before the fix keep their old paths until their
+structure is rebuilt (a backfill: a write to the shared project, for the user to approve).
+
+### Regression test
+`backend/tests/test_block_paths.py::test_a_body_tag_with_attributes_is_not_a_step`.
+Failed before the fix: yes (book_structure.py stashed: 1 failed, '/4/2/2/4' for the paragraph). Passes after: yes
+(8 passed). With the fix, the walk's own start and bookmark CFIs over this book's stored chunks map to blocks
+0.2 and 1.1: 949 words, 3 questions.
+
+### Commit
+fix(ingest): count EPUB block paths from the body when ebooklib keeps its tag

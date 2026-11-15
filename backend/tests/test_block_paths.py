@@ -80,3 +80,12 @@ def test_migration_017_adds_block_paths_only():
 def test_ingestion_stores_block_paths_beside_the_blocks():
     source = Path(book_ingestor.__file__).read_text(encoding="utf-8")
     assert '"block_paths": paths[start + offset] if paths else None' in source
+
+
+def test_a_body_tag_with_attributes_is_not_a_step():
+    """C23.G (DEBUG_LOG): ebooklib keeps `<body epub:type="...">` in the body markup (it strips only a bare `<body>`);
+    its children are still the first steps under the body, so the paths match the reader's CFIs."""
+    inner = '<section id="chapter-1"><hgroup><h2>I</h2></hgroup><p>Alice was beginning</p></section>'
+    for markup in (f'<body epub:type="bodymatter z3998:fiction">{inner}</body>', inner):
+        paths = {b["text"]: b["path"] for b in book_structure.xhtml_blocks(markup, [4])}
+        assert paths == {"I": "/4/2/2/2", "Alice was beginning": "/4/2/4"}, markup[:30]

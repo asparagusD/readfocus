@@ -4107,3 +4107,55 @@ error. Both failed before the fix.
 
 ### Commit
 `fix(pdf): close PDF.js 6 documents through their loading task` (C23.6b)
+
+## 2026-11-15 C23.7a — phone selection toolbar button measured 35.99998 px
+
+**Status:** fixed
+
+### Symptom
+With the C23.7a change (the reader's session row and fixed timer removed) the full e2e run had one failure; the
+test passes on the C23.6b commit (5 of 5). Expected each selection-toolbar button to be at least 36 px:
+
+    npm --prefix frontend run test:e2e
+    1 failed
+      e2e\annotations-toolbar.spec.js:142:3 › on a phone, in lamplight › the toolbar fits the screen and stays clear of the selection
+    262 passed (10.8m)
+
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+    Expected: >= 36
+    Received:    35.99998474121094
+    > 151 |       expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(36); // the handoff's 36 px buttons, 44 px reach
+
+### Repro
+Not every time: 3 failures in 5 with C23.7a applied, 0 in 5 on the C23.6b commit (C23.7a stashed):
+
+    npx playwright test e2e/annotations-toolbar.spec.js:142 --repeat-each 5 --reporter=line
+
+### Hypotheses
+1. The bar is measured while its rise animation (`rf-seltool-rise`, translateY 4 px -> 0 over --dur-2) is still
+   running, so a fractional translate gives a float height a hair under 36. Evidence: the value is 36 minus float
+   error, and the size is fixed in CSS (`block-size: 36px`). Ruled out if: the bar's computed transform is `none`
+   when measured. Result: confirmed. Logging each button's box and its ancestors' transforms showed
+   `.rf-seltool` at `matrix(1, 0, 0, 1, 0, 0.39 .. 1.51)` and heights 35.99998 / 36.00002 at those offsets.
+2. The bar is positioned at a fractional `top` (floating-ui `transform: false`). Evidence: tops like 225.77.
+   Ruled out if: the height is 36 whenever the transform is identity. Result: ruled out as the cause; with the
+   animation finished every height read 36.
+3. The removed session row changed the button CSS at 375. Ruled out by: no CSS of the selection toolbar changed
+   (`git diff` touches only Results.css). Result: ruled out. The row's removal only moves the page up, so the
+   selection is made, and measured, sooner in the animation.
+
+### Root cause
+The test (`frontend/e2e/annotations-toolbar.spec.js:144`) read the toolbar's geometry before its entrance
+animation had settled; the app's sizes were right.
+
+### Fix
+The test waits for the toolbar's animations (`el.getAnimations()`, each `.finished`) before measuring, so
+it checks the bar where it rests. No app change, no tolerance added to the 36 px check.
+
+### Regression test
+`frontend/e2e/annotations-toolbar.spec.js` › "on a phone, in lamplight › the toolbar fits the screen and stays
+clear of the selection". Without the wait: 3 of 5 failed (35.99998474121094). With it: 8 of 8 passed
+(`--repeat-each 8`).
+
+### Commit
+fix(frontend): measure the selection toolbar after its rise settles

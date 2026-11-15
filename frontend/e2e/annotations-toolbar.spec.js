@@ -142,6 +142,8 @@ test.describe('on a phone, in lamplight', () => {
   test('the toolbar fits the screen and stays clear of the selection', async ({ page }) => {
     await openReader(page);
     const lines = await select(page, 'lamp', 'small');
+    // Measure the settled bar: mid-rise its translateY is fractional and a 36 px button reads 35.99998 (DEBUG_LOG C23.7a).
+    await toolbar(page).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     const bar = await toolbar(page).boundingBox();
     expect(bar.x).toBeGreaterThanOrEqual(0);
     expect(bar.x + bar.width).toBeLessThanOrEqual(375);

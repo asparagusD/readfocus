@@ -13,7 +13,7 @@ import './ReaderToolbar.css';
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
-  lookupOn, onLookupToggle, controls, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef, children,
+  lookupOn, onLookupToggle, controls, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef, onFocusMode, children,
 }) {
   const index = SIZES.indexOf(size);
   return (
@@ -81,6 +81,14 @@ export function ReaderToolbar({
           aria-controls={steveOpen ? 'rf-side-panel' : undefined} aria-label="Ask Steve">
           <MessageSquareText size={18} strokeWidth={1.75} aria-hidden="true" />
           <span className="rf-tool-label">Steve</span>
+        </button>
+      )}
+      {onFocusMode && (
+        // C23.6: focus mode's switch; the focus bar takes the toolbar's place while it is on.
+        <button type="button" role="switch" aria-checked={false} className="rf-tool rf-switch" onClick={onFocusMode}
+          aria-label="Focus mode">
+          <span className="rf-tool-label" aria-hidden="true">Focus</span>
+          <span className="rf-switch-track" aria-hidden="true"><span className="rf-switch-knob" /></span>
         </button>
       )}
       <ThemeToggle />

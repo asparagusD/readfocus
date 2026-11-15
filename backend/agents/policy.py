@@ -368,3 +368,51 @@ NOTE_FILE_TYPES = ("image/webp", "image/png")
 NOTE_FILE_URL_SECONDS = 3_600
 # Note blocks one list request returns, in reading order.
 NOTES_LIST_MAX = 2_000
+
+# --- Body start (C23.1, docs/FOCUS_RULES.md F2) ------------------------------------------------------------
+# How books.body_start was found (028 checks the same values): the outline, a heading in the region map, the
+# first page after the contents with enough prose, or the reader's own choice (which always wins).
+BODY_START_SOURCES = ("outline", "heading", "prose", "user")
+# Outline entries that are front matter, never the body (matched at the start of the title, lower case).
+BODY_START_FRONT_MATTER = (
+    "cover", "title", "half title", "halftitle", "frontispiece", "copyright", "imprint", "contents",
+    "table of contents", "dedication", "epigraph", "foreword", "preface", "acknowledgments", "acknowledgements",
+    "about the author", "about the authors", "list of figures", "list of tables", "list of illustrations",
+    "illustrations", "abbreviations", "praise", "also by", "other books by", "introduction", "note on the text",
+    "a note on", "how to use this book", "maps",
+)
+BODY_START_MIN_PROSE_WORDS = 300  # (3) a page or EPUB section with at least this much prose
+BODY_START_HEADING_MAX_CHARS = 80  # a region's first line longer than this is not a heading
+BODY_START_HEADING_TOP = 3  # a numbered heading ("1 Springs") is among the first regions of its page
+BODY_START_CONTENTS_LINES = 3  # a page with this many chapter-like lines is a contents page
+BODY_START_SCAN_UNITS = 80  # (2) and (3) look at the first pages or EPUB sections only
+BODY_START_TITLE_MAX = 200
+
+# --- Focus mode (C23, docs/FOCUS_RULES.md: the defaults table there is the source; test_focus_policy.py checks) ---
+FOCUS_POINTS_PER_MINUTE = 10  # F4
+FOCUS_HEARTBEAT_S = 30  # F3: the tab sends one every 30 s while visible (C23.6)
+FOCUS_IDLE_PROMPT_MIN = 10  # F6
+FOCUS_IDLE_ANSWER_S = 60  # F6
+FOCUS_PAGE_CAP_MIN = 30  # F7
+FOCUS_SESSION_CAP_MIN = 180  # F8
+QUIZ_WORDS_PER_QUESTION = 400  # F10
+QUIZ_MIN_QUESTIONS = 3  # F10
+QUIZ_MAX_QUESTIONS = 15  # F10
+QUIZ_POINTS_PER_CORRECT = 20  # F11
+QUIZ_PASS_SCORE = 0.40  # F12
+FOCUS_MAX_GAP_S = 45  # F3: two heartbeats further apart than this credit nothing between them
+FOCUS_MIN_HEARTBEAT_GAP_S = 5  # F3: a heartbeat sooner than this after the last one counted is ignored
+FOCUS_HEARTBEAT_RATE_S = 25  # F3: the API stores at most one heartbeat per this many seconds; extras are counted
+FOCUS_EVENT_RATE_S = 2  # F3: and at most one other event of the same kind per this many seconds
+QUIZ_CORRECT_FROM = MASTERY_CORRECT_FROM  # F11: an answer scoring this share of its maximum is correct
+QUIZ_LOW_CONFIDENCE_WEIGHT = 0.5  # F11: a correct answer the grader is unsure of counts half
+FOCUS_ABANDON_AFTER_MIN = 120  # F1: an open session with no event for this long is abandoned (0 points)
+# focus_sessions.status and focus_events.kind (029 checks the same values). Open sessions: one per reader.
+FOCUS_STATUSES = ("active", "paused", "awaiting_quiz", "scored", "abandoned")
+FOCUS_OPEN_STATUSES = ("active", "paused")
+FOCUS_EVENT_KINDS = ("start", "heartbeat", "page_turn", "hidden", "visible", "idle_prompt", "idle_confirm",
+                     "pause", "resume", "end")
+FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" or "s3:4"
+# Stored on each session at its start and again when it is scored, so the row names the rules that scored it.
+# A date, with ".n" for a later revision the same day. 2026-11-15.2: the quiz bonus is capped at the time points.
+FOCUS_RULES_VERSION = "2026-11-15.2"

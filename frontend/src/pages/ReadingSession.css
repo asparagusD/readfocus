@@ -64,3 +64,6 @@
   justify-content: flex-end;
   gap: var(--space-3);
 }
+
+/* C23.6: three choices read best as one column, the main one first. */
+.rf-leave-actions--stack { flex-direction: column; align-items: stretch; }

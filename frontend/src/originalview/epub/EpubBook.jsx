@@ -2,6 +2,7 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'r
 import { epubThemeCss, locationAt } from '../frame';
 import { EpubView } from './EpubView';
 import { epubAnchor, epubPositions } from '../../anchors';
+import { epubEndPoint } from '../../focus/bookmark';
 import { paintedIn, paintSection, readPalette } from '../../annotations/epubPaint';
 
 /** "p. 34 of ~210" or "pp. 34–35 of ~210"; "~" because the numbers count characters, not printed pages. */
@@ -136,6 +137,11 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
         const place = last.current;
         if (!place?.cfi?.includes(',')) return null;
         return { scope: 'view', anchors: [epubAnchor(place.cfi)], ...epubPositions(place.index, place.charStart, place.charEnd) };
+      },
+      // C23.6b: where focus mode's ribbon can be set: the end of the page shown (the Reader adds its folio).
+      shownPlaces: async () => {
+        const anchor = epubEndPoint(last.current?.cfi);
+        return anchor ? [{ anchor, label: null }] : [];
       },
       getSelection: () => {
         for (const { doc } of now()?.contents() ?? []) {

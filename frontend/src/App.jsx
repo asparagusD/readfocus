@@ -20,6 +20,8 @@ const Library = named(() => import('./pages/Library'), 'Library');
 const Dashboard = named(() => import('./pages/Dashboard'), 'Dashboard');
 const ReadingSession = named(() => import('./pages/ReadingSession'), 'ReadingSession');
 const ComprehensionTest = named(() => import('./pages/ComprehensionTest'), 'ComprehensionTest');
+const FocusQuiz = named(() => import('./pages/ComprehensionTest'), 'FocusQuiz'); // C23.6b
+const QuizMe = named(() => import('./pages/ComprehensionTest'), 'QuizMe'); // C23.7b
 const Results = named(() => import('./pages/Results'), 'Results');
 const Login = named(() => import('./pages/Login'), 'Login');
 const NotFound = named(() => import('./pages/NotFound'), 'NotFound');
@@ -112,6 +114,8 @@ function App() {
                     )}
                     <Route path="/read/:bookId" element={<AuthGuard>{page(ReadingSession)}</AuthGuard>} />
                     <Route path="/test/:sessionId" element={<AuthGuard>{page(ComprehensionTest)}</AuthGuard>} />
+                    <Route path="/focus/:sessionId/quiz" element={<AuthGuard>{page(FocusQuiz)}</AuthGuard>} />
+                    <Route path="/quiz/:sessionId" element={<AuthGuard>{page(QuizMe)}</AuthGuard>} />
                     <Route path="/*" element={
                       <Layout>
                         <AnimatedRoutes scope={pageOf}>

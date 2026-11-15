@@ -61,3 +61,22 @@ const WEAK_BELOW = 0.5; // backend/agents/policy.py PLANNER_WEAK_BELOW
 
 /** A concept needs revisiting as the planner sees it: tested at least once and under half mastered. */
 export const needsRevisiting = (item) => item.attempts > 0 && item.mastery < WEAK_BELOW;
+
+/** C23.7c: seconds as "1 h 10 min", "25 min" or "0 min". */
+export function focusedTime(seconds) {
+  const minutes = Math.floor((seconds ?? 0) / 60);
+  const h = Math.floor(minutes / 60);
+  return h ? `${h} h ${minutes % 60} min` : `${minutes} min`;
+}
+
+/** C23.7c: the dashboard's focus card from GET /dashboard's focus_this_week (server-timed, server-scored). */
+export function focusWeek(week) {
+  const sessions = week?.sessions ?? 0;
+  return {
+    time: focusedTime(week?.seconds),
+    points: (week?.points ?? 0).toLocaleString('en-GB'),
+    line: sessions
+      ? `From ${sessions} focus ${sessions === 1 ? 'session' : 'sessions'} since Monday.`
+      : 'Turn on Focus mode in a book and your focused time and points gather here.',
+  };
+}

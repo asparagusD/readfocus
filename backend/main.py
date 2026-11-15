@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from backend.cors import add_cors
+from backend.focus import store as focus_store
 from backend.nlp import embedder
 from backend.routers import (
     agent,
@@ -13,6 +14,7 @@ from backend.routers import (
     auth,
     books,
     dashboard,
+    focus,
     lookup,
     mastery,
     notes,
@@ -34,6 +36,14 @@ async def lifespan(app: FastAPI):
         embedder.preload()
     # Resume ingestion jobs a stopped server left behind (processing_jobs).
     sweep = asyncio.create_task(ingestion_worker.sweep_forever()) if ingestion_worker.sweep_enabled() else None
+    # C23.4: focus sessions left open with no event for two hours are abandoned (FOCUS_RULES F1).
+    if focus_store.sweep_enabled():
+        try:
+            swept = await asyncio.to_thread(focus_store.sweep_abandoned)
+            if swept:
+                print(f"Focus sweep: {swept} session(s) abandoned")
+        except Exception as e:  # noqa: BLE001 - a sweep that fails must not stop the server starting
+            print(f"Focus sweep failed: {e}")
     yield
     if sweep:
         sweep.cancel()
@@ -55,6 +65,7 @@ app.include_router(steve.router, prefix="/steve", tags=["Steve"])
 app.include_router(steve_ask.router, prefix="/steve", tags=["Steve"])
 app.include_router(annotations.router, tags=["Annotations"])
 app.include_router(notes.router, tags=["Notes"])
+app.include_router(focus.router, prefix="/focus", tags=["Focus"])
 
 @app.get("/health")
 def health_check():

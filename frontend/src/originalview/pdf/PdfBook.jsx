@@ -5,6 +5,7 @@ import { pdfAnchor, pdfPositions, quadsFromRects, rectsFromQuads } from '../../a
 import { forPages } from '../../annotations/paint';
 import { pdfPagesLabel } from '../../annotations/list';
 import { pdfNoteTop, shownAnchor } from '../../notes/markers';
+import { pdfPageEnd } from '../../focus/bookmark';
 
 /**
  * PDF anchors for a selection (ANCHORS A1, A2): one per page it touches, each with a quad
@@ -152,6 +153,11 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
       const sizes = await Promise.all(pages.map((n) => doc.getPage(n).then((p) => [n, p.view[2] - p.view[0], p.view[3] - p.view[1]])));
       const anchors = sizes.map(([n, w, h]) => ({ kind: 'pdf', page: n, quads: [[0, 0, Math.round(w * 100) / 100, Math.round(h * 100) / 100]], text: '' }));
       return { scope: 'view', anchors, ...pdfPositions(anchors, sizes.map(([, w]) => w)) };
+    },
+    // C23.6b: where focus mode's ribbon can be set: each page shown, a point at its end, with its printed label.
+    shownPlaces: async () => {
+      const sizes = await Promise.all(pages.map((n) => doc.getPage(n).then((p) => [n, p.view[3] - p.view[1]])));
+      return sizes.map(([n, h]) => ({ anchor: pdfPageEnd(n, h), label: `p. ${meta.labels?.[n - 1] ?? n}` }));
     },
     // C22.4: where each note's passage is on the pages shown, for its margin marker: the page's outer edge and side.
     noteSpots: (notes, within) => notes.flatMap((note) => {

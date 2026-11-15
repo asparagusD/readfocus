@@ -52,7 +52,7 @@ const chunk = (book, chunk_index) => ({ id: `chunk-${chunk_index}`, chunk_index,
 const json = (route, body, status = 200) => route.fulfill({ status, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 /** Routes for one page: the API remembers the saved position across reloads, like the server. */
-async function mockBackend(page, api, book) {
+export async function mockBackend(page, api, book) {
   const { file, type, today, chunks } = BOOKS[book];
   await page.route(/supabase\.co/, (route) => { api.unmocked.push(route.request().url()); return route.abort(); });
   await page.route(`${API}/**`, async (route) => {
@@ -72,7 +72,8 @@ async function mockBackend(page, api, book) {
           book: { title: 'Scanned', author: 'A Scanner', toc: [], format: 'pdf', storage_mode: 'cloud' } });
       }
       return json(route, {
-        session_id: 'e2e-session', chunks: today.map((i) => chunk(book, i)), chunk_indices: today, position: api.position,
+        // C23.G: a test may shorten today's reading (api.today) to leave pages beyond it.
+        session_id: 'e2e-session', chunks: (api.today ?? today).map((i) => chunk(book, i)), chunk_indices: api.today ?? today, position: api.position,
         focus_duration_minutes: 20, reason: 'A steady pace for this book.', chapter_before: '',
         book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' },
       });
@@ -111,6 +112,21 @@ async function mockBackend(page, api, book) {
       return json(route, { scanned_pages: scanned, done: [...api.ocr.keys()], ...(pages ? { pages } : {}) });
     }
     if (path === `/books/${BOOK}/status`) return json(route, { status: 'processing', total_chunks: 0 });
+    if (path.startsWith('/focus/')) return focusRoute(route, request, api.focus, path); // C23.6
+    if (path === '/sessions/focus-1/evaluate-single') return json(route, { status: 'graded' }); // C23.6b
+    if (path === '/sessions/focus-1') { // C23.6b: a focus quiz is kept on a sessions row with the focus session's id
+      return json(route, { id: 'focus-1', book_id: BOOK, status: 'testing', test_questions: FOCUS_QUIZ });
+    }
+    if (path === `/books/${BOOK}/body-start`) { // C23.1: none unless a test sets api.bodyStart; a PUT is the reader's
+      if (api.bodyStartFail) return json(route, { detail: 'down' }, 503);
+      if (request.method() === 'PUT') {
+        const body = JSON.parse(request.postData() || '{}');
+        api.bodyStartPuts.push(body);
+        const start = body.page ? { kind: 'pdf', page: body.page } : { kind: 'epub', spine_index: body.spine_index };
+        api.bodyStart = { source: 'user', body_start: { ...start, title: body.title ?? null } };
+      }
+      return json(route, api.bodyStart ?? { source: null, body_start: null });
+    }
     if (path === '/lookup') {
       const term = url.searchParams.get('term');
       api.lookups.push({ term, proper: url.searchParams.get('proper') === '1' });
@@ -226,8 +242,69 @@ async function mockBackend(page, api, book) {
   });
 }
 
+/** C23.6b: the focus quiz the fake server builds: three questions, the first multiple choice. */
+const FOCUS_QUIZ = [
+  { question: 'What did the lamp throw?\n(a) A shadow  (b) A small circle of light  (c) A spark', type: 'factual',
+    options: ['A shadow', 'A small circle of light', 'A spark'] },
+  { question: 'What mattered inside the circle of light?', type: 'factual' },
+  { question: 'In your own words, what is the main idea of the pages you read?', type: 'summary' },
+];
+
+/** C23.6: focus sessions as the server keeps them; tests set `api.focus.active` to move the server's clock. */
+function focusRoute(route, request, focus, path) {
+  const body = JSON.parse(request.postData() || 'null');
+  const view = () => focus.session && { ...focus.session, active_seconds: focus.active,
+    cap_remaining_s: Math.max(0, 10800 - focus.active), capped: focus.active >= 10800,
+    points_time: Math.floor(focus.active / 6), bookmark_set: Boolean(focus.session.end_anchor) };
+  const [, , id, action, sub] = path.split('/');
+  focus.calls.push({ method: request.method(), path, body });
+  if (path === '/focus/current') return json(route, { session: focus.session ? view() : null });
+  if (path === '/focus/start') {
+    focus.session = { id: 'focus-1', book_id: body.book_id, status: 'active', state: 'running', reasons: {},
+      points_time: 0, points_total: 0, ignored_events: 0, started_at: '2026-11-15T09:00:00Z', ended_at: null };
+    return json(route, view());
+  }
+  if (!focus.session || id !== focus.session.id) return json(route, { detail: 'Focus session not found' }, 404);
+  const s = focus.session;
+  if (action === 'event') {
+    if (body.kind === 'hidden') s.state = 'hidden';
+    if (body.kind === 'visible') s.state = 'running';
+    focus.events.push(body);
+    return json(route, { accepted: true, reason: null, session: view() });
+  }
+  if (action === 'pause') Object.assign(s, { status: 'paused', state: 'paused' });
+  if (action === 'resume') Object.assign(s, { status: 'active', state: 'running' });
+  if (action === 'end') {
+    if (s.status === 'awaiting_quiz' && s.end_anchor) return json(route, { detail: 'This focus session is awaiting quiz.' }, 409);
+    Object.assign(s, { status: 'awaiting_quiz', state: 'awaiting_quiz', end_anchor: body.bookmark_anchor });
+  }
+  if (action === 'quiz' && !sub) {
+    return json(route, { questions: FOCUS_QUIZ, count: FOCUS_QUIZ.length, words_in_range: 1200 });
+  }
+  if (action === 'quiz' && sub === 'answers') {
+    focus.answers = body.answers;
+    Object.assign(s, { status: 'scored', state: 'scored' });
+    const pts = Math.floor(focus.active / 6);
+    const passed = focus.passed !== false; // C23.7: a test can fail the quiz (1 of 3)
+    const lines = [{ code: 'counted', label: 'Focused reading', seconds: focus.active, points: pts },
+      { code: 'page_cap', label: 'Time on one page beyond 30 minutes without turning it', seconds: 600, points: 0 },
+      { code: 'quiz_bonus', label: `Quiz: ${passed ? 2 : 1} of 3 correct`, points: passed ? 40 : 0 },
+      ...(passed ? [] : [{ code: 'quiz_failed', label: 'Quiz below 40%: this session earns 0 points', points: 0 }])];
+    return json(route, { ...view(), passed, quiz_score: passed ? 2 / 3 : 1 / 3, points_time: passed ? pts : 0,
+      points_bonus: passed ? 40 : 0, points_total: passed ? pts + 40 : 0, quiz_correct: passed ? 2 : 1, quiz_total: 3,
+      total_score: passed ? 20 : 10, max_score: 30, percentage: passed ? 66.7 : 33.3, lines, per_question: [
+        { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' },
+        passed ? { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' } : { score: 0, max_score: 10, feedback: 'Not this time.', confidence: 'high' },
+        { score: 0, max_score: 10, feedback: 'Say what the pages were about.', confidence: 'high' }] });
+  }
+  if (action === 'discard') Object.assign(s, { status: 'abandoned', state: 'abandoned' });
+  const out = view();
+  if (action === 'discard') focus.session = null;
+  return json(route, out);
+}
+
 /** A signed-in reader for the app: a session in Supabase's storage that is far from expiring. */
-async function signIn(page) {
+export async function signIn(page) {
   const session = {
     access_token: 'e2e-token', refresh_token: 'e2e-refresh', token_type: 'bearer', expires_in: 3600,
     expires_at: Math.floor(Date.now() / 1000) + 24 * 3600,
@@ -248,7 +325,9 @@ export const test = base.extend({
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
-      notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [] };
+      notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
+      bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
+      focus: { session: null, active: 0, calls: [], events: [] } };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

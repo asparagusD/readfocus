@@ -19,7 +19,7 @@ env:
   # errors, so CI fails only when a count goes UP. Lower these numbers in the
   # same commit that lowers the CLAUDE.md table.
   RUFF_BASELINE: 27
-  ESLINT_ERROR_BASELINE: 4
+  ESLINT_ERROR_BASELINE: 3
   ESLINT_WARNING_BASELINE: 0
 
 jobs:

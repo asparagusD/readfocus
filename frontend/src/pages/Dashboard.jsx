@@ -9,7 +9,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { MasteryBar } from '../components/ui/MasteryBar';
 import { BookStack, Candle, ReadingLamp } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
-import { greeting, lastScore, lastScores, nextBook, streakLine, testsThisWeek } from '../lib/dashboard';
+import { focusWeek, greeting, lastScore, lastScores, nextBook, streakLine, testsThisWeek } from '../lib/dashboard';
 import { seconds } from '../motion/presets';
 import { splitFeedback } from '../lib/results';
 import { MasteryList } from '../components/dashboard/MasteryList';
@@ -143,6 +143,7 @@ export function Dashboard() {
     );
   }
 
+  const week = focusWeek(data.focus_this_week);
   const stats = [
     [data.words_this_week.toLocaleString('en-GB'), 'words read this week'],
     [latest == null ? '–' : `${latest}%`, 'last test score'],
@@ -185,6 +186,15 @@ export function Dashboard() {
         </div>
 
         <aside className="rf-dash__side">
+          {/* C23.7c: focused hours and points this week, both from the server; XP and levels come with C24. */}
+          <section className="rf-dash__card" aria-labelledby="rf-focus-title">
+            <h2 id="rf-focus-title" className="eyebrow">Focus this week</h2>
+            <dl className="rf-dash__focus">
+              <div><dt className="rf-dash__label">focused</dt><dd className="rf-dash__figure">{week.time}</dd></div>
+              <div><dt className="rf-dash__label">points</dt><dd className="rf-dash__figure">{week.points}</dd></div>
+            </dl>
+            <p className="rf-dash__muted">{week.line}</p>
+          </section>
           {nextBook(books) && (
             <section className="rf-dash__card rf-dash__tonight" aria-labelledby="rf-tonight-title">
               <ReadingLamp size={96} />

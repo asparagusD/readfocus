@@ -58,6 +58,13 @@
       "handler": "list_annotations"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/body-start",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/body-start",
+      "handler": "get_body_start"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/file",
       "type": "endpoint",
       "method": "GET",
@@ -119,6 +126,20 @@
       "method": "GET",
       "path": "/dashboard",
       "handler": "get_dashboard"
+    },
+    {
+      "id": "endpoint:GET /focus/current",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/focus/current",
+      "handler": "current_focus"
+    },
+    {
+      "id": "endpoint:GET /focus/{session_id}",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/focus/{session_id}",
+      "handler": "get_focus"
     },
     {
       "id": "endpoint:GET /health",
@@ -240,6 +261,69 @@
       "handler": "resume_book"
     },
     {
+      "id": "endpoint:POST /focus/quiz-me",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/quiz-me",
+      "handler": "quiz_me_start"
+    },
+    {
+      "id": "endpoint:POST /focus/start",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/start",
+      "handler": "start_focus"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/discard",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/discard",
+      "handler": "discard_focus"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/end",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/end",
+      "handler": "end_focus"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/event",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/event",
+      "handler": "focus_event"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/pause",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/pause",
+      "handler": "pause_focus"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/quiz",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/quiz",
+      "handler": "focus_quiz"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/quiz/answers",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/quiz/answers",
+      "handler": "focus_quiz_answers"
+    },
+    {
+      "id": "endpoint:POST /focus/{session_id}/resume",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/{session_id}/resume",
+      "handler": "resume_focus"
+    },
+    {
       "id": "endpoint:POST /sessions/start",
       "type": "endpoint",
       "method": "POST",
@@ -289,6 +373,13 @@
       "handler": "equation_latex"
     },
     {
+      "id": "endpoint:PUT /books/{book_id}/body-start",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/books/{book_id}/body-start",
+      "handler": "put_body_start"
+    },
+    {
       "id": "endpoint:PUT /sessions/{session_id}/position",
       "type": "endpoint",
       "method": "PUT",
@@ -335,6 +426,10 @@
     },
     {
       "id": "env:FASTEMBED_CACHE",
+      "type": "env"
+    },
+    {
+      "id": "env:FOCUS_SWEEP",
       "type": "env"
     },
     {
@@ -721,6 +816,48 @@
       "language": "python"
     },
     {
+      "id": "file:backend/focus/__init__.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/policy.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/quiz.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/quiz_me.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/range_quiz.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/scoring.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/focus/store.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/main.py",
       "type": "file",
       "role": "entry",
@@ -847,6 +984,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/focus.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/lookup.py",
       "type": "file",
       "role": "router",
@@ -896,6 +1039,12 @@
     },
     {
       "id": "file:backend/services/anchor_checks.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/body_start.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -1183,6 +1332,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_body_start.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_books_list.py",
       "type": "file",
       "role": "test",
@@ -1190,6 +1345,18 @@
     },
     {
       "id": "file:backend/tests/test_api_dashboard.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_focus.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_focus_quiz.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1208,6 +1375,12 @@
     },
     {
       "id": "file:backend/tests/test_api_position.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_quiz_me.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1238,6 +1411,18 @@
     },
     {
       "id": "file:backend/tests/test_backfill.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_backfill_block_paths.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_backfill_body_start.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1280,6 +1465,12 @@
     },
     {
       "id": "file:backend/tests/test_block_paths.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_body_start.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1388,6 +1579,24 @@
     },
     {
       "id": "file:backend/tests/test_figures.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_focus_anticheat.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_focus_policy.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_focus_scoring.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1556,6 +1765,12 @@
     },
     {
       "id": "file:backend/tests/test_question_strategies.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_range_quiz.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1849,6 +2064,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/body-start.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/calibration.spec.js",
       "type": "file",
       "role": "config",
@@ -1913,6 +2134,24 @@
       "type": "file",
       "role": "config",
       "language": "text"
+    },
+    {
+      "id": "file:frontend/e2e/focus-end.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/focus-mode.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/focus.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/e2e/gate-g5.spec.js",
@@ -1994,6 +2233,12 @@
     },
     {
       "id": "file:frontend/e2e/ocr.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/quiz-me.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2599,6 +2844,108 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/focus/FocusBar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/focus/FocusBar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/focus/ReadyModal.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/focus/RibbonPlacer.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/focus/RibbonPlacer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/focus/bodyStart.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/bodyStart.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/bookmark.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/bookmark.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/breakdown.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/breakdown.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/clock.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/clock.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/useBodyStart.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/useFocusSession.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/writer.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/writer.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/gallery/BookGallery.jsx",
       "type": "file",
       "role": "asset",
@@ -3173,6 +3520,18 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/close.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/close.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/originalview/pdf/ocr.js",
@@ -3949,6 +4308,18 @@
       "language": "markdown"
     },
     {
+      "id": "file:scripts/backfill_block_paths.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/backfill_body_start.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/backfill_book_files.py",
       "type": "file",
       "role": "script",
@@ -4327,6 +4698,24 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/028_body_start.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/029_focus.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
+      "id": "file:supabase/migrations/030_focus_ignored_events.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -4429,6 +4818,10 @@
       "language": "python"
     },
     {
+      "id": "function:focus_events_append_only",
+      "type": "function"
+    },
+    {
       "id": "function:handle_new_user",
       "type": "function"
     },
@@ -4516,6 +4909,14 @@
     },
     {
       "id": "table:equation_latex",
+      "type": "table"
+    },
+    {
+      "id": "table:focus_events",
+      "type": "table"
+    },
+    {
+      "id": "table:focus_sessions",
       "type": "table"
     },
     {
@@ -4652,6 +5053,16 @@
       "to": "table:profiles"
     },
     {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/028_body_start.sql",
+      "to": "table:books"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/030_focus_ignored_events.sql",
+      "to": "table:focus_sessions"
+    },
+    {
       "type": "calls_endpoint",
       "from": "file:frontend/src/annotations/useAnnotations.js",
       "to": "endpoint:DELETE /annotations/{annotation_id}"
@@ -4680,6 +5091,36 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
       "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/ReadyModal.jsx",
+      "to": "endpoint:POST /focus/{session_id}/quiz"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useBodyStart.js",
+      "to": "endpoint:GET /books/{book_id}/body-start"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useBodyStart.js",
+      "to": "endpoint:PUT /books/{book_id}/body-start"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "endpoint:GET /focus/current"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "endpoint:GET /focus/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "endpoint:POST /focus/{session_id}/event"
     },
     {
       "type": "calls_endpoint",
@@ -4714,12 +5155,12 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
-      "to": "endpoint:POST /sessions/{session_id}/evaluate-single"
+      "to": "endpoint:POST /focus/{session_id}/quiz"
     },
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
-      "to": "endpoint:POST /sessions/{session_id}/submit-answers"
+      "to": "endpoint:POST /sessions/{session_id}/evaluate-single"
     },
     {
       "type": "calls_endpoint",
@@ -4759,12 +5200,12 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:POST /sessions/start"
+      "to": "endpoint:POST /focus/quiz-me"
     },
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:POST /sessions/{session_id}/finish-reading"
+      "to": "endpoint:POST /sessions/start"
     },
     {
       "type": "calls_endpoint",
@@ -5071,6 +5512,11 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/body-start"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}/file"
     },
     {
@@ -5110,8 +5556,68 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:PUT /books/{book_id}/body-start"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/dashboard.py",
       "to": "endpoint:GET /dashboard"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:GET /focus/current"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:GET /focus/{session_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/quiz-me"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/start"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/discard"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/end"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/event"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/pause"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/quiz"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/quiz/answers"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/{session_id}/resume"
     },
     {
       "type": "defines_endpoint",
@@ -5279,6 +5785,11 @@
       "to": "function:steve_take_quota"
     },
     {
+      "type": "defines_function",
+      "from": "file:supabase/migrations/029_focus.sql",
+      "to": "function:focus_events_append_only"
+    },
+    {
       "type": "defines_table",
       "from": "file:supabase/migrations/001_initial.sql",
       "to": "table:books"
@@ -5377,6 +5888,16 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/027_note_blocks.sql",
       "to": "table:note_blocks"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/029_focus.sql",
+      "to": "table:focus_events"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/029_focus.sql",
+      "to": "table:focus_sessions"
     },
     {
       "type": "graph_edge",
@@ -5831,8 +6352,118 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/focus/policy.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/agents/workflow.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/focus/range_quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/focus/scoring.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/focus/quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/range_quiz.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/range_quiz.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/range_quiz.py",
+      "to": "file:backend/regions/prose.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/range_quiz.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/scoring.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/store.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/store.py",
+      "to": "file:backend/focus/scoring.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/store.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/main.py",
       "to": "file:backend/cors.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/focus/store.py"
     },
     {
       "type": "imports",
@@ -5863,6 +6494,11 @@
       "type": "imports",
       "from": "file:backend/main.py",
       "to": "file:backend/routers/dashboard.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/focus.py"
     },
     {
       "type": "imports",
@@ -6027,6 +6663,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/services/book_ingestor.py"
     },
     {
@@ -6047,6 +6688,51 @@
     {
       "type": "imports",
       "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/focus/quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/focus/quiz_me.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -6233,6 +6919,11 @@
       "type": "imports",
       "from": "file:backend/services/anchor_checks.py",
       "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/body_start.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",
@@ -6651,6 +7342,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_api_body_start.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_body_start.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_body_start.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_body_start.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_api_books_list.py",
       "to": "file:backend/dependencies.py"
     },
@@ -6688,6 +7399,121 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_dashboard.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/routers/focus.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/evaluator_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/knowledge_state/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/optimizer_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/planner_agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/agents/workflow.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/focus/quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/routers/focus.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/routers/steve_ask.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/steve/consent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/tests/test_api_sessions.py"
     },
     {
       "type": "imports",
@@ -6748,6 +7574,21 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_position.py",
       "to": "file:backend/tests/test_api_sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_quiz_me.py",
+      "to": "file:backend/focus/quiz_me.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_quiz_me.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_quiz_me.py",
+      "to": "file:backend/tests/test_api_focus_quiz.py"
     },
     {
       "type": "imports",
@@ -6853,6 +7694,46 @@
       "type": "imports",
       "from": "file:backend/tests/test_backfill.py",
       "to": "file:scripts/backfill_local_embeddings.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:backend/tests/test_book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_block_paths.py",
+      "to": "file:scripts/backfill_block_paths.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_body_start.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_body_start.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_body_start.py",
+      "to": "file:scripts/backfill_body_start.py"
     },
     {
       "type": "imports",
@@ -6963,6 +7844,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_block_paths.py",
       "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_body_start.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_body_start.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -7218,6 +8109,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_figures.py",
       "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_focus_anticheat.py",
+      "to": "file:backend/tests/test_api_focus_quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_focus_policy.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_focus_scoring.py",
+      "to": "file:backend/focus/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_focus_scoring.py",
+      "to": "file:backend/focus/scoring.py"
     },
     {
       "type": "imports",
@@ -7706,6 +8617,16 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_range_quiz.py",
+      "to": "file:backend/agents/question_generation/assembler.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_range_quiz.py",
+      "to": "file:backend/focus/range_quiz.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_region_job.py",
       "to": "file:backend/regions/extract.py"
     },
@@ -8056,6 +8977,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/body-start.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/calibration.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8072,6 +8998,21 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/errors.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/focus-end.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/focus-mode.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/focus.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -8142,6 +9083,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/ocr.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/quiz-me.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -8696,6 +9642,91 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/focus/FocusBar.jsx",
+      "to": "file:frontend/src/focus/FocusBar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/FocusBar.jsx",
+      "to": "file:frontend/src/focus/clock.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/ReadyModal.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/ReadyModal.jsx",
+      "to": "file:frontend/src/components/ui/Modal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/ReadyModal.jsx",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/RibbonPlacer.jsx",
+      "to": "file:frontend/src/focus/RibbonPlacer.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/RibbonPlacer.jsx",
+      "to": "file:frontend/src/focus/bookmark.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/bodyStart.js",
+      "to": "file:frontend/src/originalview/today.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/bodyStart.test.js",
+      "to": "file:frontend/src/focus/bodyStart.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/bookmark.test.js",
+      "to": "file:frontend/src/focus/bookmark.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/breakdown.test.js",
+      "to": "file:frontend/src/focus/breakdown.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/clock.test.js",
+      "to": "file:frontend/src/focus/clock.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/useBodyStart.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "file:frontend/src/focus/clock.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "file:frontend/src/focus/writer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/useFocusSession.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/writer.test.js",
+      "to": "file:frontend/src/focus/writer.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gallery/BookGallery.jsx",
       "to": "file:frontend/src/originalview/Reader.jsx"
     },
@@ -9242,6 +10273,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/focus/RibbonPlacer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/motion/presets.js"
     },
     {
@@ -9337,6 +10373,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/focus/bookmark.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
       "to": "file:frontend/src/originalview/epub/EpubView.jsx"
     },
     {
@@ -9417,6 +10458,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/focus/bookmark.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/notes/markers.js"
     },
     {
@@ -9471,6 +10517,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/close.test.js",
+      "to": "file:frontend/src/originalview/pdf/close.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/pdf/ocr.test.js",
       "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
@@ -9498,6 +10549,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
       "to": "file:frontend/src/originalview/bookFile.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/usePdfDocument.js",
+      "to": "file:frontend/src/originalview/pdf/close.js"
     },
     {
       "type": "imports",
@@ -9822,6 +10878,31 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/FocusBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/ReadyModal.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/bodyStart.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/useBodyStart.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/useFocusSession.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
     },
     {
@@ -9972,6 +11053,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Results.jsx",
+      "to": "file:frontend/src/focus/breakdown.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Results.jsx",
       "to": "file:frontend/src/illustrations/index.js"
     },
     {
@@ -10088,6 +11174,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/ContentsDrawer.jsx",
       "to": "file:frontend/src/annotations/roving.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/focus/bodyStart.js"
     },
     {
       "type": "imports",
@@ -10538,6 +11629,36 @@
       "type": "imports",
       "from": "file:frontend/vite.config.js",
       "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "file:scripts/backfill_structure.py"
     },
     {
       "type": "imports",
@@ -11041,6 +12162,51 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/store.py",
+      "to": "table:focus_events"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/store.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/mcp_server.py",
       "to": "table:chunks"
     },
@@ -11092,6 +12258,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/dashboard.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
       "to": "table:reading_progress"
     },
     {
@@ -11103,6 +12274,16 @@
       "type": "reads_table",
       "from": "file:backend/routers/dashboard.py",
       "to": "table:test_results"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/focus.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/focus.py",
+      "to": "table:focus_sessions"
     },
     {
       "type": "reads_table",
@@ -11157,6 +12338,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/sessions.py",
       "to": "table:reading_progress"
     },
     {
@@ -11198,6 +12384,16 @@
       "type": "reads_table",
       "from": "file:backend/routers/steve_ask.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/body_start.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/body_start.py",
+      "to": "table:page_regions"
     },
     {
       "type": "reads_table",
@@ -11281,6 +12477,21 @@
     },
     {
       "type": "reads_table",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_book_files.py",
       "to": "table:books"
     },
@@ -11333,6 +12544,11 @@
       "type": "uses_env",
       "from": "file:backend/dependencies.py",
       "to": "env:EMBED_WAIT_SECONDS"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/focus/store.py",
+      "to": "env:FOCUS_SWEEP"
     },
     {
       "type": "uses_env",
@@ -11421,6 +12637,11 @@
     },
     {
       "type": "uses_env",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "env:ENV"
+    },
+    {
+      "type": "uses_env",
       "from": "file:scripts/backfill_book_files.py",
       "to": "env:ENV"
     },
@@ -11506,6 +12727,26 @@
     },
     {
       "type": "writes_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/focus/quiz.py",
+      "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/focus/store.py",
+      "to": "table:focus_events"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/focus/store.py",
+      "to": "table:focus_sessions"
+    },
+    {
+      "type": "writes_table",
       "from": "file:backend/routers/annotations.py",
       "to": "table:annotations"
     },
@@ -11518,6 +12759,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/books.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/focus.py",
+      "to": "table:focus_sessions"
     },
     {
       "type": "writes_table",
@@ -11628,6 +12874,16 @@
       "type": "writes_table",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "table:question_bank"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_block_paths.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "table:books"
     },
     {
       "type": "writes_table",

@@ -129,7 +129,12 @@ def xhtml_blocks(markup, root_path: list[int] | None = None) -> list[dict]:
                 run[0].add(str(child), kinds)
 
     root = list(root_path or [])
-    walk(BeautifulSoup(markup, "html.parser"), "paragraph", None, frozenset(), root, root)
+    soup = BeautifulSoup(markup, "html.parser")
+    # ebooklib strips the <body> tag only when it is bare; one with attributes (epub:type) stays in the markup.
+    # Its children are still the first steps under the body (C23.G, DEBUG_LOG), so walk from the body itself.
+    tops = [c for c in soup.children if isinstance(c, Tag)]
+    start = tops[0] if len(tops) == 1 and tops[0].name.lower() == "body" else soup
+    walk(start, "paragraph", None, frozenset(), root, root)
     flush("paragraph", None, root)
     return out
 

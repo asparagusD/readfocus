@@ -1,7 +1,7 @@
 // node --test (npm run test:unit): the dashboard's pure helpers.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { greeting, lastScore, lastScores, needsRevisiting, partOfDay, streakLine, testsThisWeek } from './dashboard.js';
+import { focusWeek, focusedTime, greeting, lastScore, lastScores, needsRevisiting, partOfDay, streakLine, testsThisWeek } from './dashboard.js';
 
 const at = (iso) => new Date(iso); // local time
 
@@ -40,4 +40,17 @@ test('needs revisiting matches the planner: tested and under 0.5', () => {
   assert.equal(needsRevisiting({ mastery: 0.41, attempts: 2 }), true);
   assert.equal(needsRevisiting({ mastery: 0.5, attempts: 2 }), false);
   assert.equal(needsRevisiting({ mastery: 0.3, attempts: 0 }), false); // untested: only the prior
+});
+
+test('C23.7c: focused time in hours and minutes', () => {
+  assert.equal(focusedTime(0), '0 min');
+  assert.equal(focusedTime(1500), '25 min');
+  assert.equal(focusedTime(4200), '1 h 10 min');
+});
+
+test('C23.7c: the focus card says how many sessions, or how to start one', () => {
+  assert.deepEqual(focusWeek({ seconds: 4200, points: 1540, sessions: 2 }),
+    { time: '1 h 10 min', points: '1,540', line: 'From 2 focus sessions since Monday.' });
+  assert.equal(focusWeek({ seconds: 600, points: 0, sessions: 1 }).line, 'From 1 focus session since Monday.');
+  assert.equal(focusWeek(undefined).line, 'Turn on Focus mode in a book and your focused time and points gather here.');
 });

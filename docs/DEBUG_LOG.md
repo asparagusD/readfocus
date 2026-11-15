@@ -4073,3 +4073,487 @@ length and starts past its section's start.
 
 ### Commit
 `fix(notes): EPUB block notes keep their own characters` (C22.6)
+
+## 2026-11-15 C23.6b — leaving the reader broke the next page ("n?.destroy is not a function")
+
+### Symptom
+Writing C23.6b's e2e spec, the quiz page showed "A page failed to render" after the reader opened it. The
+console: `TypeError: n?.destroy is not a function` at `ReadingSession-*.js`, in `usePdfDocument`'s cleanup.
+
+### Repro
+Open a PDF in the reader, press Back to the library: the same error, and the error boundary's page in place
+of the library. Also at `2b34a89` (C23.6a) with no C23.6b change: the defect is older than this chunk.
+
+### Hypotheses
+1. Something new in C23.6b returns a non-function from an effect. Ruled out: the stack points into
+   `usePdfDocument`, and the library button fails without any C23.6b code.
+2. `doc.destroy` does not exist on the document `openPdf` returns. Confirmed: PDF.js 6.4.299 (since C17.2,
+   `ce8ef01`) moved `destroy()` from `PDFDocumentProxy` to its loading task (`node_modules/pdfjs-dist/build/
+   pdf.mjs`: the proxy has `_destroy()` and `loadingTask`, no `destroy`).
+
+### Root cause
+`usePdfDocument` closed documents with `doc?.destroy()`, which PDF.js 6 documents do not have, so every PDF
+reader unmount threw during React's commit and the error boundary replaced the next page. No test left the
+reader after a PDF had loaded.
+
+### Fix
+`originalview/pdf/close.js` `closePdf(doc)`: the document's own `destroy()` when it has one, else
+`doc.loadingTask.destroy()`; `usePdfDocument` uses it for both closes.
+
+### Regression test
+`close.test.js` (2): a PDF.js 6 document closes through its loading task; an older one by `destroy()`;
+nothing open is fine. `e2e/reader.spec.js`: leaving a PDF for the library shows the library with no page
+error. Both failed before the fix.
+
+### Commit
+`fix(pdf): close PDF.js 6 documents through their loading task` (C23.6b)
+
+## 2026-11-15 C23.7a — phone selection toolbar button measured 35.99998 px
+
+**Status:** fixed
+
+### Symptom
+With the C23.7a change (the reader's session row and fixed timer removed) the full e2e run had one failure; the
+test passes on the C23.6b commit (5 of 5). Expected each selection-toolbar button to be at least 36 px:
+
+    npm --prefix frontend run test:e2e
+    1 failed
+      e2e\annotations-toolbar.spec.js:142:3 › on a phone, in lamplight › the toolbar fits the screen and stays clear of the selection
+    262 passed (10.8m)
+
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+    Expected: >= 36
+    Received:    35.99998474121094
+    > 151 |       expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(36); // the handoff's 36 px buttons, 44 px reach
+
+### Repro
+Not every time: 3 failures in 5 with C23.7a applied, 0 in 5 on the C23.6b commit (C23.7a stashed):
+
+    npx playwright test e2e/annotations-toolbar.spec.js:142 --repeat-each 5 --reporter=line
+
+### Hypotheses
+1. The bar is measured while its rise animation (`rf-seltool-rise`, translateY 4 px -> 0 over --dur-2) is still
+   running, so a fractional translate gives a float height a hair under 36. Evidence: the value is 36 minus float
+   error, and the size is fixed in CSS (`block-size: 36px`). Ruled out if: the bar's computed transform is `none`
+   when measured. Result: confirmed. Logging each button's box and its ancestors' transforms showed
+   `.rf-seltool` at `matrix(1, 0, 0, 1, 0, 0.39 .. 1.51)` and heights 35.99998 / 36.00002 at those offsets.
+2. The bar is positioned at a fractional `top` (floating-ui `transform: false`). Evidence: tops like 225.77.
+   Ruled out if: the height is 36 whenever the transform is identity. Result: ruled out as the cause; with the
+   animation finished every height read 36.
+3. The removed session row changed the button CSS at 375. Ruled out by: no CSS of the selection toolbar changed
+   (`git diff` touches only Results.css). Result: ruled out. The row's removal only moves the page up, so the
+   selection is made, and measured, sooner in the animation.
+
+### Root cause
+The test (`frontend/e2e/annotations-toolbar.spec.js:144`) read the toolbar's geometry before its entrance
+animation had settled; the app's sizes were right.
+
+### Fix
+The test waits for the toolbar's animations (`el.getAnimations()`, each `.finished`) before measuring, so
+it checks the bar where it rests. No app change, no tolerance added to the 36 px check.
+
+### Regression test
+`frontend/e2e/annotations-toolbar.spec.js` › "on a phone, in lamplight › the toolbar fits the screen and stays
+clear of the selection". Without the wait: 3 of 5 failed (35.99998474121094). With it: 8 of 8 passed
+(`--repeat-each 8`).
+
+### Commit
+fix(frontend): measure the selection toolbar after its rise settles
+
+## 2026-11-15 C23.8 — a focus session with no heartbeats still earns the quiz bonus
+
+**Status:** fixed
+
+### Symptom
+A forged session (start, then the bookmark an hour later with not one heartbeat) has 0 active seconds, yet
+answering its quiz right earns the bonus. Expected: no focused reading, no points (C23.8 prompt, F14).
+
+    pytest "backend/tests/test_focus_anticheat.py::test_an_end_with_no_heartbeats_earns_nothing_even_with_every_answer_right" -q
+    >       assert (body["points_time"], body["points_bonus"], body["points_total"]) == (0, 0, 0)
+    E       assert (0, 60, 60) == (0, 0, 0)
+    E         At index 1 diff: 60 != 0
+    backend\tests\test_focus_anticheat.py:56: AssertionError
+    1 failed in 2.14s
+
+### Repro
+Every time, the test above; and the pure engine, scenario "zero heartbeats, then every quiz answer right":
+
+    pytest backend/tests/test_focus_scoring.py -q -k "zero heartbeats"
+
+### Hypotheses
+1. `decide()` gives the bonus whenever the quiz passes, whatever the counted time. Evidence: in
+   `backend/focus/scoring.py` the bonus is `round(quiz.correct * BONUS_PER_CORRECT) if passed`, with no other
+   condition. Ruled out if: the engine alone gives 0 for this input. Result: confirmed (the engine gives
+   points_bonus 60 for 3 of 3 with counted_seconds 0).
+2. The API scores with the client's numbers. Ruled out by: the endpoint takes no numbers (extra keys are refused,
+   F14), and `grade()` passes only stored events and the graded quiz. Result: ruled out.
+
+### Root cause
+`backend/focus/scoring.py` `decide()`: the quiz bonus (F11) did not require any focused reading, so a session
+with no counted time still earned it for the range between its start and its bookmark.
+
+### Fix
+The bonus needs counted time: a session with 0 counted seconds earns no bonus (and so 0 in all), passed or
+not; its breakdown line shows the quiz with 0 points. One condition in `decide()`; FOCUS_RULES F11 updated.
+
+### Regression test
+`backend/tests/test_focus_scoring.py` scenario "zero heartbeats, then every quiz answer right" and
+`backend/tests/test_focus_anticheat.py::test_an_end_with_no_heartbeats_earns_nothing_even_with_every_answer_right`.
+Failed before the fix: yes (`git stash push -- backend/focus/scoring.py`: "points_bonus: 60 != 0", 1 failed).
+Passes after: yes (2 passed with `-k zero`; 57 passed across scoring, anti-cheat and focus quiz tests).
+
+### Commit
+`d28f936` fix(focus): no quiz bonus for a session with no focused reading
+
+## 2026-11-15 C23.8 — Start on a spread across the body start sends a front-matter page
+
+**Status:** fixed
+
+### Symptom
+Found by the C23.8 e2e. On a PDF spread showing pp. 2-3 with Chapter 1 on p. 3, the focus bar is unlocked (a
+page shown is in the body) and Start is offered, but the start anchor is the spread's first page, p. 2. The real
+server refuses that (`_before_body`: 409 "Focus mode starts at Chapter 1."), so Start does nothing for the reader.
+
+    npx playwright test e2e/focus.spec.js --reporter=line
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+    Expected: >= 3
+    Received:    2
+        at startAtChapter1 (I:\readfocus\frontend\e2e\focus.spec.js:66:83)
+    4 failed
+
+### Repro
+Every time: any test in `frontend/e2e/focus.spec.js` (open the reader, focus mode on, one turn to pp. 2-3, Start).
+
+### Hypotheses
+1. The lock and the start disagree: `beforeBody()` unlocks when the spread's last page reaches the body start,
+   while `useFocusSession.start()` sends `reader.anchor()`, the spread's first page. Evidence: start body page 2,
+   body start p. 3. Ruled out if: the anchor sent were p. 3. Result: confirmed by the request body.
+2. Page numbers differ in base (0- vs 1-based). Ruled out by: docs/ANCHORS.md A3 and the body start both 1-based;
+   the server compares them directly. Result: ruled out.
+
+### Root cause
+`frontend/src/focus/useFocusSession.js` `start()` used the first page shown; on a spread straddling the body
+start that page is front matter, which the server rightly refuses.
+
+### Fix
+`bodyStart.js` `startAnchor(anchor, start)` (pure): a place before the body start becomes the body start's own
+anchor; ReadingSession passes it to `focus.start`, so a straddling spread starts at Chapter 1.
+
+### Regression test
+`frontend/src/focus/bodyStart.test.js` (startAnchor) and every test in `frontend/e2e/focus.spec.js`.
+
+### Commit
+`af51db4` fix(focus): start a spread across the body start at chapter 1
+
+## 2026-11-15 C23.8 — a second tab on a focus session writes events too
+
+**Status:** fixed
+
+### Symptom
+C23.8 asks for one active session per reader with a second tab read-only. A second tab opened on the same book
+adopts the open session through `GET /focus/current` and runs the same hook: its own heartbeats, page turns,
+`hidden`/`visible` and idle prompts. The server's 25 s heartbeat limit keeps the time from doubling
+(`test_focus_anticheat.py::test_two_tabs_on_one_session_count_the_time_once`), but a background second tab's
+`hidden` event stops the clock for the tab the reader is using, and its page turns start new page visits.
+
+    npx playwright test e2e/focus.spec.js -g "two tabs" --reporter=line
+    (before the fix) the second tab showed Pause focus and End session, and its page turn was posted
+
+### Repro
+Every time: the "two tabs" test in `frontend/e2e/focus.spec.js` (two pages in one browser context, the same
+fake server); before the fix the second tab's controls are there and its events reach the server.
+
+### Hypotheses
+1. Nothing in the client tells tabs apart: every mounted `useFocusSession` on an open session writes. Evidence:
+   `send()` has no condition beyond a session id. Ruled out if: the second tab sent nothing. Result: confirmed.
+2. The server could refuse a second writer. Ruled out as the place for it: the server cannot tell two tabs of
+   one reader apart without a client-chosen id, which a forger would copy; it already caps the time (F3).
+
+### Root cause
+`frontend/src/focus/useFocusSession.js`: no single-writer rule among a reader's tabs.
+
+### Fix
+`frontend/src/focus/writer.js` (new): a lease in localStorage (`rf-focus-writer:<session id>`, the tab's id and
+the time), renewed on each event the writer sends and lapsing after 75 s (two and a half heartbeats); given up on
+`pagehide` and when the hook lets go of the session. The hook sends an event only while it holds the lease; a
+tab that takes a lapsed lease over a hidden session says `visible` first. FocusBar `readOnly`: "Focus is running in
+another tab · this one only shows its time", no Pause, Resume, End or idle prompt; Exit goes to the library.
+
+### Regression test
+`frontend/src/focus/writer.test.js` (4) and `frontend/e2e/focus.spec.js` "two tabs on one session" (in the
+C23.8 test commit): the second tab sends nothing while the first writes, and writes once its lease has lapsed.
+
+### Commit
+`e402c6b` fix(focus): a second tab on a focus session only watches
+
+## 2026-11-15 C23.8 — a short session with a far bookmark earns the whole range's quiz bonus
+
+**Status:** fixed
+
+### Symptom
+Left open by C23.8 and decided by the user ("Cap bonus at time points"). One focused minute (10 points), then
+the bookmark far ahead: the quiz covers the whole range (up to 15 questions), and 15 right earned a 300-point
+bonus for reading the server timed at one minute.
+
+    pytest backend/tests/test_focus_scoring.py -q
+    expected = {'passed': True, 'points_time': 10, 'points_bonus': 10, 'points_total': 20}
+    E           AssertionError: points_bonus: 300 != 10
+    backend\tests\test_focus_scoring.py:160: AssertionError
+
+### Repro
+Every time: the scenario "one focused minute, a bookmark far ahead, 15 of 15 right: bonus capped at 10" in
+`backend/tests/test_focus_scoring.py`.
+
+### Hypotheses
+1. The bonus scales with the quiz (the range), not with the timed reading. Evidence: `decide()` computes
+   `quiz.correct * BONUS_PER_CORRECT` with no bound but counted time > 0 (d28f936). Result: confirmed.
+
+### Root cause
+`backend/focus/scoring.py` `decide()`: the bonus had no bound tied to the reading the server timed.
+
+### Fix
+The user's rule: the bonus is at most the session's time points (F11). One `min()` in `decide()`; the quiz
+line carries `capped` when the cap applied; FOCUS_RULES F11, the ready dialog and the results row say so.
+
+### Regression test
+The scenario above, and "quiz 40 of 100 passes; the bonus is capped at the time points". Failed before the fix:
+yes (scoring.py stashed: 3 failed, 300 != 10 and 800 != 100, and the line's capped flag missing). Passes after:
+yes (37 passed); `test_a_capped_bonus_says_so_on_its_line` and `breakdown.test.js` check the flag and its words.
+
+### Commit
+fix(focus): cap the quiz bonus at a session's time points
+
+## 2026-11-15 C23.G — an EPUB focus quiz covers 12 words, not the pages read
+
+**Status:** fixed
+
+### Symptom
+Gate G7 walk (dev project, test reader B, Standard Ebooks' *Alice's Adventures in Wonderland*): 10.5 minutes
+read in Chapter I, ribbon on pp. 4-6. The quiz was built from 12 words in one chunk, so it had 1 question (F10's
+minimum is 3), and that question came from the chapter's end, past the bookmark:
+
+    focus_sessions: words_in_range 12, quiz_total 1
+    sessions: chunk_start_index 3, chunk_end_index 3, assigned_words 12
+    question: "Fill in the blank: So she set to work, and very soon finished off the _____."
+    start -> block (3, '3.3')   end -> block (3, '3.3')     (block_for_cfi on the book's chunks)
+    slices [(3, 0.26, 0.277, 12)]
+
+### Repro
+Every time, offline: the chapter's own body markup through `xhtml_blocks` gives paths one level too deep:
+
+    epub_documents(alice)[spine 5] markup starts '<body epub:type="bodymatter z3998:fiction">'
+    xhtml_blocks(markup, [4]) -> '/4/2/2/4' for the first <p>; the reader's CFI for it is /4/2[chapter-1]/4
+
+### Hypotheses
+1. The stored block paths count the `<body>` element as a child. Evidence: every Alice path starts `/4/2/2/`,
+   the XHTML is body > section#chapter-1 > hgroup, p...; ebooklib's `get_body_content()` strips `<body>` only when
+   the tag is exactly `<body>` (no attributes); Standard Ebooks put `epub:type` on it. Ruled out if: the markup
+   handed to `xhtml_blocks` had no body tag. Result: confirmed (the markup above).
+2. The reader's CFI is wrong (epub.js wrappers). Ruled out by: `/4/2[chapter-1]/4` names the section by its id
+   and matches the file's structure. Result: ruled out.
+3. `block_for_cfi` mis-parses id assertions. Ruled out by: test_block_paths passes on reflow.epub (whose body has
+   no attributes), and with the paths fixed the same CFIs map right. Result: ruled out.
+
+### Root cause
+`backend/services/book_structure.py` `xhtml_blocks()`: given body markup that still has its `<body>` tag, it
+walked `<body>` as a child of the body, adding a `/2` step to every path. Every EPUB whose `<body>` carries an
+attribute has wrong `chunks.block_paths`, so CFIs fall back to a neighbouring block (quiz ranges, A6 mapping).
+
+### Fix
+`xhtml_blocks` walks from the `<body>` element itself when the markup starts with one, so its children take the
+first steps under the body, as in the document. Books ingested before the fix keep their old paths until their
+structure is rebuilt (a backfill: a write to the shared project, for the user to approve).
+
+### Regression test
+`backend/tests/test_block_paths.py::test_a_body_tag_with_attributes_is_not_a_step`.
+Failed before the fix: yes (book_structure.py stashed: 1 failed, '/4/2/2/4' for the paragraph). Passes after: yes
+(8 passed). With the fix, the walk's own start and bookmark CFIs over this book's stored chunks map to blocks
+0.2 and 1.1: 949 words, 3 questions.
+
+### Commit
+fix(ingest): count EPUB block paths from the body when ebooklib keeps its tag
+
+## 2026-11-15 C23.G — the reader cannot go past "That's today's suggested reading"
+
+**Status:** fixed
+
+### Symptom
+Gate G7 walk, focus mode on: past the last page of the suggested reading the closing page says "Read on as
+far as you like; your place is kept.", but Next is disabled and ArrowRight does nothing, so the session cannot
+go on into the book (C23.7 retired the timed session; the suggestion is only a suggestion now).
+
+### Repro
+Every time: `frontend/e2e/reader.spec.js` "the closing page lets the reader read on" (PDF and EPUB): from the
+closing page, ArrowRight leaves the closing page in place.
+
+### Hypotheses
+1. `Reader.jsx` `move()` returns early while `ending` for any direction but back, and both Next buttons are
+   `disabled={... ending ...}`. Evidence: the code; C17.5 built the closing page as the end of a timed session.
+   Result: confirmed (the closing page stays, `move(1)` returns false).
+
+### Root cause
+`frontend/src/originalview/Reader.jsx` treated the closing page as a dead end, from before C23.7.
+
+### Fix
+From the closing page, Next (and Space, ArrowRight, the edge) closes it and turns on into the book. Past the
+suggested reading the closing page is not shown again: it appears only when turning from inside the reading
+past its end. The folio says "Beyond today's reading" as before. A book's real last page still stops Next.
+
+### Regression test
+`frontend/e2e/reader.spec.js` "the closing page lets the reader read on, and does not come back" (PDF, EPUB).
+Failed before the fix: yes (Reader.jsx stashed: 2 failed, Next "disabled"). Passes after: yes (with the
+existing closing-page tests, 4 passed). The fixtures' suggested reading ran to the book's last page, so the test
+shortens it (`api.today`) to leave pages beyond.
+
+### Commit
+fix(reader): let the reader read on past today's suggested pages
+
+## 2026-11-15 C23.G — a focus quiz can be graded, reset and retaken through the test endpoints
+
+**Status:** fixed
+
+### Symptom
+Found by the C23 close review. A focus quiz is kept on a `sessions` row with the focus session's id (so
+`submit_answers` grades it). The old test endpoints accept that row: `POST /sessions/{id}/submit-answers` grades it
+and returns each answer's feedback (which quotes the evidence); `POST /sessions/{id}/finish-reading` sets any row
+back to `testing` with no status check. Repeating both, then `POST /focus/{id}/quiz/answers` with the right
+answers, turns a failed quiz (F12: 0 points) into a pass with time points and bonus.
+
+### Repro
+Every time: `backend/tests/test_api_focus_quiz.py::test_the_test_endpoints_refuse_a_focus_quiz`.
+
+### Hypotheses
+1. The `/sessions` routes do not know a row is a focus quiz. Evidence: `finish_reading` and `submit_answers` look
+   only at `sessions` by id and user. Result: confirmed by the test (200 from both).
+
+### Root cause
+`backend/routers/sessions.py` `finish_reading` and `submit_answers`: no check that the row belongs to a focus
+session, whose quiz is graded and scored only by `/focus/{id}/quiz/answers`.
+
+### Fix
+`submit-answers` refuses (409) a session id that is a focus session of the caller's; `finish-reading` reopens only
+a session still `reading` or `testing` (in the same single update, so its one round trip stays: issue 28), and
+says 409 for one already answered. `evaluate-single` stays open (the focus quiz screen caches answers through it;
+it returns nothing). A first attempt that also checked focus in `finish-reading` broke the one-round-trip test.
+
+### Regression test
+`backend/tests/test_api_focus_quiz.py::test_the_test_endpoints_refuse_a_focus_quiz`.
+Failed before the fix: yes (sessions.py stashed: 1 failed, `assert 200 == 409`). Passes after: yes; pytest
+backend/tests 1676 passed.
+
+### Commit
+fix(api): keep focus quizzes off the test endpoints and never reopen a graded test
+
+## 2026-11-15 C23.G — a failed grading scores a focus session 0 for good, or leaves it stuck
+
+**Status:** fixed
+
+### Symptom
+C23 close review. `backend/focus/quiz.py` `grade()` claims the quiz row (`testing` -> `completed`) before
+grading. If `run_submit` raises, the row stays `completed` and the focus session `awaiting_quiz`: every retry is
+409 "already answered", for ever. If it returns an error or no `evaluation_result`, `per_question` is empty, the
+weighted score 0, and the session is written `scored` with 0 points.
+
+### Repro
+Every time: `backend/tests/test_api_focus_quiz.py::test_a_grading_failure_scores_nothing_and_can_be_retried`
+(run_submit raising, then returning an error).
+
+### Hypotheses
+1. `grade()` has no failure path, unlike `submit_answers` (which releases the row and returns 500). Result:
+   confirmed by the test.
+
+### Root cause
+`backend/focus/quiz.py` `grade()`: no release of the claimed row and no refusal when grading did not happen.
+
+### Fix
+On an exception, an error, or no `evaluation_result`, the row goes back to `testing`, nothing is scored, and the
+route answers 503 "Your answers couldn't be graded just now. They are kept; try again." The answers are still in
+the reader's browser (the quiz screen keeps them until a submit succeeds).
+
+### Regression test
+`backend/tests/test_api_focus_quiz.py::test_a_grading_failure_scores_nothing_and_can_be_retried`.
+Failed before the fix: yes (quiz.py and focus.py stashed: 2 failed, the RuntimeError escaping, and a 0 scored).
+Passes after: yes; pytest backend/tests 1678 passed. The quiz screen already keeps the answers and says "try
+Submit again" on a failed submit (C13.5), so the 503 needs no frontend change.
+
+### Commit
+fix(focus): release a focus quiz whose grading failed instead of scoring it
+
+## 2026-11-15 C23.G — a malformed bookmark breaks a focus session's quiz for good
+
+**Status:** fixed
+
+### Symptom
+C23 close review. `POST /focus/{id}/end` checks only that the bookmark comes after the start (`order_key`), not
+that it is a place in the book. An EPUB bookmark like `epubcfi(/6/7!/4)` (an odd spine step) after a start in
+`/6/6!...` is stored, but `unit_of` gives None, and building the quiz then fails (`toc_slices` compares with None):
+every `POST /focus/{id}/quiz` is 500 and the session, `awaiting_quiz`, cannot take another bookmark. A PDF
+bookmark with a quad far above the page (y < -10,000) gives a negative `end_position`: the row's CHECK fails
+after the `end` event is already stored.
+
+### Repro
+Every time: `backend/tests/test_api_focus.py::test_a_bookmark_that_is_not_a_place_in_the_book_is_refused`.
+
+### Hypotheses
+1. `_end` skips `_check_place`, which `_start` runs. Evidence: the code. Result: confirmed by the test (200, and
+   the session awaiting a quiz that cannot be built).
+2. Quads are unbounded in `PdfAnchor` (no range on the numbers). Result: confirmed (a -20,000 y passes).
+
+### Root cause
+`backend/routers/focus.py` `_end` (no place check) and `_check_place` (no bound on a PDF quad's numbers).
+
+### Fix
+`_end` runs `_check_place` on the bookmark before anything is stored; `_check_place` also refuses a PDF quad with a
+number below -1,000 or above 100,000 points (start and bookmark alike; a little below 0 is left for rounding at a
+page's edge, and a negative position needs y below -10,000). Both answer 422 and change nothing.
+
+### Regression test
+`backend/tests/test_api_focus.py::test_a_bookmark_that_is_not_a_place_in_the_book_is_refused`.
+Failed before the fix: yes (focus.py stashed: 4 failed). Passes after: yes; a start at -0.5 points is still
+accepted.
+
+### Commit
+fix(focus): refuse a bookmark that is not a place in the book
+
+## 2026-11-15 C23.G — the focus e2e stall test failed once under a full-suite run
+
+**Status:** fixed (not reproducible on demand)
+
+### Symptom
+C23 close, full `npm --prefix frontend run test:e2e` (12 min): 274 passed, 1 failed:
+
+    x 71 e2e\focus.spec.js:138:1 › a 31-minute stall on one page: beats all along with no turn; the extra minute is listed as not counted (24.3s)
+    Error: expect(locator).toBeVisible() failed
+    Expected: visible
+    Error: element(s) not found
+        at endAndAnswer (I:\readfocus\frontend\e2e\focus.spec.js:98:73)
+
+The next full run on the same code plus backend-only fixes: 275 passed.
+
+### Repro
+Not on demand: `npx playwright test e2e/focus.spec.js -g "31-minute" --repeat-each 6`: 6 passed. Seen once in four
+full runs that included this test (273, 275, 274 + this failure, 275).
+
+### Hypotheses
+1. The quiz opens in a fresh browser context (cold cache: the app shell, the auth restore, the lazy quiz chunk,
+   then the quiz request) and, under the full suite's load, its first question can take longer than the default
+   5 s. Evidence: the failing line waits for a question right after `goto` in that new context; the test passes
+   whenever run alone. Ruled out if: it fails with a long first wait too. Result: not confirmable directly (the
+   failing run's artifacts were overwritten by the next run); the most likely by elimination.
+2. A click on Next was lost between questions. Evidence against: the other three quiz-taking tests use the same
+   loop and never failed in any run; each later question already waits up to 5 s after a click.
+
+### Root cause
+Most likely: `frontend/e2e/focus.spec.js` `endAndAnswer` gave a cold new browser context the same 5 s as a page
+already open.
+
+### Fix
+The quiz tab waits for its first question with its own 20 s limit after `goto` (opening a cold context), then each
+question as before. No app change, no assertion loosened.
+
+### Regression test
+The test itself; `--repeat-each` runs pass before and after, so the failure is not proven gone, only the cold-start
+wait widened. If it recurs, the trace (`E2E_TRACE=1`) of that run is the next step.
+
+### Commit
+fix(frontend): let the focus e2e quiz tab finish opening before the first question

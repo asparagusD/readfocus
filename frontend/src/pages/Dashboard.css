@@ -282,3 +282,21 @@
   30% { transform: scale(0.94, 1.06); }
   60% { transform: scale(1.04, 0.97); }
 }
+
+/* C23.7c: the focus card's two figures side by side; the label under the figure, as in the stats band. */
+.rf-dash__focus {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0 0 var(--space-3);
+}
+
+.rf-dash__focus div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-1);
+}
+
+.rf-dash__focus .rf-dash__figure {
+  font-size: var(--text-h2);
+}

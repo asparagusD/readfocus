@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fromBook } from '../bookFile';
+import { closePdf } from './close';
 import { createPageCache } from './pageCache';
 import { loadPdfjs, openPdf, releasePage, renderPage } from './pdfjs';
 
@@ -17,13 +18,13 @@ export function usePdfDocument(bookId, load = fromBook) {
       .then(openPdf)
       .then((opened) => {
         doc = opened;
-        if (gone) return opened.destroy();
+        if (gone) return closePdf(opened);
         setResult({ bookId, load, status: 'ready', doc: opened, numPages: opened.numPages, error: null });
       })
       .catch((error) => !gone && setResult({ bookId, load, status: 'error', doc: null, numPages: 0, error }));
     return () => {
       gone = true;
-      doc?.destroy();
+      closePdf(doc);
     };
   }, [bookId, load]);
   // A result for an earlier book (or source) means this one is still loading.

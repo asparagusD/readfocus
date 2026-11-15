@@ -58,6 +58,13 @@
       "handler": "list_annotations"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/body-start",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/body-start",
+      "handler": "get_body_start"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/file",
       "type": "endpoint",
       "method": "GET",
@@ -287,6 +294,13 @@
       "method": "POST",
       "path": "/steve/latex",
       "handler": "equation_latex"
+    },
+    {
+      "id": "endpoint:PUT /books/{book_id}/body-start",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/books/{book_id}/body-start",
+      "handler": "put_body_start"
     },
     {
       "id": "endpoint:PUT /sessions/{session_id}/position",
@@ -901,6 +915,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/body_start.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/book_ingestor.py",
       "type": "file",
       "role": "service",
@@ -1183,6 +1203,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_api_body_start.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_api_books_list.py",
       "type": "file",
       "role": "test",
@@ -1243,6 +1269,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_body_start.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_backfill_book_files.py",
       "type": "file",
       "role": "test",
@@ -1280,6 +1312,12 @@
     },
     {
       "id": "file:backend/tests/test_block_paths.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_body_start.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1844,6 +1882,12 @@
     },
     {
       "id": "file:frontend/e2e/annotations.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/body-start.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2594,6 +2638,24 @@
     },
     {
       "id": "file:frontend/src/deploy/deployEnv.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/bodyStart.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/bodyStart.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/focus/useBodyStart.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -3949,6 +4011,12 @@
       "language": "markdown"
     },
     {
+      "id": "file:scripts/backfill_body_start.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/backfill_book_files.py",
       "type": "file",
       "role": "script",
@@ -4327,6 +4395,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/028_body_start.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -4652,6 +4726,11 @@
       "to": "table:profiles"
     },
     {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/028_body_start.sql",
+      "to": "table:books"
+    },
+    {
       "type": "calls_endpoint",
       "from": "file:frontend/src/annotations/useAnnotations.js",
       "to": "endpoint:DELETE /annotations/{annotation_id}"
@@ -4680,6 +4759,16 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
       "to": "endpoint:GET /mastery"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useBodyStart.js",
+      "to": "endpoint:GET /books/{book_id}/body-start"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/focus/useBodyStart.js",
+      "to": "endpoint:PUT /books/{book_id}/body-start"
     },
     {
       "type": "calls_endpoint",
@@ -5071,6 +5160,11 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:GET /books/{book_id}/body-start"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:GET /books/{book_id}/file"
     },
     {
@@ -5107,6 +5201,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
       "to": "endpoint:POST /books/{book_id}/resume"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:PUT /books/{book_id}/body-start"
     },
     {
       "type": "defines_endpoint",
@@ -6027,6 +6126,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/services/book_ingestor.py"
     },
     {
@@ -6233,6 +6337,11 @@
       "type": "imports",
       "from": "file:backend/services/anchor_checks.py",
       "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/body_start.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",
@@ -6651,6 +6760,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_api_body_start.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_body_start.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_body_start.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_body_start.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_api_books_list.py",
       "to": "file:backend/dependencies.py"
     },
@@ -6856,6 +6985,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_backfill_body_start.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_body_start.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_body_start.py",
+      "to": "file:scripts/backfill_body_start.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_backfill_book_files.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -6963,6 +7107,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_block_paths.py",
       "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_body_start.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_body_start.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -8056,6 +8210,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/body-start.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/calibration.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -8693,6 +8852,21 @@
       "type": "imports",
       "from": "file:frontend/src/deploy/deployEnv.test.js",
       "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/bodyStart.js",
+      "to": "file:frontend/src/originalview/today.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/bodyStart.test.js",
+      "to": "file:frontend/src/focus/bodyStart.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/focus/useBodyStart.js",
+      "to": "file:frontend/src/lib/api.js"
     },
     {
       "type": "imports",
@@ -9822,6 +9996,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/bodyStart.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/focus/useBodyStart.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
     },
     {
@@ -10088,6 +10272,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/ContentsDrawer.jsx",
       "to": "file:frontend/src/annotations/roving.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/focus/bodyStart.js"
     },
     {
       "type": "imports",
@@ -10538,6 +10727,21 @@
       "type": "imports",
       "from": "file:frontend/vite.config.js",
       "to": "file:frontend/src/deploy/deployEnv.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "file:scripts/backfill_structure.py"
     },
     {
       "type": "imports",
@@ -11201,6 +11405,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/body_start.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/body_start.py",
+      "to": "table:page_regions"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/book_ingestor.py",
       "to": "table:books"
     },
@@ -11278,6 +11492,11 @@
       "type": "reads_table",
       "from": "file:backend/steve/threads.py",
       "to": "table:steve_threads"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "table:books"
     },
     {
       "type": "reads_table",
@@ -11628,6 +11847,11 @@
       "type": "writes_table",
       "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "table:question_bank"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_body_start.py",
+      "to": "table:books"
     },
     {
       "type": "writes_table",

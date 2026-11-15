@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 810,
-    "inventoried": 667,
+    "tracked": 820,
+    "inventoried": 677,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15229,
+      "size_bytes": 15281,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -249,8 +249,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 370,
-      "size_bytes": 15375,
+      "lines": 389,
+      "size_bytes": 16869,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
     },
@@ -553,10 +553,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 354,
-      "size_bytes": 18166,
+      "lines": 405,
+      "size_bytes": 21068,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages)."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -637,6 +637,14 @@
       "size_bytes": 3483,
       "role": "service",
       "purpose": "Anchor checks shared by annotations and note blocks (ANCHORS A1/A2/A4): one kind, one anchor per page or spine item in reading order, text or none, whole-number positions whose page/spine and PDF line parts agree with the anchors; spine_of_range for range CFIs."
+    },
+    {
+      "path": "backend/services/body_start.py",
+      "language": "python",
+      "lines": 175,
+      "size_bytes": 9211,
+      "role": "service",
+      "purpose": "Where a book's body (chapter 1) begins, for focus mode (C23.1, FOCUS_RULES F2): the outline's chapter-1 or Part-I entry (its page from chunks.anchors when the outline came from text headings), else its first non-front-matter entry; then a chapter heading among a page's regions, contents pages skipped; then the first page after the contents with 300 words of prose. Returns {kind, page | spine_index, title, anchor}."
     },
     {
       "path": "backend/services/book_ingestor.py",
@@ -1015,6 +1023,14 @@
       "purpose": "Pytest: the labelled answer fixtures have every field, unique ids, every category and type, scores inside their category's band, key terms taken from the evidence, and truly empty and copied answers."
     },
     {
+      "path": "backend/tests/test_api_body_start.py",
+      "language": "python",
+      "lines": 99,
+      "size_bytes": 4947,
+      "role": "test",
+      "purpose": "Pytest for GET/PUT /books/{id}/body-start: detected once and stored, region headings for a PDF without an outline, nothing found not stored, the reader's choice wins, EPUB spine indexes, bad places refused, another reader's book 404."
+    },
+    {
       "path": "backend/tests/test_api_books_list.py",
       "language": "python",
       "lines": 68,
@@ -1095,6 +1111,14 @@
       "purpose": "Pytest on a fake table: the backfill embeds only rows with no local embedding, is idempotent and resumable, writes nothing on --dry-run, can be limited to one book, and refuses to run outside development."
     },
     {
+      "path": "backend/tests/test_backfill_body_start.py",
+      "language": "python",
+      "lines": 53,
+      "size_bytes": 2558,
+      "role": "test",
+      "purpose": "Pytest for scripts/backfill_body_start.py: ready books with no body start, the reader's own choice kept, a dry run writes nothing."
+    },
+    {
       "path": "backend/tests/test_backfill_book_files.py",
       "language": "python",
       "lines": 65,
@@ -1149,6 +1173,14 @@
       "size_bytes": 4375,
       "role": "test",
       "purpose": "Pytest on the reader fixture books (C17.6): every EPUB block's spine index and element path in block_paths, a CFI to its block, contents from the EPUB nav and the PDF outline with their chunks and blocks, the chapter contents without an outline, migration 017 additive, ingestion storing block_paths."
+    },
+    {
+      "path": "backend/tests/test_body_start.py",
+      "language": "python",
+      "lines": 186,
+      "size_bytes": 10552,
+      "role": "test",
+      "purpose": "Pytest for body start detection: EPUB nav and PDF outline, chapter-one spellings and near misses, Part I with a chapter after it, bare Introduction, unnumbered novels, region headings with contents pages and numbered lists skipped, the prose fallback, outlines with chunk pages only, cases from the project's own books."
     },
     {
       "path": "backend/tests/test_book_files.py",
@@ -1385,8 +1417,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 719,
-      "size_bytes": 32691,
+      "lines": 738,
+      "size_bytes": 33713,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -1834,7 +1866,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5200,
-      "size_bytes": 903513,
+      "size_bytes": 908430,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -1903,6 +1935,14 @@
       "purpose": "E2E for C21 end to end: PDF and EPUB highlights through zoom, a resize, a text-size change and a reload; the Annotations tab's order, snippets, pages, colour filter and jump; the chip's Ask Steve (mocked) with lookup off and the word card with it on; delete; the empty states."
     },
     {
+      "path": "frontend/e2e/body-start.spec.js",
+      "language": "javascript",
+      "lines": 92,
+      "size_bytes": 4737,
+      "role": "config",
+      "purpose": "E2E for the body start (C23.1): the front-matter note in the folio line on a PDF and an EPUB and gone past it, 'The book starts here' sends the page or section shown, a failed lookup shows nothing, the start entry marked, 44 px on a phone."
+    },
+    {
       "path": "frontend/e2e/calibration.spec.js",
       "language": "javascript",
       "lines": 60,
@@ -1937,10 +1977,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 363,
-      "size_bytes": 22566,
+      "lines": 374,
+      "size_bytes": 23270,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6)."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail)."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -2901,6 +2941,30 @@
       "size_bytes": 3303,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): a complete env passes, missing and malformed variables are named, a secret or service-role key is refused, VITE_SITE_URL only warns, only Vercel builds are checked; vercel.json builds into dist and rewrites app routes but not /assets/ to index.html."
+    },
+    {
+      "path": "frontend/src/focus/bodyStart.js",
+      "language": "javascript",
+      "lines": 41,
+      "size_bytes": 1740,
+      "role": "asset",
+      "purpose": "The body start on the reader's side (C23.1): whether the pages shown are before it, its label (the entry title or Chapter 1), whether a contents entry is it, and the PUT body for 'The book starts here'."
+    },
+    {
+      "path": "frontend/src/focus/bodyStart.test.js",
+      "language": "javascript",
+      "lines": 47,
+      "size_bytes": 2504,
+      "role": "asset",
+      "purpose": "Unit tests for focus/bodyStart.js: PDF spreads and EPUB sections before the start, unknown starts lock nothing, labels, the start entry, the chosen page or section."
+    },
+    {
+      "path": "frontend/src/focus/useBodyStart.js",
+      "language": "javascript",
+      "lines": 27,
+      "size_bytes": 1163,
+      "role": "asset",
+      "purpose": "React hook (C23.1): GET /books/{id}/body-start once the reading session is known (a failure leaves it unknown) and choose() for the reader's PUT."
     },
     {
       "path": "frontend/src/gallery/BookGallery.jsx",
@@ -3889,10 +3953,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 570,
-      "size_bytes": 28059,
+      "lines": 593,
+      "size_bytes": 29360,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4)."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme, and the session's countdown with start/pause, Done reading and abandon); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's reason as a note over that first page and the closing 'That's today's reading' page with Start test past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8); timing and the leave Modal as before (C13.4). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -4001,18 +4065,18 @@
     {
       "path": "frontend/src/reader/ContentsDrawer.css",
       "language": "css",
-      "lines": 187,
-      "size_bytes": 6025,
+      "lines": 228,
+      "size_bytes": 7135,
       "role": "asset",
       "purpose": "Contents drawer styles: a surface panel with a lift shadow, the bottom-sheet variant, Playfair heading, 44 px chapter rows in Lora, the current one on the accent wash, the 'today' label."
     },
     {
       "path": "frontend/src/reader/ContentsDrawer.jsx",
       "language": "jsx",
-      "lines": 151,
-      "size_bytes": 7427,
+      "lines": 170,
+      "size_bytes": 8632,
       "role": "asset",
-      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform."
+      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform. C23.1: the body-start entry labelled 'focus starts'; a footer saying where focus mode starts (printed page) with 'The book starts here'."
     },
     {
       "path": "frontend/src/reader/PhraseChip.jsx",
@@ -4703,6 +4767,14 @@
       "purpose": "The C18 technical test shelf as fetched: file, title, author, what each book tests, licence, source URL, the page the licence was checked on, size and sha256 (the books themselves are git-ignored)."
     },
     {
+      "path": "scripts/backfill_body_start.py",
+      "language": "python",
+      "lines": 81,
+      "size_bytes": 3742,
+      "role": "script",
+      "purpose": "Stores books.body_start for ready books that have none (C23.1), with the same detection as the API; --dry-run reads every ready book and writes nothing; a write needs ENV=development or --allow-non-dev with approval and a dump."
+    },
+    {
       "path": "scripts/backfill_book_files.py",
       "language": "python",
       "lines": 87,
@@ -5207,6 +5279,14 @@
       "purpose": "Migration 027 (C22.1, additive): note_blocks (anchors jsonb list, scope selection/view, position_start/end float8, kind text/drawing/equation/code/figure, content jsonb capped at 256 KB, thumbnail_path, annotation_id and region_id set null on delete, orphaned, version for If-Match, timestamps, deleted_at for soft delete), index (user_id, book_id, position_start), RLS with an owner SELECT policy only; a private notes bucket (256 KB, WebP/PNG) with an owner-folder policy like books."
     },
     {
+      "path": "supabase/migrations/028_body_start.sql",
+      "language": "sql",
+      "lines": 19,
+      "size_bytes": 1189,
+      "role": "migration",
+      "purpose": "Adds books.body_start (jsonb object) and books.body_start_source (outline, heading, prose or user), both nullable (C23.1)."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -5281,8 +5361,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 669,
-      "size_bytes": 200980,
+      "lines": 679,
+      "size_bytes": 204258,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

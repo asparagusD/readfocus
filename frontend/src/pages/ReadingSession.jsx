@@ -32,6 +32,8 @@ import { chapterOf } from '../notes/place';
 import { shownRange } from '../notes/sync';
 import { NotesContext } from '../notes/NotesContext';
 import { answerDoc, quoteDoc } from '../notes/fromBook';
+import { useBodyStart } from '../focus/useBodyStart';
+import { beforeBody, chosenStart, startLabel } from '../focus/bodyStart';
 import './ReadingSession.css';
 
 // One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
@@ -117,6 +119,7 @@ export function ReadingSession() {
   // C19.4: scanned pages get a text layer read by OCR in this browser. A fully scanned book with no chunks
   // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
   const pagesOnly = Boolean(sessionData?.pages_only);
+  const body = useBodyStart(bookId, Boolean(sessionData) && !pagesOnly); // C23.1: where focus mode starts
   const opened = Boolean(sessionData);
   const ocr = useMemo(() => (kind === 'pdf' && opened ? createOcrSource(fetchApi, bookId, {
     ahead: pagesOnly, skipFor: async (page) => { await regions?.load(page); return regions?.boxesOf(page) ?? []; },
@@ -199,6 +202,8 @@ export function ReadingSession() {
     setEntries((reader.current?.toc() ?? []).map((entry, i) => ({ ...entry, key: `${i}-${entry.title}`, today: today(entry.loc) })));
     // C21.5: each annotation's page, read from the book as the drawer opens (the counted EPUB pages can change).
     setAnnotationPages(new Map(notes.annotations.map((a) => [a.id, reader.current?.pageLabel(a) ?? ''])));
+    const anchor = body.bodyStart?.anchor; // C23.1: the start's printed page, as the folio names pages
+    setStartPage(anchor ? reader.current?.pageLabel({ anchors: [anchor] }) ?? '' : '');
     setContentsOpen((open) => !open);
   };
   const onPickAnnotation = useCallback((annotation) => {
@@ -210,6 +215,21 @@ export function ReadingSession() {
     setContentsOpen(false);
     reader.current?.goTo(entry.target);
   }, []);
+  // C23.1: "The book starts here": the page or section shown becomes the body start (the reader's choice wins).
+  const { choose } = body;
+  const [startPage, setStartPage] = useState('');
+  const startHere = useCallback(async () => {
+    const chosen = chosenStart(place, chapter);
+    if (!chosen) return;
+    try {
+      await choose(chosen);
+      const shown = folioShort(place.folio);
+      setStartPage(shown);
+      toast({ kind: 'neutral', message: `Focus mode now starts at ${shown || 'this page'}.` });
+    } catch (err) {
+      toast({ kind: 'warning', message: `The start wasn't changed: ${err.message}` });
+    }
+  }, [place, chapter, choose, toast]);
   const backToToday = () => reader.current?.goTo(todayAnchor.current ?? bounds?.start);
   const closeSide = useCallback(() => setSide(null), []);
   const toggleSide = (tab, button) => {
@@ -504,7 +524,7 @@ export function ReadingSession() {
           opening={!bounds}
           note={note}
           closing={closing}
-          status={outside ? "Beyond today's reading" : null}
+          status={outside ? "Beyond today's reading" : beforeBody(place, body.bodyStart) ? `Focus mode starts at ${startLabel(body.bodyStart)}` : null}
           label={outside ? `${bookTitle}: beyond today's reading, it does not count toward today's session` : `Today's reading from ${bookTitle}`}
           lookupClient={lookupClient}
           hoverLookup={hoverLookup}
@@ -556,6 +576,9 @@ export function ReadingSession() {
         annotations={pagesOnly ? null : notes.annotations}
         pageOf={(a) => annotationPages.get(a.id) ?? ''}
         onPickAnnotation={onPickAnnotation}
+        bodyStart={body.bodyStart}
+        startPage={startPage}
+        onStartHere={pagesOnly ? null : startHere}
       />
 
       <Modal isOpen={showAbandonModal} onClose={() => setShowAbandonModal(false)} title="Leave today's reading?">

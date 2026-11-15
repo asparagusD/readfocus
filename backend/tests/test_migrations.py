@@ -717,3 +717,22 @@ def test_027_adds_a_private_notes_bucket_with_owner_folders_like_books():
     assert ('CREATE POLICY "Readers access their own note files" ON storage.objects FOR ALL USING '
             "( bucket_id = 'notes' AND auth.uid()::text = (string_to_array(name, '/'))[1] )") in sql
     assert sql.count("CREATE POLICY") == 2
+
+
+# --- 028: body start (C23.1) ------------------------------------------------------------------------------
+
+def migration_028() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "028_body_start.sql"))
+
+
+def test_028_adds_two_nullable_columns_to_books_and_nothing_else():
+    from backend.agents import policy
+    sql = migration_028()
+    assert re.findall(r"ALTER TABLE public\.(\w+) ADD COLUMN IF NOT EXISTS (\w+)", sql) == [
+        ("books", "body_start"), ("books", "body_start_source")]
+    assert ("ADD COLUMN IF NOT EXISTS body_start jsonb CHECK (body_start IS NULL OR jsonb_typeof(body_start) = 'object')"
+            in sql)
+    sources = ", ".join(f"'{s}'" for s in policy.BODY_START_SOURCES)
+    assert f"ADD COLUMN IF NOT EXISTS body_start_source text CHECK (body_start_source IN ({sources}))" in sql
+    assert "NOT NULL" not in sql and "DEFAULT" not in sql  # existing rows keep null until detected or backfilled
+    assert not re.search(r"\bUPDATE\b|\bINSERT\b|\bPOLICY\b", sql)

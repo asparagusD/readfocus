@@ -368,3 +368,22 @@ NOTE_FILE_TYPES = ("image/webp", "image/png")
 NOTE_FILE_URL_SECONDS = 3_600
 # Note blocks one list request returns, in reading order.
 NOTES_LIST_MAX = 2_000
+
+# --- Body start (C23.1, docs/FOCUS_RULES.md F2) ------------------------------------------------------------
+# How books.body_start was found (028 checks the same values): the outline, a heading in the region map, the
+# first page after the contents with enough prose, or the reader's own choice (which always wins).
+BODY_START_SOURCES = ("outline", "heading", "prose", "user")
+# Outline entries that are front matter, never the body (matched at the start of the title, lower case).
+BODY_START_FRONT_MATTER = (
+    "cover", "title", "half title", "halftitle", "frontispiece", "copyright", "imprint", "contents",
+    "table of contents", "dedication", "epigraph", "foreword", "preface", "acknowledgments", "acknowledgements",
+    "about the author", "about the authors", "list of figures", "list of tables", "list of illustrations",
+    "illustrations", "abbreviations", "praise", "also by", "other books by", "introduction", "note on the text",
+    "a note on", "how to use this book", "maps",
+)
+BODY_START_MIN_PROSE_WORDS = 300  # (3) a page or EPUB section with at least this much prose
+BODY_START_HEADING_MAX_CHARS = 80  # a region's first line longer than this is not a heading
+BODY_START_HEADING_TOP = 3  # a numbered heading ("1 Springs") is among the first regions of its page
+BODY_START_CONTENTS_LINES = 3  # a page with this many chapter-like lines is a contents page
+BODY_START_SCAN_UNITS = 80  # (2) and (3) look at the first pages or EPUB sections only
+BODY_START_TITLE_MAX = 200

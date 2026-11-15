@@ -6,11 +6,12 @@ from datetime import UTC, datetime
 from typing import Any, Literal, cast
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
+from pydantic import BaseModel, ConfigDict, Field
 from pypdf import PdfReader
 from backend.agents import policy
 from backend.convert.epub_builder import build_epub
 from backend.convert.sources import FORMATS as CONVERTED, convert_upload
-from backend.services import book_ingestor
+from backend.services import body_start, book_ingestor
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 from backend.dependencies import get_current_user
@@ -287,6 +288,56 @@ async def get_region_at(book_id: str, spine_index: int = Query(ge=0, le=100_000)
     if found is None:
         raise HTTPException(status_code=404, detail="Region not found")
     return region_detail(cast(dict[str, Any], found))
+
+
+BODY_START_FIELDS = "id, file_type, page_count, toc, body_start, body_start_source"
+
+
+def _book_for_body_start(book_id: str, user_id: str) -> dict:
+    rows = supabase.table("books").select(BODY_START_FIELDS).eq("id", book_id).eq("user_id", user_id).execute().data
+    if not rows:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return cast(dict[str, Any], rows[0])
+
+
+@router.get("/{book_id}/body-start")
+async def get_body_start(book_id: str, user_id: str = Depends(get_current_user)):
+    """Where the caller's book's body (chapter 1) begins, for focus mode (C23.1, FOCUS_RULES F2): the stored one,
+    else detected now and stored unless the reader chose one meanwhile. {source: None, body_start: None} when
+    nothing points at it."""
+    book = await run_in_threadpool(_book_for_body_start, book_id, user_id)
+    if book.get("body_start"):
+        return {"source": book.get("body_start_source"), "body_start": book["body_start"]}
+    found = await run_in_threadpool(body_start.for_book, supabase, book)
+    if not found:
+        return {"source": None, "body_start": None}
+    await run_in_threadpool(supabase.table("books").update({"body_start": found["body_start"], "body_start_source": found[
+        "source"]}).eq("id", book_id).eq("user_id", user_id).is_("body_start", "null").execute)
+    return found
+
+
+class BodyStartRequest(BaseModel):
+    """The reader's own body start ("The book starts here"): a PDF page or an EPUB spine index, and its title."""
+    model_config = ConfigDict(extra="forbid")
+    page: int | None = Field(default=None, ge=1, le=100_000)
+    spine_index: int | None = Field(default=None, ge=0, le=100_000)
+    title: str | None = Field(default=None, max_length=policy.BODY_START_TITLE_MAX)
+
+
+@router.put("/{book_id}/body-start")
+async def put_body_start(book_id: str, req: BodyStartRequest, user_id: str = Depends(get_current_user)):
+    """Set the body start by hand (source user); detection never overwrites it."""
+    book = await run_in_threadpool(_book_for_body_start, book_id, user_id)
+    pdf = str(book.get("file_type") or "").lower() == "pdf"
+    unit = req.page if pdf else req.spine_index
+    if unit is None or (req.spine_index if pdf else req.page) is not None:
+        raise HTTPException(status_code=422, detail="A PDF's start is a page; an EPUB's is a section (spine_index).")
+    if pdf and book.get("page_count") and unit > book["page_count"]:
+        raise HTTPException(status_code=422, detail="That page is not in this book.")
+    found = {"source": "user", "body_start": body_start.place("pdf" if pdf else "epub", unit, req.title)}
+    await run_in_threadpool(supabase.table("books").update({"body_start": found["body_start"], "body_start_source": "user"})
+                            .eq("id", book_id).eq("user_id", user_id).execute)
+    return found
 
 
 JOB_FIELDS = ("status", "progress", "cursor", "attempts", "error", "updated_at")

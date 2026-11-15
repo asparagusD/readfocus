@@ -5,6 +5,7 @@ import { easing, seconds } from '../motion/presets';
 import { COLOURS, colourName } from '../annotations/palette';
 import { listed, snippetOf } from '../annotations/list';
 import { rove } from '../annotations/roving';
+import { isStartEntry, startLabel } from '../focus/bodyStart';
 import './ContentsDrawer.css';
 
 const narrow = () => typeof window !== 'undefined' && window.matchMedia('(width < 640px)').matches;
@@ -18,8 +19,11 @@ const narrow = () => typeof window !== 'undefined' && window.matchMedia('(width 
  * button or a click outside closes it, and focus returns to `returnTo`.
  * C21.5: an Annotations tab beside Contents: the reader's highlights and underlines in reading order, each with
  * its colour, snippet and page (`pageOf(annotation)`), a colour filter, and a jump to the passage (`onPickAnnotation`).
+ * C23.1: the entry where the book's body starts (`bodyStart`) is labelled "focus starts", and with `onStartHere`
+ * a footer says where focus mode starts (at `startPage`, its printed page) and offers "The book starts here" (the page shown becomes the start).
  */
-export function ContentsDrawer({ open, onClose, entries, current, onPick, returnTo, annotations = null, pageOf, onPickAnnotation }) {
+export function ContentsDrawer({ open, onClose, entries, current, onPick, returnTo, annotations = null, pageOf, onPickAnnotation,
+  bodyStart = null, startPage = '', onStartHere = null }) {
   const panel = useRef(null);
   const [tab, setTab] = useState('contents');
   const [colour, setColour] = useState(null);
@@ -84,12 +88,14 @@ export function ContentsDrawer({ open, onClose, entries, current, onPick, return
               aria-labelledby={annotations ? 'rf-tab-contents' : undefined}>
             {entries.length ? (
               <ol className="rf-contents-list">
-                {entries.map((entry) => {
+                {entries.map((entry, n) => {
                   const here = entry.title === current;
+                  const starts = isStartEntry(entry, bodyStart) && entries.findIndex((e) => isStartEntry(e, bodyStart)) === n;
                   return (
                     <li key={entry.key}>
                       <button type="button" className="rf-contents-item" aria-current={here ? 'true' : undefined} onClick={() => onPick(entry)}>
                         <span className="rf-contents-name">{entry.title}</span>
+                        {starts && <span className="rf-contents-start">focus starts</span>}
                         {entry.today && <span className="rf-contents-today">today</span>}
                       </button>
                     </li>
@@ -98,6 +104,19 @@ export function ContentsDrawer({ open, onClose, entries, current, onPick, return
               </ol>
             ) : (
               <p className="rf-contents-empty">This book has no chapters we could find. Its pages are still all here.</p>
+            )}
+            {onStartHere && (
+              <div className="rf-contents-foot">
+                {bodyStart && (
+                  <p className="rf-contents-note" id="rf-body-start-note">
+                    Focus mode starts at {startLabel(bodyStart)}{startPage ? `, ${startPage}` : ''}.
+                  </p>
+                )}
+                <button type="button" className="rf-contents-action" onClick={onStartHere}
+                  aria-describedby={bodyStart ? 'rf-body-start-note' : undefined}>
+                  The book starts here
+                </button>
+              </div>
             )}
             </div>
           ) : (

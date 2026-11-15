@@ -111,6 +111,16 @@ async function mockBackend(page, api, book) {
       return json(route, { scanned_pages: scanned, done: [...api.ocr.keys()], ...(pages ? { pages } : {}) });
     }
     if (path === `/books/${BOOK}/status`) return json(route, { status: 'processing', total_chunks: 0 });
+    if (path === `/books/${BOOK}/body-start`) { // C23.1: none unless a test sets api.bodyStart; a PUT is the reader's
+      if (api.bodyStartFail) return json(route, { detail: 'down' }, 503);
+      if (request.method() === 'PUT') {
+        const body = JSON.parse(request.postData() || '{}');
+        api.bodyStartPuts.push(body);
+        const start = body.page ? { kind: 'pdf', page: body.page } : { kind: 'epub', spine_index: body.spine_index };
+        api.bodyStart = { source: 'user', body_start: { ...start, title: body.title ?? null } };
+      }
+      return json(route, api.bodyStart ?? { source: null, body_start: null });
+    }
     if (path === '/lookup') {
       const term = url.searchParams.get('term');
       api.lookups.push({ term, proper: url.searchParams.get('proper') === '1' });
@@ -248,7 +258,8 @@ export const test = base.extend({
     const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
-      notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [] };
+      notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
+      bodyStart: null, bodyStartPuts: [], bodyStartFail: false };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

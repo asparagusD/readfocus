@@ -64,6 +64,10 @@ export async function mockBackend(page, api, book) {
     if (path === '/auth/profile') return json(route, { id: 'e2e-reader', is_calibrated: true, wpm: 240 });
     if (path === '/books' && request.method() === 'GET') return json(route, []);
     if (path === '/dashboard') return json(route, { book_progress: [], score_over_time: [], reading_streak: 0, words_this_week: 0, recent_feedback: [] });
+    if (path === '/me/progress' && request.method() === 'GET') { // C24.6a: the header's progress (a test may set api.progress)
+      api.progressReads += 1;
+      return api.progress ? json(route, api.progress) : json(route, { detail: 'down' }, 503);
+    }
     if (path === '/sessions/start') {
       api.starts += 1;
       if (BOOKS[book].pagesOnly) { // C19.4: a fully scanned book with no chunks opens pages-only
@@ -242,6 +246,14 @@ export async function mockBackend(page, api, book) {
   });
 }
 
+/** C24.6a: GET /me/progress for a reader part way through a week (GAMIFICATION; C24.5's shape). */
+export const PROGRESS = {
+  total_xp: 1240, daily_goal: 50, timezone: 'UTC', display_name: null, leaderboard_opt_out: false,
+  today: { day: '2026-11-18', xp: 30, goal: 50, met: false },
+  streak: { days: 7, freezes: 1, frozen_days: [] }, tier: 'Hardcover',
+  badges: [{ id: 'first_focus', name: 'First focus session', awarded_at: '2026-11-10T20:00:00+00:00' }],
+};
+
 /** C23.6b: the focus quiz the fake server builds: three questions, the first multiple choice. */
 const FOCUS_QUIZ = [
   { question: 'What did the lamp throw?\n(a) A shadow  (b) A small circle of light  (c) A spark', type: 'factual',
@@ -327,7 +339,8 @@ export const test = base.extend({
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
       bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
-      focus: { session: null, active: 0, calls: [], events: [] } };
+      focus: { session: null, active: 0, calls: [], events: [] },
+      progress: structuredClone(PROGRESS), progressReads: 0 };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));

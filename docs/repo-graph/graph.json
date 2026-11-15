@@ -2309,6 +2309,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/gamification-header.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/gate-g5.spec.js",
       "type": "file",
       "role": "config",
@@ -3147,6 +3153,36 @@
       "type": "file",
       "role": "asset",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gamification/HeaderProgress.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/gamification/HeaderProgress.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/gamification/progressMath.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/gamification/progressMath.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/gamification/useProgress.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/hooks/useAuth.jsx",
@@ -5322,6 +5358,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/focus/useFocusSession.js",
       "to": "endpoint:POST /focus/{session_id}/event"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/gamification/useProgress.js",
+      "to": "endpoint:GET /me/progress"
     },
     {
       "type": "calls_endpoint",
@@ -9568,6 +9609,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/gamification-header.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/gate-g5.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -9985,6 +10031,16 @@
       "type": "imports",
       "from": "file:frontend/src/components/Layout.jsx",
       "to": "file:frontend/src/components/ThemeToggle.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/gamification/HeaderProgress.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/gamification/useProgress.js"
     },
     {
       "type": "imports",
@@ -10445,6 +10501,31 @@
       "type": "imports",
       "from": "file:frontend/src/gallery/main.jsx",
       "to": "file:frontend/src/motion/MotionRoot.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/HeaderProgress.jsx",
+      "to": "file:frontend/src/gamification/HeaderProgress.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/HeaderProgress.jsx",
+      "to": "file:frontend/src/gamification/progressMath.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/HeaderProgress.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/progressMath.test.js",
+      "to": "file:frontend/src/gamification/progressMath.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/useProgress.js",
+      "to": "file:frontend/src/lib/api.js"
     },
     {
       "type": "imports",

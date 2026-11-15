@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 882,
-    "inventoried": 739,
+    "tracked": 888,
+    "inventoried": 745,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16194,
+      "size_bytes": 16248,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2153,8 +2153,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5490,
-      "size_bytes": 989899,
+      "lines": 5492,
+      "size_bytes": 996834,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2265,10 +2265,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 442,
-      "size_bytes": 27934,
+      "lines": 455,
+      "size_bytes": 28720,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null)."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -2341,6 +2341,14 @@
       "size_bytes": 11913,
       "role": "config",
       "purpose": "E2E of focus mode with Playwright's fake clock on the mocked API (C23.8): locked before Chapter 1, start on the spread at Chapter 1 (start anchor p. 3), heartbeats, a page turn, a hidden tab sending nothing, the bookmark and a 5-question quiz (taken in a fresh context on the real clock) with 80% showing time and bonus; a 31-minute stall beating with input and no turn, its extra minute listed; under 40% with no points; two tabs, the second read-only until the first's lease lapses. The numbers are the engine's, tested in test_focus_anticheat.py."
+    },
+    {
+      "path": "frontend/e2e/gamification-header.spec.js",
+      "language": "javascript",
+      "lines": 81,
+      "size_bytes": 4588,
+      "role": "config",
+      "purpose": "Playwright (C24.6a): the header progress's name, level, drops and bar, keyboard to the Dashboard, a new reader's encouragement, the once-a-day celebration, reduced motion, a failed read, 375 px in both themes."
     },
     {
       "path": "frontend/e2e/gate-g5.spec.js",
@@ -2905,10 +2913,10 @@
     {
       "path": "frontend/src/components/Layout.jsx",
       "language": "jsx",
-      "lines": 44,
-      "size_bytes": 1646,
+      "lines": 48,
+      "size_bytes": 2003,
       "role": "component",
-      "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target."
+      "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target. C24.6a: the reader's progress (candle, goal ring, level) before the theme toggle, fetched only when signed in."
     },
     {
       "path": "frontend/src/components/RouteErrorBoundary.jsx",
@@ -3461,6 +3469,46 @@
       "size_bytes": 462,
       "role": "asset",
       "purpose": "Entry for the dev-only gallery: global styles, MotionRoot, ToastProvider, Gallery."
+    },
+    {
+      "path": "frontend/src/gamification/HeaderProgress.css",
+      "language": "css",
+      "lines": 162,
+      "size_bytes": 2964,
+      "role": "asset",
+      "purpose": "Styles for the header progress (C24.6a): candle, drops, ring, halo, level bar; phones show the candle and ring only; the flicker stops under reduced motion."
+    },
+    {
+      "path": "frontend/src/gamification/HeaderProgress.jsx",
+      "language": "jsx",
+      "lines": 78,
+      "size_bytes": 3769,
+      "role": "asset",
+      "purpose": "Header progress (C24.6a): one 44 px link to the Dashboard with the streak candle (flame grows with the streak, freezes as wax drops), today's goal ring and, from 640 px, 'Level n' with a slim XP bar; a once-a-day goal-met halo and polite status, still under reduced motion."
+    },
+    {
+      "path": "frontend/src/gamification/progressMath.js",
+      "language": "javascript",
+      "lines": 44,
+      "size_bytes": 1982,
+      "role": "asset",
+      "purpose": "Pure progress helpers (C24.6a): levels (250 x n XP per level, display only), shares, the candle flame's scale by streak length, the header's one-sentence label (encouraging, no loss words), the per-day celebration key."
+    },
+    {
+      "path": "frontend/src/gamification/progressMath.test.js",
+      "language": "javascript",
+      "lines": 47,
+      "size_bytes": 2254,
+      "role": "asset",
+      "purpose": "Unit tests for progressMath (C24.6a): level edges, share clamping, the flame's growth, label wording with a loss-word guard, the celebration key."
+    },
+    {
+      "path": "frontend/src/gamification/useProgress.js",
+      "language": "javascript",
+      "lines": 18,
+      "size_bytes": 793,
+      "role": "asset",
+      "purpose": "Hook (C24.6a): GET /me/progress once for a signed-in reader; null until it arrives or if it fails."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
@@ -5857,8 +5905,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 741,
-      "size_bytes": 229288,
+      "lines": 747,
+      "size_bytes": 230879,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

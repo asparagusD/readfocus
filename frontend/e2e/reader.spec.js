@@ -371,3 +371,16 @@ test.describe('anchors across re-layout', () => {
     expect(api.position.anchor).toEqual({ kind: 'pdf', page: Number(place.start), quads: [[0, 0, 0, 0]], text: '' });
   });
 });
+
+// DEBUG_LOG 2026-11-15 C23.6b: leaving the reader threw "n?.destroy is not a function" (PDF.js 6 documents
+// have no destroy of their own) and the error boundary replaced the next page.
+test('leaving a PDF for the library shows the library, with no page error', async ({ page }) => {
+  const errors = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  await openReader(page);
+  await page.getByRole('button', { name: 'Back to the library' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.waitForTimeout(500);
+  expect(errors.filter((e) => /destroy|failed to render/.test(e))).toEqual([]);
+  await expect(page.getByText('A page failed to render')).toHaveCount(0);
+});

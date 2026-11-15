@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 840,
-    "inventoried": 697,
+    "tracked": 842,
+    "inventoried": 699,
     "excluded": 143
   },
   "files": [
@@ -90,7 +90,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 15390,
+      "size_bytes": 15408,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1897,8 +1897,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4075,
-      "size_bytes": 177829,
+      "lines": 4109,
+      "size_bytes": 179645,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2249,8 +2249,8 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 373,
-      "size_bytes": 19880,
+      "lines": 386,
+      "size_bytes": 20603,
       "role": "config",
       "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books."
     },
@@ -3879,6 +3879,22 @@
       "purpose": "One PDF page (C17.2): the cached canvas plus PDF.js's TextLayer over it, sized from the viewport (--total-scale-factor), labelled for screen readers; onShown fires once both are on screen. C17.4: a side for spreads. C17.6: data-page and data-scale (CSS px per point) for anchors."
     },
     {
+      "path": "frontend/src/originalview/pdf/close.js",
+      "language": "javascript",
+      "lines": 9,
+      "size_bytes": 398,
+      "role": "asset",
+      "purpose": "Closes an open PDF.js document: its own destroy() when it has one, else its loading task's (PDF.js 6); used by usePdfDocument (DEBUG_LOG 2026-11-15 C23.6b)."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/close.test.js",
+      "language": "javascript",
+      "lines": 18,
+      "size_bytes": 757,
+      "role": "asset",
+      "purpose": "Unit tests for closePdf: a PDF.js 6 document through its loading task, an older one by destroy(), nothing open."
+    },
+    {
       "path": "frontend/src/originalview/pdf/ocr.js",
       "language": "javascript",
       "lines": 160,
@@ -3961,8 +3977,8 @@
     {
       "path": "frontend/src/originalview/pdf/usePdfDocument.js",
       "language": "javascript",
-      "lines": 51,
-      "size_bytes": 2448,
+      "lines": 52,
+      "size_bytes": 2483,
       "role": "asset",
       "purpose": "React hooks (C17.2): usePdfDocument(bookId, load) opens the book's PDF (loading PDF.js while the source is fetched) and destroys it on unmount; usePageCache(doc, scale, current) keeps current ±2 pages rendered and starts afresh on a new scale or pixel ratio. C17.4: the page cache starts afresh on new lamplight colours."
     },
@@ -5521,8 +5537,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 699,
-      "size_bytes": 211249,
+      "lines": 701,
+      "size_bytes": 211617,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

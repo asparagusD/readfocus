@@ -4073,3 +4073,37 @@ length and starts past its section's start.
 
 ### Commit
 `fix(notes): EPUB block notes keep their own characters` (C22.6)
+
+## 2026-11-15 C23.6b — leaving the reader broke the next page ("n?.destroy is not a function")
+
+### Symptom
+Writing C23.6b's e2e spec, the quiz page showed "A page failed to render" after the reader opened it. The
+console: `TypeError: n?.destroy is not a function` at `ReadingSession-*.js`, in `usePdfDocument`'s cleanup.
+
+### Repro
+Open a PDF in the reader, press Back to the library: the same error, and the error boundary's page in place
+of the library. Also at `2b34a89` (C23.6a) with no C23.6b change: the defect is older than this chunk.
+
+### Hypotheses
+1. Something new in C23.6b returns a non-function from an effect. Ruled out: the stack points into
+   `usePdfDocument`, and the library button fails without any C23.6b code.
+2. `doc.destroy` does not exist on the document `openPdf` returns. Confirmed: PDF.js 6.4.299 (since C17.2,
+   `ce8ef01`) moved `destroy()` from `PDFDocumentProxy` to its loading task (`node_modules/pdfjs-dist/build/
+   pdf.mjs`: the proxy has `_destroy()` and `loadingTask`, no `destroy`).
+
+### Root cause
+`usePdfDocument` closed documents with `doc?.destroy()`, which PDF.js 6 documents do not have, so every PDF
+reader unmount threw during React's commit and the error boundary replaced the next page. No test left the
+reader after a PDF had loaded.
+
+### Fix
+`originalview/pdf/close.js` `closePdf(doc)`: the document's own `destroy()` when it has one, else
+`doc.loadingTask.destroy()`; `usePdfDocument` uses it for both closes.
+
+### Regression test
+`close.test.js` (2): a PDF.js 6 document closes through its loading task; an older one by `destroy()`;
+nothing open is fine. `e2e/reader.spec.js`: leaving a PDF for the library shows the library with no page
+error. Both failed before the fix.
+
+### Commit
+`fix(pdf): close PDF.js 6 documents through their loading task` (C23.6b)

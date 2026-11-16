@@ -4822,3 +4822,37 @@ own `[data-test-next]` (as `focus-end.spec.js` does).
 
 ### Commit
 test(e2e): phase-2 journey and cross-user isolation
+
+## 2026-11-17 C25.3 — GET /books/{id}/regions returns id null for every region
+
+**Status:** fixed
+
+### Symptom
+Found writing the phase-2 isolation check: on the real database every region from
+`GET /books/{id}/regions` has `"id": null`. `frontend/src/originalview/pdf/regions.js` (`regionsOf`, `regionAt`)
+keeps only regions with an id, so on real data the PDF block actions (Explain this equation, code or figure; Add
+to notes from a PDF region) find no region to attach to.
+
+### Repro
+`backend/tests/test_api_regions.py` with the in-memory database returning only the selected columns, as
+PostgREST does (`MemoryDb.project_columns`): the region ids come back null.
+
+### Hypotheses
+1. The handler's select leaves out `id`: `select("page, kind, bbox, order_in_page, meta")` while the response
+   reads `row.get("id")`. Evidence: `backend/routers/books.py` get_regions. The offline test passed because
+   `MemoryDb` ignored the column list and returned whole rows. Result: confirmed by the repro.
+
+### Root cause
+`backend/routers/books.py` get_regions selected `page, kind, bbox, order_in_page, meta` from `page_regions` and
+then returned `row.get("id")`, which PostgREST never sent.
+
+### Fix
+The select names `id` too. `backend/tests/memory_db.py` gains `project_columns` (off by default): on, a select
+returns only the columns it names, as PostgREST does.
+
+### Regression test
+`backend/tests/test_api_regions.py::test_region_ids_come_back_from_the_columns_the_database_returns`: failed with
+the old select (ids null), passes with `id` selected.
+
+### Commit
+fix(api): return region ids from GET /books/{id}/regions

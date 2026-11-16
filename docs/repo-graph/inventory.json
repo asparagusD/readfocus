@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 221,
-      "size_bytes": 16853,
+      "size_bytes": 16890,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -618,9 +618,9 @@
       "path": "backend/routers/books.py",
       "language": "python",
       "lines": 430,
-      "size_bytes": 22298,
+      "size_bytes": 22302,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -1073,10 +1073,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 173,
-      "size_bytes": 6526,
+      "lines": 178,
+      "size_bytes": 6988,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1)."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1); project_columns (C25.G, off by default) returns only the selected columns, as PostgREST does."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -1185,10 +1185,10 @@
     {
       "path": "backend/tests/test_api_regions.py",
       "language": "python",
-      "lines": 95,
-      "size_bytes": 5114,
+      "lines": 102,
+      "size_bytes": 5641,
       "role": "test",
-      "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused."
+      "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused; C25.G: region ids come back when the database returns only the selected columns."
     },
     {
       "path": "backend/tests/test_api_sessions.py",
@@ -2105,8 +2105,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4824,
-      "size_bytes": 217458,
+      "lines": 4858,
+      "size_bytes": 219076,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2169,8 +2169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5742,
-      "size_bytes": 1043244,
+      "lines": 5743,
+      "size_bytes": 1044468,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6146,7 +6146,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 777,
-      "size_bytes": 243181,
+      "size_bytes": 243451,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

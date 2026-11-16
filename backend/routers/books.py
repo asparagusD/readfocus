@@ -230,7 +230,7 @@ async def get_regions(book_id: str, first: int = Query(ge=1), last: int = Query(
     owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
     if not owned.data:
         raise HTTPException(status_code=404, detail="Book not found")
-    rows = (supabase.table("page_regions").select("page, kind, bbox, order_in_page, meta").eq("book_id", book_id)
+    rows = (supabase.table("page_regions").select("id, page, kind, bbox, order_in_page, meta").eq("book_id", book_id)
             .gte("page", first).lte("page", last).execute().data or [])
     out = []
     for row in sorted(rows, key=lambda r: (r["page"], r["order_in_page"])):

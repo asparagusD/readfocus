@@ -121,6 +121,10 @@ class Query:
             matched = matched[self.window[0]: self.window[1] + 1]
         if self.max_rows is not None:
             matched = matched[: self.max_rows]
+        if kind == "select" and self.db.project_columns and self.columns.strip() != "*":
+            # As PostgREST: only the columns asked for (plain names; "*", joins and aliases are not modelled).
+            names = [c.strip() for c in self.columns.split(",") if c.strip()]
+            matched = [{name: r.get(name) for name in names} for r in matched]
         return SimpleNamespace(data=_copy(matched))
 
 
@@ -162,6 +166,7 @@ class MemoryDb:
     def __init__(self):
         self.tables, self.calls, self.broken, self.files = {}, [], set(), {}
         self.selects, self.delay = [], 0.0  # (table, columns, window or limit) per select; seconds per call
+        self.project_columns = False  # C25.3: True returns only the selected columns, as PostgREST does
         self._ids = 0
         self.storage = SimpleNamespace(from_=lambda bucket: Bucket(self, bucket))
 

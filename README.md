@@ -186,7 +186,7 @@ Google). ruff and ESLint still report 27 and 3 errors in older code; CI
 fails a push that raises either count. The current numbers are in
 [CLAUDE.md](CLAUDE.md).
 
-Three live checks use real test users against a real backend and write to
+Five live checks use real test users against a real backend and write to
 the Supabase project, so they are run by hand, never in CI:
 
 ```bash
@@ -201,12 +201,25 @@ npm --prefix frontend run test:isolation
 npm --prefix frontend run test:xp-isolation
 ```
 
+```bash
+npm --prefix frontend run test:live:phase2
+```
+
+```bash
+npm --prefix frontend run test:phase2-isolation
+```
+
 `test:live` is the full reading journey in a browser (sign in, upload,
 read, look up a word, test, results, dashboard, next plan); `test:isolation`
 checks with two users that neither can read or change the other's data
 through the API or Supabase; `test:xp-isolation` does the same for XP,
 badges, progress and leagues (rows seeded for user A with the service key).
-Each deletes what it creates. Grader agreement
+`test:live:phase2` is the phase-2 journey (a math PDF's equations against
+PDFium, an illustrated EPUB's images, a highlight, Steve (mocked in the
+browser unless `STEVE_LIVE=1`), notes, focus mode, its quiz, points, XP,
+streak and league); `test:phase2-isolation` checks highlights, notes and
+their pictures, focus sessions, Steve threads, XP and equation LaTeX across
+two users. Each deletes what it creates. Grader agreement
 with the labelled answers: `python scripts/eval_grader.py`.
 
 ## Limitations

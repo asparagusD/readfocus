@@ -2445,6 +2445,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/phase2_journey.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/privacy.spec.js",
       "type": "file",
       "role": "config",
@@ -2571,6 +2577,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/playwright.phase2.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/public/robots.txt",
       "type": "file",
       "role": "config",
@@ -2608,6 +2620,12 @@
     },
     {
       "id": "file:frontend/scripts/live/check-isolation.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/live/check-phase2-isolation.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -5744,6 +5762,12 @@
       "from": "file:design/handoff/foundations-style-guide/Main.dc.html",
       "to": "external:google_fonts",
       "line": 13
+    },
+    {
+      "type": "calls_external",
+      "from": "file:frontend/e2e/phase2_journey.spec.js",
+      "to": "external:supabase",
+      "line": 23
     },
     {
       "type": "calls_external",
@@ -9980,6 +10004,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/phase2_journey.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/privacy.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10057,6 +10086,11 @@
       "type": "imports",
       "from": "file:frontend/playwright.gate.config.js",
       "to": "file:frontend/playwright.config.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/playwright.phase2.config.js",
+      "to": "file:frontend/playwright.live.config.js"
     },
     {
       "type": "imports",

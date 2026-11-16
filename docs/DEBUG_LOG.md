@@ -4731,3 +4731,94 @@ A second full run on the same tree: 320 of 320 passed.
 ### Next step
 On the next failure keep `test-results/` and read the assertion; if both entries recur, look at the suite's worker
 count and fixed waits together.
+
+## 2026-11-17 C25.3 — the live phase-2 journey drew 2 of 45 EPUB images
+
+**Status:** fixed (in the spec; the reader was right)
+
+### Symptom
+First local run of `npm --prefix frontend run test:live:phase2` (approved 2026-11-17, "Yes, run both"):
+
+    Error: every packaged image drawn
+    Expected: 45
+    Received: 2
+      at e2e/phase2_journey.spec.js:223
+
+Steps before it passed: both books ingested with their region maps (229.8 s), equation pages 9 and 10 match PDFium.
+
+### Repro
+The same run; the EPUB walk stops on its first `.rf-end`.
+
+### Hypotheses
+1. The walk takes the closing page after today's reading for the book's end. Evidence: the walk is Gate G5's,
+   which ran offline with a mocked session spanning the whole book (`today: [0]`, text no book holds); a live
+   session is a few passages, so `.rf-end` comes after the first section, and `reader.spec.js` "the closing page
+   lets the reader read on" shows ArrowRight continues past it. Result: confirmed by reading; 2 images is the
+   first section's.
+
+### Root cause
+`frontend/e2e/phase2_journey.spec.js` broke out of the page walk as soon as `.rf-end` was shown.
+
+### Fix
+The walk keeps pressing ArrowRight past the closing page and stops only when two presses in a row change neither
+the place nor the closing page (the book's own end).
+
+### Regression test
+The spec itself, re-run live. Attempt 1 (read on past the closing page): 42 of 45, the first five sections
+never seen. Attempt 2 (wait for images, three still presses, per-section log): 42 of 45 again, and the log showed
+why: the walk began at section 5 (the reader opens at today's reading, after the front matter) and reached the
+last section (19:2120), every image it saw loaded. Attempt 3 (walk back to the first page, `0:`, before
+counting): 20 of 20 sections, 45 of 45 images, per section the same as expected.
+
+### Commit
+test(e2e): phase-2 journey and cross-user isolation
+
+## 2026-11-17 C25.3 — the live journey could not click Focus mode
+
+**Status:** fixed (in the spec)
+
+### Symptom
+Fourth local run, after the EPUB fix: `locator.click: Timeout 60000ms exceeded` on
+`getByRole('switch', { name: 'Focus mode' })`; `<div class="rf-reading-chrome"> intercepts pointer events`.
+
+### Root cause
+`frontend/src/reader/useChromeVisible.js`: the reading toolbar fades after 2.6 s without mouse movement, and keys
+that turn pages do not wake it (as designed). The spec reached the body start by keyboard, then clicked.
+
+### Fix
+The spec moves the mouse before reaching for the toolbar or the focus bar (`wake()`), as a reader does.
+
+### Commit
+test(e2e): phase-2 journey and cross-user isolation
+
+## 2026-11-17 C25.3 — the live journey's focus quiz scored 0 of 3 with the right answers
+
+**Status:** fixed (in the spec; the app was right)
+
+### Symptom
+Fifth local run: every step through the quiz passed, then `points earned (quiz passed)`: expected > 0, received 0.
+
+### Repro
+Two diagnostic runs. The first printed the session: `active_seconds` 150 (heartbeats every 30 s, five page turns),
+`quiz_correct` 0 of 3, and a test result whose question 1 had been graded 10 of 10 while the quiz was open. The
+second printed the submit request: answers `["<question 3's answer>", "", ""]` against the stored
+`["HTML-friendly SVG", "Steven Wittens", "<question 3's answer>"]`; graded 0, "No answer was given", "No answer".
+
+### Hypotheses
+1. Every answer was written into the first question's box: the spec's `Question N` navigator click matched a
+   control but did not move the quiz. Evidence: the submitted list above (the last answer written, in slot 1).
+   Result: confirmed.
+2. Submit grading disagrees with the per-question grade. Ruled out by the same list: the server graded what it
+   was sent.
+
+### Root cause
+`frontend/e2e/phase2_journey.spec.js` moved between questions with
+`getByRole('button', { name: /^Question N(,|$)/ })`, copied from the C15 journey; on the focus quiz it did not
+change the question shown.
+
+### Fix
+The spec answers one question at a time, checks "Question i of N" is showing first, and moves on with the quiz's
+own `[data-test-next]` (as `focus-end.spec.js` does).
+
+### Commit
+test(e2e): phase-2 journey and cross-user isolation

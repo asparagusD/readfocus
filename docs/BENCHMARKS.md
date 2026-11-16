@@ -68,6 +68,68 @@ prints them; one run each, so no percentiles.
 | Run time, including A's upload, session and cleanup | 30-31 s | 66 s |
 | Rows and PDF left afterwards | none | none |
 
+## Phase 2 deployment check (C25.2, 2026-11-16 to 2026-11-17)
+
+The production image built from `ff0936c` (`docker build -t readfocus-c25 .`, the repo `Dockerfile`) with
+`psutil==7.2.2` added for measuring (`readfocus-c25-measure`). Every run: Linux container, repo mounted read-only,
+`--network none`, `--memory=512m --memory-swap=512m`, and `--cpus=0.1` unless said otherwise:
+
+    docker run --rm --network none --memory=512m --memory-swap=512m --cpus=0.1 -v <repo>:/repo:ro -w /repo -e PYTHONPATH=/repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e EMBED_PRELOAD=0 -e INGEST_SWEEP=0 readfocus-c25-measure python scripts/dev/measure_phase2.py --book <file> [--steve once|loop|none]
+
+`scripts/dev/measure_phase2.py`: `import backend.main` and the model, then the book through the real pipeline
+(`book_ingestor.run_job`: ingest, regions job, prose rebuild) on `MemoryDb`, as Gate G5's harness does, RSS
+sampled every 0.2 s per phase, and the cgroup's `memory.peak` at the end. Steve answers through the real
+`backend/steve/provider.py` and Google's Gen AI SDK, streamed, with 36,000 characters of context (the 12,000-token
+cap), from a fake Gemini endpoint on 127.0.0.1 (nothing reaches Google). `--steve once` (the default): one
+request as the prose rebuild starts, the phase with the highest peak.
+
+| | Value |
+|---|---|
+| Image size (`docker images`) | 964 MB (885 MB at C14.1, 916 MB at C18.G) |
+| Idle: app imported and model loaded | 302-309 MiB |
+| After Steve's first call (the SDK loaded) | +11 MiB |
+
+After the fix below (onnxruntime's memory arena off), `--steve once`:
+
+| Book | CPU | Seconds | Peak: ingest | Peak: regions | Peak: prose | Peak RSS | Container peak (cgroup) | Killed |
+|---|---|---|---|---|---|---|---|---|
+| SICP (883 pages, the largest shelf book under the 50 MB upload limit) | 0.1 | 2,589 | 417.7 | 423.9 | 451.6 | **451.6 MiB** | **395.1 MiB** | no |
+| SICP | no cap | 261 | 410.9 | 426.4 | 448.7 | 448.7 MiB | 392.6 MiB | no |
+| `sample.pdf` (13 pages) | 0.1 | 122 | 363.9 | 348.3 | 372.6 | 372.6 MiB | 315.9 MiB | no |
+
+Accepted at C25.2 (your choice, 2026-11-17: "Accept and commit"): SICP is 1.6 MiB over the C25 plan's 450 MiB
+RSS line and 117 MiB under 512 by the container's own count. Without Steve, after the fix, a probe of the prose
+rebuild (no CPU cap) put its peak in `prose_job.plan` (the whole book's regions and text at once: 436.5 MiB);
+its batch loop stays at about 431. Cutting further means planning in page windows (not done).
+
+Before the fix (`ff0936c`), with Steve asking non-stop through the ingest (`--steve loop`, 2,864 calls at 0.1
+CPU: six times the free tier's daily requests on our key, each with a new SDK client): SICP 3,247 s, peaks
+451.2 / 447.8 / 481.8 MiB, container 428.7 MiB, not killed; `sample.pdf` 403.3 MiB (container 375.3). No CPU
+cap, SICP: 478.0 MiB with the loop, 475.1 with no Steve, 472.2 with `MALLOC_ARENA_MAX=2` (so neither Steve nor
+glibc's arenas explain the peak). After the fix, the same loop at 0.1 CPU: 495.6 MiB (container 440.5), not
+killed; the loop's peaks move about +/-15 MiB with timing.
+
+Where idle goes (one process in the image, RSS after each import in order): Python 15.3, numpy +14.4, httpx
++11.1, fastapi +13.9, supabase +12.1, pypdf +12.5, pdfplumber +4.0, pypdfium2 +6.0, bs4 +5.1, yake +11.0,
+fastembed +35.9, mcp +14.4, the agent graph +25.5, the rest of `backend.main` +6.2: 193.8 MiB; the model
++135.2: 329.0. The server never imports mcp (only `backend/mcp_server.py` does): `import backend.main` alone is
+144.0 MiB, before fastembed and the model. Nearly all of the rest is needed while ingesting, so deferring imports
+would lower idle, not the peak.
+
+The fix, onnxruntime's CPU memory arena (`backend/nlp/embedder.py` `SESSION_OPTIONS`), measured alone in the
+image at 512 MB: the model loaded, then 600-word passages embedded in batches of 1, 16, 64, 16 and 1:
+
+| Arena | Idle | Peak | After | Seconds |
+|---|---|---|---|---|
+| on (before) | 221.1 MiB | 553.3 MiB | 552.1 MiB | 39.1 |
+| off (C25.2) | 220.9 MiB | 319.9 MiB | 119.0 MiB | 17.2 |
+
+Bundle (`npm run build`, then `npm run check:bundle`, from the build's own chunk stats): the initial route (the
+entry and its 10 static imports) is 180.4 KB of JavaScript gzipped (vendor 122.5, index 39.0, react 13.6, the
+rest under 1.5 each), budget 200 KB. Lazy only: pdfjs-dist 2 chunks, 128.3 KB; foliate-js (vendored) 13 chunks,
+41.8 KB; Excalidraw 65 chunks, 1,500.0 KB; TipTap 1 chunk, 127.8 KB; tesseract.js 1 chunk, 7.3 KB (its worker,
+core and model are served from `/ocr/` on first use). 237 JS chunks.
+
 ## Machine
 
 | | |

@@ -1,24 +1,24 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 911,
-    "inventoried": 768,
+    "tracked": 915,
+    "inventoried": 772,
     "excluded": 143
   },
   "files": [
     {
       "path": ".claude/skills/atomic-commit/SKILL.md",
       "language": "markdown",
-      "lines": 190,
-      "size_bytes": 6080,
+      "lines": 191,
+      "size_bytes": 6119,
       "role": "doc",
       "purpose": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes."
     },
     {
       "path": ".claude/skills/debug-protocol/SKILL.md",
       "language": "markdown",
-      "lines": 204,
-      "size_bytes": 6420,
+      "lines": 205,
+      "size_bytes": 6459,
       "role": "doc",
       "purpose": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template."
     },
@@ -73,10 +73,10 @@
     {
       "path": ".github/workflows/ci.yml",
       "language": "yaml",
-      "lines": 162,
-      "size_bytes": 5865,
+      "lines": 208,
+      "size_bytes": 7736,
       "role": "config",
-      "purpose": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit."
+      "purpose": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit; C25.2: a Gemini SDK step (tools/check_gemini_sdk.py), the bundle budget check after the build, and an e2e job (the whole offline Playwright suite on Microsoft Edge, traces kept on failure) that deploy-render now also waits for."
     },
     {
       "path": ".github/workflows/league-rollover.yml",
@@ -97,8 +97,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 219,
-      "size_bytes": 16542,
+      "lines": 221,
+      "size_bytes": 16853,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -121,8 +121,8 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 253,
-      "size_bytes": 12480,
+      "lines": 254,
+      "size_bytes": 12519,
       "role": "doc",
       "purpose": "Product overview (C15.4, phase 2 in C25.1): the honest positioning (algorithmic quizzes, grading, planning and scoring on our servers; Steve alone uses Google's Gemini, opt-in, free tier or the reader's key), live URL, how it works in nine steps (upload and conversion, plan, the original view, focus, Steve, test, grade, adapt, progress), the architecture in brief, local setup, the standard and live checks, and limitations."
     },
@@ -497,10 +497,10 @@
     {
       "path": "backend/nlp/embedder.py",
       "language": "python",
-      "lines": 130,
-      "size_bytes": 4561,
+      "lines": 135,
+      "size_bytes": 4996,
       "role": "lib",
-      "purpose": "Local embeddings: one thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE), preloaded and warmed on a daemon thread at startup unless EMBED_PRELOAD=0, or loaded on first use; a ready event that requests wait on and /health reports, and the load error if any; embed and embed_one return unit-length float32 vectors."
+      "purpose": "Local embeddings: one thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE), preloaded and warmed on a daemon thread at startup unless EMBED_PRELOAD=0, or loaded on first use; a ready event that requests wait on and /health reports, and the load error if any; embed and embed_one return unit-length float32 vectors; C25.2: the model is built with onnxruntime's CPU memory arena off (SESSION_OPTIONS), so a large batch's memory goes back."
     },
     {
       "path": "backend/nlp/text.py",
@@ -1409,16 +1409,16 @@
     {
       "path": "backend/tests/test_deploy_config.py",
       "language": "python",
-      "lines": 89,
-      "size_bytes": 3357,
+      "lines": 92,
+      "size_bytes": 3818,
       "role": "test",
       "purpose": "Pytest, C14.1: the Dockerfile is python:3.11-slim, bakes the model through the app's embedder before going offline, binds ${PORT:-8000} with one worker; .dockerignore is an allowlist; render.yaml is a free Docker service with /health, auto-deploy off, secrets unset and no AI key; /health exists."
     },
     {
       "path": "backend/tests/test_embedder.py",
       "language": "python",
-      "lines": 216,
-      "size_bytes": 7314,
+      "lines": 227,
+      "size_bytes": 7847,
       "role": "test",
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
@@ -1633,8 +1633,8 @@
     {
       "path": "backend/tests/test_no_paid_ai.py",
       "language": "python",
-      "lines": 128,
-      "size_bytes": 5297,
+      "lines": 136,
+      "size_bytes": 5644,
       "role": "test",
       "purpose": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
     },
@@ -2097,10 +2097,10 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1591,
-      "size_bytes": 89767,
+      "lines": 1653,
+      "size_bytes": 94367,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
+      "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
     {
       "path": "docs/DEBUG_LOG.md",
@@ -2121,8 +2121,8 @@
     {
       "path": "docs/DEPLOYMENT.md",
       "language": "markdown",
-      "lines": 230,
-      "size_bytes": 13824,
+      "lines": 235,
+      "size_bytes": 14679,
       "role": "doc",
       "purpose": "Deployment guide (C14.6): where each part runs (Vercel Hobby, Render Free readfocus-api, the shared Supabase Free project), env var names per provider, free-tier limits with doc links, cold start, Supabase pause, manual backups, the release step, redeploy, rollback, verification commands and what was verified."
     },
@@ -2170,7 +2170,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5742,
-      "size_bytes": 1036017,
+      "size_bytes": 1039606,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2193,8 +2193,8 @@
     {
       "path": "frontend/.gitignore",
       "language": "gitignore",
-      "lines": 33,
-      "size_bytes": 517,
+      "lines": 35,
+      "size_bytes": 631,
       "role": "config",
       "purpose": "Vite template ignore rules: logs, node_modules, dist, editor files."
     },
@@ -2657,8 +2657,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 76,
-      "size_bytes": 2458,
+      "lines": 77,
+      "size_bytes": 2511,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
     },
@@ -2693,6 +2693,14 @@
       "size_bytes": 341,
       "role": "config",
       "purpose": "robots.txt (C13.10e): only / (plus its /assets/, og.png and favicon) is open to crawlers; every app route is disallowed."
+    },
+    {
+      "path": "frontend/scripts/check-bundle.mjs",
+      "language": "text",
+      "lines": 72,
+      "size_bytes": 3787,
+      "role": "config",
+      "purpose": "Bundle budgets (C25.2), npm run check:bundle after a build, a standard check and CI step: reads .bundle-stats.json (vite.config.js bundleStats); the initial route (the entry chunk and its static imports) within INITIAL_JS_GZIP_BUDGET gzipped; pdfjs-dist, vendored foliate-js, Excalidraw, TipTap and tesseract.js each bundled and only in chunks loaded on demand."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -3317,6 +3325,14 @@
       "size_bytes": 463,
       "role": "component",
       "purpose": "ToastContext and useToast(), which returns { toast, dismiss } and throws without a ToastProvider."
+    },
+    {
+      "path": "frontend/src/deploy/bundleBudget.test.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 2191,
+      "role": "asset",
+      "purpose": "node --test (C25.2) for scripts/check-bundle.mjs on made-up chunks: the initial route is the entry and its static imports, not its dynamic ones; lazy libraries in lazy chunks pass; a heavy library in the initial route, or in no chunk, fails; over the gzip budget fails."
     },
     {
       "path": "frontend/src/deploy/csp.js",
@@ -5377,10 +5393,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 156,
-      "size_bytes": 6633,
+      "lines": 189,
+      "size_bytes": 8217,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings; pdfjsAssets serves PDF.js's standard fonts, wasm decoders and ICC profiles under /pdfjs/ in dev and copies them into the build (not quickjs-eval or the JS fallbacks); contentSecurityPolicyMeta puts the CSP (src/deploy/csp.js) first in the built page's head (C17.3)."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings; pdfjsAssets serves PDF.js's standard fonts, wasm decoders and ICC profiles under /pdfjs/ in dev and copies them into the build (not quickjs-eval or the JS fallbacks); contentSecurityPolicyMeta puts the CSP (src/deploy/csp.js) first in the built page's head (C17.3); bundleStats (C25.2) writes .bundle-stats.json beside dist (per JS chunk: file, entry or dynamic entry, imports, bytes, packages) for check:bundle, skipping the SSR build."
     },
     {
       "path": "package.json",
@@ -5417,10 +5433,10 @@
     {
       "path": "render.yaml",
       "language": "yaml",
-      "lines": 30,
-      "size_bytes": 1106,
+      "lines": 46,
+      "size_bytes": 1758,
       "role": "config",
-      "purpose": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key."
+      "purpose": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key; C25.2: Steve's three Gemini names, STEVE_DAILY_LIMIT_PER_USER, KEY_ENCRYPTION_SECRET and CRON_SECRET, all sync: false (set in the dashboard)."
     },
     {
       "path": "requirements-dev.txt",
@@ -5613,6 +5629,14 @@
       "size_bytes": 3047,
       "role": "script",
       "purpose": "Measures the embedding model in a fresh process: psutil RSS before and after import, load and batches, model load time, and the latency of a batch of short and of chunk-sized texts."
+    },
+    {
+      "path": "scripts/dev/measure_phase2.py",
+      "language": "python",
+      "lines": 189,
+      "size_bytes": 8644,
+      "role": "script",
+      "purpose": "Phase-2 memory check (C25.2), run in the production image at --memory=512m --cpus=0.1 with --network none: imports backend.main and loads the model, ingests a shelf book through the real pipeline on MemoryDb (gate_g5's harness: ingest, regions job, prose rebuild, RSS peaks per phase) while a thread streams Steve answers through the real provider and Gemini SDK, with a context at the policy cap, from a fake Gemini endpoint on 127.0.0.1; prints idle, after-SDK and peak RSS and the cgroup's memory.peak."
     },
     {
       "path": "scripts/dev/measure_regions.py",
@@ -6023,6 +6047,14 @@
       "purpose": "Package marker for tools."
     },
     {
+      "path": "tools/check_gemini_sdk.py",
+      "language": "python",
+      "lines": 83,
+      "size_bytes": 3557,
+      "role": "script",
+      "purpose": "Repo-wide Gemini SDK guard (C25.2), standard library only, a CI step: every Python file git knows may import google.genai or google.generativeai only in backend/steve/provider.py (tools/no_paid_ai.steve_sdk_allowed); no Google AI package in frontend/package.json and no frontend/src file importing one or naming Gemini's API host. Exit 1 with the offenders."
+    },
+    {
       "path": "tools/make_converted_fixture.py",
       "language": "python",
       "lines": 80,
@@ -6058,7 +6090,7 @@
       "path": "tools/no_paid_ai.py",
       "language": "python",
       "lines": 59,
-      "size_bytes": 3030,
+      "size_bytes": 3031,
       "role": "script",
       "purpose": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
     },
@@ -6089,8 +6121,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 770,
-      "size_bytes": 238712,
+      "lines": 774,
+      "size_bytes": 241178,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

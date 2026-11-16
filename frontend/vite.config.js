@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -121,10 +121,43 @@ function contentSecurityPolicyMeta(env) {
   }
 }
 
+// C25.2: what the bundle check reads (scripts/check-bundle.mjs): per JS chunk its file, whether it is the entry or
+// loaded on demand, its static and dynamic imports, its size and the packages it holds. Written beside dist, not in
+// it, so it is never deployed; the SSR prerender build is skipped.
+const BUNDLE_STATS = join(import.meta.dirname, '.bundle-stats.json')
+/** The package a module comes from ("@tiptap/core", "pdfjs-dist"), "foliate-js (vendored)", or null for our code. */
+const packageOf = (id) => {
+  const path = id.replaceAll('\\', '/')
+  const at = path.lastIndexOf('/node_modules/')
+  if (at >= 0) {
+    const parts = path.slice(at + '/node_modules/'.length).split('/')
+    return parts[0].startsWith('@') ? `${parts[0]}/${parts[1]}` : parts[0]
+  }
+  return path.includes('/vendor/foliate-js/') ? 'foliate-js (vendored)' : null
+}
+
+function bundleStats() {
+  let ssr = false
+  return {
+    name: 'readfocus-bundle-stats',
+    apply: 'build',
+    configResolved(config) { ssr = Boolean(config.build.ssr) },
+    writeBundle(_options, bundle) {
+      if (ssr) return
+      const chunks = Object.values(bundle).filter((c) => c.type === 'chunk').map((c) => ({
+        file: c.fileName, isEntry: c.isEntry, isDynamicEntry: c.isDynamicEntry, imports: c.imports,
+        dynamicImports: c.dynamicImports, bytes: new TextEncoder().encode(c.code).length,
+        packages: [...new Set(Object.keys(c.modules).map(packageOf).filter(Boolean))].sort(),
+      }))
+      writeFileSync(BUNDLE_STATS, JSON.stringify({ chunks }, null, 1))
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [deployEnv(), react(), tailwindcss(), preloadFonts(), pdfjsAssets(), siteUrls(loadEnv(mode, import.meta.dirname, 'VITE_').VITE_SITE_URL),
-    contentSecurityPolicyMeta(loadEnv(mode, import.meta.dirname, 'VITE_'))],
+    contentSecurityPolicyMeta(loadEnv(mode, import.meta.dirname, 'VITE_')), bundleStats()],
   server: {
     proxy: {
       '/api': {

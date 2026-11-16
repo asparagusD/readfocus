@@ -2,7 +2,8 @@
 # (0.1 CPU, 512 MB, spins down after 15 min idle). No payment method needed.
 # Secrets are entered in the Render dashboard (sync: false), never here.
 # Everything but Steve runs in the image. Steve (optional) calls Google Gemini
-# from backend/steve/provider.py; its key is set in the dashboard (C25.2b).
+# from backend/steve/provider.py only; his key and the other phase-2 secrets
+# below are set in the dashboard, never here (C25.2; docs/DEPLOYMENT.md).
 services:
   - type: web
     name: readfocus-backend
@@ -28,3 +29,18 @@ services:
         value: /app/.cache/fastembed
       - key: ENV
         value: production
+      # Phase 2 (C25.2). Steve: Gemini's free tier, no billing account.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL_CHAT
+        sync: false
+      - key: GEMINI_MODEL_VISION
+        sync: false
+      - key: STEVE_DAILY_LIMIT_PER_USER
+        sync: false
+      # Encrypts readers' own Gemini keys (32+ characters; changing it voids stored keys).
+      - key: KEY_ENCRYPTION_SECRET
+        sync: false
+      # Bearer token of POST /internal/leagues/rollover (32+ characters; the same value as GitHub's).
+      - key: CRON_SECRET
+        sync: false

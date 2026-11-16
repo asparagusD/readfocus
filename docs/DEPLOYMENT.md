@@ -46,8 +46,10 @@ Values live only in each provider's settings, never in git.
 | `ENV` | `production`: no localhost origins in CORS |
 | `CRON_SECRET` | 32+ random characters; the bearer token of `POST /internal/leagues/rollover` (C24.4); unset or shorter, the endpoint answers 503 |
 
-`PORT` is set by Render (10000); do not set it. No LLM or embedding key
-of any kind (CLAUDE.md constraint 1).
+`PORT` is set by Render (10000); do not set it. The only generative-AI
+key is Steve's `GEMINI_API_KEY` (free tier, no billing account; CLAUDE.md
+constraint 1); no other LLM or embedding key. Steve's variables are added
+here in C25.2b.
 
 **Vercel (Settings > Environment Variables, Production and Preview, type Config)**
 

@@ -1,7 +1,8 @@
 # Render blueprint for the backend: one Docker web service on the Free plan
 # (0.1 CPU, 512 MB, spins down after 15 min idle). No payment method needed.
 # Secrets are entered in the Render dashboard (sync: false), never here.
-# No LLM or embedding API key: all intelligence runs in the image.
+# Everything but Steve runs in the image. Steve (optional) calls Google Gemini
+# from backend/steve/provider.py; its key is set in the dashboard (C25.2b).
 services:
   - type: web
     name: readfocus-backend

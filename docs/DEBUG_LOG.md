@@ -4635,3 +4635,30 @@ The test itself: `--repeat-each 20`, 40 of 40 passed (EPUB and PDF), twice; befo
 
 ### Commit
 fix(frontend): read the EPUB read-on test's places once each turn has landed
+
+## 2026-11-16 C25.1 — the PDF Lamplight highlight e2e test failed once in a full run (pre-existing)
+
+**Status:** open (intermittent; not reproduced alone)
+
+### Symptom
+C25.1's full `npm --prefix frontend run test:e2e`: 319 passed, 1 failed:
+
+    x 13 e2e\annotations-render.spec.js:69:3 › pdf in lamplight › highlights lighten the recoloured page so the light text keeps its colour (1.9s)
+
+The assertion's message was not kept (the run's `test-results/` was replaced by the repro below).
+
+### Repro
+`npx playwright test e2e/annotations-render.spec.js --repeat-each 5`: 25 of 25 passed, this test 5 of 5. C25.1
+changes no annotation, reader or theme code: `git diff --stat -- frontend/src/annotations frontend/src/originalview
+frontend/src/theme frontend/e2e/annotations-render.spec.js` is empty.
+
+### Hypotheses
+1. Under full-suite load the highlight is read before the Lamplight recolouring or the highlight's style has applied
+   (the test checks `.rf-anno` once it is visible, then reads computed styles without waiting). Not yet tested.
+2. The dark colour scheme reaches the page after the first paint in a busy run. Not yet tested.
+
+A second full run on the same tree: 320 of 320 passed.
+
+### Next step
+On the next failure keep `test-results/` and read the assertion before changing the test.
+Not fixed in C25.1, which does not touch this code.

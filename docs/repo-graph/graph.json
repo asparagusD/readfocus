@@ -2439,6 +2439,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/privacy.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/quiz-me.spec.js",
       "type": "file",
       "role": "config",
@@ -3993,6 +3999,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/pages/Privacy.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/Privacy.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/pages/ReadingSession.css",
       "type": "file",
       "role": "page",
@@ -4051,6 +4069,12 @@
       "type": "file",
       "role": "page",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/claims.test.js",
+      "type": "file",
+      "role": "page",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/pages/landing/demoDefinitions.json",
@@ -9871,6 +9895,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/privacy.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/quiz-me.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11788,6 +11817,16 @@
       "type": "imports",
       "from": "file:frontend/src/pages/NotFound.jsx",
       "to": "file:frontend/src/components/ErrorScreen.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Privacy.jsx",
+      "to": "file:frontend/src/pages/Privacy.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Privacy.jsx",
+      "to": "file:frontend/src/pages/landing/LandingFooter.jsx"
     },
     {
       "type": "imports",

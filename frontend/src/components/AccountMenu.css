@@ -176,8 +176,11 @@
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: var(--text-ui);
+  text-decoration: none;
   cursor: pointer;
 }
+
+.rf-account__signout + .rf-account__signout { margin-top: 0; }
 
 .rf-account__signout:hover {
   background-color: var(--paper-2);

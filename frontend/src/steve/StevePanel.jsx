@@ -40,6 +40,9 @@ function Consent({ notice, onAccept, onLater, onKey }) {
             Google's terms for the free tier<span className="rf-steve-hidden"> (opens in a new tab)</span>
           </a>
         )}
+        <a className="rf-steve-link" href="/privacy" target="_blank" rel="noopener">
+          What ReadFocus keeps and sends<span className="rf-steve-hidden"> (opens in a new tab)</span>
+        </a>
         <div className="rf-steve-row">
           <Button onClick={accept} loading={busy} loadingLabel="Turning on…">Turn on Steve</Button>
           <Button variant="ghost" onClick={onLater}>Not now</Button>

@@ -17,6 +17,7 @@ test('first use: the notice, then Turn on Steve stores consent to that version',
   await expect(panel(page).getByText('Before Steve reads along')).toBeVisible();
   await expect(panel(page).getByText("Steve is a study assistant built on Google's Gemini.")).toBeVisible();
   await expect(panel(page).getByRole('link', { name: /Google's terms for the free tier/ })).toHaveAttribute('href', STEVE_NOTICE.terms_url);
+  await expect(panel(page).getByRole('link', { name: /What ReadFocus keeps and sends/ })).toHaveAttribute('href', '/privacy');
   await expect(page.getByLabel('Your question for Steve')).toBeDisabled();
   if (shots) await page.screenshot({ path: `${shots}/steve-consent-1440.png` });
   await panel(page).getByRole('button', { name: 'Turn on Steve' }).click();

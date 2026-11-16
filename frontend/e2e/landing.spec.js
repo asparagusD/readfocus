@@ -77,7 +77,7 @@ test.describe('hero and how it works', () => {
     const steps = page.locator('#how-it-works li');
     await expect(steps).toHaveCount(4);
     await expect(steps.nth(3)).toBeVisible();
-    await expect(steps.nth(0)).toContainText('Upload a PDF or EPUB');
+    await expect(steps.nth(0)).toContainText('Upload a book');
     await expect(steps.nth(3)).toContainText('Your next session adapts');
   });
 
@@ -163,23 +163,30 @@ test.describe('word-lookup demo', () => {
 test.describe('features, questions and footer', () => {
   test.use({ signedIn: false });
 
-  test('three feature sections and the honesty note are there', async ({ page }) => {
+  test('five feature sections and the honesty note are there, with Steve named as the one generative model', async ({ page }) => {
     await page.goto('/');
-    for (const name of ['Feels like a book', 'Understand every word', 'Reading that adapts', 'What ReadFocus isn’t']) {
+    for (const name of ['Feels like a book', 'Understand every word', 'Reading that adapts', 'Notes and Steve beside the book',
+      'Focus, points and a weekly league', 'What ReadFocus isn’t']) {
       await expect(page.getByRole('heading', { level: 2, name })).toBeAttached();
     }
-    await expect(page.locator('.rf-isnt')).toContainText('No generative AI');
+    await expect(page.locator('#feature-beside').locator('..')).toContainText('may be used to improve Google’s products');
+    await expect(page.locator('.rf-isnt')).not.toContainText('No generative AI');
+    await expect(page.locator('.rf-isnt')).toContainText('only Steve, when you ask him, uses a generative model');
+    await expect(page.locator('.rf-isnt').getByRole('link', { name: 'What we keep and what we send' })).toHaveAttribute('href', '/privacy');
   });
 
   test('questions open and close from the keyboard', async ({ page }) => {
     await page.goto('/');
     const items = page.locator('.rf-faq details');
-    await expect(items).toHaveCount(5);
+    await expect(items).toHaveCount(9);
+    for (const q of ['Is Steve free?', 'What’s sent to Google?', 'Why does Steve sometimes rest?', 'How are points calculated?']) {
+      await expect(page.locator('.rf-faq summary', { hasText: q })).toHaveCount(1);
+    }
     const first = items.first();
     await first.locator('summary').focus();
     await page.keyboard.press('Enter');
     await expect(first).toHaveAttribute('open', '');
-    await expect(first.getByText('PDF and EPUB.')).toBeVisible();
+    await expect(first.getByText(/PDF, EPUB, Markdown .* and Jupyter notebooks/)).toBeVisible();
     await page.keyboard.press('Space');
     await expect(first).not.toHaveAttribute('open', '');
   });
@@ -188,6 +195,7 @@ test.describe('features, questions and footer', () => {
     await page.goto('/');
     const footer = page.getByRole('contentinfo');
     await expect(footer.getByRole('link', { name: 'Source code on GitHub' })).toHaveAttribute('href', 'https://github.com/asparagusD/readfocus');
+    await expect(footer.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
     await expect(footer).toContainText('CC BY-SA 3.0');
     await expect(footer).toContainText('CC BY-SA 4.0');
     await footer.getByRole('radio', { name: 'Lamplight (dark)' }).click();
@@ -217,6 +225,7 @@ test.describe('head, sharing and first paint', () => {
   test('robots.txt opens only "/" and the share image is 1200 x 630 within budget', async ({ page, request }) => {
     const robots = await (await request.get('/robots.txt')).text();
     expect(robots).toContain('Allow: /$');
+    expect(robots).toContain('Allow: /privacy$');
     expect(robots).toContain('Disallow: /');
     const og = await request.get('/og.png');
     expect(og.headers()['content-type']).toBe('image/png');

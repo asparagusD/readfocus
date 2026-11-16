@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 906,
-    "inventoried": 763,
+    "tracked": 910,
+    "inventoried": 767,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16471,
+      "size_bytes": 16505,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -121,10 +121,10 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 213,
-      "size_bytes": 9525,
+      "lines": 253,
+      "size_bytes": 12480,
       "role": "doc",
-      "purpose": "Product overview for 2.0 (C15.4): the honest positioning (policy-driven LangGraph agents, on-device embeddings, rule-based knowledge tracing, no generative AI, $0 API cost), live URL, how it works in seven steps, the architecture in brief with links to docs/ARCHITECTURE.md and the repo graph, local setup, the standard and live checks, and limitations."
+      "purpose": "Product overview (C15.4, phase 2 in C25.1): the honest positioning (algorithmic quizzes, grading, planning and scoring on our servers; Steve alone uses Google's Gemini, opt-in, free tier or the reader's key), live URL, how it works in nine steps (upload and conversion, plan, the original view, focus, Steve, test, grade, adapt, progress), the architecture in brief, local setup, the standard and live checks, and limitations."
     },
     {
       "path": "backend/__init__.py",
@@ -2073,10 +2073,10 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
-      "lines": 322,
-      "size_bytes": 19163,
+      "lines": 464,
+      "size_bytes": 29971,
       "role": "doc",
-      "purpose": "Architecture of 2.0 (C15.4): the system, the five agents' pure decide() contracts (inputs, outputs, what each decides), the LangGraph diagram copied from docs/repo-graph/AGENT_GRAPH.md with its routing conditions, event flows per endpoint, ingestion, the data model by migration, the book reader and the word-lookup path, and the security layers."
+      "purpose": "Architecture (C15.4, phase 2 in C25.1): the system with Gemini for Steve only, the five agents' pure decide() contracts, the LangGraph diagram, event flows per endpoint, ingestion, conversions to EPUB, the region map, the data model through migration 033, the original view (PDF.js, foliate-js, OCR; the book view retired), word lookup, annotations, notes, Steve, focus mode, XP and leagues, and the security layers."
     },
     {
       "path": "docs/ASSETS.md",
@@ -2097,8 +2097,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4637,
-      "size_bytes": 208211,
+      "lines": 4664,
+      "size_bytes": 209568,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2113,8 +2113,8 @@
     {
       "path": "docs/DEPLOYMENT.md",
       "language": "markdown",
-      "lines": 228,
-      "size_bytes": 13699,
+      "lines": 230,
+      "size_bytes": 13824,
       "role": "doc",
       "purpose": "Deployment guide (C14.6): where each part runs (Vercel Hobby, Render Free readfocus-api, the shared Supabase Free project), env var names per provider, free-tier limits with doc links, cold start, Supabase pause, manual backups, the release step, redeploy, rollback, verification commands and what was verified."
     },
@@ -2162,7 +2162,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5741,
-      "size_bytes": 1031372,
+      "size_bytes": 1034694,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2409,8 +2409,8 @@
     {
       "path": "frontend/e2e/landing.spec.js",
       "language": "javascript",
-      "lines": 254,
-      "size_bytes": 12242,
+      "lines": 263,
+      "size_bytes": 13149,
       "role": "config",
       "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset. Demo: hover opens the real card below the word's line and pointer-leave closes it with no lookup sent; Quadi shows the Wikipedia summary and link; Enter focuses the card and Esc returns to the word; a touch long-press opens the compact card. Features: the three sections and the isn't note; the five questions open with Enter and close with Space; the footer links GitHub, credits CC BY-SA sources, switches the theme and Start reading opens Create account."
     },
@@ -2511,6 +2511,14 @@
       "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page."
     },
     {
+      "path": "frontend/e2e/privacy.spec.js",
+      "language": "javascript",
+      "lines": 64,
+      "size_bytes": 3905,
+      "role": "config",
+      "purpose": "Playwright e2e for /privacy (C25.1): the lead statement, its five sections, Google's terms link, no backend request; linked from the landing footer and an answer; 375 and 1440 in Paper and Lamplight with no sideways scroll, a reading measure and the skip link; the account menu's Privacy link when signed in."
+    },
+    {
       "path": "frontend/e2e/quiz-me.spec.js",
       "language": "javascript",
       "lines": 93,
@@ -2577,8 +2585,8 @@
     {
       "path": "frontend/e2e/steve-panel.spec.js",
       "language": "javascript",
-      "lines": 176,
-      "size_bytes": 9916,
+      "lines": 177,
+      "size_bytes": 10043,
       "role": "config",
       "purpose": "E2E for Steve's panel (C20.7b): consent stored to its version, Not now, a streamed answer with KaTeX math, tinted code and a citation chip that moves the book, checked chips only, resting with the own key, errors and Try again, the off switch, keyboard and focus return, side by side at 1440, the sheet at 375, Lamplight with reduced motion."
     },
@@ -2634,7 +2642,7 @@
       "path": "frontend/index.html",
       "language": "html",
       "lines": 59,
-      "size_bytes": 3458,
+      "size_bytes": 3432,
       "role": "entry",
       "purpose": "HTML entry: an inline script applies the stored theme and accent (or the OS scheme) to <html> before first paint; mounts main.jsx. C13.10e: full title, description, theme-color for both schemes, Open Graph and Twitter tags (og.png); the inline script also hides the prerendered landing ([data-prerendered]) off / and when a Supabase session is stored."
     },
@@ -2673,8 +2681,8 @@
     {
       "path": "frontend/public/robots.txt",
       "language": "text",
-      "lines": 9,
-      "size_bytes": 310,
+      "lines": 10,
+      "size_bytes": 341,
       "role": "config",
       "purpose": "robots.txt (C13.10e): only / (plus its /assets/, og.png and favicon) is open to crawlers; every app route is disallowed."
     },
@@ -2745,8 +2753,8 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 142,
-      "size_bytes": 6700,
+      "lines": 145,
+      "size_bytes": 6929,
       "role": "entry",
       "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4). C23.6b: /focus/:sessionId/quiz (FocusQuiz). C23.7b: /quiz/:sessionId (QuizMe). C24.6c: /league (lazy, signed in)."
     },
@@ -2897,16 +2905,16 @@
     {
       "path": "frontend/src/components/AccountMenu.css",
       "language": "css",
-      "lines": 203,
-      "size_bytes": 4422,
+      "lines": 206,
+      "size_bytes": 4511,
       "role": "component",
       "purpose": "Account button and panel styles: 44 px round initials with a field border, a raised surface panel with a lift shadow (full width under 640 px), segmented radio rows on paper-2 with the checked one raised, accent swatches, the theme row only under 640 px, Sign out."
     },
     {
       "path": "frontend/src/components/AccountMenu.jsx",
       "language": "jsx",
-      "lines": 147,
-      "size_bytes": 5406,
+      "lines": 151,
+      "size_bytes": 5655,
       "role": "component",
       "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes; the panel slides down as it opens (pop) and fades out, opacity only under reduced motion."
     },
@@ -4513,8 +4521,8 @@
     {
       "path": "frontend/src/pages/Landing.css",
       "language": "css",
-      "lines": 646,
-      "size_bytes": 17051,
+      "lines": 658,
+      "size_bytes": 17416,
       "role": "page",
       "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero grid and illustration scene, the book spread (pages, spine shade, flyleaf, caption, one page under 640 px), the contents page (numerals, leaders), the word demo (marked words, page, pointer/touch hints), the features, the honesty note, the questions and the colophon (44 px theme toggle), on the project tokens."
     },
@@ -4583,6 +4591,22 @@
       "purpose": "404 page inside Layout: ErrorScreen with \"This page isn't on the shelf.\", Back to your shelf and \"404 · <path>\"."
     },
     {
+      "path": "frontend/src/pages/Privacy.css",
+      "language": "css",
+      "lines": 66,
+      "size_bytes": 2048,
+      "role": "page",
+      "purpose": "Privacy page styles (C25.1): one column at a reading measure with the landing masthead and colophon, underlined running-text links, a smaller title and headings under 640 px."
+    },
+    {
+      "path": "frontend/src/pages/Privacy.jsx",
+      "language": "jsx",
+      "lines": 127,
+      "size_bytes": 7704,
+      "role": "page",
+      "purpose": "Public privacy page at /privacy (C25.1), outside the backend gate: the honest Steve statement, what ReadFocus keeps, what goes to Google and when, other services, who sees what (leagues), and deleting books, notes, highlights, the Gemini key and the account (by request; PRIVACY_CONTACT empty until the owner names an address)."
+    },
+    {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
       "lines": 69,
@@ -4626,31 +4650,31 @@
       "path": "frontend/src/pages/landing/Contents.jsx",
       "language": "jsx",
       "lines": 44,
-      "size_bytes": 2130,
+      "size_bytes": 2187,
       "role": "page",
-      "purpose": "How it works as a book's contents page (C13.10b): four steps with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works."
+      "purpose": "How it works as a book's contents page (C13.10b): four steps (C25.1: any supported book, read as published, focus mode) with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works."
     },
     {
       "path": "frontend/src/pages/landing/Faq.jsx",
       "language": "jsx",
-      "lines": 22,
-      "size_bytes": 1236,
+      "lines": 43,
+      "size_bytes": 3490,
       "role": "page",
-      "purpose": "Landing questions (C13.10d) as native details/summary: which files work, is it free, where definitions come from, why the first load is slow, deleting books; answers checked against the code."
+      "purpose": "Landing questions (C13.10d, C25.1) as native details/summary: which files work, is it free, is Steve free, what is sent to Google, why Steve rests, how points are calculated, where definitions come from, why the first load is slow, deleting books (with links to /privacy); answers checked against the code and the specs."
     },
     {
       "path": "frontend/src/pages/landing/Features.jsx",
       "language": "jsx",
-      "lines": 50,
-      "size_bytes": 2271,
+      "lines": 65,
+      "size_bytes": 3761,
       "role": "page",
-      "purpose": "Landing features (C13.10d): Feels like a book, Understand every word, Reading that adapts as three editorial sections with text and an illustration alternating sides (one plain sentence on rule-based agents and one small embedding model on the server), then the What ReadFocus isn't note."
+      "purpose": "Landing features (C13.10d, C25.1): Feels like a book, Understand every word, Reading that adapts, Notes and Steve beside the book, Focus, points and a weekly league as editorial sections with text and an illustration alternating sides, then the 'What ReadFocus isn't' note naming Steve as the one generative model and linking /privacy."
     },
     {
       "path": "frontend/src/pages/landing/LandingFooter.jsx",
       "language": "jsx",
       "lines": 26,
-      "size_bytes": 1212,
+      "size_bytes": 1248,
       "role": "page",
       "purpose": "Landing colophon (C13.10d): closing line with Start reading, credits for Wiktionary/Free Dictionary, Wikipedia and Project Gutenberg with licences, the GitHub source link (REPO_URL) and the ThemeToggle."
     },
@@ -4661,6 +4685,14 @@
       "size_bytes": 5852,
       "role": "page",
       "purpose": "Landing's Try it section (C13.10c): Meditations Book I.XV with seven marked words (buttons) that open the reader's real WordCard through useWordCard and a bundled client; mouse hover after HOVER_MS, touch long-press (createLongPress), click or tap, Enter opens and focuses, Esc returns focus; polite live announcement; no network calls."
+    },
+    {
+      "path": "frontend/src/pages/landing/claims.test.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 2190,
+      "role": "page",
+      "purpose": "node --test (C25.1): no page, component or index.html claims ReadFocus has no AI; the privacy and landing pages name Steve's use of Gemini and the off switch; no loss or guilt words in the gamification copy or the league page."
     },
     {
       "path": "frontend/src/pages/landing/demoDefinitions.json",
@@ -4993,8 +5025,8 @@
     {
       "path": "frontend/src/steve/StevePanel.jsx",
       "language": "jsx",
-      "lines": 259,
-      "size_bytes": 12343,
+      "lines": 262,
+      "size_bytes": 12544,
       "role": "asset",
       "purpose": "Steve's side panel (C20.7b, handoff screens 13-17): a 380 px column beside the book or a pull-up sheet under 760 px; consent, off, empty with suggestions, the conversation with streaming answers, Stop, citations that move the book, errors, resting with the own-key link, and settings; Esc returns focus to the toolbar."
     },
@@ -5377,8 +5409,8 @@
     {
       "path": "render.yaml",
       "language": "yaml",
-      "lines": 29,
-      "size_bytes": 1018,
+      "lines": 30,
+      "size_bytes": 1106,
       "role": "config",
       "purpose": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key."
     },
@@ -6049,8 +6081,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 765,
-      "size_bytes": 236563,
+      "lines": 769,
+      "size_bytes": 238144,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -17,7 +17,7 @@ export function LandingFooter() {
           the <a href="https://dictionaryapi.dev/">Free Dictionary API</a> (CC BY-SA 3.0) and
           {' '}<a href="https://en.wikipedia.org/">Wikipedia</a> (CC BY-SA 4.0). Sample text: Marcus
           Aurelius, <cite>Meditations</cite>, public domain, from <a href="https://www.gutenberg.org/ebooks/2680">Project Gutenberg</a>.
-          {' '}<a href={REPO_URL}>Source code on GitHub</a>.
+          {' '}<a href={REPO_URL}>Source code on GitHub</a>. <Link to="/privacy">Privacy</Link>.
         </p>
         <ThemeToggle />
       </div>

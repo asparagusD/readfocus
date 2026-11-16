@@ -4662,3 +4662,72 @@ A second full run on the same tree: 320 of 320 passed.
 ### Next step
 On the next failure keep `test-results/` and read the assertion before changing the test.
 Not fixed in C25.1, which does not touch this code.
+
+## 2026-11-16 C25.1 — deleting a book leaves its note pictures in storage
+
+**Status:** fixed
+
+### Symptom
+Found while writing the privacy page (C25.1), not from a failing check. `DELETE /books/{id}`
+(`backend/routers/books.py` `delete_book`) removes the book's original from the `books` bucket and the `books` row
+(the database cascades to `note_blocks`), but every file `POST /books/{id}/note-files` stored at
+`notes/<user>/<book>/<uuid>.<ext>` (equation and figure crops, drawing images and thumbnails) stays in the private
+`notes` bucket with nothing pointing at it. Expected: a deleted book takes its note pictures with it, as the privacy
+page should be able to say.
+
+### Repro
+A test that uploads note files for a book, deletes the book through the API and looks at the bucket:
+
+    pytest backend/tests/test_book_delete.py -q
+
+### Hypotheses
+1. `delete_book` never touches the `notes` bucket; the cascade only reaches rows. Evidence: the handler names only
+   `from_("books")`; `grep -rn 'from_(BUCKET)\|from_("notes")' backend` finds only `notes.py`'s list and upload.
+   Ruled out if: a trigger, storage policy or another job removes the folder. Result: confirmed by reading: no
+   migration, trigger or job removes storage objects, and the repro test fails.
+
+### Root cause
+`backend/routers/books.py` `delete_book` removed only the original from the `books` bucket; the `ON DELETE CASCADE`
+from `books` to `note_blocks` (migration 027) removes rows, never Storage objects, and nothing else ever removed
+the book's folder in the `notes` bucket.
+
+### Fix
+`_remove_note_files(user, book)` lists `notes/<user>/<book>/` a page (`NOTE_FILES_PAGE` = 100) at a time and removes
+each page until the folder is empty, before the row is deleted. The whole folder, not the paths the note rows name,
+so a file uploaded for a note that was never saved goes too. If a remove removes nothing it stops instead of
+listing the same files again. A storage failure is logged (`exc_info`, ids only) and the book is still deleted,
+as the original's removal already was. `memory_db.Bucket` gains `list` and `remove` as supabase-py has them.
+
+### Regression test
+`backend/tests/test_book_delete.py` (5): the book's three note pictures and its original go, another book's and
+another reader's files stay; a folder of 8 removed whole with 2 a page; another reader's book 404 and nothing
+removed; a storage failure logged and the book deleted; a remove that removes nothing listed once, logged, book
+deleted. Before the fix (`git stash push -- backend/routers/books.py`): 4 failed, 1 passed (the 404 case). After:
+5 passed.
+
+### Commit
+fix(api): remove a book's note pictures when the book is deleted
+
+## 2026-11-16 C25.G — the notes editor phone e2e test failed once in a full run (pre-existing)
+
+**Status:** open (intermittent; not reproduced alone)
+
+### Symptom
+The C25.G fix's full `npm --prefix frontend run test:e2e`: 319 passed, 1 failed:
+
+    x 189 e2e
+otes-editor.spec.js:176:3 › phone › the editor in the sheet: 44 px tools, nothing sideways (2.5s)
+
+### Repro
+`npx playwright test e2e/notes-editor.spec.js -g "the editor in the sheet" --repeat-each 10`: 10 of 10 passed. The
+fix changes no notes or editor code (`git diff -- frontend/src/notes frontend/e2e/notes-editor.spec.js` is empty).
+
+### Hypotheses
+1. Like the 2026-11-16 C25.1 entry, a measurement taken before layout settles under full-suite load (the editor
+   sheet's tools are lazy TipTap chunks). Not yet tested.
+
+A second full run on the same tree: 320 of 320 passed.
+
+### Next step
+On the next failure keep `test-results/` and read the assertion; if both entries recur, look at the suite's worker
+count and fixed waits together.

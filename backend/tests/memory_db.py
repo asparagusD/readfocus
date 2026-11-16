@@ -139,6 +139,19 @@ class Bucket:
         self.db.calls.append(("storage", "download"))
         return self.db.files[path]
 
+    def list(self, path=None, options=None):
+        """As supabase-py: the objects directly in folder `path`, by name, `limit` (default 100) from `offset`."""
+        options = options or {}
+        prefix = f"{path.rstrip('/')}/" if path else ""
+        names = sorted(p[len(prefix):] for p in self.db.files if p.startswith(prefix) and "/" not in p[len(prefix):])
+        start = options.get("offset", 0)
+        self.db.calls.append(("storage", "list", self.name, path))
+        return [{"name": n, "id": n} for n in names[start: start + options.get("limit", 100)]]
+
+    def remove(self, paths):
+        self.db.calls.append(("storage", "remove", self.name, tuple(paths)))
+        return [{"name": p} for p in paths if self.db.files.pop(p, None) is not None]
+
     def create_signed_url(self, path, expires_in, options=None):
         self.db.calls.append(("storage", "sign", path, expires_in))
         url = f"https://storage.test/sign/{self.name}/{path}?expires={expires_in}"

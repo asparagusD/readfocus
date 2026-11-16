@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 910,
-    "inventoried": 767,
+    "tracked": 911,
+    "inventoried": 768,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 219,
-      "size_bytes": 16505,
+      "size_bytes": 16542,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -617,10 +617,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 405,
-      "size_bytes": 21068,
+      "lines": 430,
+      "size_bytes": 22298,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages)."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -1073,10 +1073,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 160,
-      "size_bytes": 5763,
+      "lines": 173,
+      "size_bytes": 6526,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1)."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -1317,6 +1317,14 @@
       "size_bytes": 10552,
       "role": "test",
       "purpose": "Pytest for body start detection: EPUB nav and PDF outline, chapter-one spellings and near misses, Part I with a chapter after it, bare Introduction, unnumbered novels, region headings with contents pages and numbered lists skipped, the prose fallback, outlines with chunk pages only, cases from the project's own books."
+    },
+    {
+      "path": "backend/tests/test_book_delete.py",
+      "language": "python",
+      "lines": 84,
+      "size_bytes": 3625,
+      "role": "test",
+      "purpose": "DELETE /books/{id} (C25.1 fix): the book's original and every file in notes/<user>/<book>/ go with it, page by page; another book's and another reader's files stay; another reader's book is 404; a storage failure, or a remove that removes nothing, is logged once and the book is still deleted."
     },
     {
       "path": "backend/tests/test_book_files.py",
@@ -2097,8 +2105,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4664,
-      "size_bytes": 209568,
+      "lines": 4733,
+      "size_bytes": 213261,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2161,8 +2169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5741,
-      "size_bytes": 1034694,
+      "lines": 5742,
+      "size_bytes": 1036017,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -4602,7 +4610,7 @@
       "path": "frontend/src/pages/Privacy.jsx",
       "language": "jsx",
       "lines": 127,
-      "size_bytes": 7704,
+      "size_bytes": 7613,
       "role": "page",
       "purpose": "Public privacy page at /privacy (C25.1), outside the backend gate: the honest Steve statement, what ReadFocus keeps, what goes to Google and when, other services, who sees what (leagues), and deleting books, notes, highlights, the Gemini key and the account (by request; PRIVACY_CONTACT empty until the owner names an address)."
     },
@@ -4658,7 +4666,7 @@
       "path": "frontend/src/pages/landing/Faq.jsx",
       "language": "jsx",
       "lines": 43,
-      "size_bytes": 3490,
+      "size_bytes": 3409,
       "role": "page",
       "purpose": "Landing questions (C13.10d, C25.1) as native details/summary: which files work, is it free, is Steve free, what is sent to Google, why Steve rests, how points are calculated, where definitions come from, why the first load is slow, deleting books (with links to /privacy); answers checked against the code and the specs."
     },
@@ -6081,8 +6089,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 769,
-      "size_bytes": 238144,
+      "lines": 770,
+      "size_bytes": 238712,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

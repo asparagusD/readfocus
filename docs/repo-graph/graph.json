@@ -1545,6 +1545,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_book_delete.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_book_files.py",
       "type": "file",
       "role": "test",
@@ -8441,6 +8447,26 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_body_start.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {

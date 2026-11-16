@@ -21,8 +21,8 @@ const QUESTIONS = [
   ['Can I delete my books?', (
     <>
       Yes. Remove a book from your shelf and its file and text are deleted, with your highlights, notes, Steve
-      conversations and focus sessions for it. Pictures in your notes (crops and drawing previews) are not yet removed
-      with it; the <Link to="/privacy">privacy page</Link> says what else is kept and how to ask for it to go.
+      conversations and focus sessions for it, pictures in notes included. The <Link to="/privacy">privacy
+      page</Link> says what else is kept.
     </>
   )],
 ];

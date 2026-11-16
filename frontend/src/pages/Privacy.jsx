@@ -110,8 +110,8 @@ export function Privacy() {
           <h2 id="privacy-delete">Deleting</h2>
           <ul>
             <li><strong>A book:</strong> remove it from your shelf, and its file, its text and questions, your sessions,
-              highlights, notes, Steve conversations and focus sessions for it are deleted. Pictures in your notes (crops
-              and drawing previews) are not yet removed with the book; ask for them to go as below.</li>
+              highlights, notes and the pictures in them, Steve conversations and focus sessions for it are
+              deleted.</li>
             <li><strong>A highlight</strong> is deleted at once. <strong>A note</strong> disappears at once and is erased
               for good when you remove its book.</li>
             <li><strong>Your Gemini key:</strong> remove it in Steve’s settings, and it is erased.</li>

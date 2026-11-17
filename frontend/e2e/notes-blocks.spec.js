@@ -158,7 +158,9 @@ test.describe('epub regions', () => {
 
     const pre = await find(page, 'pre');
     const pbox = await still(pre);
-    await page.mouse.move(pbox.x + pbox.width / 2, pbox.y + pbox.height / 2, { steps: 4 });
+    // Straight onto the listing: a path from the equation can cross the figure below it, whose bar (placed above
+    // the figure, over the listing) then holds the pointer.
+    await page.mouse.move(pbox.x + pbox.width / 2, pbox.y + pbox.height / 2);
     await page.getByRole('toolbar', { name: 'Code, this page' }).getByRole('button', { name: 'Add to notes' }).click();
     await expect.poll(() => api.notePosts.length).toBe(2);
     expect(api.notePosts[1].kind).toBe('code');

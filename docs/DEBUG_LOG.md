@@ -4964,3 +4964,52 @@ failed 5 of 63 runs before the fix in the same container).
 
 ### Commit
 `fix(e2e): wait for saved highlights and settled blocks before measuring`
+
+## 2026-11-17 C25.5 — e2e on GitHub, second run: three different failures
+
+**Status:** fixed (one app bug, two test races); the GitHub run is the check still to come
+
+### Symptom
+CI run 44033823171 (`6b31fa6`, after the entry above): `annotations-render` passed; 317 passed, 3 failed. The log
+(pasted by the user) and the artifact, now with traces and screenshots:
+
+    1) e2e/notes-blocks.spec.js:145:3 › epub regions › an EPUB equation goes with its own LaTeX and a listing
+       with its text, on the device: locator.click timeout, waiting for toolbar 'Code, this page' › 'Add to notes'
+    2) e2e/notes-sync.spec.js:60:3 › pdf › while a note is being written the notepad stays put and offers the
+       jump instead: expect.poll(() => inView(page, 'n4a')).toBe(true): Received false (5000 ms)
+    3) e2e/reader.spec.js:344:3 › anchors across re-layout › zooming a PDF to 200% and back keeps the page and
+       the saved anchor: Test timeout of 30000ms exceeded
+
+### Repro and hypotheses, each confirmed
+1. notes-blocks: the screenshot shows the listing above a figure on GitHub's layout, and the figure's bar
+   ("Explain this figure · Add to notes", placed above the figure, over the listing's centre) open. The test moves
+   the pointer from the equation to the listing in 4 steps; that path crosses the figure, whose bar then holds the
+   pointer (`onPointerEnter={stay}`), so the listing never gets `pointerover`. The previous entry's re-layout was
+   real but not the cause. Not reproducible here: the blocks do not overlap on this machine's layout.
+2. notes-sync: **an app bug.** `Notepad.jsx`: the "Jump to notes for this page" pill sits inside the scrolling
+   list above the notes; its click measured the target and scrolled, then the pill was removed, so every note
+   moved up by the pill's height and the target's top ended above the view. Chromium's scroll anchoring hides it
+   on this machine. Repro: the same test with `.rf-notes, .rf-notes * { overflow-anchor: none }`: 3 of 3 failed.
+3. reader zoom: the trace: five Zoom in clicks and the 200% check done at 3.4 s, then the click on "Zoom: 200%"
+   waited 27 s. `useChromeVisible` fades the toolbar (`pointer-events: none`) 2.6 s after the last mouse movement
+   unless focus is inside it; at 200% Zoom in is disabled, focus leaves, and a Playwright click does not move the
+   mouse, so nothing wakes it. Locally the test reaches that click before 2.6 s. Repro: a 3 s wait before the
+   click: timeout (15 s) every time.
+
+### Root cause
+(1) and (3) are test races with the reader's hover bars and fading toolbar; (2) is a real misplaced scroll when
+the jump pill is used, visible wherever scroll anchoring does not correct it.
+
+### Fix
+`frontend/src/notes/Notepad.jsx`: the pill's click scrolls in the next frame, after the pill has gone.
+`frontend/e2e/notes-blocks.spec.js`: the pointer goes straight onto the listing. `frontend/e2e/fixtures.js`:
+`wake(page)` moves the mouse in the left margin and waits for the toolbar; `reader.spec.js` calls it before the
+click back to a fit.
+
+### Regression test
+`notes-sync.spec.js` "stays put" now turns scroll anchoring off in the notepad: without the Notepad fix
+(`git stash push -- frontend/src/notes/Notepad.jsx`) 1 failed; with it the spec's 6 passed. Zoom: with a forced
+3 s wait, without `wake` 1 failed (timeout), with it 1 passed. notes-blocks: only GitHub's layout shows it.
+
+### Commit
+`fix(notes): scroll to the page's notes after the jump pill has gone`

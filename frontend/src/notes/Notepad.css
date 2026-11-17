@@ -1,0 +1,419 @@
+/* The notepad (C22.2, handoff screen 19): note cards in book order inside the side panel. Tokens only; only
+   transform and opacity move. */
+.rf-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden; /* C22.3: nothing inside may scroll the list sideways */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.rf-notes-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+
+.rf-notes-count {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.rf-notes-order, .rf-notes-status, .rf-note-small {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
+}
+
+.rf-notes-status:empty { display: none; }
+
+.rf-notes-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border: var(--border-hair) dashed var(--line-2);
+  border-radius: var(--radius-card);
+}
+
+.rf-notes-empty-title { margin: 0; font-family: var(--font-reading); font-size: var(--text-quote); line-height: var(--text-quote--line-height); color: var(--ink); }
+
+.rf-notes-list { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+
+.rf-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-4) var(--space-4);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-card);
+  background-color: var(--paper);
+}
+
+/* C22.2b: a note added on this visit rises in with an accent edge (handoff); the one being edited keeps it. */
+.rf-note[data-new] { animation: rf-note-in var(--dur-5) var(--ease-arrive) both; }
+.rf-note[data-editing] { border-color: var(--accent); }
+/* C22.5: notes on the pages shown carry a soft accent edge. */
+.rf-note[data-here] { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+.rf-note[data-focused] { border-color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); } /* C22.4: opened from a margin marker */
+@keyframes rf-note-in { from { opacity: 0; transform: translateY(8px); } }
+
+.rf-note-read {
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
+  border-radius: var(--radius-input);
+  cursor: text;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-note-read:hover { background-color: var(--paper-2); }
+.rf-note-read:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
+
+/* C22.3: drawings. In the list, the PNG thumbnail on white, inverted in Lamplight as Excalidraw's dark mode is. */
+.rf-note-drawing { display: block; }
+.rf-note-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: var(--radius-input);
+  background-color: #ffffff;
+}
+:root[data-theme="lamplight"] .rf-note-thumb { filter: invert(0.93) hue-rotate(180deg); }
+
+/* The open drawing: a bar (the reference on a phone, Paste passage, Done) over Excalidraw's canvas. */
+.rf-drawing { display: flex; flex-direction: column; gap: var(--space-2); }
+.rf-drawing-bar { display: flex; align-items: center; gap: var(--space-2); }
+.rf-drawing-bar .rf-note-done { margin-left: auto; }
+.rf-drawing-ref {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui--line-height);
+  color: var(--ink);
+}
+
+.rf-drawing-paste {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-drawing-paste:hover:not(:disabled) { background-color: var(--paper-2); }
+.rf-drawing-paste:disabled { opacity: 0.45; cursor: default; }
+.rf-drawing-paste:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
+.rf-drawing-canvas { height: 420px; overflow: hidden; border: var(--border-hair) solid var(--line); border-radius: var(--radius-input); }
+.rf-drawing-wait { display: grid; place-items: center; height: 420px; }
+
+/* A phone: the drawing takes the whole screen, under its reference and bar. */
+.rf-drawing-screen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background-color: var(--surface);
+}
+
+.rf-drawing-screen .rf-drawing { flex: 1; min-height: 0; }
+.rf-drawing-screen .rf-drawing-canvas, .rf-drawing-screen .rf-drawing-wait { flex: 1; height: auto; min-height: 0; }
+.rf-drawing-screen .rf-drawing-paste, .rf-drawing-screen .rf-note-done { min-height: 44px; }
+
+.rf-notes-add { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding-top: var(--space-1); }
+
+.rf-notes-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: var(--border-hair) dashed var(--line-field);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-notes-pill:hover { background-color: var(--paper-2); }
+.rf-notes-pill:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
+.rf-note-head { display: flex; align-items: center; gap: var(--space-1); min-height: 32px; }
+
+.rf-note-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 32px;
+  margin-left: calc(-1 * var(--space-1));
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui--line-height);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-note-ref span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rf-note-ref svg { flex: none; color: var(--ink-2); }
+.rf-note-ref:hover { background-color: var(--paper-2); }
+
+.rf-note-done {
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: none;
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-note-done:hover { background-color: var(--paper-2); }
+.rf-note-done:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+.rf-note-done + .rf-note-kind { margin-left: 0; }
+
+.rf-note-kind { display: inline-grid; place-items: center; margin-left: auto; width: 28px; height: 28px; color: var(--ink-2); }
+
+.rf-note-delete, .rf-note-link {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle);
+}
+
+.rf-note-delete:hover, .rf-note-link:hover { background-color: var(--paper-2); color: var(--ink); }
+.rf-note-delete:disabled { opacity: 0.4; cursor: default; }
+
+.rf-note-ref:focus-visible, .rf-note-delete:focus-visible, .rf-note-link:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.rf-note-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.rf-note-body { min-width: 0; }
+
+.rf-note-doc, .rf-note-empty {
+  font-family: var(--font-reading);
+  font-size: var(--text-quote);
+  line-height: var(--text-quote--line-height);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.rf-note-empty { margin: 0; color: var(--ink-2); font-style: italic; }
+.rf-note-doc > * + * { margin-top: var(--space-2); }
+.rf-note-doc p, .rf-note-doc ul, .rf-note-doc ol, .rf-note-doc blockquote { margin-bottom: 0; }
+.rf-note-doc p:first-child { margin-top: 0; }
+.rf-note-doc ul, .rf-note-doc ol { padding-left: var(--space-5); }
+.rf-note-doc blockquote { margin-left: 0; padding-left: var(--space-3); border-left: var(--border-strong) solid var(--line-2); color: var(--ink-2); }
+.rf-note-doc code { font-family: var(--font-mono); font-size: 0.9em; }
+.rf-note-tasks { padding-left: 0 !important; list-style: none; }
+.rf-note-task { display: flex; align-items: flex-start; gap: var(--space-2); }
+.rf-note-task input { margin-top: 5px; accent-color: var(--accent); }
+.rf-note-task[data-checked="true"] > div { color: var(--ink-2); text-decoration: line-through; }
+.rf-note-doc .rf-steve-math--display { overflow-x: auto; }
+
+.rf-note-alert {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-input);
+  background-color: var(--paper-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink);
+}
+
+.rf-note-alert p { margin: 0; }
+.rf-note-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+@media (max-width: 759px) {
+  .rf-notes { padding: var(--space-3) var(--space-3) var(--space-5); }
+  .rf-note { padding: var(--space-2) var(--space-3) var(--space-3); }
+  .rf-note-delete, .rf-note-ref, .rf-note-done { min-height: 44px; }
+  .rf-note-delete, .rf-note-link { width: 44px; height: 44px; }
+  .rf-notes-pill { min-height: 44px; }
+  .rf-note-read { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-note[data-new] { animation-name: rf-note-fade; }
+  @keyframes rf-note-fade { from { opacity: 0; } }
+}
+
+/* C22.5: the filter (one segmented control) and the jump pill, which rides at the top of the list. */
+.rf-notes-filter {
+  display: flex;
+  align-self: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-pill);
+  background-color: var(--paper-2);
+}
+
+.rf-notes-filter button {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  cursor: pointer;
+}
+
+.rf-notes-filter button:hover { color: var(--ink); }
+.rf-notes-filter button[aria-checked="true"] { background-color: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 var(--border-hair) var(--line); }
+
+.rf-notes-jump {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  align-self: center;
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border: var(--border-hair) solid var(--accent);
+  border-radius: var(--radius-pill);
+  background-color: var(--accent-soft);
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 600;
+  cursor: pointer;
+  animation: rf-notes-jump-in var(--dur-3) var(--ease-settle) both;
+}
+
+.rf-notes-all {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.rf-notes-filter button:focus-visible, .rf-notes-jump:focus-visible, .rf-notes-all:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@keyframes rf-notes-jump-in { from { opacity: 0; } }
+
+@media (max-width: 759px) {
+  .rf-notes-filter button, .rf-notes-jump { min-height: 44px; }
+}
+
+/* C22.6: equation, code and figure notes, and the notepad as a drop target for a dragged equation or listing. */
+.rf-note-block { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+
+.rf-note-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 240px;
+  border-radius: var(--radius-page);
+  background-color: #fff; /* a crop of the page as printed */
+}
+
+.rf-note-math { overflow-x: auto; color: var(--ink); }
+
+.rf-note-lang {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
+}
+
+.rf-note-field { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.rf-note-field label {
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  color: var(--ink-2);
+}
+
+.rf-note-field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-input);
+  background-color: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-reading);
+  font-size: var(--text-label);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.rf-note-field textarea[data-mono] { font-family: var(--font-mono); white-space: pre; overflow-x: auto; tab-size: 4; }
+
+.rf-note-field textarea:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.rf-notes[data-drop] { outline: 2px dashed var(--accent); outline-offset: -6px; background-color: color-mix(in srgb, var(--accent-soft) 40%, transparent); }
+
+.rf-block-grip { display: inline-grid; place-items: center; min-width: 32px; padding: 0 var(--space-1); cursor: grab; }
+
+@media (max-width: 759px), (pointer: coarse) {
+  .rf-block-grip { display: none; } /* dragging is for a desktop; Add to notes is there on every screen */
+}

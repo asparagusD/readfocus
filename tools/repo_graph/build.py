@@ -57,7 +57,8 @@ EDGE_TYPES = (
 # Import name (Python top-level module or JS package) -> external service.
 EXTERNALS = {
     "groq": "groq", "langchain_groq": "groq",
-    "langchain_google_genai": "google_ai_studio", "google": "google_ai_studio",
+    "langchain_google_genai": "google_ai_studio", "google.generativeai": "google_ai_studio",
+    "google.genai": "gemini",  # Steve's provider only (C20.2); allowed by constraint 1
     "openai": "openai", "langchain_openai": "openai",
     "anthropic": "anthropic", "langchain_anthropic": "anthropic",
     "langchain": "langchain", "langchain_core": "langchain",
@@ -226,8 +227,15 @@ def line_of(text: str, position: int) -> int:
     return text.count("\n", 0, position) + 1
 
 
+def service_for(name: str) -> str | None:
+    """The external service of a dotted import name: the longest mapped prefix wins."""
+    parts = name.split(".")
+    return next((EXTERNALS[p] for p in (".".join(parts[:i]) for i in range(len(parts), 0, -1)) if p in EXTERNALS),
+                None)
+
+
 def external(graph: Graph, source: str, name: str, line: int) -> None:
-    service = EXTERNALS.get(name)
+    service = service_for(name) if "/" not in name and not name.startswith("@") else EXTERNALS.get(name)
     if service:
         node = graph.node("external", service, banned=service in BANNED_SERVICES)
         graph.edge("calls_external", source, node, line=line)
@@ -252,9 +260,12 @@ def py_edges(graph: Graph, path: str, text: str, tree: ast.AST, bound: dict, wir
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                external(graph, source, alias.name.split(".")[0], node.lineno)
+                external(graph, source, alias.name, node.lineno)
         elif isinstance(node, ast.ImportFrom) and not node.level:
-            external(graph, source, (node.module or "").split(".")[0], node.lineno)
+            module = node.module or ""
+            dotted = [f"{module}.{a.name}" for a in node.names if service_for(f"{module}.{a.name}") != service_for(module)]
+            for name in dotted or [module]:  # from google import genai -> google.genai
+                external(graph, source, name, node.lineno)
         elif wiring and isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             calls.append((node.func.attr, node.args, [graph_name(a) for a in node.args]))
     for attr, args, names in calls:  # nodes first, so each keeps its handler

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { outerBox } from './highlight';
 
 const GRACE_MS = 200; // pointer may cross the gap between the word and the card
 const NEAR_PX = 4;
 
-const near = (range, x, y) => [...range.getClientRects()].some((r) =>
+const near = (range, x, y) => outerBox(range).getClientRects().some((r) =>
   x >= r.left - NEAR_PX && x <= r.right + NEAR_PX && y >= r.top - NEAR_PX && y <= r.bottom + NEAR_PX);
 
 /**

@@ -1,7 +1,7 @@
 """A small in-memory stand-in for the Supabase client, for the ingestion tests.
 
 It understands the calls the ingestion code makes: select, insert, update,
-upsert (with on_conflict and ignore_duplicates), eq, in_, lt, is_, order,
+upsert (with on_conflict and ignore_duplicates), delete, eq, in_, lt, gte, lte, is_, order,
 limit, range and execute, plus Storage upload, download and get_public_url. It records
 each select's columns and window, and can add a delay to every call. Rows are copied through JSON on
 the way in and out, as they would be over HTTP.
@@ -35,6 +35,18 @@ class Query:
 
     def upsert(self, values, on_conflict="", ignore_duplicates=False):
         self.action = ("upsert", (values, [k.strip() for k in on_conflict.split(",")], ignore_duplicates))
+        return self
+
+    def delete(self):
+        self.action = ("delete", None)
+        return self
+
+    def gte(self, column, value):
+        self.filters.append(lambda r: r.get(column) is not None and r[column] >= value)
+        return self
+
+    def lte(self, column, value):
+        self.filters.append(lambda r: r.get(column) is not None and r[column] <= value)
         return self
 
     def eq(self, column, value):
@@ -97,6 +109,9 @@ class Query:
                     written.append(value)
             return SimpleNamespace(data=_copy(written))
         matched = [r for r in rows if all(f(r) for f in self.filters)]
+        if kind == "delete":
+            rows[:] = [r for r in rows if r not in matched]
+            return SimpleNamespace(data=_copy(matched))
         if kind == "update":
             for r in matched:
                 r.update(_copy(values))
@@ -106,6 +121,10 @@ class Query:
             matched = matched[self.window[0]: self.window[1] + 1]
         if self.max_rows is not None:
             matched = matched[: self.max_rows]
+        if kind == "select" and self.db.project_columns and self.columns.strip() != "*":
+            # As PostgREST: only the columns asked for (plain names; "*", joins and aliases are not modelled).
+            names = [c.strip() for c in self.columns.split(",") if c.strip()]
+            matched = [{name: r.get(name) for name in names} for r in matched]
         return SimpleNamespace(data=_copy(matched))
 
 
@@ -124,11 +143,32 @@ class Bucket:
         self.db.calls.append(("storage", "download"))
         return self.db.files[path]
 
+    def list(self, path=None, options=None):
+        """As supabase-py: the objects directly in folder `path`, by name, `limit` (default 100) from `offset`."""
+        options = options or {}
+        prefix = f"{path.rstrip('/')}/" if path else ""
+        names = sorted(p[len(prefix):] for p in self.db.files if p.startswith(prefix) and "/" not in p[len(prefix):])
+        start = options.get("offset", 0)
+        self.db.calls.append(("storage", "list", self.name, path))
+        return [{"name": n, "id": n} for n in names[start: start + options.get("limit", 100)]]
+
+    def remove(self, paths):
+        self.db.calls.append(("storage", "remove", self.name, tuple(paths)))
+        return [{"name": p} for p in paths if self.db.files.pop(p, None) is not None]
+
+    def create_signed_url(self, path, expires_in, options=None):
+        self.db.calls.append(("storage", "sign", path, expires_in))
+        url = f"https://storage.test/sign/{self.name}/{path}?expires={expires_in}"
+        return {"signedURL": url, "signedUrl": url}
+
 
 class MemoryDb:
     def __init__(self):
         self.tables, self.calls, self.broken, self.files = {}, [], set(), {}
         self.selects, self.delay = [], 0.0  # (table, columns, window or limit) per select; seconds per call
+        # C25.G: only the selected columns come back, as PostgREST does, so a handler that reads a column its select
+        # leaves out fails in tests (the regions-id bug). A test may set it False to inspect whole rows.
+        self.project_columns = True
         self._ids = 0
         self.storage = SimpleNamespace(from_=lambda bucket: Bucket(self, bucket))
 

@@ -50,7 +50,9 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
     """
 
     # ── 1-3. The reads do not depend on each other, so they run at once ──────
-    books, progress_data, sessions, results, feedback_rows = await asyncio.gather(
+    today = datetime.now(UTC).date()
+    week_start = today - timedelta(days=today.weekday())  # Monday
+    books, progress_data, sessions, results, feedback_rows, focus_rows = await asyncio.gather(
         run_in_threadpool(_rows, supabase.table("books").select(
             "id, title, author, total_chunks, total_words, status"
         ).eq("user_id", user_id).eq("status", "ready")),
@@ -65,6 +67,10 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
             "session_id, total_score, max_score, created_at"
         ).eq("user_id", user_id).order("created_at", desc=False)),
         run_in_threadpool(latest_feedback, user_id),
+        # C23.7c: this week's focus sessions (server-timed and server-scored); discarded ones count nothing
+        run_in_threadpool(_rows, supabase.table("focus_sessions").select(
+            "status, active_seconds, voided_seconds, points_total"
+        ).eq("user_id", user_id).gte("started_at", str(week_start))),
     )
     progress_by_book = {p["book_id"]: p for p in progress_data}
     session_by_id = {s["id"]: s for s in sessions}
@@ -133,7 +139,6 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
             completed_dates.add(s["completed_at"][:10])
 
     streak = 0
-    today = datetime.now(UTC).date()
     check_date = today
     while str(check_date) in completed_dates:
         streak += 1
@@ -146,7 +151,6 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
             check_date -= timedelta(days=1)
 
     # ── 7. Words read this week ───────────────────────────────────────────────
-    week_start = today - timedelta(days=today.weekday())  # Monday
     words_this_week = sum(
         s.get("assigned_words", 0) or 0
         for s in sessions
@@ -165,10 +169,19 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
             "date": result["created_at"][:10],
         })
 
+    # ── 9. Focus this week (C23.7c): counted time and scored points; XP comes in C24 ─────────────────────
+    kept = [f for f in focus_rows if f.get("status") != "abandoned"]
+    focus_this_week = {
+        "seconds": sum(max(0, (f.get("active_seconds") or 0) - (f.get("voided_seconds") or 0)) for f in kept),
+        "points": sum(f.get("points_total") or 0 for f in kept if f.get("status") == "scored"),
+        "sessions": len(kept),
+    }
+
     return {
         "book_progress": book_progress_list,
         "score_over_time": score_over_time,
         "reading_streak": streak,
         "words_this_week": words_this_week,
         "recent_feedback": recent_feedback,
+        "focus_this_week": focus_this_week,
     }

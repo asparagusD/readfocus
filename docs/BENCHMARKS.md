@@ -68,6 +68,68 @@ prints them; one run each, so no percentiles.
 | Run time, including A's upload, session and cleanup | 30-31 s | 66 s |
 | Rows and PDF left afterwards | none | none |
 
+## Phase 2 deployment check (C25.2, 2026-11-16 to 2026-11-17)
+
+The production image built from `ff0936c` (`docker build -t readfocus-c25 .`, the repo `Dockerfile`) with
+`psutil==7.2.2` added for measuring (`readfocus-c25-measure`). Every run: Linux container, repo mounted read-only,
+`--network none`, `--memory=512m --memory-swap=512m`, and `--cpus=0.1` unless said otherwise:
+
+    docker run --rm --network none --memory=512m --memory-swap=512m --cpus=0.1 -v <repo>:/repo:ro -w /repo -e PYTHONPATH=/repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e EMBED_PRELOAD=0 -e INGEST_SWEEP=0 readfocus-c25-measure python scripts/dev/measure_phase2.py --book <file> [--steve once|loop|none]
+
+`scripts/dev/measure_phase2.py`: `import backend.main` and the model, then the book through the real pipeline
+(`book_ingestor.run_job`: ingest, regions job, prose rebuild) on `MemoryDb`, as Gate G5's harness does, RSS
+sampled every 0.2 s per phase, and the cgroup's `memory.peak` at the end. Steve answers through the real
+`backend/steve/provider.py` and Google's Gen AI SDK, streamed, with 36,000 characters of context (the 12,000-token
+cap), from a fake Gemini endpoint on 127.0.0.1 (nothing reaches Google). `--steve once` (the default): one
+request as the prose rebuild starts, the phase with the highest peak.
+
+| | Value |
+|---|---|
+| Image size (`docker images`) | 964 MB (885 MB at C14.1, 916 MB at C18.G) |
+| Idle: app imported and model loaded | 302-309 MiB |
+| After Steve's first call (the SDK loaded) | +11 MiB |
+
+After the fix below (onnxruntime's memory arena off), `--steve once`:
+
+| Book | CPU | Seconds | Peak: ingest | Peak: regions | Peak: prose | Peak RSS | Container peak (cgroup) | Killed |
+|---|---|---|---|---|---|---|---|---|
+| SICP (883 pages, the largest shelf book under the 50 MB upload limit) | 0.1 | 2,589 | 417.7 | 423.9 | 451.6 | **451.6 MiB** | **395.1 MiB** | no |
+| SICP | no cap | 261 | 410.9 | 426.4 | 448.7 | 448.7 MiB | 392.6 MiB | no |
+| `sample.pdf` (13 pages) | 0.1 | 122 | 363.9 | 348.3 | 372.6 | 372.6 MiB | 315.9 MiB | no |
+
+Accepted at C25.2 (your choice, 2026-11-17: "Accept and commit"): SICP is 1.6 MiB over the C25 plan's 450 MiB
+RSS line and 117 MiB under 512 by the container's own count. Without Steve, after the fix, a probe of the prose
+rebuild (no CPU cap) put its peak in `prose_job.plan` (the whole book's regions and text at once: 436.5 MiB);
+its batch loop stays at about 431. Cutting further means planning in page windows (not done).
+
+Before the fix (`ff0936c`), with Steve asking non-stop through the ingest (`--steve loop`, 2,864 calls at 0.1
+CPU: six times the free tier's daily requests on our key, each with a new SDK client): SICP 3,247 s, peaks
+451.2 / 447.8 / 481.8 MiB, container 428.7 MiB, not killed; `sample.pdf` 403.3 MiB (container 375.3). No CPU
+cap, SICP: 478.0 MiB with the loop, 475.1 with no Steve, 472.2 with `MALLOC_ARENA_MAX=2` (so neither Steve nor
+glibc's arenas explain the peak). After the fix, the same loop at 0.1 CPU: 495.6 MiB (container 440.5), not
+killed; the loop's peaks move about +/-15 MiB with timing.
+
+Where idle goes (one process in the image, RSS after each import in order): Python 15.3, numpy +14.4, httpx
++11.1, fastapi +13.9, supabase +12.1, pypdf +12.5, pdfplumber +4.0, pypdfium2 +6.0, bs4 +5.1, yake +11.0,
+fastembed +35.9, mcp +14.4, the agent graph +25.5, the rest of `backend.main` +6.2: 193.8 MiB; the model
++135.2: 329.0. The server never imports mcp (only `backend/mcp_server.py` does): `import backend.main` alone is
+144.0 MiB, before fastembed and the model. Nearly all of the rest is needed while ingesting, so deferring imports
+would lower idle, not the peak.
+
+The fix, onnxruntime's CPU memory arena (`backend/nlp/embedder.py` `SESSION_OPTIONS`), measured alone in the
+image at 512 MB: the model loaded, then 600-word passages embedded in batches of 1, 16, 64, 16 and 1:
+
+| Arena | Idle | Peak | After | Seconds |
+|---|---|---|---|---|
+| on (before) | 221.1 MiB | 553.3 MiB | 552.1 MiB | 39.1 |
+| off (C25.2) | 220.9 MiB | 319.9 MiB | 119.0 MiB | 17.2 |
+
+Bundle (`npm run build`, then `npm run check:bundle`, from the build's own chunk stats): the initial route (the
+entry and its 10 static imports) is 180.4 KB of JavaScript gzipped (vendor 122.5, index 39.0, react 13.6, the
+rest under 1.5 each), budget 200 KB. Lazy only: pdfjs-dist 2 chunks, 128.3 KB; foliate-js (vendored) 13 chunks,
+41.8 KB; Excalidraw 65 chunks, 1,500.0 KB; TipTap 1 chunk, 127.8 KB; tesseract.js 1 chunk, 7.3 KB (its worker,
+core and model are served from `/ocr/` on first use). 237 JS chunks.
+
 ## Machine
 
 | | |
@@ -119,6 +181,25 @@ and the provider clients.
 Not measured: Linux or Render, where there is no launcher process and the
 numbers will differ; memory under load; memory during book ingestion.
 
+### C20.2: Google's Gen AI SDK for Steve (2026-11-14)
+
+`python -c "import psutil, os; import backend.main; ...; print(rss)"`, three
+runs each, Windows, `.venv` Python 3.11, no server started:
+
+| | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| `import backend.main` | 130.4 MB | 130.4 MB | 130.8 MB |
+| `import backend.main` + `from google import genai` + `types`, `errors` | 148.6 MB | 148.4 MB | 148.5 MB |
+
+`google-genai` 2.34.0 costs about 18 MB when loaded. `backend/steve/provider.py`
+imports it on the first Steve call only, so the idle server is unchanged
+until someone asks Steve something. No new transitive package: `.venv` already
+held `google-genai` 3.0.0 (C16.4's throwaway check), which the 2.34.0 pin
+replaced; `pip freeze` before and after differ only in that line, and
+`pip check` reports no broken requirements.
+
+Not measured: Linux or Render; memory during a streamed answer.
+
 ## Local models and dependencies
 
 One row per model or heavy dependency (the memory rule in the
@@ -131,6 +212,7 @@ One row per model or heavy dependency (the memory rule in the
 | 2026-11-10 | C4.4 | `rapidfuzz` 3.14.6, imported | 16.9 MB (Windows) | 19.0 MB | 2 MB | as above |
 | 2026-11-11 | C8.8 | **Removed**: `langchain`, `langchain-community`, `langchain-groq`, `groq`, `langchain-google-genai`, `tenacity` from `requirements.txt` (`langgraph` 1.2.20 and its `langchain-core` 1.7.6 kept) | 132.4 MB with `backend.main` and the LangGraph workflow imported; 327.0 MB with the embedding model loaded and 8 chunks embedded (Windows, median of 3) | 132.0 MB; 327.0 MB (same stages, the removed packages made unimportable) | 0 MB at run time: no app code had imported them since C8.4b | 134.0 MB idle, 2 processes, before and after (`scripts/dev/measure_rss.py`, 3 runs each) |
 | 2026-11-11 | C9.3 | No new dependency: the embedding model (C4.1) is now **loaded at startup** on a background thread (`EMBED_PRELOAD`, default on), not on first use | Windows: 136 MB idle (3 runs) | Windows: 266 to 267 MB idle, ready 2.6 to 3.7 s after process start (3 runs). Container at 0.1 CPU and 512 MB: 110 to 126 MB idle before, 272 to 275 MB after, ready 29.2 to 29.9 s after start (download included) | about +130 MB (Windows), about +150 MB (container) | The idle server now holds the model: 267 MB Windows, 275 MB in the container, against 512 MB on Render Free. Peak during ingestion in the container 328 to 335 MB (316 to 350 MB in C9.2) |
+| 2026-11-13 | C18.2 | `pdfplumber` 0.11.10 (brings `pdfminer.six` 20260107, `pypdfium2` 5.14.0; `Pillow` already installed), imported through `backend.regions.extract` | 18.4 MB (Windows) | 32.9 MB; whole-book peaks below | 14.5 MB to import; reading a book in 20-page batches peaks at 136 MB (52 MB of it the file) | Unchanged in C18.2a: nothing the app imports at startup uses it yet (the regions job in C18.2b does; measured there) |
 
 Gate G3 (C8.G), 2026-11-11: after one full journey on the dev project
 (upload, start, finish-reading, submit, results, dashboard) with no AI
@@ -151,6 +233,151 @@ Concept extraction time per chunk, Windows, `sample.pdf` chunks of 507, 740
 and 814 words, model already loaded: 72, 71 and 142 ms with the embedding
 merge; 24, 30 and 37 ms without it. Not measured in the throttled
 container.
+
+### C18.2: pdfplumber on the technical test shelf (2026-11-13)
+
+`pdfplumber` 0.11.10 with `pdfminer.six` 20260107 and `pypdfium2` 5.14.0,
+read through `backend/regions/extract.py`. Command, Windows, fresh
+process, shelf from `scripts/fetch_test_shelf.py`:
+`python scripts/dev/measure_regions.py --all --batch 20` (and `--batch 0`,
+`--batch 50`, `--pages 40`). RSS includes the book's bytes held in memory
+(52 MB for Calculus).
+
+| Book | Pages | s/page | Peak RSS, file opened once | Peak RSS, reopened every 20 pages |
+|---|---|---|---|---|
+| Calculus Volume 1 | 769 | 0.227 (once), 0.244 (per 20) | 274.4 MB | 135.5 MB (143.1 MB per 50) |
+| Interactive Linear Algebra | 455 | 0.095, 0.121 | 279.7 MB | 126.3 MB |
+| Lessons in Electric Circuits I | 557 | 0.147, 0.153 | 80.8 MB | 72.3 MB |
+| SICP | 883 | 0.101, 0.128 | 80.7 MB | 71.3 MB |
+
+Import alone: 18.4 MB before, 32.9 MB after (+14.5 MB). Opened once,
+pdfminer keeps every parsed object of the document, so a whole book costs
+up to 280 MB even with each page closed: on top of the 267 to 275 MB idle
+server (C9.3) that passes Render Free's 512 MB. Reopening the file every
+20 pages keeps the peak near 136 MB for about 7% more time, so the
+regions job (C18.2b) works in batches of 20 pages with the file reopened
+for each. Sampling 40 pages per book with a reopen per page costs 0.28 to
+0.64 s/page: opening is the expensive part.
+
+Linux, the `readfocus-api` image at `--cpus=0.1 --memory=512m` (Render
+Free's share), pdfplumber installed into `/tmp` at run time, shelf
+mounted read-only: import 17.9 MB to 38.6 MB (+20.8 MB). 15 pages per book
+with a reopen per page: Calculus 4.67 s/page (peak 137.3 MB), Linear
+Algebra 5.03 (88.6 MB), Circuits 2.41 (90.9 MB), SICP 5.28 (90.5 MB).
+Every SICP page in 20-page batches: **1.055 s/page**, 883 pages in about
+15.5 minutes, peak 67.5 MB. By the Windows ratio Calculus would take about
+2 s/page, about 26 minutes for the book: the regions job runs after a
+book is readable and must never hold up ingestion. Not measured in the
+container: the other three books page by page, the backend server with
+a job running (C18.2b).
+
+C18.2b, the regions job itself (`backend/services/region_job.py`, 20-page
+batches), Windows, one process with `backend.main` imported
+(`INGEST_SWEEP=0`; embedding model not loaded), the in-memory database
+standing in for Supabase with each batch's rows dropped once written (a
+server sends them away), the book's bytes held as the job holds them:
+
+| Book | Pages | Regions | s/page | RSS after imports | Peak | After the job |
+|---|---|---|---|---|---|---|
+| Calculus Volume 1 | 769 | 15,082 | 0.253 | 128.4 MB | 248.8 MB | 231.0 MB |
+| SICP | 883 | 4,291 | 0.132 | 128.4 MB | 176.5 MB | 175.0 MB |
+
+So a job adds up to about 120 MB on the largest shelf book (52 MB of it
+the file, which ingestion hands over rather than copying). On the 267 to
+275 MB idle server with the embedding model (C9.3) that is about 390 MB
+against Render Free's 512 MB, not measured in the container. The process
+does not give the memory back after the job (231 MB at the end): Gate G5
+measures the server in the container, and running the job in a child
+process or with smaller batches is the fallback if it is too close.
+
+C18.3, the same job with math classification (`backend/regions/classify.py`)
+on every page, same harness: Calculus 0.256 s/page (was 0.253), peak
+247.7 MB; SICP 0.137 s/page (was 0.132), peak 176.2 MB; Interactive Linear
+Algebra 455 pages 0.132 s/page, peak 173.7 MB. Classification costs about
+3 to 5 ms a page; reading the PDF is the rest.
+
+C18.4, with code detection and rebuilding as well: SICP 0.139 s/page,
+peak 177.5 MB; Calculus 0.265 s/page, peak 249.5 MB.
+
+C18.5a, with graphics, figures, drawn math and pdfplumber's table finder
+(28 to 400 ms a page when it runs, so it runs only on pages with at least
+two long thin edges each way: 365 of Calculus's 769 pages, 117 of
+Circuits's 557, 95 of ILA's 455, 14 of SICP's 883), extraction and
+classification of every page, Windows: Calculus 0.275 s/page, Circuits
+0.174, ILA 0.129, SICP 0.135 (`fig_survey`-style loop over
+`extract.iter_pages` and `classify.classify_page`, 20-page batches).
+
+C18.5b, EPUB regions from structure (`backend/regions/epub.py`), Windows, fresh
+process: Alice (18.4 MB, 20 spine documents, 927 regions) in 0.25 s, about
+13 ms a document, RSS 18 to 72 MB with ebooklib, BeautifulSoup and the
+book's bytes loaded. EPUBs need no pdfplumber.
+
+### C18.G: Gate G5, the whole pipeline on the technical shelf (2026-11-13)
+
+`python scripts/dev/gate_g5.py --book <file>`, one fresh process per book,
+Windows, no CPU limit: the real `book_ingestor.run_job` (extraction,
+chunks, local embeddings, questions), then the regions job and the prose
+rebuild (which embeds and questions changed chunks again), on the in-memory
+database. RSS sampled every 0.2 s; each phase's peak is the process's RSS,
+so it includes what earlier phases kept. The model loaded first: 179 to
+180 MB.
+
+| Book | Pages / chunks | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild |
+|---|---|---|---|---|---|
+| Calculus Volume 1 (52 MB, over the 50 MB upload limit) | 769 / 246 | 688 to 749 | 519 MB | 481 to 484 MB | 662 to 663 MB |
+| SICP | 883 / 269 | 289 | 436 MB | 407 MB | 426 MB |
+| Lessons in Electric Circuits I | 557 / 253 | 353 | 337 MB | 386 MB | 414 MB |
+| Interactive Linear Algebra | 455 / 184 | 240 | 337 MB | 370 MB | 408 MB |
+| Alice (EPUB) | 20 spine documents / 46 | 35 | 326 MB | 344 MB | 349 MB |
+
+Against Render Free's 512 MB (the container limit every earlier
+measurement used; Gate G2's 300 MB line is the model's own load): region
+extraction stays under it for every book; Calculus goes over it while
+ingesting (519 MB, before any C18 code runs) and in the prose rebuild
+(663 MB).
+
+Linux container (your choice at C18.G, "Measure in container first"): the
+repo `Dockerfile` built at `13c5d52` as `readfocus-c18g` (916 MB; model
+baked in) plus `psutil==7.2.2` (`readfocus-c18g-measure`), repo mounted
+read-only, `--network none`, no CPU limit (memory does not depend on it),
+`--memory=512m --memory-swap=512m`:
+
+    docker run --rm --network none --memory=512m --memory-swap=512m -v <repo>:/repo:ro -w /repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e PYTHONPATH=/repo readfocus-c18g-measure python scripts/dev/gate_g5.py --book <file>
+
+Model loaded: 208 to 216 MB.
+
+| Book | 512 MB cap | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild |
+|---|---|---|---|---|---|
+| Calculus Volume 1 | **killed: out of memory (exit 137, OOMKilled)** | 640 (2 GB cap) | 749 MB | 848 MB | 1,036 MB (2 GB cap) |
+| SICP | finished | 249 | 462 MB | 444 MB | 464 MB |
+| Lessons in Electric Circuits I | finished | 311 | 382 MB | 433 MB | 452 MB |
+| Interactive Linear Algebra | finished | 208 | 374 MB | 400 MB | 435 MB |
+| Alice (EPUB) | finished | 35 | 377 MB | 400 MB | 402 MB |
+
+Linux keeps more than Windows (each phase starts from what the last one
+left: glibc does not hand freed memory back). Calculus is over 512 MB while
+ingesting, before any C18 code runs; it is also over the 50 MB upload limit,
+so the app refuses it today. Every shelf book under the limit finishes inside
+512 MB, the highest at 464 MB (SICP).
+
+After the memory fix (`48e7fc3`: PDF text read 50 pages per pypdf reader,
+freed memory handed back with `malloc_trim` after each phase and batch,
+regions loaded with only the meta prose needs), same container, same
+command, `--memory=512m --memory-swap=512m`:
+
+| Book | 512 MB cap | Seconds | Peak: ingest | Peak: regions job | Peak: prose rebuild | Held by the gate's in-memory database at the end |
+|---|---|---|---|---|---|---|
+| Calculus Volume 1 | finished | 651 | 399 MB | 475 MB | 502 MB | 12 MB |
+| SICP | finished | 257 | 362 MB | 386 MB | 410 MB | 9 MB |
+| Lessons in Electric Circuits I | finished | 315 | 344 MB | 383 MB | 397 MB | 9 MB |
+| Interactive Linear Algebra | finished | 219 | 340 MB | 373 MB | 401 MB | 5 MB |
+| Alice (EPUB) | finished | 35 | 345 MB | 379 MB | 387 MB | 1 MB |
+
+The pypdf step on its own (Calculus, one process, `/proc/self/status`):
+one reader for all 769 pages 88 to 288 MB; a fresh reader per 50 pages 88
+to 136 MB, the same text for every page. Calculus keeps about 10 MB under
+the limit; the books the app accepts (50 MB upload limit) keep 100 MB or
+more.
 
 ### C14.1: Render-ready image with the model baked in (2026-11-12)
 
@@ -904,7 +1131,282 @@ httpx and the Supabase client already loaded: 55.8 → 57.1 MB RSS (+1.3
 MB). No new dependency (httpx was already pinned). The in-process LRU
 holds at most 2,000 compact answers.
 
+### Markdown and notebook conversion (C19.2a, 2026-11-13)
+
+New: `markdown-it-py==4.2.0`, `mdurl==0.1.2`, `mdit-py-plugins==0.6.1`
+(MIT, licence files read after install) and `latex2mathml==3.81.1` (MIT in
+its metadata); pure Python, about 250 KB of wheels. Windows, Python 3.11,
+fresh process, measured with psutil:
+
+| Step | RSS |
+|---|---|
+| `import backend.main` (the app as served) | 129.1 MB |
+| + `backend.convert.markdown` and the EPUB builder | +2.5 MB |
+| converting `sample.md` x 40 (31,960 characters, 80 chapters, 67 KB EPUB) | +2.6 MB more, 108 ms |
+
+Command: the inline script recorded in the C19.2a PROGRESS row. Not
+measured in the Linux container; well inside the 450 MB bar either way.
+
+### pandoc for LaTeX sources (C19.3, measured, not adopted; 2026-11-13)
+
+A throwaway image: `readfocus-c18g-measure` (the C18.G container, 917 MB)
+plus `apt-get install --no-install-recommends pandoc` (Debian's pandoc
+3.1.11.1, GPL-2.0-or-later). In a `--memory=512m` container, psutil polling
+the pandoc process every 10 ms, `pandoc <file> -f latex -t epub3 --mathml`:
+
+| What | Result |
+|---|---|
+| Image | 917 MB -> 1.16 GB (+243 MB; `/usr/bin/pandoc` is 189 MB) |
+| A 1.4 KB LaTeX source (sections, math, align, 3 figures, a table) | 0.05 s, peak RSS 71 MB |
+| The same body 40 times (41 KB, a long paper) | 0.31 s, peak RSS 119 MB |
+
+Against Gate G5's container peaks (Calculus Volume 1: 399 MB ingesting,
+475 MB in the regions job, 502 MB in the prose rebuild, under the 512 MB
+limit), a 70-120 MB pandoc process during another book's ingestion would
+pass the limit, so pandoc was not added and C19.3 was skipped.
+
+### In-browser OCR for scanned pages (C19.4b, 2026-11-13)
+
+tesseract.js 7.0.0 and tesseract.js-core 7.0.0 (Apache-2.0, licence files
+read after install), English model from @tesseract.js-data/eng 1.0.0 (MIT
+package; `4.0.0_best_int`). Served from our origin (`/ocr/`, copied at
+build): worker 111 KB, one core of three by browser support (3.9 MB each,
+wasm inline), model 2.95 MB gzipped; about 7 MB on a reader's first OCR,
+then cached by the browser (the model also in IndexedDB). The tesseract.js
+library is a lazy chunk of 17.2 KB (7.2 KB gzip); the entry bundle does not
+include it. The server gains no dependency or memory.
+
+Seconds per page, `npx playwright test e2e/ocr.spec.js -g "fully scanned"`
+three times (headless Edge on this machine, the app from `vite preview` on
+loopback, the 2-page `scanned.pdf` at 150 dpi, 185 words a page, drawn for
+OCR at about 300 dpi capped at 2,400 px):
+
+| Step | Time |
+|---|---|
+| First page, from the worker request to the page's words posted (engine and model loaded from the local server) | 1.2 s, 1.2 s, 1.2 s |
+| Second page, from the first page's post to its own | 0.8 s, 0.8 s, 0.8 s |
+
+Not measured: a phone, a real network download of the 7 MB, long dense
+pages.
+
 ## Frontend: Lighthouse and image budgets
+
+### C22 close: the notepad (2026-11-14)
+
+`npm --prefix frontend run build` at the C22 close (after `f69a5fc`). Budget
+from the C22 plan: the entry chunk grows by at most 5 kB gzip over the chunk.
+
+| Chunk | Before C22 (gzip) | C22 close (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.74 kB (35.08 kB), C20.8c | 100.68 kB (36.45 kB): +1.37 kB gzip |
+| `ReadingSession-*.js` | 127.95 kB (42.14 kB) after C21 and C22.2 | 154.08 kB (50.64 kB): C22.3-C22.6 add 8.5 kB gzip (markers, sync, notes from the book) |
+| `TextEditor-*.js` (lazy, TipTap) | none | 406.77 kB (129.25 kB), budget 150 kB gzip |
+| `DrawingEditor-*.js` + Excalidraw core + CSS (lazy) | none | 558.28 + 533.35 + 142.02 kB (169.60 + 178.89 + 22.37 kB gzip), about 385 kB gzip with the small chunks, budget 1.2 MB |
+| `katex-*.js` (lazy, shared with Steve) | 259.69 kB (77.81 kB) | unchanged |
+
+Opening the reading page loads none of TipTap, Excalidraw or KaTeX; the
+notepad's list draws notes with NoteDoc, and KaTeX loads with the first math
+shown.
+
+### C22.3: drawing notes and Excalidraw (2026-11-14)
+
+`npm --prefix frontend run build` after C22.3; what opening a drawing loads was
+read from the e2e build's network log (a temporary spec), gzip sizes from the
+build. Budget from the C22 plan: Excalidraw at most 1.2 MB gzip, fonts apart.
+
+| Loaded when a drawing opens | Size (gzip) |
+|---|---|
+| `DrawingEditor-*.js` (our editor and Excalidraw's entry) | 558.28 kB (169.61 kB) |
+| `chunk-K2UTITRG-*.js` (Excalidraw's core) | 533.35 kB (178.89 kB) |
+| `DrawingEditor-*.css` (Excalidraw's styles) | 142.02 kB (22.37 kB) |
+| `chunk-6U3AYISY-*.js` | 22.44 kB (8.62 kB) |
+| nine small chunks (file and directory open/save, `en` locale, roundRect, …) | 5.48 kB gzip together |
+| **JS and CSS together** | **about 385 kB gzip** |
+| Excalidraw's UI font, Assistant Regular and Medium (bundled from its CSS) | 40.6 kB woff2 |
+| Excalifont faces, from `/excalidraw-assets/` only when text is drawn | about 25 kB each |
+
+Not loaded unless used: `chunk-EIO257PC-*.js` 1,821 kB (744.25 kB gzip) and
+`chunk-FOHPRMQF-*.js` 662.67 kB (143.23 kB gzip), with mermaid's diagram
+chunks and 50-odd locale files: Excalidraw's "Mermaid to Excalidraw" and its
+other languages. The entry chunk: 97.08 kB (35.20 kB gzip) after C22.2b, 100.68
+kB (36.46 kB gzip) now, +1.26 kB gzip (budget 5). `public/excalidraw-assets/`
+holds all nine font families, about 12.5 MB on disk (Xiaolai's 209 subsets
+most of it), fetched one face at a time; none is fetched from another host
+(`e2e/notes-drawing.spec.js`).
+
+`@excalidraw/excalidraw` 0.18.1 is MIT (package.json; it ships no licence
+file). `npm audit --omit=dev` after it: 17 findings (13 high, 1 moderate, 3
+low); new with Excalidraw: `nanoid` 3.3.3 (Excalidraw's element ids), and
+through `@excalidraw/mermaid-to-excalidraw`: `lodash-es` 4.17.21,
+`chevrotain`, `langium`, `@mermaid-js/parser`, `mermaid` 11 and its `katex`
+0.16. Already there before: vite, postcss, source-map-js, react-router.
+After the C22.3 follow-up (`package.json` `overrides`: nanoid 3.3.20 in
+Excalidraw, 5.1.16 in mermaid-to-excalidraw, lodash-es 4.18.1, mermaid's
+katex 0.19.1): 5 findings (4 high, 1 low), all of them the older ones; the
+build lost mermaid's own 259 kB (77.5 kB gzip) katex chunk, as it now shares
+ours. The Mermaid tool still converts, math labels included
+(`e2e/notes-drawing.spec.js`).
+
+### C22.2: the notepad and TipTap (2026-11-14)
+
+`npm --prefix frontend run build` after C22.2b. Budgets from the C22 plan:
+the entry chunk grows by at most 5 KB gzip, the TipTap chunk is at most
+150 KB gzip.
+
+| Chunk | Before (gzip) | After C22.2b (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.88 kB (35.13 kB), C22.2a | 97.08 kB (35.20 kB) |
+| `ReadingSession-*.js` | 90.03 kB (30.54 kB), C20.8c, before C21 | 127.95 kB (42.14 kB), with C21 and C22.2a/b |
+| `TextEditor-*.js` (new, lazy: TipTap 3.34.0, ProseMirror, our math nodes) | none | 406.76 kB (129.25 kB) |
+| `TextEditor-*.css` (new, lazy) | none | 2.96 kB (0.92 kB) |
+| `katex-*.js` (lazy since C20.7b, now also for notes) | — | 259.69 kB (77.81 kB) |
+
+The editor chunk loads only when a note is opened for editing or added
+(checked in `e2e/notes-editor.spec.js`: no `TextEditor` script before
+"Text"); drawn notes use NoteDoc and KaTeX only. The six `@tiptap/*`
+packages are MIT, pinned at 3.34.0; `npm audit` names none of them (its six
+findings are in vite and launch-editor, as before).
+
+### C20.8b-c: block actions and mathml-to-latex (2026-11-14)
+
+`npm --prefix frontend run build` after C20.8c, against C20.7b above:
+
+| Chunk | C20.7b (gzip) | C20.8c (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.74 kB (35.07 kB) | 96.74 kB (35.08 kB) |
+| `ReadingSession-*.js` | 77.47 kB (26.60 kB) | 90.03 kB (30.54 kB) |
+| `dist-*.js` (new, lazy: `mathml-to-latex` + `@xmldom/xmldom`) | none | 172.48 kB (52.17 kB) |
+
+`mathml-to-latex` 1.8.0 (MIT, released 2026-06-10; one dependency,
+`@xmldom/xmldom` 0.9.12, MIT) is imported only when an EPUB equation with
+no TeX annotation is copied or explained; `npm audit` names neither.
+
+### C20.7b: Steve's panel and KaTeX (2026-11-14)
+
+`npm --prefix frontend run build`, before (C20.7a's tree, the panel not
+imported) and after:
+
+| Chunk | Before (gzip) | After (gzip) |
+|---|---|---|
+| `index-*.js` (initial) | 96.70 kB (35.02 kB) | 96.74 kB (35.07 kB) |
+| `ReadingSession-*.js` | 53.56 kB (18.62 kB) | 77.47 kB (26.60 kB) |
+| `ReadingSession-*.css` | 17.06 kB (3.85 kB) | 26.16 kB (5.26 kB) |
+| `katex-*.js` (new, lazy) | none | 259.69 kB (77.81 kB) |
+
+KaTeX 0.19.1 (MIT, released 2026-10-23; its one dependency, `commander`, is
+for its command line only) is imported on the first equation Steve
+writes, with `output: "mathml"`, so no KaTeX fonts or CSS are shipped;
+the MathML goes through DOMPurify's MathML profile. Code in answers is
+tinted by `frontend/src/steve/highlight.js`, no dependency. `npm audit`
+names neither package.
+
+### C17.5: page turns on the original view (2026-11-12)
+
+`e2e/reader.spec.js` "page-turn frame rate", Playwright on Edge against the
+production build (`vite preview`), 1440 x 900, API mocked: four turns
+(two forward, two back, 800 ms apart) with the leaf animation, frames
+sampled with requestAnimationFrame; written to
+`frontend/test-results/reader-benchmarks-{pdf,epub}.json`.
+
+| Book | fps | worst frame | frames over 33 ms |
+|---|---|---|---|
+| `sample.pdf` (6 pages) | 75 | 13.7 ms | 0 |
+| `reflow.epub` (4 sections, 9 images) | 75 | 13.8 ms | 0 |
+
+A cached word's card opens within 600 ms of the pointer reaching the word
+on both (asserted, not recorded). Not measured: the 4x CPU throttle run of
+C12, a long PDF's text search for today's chunks, phones.
+
+### C17.3: EPUB renderer (2026-11-12)
+
+foliate-js vendored at `78914aef4466` (MIT; decision D-C17.3 in
+`docs/DECISIONS.md`) and `dompurify@3.4.17` (MPL-2.0 or Apache-2.0).
+Minified + `gzip -9`: foliate-js for a reflowable EPUB 37.2 KB (view, CFI,
+progress and overlayer 8.2, EPUB parser 8.1, paginator 7.1, zip 13.8;
+fixed layout +2.4), bundled with rolldown in the evaluation; DOMPurify
+`purify.min.js` 29,828 B raw, 11,757 B gzip. As with PDF.js, the production
+build has no EPUB chunk yet (only the dev gallery imports the renderer;
+`grep` finds neither in `dist/assets/*.js`).
+
+Checks: `/__epub` on the Vite dev server, Microsoft Edge through
+Playwright, on the generated fixtures (`tools/make_reader_fixtures.py`).
+Script in the scratchpad, not committed. Every image shown on any page is
+fetched and hashed (SHA-256) and matched against the package's image files.
+
+| Check | Result |
+|---|---|
+| `reflow.epub` images: packaged vs shown, 1440 px, DPR 1 (two pages side by side) | 9 packaged, 8 shown: `wide-2x.png` is the `srcset` 2x candidate of `wide.png`, so a DPR 1 screen shows `wide.png` |
+| Same, 800 px, DPR 2 (one page) | 9 packaged, 8 shown: `wide-2x.png` instead of `wide.png` |
+| `diagram.svg` | shown at 400 x 200 with its shapes; its bytes differ from the package because foliate loads SVG files as text and our sanitizer re-serialises them (no script inside) |
+| Kinds covered | `<img>` PNG and GIF, `<img>` of an SVG, inline `<svg>` `<image>` by `xlink:href` and by SVG 2 `href`, a CSS background, a `<figure>` with `<figcaption>`, a `srcset`, the cover |
+| Figure and caption | same column (left 77 px both), caption 7 px under the image; the image has `width="1200" height="800"` from its header before it decodes |
+| MathML | `<math>` is a `MathMLElement`, 53 px high; its `<mfrac>` 33 px |
+| Code | `<pre><code>` text identical to the source, indentation kept (`white-space: pre-wrap`) |
+| `fixed.epub` | both pages' images shown; page one alone on the right of the first spread, frame 535 x 713 |
+| `hostile.epub` | no script ran (top window and section), 0 scripts, 0 event handlers, 0 iframe/form/input/object/embed, 0 `javascript:` links, 0 `http-equiv` metas, 0 references to `example.invalid` left, the local image shown, no request off `localhost` |
+| CSP backstop (`vite preview` of the production build, a blob: iframe with an inline script, an `onerror` handler, a remote image and a remote background) | script and handler did not run; 4 CSP violations reported; the remote loads refused |
+| Style switch | Publisher: `Georgia, serif` (the book's CSS); ReadFocus: `"ReadFocus Lora", Georgia, serif` at 18 px, the font loaded inside the section |
+| CFI | a location's CFI, after going elsewhere, `goTo` it: the same CFI back |
+| Page turn (call to `relocate`) | 300 to 306 ms with foliate's slide animation (that is its duration); 0 to 1 ms with reduced motion |
+| JS heap (`performance.memory`) before and after paging the whole fixture | 18.9 to 22.7 MB (DPR 1), 18.8 to 22.9 MB (DPR 2) |
+
+Images load per section (foliate) and, inside a section, with
+`loading="lazy"` and `decoding="async"`, so the browser decodes the ones
+near the visible page; this was not measured page by page. Not measured: a
+real publisher EPUB, a phone, a production build of the renderer.
+
+### C17.2: PDF.js renderer (2026-11-12)
+
+`pdfjs-dist@6.4.299` (Apache-2.0, checked in the installed `package.json`
+and `LICENSE`; released 2026-10-03; its only optional dependency,
+`@napi-rs/canvas`, is for Node and is never bundled). Sizes of the files
+the browser loads, `gzip -9`:
+
+| File | Raw | Gzip | Loaded |
+|---|---|---|---|
+| `build/pdf.min.mjs` (library) | 458,904 B | 131,443 B | when a PDF opens |
+| `build/pdf.worker.min.mjs` (worker) | 1,264,342 B | 374,642 B | when a PDF opens |
+| `/pdfjs/wasm/*.wasm` (JPEG 2000, JBIG2, colour) and `/pdfjs/standard_fonts/*` | 1,249,437 B together | n/a | only when a page needs one |
+
+A production build has **no** PDF.js chunk yet: only the dev gallery
+(`/__pdf`) imports the renderer, and `grep -l "GlobalWorkerOptions\|pdfjs"
+dist/assets/*.js` finds nothing, so the first-load bundle is unchanged. The
+chunk sizes in the build are measured when the reader imports it (C17.4/5).
+`dist/pdfjs/` (1.4 MB with licences) is copied into every build and fetched
+on demand only. `quickjs-eval` (JavaScript inside PDFs) and the JS decoder
+fallbacks are not served.
+
+Timing: `/__pdf` on the Vite dev server (unminified app code; the worker is
+the minified file), Microsoft Edge through Playwright, 1440 x 1100, on the
+593-page "Digital Design And Computer Architecture" PDF (5,073,556 B) from a
+Supabase Storage signed URL, opening at page 40. Script in the scratchpad,
+not committed.
+
+| Measure | Result | Target |
+|---|---|---|
+| First page shown (canvas and text layer), new browser context each run | run 1: 3,135 ms (Vite still compiling `pdfjs-dist`), 1,312, 1,335 ms; run 2 (final code): 1,994 ms, 1,289, 1,289 ms | < 1.5 s |
+| First page, same context again (HTTP cache warm), DPR 2 | run 1: 1,276, 846 ms; run 2: 1,333, 854 ms | |
+| Signing the URL (`create_signed_url`, what `GET /books/{id}/file` calls), 6 calls from this machine | 180, 109, 112, 126, 105, 103 ms | |
+| Page turn, page already in the ±2 cache, DPR 2 (click to text layer rendered) | run 1: 7, 6, 4, 4, 4 ms; run 2: 8, 7, 5, 4, 3 ms | < 200 ms |
+
+The first new context of each run is the slowest (3.1 s and 2.0 s, over
+the target): the dev server's first transform and a cold connection to
+Storage; later contexts land at about 1.3 s.
+
+In the gallery the source is ready at once. For a book, `usePdfDocument`
+starts loading PDF.js and asks `GET /books/{id}/file` at the same moment,
+so the signing time overlaps the library download instead of adding to it;
+added in full it would make a cold first page 1.42 to 1.52 s, at the 1.5 s
+target rather than clearly under it. The endpoint was not timed through
+the backend (it needs a signed-in reader); its select and auth add to the
+signing time above. Not measured: a production build, a
+phone, Render's region.
+
+Checked by eye (screenshots): a selected line's highlight sits on its glyphs
+at 100 % (span 288.1 x 13.3 px) and 200 % (576.2 x 26.7 px, exactly double);
+the cover (raster), a photograph page (p. 31) and a vector figure with
+hatching (p. 52, Figure 1.29) render complete. The canvas is 1535 x 1728 at
+DPR 2 for a 767 px wide page. No pixel comparison with a second renderer.
 
 ### C13 close: every page (2026-11-11)
 

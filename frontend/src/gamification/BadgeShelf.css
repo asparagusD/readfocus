@@ -1,0 +1,144 @@
+/* The badge shelf (C24.6b, handoff screen 26): seals and bookplates on a shelf edge. */
+.rf-shelf {
+  margin-top: var(--space-7);
+}
+
+.rf-shelf__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-6) var(--space-4);
+  margin: 0;
+  padding: 0 0 var(--space-5);
+  border-bottom: 2px solid var(--line-2);
+  list-style: none;
+}
+
+.rf-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.rf-badge__emblem {
+  display: inline-flex;
+  align-items: center;
+  min-height: 84px;
+  margin-bottom: var(--space-2);
+}
+
+.rf-badge__seal {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+}
+
+.rf-badge__rim {
+  position: absolute;
+  inset: 0;
+}
+
+.rf-badge__rim path {
+  fill: none;
+  stroke: var(--line-field);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+
+.rf-badge__rim circle {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1;
+}
+
+.rf-badge__seal > svg + svg,
+.rf-badge__plate svg {
+  position: relative;
+  color: var(--ink-3);
+}
+
+.rf-badge__plate {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 76px;
+  height: 84px;
+  padding: var(--space-1) 0 var(--space-2);
+  border: 1px dashed var(--line-field);
+  border-radius: var(--radius-hair);
+}
+
+.rf-badge__exlibris {
+  color: var(--ink-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-running-head);
+  line-height: var(--text-running-head--line-height);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Earned: the seal inked in the accent, the plate framed in it. */
+.rf-badge.is-earned .rf-badge__rim path {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-dasharray: none;
+}
+
+.rf-badge.is-earned .rf-badge__rim circle {
+  stroke: var(--accent-ink);
+  opacity: 0.6;
+}
+
+.rf-badge.is-earned .rf-badge__seal > svg + svg {
+  color: var(--accent-ink);
+}
+
+.rf-badge.is-earned .rf-badge__plate {
+  border: 1px solid var(--accent-text);
+  outline: 1px solid var(--accent-text);
+  outline-offset: 2px;
+  background-color: var(--surface);
+}
+
+.rf-badge.is-earned .rf-badge__plate svg,
+.rf-badge.is-earned .rf-badge__exlibris {
+  color: var(--accent-text);
+}
+
+.rf-badge__name {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--text-ui);
+  line-height: var(--text-ui--line-height);
+}
+
+.rf-badge__line {
+  margin: 0;
+  max-width: 22ch;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+
+.rf-badge__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .rf-shelf__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-3);
+  }
+}

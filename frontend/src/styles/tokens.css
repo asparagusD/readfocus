@@ -162,6 +162,14 @@
   --cover-ochre: #7a5c2e;
   --cover-slate: #38434a;
   --cover-title: #f6efe3;
+
+  /* C21.2: the selection toolbar's colour dots, fixed hex in both themes (handoff); a --line-field ring is
+     their boundary, as Paper's dots alone are under 3:1. */
+  --dot-honey: #d9b84f;
+  --dot-sage: #8fae7e;
+  --dot-sky: #7fa3c2;
+  --dot-rose: #d08a7e;
+  --dot-lilac: #a892c6;
 }
 
 /* ── Colour: Paper, terracotta (default) ────────────────────────────── */
@@ -182,6 +190,18 @@
   --warn-soft: #f6e9cf;
   --swatch-terracotta: #a64b2a; /* both accents, for the accent setting's swatches */
   --swatch-sage: #506a4a;
+  /* C21.2, handoff screen 18: highlights behind ink (11.1:1 or more) and underlines in the same hue, 2 px,
+     3:1 or more on every ground. */
+  --hl-honey: #f4e2a8;
+  --hl-sage: #dce6cf;
+  --hl-sky: #d5e2ec;
+  --hl-rose: #f0d6d0;
+  --hl-lilac: #e4dcec;
+  --ul-honey: #988137;
+  --ul-sage: #728b65;
+  --ul-sky: #68869f;
+  --ul-rose: #af746a;
+  --ul-lilac: #8d7ba6;
 
   --accent: #a64b2a;
   --accent-hover: #904428; /* A8: 18% toward --ink */
@@ -225,6 +245,17 @@
   --warn-soft: #3a2e1c;
   --swatch-terracotta: #e59a6c;
   --swatch-sage: #a8c198;
+  /* The handoff's rgba highlights laid over --page, opaque so contrast can be measured (6.6:1 or more). */
+  --hl-honey: #5e4c2e;
+  --hl-sage: #46483a;
+  --hl-sky: #3e454b;
+  --hl-rose: #573d36;
+  --hl-lilac: #4c424d;
+  --ul-honey: #d9b84f;
+  --ul-sage: #8fae7e;
+  --ul-sky: #7fa3c2;
+  --ul-rose: #d08a7e;
+  --ul-lilac: #a892c6;
 
   --accent: #e59a6c;
   --accent-hover: #e7a87f;

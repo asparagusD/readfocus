@@ -19,6 +19,19 @@ supabase==2.34.1
 pypdf==7.0.0
 ebooklib==0.21
 beautifulsoup4==4.15.0
+# Region map (C18.2): characters with fonts and positions. pdfplumber is
+# MIT; it pins pdfminer.six (MIT) and needs pypdfium2 (BSD-3/Apache-2.0,
+# ships PDFium), pinned here to releases at least two weeks old.
+pdfplumber==0.11.10
+pdfminer.six==20260107
+pypdfium2==5.14.0
+# Converted sources (C19.2): Markdown and notebook text to XHTML, LaTeX to
+# MathML. All MIT, pure Python, releases at least two weeks old; +2.6 MB RSS
+# on import (docs/BENCHMARKS.md).
+markdown-it-py==4.2.0
+mdurl==0.1.2
+mdit-py-plugins==0.6.1
+latex2mathml==3.81.1
 
 # Local NLP (backend/nlp/). No API calls.
 fastembed==0.9.1
@@ -34,3 +47,19 @@ langchain-core==1.7.6
 
 # backend/mcp_server.py only. The app does not start it (C3.4); manual use.
 mcp==1.30.0
+
+# Steve (C20.2): Google's Gen AI SDK, imported only by backend/steve/provider.py
+# and only on first use (+18 MB RSS when loaded, docs/BENCHMARKS.md). Apache-2.0.
+# Its other dependencies (httpx, pydantic, google-auth, tenacity, websockets,
+# requests, anyio) are already here or installed through supabase and pdfminer.
+google-genai==2.34.0
+
+# Readers' own Gemini keys (C20.3): Fernet with an HKDF-derived key in
+# backend/steve/keys.py. Already installed through google-auth and
+# pdfminer.six; pinned here now that backend/ imports it directly.
+cryptography==50.0.2
+
+# Readers' time zones (C24.1): zoneinfo reads the IANA database, which
+# Windows and some slim images lack. Pure data, Apache-2.0, ~350 KB;
+# loading five zones added 36 KiB RSS. Not imported by name.
+tzdata==2026.5

@@ -8,17 +8,23 @@ your score.
 
 - **Intelligent**: planning, question generation, grading and pacing adapt to
   the reader.
-- **Blazing fast**: no waiting on remote model calls.
-- **$0 API cost**: all intelligence is algorithmic or runs on local models.
+- **Blazing fast**: reading, tests and grading never wait on a remote model.
+- **$0 API cost**: algorithmic or local; Steve uses Gemini's free tier or a reader's key.
 - **Cozy and sophisticated UI** that feels like reading a real book.
 - Built in a **27-hour sprint**, split into chunks (C0, C1, ...) and
   subchunks (C1.1, C1.2, ...).
 
 ## Hard constraints
 
-1. No LLM or embedding API calls of any kind (Groq, OpenAI, Anthropic,
-   Gemini/Google AI, Cerebras, SambaNova, OpenRouter). No paid services. No
-   payment methods.
+1. Gemini is the only generative AI allowed: only for Steve, only through
+   our backend, only after the reader's consent, on the free tier (no
+   billing account) or the reader's own key. Everything else stays
+   algorithmic and local: no other LLM or embedding API (Groq, OpenAI,
+   Anthropic, Cerebras, SambaNova, OpenRouter), no scraping, no paid APIs
+   or services, no payment methods. Free-tier prompts and responses may be
+   used by Google to improve its products, so Steve shows a consent notice
+   before first use and can be turned off. Never send more book text than
+   Steve's context builder allows.
 2. Supabase migrations are additive only. Never drop tables or columns.
    Dev and production share one Supabase project (`lvfhuszvuiowyeizstru`,
    decided at Gate G4): treat it as production. Reading it is allowed:
@@ -35,6 +41,20 @@ your score.
 5. Render Free has tight RAM/CPU: measure memory (psutil RSS) before adding
    any model or heavy dependency.
 
+## Phase 2 (C16–C25, 45.5-hour budget)
+
+Adds Steve, highlights and underlines, a notepad, focus mode, gamification
+and the original view. English only: Bengali/Bangla books are out of scope.
+
+- **Original view**: PDF and EPUB renderers show each book as published (images, figures, math, code); the book view is retired (C17).
+- **Region map**: each page split into prose, math, code, figure and table regions (`docs/ANCHORS.md`, written in C16.3).
+- **Anchors**: highlights, notes and drawings point at PDF quads or an EPUB CFI range, plus a text quote (`docs/ANCHORS.md`).
+- **Body start**: where the book's body (chapter 1) begins after front matter; focus mode unlocks there (`docs/FOCUS_RULES.md`, C16.3).
+- **Focus session**: a server-timed stopwatch with server-scored points, a bookmark quiz and a 3-hour cap (`docs/FOCUS_RULES.md`).
+- **Gamification** (`docs/GAMIFICATION.md`, C16.3): no dark patterns: streak freezes, no guilt notifications, no fake users, a leaderboard opt-out. Only the server writes points and XP.
+- **Readers' own Gemini keys** are stored encrypted on our server, never logged, never returned in full.
+- **New env vars** (names only): `GEMINI_API_KEY`, `GEMINI_MODEL_CHAT`, `GEMINI_MODEL_VISION`, `STEVE_DAILY_LIMIT_PER_USER`, `KEY_ENCRYPTION_SECRET`, `CRON_SECRET`.
+
 ## Working method
 
 - **Skills first.** Every prompt names the skills to load (see
@@ -49,17 +69,9 @@ your score.
   rewiring files, run `make graph` and include `docs/repo-graph/` in the same
   commit.
 - **Standard checks** before every commit (see [below](#standard-checks)).
-- **Debug protocol** on any failure:
-  1. Log the exact command, error and stack trace in `docs/DEBUG_LOG.md`.
-  2. Reproduce with the smallest failing command or test.
-  3. Read the failing file's upstream and downstream files via the repo graph.
-  4. Write 1–3 ranked hypotheses with evidence.
-  5. Test one at a time.
-  6. Make the minimal root-cause fix.
-  7. Add a regression test that fails before and passes after.
-  8. Re-run the standard checks.
-  9. Record the root cause; commit as `fix(<scope>): ...`.
-  10. After 3 failed attempts, stop, restore the last green state, and report.
+- **Debug protocol** on any failure: the ten steps of the `debug-protocol`
+  skill (log in `docs/DEBUG_LOG.md`, reproduce, ranked hypotheses, minimal
+  root-cause fix, regression test, `fix(<scope>): ...`; stop after 3 tries).
 - **Progress.** Tick each subchunk in `docs/PROGRESS.md`
   (Step | Commit | Change | Verified by | Time | Open issues).
 - **Ask, don't assume** before anything irreversible, writing to the
@@ -76,11 +88,13 @@ your score.
 | Data | Supabase: Postgres, pgvector, Storage, Auth, RLS (`supabase/migrations/`) |
 | Agents | LangGraph with five algorithmic agents: orchestrator, planner, test generator, evaluator, optimizer (`backend/agents/`) |
 | Embeddings | Local fastembed models, cached under `FASTEMBED_CACHE` |
+| Study assistant | Steve: Gemini through the backend, opt-in (from C20) |
 | Word lookup | Free Dictionary API and Wikipedia |
 | Hosting | Render Free (backend), Vercel (frontend) |
 
 Since C8.8 no backend code, dependency or config uses an LLM or embedding
-API; `backend/tests/test_no_paid_ai.py` keeps it that way (constraint 1).
+API. `backend/tests/test_no_paid_ai.py` still bans Gemini too; Steve's
+backend chunk narrows it to his module, test first (constraint 1).
 
 Python: `.venv`, the Docker image and CI are 3.11 (CI since C14.5);
 `pyrightconfig.json` still says 3.14. Write code that runs on 3.11. Dev and
@@ -96,12 +110,8 @@ CI tools (pytest, ruff, psutil) are pinned in `requirements-dev.txt`.
 
 ## Run commands
 
-Activate the virtualenv first; `uvicorn`, `ruff` and `pytest` live in `.venv`
-and are not on PATH otherwise.
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
+Activate the virtualenv first (`.\.venv\Scripts\Activate.ps1`); `uvicorn`,
+`ruff` and `pytest` live in `.venv` and are not on PATH otherwise.
 
 ```bash
 make dev-backend    # FastAPI on http://127.0.0.1:8000, health check at /health
@@ -124,6 +134,7 @@ python -c "import backend.main"
 pytest tools/repo_graph/tests -q
 npm --prefix frontend run check:contrast
 npm --prefix frontend run check:images
+npm --prefix frontend run check:bundle
 npm --prefix frontend run test:unit
 npm --prefix frontend run test:e2e
 ```
@@ -133,18 +144,19 @@ Baseline when this file was written (C1.1; the last four rows were added in C10.
 | Check | Result |
 |---|---|
 | `ruff check backend/` | fails: 27 errors in existing code (28 until C14.3, 30 until C9.4, 31 until C9.1b, 32 until the issue 29 fix, 36 until C8.8, 40 until C8.5, 84 until C3.4, 83 until C4.5, 82 until C5.5, 81 until C6.4, 64 until C8.3, 63 until C8.4a, 48 until C8.4b) |
-| `pytest backend/tests -q` | passes: 811 tests, offline (809 until C15.3, 806 until the C15.2 issue 17 fix, 804 until the C14.5 requirements fix, 795 until C14.3, 787 until C14.1, 783 until C13.3a, 782 until the C12.6 cache-key fix, 775 until the second C12.6 follow-up, 772 until the C12.6 follow-up, 743 until C12.6, 735 until C12.4, 728 until C12.3b, 712 until C12.2, 689 until the C12.1 chapter fix, 678 until C12.1c, 673 until C12.1b, 652 until C12.1a, 650 until the C11.2 backfill fix, 608 until C11.2, 606 until the C9.3 preload fix, 605 until the C9.5 bench fix, 593 until C9.4, 584 until C9.3, 582 until C9.2, 568 until C9.1b, 551 until C9.1a, 548 until C9.0a, 546 until the issue 34 fix, 543 until the issue 33 fix, 542 until the issue 29 fix, 541 until the C8.G fix, 538 until C8.8, 527 until C8.7, 525 until the C8.5 fix of issue 32, 524 until the C8.5 fix of issue 31, 516 until C8.6, 495 until C8.5, 485 until C8.4b, 472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
-| `npm --prefix frontend run lint` | fails: 4 errors, 0 warnings in existing code (6 until C13.8b, 7 until C13.7a, 8 until C13.6a, 12 errors and 2 warnings until C13.5a, 13 until the C13.5 auto-submit fix, 17 until C13.3a, 18 until C13.1b, 19 until C12.5a, 20 until C12.3b, 21 until C10.6, 22 until C10.5b) |
+| `pytest backend/tests -q` | passes: 2014 tests, offline (2013 until the C25.G regions-id fix, 2011 until C25.2, 2006 until the C25.1 note-files fix, 2005 until C24.7, 2003 until C24.6c, 1947 until C24.5, 1929 until C24.4, 1918 until C24.3b, 1864 until C24.3a, 1771 until C24.2, 1682 until C24.1, 1678 until the C23.G bookmark-place fix, 1676 until the C23.G grading-failure fix, 1675 until the C23.G retake fix, 1668 until the C23.G backfill script, 1667 until the C23.G path fix, 1666 until the C23.8 rules version, 1664 until the C23.8 bonus cap, 1654 until C23.8, 1653 until C23.7c, 1647 until C23.7b, 1646 until C23.7a, 1644 until C23.6b, 1640 until C23.6a, 1608 until C23.5, 1575 until C23.4, 1542 until C23.3, 1534 until C23.2, 1482 until C23.1, 1477 until C22.2b, 1412 until C22.1, 1382 until C21.1, 1370 until C20.9, 1369 until the C20.9 client fix, 1345 until C20.8a, 1314 until C20.6, 1284 until C20.5, 1258 until C20.4, 1230 until C20.3, 1185 until C20.2, 1159 until C20.1, 1157 until the C19.4 OCR-text fix, 1136 until C19.4a, 1120 until C19.2c, 1110 until C19.2b, 1097 until C19.2a, 1095 until the C19.1 epubcheck fix, 1070 until C19.1a, 1065 until the C18.G memory fix, 1061 until the C18.G unreadable fix, 1060 until the C18.G garble-filter fix, 1059 until the C18.G EPUB anchor fix, 1058 until the C18.6c paging fix, 1053 until C18.6d, 1046 until C18.6c, 1034 until C18.6b, 1021 until C18.6a, 1000 until C18.5b, 985 until C18.5a, 962 until C18.4, 913 until C18.3, 895 until C18.2b, 878 until C18.2a, 858 until C18.1, 857 until the C17.6 backfill fix, 849 until C17.6, 829 until C17.5a, 823 until C17.1c, 812 until C17.1a, 811 until C16.4, 809 until C15.3, 806 until the C15.2 issue 17 fix, 804 until the C14.5 requirements fix, 795 until C14.3, 787 until C14.1, 783 until C13.3a, 782 until the C12.6 cache-key fix, 775 until the second C12.6 follow-up, 772 until the C12.6 follow-up, 743 until C12.6, 735 until C12.4, 728 until C12.3b, 712 until C12.2, 689 until the C12.1 chapter fix, 678 until C12.1c, 673 until C12.1b, 652 until C12.1a, 650 until the C11.2 backfill fix, 608 until C11.2, 606 until the C9.3 preload fix, 605 until the C9.5 bench fix, 593 until C9.4, 584 until C9.3, 582 until C9.2, 568 until C9.1b, 551 until C9.1a, 548 until C9.0a, 546 until the issue 34 fix, 543 until the issue 33 fix, 542 until the issue 29 fix, 541 until the C8.G fix, 538 until C8.8, 527 until C8.7, 525 until the C8.5 fix of issue 32, 524 until the C8.5 fix of issue 31, 516 until C8.6, 495 until C8.5, 485 until C8.4b, 472 until C8.4a, 30 until C4.1, 156 until C5.1, 263 until C6.1, 268 until C6.2, 339 until C7.1, 346 until C7.2, 368 until C7.3, 400 until C7.4, 409 until C8.1, 433 until C8.2, 466 until C8.3) |
+| `npm --prefix frontend run lint` | fails: 3 errors, 0 warnings in existing code (4 until C23.7a, 6 until C13.8b, 7 until C13.7a, 8 until C13.6a, 12 errors and 2 warnings until C13.5a, 13 until the C13.5 auto-submit fix, 17 until C13.3a, 18 until C13.1b, 19 until C12.5a, 20 until C12.3b, 21 until C10.6, 22 until C10.5b) |
 | `npm --prefix frontend run build` | passes |
 | `python -c "import backend.main"` | passes |
-| `pytest tools/repo_graph/tests -q` | passes: 62 tests (61 until C8.5) |
-| `npm --prefix frontend run check:contrast` | passes: 204 pairs across 4 theme x accent combinations, 0 failing (200 until C10.3) |
-| `npm --prefix frontend run check:images` | passes: 2 rasters (36.3 KB; 1 raster, 13.1 KB, until C13.10e), 8 illustrations (7 until C13.7a), 1 `<img>`, 0 failing |
-| `npm --prefix frontend run test:unit` | passes: 70 tests, 62 until C14.2, 60 until C13.10a, 55 until C13.8a, 54 until C13.7b, 50 until C13.7a, 45 until C13.6a, 42 until C13.2a, 37 until C12.9, 27 until C12.8a, 18 until C12.7, 15 until C12.5a, 12 until C12.4 (Node's built-in runner over `frontend/src/**/*.test.js`; needs Node 22 or later) |
-| `npm --prefix frontend run test:e2e` | passes: 103 tests, 102 until the C15.1 closing-page fix, 97 until C13.10e, 94 until C13.10d, 90 until C13.10c, 87 until C13.10b, 82 until C13.10a, 77 until C13.9, 74 until C13.8b, 67 until C13.8a, 64 until C13.7c, 62 until C13.7b, 58 until C13.7a, 56 until C13.6b, 50 until C13.6a, 48 until C13.5b, 42 until C13.5a, 41 until the C13.5 auto-submit fix, 37 until C13.4, 36 until the C13.4 Start test fix, 32 until C13.3c, 27 until C13.3b, 22 until C13.3a, 18 until C13.2b, 14 until C13.2a, 8 until C13.1b (Playwright on the installed Microsoft Edge, no browser download; builds the app (since C13.10e the build also prerenders the landing page) and serves it with `vite preview` on port 4174, every API call mocked; about 90 s; port 4174 must be free) |
+| `pytest tools/repo_graph/tests -q` | passes: 64 tests (62 until C20.2, 61 until C8.5) |
+| `npm --prefix frontend run check:contrast` | passes: 304 pairs across 4 theme x accent combinations, 0 failing (204 until C21.2, 200 until C10.3) |
+| `npm --prefix frontend run check:images` | passes: 2 rasters (36.3 KB; 1 raster, 13.1 KB, until C13.10e), 8 illustrations (7 until C13.7a), 3 `<img>` (2 until C22.6, 1 until C22.3), 0 failing |
+| `npm --prefix frontend run check:bundle` | passes: initial route 180.4 KB of JS gzipped (budget 200 KB), pdfjs-dist, foliate-js, Excalidraw, TipTap and tesseract.js only in lazy chunks, 0 failing (added in C25.2; needs a build first) |
+| `npm --prefix frontend run test:unit` | passes: 267 tests, 263 until C25.2, 260 until C25.1, 258 until the C24.G time zone, 257 until C24.6d, 250 until C24.6c, 246 until C24.6b, 240 until C24.6a, 239 until the C23.8 bonus cap, 234 until C23.8, 232 until C23.7c, 228 until C23.7a, 225 until C23.6b, 223 until the C23.6b PDF close fix, 217 until C23.6a, 211 until C23.1, 205 until C22.6, 198 until C22.5, 193 until C22.4, 187 until C22.3, 185 until C22.2b, 171 until C22.2a, 168 until C21.5, 166 until C21.4, 162 until C21.3, 157 until C21.2, 154 until C20.8c, 148 until C20.8b, 129 until C20.7a, 124 until C20.3, 120 until C19.4b, 116 until C18.6d, 110 until C17.6, 120 until C17.5d, 114 until C17.5b, 109 until C17.4b, 99 until C17.4a, 89 until C17.3c, 83 until C17.3a, 73 until C17.2a, 70 until C17.1b, 62 until C14.2, 60 until C13.10a, 55 until C13.8a, 54 until C13.7b, 50 until C13.7a, 45 until C13.6a, 42 until C13.2a, 37 until C12.9, 27 until C12.8a, 18 until C12.7, 15 until C12.5a, 12 until C12.4 (Node's built-in runner over `frontend/src/**/*.test.js`; needs Node 22 or later) |
+| `npm --prefix frontend run test:e2e` | passes: 320 tests, 313 until C25.1, 308 until C24.7, 303 until the C24.G time zone, 296 until C24.6d, 289 until C24.6c, 282 until C24.6b, 275 until C24.6a, 273 until the C23.G read-on fix, 269 until C23.8, 267 until C23.7c, 263 until C23.7b (C23.7a retired the timer's tests), 266 until C23.7a, 260 until C23.6b, 259 until the C23.6b PDF close fix, 249 until C23.6a, 243 until C23.1, 231 until C22.6, 225 until C22.5, 217 until C22.4, 216 until the C22.3 overrides, 210 until C22.3, 202 until C22.2b, 193 until C22.2a, 189 until C21.5, 187 until the C21.4 block-actions fix, 177 until C21.4, 172 until C21.3, 163 until C21.2, 157 until C20.8c, 150 until C20.8b, 139 until C20.7b, 134 until C20.3, 132 until C19.G, 130 until C19.4b, 129 until C19.2c, 127 until C19.1b, 126 until C18.6d, 124 until the C17 close, 122 until C17.6, 113 until C17.5c, 104 until C17.5b, 103 until C17.1b, 102 until the C15.1 closing-page fix, 97 until C13.10e, 94 until C13.10d, 90 until C13.10c, 87 until C13.10b, 82 until C13.10a, 77 until C13.9, 74 until C13.8b, 67 until C13.8a, 64 until C13.7c, 62 until C13.7b, 58 until C13.7a, 56 until C13.6b, 50 until C13.6a, 48 until C13.5b, 42 until C13.5a, 41 until the C13.5 auto-submit fix, 37 until C13.4, 36 until the C13.4 Start test fix, 32 until C13.3c, 27 until C13.3b, 22 until C13.3a, 18 until C13.2b, 14 until C13.2a, 8 until C13.1b (Playwright on the installed Microsoft Edge, no browser download; builds the app (since C13.10e the build also prerenders the landing page) and serves it with `vite preview` on port 4174, every API call mocked; about 90 s; port 4174 must be free) |
 
 Until a chunk brings ruff and ESLint to zero, "never commit failing checks"
-means: the eight passing checks stay green and the two error counts never go
+means: the nine passing checks stay green and the two error counts never go
 up. Update this table when a baseline changes, and the matching
 `RUFF_BASELINE` and `ESLINT_*_BASELINE` values in `.github/workflows/ci.yml`,
 which fails a push whose ruff or ESLint count rises above them.
@@ -186,7 +198,8 @@ Project skills live in `.claude/skills/<name>/SKILL.md`.
 | `atomic-commit` | Staging, commit size and the commit format above | added in C1.2 |
 | `debug-protocol` | The ten-step failure procedure and `docs/DEBUG_LOG.md` | added in C1.3 |
 | `repo-graph` | Looking up a file's neighbours before editing; regenerating the graph | added in C1.4, tooling in C2 |
-| `free-intelligence` | Any feature that needs "AI": enforces constraints 1 and 5 | added in C1.5 |
+| `free-intelligence` | Any feature that needs "AI": enforces constraints 1 and 5 | added in C1.5, Steve exception in C16.2 |
+| `steve-guardrails` | Any code that calls Gemini or builds Steve's prompts, context or UI | added in C16.2 |
 | `design-review` | The gate every frontend change passes | added in C1.6 |
 | `impeccable` | UI design, critique and polish | installed locally |
 | `design-taste-frontend` | UI work; this is the installed name of `taste-skill` | installed locally |

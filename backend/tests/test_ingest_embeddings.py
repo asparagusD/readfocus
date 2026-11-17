@@ -11,7 +11,13 @@ import numpy as np
 import pytest
 
 from backend.nlp import embedder
-from backend.services import book_ingestor, covers, ingestion_worker
+from backend.services import (
+    book_ingestor,
+    covers,
+    ingestion_worker,
+    ocr_pages,
+    region_job,
+)
 from backend.services import processing_jobs as jobs
 from backend.tests.memory_db import MemoryDb
 
@@ -26,7 +32,7 @@ class Crash(RuntimeError):
 def env(monkeypatch):
     """A book of `count` chunks in Storage, a fake embedder and a question agent that upserts one row per chunk."""
     db = MemoryDb()
-    for module in (book_ingestor, jobs, ingestion_worker):
+    for module in (book_ingestor, jobs, ingestion_worker, ocr_pages):
         monkeypatch.setattr(module, "supabase", db)
     state = {"embed_calls": [], "crash_on_embed": None, "events": []}
 
@@ -45,9 +51,15 @@ def env(monkeypatch):
 
     monkeypatch.setattr(embedder, "embed", fake_embed)
     monkeypatch.setattr(book_ingestor.question_agent, "run", fake_questions)
-    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data: ["unused"])
+    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data, *a, **k: ["unused"])
     state["covers"] = []  # (book_id, title, author) per cover lookup; no network in these tests
     monkeypatch.setattr(covers, "ensure_cover", lambda *args: state["covers"].append(args))
+    state["regions"] = []  # (book, file_bytes, ingest job status) per hand-off to the regions job
+
+    async def after_ingest(book, file_bytes=None):
+        state["regions"].append((book, file_bytes, jobs.get(book["id"])["status"]))
+
+    monkeypatch.setattr(region_job, "after_ingest", after_ingest)
 
     def book(count):
         chunks = [f"chunk number {i} " + "word " * i for i in range(count)]
@@ -258,9 +270,9 @@ def test_a_book_without_chapters_gets_an_empty_toc(env):
 
 
 def test_no_structure_never_fails_the_job(env, monkeypatch):
-    monkeypatch.setattr(book_ingestor.book_structure, "build", lambda *args: (None, None))
+    monkeypatch.setattr(book_ingestor.book_structure, "build_with_paths", lambda *args: (None, None, None))
     assert run(env["book"](3), b"%PDF")["status"] == "ready"
-    assert all(c["blocks"] is None for c in env["db"].tables["chunks"])
+    assert all(c["blocks"] is None and c["block_paths"] is None for c in env["db"].tables["chunks"])
     assert env["db"].tables["books"][0].get("toc") is None and jobs.get(BOOK)["status"] == "done"
 
 
@@ -272,3 +284,12 @@ def test_a_resumed_job_stores_blocks_for_every_chunk(env):
     stored = sorted(env["db"].tables["chunks"], key=lambda c: c["chunk_index"])
     assert [c["blocks"][0]["id"] for c in stored] == [f"{i}.0" for i in range(40)]
     assert env["db"].tables["books"][0]["toc"] == []
+
+
+def test_the_regions_job_follows_a_finished_ingestion(env):
+    job = env["book"](3)
+    run(job, b"%PDF bytes")
+    [(book, data, ingest_status)] = env["regions"]
+    assert (book["id"], book["user_id"], book["file_type"], book["storage_path"]) == (
+        BOOK, USER, "pdf", f"{USER}/{BOOK}.pdf")
+    assert data == b"%PDF bytes" and ingest_status == "done"

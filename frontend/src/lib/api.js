@@ -30,10 +30,14 @@ export async function fetchApi(endpoint, options = {}) {
     throw new Error('Unauthorized');
   }
 
+  if (response.status === 204) return null; // nothing to read: a delete (C21.4)
+
   const data = await response.json();
   
   if (!response.ok) {
-    throw new Error(data.detail || data.message || 'API request failed');
+    // C22.2: the status and detail ride along, so a caller can tell a 409 (with its body) from a refusal.
+    const message = typeof data.detail === 'string' ? data.detail : data.detail?.message || data.message;
+    throw Object.assign(new Error(message || 'API request failed'), { status: response.status, detail: data.detail });
   }
 
   return data;

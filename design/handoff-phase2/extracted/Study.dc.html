@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ReadFocus study prototype</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Lora:ital,wght@0,400;0,500;0,600;1,400&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#A64B2A}a:hover{color:#7E3820}
+.rf{container-type:inline-size;container-name:rf;position:relative;overflow:clip;background:var(--paper);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;--ease-settle:cubic-bezier(.22,.61,.36,1);--ease-arrive:cubic-bezier(.16,1,.3,1);--ease-breathe:cubic-bezier(.45,0,.55,1);--dur-1:150ms;--dur-2:200ms;--dur-3:250ms;--dur-4:400ms;--dur-5:600ms;--dur-6:800ms}
+.rf *{box-sizing:border-box}
+.rf button,.rf input,.rf textarea{font:inherit;color:inherit}
+.t-paper{--paper:#FAF7F2;--paper-2:#F3EDE3;--surface:#FFFDF9;--page:#FBF8F2;--ink:#2A2420;--ink-2:#5C534A;--ink-3:#756A5F;--line:#E6DED2;--line-2:#D6CBBB;--warn:#8C5A00;--warn-soft:#F6E9CF;--grain:.05;--drop:rgba(40,25,10,.35);--hl-honey:#F4E2A8;--hl-sage:#DCE6CF;--hl-sky:#D5E2EC;--hl-rose:#F0D6D0;--hl-lilac:#E4DCEC;--code-bg:#F3EDE3}
+.t-lamplight{--paper:#1D1915;--paper-2:#161310;--surface:#25201B;--page:#231E19;--ink:#EEE5D5;--ink-2:#C4B8A5;--ink-3:#A09481;--line:#383029;--line-2:#4A4037;--warn:#E9B65E;--warn-soft:#3A2E1C;--grain:.06;--drop:rgba(0,0,0,.6);--hl-honey:rgba(233,182,94,.30);--hl-sage:rgba(168,193,152,.26);--hl-sky:rgba(130,170,205,.28);--hl-rose:rgba(222,140,128,.28);--hl-lilac:rgba(182,160,212,.28);--code-bg:#1A1612}
+.t-paper.a-terracotta{--accent:#A64B2A;--accent-ink:#FFFDF9;--accent-soft:#F3E2D7;--accent-text:#9A4526;--glow:rgba(166,75,42,0)}
+.t-paper.a-sage{--accent:#506A4A;--accent-ink:#FFFDF9;--accent-soft:#E3EADD;--accent-text:#4A6244;--glow:rgba(80,106,74,0)}
+.t-lamplight.a-terracotta{--accent:#E59A6C;--accent-ink:#1D1915;--accent-soft:#3A271C;--accent-text:#EDA77B;--glow:rgba(229,154,108,.28)}
+.t-lamplight.a-sage{--accent:#A8C198;--accent-ink:#1D1915;--accent-soft:#26301F;--accent-text:#B3CBA3;--glow:rgba(168,193,152,.24)}
+.grain{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:var(--grain);mix-blend-mode:multiply;z-index:60}
+.t-lamplight .grain{mix-blend-mode:screen}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.h1{font-family:'Playfair Display',Georgia,serif;font-weight:500;font-size:44px;line-height:1.1;margin:0;letter-spacing:-.01em}
+.h3{font-family:'Playfair Display',Georgia,serif;font-weight:500;font-size:24px;line-height:1.25;margin:0}
+.sub2{color:var(--ink-2);margin:0;font-size:15px;line-height:1.6}
+.small{font-size:13px;color:var(--ink-3)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:500 15px/1 'DM Sans',system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:10px;border:1px solid transparent;cursor:pointer;text-decoration:none;white-space:nowrap;transition:transform var(--dur-1) var(--ease-settle)}
+.btn:active{transform:scale(.98)}
+.btn-p{background:var(--accent);color:var(--accent-ink)}
+.btn-p:hover{filter:brightness(1.07)}
+.t-lamplight .btn-p{box-shadow:0 0 24px var(--glow)}
+.btn-s{background:var(--surface);color:var(--ink);border-color:var(--line-2)}
+.btn-s:hover{border-color:var(--ink-3)}
+.btn-g{background:transparent;color:var(--ink-2)}
+.btn-g:hover{color:var(--ink);background:var(--paper-2)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn.sm{min-height:36px;padding:0 14px;font-size:14px}
+.rf :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.tt{position:relative;width:60px;height:44px;border:0;background:transparent;cursor:pointer;padding:0;flex:none}
+.tt-track{position:absolute;left:0;right:0;top:5px;height:34px;border-radius:999px;border:1px solid var(--line-2);background:var(--paper-2)}
+.tt-knob{position:absolute;top:9px;left:4px;width:26px;height:26px;border-radius:50%;background:var(--surface);border:1px solid var(--line-2);transition:transform var(--dur-3) var(--ease-settle)}
+.t-lamplight .tt-knob{transform:translateX(26px);background:var(--accent);border-color:var(--accent);box-shadow:0 0 14px var(--glow)}
+.tt .ic{position:absolute;top:13px;width:16px;height:16px;z-index:1}
+.tt .i-sun{left:9px;color:var(--ink)}
+.tt .i-moon{right:8px;color:var(--ink-3)}
+.t-lamplight .tt .i-sun{color:var(--ink-3)}
+.t-lamplight .tt .i-moon{color:var(--accent-ink)}
+.msw{position:relative;width:30px;height:18px;border-radius:999px;background:var(--line-2);display:inline-block;flex:none}
+.msw i{position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--surface);transition:transform var(--dur-2) var(--ease-settle)}
+.msw.on{background:var(--accent)}
+.msw.on i{transform:translateX(12px)}
+@keyframes fadein{from{opacity:0}}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(24px)}}
+.rdr{min-height:inherit;display:flex;flex-direction:column}
+.rbar{display:flex;align-items:center;gap:6px;padding:8px 20px;border-bottom:1px solid var(--line);background:var(--paper);position:relative;z-index:10;flex-wrap:nowrap}
+.tb{min-width:44px;height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;border:0;border-radius:8px;background:transparent;cursor:pointer;color:var(--ink-2);font-size:14px;font-weight:500;white-space:nowrap}
+.tb:hover{background:var(--paper-2);color:var(--ink)}
+.tb.on{color:var(--ink);background:var(--paper-2)}
+.tb[disabled]{opacity:.35;cursor:not-allowed}
+.tb .cnt{font-size:11px;font-weight:600;min-width:18px;height:18px;border-radius:999px;background:var(--accent-soft);color:var(--accent-text);display:inline-grid;place-items:center;padding:0 5px}
+.sep{width:1px;height:22px;background:var(--line);margin:0 6px;flex:none}
+.btitle{font-family:'Lora',Georgia,serif;font-size:14px;color:var(--ink-2);padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.seg{display:inline-grid;grid-auto-flow:column;padding:3px;border-radius:10px;background:var(--paper-2);border:1px solid var(--line)}
+.seg-b{min-height:34px;border:0;border-radius:7px;background:transparent;cursor:pointer;color:var(--ink-2);font-weight:500;font-size:13px;padding:0 12px}
+.seg-b.on{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line-2)}
+.zoomv{font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-2);min-width:44px;text-align:center}
+.spacer{flex:1}
+.fbar{display:flex;align-items:center;gap:14px;padding:10px 24px;border-bottom:1px solid transparent;position:relative;z-index:10;animation:fadein var(--dur-4) var(--ease-settle) both}
+.watch{display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-variant-numeric:tabular-nums;font-weight:500;font-size:15px;cursor:default}
+.watch .dotlive{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:breathe 2.4s var(--ease-breathe) infinite alternate}
+@keyframes breathe{to{opacity:.35}}
+.watch.locked{color:var(--ink-3);cursor:pointer}
+.lockpop{position:absolute;top:58px;left:24px;width:320px;padding:16px 18px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);box-shadow:0 16px 32px -20px var(--drop);font-size:14px;line-height:1.55;color:var(--ink-2);z-index:12;animation:rise var(--dur-3) var(--ease-settle) both}
+.lockpop b{color:var(--ink);display:block;margin-bottom:4px}
+.rbody{flex:1;display:flex;min-height:0;position:relative}
+.bookarea{flex:1;min-width:0;padding:28px 40px 32px;position:relative}
+.side{width:380px;flex:none;border-left:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;position:relative;z-index:6;animation:slideIn var(--dur-4) var(--ease-arrive) both}
+.side-h{display:flex;align-items:center;gap:4px;padding:8px 8px 0 12px;border-bottom:1px solid var(--line)}
+.tab{min-height:44px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);font-weight:500;position:relative;display:inline-flex;align-items:center;gap:8px}
+.tab.on{color:var(--ink)}
+.tab.on::after{content:'';position:absolute;left:12px;right:12px;bottom:-1px;height:1.5px;background:var(--accent)}
+.side-x{margin-left:auto;width:40px;height:40px;border:0;background:transparent;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:var(--ink-3)}
+.side-x:hover{background:var(--paper-2);color:var(--ink)}
+.grab{display:none}
+.side-b{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.side-f{border-top:1px solid var(--line);padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px}
+.ask{display:flex;align-items:flex-end;gap:8px;padding:6px 6px 6px 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--paper)}
+.ask input{flex:1;border:0;background:transparent;min-height:36px;font-size:15px;color:var(--ink);outline:none}
+.ask input::placeholder{color:var(--ink-3)}
+.ask:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.send{width:36px;height:36px;border-radius:9px;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;cursor:pointer;flex:none}
+.send[disabled]{opacity:.35;cursor:not-allowed}
+.fine{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fine button{border:0;background:none;color:var(--accent-text);font-size:12px;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;min-height:24px}
+.sv-id{display:flex;align-items:center;gap:12px}
+.sv-av{width:40px;height:40px;border-radius:50%;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center;font-family:'Playfair Display',Georgia,serif;font-size:20px;font-weight:600;flex:none}
+.sv-av.sm{width:28px;height:28px;font-size:14px}
+.sv-name{font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:500;line-height:1.2}
+.sv-role{font-size:12.5px;color:var(--ink-3)}
+.consent{border:1px solid var(--line-2);border-radius:14px;padding:20px;background:var(--paper);display:flex;flex-direction:column;gap:12px;animation:rise var(--dur-4) var(--ease-arrive) both}
+.consent ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.consent li{display:grid;grid-template-columns:18px 1fr;gap:10px;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.consent li .ic{width:16px;height:16px;margin-top:2px;color:var(--accent-text)}
+.sugg{display:flex;flex-direction:column;gap:8px}
+.sg-b{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);cursor:pointer;font-family:'Lora',Georgia,serif;font-size:14.5px;color:var(--ink)}
+.sg-b:hover{border-color:var(--ink-3)}
+.sg-b .ic{width:15px;height:15px;color:var(--ink-3)}
+.qbub{align-self:flex-end;max-width:92%;padding:10px 14px;border-radius:12px 12px 4px 12px;background:var(--paper-2);font-size:14px;line-height:1.5}
+.qbub q{font-family:'Lora',Georgia,serif;font-style:italic;quotes:'“' '”'}
+.ans{display:flex;flex-direction:column;gap:12px;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.65}
+.ans p{margin:0}
+.ablk{animation:fadein var(--dur-3) var(--ease-settle) both}
+.cite{display:inline-flex;align-items:center;font-family:'DM Sans',system-ui,sans-serif;font-size:11.5px;font-weight:600;color:var(--accent-text);background:var(--accent-soft);border:0;border-radius:6px;padding:1px 6px;margin-left:2px;cursor:pointer;vertical-align:1px;min-height:20px}
+.cite:hover{text-decoration:underline}
+.caret{display:inline-block;width:7px;height:16px;background:var(--accent);vertical-align:-2px;margin-left:2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.aact{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.streaming{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--ink-3)}
+.math{font-family:'Lora',Georgia,serif;font-style:normal;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;font-size:1.06em}
+.math i{font-style:italic}
+.math sub,.math sup{font-size:.7em;font-style:normal}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.9em;line-height:1.15;margin:0 2px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 3px}
+.bigop{display:inline-flex;flex-direction:column;align-items:center;line-height:1;margin:0 3px;vertical-align:middle}
+.bigop .op{font-size:1.9em;line-height:.95}
+.bigop .lim{font-size:.62em}
+.mblock{display:flex;justify-content:center;padding:10px 0;overflow-x:auto}
+.codeb{position:relative;margin:0;padding:14px 16px;border-radius:10px;background:var(--code-bg);border:1px solid var(--line);font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.65;overflow-x:auto;color:var(--ink);white-space:pre}
+.codeb .k{color:var(--accent-text)}
+.codeb .c{color:var(--ink-3);font-style:italic}
+.codeb .s{color:var(--ink-2)}
+.spread-wrap{position:relative;max-width:1000px;margin:0 auto}
+.hintbar{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 auto 16px;max-width:1000px;padding:10px 16px;border-radius:10px;border:1px dashed var(--line-2);font-size:14px;color:var(--ink-2);animation:rise var(--dur-4) var(--ease-arrive) both}
+.notice{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:min(520px,calc(100% - 32px));z-index:9;display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border:1px solid var(--line-2);border-radius:14px;background:var(--surface);box-shadow:0 20px 40px -24px var(--drop);animation:noticeIn var(--dur-5) var(--ease-arrive) both}
+@keyframes noticeIn{from{opacity:0;transform:translate(-50%,-10px)}}
+.notice .ic{color:var(--accent-text);margin-top:2px}
+.notice p{margin:2px 0 0;font-size:14px;line-height:1.55;color:var(--ink-2)}
+.spread{display:grid;grid-template-columns:1fr 1fr;position:relative;background:var(--page);border:1px solid var(--line);border-radius:4px;box-shadow:0 30px 60px -36px var(--drop)}
+.t-lamplight .spread{box-shadow:0 30px 60px -30px var(--drop),0 0 120px -30px var(--glow)}
+.spread::after{content:'';position:absolute;top:0;bottom:0;left:50%;width:56px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(60,40,20,.07) 42%,rgba(60,40,20,.13) 50%,rgba(60,40,20,.07) 58%,transparent);pointer-events:none}
+.t-lamplight .spread::after{background:linear-gradient(90deg,transparent,rgba(0,0,0,.18) 42%,rgba(0,0,0,.32) 50%,rgba(0,0,0,.18) 58%,transparent)}
+.spread.single{grid-template-columns:1fr}
+.spread.single::after{display:none}
+.focus .spread{box-shadow:0 40px 80px -40px var(--drop),0 0 160px -40px var(--glow)}
+.page{position:relative;padding:36px 56px 44px;min-height:700px;display:flex;flex-direction:column;--z:1}
+.page.flash{animation:flash var(--dur-6) var(--ease-settle)}
+@keyframes flash{30%{box-shadow:inset 0 0 0 2px var(--accent)}}
+.rh{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:24px;padding-right:0}
+.slot-r .rh{text-align:right;padding-right:36px}
+.slot-l.ribl .rh{padding-left:36px}
+.ribbon{position:absolute;top:-7px;right:16px;width:18px;height:120px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);z-index:3}
+.slot-l .ribbon{right:auto;left:16px}
+.t-lamplight .ribbon{filter:drop-shadow(0 0 10px var(--glow))}
+.dragrib{position:absolute;top:-7px;left:0;width:22px;height:150px;border:0;padding:0;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 88%,0 100%);cursor:grab;z-index:8;touch-action:none;animation:ribHint var(--dur-6) var(--ease-settle) 2 alternate}
+.dragrib.dragging{cursor:grabbing;animation:none}
+.dragrib:focus-visible{outline:none;box-shadow:inset 0 0 0 3px var(--accent-ink)}
+@keyframes ribHint{to{translate:0 10px}}
+.placehere{margin-top:12px;align-self:center}
+.cont{flex:1;display:flex;flex-direction:column;gap:14px;font-size:calc(15.5px * var(--z))}
+.pdf .cont{font-family:'Lora',Georgia,serif;line-height:1.62}
+.epub .cont{font-family:'Lora',Georgia,serif;line-height:1.7;font-size:calc(16.5px * var(--z))}
+.cont p{margin:0;text-align:justify;hyphens:auto}
+.sec{font-family:'Playfair Display',Georgia,serif;font-weight:500;font-size:1.65em;line-height:1.2;margin:4px 0 2px;display:flex;gap:12px;align-items:baseline}
+.sec .no{color:var(--accent-text);font-size:.8em}
+.epub .sec{font-family:'DM Sans',system-ui,sans-serif;font-weight:600;font-size:1.15em;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);border-bottom:1px solid var(--line-2);padding-bottom:8px}
+.blkw{position:relative}
+.mk{position:absolute;top:2px;width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface);color:var(--accent-text);font-size:11px;font-weight:600;display:grid;place-items:center;cursor:pointer;z-index:2;animation:fadein var(--dur-4) var(--ease-settle) both}
+.slot-l .mk{left:-44px}
+.slot-r .mk{right:-44px}
+.focus .mk{opacity:.35}
+.mk:hover{border-color:var(--accent)}
+.eq{position:relative;display:flex;align-items:center;justify-content:center;padding:10px 40px;border-radius:8px;outline:none}
+.eq:hover,.eq:focus-visible,.eq.show{background:var(--paper-2)}
+.eqn{position:absolute;right:0;font-size:.85em;color:var(--ink-3);font-family:'Lora',Georgia,serif}
+.aff{position:absolute;top:-20px;right:6px;display:flex;gap:6px;opacity:0;transform:translateY(4px);transition:opacity var(--dur-2) var(--ease-settle),transform var(--dur-2) var(--ease-settle);pointer-events:none;z-index:4}
+.eq:hover .aff,.eq:focus-within .aff,.affw:hover .aff,.affw:focus-within .aff,.show .aff{opacity:1;transform:none;pointer-events:auto}
+.affb{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);font-family:'DM Sans',system-ui,sans-serif;font-size:12.5px;font-weight:500;color:var(--ink);cursor:pointer;box-shadow:0 8px 16px -12px var(--drop);white-space:nowrap}
+.affb:hover{border-color:var(--accent)}
+.affb .ic{width:14px;height:14px;color:var(--accent-text)}
+.affw{position:relative;border-radius:8px}
+.affw.fig{padding:8px;margin:0 -8px}
+.affw:hover.fig,.affw.show.fig{background:var(--paper-2)}
+.fig svg{display:block;width:100%;height:auto}
+.fig .ax{stroke:var(--ink-3);stroke-width:1;fill:none}
+.fig .sq{stroke:var(--ink-2);stroke-width:1.4;fill:none;stroke-dasharray:4 4}
+.fig .n1{stroke:var(--ink-3);stroke-width:1.4;fill:none}
+.fig .n3{stroke:var(--ink-2);stroke-width:1.4;fill:none}
+.fig .n9{stroke:var(--accent);stroke-width:1.8;fill:none}
+.fig text{fill:var(--ink-3);font-family:'DM Sans',sans-serif;font-size:10px}
+.cap{font-family:'Lora',Georgia,serif;font-size:.85em;line-height:1.5;color:var(--ink-2);margin-top:6px}
+.cap b{color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;font-size:.92em}
+.epub .fig{background:var(--paper-2);border-radius:10px;padding:14px;margin:0}
+.toc{display:flex;flex-direction:column}
+.toc-r{display:flex;align-items:baseline;gap:8px;padding:7px 0;font-family:'Lora',Georgia,serif}
+.toc-r .dots{flex:1;border-bottom:1px dotted var(--line-2);transform:translateY(-4px)}
+.toc-r .pn{font-variant-numeric:oldstyle-nums;color:var(--ink-2)}
+.toc-r.ch{font-weight:600}
+.folio{margin-top:auto;padding-top:24px;font-family:'Lora',Georgia,serif;font-size:13px;color:var(--ink-3);text-align:center}
+.sel-s{cursor:text}
+.hl{border-radius:2px;-webkit-box-decoration-break:clone;box-decoration-break:clone;position:relative}
+.hl-honey{background:var(--hl-honey)}
+.hl-sage{background:var(--hl-sage)}
+.hl-sky{background:var(--hl-sky)}
+.hl-rose{background:var(--hl-rose)}
+.hl-lilac{background:var(--hl-lilac)}
+.ulc{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:4px}
+.selected{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent-soft)}
+.askchip{position:absolute;right:0;bottom:calc(100% + 4px);display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 10px 0 6px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);font-family:'DM Sans',system-ui,sans-serif;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap;opacity:0;transform:translateY(4px);transition:opacity var(--dur-2) var(--ease-settle),transform var(--dur-2) var(--ease-settle);pointer-events:none;box-shadow:0 8px 16px -12px var(--drop);text-indent:0;z-index:5}
+.hl:hover .askchip,.askchip:focus-visible,.askchip.show{opacity:1;transform:none;pointer-events:auto}
+.seltool{position:absolute;z-index:9;display:flex;align-items:center;gap:4px;padding:6px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 16px 32px -18px var(--drop);animation:rise var(--dur-2) var(--ease-settle) both;white-space:nowrap}
+.swb{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line-2);cursor:pointer;padding:0;margin:0 1px}
+.swb:hover{box-shadow:0 0 0 2px var(--ink-3)}
+.tl-b{min-width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 8px;border:0;border-radius:8px;background:transparent;cursor:pointer;color:var(--ink);font-size:13px;font-weight:600}
+.tl-b:hover{background:var(--paper-2)}
+.tl-b .ic{width:16px;height:16px}
+.rfoot{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1000px;margin:16px auto 0}
+.nb-list{display:flex;flex-direction:column;gap:14px}
+.nb{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px}
+.nb.fresh{animation:rise var(--dur-5) var(--ease-arrive) both;border-color:var(--accent)}
+.nb-ref{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nb-refb{border:0;background:none;padding:0;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--accent-text);cursor:pointer;min-height:24px;display:inline-flex;align-items:center;gap:5px}
+.nb-refb .ic{width:12px;height:12px}
+.nb-kind{font-size:11px;color:var(--ink-3);display:inline-flex;align-items:center;gap:4px}
+.nb-kind .ic{width:13px;height:13px}
+.nb-text{margin:0;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.6}
+.nb .codeb{font-size:11.5px;padding:10px 12px}
+.draw{border-radius:8px;background:var(--surface);border:1px solid var(--line);position:relative}
+.draw svg{display:block;width:100%;height:auto}
+.draw .rough{fill:none;stroke:var(--ink-2);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.draw .roughA{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.draw text{font-family:'Caveat',cursive;font-size:19px;fill:var(--ink)}
+.draw-tools{position:absolute;top:6px;right:6px;display:flex;gap:2px;padding:2px;border-radius:8px;background:var(--paper);border:1px solid var(--line)}
+.draw-tools span{width:24px;height:24px;display:grid;place-items:center;color:var(--ink-3)}
+.draw-tools .ic{width:13px;height:13px}
+.addbar{display:flex;gap:6px;flex-wrap:wrap}
+.addb{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px dashed var(--line-2);background:transparent;color:var(--ink-2);font-size:13px;font-weight:500;cursor:pointer}
+.addb:hover{border-color:var(--ink-3);color:var(--ink)}
+.addb .ic{width:14px;height:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:500}
+.inp{height:46px;padding:0 14px;border:1px solid var(--line-2);border-radius:8px;background:var(--paper);font-size:15px;color:var(--ink);width:100%}
+.swrow{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:14px 0;border-top:1px solid var(--line)}
+.swrow b{font-weight:600;font-size:14px;display:block}
+.swbtn{border:0;background:transparent;padding:8px 0;cursor:pointer}
+.paused{display:flex;flex-direction:column;gap:12px;align-items:flex-start;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+.il{overflow:visible}
+.il *{fill:none;stroke:var(--ink-2);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.il .f1{fill:var(--accent-soft)}
+.il .f2{fill:var(--surface)}
+.il .fa{fill:var(--accent);stroke:none}
+.il .glow{fill:var(--accent);stroke:none;opacity:.12}
+.t-lamplight .il .glow{opacity:.24}
+.scrim{position:absolute;inset:0;background:rgba(20,15,10,.32);z-index:40;animation:fadein var(--dur-3) var(--ease-settle) both}
+.modal{position:absolute;top:20%;left:50%;width:min(460px,calc(100% - 32px));transform:translateX(-50%);z-index:41;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:28px;display:flex;flex-direction:column;gap:12px;animation:modalIn var(--dur-4) var(--ease-arrive) both;box-shadow:0 30px 60px -30px var(--drop)}
+@keyframes modalIn{from{opacity:0;transform:translate(-50%,10px)}}
+.modal .pts{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:10px;background:var(--paper-2);font-size:14px;color:var(--ink-2)}
+.toast-dock{position:sticky;bottom:0;height:0;z-index:50}
+.toast{position:absolute;left:24px;bottom:24px;display:flex;align-items:center;gap:12px;padding:10px 8px 10px 16px;background:var(--ink);color:var(--paper);border-radius:12px;font-size:14px;animation:rise var(--dur-3) var(--ease-arrive) both;max-width:calc(100cqw - 48px);box-shadow:0 16px 32px -16px var(--drop)}
+.toast-x{border:0;background:transparent;color:var(--paper);opacity:.75;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:8px}
+.bar{display:flex;align-items:center;gap:24px;padding:14px 40px;border-bottom:1px solid var(--line);background:var(--paper)}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:600;background:none;border:0;cursor:pointer;padding:6px 4px;color:var(--ink);min-height:44px}
+.brand .ic{width:24px;height:24px;color:var(--accent)}
+.nav{display:flex;gap:4px;margin-left:12px}
+.nl{background:none;border:0;padding:0 14px;border-radius:8px;cursor:pointer;color:var(--ink-2);font-weight:500;position:relative;min-height:44px}
+.nl.on{color:var(--ink)}
+.nl.on::after{content:'';position:absolute;left:14px;right:14px;bottom:6px;height:1.5px;background:var(--accent)}
+.bar-r{margin-left:auto;display:flex;align-items:center;gap:12px}
+.xpmini{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.xpmini .trk{width:72px;height:4px;border-radius:4px;background:var(--line);overflow:hidden}
+.xpmini .trk i{display:block;height:100%;width:83%;background:var(--accent)}
+.wrap{max-width:1160px;margin:0 auto;padding:48px 40px 96px}
+.quiz{max-width:720px;margin:0 auto;padding:48px 24px 64px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:36px}
+.dots{display:flex;gap:10px;list-style:none;margin:0;padding:0}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--line-2);transition:transform var(--dur-3) var(--ease-settle)}
+.dot.done{background:var(--ink-3)}
+.dot.cur{background:var(--accent);transform:scale(1.4)}
+.q{animation:slideIn var(--dur-4) var(--ease-arrive) both}
+.q-t{font-family:'Lora',Georgia,serif;font-size:25px;line-height:1.4;margin:12px 0 28px;font-weight:500}
+.opts{display:flex;flex-direction:column;gap:12px}
+.opt{display:flex;gap:16px;align-items:flex-start;padding:16px 18px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);cursor:pointer;font-family:'Lora',Georgia,serif;font-size:17px;line-height:1.5;position:relative}
+.opt:hover{border-color:var(--ink-3)}
+.opt:focus-within{outline:2px solid var(--accent);outline-offset:3px}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft);animation:settle var(--dur-3) var(--ease-settle)}
+@keyframes settle{0%{transform:scale(.985)}60%{transform:scale(1.006)}100%{transform:none}}
+.opt-l{font-family:'DM Sans',system-ui,sans-serif;font-weight:600;font-size:13px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;flex:none;color:var(--ink-2);background:var(--paper)}
+.opt.sel .opt-l{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.q-nav{display:flex;justify-content:space-between;gap:12px;margin-top:40px}
+.res{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:56px;align-items:start}
+.score{font-family:'Playfair Display',Georgia,serif;font-size:112px;line-height:.9;font-weight:500;font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.02em}
+.score .u{font-size:40px;color:var(--ink-3);margin-left:6px}
+.ptable{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);align-items:baseline;animation:rise var(--dur-4) var(--ease-arrive) both}
+.prow b{font-weight:600;display:block}
+.prow .v{font-family:'Playfair Display',Georgia,serif;font-size:24px;font-variant-numeric:lining-nums tabular-nums}
+.prow.total .v{color:var(--accent-text);font-size:30px}
+.panel{border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--surface);display:flex;flex-direction:column;gap:12px}
+.kind{border:1px dashed var(--line-2);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:10px;background:var(--paper)}
+.kind p{margin:0;font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.65}
+.prog{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:24px;margin-top:32px}
+.xpbar{height:10px;border-radius:10px;background:var(--line);overflow:hidden}
+.xpbar i{display:block;height:100%;background:var(--accent);border-radius:10px;transform-origin:left;animation:grow var(--dur-6) var(--ease-arrive) both}
+@keyframes grow{from{transform:scaleX(0)}}
+.ring .tr{fill:none;stroke:var(--line);stroke-width:8}
+.ring .ar{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round;stroke-dasharray:67 100;animation:ringIn var(--dur-6) var(--ease-arrive) both}
+@keyframes ringIn{from{stroke-dasharray:0 100}}
+.ring text{fill:var(--ink);font-family:'Playfair Display',Georgia,serif;font-size:22px}
+.bignum{font-family:'Playfair Display',Georgia,serif;font-size:40px;font-weight:500;line-height:1;font-variant-numeric:lining-nums tabular-nums}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick 3.2s var(--ease-breathe) infinite}
+@keyframes flick{0%,100%{transform:scale(1,1) rotate(-1.5deg)}50%{transform:scale(1.05,.94) rotate(1.5deg)}}
+.jars{display:flex;gap:10px;align-items:flex-end}
+.jar{width:30px;height:36px}
+.jar *{fill:none;stroke:var(--ink-2);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.jar .glass{fill:var(--accent-soft)}
+.jar.empty{opacity:.35}
+.shelfb{margin-top:40px}
+.shelfrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:24px;padding:24px 8px 20px;border-bottom:2px solid var(--line-2);position:relative}
+.shelfrow::after{content:'';position:absolute;left:0;right:0;bottom:-10px;height:8px;background:linear-gradient(var(--paper-2),transparent)}
+.badge{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.badge svg{width:96px;height:96px}
+.badge .bt{font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;line-height:1.3}
+.badge .bd{font-size:12px;color:var(--ink-3);line-height:1.4}
+.badge.locked svg{opacity:.45}
+.seal .wax{fill:var(--accent)}
+.seal .rim{fill:none;stroke:var(--accent-ink);stroke-opacity:.45;stroke-width:1.2}
+.seal .gl{fill:none;stroke:var(--accent-ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.locked .seal .wax{fill:none;stroke:var(--ink-3);stroke-width:1.4;stroke-dasharray:3 3}
+.locked .seal .rim,.locked .seal .gl{stroke:var(--ink-3)}
+.plate .pf{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.2}
+.plate .pi{fill:none;stroke:var(--accent);stroke-width:1}
+.plate text{fill:var(--ink);font-family:'Playfair Display',Georgia,serif}
+.plate .exl{font-size:9px;letter-spacing:.2em;fill:var(--accent-text);font-family:'DM Sans',sans-serif;font-weight:600}
+.locked .plate .pf{stroke-dasharray:3 3;stroke:var(--ink-3);fill:none}
+.locked .plate .pi{stroke:var(--ink-3)}
+.tiers{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.tier{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px 0 10px;border-radius:8px;border:1px solid var(--line);font-size:13px;font-weight:500;color:var(--ink-3);background:var(--paper)}
+.tier i{width:6px;height:18px;border-radius:2px;background:var(--line-2)}
+.tier.done{color:var(--ink-2)}
+.tier.done i{background:var(--ink-3)}
+.tier.cur{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.tier.cur i{background:var(--accent)}
+.tier.next{border-style:dashed;color:var(--ink-2)}
+.lg{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:40px;margin-top:32px;align-items:start}
+.lrows{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.lr{display:grid;grid-template-columns:36px 36px minmax(0,1fr) auto;gap:14px;align-items:center;min-height:56px;padding:0 12px;border-bottom:1px solid var(--line)}
+.lr .rk{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-3);text-align:right}
+.lr .av{width:32px;height:32px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--ink-2)}
+.lr .nm{font-family:'Lora',Georgia,serif;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr .xp{font-variant-numeric:tabular-nums;font-weight:500}
+.lr.you{background:var(--accent-soft);border-radius:8px;border-bottom-color:transparent}
+.lr.you .av{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.lr.moved{animation:moveUp var(--dur-5) var(--ease-arrive) both}
+@keyframes moveUp{from{opacity:0;transform:translateY(24px)}}
+.up{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--accent-text);margin-left:8px}
+.up .ic{width:13px;height:13px}
+.zone{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:12.5px;font-weight:600;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.zone .ic{width:15px;height:15px}
+.zone.pro{color:var(--accent-text)}
+.gap{padding:6px 12px;color:var(--ink-3);font-size:13px;border-bottom:1px solid var(--line);text-align:center;letter-spacing:.3em}
+.celeb-b{display:flex;gap:14px;align-items:center;padding:16px 18px;border:1px solid var(--accent);border-radius:14px;background:var(--accent-soft);animation:rise var(--dur-5) var(--ease-arrive) both}
+.celeb-b svg{width:48px;height:48px;flex:none;animation:stamp var(--dur-5) var(--ease-arrive) both}
+@keyframes stamp{from{opacity:0;transform:scale(1.25) rotate(-8deg)}}
+.celeb{min-height:inherit;display:grid;place-items:center;padding:64px 24px;position:relative}
+.celeb-c{max-width:560px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+.celeb-c .bigseal{width:160px;height:160px;animation:stamp var(--dur-6) var(--ease-arrive) 200ms both}
+.celeb-glow{position:absolute;left:50%;top:38%;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;background:radial-gradient(var(--accent-soft),transparent 65%);opacity:.9;animation:fadein 1.2s var(--ease-settle) both;pointer-events:none}
+.celeb-h{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:400;font-size:52px;line-height:1.1;margin:0}
+@media (prefers-reduced-motion: reduce){.rf *,.rf *::before,.rf *::after{animation-duration:1ms !important;animation-delay:0ms !important;animation-iteration-count:1 !important;transition-duration:1ms !important}}
+@container rf (max-width: 760px){
+.rbar{padding:6px 8px;gap:2px;overflow-x:auto}
+.rbar .tl,.rbar .btitle,.rbar .sep.x,.rbar .zoomv{display:none}
+.seg-b{padding:0 8px}
+.bookarea{padding:12px 0 20px}
+.spread{border-left:0;border-right:0;border-radius:0}
+.page{padding:22px 22px 30px;min-height:600px}
+.slot-l .mk,.slot-r .mk{left:auto;right:-14px;width:22px;height:22px;font-size:10px}
+.eq{padding:10px 8px;overflow-x:auto;justify-content:flex-start}
+.eqn{position:static;margin-left:auto;padding-left:8px}
+.aff{right:0;top:-22px}
+.rfoot{padding:0 8px}
+.rfoot .btn{padding:0 12px}
+.side{position:absolute;left:0;right:0;bottom:0;width:auto;height:64%;border-left:0;border-top:1px solid var(--line-2);border-radius:18px 18px 0 0;box-shadow:0 -20px 40px -20px var(--drop);animation:sheetUp var(--dur-5) var(--ease-arrive) both;z-index:20}
+@keyframes sheetUp{from{transform:translateY(40%);opacity:0}}
+.grab{display:block;width:36px;height:4px;border-radius:4px;background:var(--line-2);margin:8px auto 0}
+.side-h{padding:2px 6px 0 8px}
+.side-b{padding:14px 16px}
+.fbar{padding:8px 12px;gap:8px}
+.fbar .tl{display:none}
+.lockpop{left:12px;right:12px;width:auto}
+.notice{top:8px}
+.hintbar{margin:0 12px 12px}
+.bar{padding:8px 12px;gap:4px}
+.brand span{display:none}
+.nav{margin-left:0}
+.nl{padding:0 10px}
+.nl.on::after{left:10px;right:10px}
+.xpmini{display:none}
+.wrap{padding:28px 16px 64px}
+.quiz{padding:28px 16px 48px}
+.q-t{font-size:21px}
+.opt{font-size:16px;padding:14px}
+.h1{font-size:32px}
+.res,.lg{grid-template-columns:1fr;gap:28px}
+.score{font-size:84px}
+.prog{grid-template-columns:1fr;gap:16px}
+.shelfrow{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 10px;padding:20px 0}
+.badge svg{width:72px;height:72px}
+.lr{grid-template-columns:28px 32px minmax(0,1fr) auto;gap:10px;padding:0 8px}
+.celeb-h{font-size:38px}
+.celeb-c .bigseal{width:120px;height:120px}
+.toast{left:12px;bottom:12px}
+}
+</style>
+</helmet>
+<div class="rf t-{{theme}} a-{{accent}}" ref="{{rootRef}}" style="min-height: {{minH}}">
+<svg class="grain" aria-hidden="true"><filter id="rfgrain2"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter><rect width="100%" height="100%" filter="url(#rfgrain2)"></rect></svg>
+
+<sc-if value="{{isReader}}" hint-placeholder-val="{{ true }}">
+<div class="rdr {{focusCls}}">
+<sc-if value="{{notFocus}}" hint-placeholder-val="{{ true }}">
+<header class="rbar" role="toolbar" aria-label="Reader tools">
+<button class="tb" type="button" aria-label="Back to library" onClick="{{toast_library}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg><span class="tl">Library</span></button>
+<span class="sep x"></span>
+<span class="btitle"><i>Signals, Gently</i> · 4 Fourier series</span>
+<span class="spacer"></span>
+<div class="seg" role="group" aria-label="View"><button class="seg-b on" type="button" aria-pressed="true">Original</button><button class="seg-b" type="button" aria-pressed="false" onClick="{{toast_reflow}}">Reading view</button></div>
+<span class="sep x"></span>
+<sc-if value="{{isPdf}}" hint-placeholder-val="{{ true }}">
+<button class="tb" type="button" aria-label="Zoom out" onClick="{{zoomOut}}" disabled="{{zMin}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3M8 11h6"></path></svg></button>
+<span class="zoomv" aria-live="polite">{{zoomText}}</span>
+<button class="tb" type="button" aria-label="Zoom in" onClick="{{zoomIn}}" disabled="{{zMax}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3M11 8v6M8 11h6"></path></svg></button>
+</sc-if>
+<sc-if value="{{isEpub}}" hint-placeholder-val="{{ false }}">
+<button class="tb" type="button" aria-label="Smaller text" onClick="{{zoomOut}}" disabled="{{zMin}}"><span style="font-family: Lora, serif; font-size: 13px">A</span></button>
+<button class="tb" type="button" aria-label="Larger text" onClick="{{zoomIn}}" disabled="{{zMax}}"><span style="font-family: Lora, serif; font-size: 19px">A</span></button>
+</sc-if>
+<span class="sep"></span>
+<button class="tb" type="button" role="switch" aria-checked="false" onClick="{{startFocus}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg><span class="tl">Focus</span><span class="msw" aria-hidden="true"><i></i></span></button>
+<button class="tb {{notesOn}}" type="button" aria-pressed="{{notesPressed}}" onClick="{{openNotes}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"></path><path d="M2 6h4M2 10h4M2 14h4M2 18h4"></path><path d="M21.4 5.6a2.1 2.1 0 1 0-3-3L12 9v3h3z"></path></svg><span class="tl">Notes</span><span class="cnt">{{noteCount}}</span></button>
+<button class="tb {{steveOn}}" type="button" aria-pressed="{{stevePressed}}" onClick="{{openSteve}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg><span class="tl">Steve</span></button>
+<button class="tt" type="button" role="switch" aria-checked="{{isLamp}}" aria-label="Lamplight theme" onClick="{{toggleTheme}}"><span class="tt-track"></span><span class="tt-knob"></span><svg class="ic i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><svg class="ic i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+</header>
+</sc-if>
+<sc-if value="{{focus}}" hint-placeholder-val="{{ false }}">
+<header class="fbar">
+<sc-if value="{{watchLocked}}" hint-placeholder-val="{{ false }}"><button class="watch locked" type="button" aria-expanded="{{lockOpen}}" onClick="{{toggleLock}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span>0:00:00</span><span class="tl small">starts at Chapter 1</span></button></sc-if>
+<sc-if value="{{watchRun}}" hint-placeholder-val="{{ true }}"><span class="watch" role="timer" aria-label="{{watchLabel}}"><span class="dotlive" aria-hidden="true"></span>{{watchText}}</span></sc-if>
+<span class="small tl">Focus · notes, Steve and badges are tucked away</span>
+<span class="spacer"></span>
+<sc-if value="{{live}}" hint-placeholder-val="{{ true }}"><button class="btn btn-g sm tl" type="button" onClick="{{jump245}}">Jump to 2:45 (prototype)</button></sc-if>
+<button class="btn btn-s sm" type="button" onClick="{{exitFocus}}">Pause focus</button>
+<button class="btn btn-p sm" type="button" onClick="{{endSession}}">End session</button>
+<sc-if value="{{lockOpen}}" hint-placeholder-val="{{ false }}"><div class="lockpop" role="note"><b>The clock starts at Chapter 1.</b>Front matter like the preface and contents doesn’t count toward focus time or points. Turn to page 1 and it starts on its own.</div></sc-if>
+</header>
+</sc-if>
+<div class="rbody">
+<div class="bookarea">
+<sc-if value="{{placing}}" hint-placeholder-val="{{ false }}"><div class="hintbar" role="status"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Drag the ribbon to the page where you stopped.</div></sc-if>
+<sc-if value="{{showNotice}}" hint-placeholder-val="{{ false }}"><div class="notice" role="status"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2M10 2h4"></path></svg><div style="flex: 1"><b>15 minutes left in this session</b><p>Sessions stop at three hours so the reading stays fresh. The end of §4.2, one page on, is a good place to set the ribbon.</p></div><button class="btn btn-g sm" type="button" onClick="{{dismissNotice}}">OK</button></div></sc-if>
+<div class="spread-wrap" ref="{{wrapRef}}" onMouseUp="{{onSelect}}">
+<div class="spread {{spreadCls}} {{fmt}}">
+<sc-for list="{{visPages}}" as="pg" hint-placeholder-count="2">
+<article class="page {{pg.slot}} {{pg.ribCls}} {{pg.flashCls}} {{fmt}}" style="--z: {{zoom}}">
+<div class="rh">{{pg.header}}</div>
+<sc-if value="{{pg.ribbon}}" hint-placeholder-val="{{ false }}"><span class="ribbon" aria-hidden="true"></span></sc-if>
+<div class="cont">
+<sc-for list="{{pg.blocks}}" as="b" hint-placeholder-count="3">
+<div class="blkw">
+<sc-if value="{{b.hasMark}}" hint-placeholder-val="{{ false }}"><button class="mk" type="button" aria-label="{{b.markLabel}}" onClick="{{openNotes}}">{{b.marks}}</button></sc-if>
+<sc-if value="{{b.isSec}}" hint-placeholder-val="{{ false }}"><h2 class="sec"><span class="no">{{b.no}}</span>{{b.t}}</h2></sc-if>
+<sc-if value="{{b.isP}}" hint-placeholder-val="{{ true }}"><p class="sel-s"><sc-for list="{{b.segs}}" as="sg" hint-placeholder-count="2"><span class="{{sg.cls}}" data-seg="{{sg.id}}">{{sg.t}}<sc-if value="{{sg.hasHl}}" hint-placeholder-val="{{ false }}"><button class="askchip {{sg.chipCls}}" type="button" onClick="{{sg.ask}}"><span class="sv-av sm" style="width: 20px; height: 20px; font-size: 11px">S</span>Ask Steve</button></sc-if></span></sc-for></p></sc-if>
+<sc-if value="{{b.isEq43}}" hint-placeholder-val="{{ false }}"><div class="eq {{b.affCls}}" tabindex="0" aria-label="Equation 4.3"><div class="aff"><button class="affb" type="button" onClick="{{b.explain}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Explain this equation</button><button class="affb" type="button" onClick="{{b.copy}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>Copy as LaTeX</button></div><span class="math"><i>f</i>(<i>x</i>) = <span class="frac"><span><i>a</i><sub>0</sub></span><span>2</span></span> + <span class="bigop"><span class="lim">∞</span><span class="op">∑</span><span class="lim"><i>n</i>=1</span></span>(<i>a</i><sub><i>n</i></sub> cos <i>nx</i> + <i>b</i><sub><i>n</i></sub> sin <i>nx</i>)</span><span class="eqn">(4.3)</span></div></sc-if>
+<sc-if value="{{b.isEq44}}" hint-placeholder-val="{{ false }}"><div class="eq {{b.affCls}}" tabindex="0" aria-label="Equation 4.4"><div class="aff"><button class="affb" type="button" onClick="{{b.explain}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Explain this equation</button><button class="affb" type="button" onClick="{{b.copy}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>Copy as LaTeX</button></div><span class="math"><i>a</i><sub><i>n</i></sub> = <span class="frac"><span>1</span><span>π</span></span><span class="bigop"><span class="lim">π</span><span class="op">∫</span><span class="lim">−π</span></span><i>f</i>(<i>x</i>) cos <i>nx</i> d<i>x</i>,   <i>b</i><sub><i>n</i></sub> = <span class="frac"><span>1</span><span>π</span></span><span class="bigop"><span class="lim">π</span><span class="op">∫</span><span class="lim">−π</span></span><i>f</i>(<i>x</i>) sin <i>nx</i> d<i>x</i></span><span class="eqn">(4.4)</span></div></sc-if>
+<sc-if value="{{b.isFig}}" hint-placeholder-val="{{ false }}"><figure class="affw fig {{b.affCls}}" style="margin: 0"><div class="aff"><button class="affb" type="button" onClick="{{b.explain}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Explain this figure</button><button class="affb" type="button" onClick="{{b.note}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add to notes</button></div><svg viewBox="0 0 400 170" role="img" aria-label="Square wave with partial sums using 1, 3 and 9 odd harmonics; the 9-term curve overshoots near each jump"><path class="ax" d="M20 85 H390 M20 15 V155"></path><path class="sq" d="M20 135 H110 V35 H290 V135 H380"></path><path class="n1" d="{{figN1}}"></path><path class="n3" d="{{figN3}}"></path><path class="n9" d="{{figN9}}"></path><text x="296" y="28">N = 9</text><text x="24" y="166">−π</text><text x="196" y="166">0</text><text x="372" y="166">π</text></svg><figcaption class="cap"><b>Figure 4.2</b>  Partial sums of the Fourier series of a square wave with 1, 3 and 9 odd harmonics. Near each jump the overshoot settles at about 9% of the jump: the Gibbs phenomenon.</figcaption></figure></sc-if>
+<sc-if value="{{b.isCode}}" hint-placeholder-val="{{ false }}"><div class="affw {{b.affCls}}"><div class="aff"><button class="affb" type="button" onClick="{{b.copy}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>Copy code</button><button class="affb" type="button" onClick="{{b.explain}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Explain this code</button></div><pre class="codeb" tabindex="0" aria-label="Code listing 4.1"><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> square_partial_sum(x, N):
+    <span class="s">"""Sum the first N odd harmonics."""</span>
+    n = np.arange(1, 2 * N, 2)   <span class="c"># 1, 3, 5, …</span>
+    terms = np.sin(np.outer(x, n)) / n
+    <span class="k">return</span> (4 / np.pi) * terms.sum(axis=1)</pre></div></sc-if>
+<sc-if value="{{b.isToc}}" hint-placeholder-val="{{ false }}"><div class="toc"><sc-for list="{{b.rows}}" as="r" hint-placeholder-count="6"><div class="toc-r {{r.cls}}"><span>{{r.t}}</span><span class="dots"></span><span class="pn">{{r.p}}</span></div></sc-for></div></sc-if>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{pg.canPlace}}" hint-placeholder-val="{{ false }}"><button class="btn btn-s sm placehere" type="button" onClick="{{pg.place}}">Set ribbon on p. {{pg.no}}</button></sc-if>
+<div class="folio">{{pg.folio}}</div>
+</article>
+</sc-for>
+<sc-if value="{{placing}}" hint-placeholder-val="{{ false }}"><button class="dragrib {{dragCls}}" type="button" aria-label="Ribbon bookmark. Drag to a page, or use the arrow keys and press Enter." style="transform: translateX({{ribX}}px)" onPointerDown="{{ribDown}}" onPointerMove="{{ribMove}}" onPointerUp="{{ribUp}}" onKeyDown="{{ribKey}}"></button></sc-if>
+</div>
+<sc-if value="{{selTool}}" hint-placeholder-val="{{ false }}">
+<div class="seltool" style="top: {{selTop}}px; left: {{selLeft}}px" role="toolbar" aria-label="Highlight selection">
+<sc-for list="{{swatches}}" as="w" hint-placeholder-count="5"><button class="swb" type="button" style="background: {{w.dot}}" aria-label="{{w.name}} highlight" onClick="{{w.pick}}"></button></sc-for>
+<button class="tl-b" type="button" aria-label="Underline" onClick="{{applyUl}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v6a6 6 0 0 0 12 0V4M4 20h16"></path></svg></button>
+<span class="sep" style="margin: 0 2px"></span>
+<button class="tl-b" type="button" onClick="{{askSel}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Ask Steve</button>
+<button class="tl-b" type="button" onClick="{{noteSel}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Note</button>
+</div>
+</sc-if>
+</div>
+<div class="rfoot">
+<button class="btn btn-g" type="button" onClick="{{prevPage}}" disabled="{{atStart}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>Previous</button>
+<span class="small">{{whereText}}</span>
+<button class="btn btn-g" type="button" onClick="{{nextPage}}" disabled="{{atEnd}}">Next<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+</div>
+</div>
+
+<sc-if value="{{panelOpen}}" hint-placeholder-val="{{ false }}">
+<aside class="side" aria-label="Study panel">
+<span class="grab" aria-hidden="true"></span>
+<div class="side-h" role="tablist">
+<button class="tab {{tabSteve}}" type="button" role="tab" aria-selected="{{isSteveTab}}" onClick="{{openSteve}}"><span class="sv-av sm" aria-hidden="true">S</span>Steve</button>
+<button class="tab {{tabNotes}}" type="button" role="tab" aria-selected="{{isNotesTab}}" onClick="{{openNotes}}">Notes <span class="small">{{noteCount}}</span></button>
+<button class="side-x" type="button" aria-label="Close panel" onClick="{{closePanel}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+</div>
+
+<sc-if value="{{isSteveTab}}" hint-placeholder-val="{{ true }}">
+<div class="side-b">
+<sc-if value="{{sv.consent}}" hint-placeholder-val="{{ false }}">
+<div class="sv-id"><span class="sv-av" aria-hidden="true">S</span><div><div class="sv-name">Steve</div><div class="sv-role">Study assistant · reads along with you</div></div></div>
+<div class="consent">
+<h3 class="h3" style="font-size: 21px">Before Steve reads along</h3>
+<ul>
+<li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"></path></svg><span>To answer, Steve sends the passage you ask about, and the pages around it, to Google’s Gemini.</span></li>
+<li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"></path><path d="M21.4 5.6a2.1 2.1 0 1 0-3-3L12 9v3h3z"></path></svg><span>Your notes and highlights stay here unless you add them to a question.</span></li>
+<li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.4 6.6a9 9 0 1 1-12.8 0M12 2v10"></path></svg><span>You can turn Steve off any time in Settings, for one book or all of them.</span></li>
+</ul>
+<div class="row" style="margin-top: 4px"><button class="btn btn-p" type="button" onClick="{{acceptConsent}}">Turn on Steve</button><button class="btn btn-g" type="button" onClick="{{closePanel}}">Not now</button></div>
+<div class="fine">Prefer your own account? <button type="button" onClick="{{goKey}}">Use your own Gemini key</button></div>
+</div>
+</sc-if>
+<sc-if value="{{sv.empty}}" hint-placeholder-val="{{ false }}">
+<div class="sv-id"><span class="sv-av" aria-hidden="true">S</span><div><div class="sv-name">Ask Steve about these pages</div><div class="sv-role">He’s read §4.2 and the pages around it.</div></div></div>
+<div class="sugg"><sc-for list="{{suggestions}}" as="g" hint-placeholder-count="4"><button class="sg-b" type="button" onClick="{{g.ask}}"><span>{{g.t}}</span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button></sc-for></div>
+<p class="small" style="margin: 0">Tip: select any sentence in the book and choose Ask Steve.</p>
+</sc-if>
+<sc-if value="{{sv.answer}}" hint-placeholder-val="{{ false }}">
+<div class="qbub">{{askPrefix}} <q>{{askQuote}}</q></div>
+<div class="sv-id"><span class="sv-av sm" aria-hidden="true">S</span><span class="small">Steve · from pages {{ansPages}}</span></div>
+<div class="ans" aria-live="polite">
+<sc-for list="{{ansBlocks}}" as="a" hint-placeholder-count="3">
+<div class="ablk">
+<sc-if value="{{a.isP}}" hint-placeholder-val="{{ true }}"><p><sc-for list="{{a.segs}}" as="x" hint-placeholder-count="1"><sc-if value="{{x.isT}}" hint-placeholder-val="{{ true }}">{{x.t}}</sc-if><sc-if value="{{x.isCite}}" hint-placeholder-val="{{ false }}"><button class="cite" type="button" onClick="{{x.go}}" aria-label="Go to page {{x.p}}">p. {{x.p}}</button></sc-if><sc-if value="{{x.isCaret}}" hint-placeholder-val="{{ false }}"><span class="caret" aria-hidden="true"></span></sc-if></sc-for></p></sc-if>
+<sc-if value="{{a.isOrth}}" hint-placeholder-val="{{ false }}"><div class="mblock"><span class="math"><span class="bigop"><span class="lim">π</span><span class="op">∫</span><span class="lim">−π</span></span>cos <i>mx</i> cos <i>nx</i> d<i>x</i> = 0,   <i>m</i> ≠ <i>n</i></span></div></sc-if>
+<sc-if value="{{a.isSq}}" hint-placeholder-val="{{ false }}"><div class="mblock"><span class="math"><i>f</i>(<i>x</i>) = <span class="frac"><span>4</span><span>π</span></span><span class="bigop"><span class="lim"> </span><span class="op">∑</span><span class="lim"><i>n</i> odd</span></span><span class="frac"><span>sin <i>nx</i></span><span><i>n</i></span></span></span></div></sc-if>
+<sc-if value="{{a.isCode}}" hint-placeholder-val="{{ false }}"><pre class="codeb" style="font-size: 11.5px">bn = [4 / (np.pi * n) <span class="k">if</span> n % 2 <span class="k">else</span> 0
+      <span class="k">for</span> n <span class="k">in</span> range(1, 10)]</pre></sc-if>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{streaming}}" hint-placeholder-val="{{ false }}"><div class="streaming"><span>Steve is writing…</span><button class="btn btn-g sm" type="button" onClick="{{stopStream}}">Stop</button></div></sc-if>
+<sc-if value="{{doneStream}}" hint-placeholder-val="{{ true }}"><div class="aact"><button class="btn btn-s sm" type="button" onClick="{{addAnsNote}}" disabled="{{ansNoted}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>{{addNoteLabel}}</button><button class="btn btn-g sm" type="button" onClick="{{copyAns}}">Copy</button></div></sc-if>
+</sc-if>
+<sc-if value="{{sv.paused}}" hint-placeholder-val="{{ false }}">
+<div class="sv-id"><span class="sv-av" aria-hidden="true">S</span><div><div class="sv-name">Steve</div><div class="sv-role">Paused for today</div></div></div>
+<div class="paused">
+<svg class="il" viewBox="200 150 140 145" aria-hidden="true" style="width: 96px; height: 100px"><path class="f2" d="M234 198 H306 L291 160 H249 Z"></path><path d="M270 202 V280"></path><path class="f2" d="M248 288 Q270 274 292 288 Z"></path><path d="M206 289 H334"></path><path d="M300 150 l8 -8 M310 160 h10" style="stroke-dasharray: 2 4"></path></svg>
+<h3 class="h3" style="font-size: 21px">Steve is resting until tomorrow</h3>
+<p class="sub2">You’ve used today’s shared questions. They come back at midnight, your time. The book, your notes and your highlights are all still here.</p>
+<div class="row"><button class="btn btn-s" type="button" onClick="{{goKey}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"></path></svg>Use your own key</button><button class="btn btn-g" type="button" onClick="{{closePanel}}">Keep reading</button></div>
+</div>
+</sc-if>
+<sc-if value="{{sv.key}}" hint-placeholder-val="{{ false }}">
+<button class="btn btn-g sm" type="button" onClick="{{backFromKey}}" style="align-self: flex-start; margin-left: -14px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>Steve</button>
+<h3 class="h3" style="font-size: 21px">Use your own Gemini key</h3>
+<p class="sub2">Questions asked with your key don’t count toward the shared daily limit. Google bills your key directly.</p>
+<div class="field"><label for="st-key">Gemini API key</label><input id="st-key" class="inp" type="password" value="{{keyVal}}" onChange="{{setKey}}" autocomplete="off" placeholder="Paste your key"></div>
+<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="font-size: 13px; color: var(--accent-text); display: inline-flex; align-items: center; gap: 4px">Get a key in Google AI Studio<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 13px; height: 13px"><path d="M7 17 17 7M7 7h10v10"></path></svg></a>
+<div class="row"><button class="btn btn-p" type="button" onClick="{{saveKey}}">Save key</button><button class="btn btn-g" type="button" onClick="{{saveKey}}">Test it</button></div>
+<p class="small" style="margin: 0">Kept on this device only. Remove it any time.</p>
+<div class="swrow"><div><b>Send book text to Gemini</b><span class="small">Off turns Steve off for every book.</span></div><button class="swbtn" type="button" role="switch" aria-checked="{{geminiOn}}" aria-label="Send book text to Gemini" onClick="{{toggleGemini}}"><span class="msw {{geminiCls}}"><i></i></span></button></div>
+</sc-if>
+</div>
+<div class="side-f">
+<div class="ask"><label class="sr" for="st-ask">Ask Steve</label><input id="st-ask" type="text" placeholder="{{askPh}}" disabled="{{askDisabled}}"><button class="send" type="button" aria-label="Send" disabled="{{askDisabled}}" onClick="{{askDefault}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l7-7 7 7M12 19V5"></path></svg></button></div>
+<div class="fine"><span>Answers by Gemini · book text leaves this device</span><button type="button" onClick="{{goKey}}">Settings</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isNotesTab}}" hint-placeholder-val="{{ false }}">
+<div class="side-b">
+<div class="row" style="justify-content: space-between"><span class="eyebrow">Chapter 4 · {{noteCount}} notes</span><span class="small">Newest last</span></div>
+<div class="nb-list">
+<sc-for list="{{notes}}" as="n" hint-placeholder-count="4">
+<article class="nb {{n.cls}}">
+<div class="nb-ref"><button class="nb-refb" type="button" onClick="{{n.go}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>{{n.ref}}</button><span class="nb-kind">{{n.kind}}</span></div>
+<sc-if value="{{n.isText}}" hint-placeholder-val="{{ true }}"><p class="nb-text">{{n.text}}</p></sc-if>
+<sc-if value="{{n.isEq}}" hint-placeholder-val="{{ false }}"><div class="mblock" style="background: var(--surface); border-radius: 8px; border: 1px solid var(--line)"><span class="math" style="font-size: 15px"><i>a</i><sub><i>n</i></sub> = <span class="frac"><span>1</span><span>π</span></span><span class="bigop"><span class="lim">π</span><span class="op">∫</span><span class="lim">−π</span></span><i>f</i>(<i>x</i>) cos <i>nx</i> d<i>x</i></span></div><span class="small" style="font-family: 'JetBrains Mono', monospace; font-size: 11px">a_n = \frac{1}{\pi}\int_{-\pi}^{\pi} f(x)\cos nx\,dx</span></sc-if>
+<sc-if value="{{n.isDraw}}" hint-placeholder-val="{{ false }}"><div class="draw"><div class="draw-tools" aria-hidden="true"><span><svg class="ic" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"></path></svg></span><span><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg></span><span><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></span><span><svg class="ic" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"></path></svg></span></div><svg viewBox="0 0 320 160" role="img" aria-label="Hand sketch of a square wave with an overshoot near the jump, labelled about nine percent"><path class="rough" d="M14 82 Q160 81 306 83"></path><path class="rough" d="M20 122 L92 121.5 L93 42 L230 43 L231 121 L300 122"></path><path class="roughA" d="M20 118 C50 114 70 116 84 112 C88 70 90 34 98 30 C108 40 114 46 128 44 C170 42 200 45 222 46 C226 60 228 100 236 126 C250 120 280 118 300 119"></path><path class="rough" d="M150 18 Q120 14 104 26"></path><path class="rough" d="M104 26 l10 -1 M104 26 l3 -9"></path><text x="152" y="22">≈ 9% overshoot</text><text x="180" y="150">never shrinks</text></svg></div></sc-if>
+<sc-if value="{{n.isCode}}" hint-placeholder-val="{{ false }}"><pre class="codeb">n = np.arange(1, 2 * N, 2)  <span class="c"># odd only</span></pre><p class="nb-text" style="font-size: 14px">Even harmonics vanish for an odd square wave.</p></sc-if>
+</article>
+</sc-for>
+</div>
+</div>
+<div class="side-f">
+<div class="addbar" role="group" aria-label="Add a note block">
+<button class="addb" type="button" onClick="{{addText}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V4h16v3M9 20h6M12 4v16"></path></svg>Text</button>
+<button class="addb" type="button" onClick="{{addText}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"></path></svg>Drawing</button>
+<button class="addb" type="button" onClick="{{addText}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 7V4H6l6 8-6 8h12v-3"></path></svg>Equation</button>
+<button class="addb" type="button" onClick="{{addText}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg>Code</button>
+</div>
+</div>
+</sc-if>
+</aside>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isApp}}" hint-placeholder-val="{{ false }}">
+<sc-if value="{{showBar}}" hint-placeholder-val="{{ true }}">
+<header class="bar">
+<button class="brand" type="button" onClick="{{backToBook}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg><span>ReadFocus</span></button>
+<nav class="nav" aria-label="Main"><button class="nl" type="button" onClick="{{backToBook}}">Library</button><button class="nl {{navProg}}" type="button" onClick="{{goProgress}}">Dashboard</button><button class="nl {{navLeague}}" type="button" onClick="{{goLeague}}">League</button></nav>
+<div class="bar-r"><span class="xpmini">Level 7<span class="trk"><i></i></span></span><button class="tt" type="button" role="switch" aria-checked="{{isLamp}}" aria-label="Lamplight theme" onClick="{{toggleTheme}}"><span class="tt-track"></span><span class="tt-knob"></span><svg class="ic i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><svg class="ic i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button></div>
+</header>
+</sc-if>
+
+<sc-if value="{{v.quiz}}" hint-placeholder-val="{{ false }}">
+<main class="quiz">
+<div class="qhead"><span class="eyebrow">§4.2 · from the pages you just read</span><ol class="dots" aria-label="{{dotsLabel}}"><sc-for list="{{dots}}" as="d" hint-placeholder-count="3"><li class="dot {{d.cls}}"></li></sc-for></ol></div>
+<sc-for list="{{questions}}" as="q" hint-placeholder-count="1"><sc-if value="{{q.active}}" hint-placeholder-val="{{ true }}">
+<section class="q">
+<span class="eyebrow">Question {{q.n}} of 3</span>
+<h1 class="q-t">{{q.text}}</h1>
+<div class="opts" role="radiogroup" aria-label="Answer options"><sc-for list="{{q.opts}}" as="o" hint-placeholder-count="4"><label class="opt {{o.cls}}"><input class="sr" type="radio" name="{{q.name}}" checked="{{o.sel}}" onChange="{{o.pick}}"><span class="opt-l" aria-hidden="true">{{o.l}}</span><span>{{o.t}}</span></label></sc-for></div>
+</section>
+</sc-if></sc-for>
+<div class="q-nav"><button class="btn btn-g" type="button" onClick="{{saveLeave}}">Save and finish later</button><button class="btn btn-p" type="button" onClick="{{nextQ}}">{{nextLabel}}<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button></div>
+</main>
+</sc-if>
+
+<sc-if value="{{v.results}}" hint-placeholder-val="{{ false }}">
+<main class="wrap">
+<div class="res">
+<div style="display: flex; flex-direction: column; gap: 20px">
+<span class="eyebrow">Session complete · Signals, Gently §4.2</span>
+<sc-if value="{{earned}}" hint-placeholder-val="{{ true }}"><span class="score" aria-label="{{xpLabel}}">+{{xpCount}}<span class="u">XP</span></span><p class="sub2" style="font-family: Lora, serif; font-size: 18px; color: var(--ink)">2 of 3 right, and 52 focused minutes. A solid evening with Fourier.</p></sc-if>
+<sc-if value="{{noPoints}}" hint-placeholder-val="{{ false }}"><span class="score" aria-label="No points this time">0<span class="u">XP</span></span><div class="kind"><span class="eyebrow">Why no points this time</span><p>You got 1 of 3, which is under 40%. Below that we hold points back so they keep meaning something. That’s all it means.</p><p>Your 52 minutes still count toward your streak, and §4.2 comes back first in tomorrow’s session.</p></div></sc-if>
+<div class="row"><sc-if value="{{earned}}" hint-placeholder-val="{{ true }}"><button class="btn btn-p" type="button" onClick="{{goLeague}}">See your league</button></sc-if><sc-if value="{{noPoints}}" hint-placeholder-val="{{ false }}"><button class="btn btn-p" type="button" onClick="{{reviewSteve}}">Go over §4.2 with Steve</button></sc-if><button class="btn btn-g" type="button" onClick="{{backToBook}}">Back to the book</button></div>
+</div>
+<div class="panel">
+<span class="eyebrow">How this session scored</span>
+<div class="ptable">
+<sc-for list="{{pointsRows}}" as="r" hint-placeholder-count="4"><div class="prow {{r.cls}}" style="animation-delay: {{r.d}}"><div><b>{{r.t}}</b><span class="small">{{r.s}}</span></div><span class="v">{{r.v}}</span></div></sc-for>
+</div>
+<p class="small" style="margin: 4px 0 0">1 XP per focused minute, up to 180 a session. The quiz bonus grows with your score. Under 40%, the session earns no points.</p>
+</div>
+</div>
+</main>
+</sc-if>
+
+<sc-if value="{{v.progress}}" hint-placeholder-val="{{ false }}">
+<main class="wrap">
+<span class="eyebrow">Thursday evening</span>
+<h1 class="h1" style="margin-top: 8px">Your reading, lately</h1>
+<div class="prog">
+<section class="panel">
+<div class="row" style="justify-content: space-between"><span class="eyebrow">Level 7 · Reader</span><span class="small">260 XP to level 8</span></div>
+<div class="row" style="align-items: baseline; gap: 8px"><span class="bignum">1,240</span><span class="small">of 1,500 XP</span></div>
+<div class="xpbar" role="progressbar" aria-valuemin="0" aria-valuemax="1500" aria-valuenow="1240" aria-label="Experience toward level 8"><i style="width: 83%"></i></div>
+<p class="small" style="margin: 0">+92 XP tonight from Signals, Gently</p>
+</section>
+<section class="panel" style="flex-direction: row; align-items: center; gap: 18px">
+<svg class="ring" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Daily goal: 30 of 45 minutes"><circle class="tr" cx="50" cy="50" r="40"></circle><circle class="ar" cx="50" cy="50" r="40" pathLength="100" transform="rotate(-90 50 50)"></circle><text x="50" y="57" text-anchor="middle">30′</text></svg>
+<div><span class="eyebrow">Daily goal</span><p class="sub2" style="margin-top: 4px">30 of 45 minutes. One more short sitting would do it.</p></div>
+</section>
+<section class="panel">
+<div class="row" style="gap: 14px; align-items: center">
+<svg viewBox="0 0 28 40" width="28" height="40" aria-hidden="true"><path class="flame" d="M14 4 C18 10 19 13 19 16 a5 5 0 0 1 -10 0 C9 13 11 9 14 4 Z" style="fill: var(--accent)"></path><path d="M14 13 v5" style="stroke: var(--ink-2); stroke-width: 1.4; stroke-linecap: round; fill: none"></path><rect x="9" y="19" width="10" height="16" rx="1.5" style="fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.4"></rect><path d="M5 37 H23" style="stroke: var(--ink-2); stroke-width: 1.4; stroke-linecap: round"></path></svg>
+<div><span class="bignum" style="font-size: 32px">13</span> <span class="small">evenings in a row</span></div>
+</div>
+<div class="row" style="justify-content: space-between; align-items: flex-end">
+<div class="jars" aria-label="2 streak freezes saved">
+<svg class="jar" viewBox="0 0 30 36" aria-hidden="true"><path class="glass" d="M6 32 V14 a9 9 0 0 1 18 0 V32 Z"></path><path d="M15 5 v-3 M3 33 H27"></path><path d="M15 26 v-5" style="stroke: var(--accent)"></path></svg>
+<svg class="jar" viewBox="0 0 30 36" aria-hidden="true"><path class="glass" d="M6 32 V14 a9 9 0 0 1 18 0 V32 Z"></path><path d="M15 5 v-3 M3 33 H27"></path><path d="M15 26 v-5" style="stroke: var(--accent)"></path></svg>
+</div>
+<span class="small" style="max-width: 190px; text-align: right">2 freezes saved. One keeps the candle lit if you miss an evening.</span>
+</div>
+</section>
+</div>
+<section class="shelfb">
+<div class="row" style="justify-content: space-between"><h2 class="h3">Badge shelf</h2><span class="small">4 of 6 earned</span></div>
+<div class="shelfrow">
+<sc-for list="{{badges}}" as="b" hint-placeholder-count="6">
+<div class="badge {{b.cls}}">
+<sc-if value="{{b.isSeal}}" hint-placeholder-val="{{ true }}"><svg class="seal" viewBox="0 0 100 100" aria-hidden="true"><path class="wax" d="M50 6 C58 6 60 12 67 13 C75 14 80 10 86 17 C91 23 86 29 89 36 C92 43 97 46 95 55 C93 63 87 64 85 71 C83 78 86 85 78 90 C71 95 66 89 58 92 C50 95 46 98 38 94 C31 90 31 84 24 81 C17 78 10 79 7 70 C4 62 10 58 9 50 C8 42 3 37 8 29 C13 21 19 24 25 18 C31 12 31 6 40 6 C44 6 46 6 50 6 Z"></path><circle class="rim" cx="50" cy="50" r="30"></circle><path class="gl" d="{{b.glyph}}"></path></svg></sc-if>
+<sc-if value="{{b.isPlate}}" hint-placeholder-val="{{ false }}"><svg class="plate" viewBox="0 0 100 100" aria-hidden="true"><rect class="pf" x="14" y="8" width="72" height="84" rx="3"></rect><rect class="pi" x="20" y="14" width="60" height="72" rx="2"></rect><text class="exl" x="50" y="34" text-anchor="middle">EX LIBRIS</text><text x="50" y="58" text-anchor="middle" font-size="20" font-style="italic">{{b.mark}}</text><path class="pi" d="M36 70 H64"></path></svg></sc-if>
+<span class="bt">{{b.t}}</span><span class="bd">{{b.d}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+</main>
+</sc-if>
+
+<sc-if value="{{v.league}}" hint-placeholder-val="{{ false }}">
+<main class="wrap">
+<div class="row" style="justify-content: space-between; align-items: flex-end">
+<div><span class="eyebrow">This week · ends Sunday 20:00</span><h1 class="h1" style="margin-top: 8px">Hardcover league</h1></div>
+<span class="small">20 readers who started the week together</span>
+</div>
+<div class="tiers" aria-label="League tiers"><sc-for list="{{tiers}}" as="t" hint-placeholder-count="6"><span class="tier {{t.cls}}"><i></i>{{t.n}}</span></sc-for></div>
+<div class="lg">
+<section>
+<ol class="lrows" aria-label="League standings">
+<sc-for list="{{lrows}}" as="r" hint-placeholder-count="12">
+<sc-if value="{{r.isRow}}" hint-placeholder-val="{{ true }}"><li class="lr {{r.cls}}"><span class="rk">{{r.rk}}</span><span class="av" aria-hidden="true">{{r.ini}}</span><span class="nm">{{r.nm}}<sc-if value="{{r.up}}" hint-placeholder-val="{{ false }}"><span class="up"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l7-7 7 7M12 19V5"></path></svg>{{r.upText}}</span></sc-if></span><span class="xp">{{r.xp}} XP</span></li></sc-if>
+<sc-if value="{{r.isPro}}" hint-placeholder-val="{{ false }}"><li class="zone pro"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l7-7 7 7M12 19V5"></path></svg>Promotion zone · the top 5 move up to Folio</li></sc-if>
+<sc-if value="{{r.isDem}}" hint-placeholder-val="{{ false }}"><li class="zone"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12l-7 7-7-7M12 5v14"></path></svg>The bottom 5 move to Paperback next week</li></sc-if>
+<sc-if value="{{r.isGap}}" hint-placeholder-val="{{ false }}"><li class="gap" aria-label="Ranks 8 to 14 hidden">· · ·</li></sc-if>
+</sc-for>
+</ol>
+</section>
+<aside style="display: flex; flex-direction: column; gap: 20px">
+<sc-if value="{{showCelebBanner}}" hint-placeholder-val="{{ true }}"><div class="celeb-b" role="status"><svg class="seal" viewBox="0 0 100 100" aria-hidden="true"><path class="wax" d="M50 6 C58 6 60 12 67 13 C75 14 80 10 86 17 C91 23 86 29 89 36 C92 43 97 46 95 55 C93 63 87 64 85 71 C83 78 86 85 78 90 C71 95 66 89 58 92 C50 95 46 98 38 94 C31 90 31 84 24 81 C17 78 10 79 7 70 C4 62 10 58 9 50 C8 42 3 37 8 29 C13 21 19 24 25 18 C31 12 31 6 40 6 C44 6 46 6 50 6 Z"></path><circle class="rim" cx="50" cy="50" r="30"></circle><path class="gl" d="M50 34 L50 66 M36 48 L50 34 L64 48"></path></svg><div><b>You’re in the promotion zone.</b><div class="small" style="color: var(--ink-2)">Tonight’s 92 XP moved you up 3 places.</div></div></div></sc-if>
+<div class="panel">
+<span class="eyebrow">How leagues work</span>
+<p class="sub2">Each week you read alongside 19 others at your tier. Points come only from focused reading and quizzes. Nothing to buy, no extra lives.</p>
+<p class="sub2">Top 5 move up, bottom 5 move down, everyone else stays. Missing a week just keeps you where you are.</p>
+<sc-if value="{{live}}" hint-placeholder-val="{{ true }}"><button class="btn btn-g sm" type="button" onClick="{{goCelebrate}}" style="align-self: flex-start; margin-left: -14px">Preview Sunday’s promotion (prototype)</button></sc-if>
+</div>
+</aside>
+</div>
+</main>
+</sc-if>
+
+<sc-if value="{{v.celebrate}}" hint-placeholder-val="{{ false }}">
+<main class="celeb">
+<span class="celeb-glow" aria-hidden="true"></span>
+<div class="celeb-c" role="status">
+<svg class="seal bigseal" viewBox="0 0 100 100" aria-hidden="true"><path class="wax" d="M50 6 C58 6 60 12 67 13 C75 14 80 10 86 17 C91 23 86 29 89 36 C92 43 97 46 95 55 C93 63 87 64 85 71 C83 78 86 85 78 90 C71 95 66 89 58 92 C50 95 46 98 38 94 C31 90 31 84 24 81 C17 78 10 79 7 70 C4 62 10 58 9 50 C8 42 3 37 8 29 C13 21 19 24 25 18 C31 12 31 6 40 6 C44 6 46 6 50 6 Z"></path><circle class="rim" cx="50" cy="50" r="30"></circle><path class="gl" d="M36 64 V38 L50 46 L64 38 V64 M50 46 V66"></path></svg>
+<span class="eyebrow">Week of 9 November</span>
+<h1 class="celeb-h">Welcome to Folio</h1>
+<p class="sub2" style="font-size: 17px">You finished the week 3rd in Hardcover. Next week you’ll read alongside 19 others in Folio.</p>
+<div class="tiers" style="justify-content: center"><sc-for list="{{tiersC}}" as="t" hint-placeholder-count="6"><span class="tier {{t.cls}}"><i></i>{{t.n}}</span></sc-for></div>
+<button class="btn btn-p" type="button" onClick="{{backToBook}}" style="margin-top: 8px">Back to my shelf</button>
+</div>
+</main>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{readyModal}}" hint-placeholder-val="{{ false }}">
+<div class="scrim"></div>
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="st-ready-h">
+<span class="eyebrow">Ribbon set on p. {{ribPageNo}}</span>
+<h2 id="st-ready-h" class="h3">Ready for your questions?</h2>
+<p class="sub2">Three short questions on what you read tonight, about four minutes.</p>
+<div class="pts"><span>52 focused minutes → 52 XP</span><span>Quiz bonus grows with your score</span></div>
+<div class="row" style="justify-content: flex-end; margin-top: 6px"><button class="btn btn-g" type="button" onClick="{{notYet}}">Not now, keep my place</button><button class="btn btn-p" type="button" onClick="{{startQuiz}}">Start questions</button></div>
+</div>
+</sc-if>
+
+<div class="toast-dock">
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+<div class="toast" role="status"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg><span>{{toastText}}</span><button class="toast-x" type="button" aria-label="Dismiss" onClick="{{dismissToast}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg></button></div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"stage":{"editor":"enum","options":["original-pdf","original-epub","steve-consent","steve-empty","steve-answer","steve-paused","steve-key","highlight","notes","focus-locked","focus","bookmark","quiz","results","results-low","progress","league","celebrate"],"default":"original-pdf","section":"Prototype"},"theme":{"editor":"enum","options":["paper","lamplight"],"default":"paper","section":"Look"},"accent":{"editor":"enum","options":["terracotta","sage"],"default":"terracotta","section":"Look"},"still":{"editor":"boolean","default":false,"section":"Prototype"},"frameH":{"editor":null,"tsType":"string"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  state = this.initState(this.props.stage || 'original-pdf', !!this.props.still);
+
+  rootRef = (el) => { this.rootEl = el; };
+  wrapRef = (el) => { this.wrapEl = el; };
+
+  initState(stage, still) {
+    const s = {
+      view: 'reader', fmt: 'pdf', pg: 2, zoom: 1, panel: null, sv: 'consent', consented: false,
+      ask: null, streamN: 0, ansNoted: false, keyVal: '', gemini: true,
+      hl: {}, ul: {}, selTool: null, affShow: {}, chipShow: null,
+      notes: this.baseNotes(), freshNote: null,
+      focus: false, elapsed: 0, noticeDismissed: false, lockOpen: false,
+      placing: false, dragging: false, ribX: 0, ribPage: 'r', readyModal: false,
+      qi: 0, ans: [null, null, null], low: false, xpCount: 0,
+      leagueUpdated: false, celebBanner: false, toast: null, themeOv: null, narrow: false, flashPage: null
+    };
+    const all = (n) => this.ansFor(n).length;
+    if (stage === 'original-pdf') s.affShow = { eq44: true };
+    if (stage === 'original-epub') { s.fmt = 'epub'; s.affShow = { fig: true, code: true }; s.pg = 3; }
+    if (stage === 'steve-consent') { s.panel = 'steve'; s.sv = 'consent'; s.hl = { s5: 'honey' }; }
+    if (stage === 'steve-empty') { s.panel = 'steve'; s.sv = 'empty'; s.consented = true; }
+    if (stage === 'steve-answer') { s.panel = 'steve'; s.sv = 'answer'; s.consented = true; s.ask = 'coef'; s.streamN = 4; s.hl = { s5: 'honey' }; }
+    if (stage === 'steve-paused') { s.panel = 'steve'; s.sv = 'paused'; s.consented = true; }
+    if (stage === 'steve-key') { s.panel = 'steve'; s.sv = 'key'; s.consented = true; s.keyVal = 'AIzaSyD4-sample-key'; }
+    if (stage === 'highlight') { s.hl = { s2: 'honey', s7: 'sky' }; s.ul = { s1: true }; s.chipShow = 's2'; s.selTool = { seg: 's5', top: 300, left: 120, still: true }; }
+    if (stage === 'notes') { s.panel = 'notes'; s.hl = { s5: 'honey' }; s.notes = this.baseNotes().concat([this.steveNote()]); s.freshNote = 'n5'; }
+    if (stage === 'focus-locked') { s.focus = true; s.pg = 0; s.lockOpen = true; }
+    if (stage === 'focus') { s.focus = true; s.elapsed = 9903; }
+    if (stage === 'bookmark') { s.focus = true; s.elapsed = 3120; s.ribPage = 'r'; s.readyModal = true; }
+    if (stage === 'quiz') { s.view = 'quiz'; s.qi = 1; s.ans = [0, 2, null]; }
+    if (stage === 'results') { s.view = 'results'; s.xpCount = still ? 92 : 0; }
+    if (stage === 'results-low') { s.view = 'results'; s.low = true; }
+    if (stage === 'progress') s.view = 'progress';
+    if (stage === 'league') { s.view = 'league'; s.leagueUpdated = true; s.celebBanner = true; }
+    if (stage === 'celebrate') s.view = 'celebrate';
+    if (stage === 'steve-answer' && !still) s.streamN = 0;
+    s._all = all;
+    return s;
+  }
+
+  componentDidMount() {
+    this.T = [];
+    this.rm = typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (this.rootEl && typeof ResizeObserver !== 'undefined') { this.ro = new ResizeObserver(() => this.measure()); this.ro.observe(this.rootEl); }
+    this.measure();
+    if (!this.props.still) {
+      if (this.state.sv === 'answer' && this.state.panel === 'steve') this.stream(this.state.ask);
+      if (this.state.focus) this.runWatch();
+      if (this.state.view === 'results') this.countXp();
+    }
+  }
+  componentWillUnmount() { this.clearT(); if (this.ro) this.ro.disconnect(); clearTimeout(this.toastT); clearInterval(this.watchT); }
+  measure() {
+    if (!this.rootEl) return;
+    const n = this.rootEl.offsetWidth < 760;
+    if (n !== this.state.narrow) this.setState({ narrow: n });
+  }
+  later(fn, ms) { const id = setTimeout(fn, ms); this.T.push(id); return id; }
+  clearT() { (this.T || []).forEach((id) => { clearTimeout(id); clearInterval(id); }); this.T = []; }
+  showToast(text) {
+    clearTimeout(this.toastT);
+    this.setState({ toast: text });
+    if (!this.props.still) this.toastT = setTimeout(() => this.setState({ toast: null }), 5000);
+  }
+  copyText(t, msg) {
+    try { if (navigator.clipboard) navigator.clipboard.writeText(t); } catch (e) {}
+    this.showToast(msg);
+  }
+
+  baseNotes() {
+    return [
+      { id: 'n1', type: 'text', ref: 'p. 44 · Fourier series', page: 44, text: 'Any periodic f is a sum of sines and cosines. The coefficients say how much of each frequency is in it.' },
+      { id: 'n2', type: 'eq', ref: 'p. 44 · eq. 4.4', page: 44 },
+      { id: 'n3', type: 'draw', ref: 'p. 45 · Figure 4.2', page: 45 },
+      { id: 'n4', type: 'code', ref: 'p. 45 · square_partial_sum', page: 45 }
+    ];
+  }
+  steveNote() {
+    return { id: 'n5', type: 'text', ref: 'p. 44 · from Steve', page: 44, text: 'aₙ is a measurement: multiply f by cos nx and average over a period. Mismatched frequencies cancel, so only the match survives.' };
+  }
+
+  ansFor(kind) {
+    const T = (t) => ({ k: 't', t });
+    const C = (p) => ({ k: 'c', p });
+    if (kind === 'code') return [
+      { k: 'p', segs: [T('np.arange(1, 2 * N, 2) picks out the odd harmonics 1, 3, 5, … because the even ones are zero for a square wave. '), C(45)] },
+      { k: 'p', segs: [T('np.outer(x, n) builds a grid: one row per x, one column per harmonic, so a single sin call evaluates every term at once. Summing across columns gives')] },
+      { k: 'sq' },
+      { k: 'p', segs: [T('which is exactly the series behind Figure 4.2. '), C(45)] }
+    ];
+    if (kind === 'figure') return [
+      { k: 'p', segs: [T('Figure 4.2 overlays three partial sums of the square wave, with 1, 3 and 9 odd harmonics. '), C(45)] },
+      { k: 'p', segs: [T('Each extra harmonic sharpens the edges, but beside every jump the curve overshoots by about 9% of the jump. The overshoot gets narrower as you add terms; it never gets shorter. That’s the Gibbs phenomenon.')] },
+      { k: 'sq' },
+      { k: 'p', segs: [T('In practice it’s why cutting a signal’s spectrum short leaves ringing near sharp edges.')] }
+    ];
+    return [
+      { k: 'p', segs: [T('Think of aₙ as a measurement. Multiply f by a pure cosine of frequency n and average over one period: the parts of f that move at that frequency add up, and everything else cancels. '), C(44)] },
+      { k: 'p', segs: [T('The cancelling comes from orthogonality. For whole numbers m and n,')] },
+      { k: 'orth' },
+      { k: 'p', segs: [T('so in equation (4.4) only the matching term survives. For the square wave every aₙ is zero, because the wave is odd, and only sine terms remain. '), C(45)] },
+      { k: 'code' },
+      { k: 'p', segs: [T('Those are the bₙ values the code on p. 45 sums. Want me to quiz you on it later?')] }
+    ];
+  }
+  askText(kind) {
+    if (kind === 'code') return ['Explain this code:', 'square_partial_sum(x, N)'];
+    if (kind === 'figure') return ['Explain this figure:', 'Figure 4.2, partial sums of a square wave'];
+    if (kind === 'eq') return ['Explain this equation:', 'equation (4.4)'];
+    if (kind === 'sugg') return ['', 'Why does every aₙ vanish for the square wave?'];
+    return ['Explain:', 'where the coefficients measure how much of each frequency the function contains'];
+  }
+
+  askSteve(kind) {
+    clearInterval(this.streamT);
+    const base = { panel: 'steve', selTool: null, ask: kind, streamN: 0, ansNoted: false };
+    if (!this.state.consented) { this.pendingAsk = kind; this.setState(Object.assign(base, { sv: 'consent' })); return; }
+    this.setState(Object.assign(base, { sv: 'answer' }));
+    this.stream(kind);
+  }
+  stream(kind) {
+    if (this.props.still) return;
+    const n = this.ansFor(kind).length;
+    if (this.rm) { this.setState({ streamN: n }); return; }
+    clearInterval(this.streamT);
+    this.setState({ streamN: 1 });
+    this.streamT = setInterval(() => {
+      if (this.state.streamN >= n) { clearInterval(this.streamT); return; }
+      this.setState((s) => ({ streamN: s.streamN + 1 }));
+    }, 700);
+    this.T.push(this.streamT);
+  }
+  addNote(note, msg) {
+    this.setState((s) => ({ notes: s.notes.concat([note]), freshNote: note.id, panel: 'notes' }));
+    this.showToast(msg);
+  }
+  runWatch() {
+    clearInterval(this.watchT);
+    this.watchT = setInterval(() => {
+      if (!this.state.focus || this.state.pg < 2 || this.state.placing || this.state.readyModal) return;
+      this.setState((s) => ({ elapsed: s.elapsed + 1 }));
+    }, 1000);
+  }
+  startPlacing() {
+    const w = this.wrapEl ? this.wrapEl.getBoundingClientRect().width : 1000;
+    this.setState({ placing: true, readyModal: false, ribX: Math.max(8, w - 60), panel: null, selTool: null });
+  }
+  place(page) {
+    this.drag = null;
+    this.setState({ placing: false, dragging: false, ribPage: page, readyModal: true });
+  }
+  countXp() {
+    if (this.props.still) return;
+    if (this.rm) { this.setState({ xpCount: 92 }); return; }
+    this.setState({ xpCount: 0 });
+    this.later(() => {
+      const t0 = performance.now();
+      const step = (now) => {
+        const p = Math.min(1, (now - t0) / 800);
+        this.setState({ xpCount: Math.round(92 * (1 - Math.pow(1 - p, 3))) });
+        if (p < 1 && this.state.view === 'results') requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, 300);
+  }
+  goView(view) {
+    clearInterval(this.watchT);
+    this.setState({ view, readyModal: false, placing: false, panel: null });
+    if (view === 'results') this.countXp();
+    if (view === 'league' && !this.state.leagueUpdated) {
+      this.later(() => this.setState({ leagueUpdated: true }), this.props.still ? 0 : 500);
+      this.later(() => this.setState({ celebBanner: true }), this.props.still ? 0 : 1100);
+    }
+    try { if (!this.props.still) window.scrollTo(0, 0); } catch (e) {}
+  }
+
+  pages() {
+    const S = (id, t) => ({ id, t });
+    return [
+      { no: 'xi', kind: 'front', header: 'Preface', blocks: [
+        { type: 'sec', no: '', t: 'Preface' },
+        { type: 'p', segs: [S('f1', 'This book grew out of a course for students who had met calculus but not yet Fourier. Its aim is modest: to make the series feel inevitable rather than magical, and to leave you able to compute one by hand and by machine.')] },
+        { type: 'p', segs: [S('f2', 'Each chapter mixes a little history, a few careful derivations and short Python listings you can run as you read. The exercises are worth doing; the asides are worth skipping on a first pass.')] }
+      ] },
+      { no: 'xii', kind: 'front', header: 'Contents', blocks: [
+        { type: 'sec', no: '', t: 'Contents' },
+        { type: 'toc', rows: [['1  Periodic things', '1'], ['2  Vectors without arrows', '13'], ['3  Inner products of functions', '27'], ['4  Fourier series', '41', 'ch'], ['     4.2  The coefficients', '44'], ['     4.3  Convergence', '47'], ['5  The transform', '63']] }
+      ] },
+      { no: 44, header: 'Signals, Gently', blocks: [
+        { type: 'sec', no: '4.2', t: 'The coefficients' },
+        { type: 'p', segs: [S('s1', 'Any reasonably well-behaved periodic function can be written as a sum of sines and cosines. '), S('s2', 'For a function f with period 2π, the Fourier series is')], mark: 'n1' },
+        { type: 'eq43' },
+        { type: 'p', segs: [S('s5', 'where the coefficients measure how much of each frequency the function contains:')] },
+        { type: 'eq44', mark: 'n2' },
+        { type: 'p', segs: [S('s6', 'The surprise, which Fourier’s contemporaries resisted, is that even a function with jumps can be built this way. '), S('s7', 'A square wave, the most stubborn example, is where we turn next.')] }
+      ] },
+      { no: 45, header: '4  Fourier series', blocks: [
+        { type: 'fig', mark: 'n3' },
+        { type: 'p', segs: [S('s8', 'Because the square wave is odd, every aₙ vanishes and only odd sine terms survive. Listing 4.1 sums them directly.')] },
+        { type: 'code', mark: 'n4' },
+        { type: 'p', segs: [S('s9', 'Try N = 50: the wiggles crowd toward the jump but never sink below that 9% peak.')] }
+      ] },
+      { no: 46, header: 'Signals, Gently', blocks: [
+        { type: 'sec', no: '4.3', t: 'Convergence' },
+        { type: 'p', segs: [S('s10', 'When does the series actually equal the function? At every point where f is smooth, it does. At a jump it settles on the midpoint of the two sides, which is why the partial sums in Figure 4.2 all pass through zero at the edges.')] },
+        { type: 'p', segs: [S('s11', 'That is a weaker promise than it sounds, and the rest of this section makes it precise.')] }
+      ] },
+      { no: 47, header: '4  Fourier series', blocks: [
+        { type: 'p', segs: [S('s12', 'Exercises')] },
+        { type: 'p', segs: [S('s13', '4.1  Compute the coefficients of the sawtooth f(x) = x on (−π, π).')] },
+        { type: 'p', segs: [S('s14', '4.2  Modify Listing 4.1 to plot N = 1, 5 and 50 on one axis. Measure the overshoot.')] }
+      ] }
+    ];
+  }
+
+  figPath(N) {
+    const pts = [];
+    for (let i = 0; i <= 180; i++) {
+      const x = -Math.PI + (2 * Math.PI * i) / 180;
+      let y = 0;
+      for (let k = 1; k <= 2 * N; k += 2) y += Math.sin(k * x) / k;
+      y = (4 / Math.PI) * y;
+      pts.push(((20 + (i / 180) * 360).toFixed(1)) + ' ' + ((85 - y * 50).toFixed(1)));
+    }
+    return 'M' + pts.join(' L');
+  }
+
+  renderVals() {
+    const st = this.state;
+    const still = !!this.props.still;
+    const live = !still;
+    const theme = st.themeOv || this.props.theme || 'paper';
+    const accent = this.props.accent || 'terracotta';
+    const narrow = st.narrow;
+    const isReader = st.view === 'reader';
+    const v = { quiz: st.view === 'quiz', results: st.view === 'results', progress: st.view === 'progress', league: st.view === 'league', celebrate: st.view === 'celebrate' };
+
+    // pages
+    const all = this.pages();
+    const base = narrow ? st.pg : st.pg - (st.pg % 2);
+    const vis = narrow ? [all[base]] : [all[base], all[base + 1]];
+    const noteMarks = {};
+    st.notes.forEach((n) => { noteMarks[n.page] = (noteMarks[n.page] || 0) + 1; });
+    const markFor = { n1: 's', n2: 's', n3: 's', n4: 's' };
+    const visPages = vis.filter(Boolean).map((pg, i) => {
+      const slot = narrow ? 'slot-l' : (i === 0 ? 'slot-l' : 'slot-r');
+      const isRight = slot === 'slot-r';
+      const ribHere = !st.placing && ((st.ribPage === 'r' && (isRight || narrow) && pg.no === 45) || (st.ribPage === 'l' && pg.no === 44));
+      return {
+        slot, no: pg.no, header: pg.header,
+        ribbon: ribHere, ribCls: ribHere && !isRight ? 'ribl' : '',
+        flashCls: st.flashPage === pg.no ? 'flash' : '',
+        folio: st.fmt === 'epub' ? 'p. ' + pg.no + ' of 380' : String(pg.no),
+        canPlace: st.placing && typeof pg.no === 'number',
+        place: () => this.place(isRight ? 'r' : 'l'),
+        blocks: pg.blocks.map((b, bi) => {
+          const hasMark = !!(b.mark && st.notes.some((n) => n.id === b.mark)) || (b.type === 'p' && bi === 3 && pg.no === 44 && st.notes.some((n) => n.id === 'n5'));
+          const kind = b.type === 'eq43' || b.type === 'eq44' ? 'eq' : b.type;
+          const affKey = b.type === 'eq44' ? 'eq44' : (b.type === 'eq43' ? 'eq43' : b.type);
+          return {
+            isSec: b.type === 'sec', isP: b.type === 'p', isEq43: b.type === 'eq43', isEq44: b.type === 'eq44', isFig: b.type === 'fig', isCode: b.type === 'code', isToc: b.type === 'toc',
+            no: b.no || '', t: b.t || '',
+            hasMark: hasMark && typeof pg.no === 'number', marks: 1, markLabel: 'Open note for this passage',
+            affCls: st.affShow[affKey] ? 'show' : '',
+            explain: () => this.askSteve(kind === 'eq' ? 'eq' : (b.type === 'fig' ? 'figure' : 'code')),
+            copy: () => b.type === 'code' ? this.copyText('def square_partial_sum(x, N): ...', 'Code copied') : this.copyText(b.type === 'eq43' ? 'f(x) = \\frac{a_0}{2} + \\sum_{n=1}^{\\infty} (a_n \\cos nx + b_n \\sin nx)' : 'a_n = \\frac{1}{\\pi}\\int_{-\\pi}^{\\pi} f(x)\\cos nx\\,dx', 'LaTeX copied'),
+            note: () => this.addNote({ id: 'nf' + Date.now(), type: 'text', ref: 'p. 45 · Figure 4.2', page: 45, text: 'Gibbs: the overshoot narrows as N grows but stays near 9% of the jump.' }, 'Added to notes · p. 45'),
+            rows: (b.rows || []).map((r) => ({ t: r[0], p: r[1], cls: r[2] || '' })),
+            segs: (b.segs || []).map((sg) => {
+              const c = st.hl[sg.id];
+              const sel = st.selTool && st.selTool.seg === sg.id;
+              return {
+                id: sg.id, t: sg.t,
+                cls: [c ? 'hl hl-' + c : '', st.ul[sg.id] ? 'ulc' : '', sel ? 'selected' : ''].join(' ').trim(),
+                hasHl: !!c, chipCls: st.chipShow === sg.id ? 'show' : '',
+                ask: () => this.askSteve('coef')
+              };
+            })
+          };
+        })
+      };
+    });
+    const isFront = typeof all[base].no !== 'number';
+    const maxPg = all.length - 1;
+    const atStart = st.pg <= (narrow ? 0 : 1);
+    const atEnd = narrow ? st.pg >= maxPg : base + 2 > maxPg;
+    const turn = (d) => () => {
+      const step = narrow ? 1 : 2;
+      const nb = Math.max(0, Math.min(maxPg, (narrow ? st.pg : base) + d * step));
+      this.setState({ pg: nb, selTool: null, lockOpen: false });
+    };
+
+    // steve
+    const ansAll = st.ask ? this.ansFor(st.ask) : [];
+    const shown = ansAll.slice(0, Math.max(0, st.streamN));
+    const streaming = st.sv === 'answer' && st.streamN < ansAll.length;
+    const ansBlocks = shown.map((a, i) => {
+      const last = i === shown.length - 1;
+      const segs = (a.segs || []).map((x) => ({ isT: x.k === 't', isCite: x.k === 'c', isCaret: false, t: x.t || '', p: x.p || '', go: () => { this.setState({ flashPage: x.p, pg: narrow ? (x.p === 44 ? 2 : 3) : st.pg }); this.later(() => this.setState({ flashPage: null }), 900); } }));
+      if (last && streaming && a.k === 'p') segs.push({ isT: false, isCite: false, isCaret: true });
+      return { isP: a.k === 'p', isOrth: a.k === 'orth', isSq: a.k === 'sq', isCode: a.k === 'code', segs };
+    });
+    const at = this.askText(st.ask || 'coef');
+
+    // notes
+    const notes = st.notes.map((n) => ({
+      ref: n.ref, text: n.text || '', cls: st.freshNote === n.id ? 'fresh' : '',
+      kind: n.type === 'text' ? 'Text' : n.type === 'eq' ? 'Equation' : n.type === 'draw' ? 'Drawing' : 'Code',
+      isText: n.type === 'text', isEq: n.type === 'eq', isDraw: n.type === 'draw', isCode: n.type === 'code',
+      go: () => this.setState({ pg: narrow ? (n.page === 44 ? 2 : 3) : 2, flashPage: n.page })
+    }));
+
+    // watch
+    const e = st.elapsed;
+    const watchText = Math.floor(e / 3600) + ':' + String(Math.floor((e % 3600) / 60)).padStart(2, '0') + ':' + String(e % 60).padStart(2, '0');
+
+    // quiz
+    const qs = [
+      { text: 'What does the coefficient aₙ measure?', opts: ['How much of cos nx the function contains', 'The height of the function at x = n', 'The number of jumps in one period', 'How fast the series converges'] },
+      { text: 'Why is every aₙ zero for the square wave in Figure 4.2?', opts: ['Its period is not 2π', 'It has jumps', 'It is an odd function', 'Its average is one'] },
+      { text: 'What happens to the overshoot near a jump as N grows?', opts: ['It disappears', 'It narrows but stays near 9% of the jump', 'It grows without limit', 'It moves away from the jump'] }
+    ];
+    const questions = qs.map((q, i) => ({
+      n: i + 1, name: 'stq' + i, text: q.text, active: i === st.qi,
+      opts: q.opts.map((t, j) => ({ l: 'ABCD'[j], t, sel: st.ans[i] === j, cls: st.ans[i] === j ? 'sel' : '', pick: () => this.setState((s) => { const a = s.ans.slice(); a[i] = j; return { ans: a }; }) }))
+    }));
+
+    // points
+    const pointsRows = st.low ? [
+      { t: 'Focused reading', s: '52 minutes · counts toward your streak', v: '—', cls: '', d: '0ms' },
+      { t: 'Quiz', s: '1 of 3 · under 40%', v: '—', cls: '', d: '60ms' },
+      { t: 'This session', s: 'Points held back this time', v: '0 XP', cls: 'total', d: '120ms' }
+    ] : [
+      { t: 'Focused reading', s: '52 minutes from Chapter 4', v: '+52', cls: '', d: '0ms' },
+      { t: 'Quiz bonus', s: '2 of 3 right · 67%', v: '+30', cls: '', d: '60ms' },
+      { t: 'Finished with the ribbon', s: 'Session closed properly', v: '+10', cls: '', d: '120ms' },
+      { t: 'Total', s: 'Added to Hardcover league', v: '+92 XP', cls: 'total', d: '180ms' }
+    ];
+
+    // league
+    const upd = st.leagueUpdated;
+    const others = [['marginalia', 742], ['slow.reader', 690], ['inkwell', 655], ['dogeared', 488], ['quietpages', 470], ['folio_fox', 455]];
+    const you = ['You', upd ? 502 : 410];
+    const top = others.concat([you]).sort((a, b) => b[1] - a[1]);
+    const lrows = [];
+    top.forEach((r, i) => {
+      const isYou = r[0] === 'You';
+      lrows.push({ isRow: true, rk: i + 1, ini: isYou ? 'FR' : r[0].replace(/[^a-z]/gi, '').slice(0, 2).toUpperCase(), nm: r[0], xp: r[1], cls: isYou ? 'you' + (upd ? ' moved' : '') : '', up: isYou && upd, upText: 'up 3' });
+      if (i === 4) lrows.push({ isPro: true });
+    });
+    lrows.push({ isGap: true });
+    lrows.push({ isDem: true });
+    [['nightlamp', 160], ['tea_and_proofs', 142], ['papercut', 120]].forEach((r, i) => lrows.push({ isRow: true, rk: 16 + i, ini: r[0].slice(0, 2).toUpperCase(), nm: r[0], xp: r[1], cls: '' }));
+    const tierNames = ['Pamphlet', 'Paperback', 'Hardcover', 'Folio', 'First Edition', 'Illuminated'];
+    const tiers = tierNames.map((n, i) => ({ n, cls: i < 2 ? 'done' : i === 2 ? 'cur' : i === 3 ? 'next' : '' }));
+    const tiersC = tierNames.map((n, i) => ({ n, cls: i < 3 ? 'done' : i === 3 ? 'cur' : '' }));
+
+    const badges = [
+      { isSeal: true, t: 'Seven evenings', d: 'A week of reading in a row', glyph: 'M50 34 C54 40 55 43 55 46 a5 5 0 0 1 -10 0 C45 43 47 39 50 34 Z M45 52 H55 V66 H45 Z', cls: '' },
+      { isPlate: true, t: 'First book finished', d: 'Walden, in October', mark: 'Walden', cls: '' },
+      { isSeal: true, t: 'Good questions', d: 'Asked Steve 30 times', glyph: 'M38 40 H62 V56 H48 L40 63 V56 H38 Z', cls: '' },
+      { isPlate: true, t: 'Fifty margin notes', d: 'Notes across all books', mark: '50', cls: '' },
+      { isSeal: true, t: 'A hundred evenings', d: '87 to go', glyph: 'M38 50 a12 12 0 1 0 24 0 a12 12 0 1 0 -24 0 M50 42 V50 L56 54', cls: 'locked' },
+      { isPlate: true, t: 'A week in Folio', d: 'Finish a week in Folio', mark: 'Folio', cls: 'locked' }
+    ].map((b) => Object.assign({ isSeal: false, isPlate: false, glyph: '', mark: '' }, b));
+
+    const sv = { consent: st.sv === 'consent', empty: st.sv === 'empty', answer: st.sv === 'answer', paused: st.sv === 'paused', key: st.sv === 'key' };
+    const swatches = [['honey', 'Honey', '#D9B84F'], ['sage', 'Sage', '#8FAE7E'], ['sky', 'Sky', '#7FA3C2'], ['rose', 'Rose', '#D08A7E'], ['lilac', 'Lilac', '#A892C6']].map((w) => ({
+      name: w[1], dot: w[2],
+      pick: () => { const seg = st.selTool && st.selTool.seg; if (!seg) return; this.setState((s) => ({ hl: Object.assign({}, s.hl, { [seg]: w[0] }), selTool: null })); window.getSelection && window.getSelection().removeAllRanges(); }
+    }));
+    const toast = st.toast;
+
+    return {
+      rootRef: this.rootRef, wrapRef: this.wrapRef,
+      theme, accent, live, minH: this.props.frameH || '100vh',
+      isLamp: theme === 'lamplight',
+      toggleTheme: () => this.setState({ themeOv: theme === 'lamplight' ? 'paper' : 'lamplight' }),
+      isReader, isApp: !isReader, v, showBar: !v.quiz && !v.celebrate,
+      // reader chrome
+      focus: st.focus, notFocus: !st.focus, focusCls: st.focus ? 'focus' : '',
+      isPdf: st.fmt === 'pdf', isEpub: st.fmt === 'epub', fmt: st.fmt,
+      zoom: st.zoom, zoomText: Math.round(st.zoom * 100) + '%', zMin: st.zoom <= 0.9, zMax: st.zoom >= 1.2,
+      zoomIn: () => this.setState((s) => ({ zoom: Math.min(1.2, +(s.zoom + 0.1).toFixed(2)) })),
+      zoomOut: () => this.setState((s) => ({ zoom: Math.max(0.9, +(s.zoom - 0.1).toFixed(2)) })),
+      toast_library: () => this.showToast('The library is in the phase 1 prototype.'),
+      toast_reflow: () => this.showToast('Reading view reflows the text, as in the phase 1 reader.'),
+      noteCount: st.notes.length,
+      notesOn: st.panel === 'notes' ? 'on' : '', steveOn: st.panel === 'steve' ? 'on' : '',
+      notesPressed: st.panel === 'notes', stevePressed: st.panel === 'steve',
+      openNotes: () => this.setState({ panel: 'notes', selTool: null }),
+      openSteve: () => this.setState((s) => ({ panel: 'steve', selTool: null, sv: s.consented ? (s.ask ? 'answer' : (s.sv === 'consent' ? 'empty' : s.sv)) : 'consent' })),
+      closePanel: () => this.setState({ panel: null }),
+      panelOpen: !!st.panel && !st.focus,
+      isSteveTab: st.panel === 'steve', isNotesTab: st.panel === 'notes',
+      tabSteve: st.panel === 'steve' ? 'on' : '', tabNotes: st.panel === 'notes' ? 'on' : '',
+      spreadCls: narrow ? 'single' : '',
+      visPages, atStart, atEnd, prevPage: turn(-1), nextPage: turn(1),
+      whereText: isFront ? 'Front matter · the focus clock starts at Chapter 1' : (narrow ? 'p. ' + all[base].no : 'pp. ' + all[base].no + '–' + (all[base + 1] ? all[base + 1].no : '')) + ' · Chapter 4',
+      figN1: this.figPath(1), figN3: this.figPath(3), figN9: this.figPath(9),
+      // selection
+      onSelect: (ev) => {
+        if (still || st.placing) return;
+        const sel = window.getSelection && window.getSelection();
+        if (!sel || sel.isCollapsed || !this.wrapEl) { if (this.state.selTool && !this.state.selTool.still) this.setState({ selTool: null }); return; }
+        const node = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+        const segEl = node && node.closest ? node.closest('[data-seg]') : null;
+        if (!segEl) return;
+        const r = sel.getRangeAt(0).getBoundingClientRect();
+        const w = this.wrapEl.getBoundingClientRect();
+        const left = Math.max(0, Math.min(w.width - 330, r.left - w.left + r.width / 2 - 165));
+        this.setState({ selTool: { seg: segEl.getAttribute('data-seg'), top: Math.max(0, r.top - w.top - 56), left } });
+      },
+      selTool: !!st.selTool && isReader, selTop: st.selTool ? st.selTool.top : 0, selLeft: st.selTool ? st.selTool.left : 0,
+      swatches,
+      applyUl: () => { const seg = st.selTool && st.selTool.seg; if (!seg) return; this.setState((s) => ({ ul: Object.assign({}, s.ul, { [seg]: !s.ul[seg] }), selTool: null })); },
+      askSel: () => { const seg = st.selTool && st.selTool.seg; if (seg) this.setState((s) => ({ hl: Object.assign({}, s.hl, { [seg]: s.hl[seg] || 'honey' }) })); this.askSteve('coef'); },
+      noteSel: () => { this.setState({ selTool: null }); this.addNote({ id: 'ns' + Date.now(), type: 'text', ref: 'p. 44 · Fourier series', page: 44, text: 'Coefficients = how much of each frequency. Come back to the integral form.' }, 'Note added · p. 44'); },
+      // steve
+      sv, suggestions: ['Why does every aₙ vanish for the square wave?', 'What is the Gibbs phenomenon, in plain words?', 'Walk me through equation (4.4)', 'Quiz me on §4.2'].map((t, i) => ({ t, ask: () => this.askSteve(i === 1 ? 'figure' : 'coef') })),
+      acceptConsent: () => { const k = this.pendingAsk; this.pendingAsk = null; this.setState({ consented: true, sv: k ? 'answer' : 'empty', ask: k || null, streamN: 0 }); if (k) this.stream(k); },
+      askPrefix: at[0], askQuote: at[1], ansPages: st.ask === 'coef' || st.ask === 'eq' || st.ask === 'sugg' ? '44–45' : '45',
+      ansBlocks, streaming, doneStream: sv.answer && !streaming,
+      stopStream: () => { clearInterval(this.streamT); this.setState({ streamN: ansAll.length }); },
+      addAnsNote: () => { this.setState({ ansNoted: true }); this.addNote(Object.assign(this.steveNote(), { id: 'n5' }), 'Added to notes · p. 44'); },
+      ansNoted: st.ansNoted, addNoteLabel: st.ansNoted ? 'Added to notes' : 'Add to notes',
+      copyAns: () => this.copyText('Think of a_n as a measurement…', 'Answer copied'),
+      goKey: () => this.setState({ panel: 'steve', sv: 'key' }),
+      backFromKey: () => this.setState((s) => ({ sv: s.consented ? (s.ask ? 'answer' : 'empty') : 'consent' })),
+      keyVal: st.keyVal, setKey: (ev) => { const val = ev.target.value; this.setState({ keyVal: val }); },
+      saveKey: () => this.showToast(st.keyVal ? 'Key saved. Steve will use it from now on.' : 'Paste a key first.'),
+      geminiOn: st.gemini, geminiCls: st.gemini ? 'on' : '', toggleGemini: () => this.setState((s) => ({ gemini: !s.gemini })),
+      askPh: sv.paused ? 'Steve is back tomorrow' : (sv.consent ? 'Turn on Steve to ask' : 'Ask about these pages…'),
+      askDisabled: sv.paused || sv.consent || !st.gemini,
+      askDefault: () => this.askSteve('sugg'),
+      // notes
+      notes, addText: () => this.addNote({ id: 'nt' + Date.now(), type: 'text', ref: 'p. 45 · Listing 4.1', page: 45, text: 'Try N = 50 tomorrow and measure the peak.' }, 'Note added · p. 45'),
+      // focus
+      startFocus: () => { this.setState({ focus: true, panel: null, selTool: null, lockOpen: false }); this.runWatch(); },
+      exitFocus: () => { clearInterval(this.watchT); this.setState({ focus: false, lockOpen: false }); },
+      endSession: () => this.startPlacing(),
+      watchLocked: st.focus && isFront, watchRun: st.focus && !isFront,
+      lockOpen: st.lockOpen && st.focus && isFront, toggleLock: () => this.setState((s) => ({ lockOpen: !s.lockOpen })),
+      watchText, watchLabel: 'Focus time ' + watchText,
+      jump245: () => this.setState({ elapsed: 9900, noticeDismissed: false }),
+      showNotice: st.focus && e >= 9900 && !st.noticeDismissed && !st.placing,
+      dismissNotice: () => this.setState({ noticeDismissed: true }),
+      // ribbon
+      placing: st.placing, ribX: st.ribX, dragCls: st.dragging ? 'dragging' : '',
+      ribDown: (ev) => { try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (x) {} this.drag = { sx: ev.clientX, x0: this.state.ribX }; this.setState({ dragging: true }); },
+      ribMove: (ev) => { if (!this.drag || !this.wrapEl) return; const w = this.wrapEl.getBoundingClientRect().width; const x = Math.max(8, Math.min(w - 30, this.drag.x0 + ev.clientX - this.drag.sx)); this.setState({ ribX: x }); },
+      ribUp: () => { if (!this.drag || !this.wrapEl) return; const w = this.wrapEl.getBoundingClientRect().width; this.place(narrow || this.state.ribX > w / 2 ? 'r' : 'l'); },
+      ribKey: (ev) => {
+        if (!this.wrapEl) return;
+        const w = this.wrapEl.getBoundingClientRect().width;
+        if (ev.key === 'ArrowLeft') { ev.preventDefault(); this.setState({ ribX: 40 }); }
+        if (ev.key === 'ArrowRight') { ev.preventDefault(); this.setState({ ribX: w - 60 }); }
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); this.place(narrow || this.state.ribX > w / 2 ? 'r' : 'l'); }
+      },
+      readyModal: st.readyModal, ribPageNo: st.ribPage === 'l' ? 44 : 45,
+      notYet: () => { clearInterval(this.watchT); this.setState({ readyModal: false, focus: false }); this.showToast('Place saved at p. ' + (st.ribPage === 'l' ? 44 : 45) + '. Questions will wait.'); },
+      startQuiz: () => { this.setState({ qi: 0, ans: [null, null, null] }); this.goView('quiz'); },
+      // quiz
+      questions, dots: [0, 1, 2].map((i) => ({ cls: i === st.qi ? 'cur' : (i < st.qi ? 'done' : '') })), dotsLabel: 'Question ' + (st.qi + 1) + ' of 3',
+      nextLabel: st.qi >= 2 ? 'See results' : 'Next',
+      nextQ: () => { if (this.state.qi >= 2) { const right = [0, 2, 1].filter((c, i) => this.state.ans[i] === c).length; this.setState({ low: right < 2 && this.state.ans.every((a) => a !== null) && right <= 1 }); this.goView('results'); } else this.setState((s) => ({ qi: s.qi + 1 })); },
+      saveLeave: () => { this.goView('reader'); this.showToast('Answers saved. Pick up the questions any time today.'); },
+      // results
+      earned: !st.low, noPoints: st.low, xpCount: st.xpCount, xpLabel: 'Plus 92 experience points', pointsRows,
+      goLeague: () => this.goView('league'), goProgress: () => this.goView('progress'), goCelebrate: () => this.goView('celebrate'),
+      backToBook: () => { this.setState({ focus: false, panel: null }); this.goView('reader'); },
+      reviewSteve: () => { this.setState({ focus: false }); this.goView('reader'); this.later(() => this.askSteve('coef'), 50); },
+      navProg: v.progress ? 'on' : '', navLeague: v.league ? 'on' : '',
+      // progress / league
+      badges, lrows, tiers, tiersC, showCelebBanner: st.celebBanner,
+      // toast
+      hasToast: !!toast, toastText: toast || '', dismissToast: () => this.setState({ toast: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

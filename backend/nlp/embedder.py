@@ -26,6 +26,11 @@ EMBEDDING_DIM = 384
 BATCH_SIZE = 4
 DEFAULT_THREADS = 1
 DEFAULT_CACHE = ".cache/fastembed"
+# C25.2: onnxruntime's CPU memory arena grows to the largest batch it has run and never shrinks, so every
+# ingestion left the server holding its peak. Off, memory goes back after each call: in the production image
+# (docs/BENCHMARKS.md, C25.2) 64 long passages peaked at 320 MiB instead of 553 and fell to 119 instead of
+# staying at 552, and ran faster at 512 MB.
+SESSION_OPTIONS = {"enable_cpu_mem_arena": False}
 
 _model = None
 _lock = threading.Lock()
@@ -52,7 +57,7 @@ def _load():
     # onnxruntime are only paid for by a process that embeds.
     from fastembed import TextEmbedding
 
-    return TextEmbedding(model_name=MODEL_NAME, cache_dir=cache_dir(), threads=thread_count())
+    return TextEmbedding(model_name=MODEL_NAME, cache_dir=cache_dir(), threads=thread_count(), **SESSION_OPTIONS)
 
 
 def get_model():

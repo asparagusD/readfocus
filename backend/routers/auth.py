@@ -17,6 +17,7 @@ async def get_profile(user_id: str = Depends(get_current_user)):
         if not resp.data:
             raise HTTPException(status_code=404, detail="Profile not found.")
         profile: dict[str, Any] = cast(dict[str, Any], resp.data[0])
+        profile.pop("steve_key_cipher", None)  # the reader's encrypted Gemini key never leaves the server (C20.1)
         if "is_calibrated" not in profile:
             profile["is_calibrated"] = False
         return profile

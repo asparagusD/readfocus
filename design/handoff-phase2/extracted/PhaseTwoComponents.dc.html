@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>ReadFocus phase 2 components</title>
+<script src="dde11860-bd7e-4ae6-8b54-04687d5d8949"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* cyrillic-ext */
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("14c5ec38-73e9-41e8-9f9e-53dc159a8cdb") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("ec5e3dcf-55aa-40cc-9f8d-bf4c76648874") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("11e334fa-a198-40f1-9e1b-30a40d83bab5") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("18a20cbd-ecfd-477f-b1b4-dcb751175e12") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/dmsans/v17/rP2Hp2ywxg089UriCZ2IHSeH.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("dfa7e4fd-5678-431a-a22c-d58230915eb5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/dmsans/v17/rP2Hp2ywxg089UriCZ2IHSeH.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("dfa7e4fd-5678-431a-a22c-d58230915eb5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/dmsans/v17/rP2Hp2ywxg089UriCZ2IHSeH.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("dfa7e4fd-5678-431a-a22c-d58230915eb5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("16ec7d5f-10e7-4a8c-aa2e-eb431634a71d") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("559ce0d1-6042-4b0a-b1f2-6dcfa8da3ec9") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("7ded34b5-77f5-4438-98d4-e9eeb54a6b9d") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("b65f8c18-ec03-4ddf-ad42-79b082a0e4d4") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("c0ca11cb-2915-4ce9-8e5f-2077fb96910c") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("9a01dcae-53d1-484c-b62b-0e16b59d9530") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("16ec7d5f-10e7-4a8c-aa2e-eb431634a71d") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("559ce0d1-6042-4b0a-b1f2-6dcfa8da3ec9") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("7ded34b5-77f5-4438-98d4-e9eeb54a6b9d") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("b65f8c18-ec03-4ddf-ad42-79b082a0e4d4") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("c0ca11cb-2915-4ce9-8e5f-2077fb96910c") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("9a01dcae-53d1-484c-b62b-0e16b59d9530") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QI8MX1D_JOuMw_hLdO6T2wV9KnW-MoFoqJ2nOeZ.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QI8MX1D_JOuMw_hLdO6T2wV9KnW-MoFoqt2nOeZ.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* math */
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QI8MX1D_JOuMw_hLdO6T2wV9KnW-MoFotN2nOeZ.woff2) format('woff2');
+  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-209F, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
+}
+/* symbols */
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QI8MX1D_JOuMw_hLdO6T2wV9KnW-MoFosF2nOeZ.woff2) format('woff2');
+  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AE, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F8D0-1F8D8, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FAC6, U+1FAC8, U+1FACC-1FADD, U+1FADF-1FAEB, U+1FAEF-1FAFA, U+1FB00-1FBFF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QI8MX1D_JOuMw_hLdO6T2wV9KnW-MoFoqB2nOeZ.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QI8MX1D_JOuMw_hLdO6T2wV9KnW-MoFoqF2nOeZ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QI8MX1D_JOuMw_hLdO6T2wV9KnW-MoFoq92nA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwf7I-NP.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMw77I-NP.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* math */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuM3b7I-NP.woff2) format('woff2');
+  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-209F, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
+}
+/* symbols */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuM2T7I-NP.woff2) format('woff2');
+  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AE, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F8D0-1F8D8, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FAC6, U+1FAC8, U+1FACC-1FADD, U+1FADF-1FAEB, U+1FAEF-1FAFA, U+1FB00-1FBFF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwX7I-NP.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwT7I-NP.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwr7Iw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwf7I-NP.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMw77I-NP.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* math */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuM3b7I-NP.woff2) format('woff2');
+  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-209F, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
+}
+/* symbols */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuM2T7I-NP.woff2) format('woff2');
+  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AE, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F8D0-1F8D8, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FAC6, U+1FAC8, U+1FACC-1FADD, U+1FADF-1FAEB, U+1FAEF-1FAFA, U+1FB00-1FBFF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwX7I-NP.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwT7I-NP.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwr7Iw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwf7I-NP.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMw77I-NP.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* math */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuM3b7I-NP.woff2) format('woff2');
+  unicode-range: U+0302-0303, U+0305, U+0307-0308, U+0310, U+0312, U+0315, U+031A, U+0326-0327, U+032C, U+032F-0330, U+0332-0333, U+0338, U+033A, U+0346, U+034D, U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+03D1, U+03D5-03D6, U+03F0-03F1, U+03F4-03F5, U+2016-2017, U+2034-2038, U+203C, U+2040, U+2043, U+2047, U+2050, U+2057, U+205F, U+2070-2071, U+2074-209F, U+20D0-20DC, U+20E1, U+20E5-20EF, U+2100-2112, U+2114-2115, U+2117-2121, U+2123-214F, U+2190, U+2192, U+2194-21AE, U+21B0-21E5, U+21F1-21F2, U+21F4-2211, U+2213-2214, U+2216-22FF, U+2308-230B, U+2310, U+2319, U+231C-2321, U+2336-237A, U+237C, U+2395, U+239B-23B7, U+23D0, U+23DC-23E1, U+2474-2475, U+25AF, U+25B3, U+25B7, U+25BD, U+25C1, U+25CA, U+25CC, U+25FB, U+266D-266F, U+27C0-27FF, U+2900-2AFF, U+2B0E-2B11, U+2B30-2B4C, U+2BFE, U+3030, U+FF5B, U+FF5D, U+1D400-1D7FF, U+1EE00-1EEFF;
+}
+/* symbols */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuM2T7I-NP.woff2) format('woff2');
+  unicode-range: U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AE, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F8D0-1F8D8, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FAC6, U+1FAC8, U+1FACC-1FADD, U+1FADF-1FAEB, U+1FAEF-1FAFA, U+1FB00-1FBFF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwX7I-NP.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwT7I-NP.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/lora/v37/0QIvMX1D_JOuMwr7Iw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnohkk72xU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnojUk72xU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnojEk72xU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnogkk7.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnohkk72xU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnojUk72xU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnojEk72xU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFkD-vYSZviVYUb_rj3ij__anPXDTnogkk7.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTjYgFE_.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgFE_.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgFE_.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTjYgFE_.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgFE_.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgFE_.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTjYgFE_.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgFE_.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgFE_.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+body{margin:0}
+a{color:#A64B2A}a:hover{color:#7E3820}
+.cs{--ease-settle:cubic-bezier(.22,.61,.36,1);--ease-breathe:cubic-bezier(.45,0,.55,1);background:var(--paper);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.5;border-radius:20px;padding:56px;display:flex;flex-direction:column;gap:48px}
+.cs *{box-sizing:border-box}
+.cs button,.cs input{font:inherit;color:inherit}
+.t-paper{--paper:#FAF7F2;--paper-2:#F3EDE3;--surface:#FFFDF9;--page:#FBF8F2;--ink:#2A2420;--ink-2:#5C534A;--ink-3:#756A5F;--line:#E6DED2;--line-2:#D6CBBB;--warn:#8C5A00;--drop:rgba(40,25,10,.35);--hl-honey:#F4E2A8;--hl-sage:#DCE6CF;--hl-sky:#D5E2EC;--hl-rose:#F0D6D0;--hl-lilac:#E4DCEC;--code-bg:#F3EDE3}
+.t-lamplight{--paper:#1D1915;--paper-2:#161310;--surface:#25201B;--page:#231E19;--ink:#EEE5D5;--ink-2:#C4B8A5;--ink-3:#A09481;--line:#383029;--line-2:#4A4037;--warn:#E9B65E;--drop:rgba(0,0,0,.6);--hl-honey:rgba(233,182,94,.30);--hl-sage:rgba(168,193,152,.26);--hl-sky:rgba(130,170,205,.28);--hl-rose:rgba(222,140,128,.28);--hl-lilac:rgba(182,160,212,.28);--code-bg:#1A1612}
+.t-paper.a-terracotta{--accent:#A64B2A;--accent-ink:#FFFDF9;--accent-soft:#F3E2D7;--accent-text:#9A4526;--glow:rgba(166,75,42,0)}
+.t-paper.a-sage{--accent:#506A4A;--accent-ink:#FFFDF9;--accent-soft:#E3EADD;--accent-text:#4A6244;--glow:rgba(80,106,74,0)}
+.t-lamplight.a-terracotta{--accent:#E59A6C;--accent-ink:#1D1915;--accent-soft:#3A271C;--accent-text:#EDA77B;--glow:rgba(229,154,108,.28)}
+.t-lamplight.a-sage{--accent:#A8C198;--accent-ink:#1D1915;--accent-soft:#26301F;--accent-text:#B3CBA3;--glow:rgba(168,193,152,.24)}
+.cs-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:24px}
+.cs-h h2{font-family:'Playfair Display',Georgia,serif;font-weight:500;font-size:40px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.small{font-size:13px;color:var(--ink-3)}
+.blk{display:flex;flex-direction:column;gap:16px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:500 15px/1 'DM Sans',system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn.sm{min-height:36px;padding:0 14px;font-size:14px}
+.btn-p{background:var(--accent);color:var(--accent-ink)}
+.t-lamplight .btn-p{box-shadow:0 0 24px var(--glow)}
+.btn-s{background:var(--surface);color:var(--ink);border-color:var(--line-2)}
+.btn-g{background:transparent;color:var(--ink-2)}
+.tok{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.tok div{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--ink-2)}
+.tok span.sw{height:44px;border-radius:8px;border:1px solid var(--line)}
+.lo{font-family:'Lora',Georgia,serif}
+.para{font-family:'Lora',Georgia,serif;font-size:17px;line-height:1.75;margin:0;padding:28px 24px 16px;background:var(--page);border:1px solid var(--line);border-radius:8px;position:relative}
+.hl{border-radius:2px;-webkit-box-decoration-break:clone;box-decoration-break:clone;position:relative}
+.hl-honey{background:var(--hl-honey)}.hl-sage{background:var(--hl-sage)}.hl-sky{background:var(--hl-sky)}.hl-rose{background:var(--hl-rose)}.hl-lilac{background:var(--hl-lilac)}
+.ulc{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:4px}
+.selected{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent-soft)}
+.askchip{position:absolute;right:0;bottom:calc(100% + 4px);display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 10px 0 6px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);font-family:'DM Sans',system-ui,sans-serif;font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;box-shadow:0 8px 16px -12px var(--drop)}
+.av{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center;font-family:'Playfair Display',Georgia,serif;font-size:11px;font-weight:600}
+.av.lg{width:40px;height:40px;font-size:20px}
+.seltool{display:inline-flex;align-items:center;gap:4px;padding:6px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 16px 32px -18px var(--drop)}
+.swb{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line-2);padding:0;margin:0 1px}
+.swb.on{box-shadow:0 0 0 2px var(--ink)}
+.tl-b{min-width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--ink);font-size:13px;font-weight:600}
+.tl-b .ic{width:16px;height:16px}
+.sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.affb{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);font-size:12.5px;font-weight:500;color:var(--ink);box-shadow:0 8px 16px -12px var(--drop);white-space:nowrap}
+.affb .ic{width:14px;height:14px;color:var(--accent-text)}
+.affbox{position:relative;padding:34px 16px 16px;border-radius:10px;background:var(--paper-2)}
+.affbox .affs{position:absolute;top:-14px;right:10px;display:flex;gap:6px}
+.math{font-family:'Lora',Georgia,serif;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;font-size:17px}
+.math i{font-style:italic}
+.math sub{font-size:.7em}
+.frac{display:inline-flex;flex-direction:column;align-items:center;font-size:.9em;line-height:1.15;margin:0 2px}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 3px}
+.bigop{display:inline-flex;flex-direction:column;align-items:center;line-height:1;margin:0 3px}
+.bigop .op{font-size:1.9em;line-height:.95}
+.bigop .lim{font-size:.62em}
+.codeb{margin:0;padding:12px 14px;border-radius:10px;background:var(--code-bg);border:1px solid var(--line);font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:12px;line-height:1.65;color:var(--ink);white-space:pre;overflow-x:auto}
+.codeb .k{color:var(--accent-text)}
+.codeb .c{color:var(--ink-3);font-style:italic}
+.panelx{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:18px;display:flex;flex-direction:column;gap:12px}
+.sv-id{display:flex;align-items:center;gap:12px}
+.sv-name{font-family:'Playfair Display',Georgia,serif;font-size:19px;font-weight:500;line-height:1.2}
+.consent li{font-size:14px;color:var(--ink-2);line-height:1.5}
+.consent ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.sg-b{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-family:'Lora',Georgia,serif;font-size:14.5px;text-align:left}
+.qbub{align-self:flex-end;max-width:92%;padding:10px 14px;border-radius:12px 12px 4px 12px;background:var(--paper-2);font-size:14px}
+.qbub q{font-family:'Lora',Georgia,serif;font-style:italic}
+.ans{font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.65;margin:0}
+.cite{display:inline-flex;align-items:center;font-family:'DM Sans',system-ui,sans-serif;font-size:11.5px;font-weight:600;color:var(--accent-text);background:var(--accent-soft);border:0;border-radius:6px;padding:1px 6px;margin-left:2px;vertical-align:1px}
+.caret{display:inline-block;width:7px;height:16px;background:var(--accent);vertical-align:-2px;margin-left:2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.ask{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--paper);color:var(--ink-3);font-size:15px}
+.send{width:36px;height:36px;border-radius:9px;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;margin-left:auto}
+.send.off{opacity:.35}
+.inp{height:46px;padding:0 14px;border:1px solid var(--line-2);border-radius:8px;background:var(--paper);font-size:15px;color:var(--ink);width:100%}
+.msw{position:relative;width:30px;height:18px;border-radius:999px;background:var(--line-2);display:inline-block}
+.msw i{position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--surface)}
+.msw.on{background:var(--accent)}
+.msw.on i{transform:translateX(12px)}
+.nb{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px}
+.nb-ref{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--accent-text)}
+.nb-ref span:last-child{font-weight:400;color:var(--ink-3);letter-spacing:0}
+.nb-text{margin:0;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.6}
+.draw{border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+.draw svg{display:block;width:100%;height:auto}
+.draw .rough{fill:none;stroke:var(--ink-2);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.draw .roughA{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.draw text{font-family:'Caveat',cursive;font-size:19px;fill:var(--ink)}
+.mk{width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface);color:var(--accent-text);font-size:11px;font-weight:600;display:grid;place-items:center}
+.addb{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px dashed var(--line-2);background:transparent;color:var(--ink-2);font-size:13px;font-weight:500}
+.addb .ic{width:14px;height:14px}
+.watch{display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-variant-numeric:tabular-nums;font-weight:500}
+.watch .dl{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.watch.locked{color:var(--ink-3)}
+.pop{padding:14px 16px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);box-shadow:0 16px 32px -20px var(--drop);font-size:14px;line-height:1.55;color:var(--ink-2);max-width:320px}
+.pop b{color:var(--ink);display:block}
+.notice{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border:1px solid var(--line-2);border-radius:14px;background:var(--surface);box-shadow:0 20px 40px -24px var(--drop)}
+.notice .ic{color:var(--accent-text);margin-top:2px}
+.notice p{margin:2px 0 0;font-size:14px;line-height:1.55;color:var(--ink-2)}
+.ribdemo{position:relative;height:180px;border:1px solid var(--line);border-radius:6px;background:var(--page);overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
+.ribdemo>div{border-right:1px solid var(--line);padding:16px;font-size:12px;color:var(--ink-3)}
+.drib{position:absolute;top:-7px;width:22px;height:150px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 88%,0 100%)}
+.ghost{opacity:.3}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.prow b{font-weight:600;display:block}
+.prow .v{font-family:'Playfair Display',Georgia,serif;font-size:22px;font-variant-numeric:lining-nums tabular-nums}
+.prow.total .v{color:var(--accent-text)}
+.kind{border:1px dashed var(--line-2);border-radius:14px;padding:16px 18px;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.6}
+.xpbar{height:10px;border-radius:10px;background:var(--line);overflow:hidden}
+.xpbar i{display:block;height:100%;background:var(--accent);border-radius:10px}
+.ring .tr{fill:none;stroke:var(--line);stroke-width:8}
+.ring .ar{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round}
+.ring text{fill:var(--ink);font-family:'Playfair Display',Georgia,serif;font-size:22px}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick 3.2s var(--ease-breathe) infinite}
+@keyframes flick{0%,100%{transform:scale(1,1) rotate(-1.5deg)}50%{transform:scale(1.05,.94) rotate(1.5deg)}}
+.jar *{fill:none;stroke:var(--ink-2);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.jar .glass{fill:var(--accent-soft)}
+.jar.used{opacity:.35}
+.badge{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.badge svg{width:96px;height:96px}
+.badge .bt{font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600}
+.badge .bd{font-size:12px;color:var(--ink-3)}
+.badge.locked svg{opacity:.45}
+.seal .wax{fill:var(--accent)}
+.seal .rim{fill:none;stroke:var(--accent-ink);stroke-opacity:.45;stroke-width:1.2}
+.seal .gl{fill:none;stroke:var(--accent-ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.locked .seal .wax{fill:none;stroke:var(--ink-3);stroke-width:1.4;stroke-dasharray:3 3}
+.locked .seal .rim,.locked .seal .gl{stroke:var(--ink-3)}
+.plate .pf{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.2}
+.plate .pi{fill:none;stroke:var(--accent);stroke-width:1}
+.plate text{fill:var(--ink);font-family:'Playfair Display',Georgia,serif}
+.plate .exl{font-size:9px;letter-spacing:.2em;fill:var(--accent-text);font-family:'DM Sans',sans-serif;font-weight:600}
+.locked .plate .pf{stroke-dasharray:3 3;stroke:var(--ink-3);fill:none}
+.locked .plate .pi{stroke:var(--ink-3)}
+.tier{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px 0 10px;border-radius:8px;border:1px solid var(--line);font-size:13px;font-weight:500;color:var(--ink-3);background:var(--paper)}
+.tier i{width:6px;height:18px;border-radius:2px;background:var(--line-2)}
+.tier.done{color:var(--ink-2)}
+.tier.done i{background:var(--ink-3)}
+.tier.cur{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.tier.cur i{background:var(--accent)}
+.tier.next{border-style:dashed;color:var(--ink-2)}
+.lr{display:grid;grid-template-columns:36px 36px minmax(0,1fr) auto;gap:14px;align-items:center;min-height:56px;padding:0 12px;border-bottom:1px solid var(--line)}
+.lr .rk{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-3);text-align:right}
+.lr .avr{width:32px;height:32px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--ink-2)}
+.lr .nm{font-family:'Lora',Georgia,serif}
+.lr.you{background:var(--accent-soft);border-radius:8px;border-bottom-color:transparent}
+.lr.you .avr{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.up{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--accent-text);margin-left:8px;font-family:'DM Sans',sans-serif}
+.up .ic{width:13px;height:13px}
+.zone{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:12.5px;font-weight:600;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.zone .ic{width:15px;height:15px}
+.zone.pro{color:var(--accent-text)}
+.celeb-b{display:flex;gap:14px;align-items:center;padding:16px 18px;border:1px solid var(--accent);border-radius:14px;background:var(--accent-soft)}
+.celeb-b svg{width:48px;height:48px;flex:none}
+@media (prefers-reduced-motion: reduce){.cs *{animation:none !important}}
+</style>
+</helmet>
+<div style="width: 2960px; box-sizing: border-box; padding: 64px; background: #EDE7DD; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; align-items: start">
+<sc-for list="{{themes}}" as="t" hint-placeholder-count="2">
+<div class="cs {{t.cls}}">
+<div class="cs-h"><h2>Phase 2 components · {{t.name}}</h2><span class="small">Adds to the phase 1 sheet · same tokens and motion scale</span></div>
+
+<section class="blk">
+<span class="eyebrow">New tokens</span>
+<div class="tok">
+<div><span class="sw" style="background: var(--hl-honey)"></span><b>--hl-honey</b>{{t.h1}}</div>
+<div><span class="sw" style="background: var(--hl-sage)"></span><b>--hl-sage</b>{{t.h2}}</div>
+<div><span class="sw" style="background: var(--hl-sky)"></span><b>--hl-sky</b>{{t.h3}}</div>
+<div><span class="sw" style="background: var(--hl-rose)"></span><b>--hl-rose</b>{{t.h4}}</div>
+<div><span class="sw" style="background: var(--hl-lilac)"></span><b>--hl-lilac</b>{{t.h5}}</div>
+</div>
+<span class="small">Highlights sit behind ink text, so body text keeps its full contrast in both themes. Each colour also has a name for screen readers and the colour picker. Code and math: JetBrains Mono 12–12.5 px on --code-bg; KaTeX output inherits Lora.</span>
+</section>
+
+<div class="g2">
+<section class="blk">
+<span class="eyebrow">Selection toolbar · highlight · underline</span>
+<div class="seltool" role="toolbar" aria-label="Highlight selection" style="align-self: flex-start">
+<button class="swb on" type="button" aria-label="Honey highlight" style="background: #D9B84F"></button><button class="swb" type="button" aria-label="Sage highlight" style="background: #8FAE7E"></button><button class="swb" type="button" aria-label="Sky highlight" style="background: #7FA3C2"></button><button class="swb" type="button" aria-label="Rose highlight" style="background: #D08A7E"></button><button class="swb" type="button" aria-label="Lilac highlight" style="background: #A892C6"></button>
+<button class="tl-b" type="button" aria-label="Underline"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M6 4v6a6 6 0 0 0 12 0V4M4 20h16"></path></svg></button>
+<span class="sep"></span>
+<button class="tl-b" type="button"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Ask Steve</button>
+<button class="tl-b" type="button"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Note</button>
+</div>
+<p class="para">Any reasonably <span class="selected">well-behaved periodic function</span> can be written as a sum of sines and cosines. <span class="hl hl-honey">For a function f with period 2π, the Fourier series is<button class="askchip" type="button"><span class="av">S</span>Ask Steve</button></span> <span class="ulc">built from these coefficients</span>, <span class="hl hl-sky">and the square wave</span> <span class="hl hl-sage">is next</span>.</p>
+<span class="small">Toolbar appears 8 px above the selection (fade + 4 px rise, 200 ms). Hovering or focusing a highlight shows the Ask Steve chip.</span>
+</section>
+<section class="blk">
+<span class="eyebrow">Hover affordances · equation, code, figure</span>
+<div class="affbox"><div class="affs"><span class="affb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Explain this equation</span><span class="affb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>Copy as LaTeX</span></div><div style="display: flex; justify-content: center"><span class="math"><i>a</i><sub><i>n</i></sub> = <span class="frac"><span>1</span><span>π</span></span><span class="bigop"><span class="lim">π</span><span class="op">∫</span><span class="lim">−π</span></span><i>f</i>(<i>x</i>) cos <i>nx</i> d<i>x</i></span></div></div>
+<div class="affbox"><div class="affs"><span class="affb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>Copy code</span><span class="affb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Explain this code</span></div><pre class="codeb">n = np.arange(1, 2 * N, 2)   <span class="c"># 1, 3, 5, …</span>
+<span class="k">return</span> (4 / np.pi) * terms.sum(axis=1)</pre></div>
+<div class="affbox"><div class="affs"><span class="affb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>Explain this figure</span><span class="affb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add to notes</span></div><div style="height: 56px; border-radius: 6px; border: 1px dashed var(--line-2); display: grid; place-items: center" class="small">Figure 4.2</div></div>
+<span class="small">Shown on hover and on keyboard focus of the block; hidden on touch until the block is tapped.</span>
+</section>
+</div>
+
+<section class="blk">
+<span class="eyebrow">Steve · study assistant</span>
+<div class="g3">
+<div class="panelx">
+<div class="sv-id"><span class="av lg">S</span><div><div class="sv-name">Steve</div><div class="small">Study assistant · reads along with you</div></div></div>
+<div class="consent"><b class="lo" style="font-size: 17px">Before Steve reads along</b><ul><li>Sends the passage you ask about, and nearby pages, to Google’s Gemini.</li><li>Notes and highlights stay here unless you add them.</li><li>Turn it off any time in Settings.</li></ul></div>
+<div class="row"><button class="btn btn-p sm" type="button">Turn on Steve</button><button class="btn btn-g sm" type="button">Not now</button></div>
+</div>
+<div class="panelx">
+<span class="small">Empty state · suggestions</span>
+<button class="sg-b" type="button">Why does every aₙ vanish for the square wave?<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 15px; height: 15px; color: var(--ink-3)"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+<button class="sg-b" type="button">Walk me through equation (4.4)<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 15px; height: 15px; color: var(--ink-3)"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></button>
+<div class="ask">Ask about these pages…<span class="send"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M5 12l7-7 7 7M12 19V5"></path></svg></span></div>
+<div class="ask">Steve is back tomorrow<span class="send off"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M5 12l7-7 7 7M12 19V5"></path></svg></span></div>
+</div>
+<div class="panelx">
+<span class="small">Streaming answer</span>
+<div class="qbub">Explain: <q>how much of each frequency the function contains</q></div>
+<p class="ans">Think of aₙ as a measurement: multiply by a pure cosine and average over one period. <button class="cite" type="button">p. 44</button></p>
+<div style="display: flex; justify-content: center"><span class="math"><span class="bigop"><span class="lim">π</span><span class="op">∫</span><span class="lim">−π</span></span>cos <i>mx</i> cos <i>nx</i> d<i>x</i> = 0</span></div>
+<p class="ans">so only the matching term survives<span class="caret" aria-hidden="true"></span></p>
+<div class="row" style="justify-content: space-between"><span class="small">Steve is writing…</span><button class="btn btn-g sm" type="button">Stop</button></div>
+</div>
+</div>
+<div class="g3">
+<div class="panelx">
+<span class="small">Paused for today</span>
+<b class="lo" style="font-size: 18px">Steve is resting until tomorrow</b>
+<p class="small" style="margin: 0; color: var(--ink-2)">Today’s shared questions come back at midnight. No countdowns, no upsell.</p>
+<button class="btn btn-s sm" type="button" style="align-self: flex-start">Use your own key</button>
+</div>
+<div class="panelx">
+<span class="small">Your own key</span>
+<label class="small" for="ck-{{t.id}}" style="color: var(--ink); font-weight: 500">Gemini API key</label>
+<input id="ck-{{t.id}}" class="inp" type="password" value="sample-key-value">
+<div class="row" style="justify-content: space-between"><span style="font-size: 14px">Send book text to Gemini</span><span class="msw on" role="img" aria-label="On"><i></i></span></div>
+</div>
+<div class="panelx">
+<span class="small">Citation link · code in an answer</span>
+<div class="row"><button class="cite" type="button">p. 44</button><button class="cite" type="button">p. 45</button><button class="cite" type="button">Fig. 4.2</button></div>
+<pre class="codeb">bn = [4 / (np.pi * n) <span class="k">if</span> n % 2 <span class="k">else</span> 0
+      <span class="k">for</span> n <span class="k">in</span> range(1, 10)]</pre>
+</div>
+</div>
+</section>
+
+<section class="blk">
+<span class="eyebrow">Notepad blocks · margin marker</span>
+<div class="g2" style="gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<article class="nb"><div class="nb-ref"><span>p. 44 · Fourier series</span><span>Text</span></div><p class="nb-text">Coefficients say how much of each frequency is in f.</p></article>
+<article class="nb"><div class="nb-ref"><span>p. 44 · eq. 4.4</span><span>Equation</span></div><div style="display: flex; justify-content: center; padding: 8px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line)"><span class="math"><i>a</i><sub><i>n</i></sub> = <span class="frac"><span>1</span><span>π</span></span><span class="bigop"><span class="lim">π</span><span class="op">∫</span><span class="lim">−π</span></span><i>f</i>(<i>x</i>) cos <i>nx</i> d<i>x</i></span></div><span class="small" style="font-family: 'JetBrains Mono', monospace; font-size: 11px">a_n = \frac{1}{\pi}\int_{-\pi}^{\pi} f(x)\cos nx\,dx</span></article>
+<article class="nb"><div class="nb-ref"><span>p. 45 · square_partial_sum</span><span>Code</span></div><pre class="codeb">n = np.arange(1, 2 * N, 2)  <span class="c"># odd only</span></pre></article>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<article class="nb"><div class="nb-ref"><span>p. 45 · Figure 4.2</span><span>Drawing · Excalidraw</span></div><div class="draw"><svg sc-camel-view-box="0 0 320 160" role="img" aria-label="Sketch of a square wave with overshoot"><path class="rough" d="M14 82 Q160 81 306 83"></path><path class="rough" d="M20 122 L92 121.5 L93 42 L230 43 L231 121 L300 122"></path><path class="roughA" d="M20 118 C50 114 70 116 84 112 C88 70 90 34 98 30 C108 40 114 46 128 44 C170 42 200 45 222 46 C226 60 228 100 236 126 C250 120 280 118 300 119"></path><path class="rough" d="M150 18 Q120 14 104 26 M104 26 l10 -1 M104 26 l3 -9"></path><text x="152" y="22">≈ 9% overshoot</text></svg></div></article>
+<div class="row" style="gap: 16px"><span class="mk">1</span><span class="mk" style="border-color: var(--accent)">2</span><span class="small" style="max-width: 280px">Margin marker in the outer margin beside a passage with notes. Count = notes on that passage; dims to 35% in focus mode.</span></div>
+<div class="row" style="gap: 8px"><span class="addb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M4 7V4h16v3M9 20h6M12 4v16"></path></svg>Text</span><span class="addb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"></path></svg>Drawing</span><span class="addb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M18 7V4H6l6 8-6 8h12v-3"></path></svg>Equation</span><span class="addb"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"></path></svg>Code</span></div>
+</div>
+</div>
+</section>
+
+<section class="blk">
+<span class="eyebrow">Focus mode · stopwatch, notice, ribbon</span>
+<div class="g2" style="gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div class="row"><span class="watch" role="timer"><span class="dl" aria-hidden="true"></span>0:52:14</span><span class="watch locked"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>0:00:00 · starts at Chapter 1</span></div>
+<div class="pop" role="note"><b>The clock starts at Chapter 1.</b>Front matter like the preface and contents doesn’t count toward focus time or points.</div>
+<div class="notice" role="status"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2M10 2h4"></path></svg><div><b>15 minutes left in this session</b><p>Sessions stop at three hours so the reading stays fresh.</p></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="ribdemo"><div>p. 44</div><div style="border-right: 0">p. 45</div><span class="drib ghost" style="left: 440px" aria-hidden="true"></span><span class="drib" style="left: 300px" aria-hidden="true"></span></div>
+<span class="small">Ribbon bookmark while dragging: 22 × 150, grab cursor, two gentle 10 px nudges to hint it moves. Keyboard: arrows choose a page, Enter sets it. Each page also offers a “Set ribbon on p. N” button.</span>
+</div>
+</div>
+</section>
+
+<section class="blk">
+<span class="eyebrow">Points · XP · goal · streak</span>
+<div class="g3">
+<div class="panelx">
+<div class="prow"><div><b>Focused reading</b><span class="small">52 minutes</span></div><span class="v">+52</span></div>
+<div class="prow"><div><b>Quiz bonus</b><span class="small">2 of 3 · 67%</span></div><span class="v">+30</span></div>
+<div class="prow total" style="border-bottom: 0"><div><b>Total</b></div><span class="v">+92 XP</span></div>
+<div class="kind">Under 40%, the session earns no points. Your minutes still count toward your streak.</div>
+</div>
+<div class="panelx">
+<div class="row" style="justify-content: space-between"><span class="eyebrow">Level 7</span><span class="small">1,240 / 1,500</span></div>
+<div class="xpbar"><i style="width: 83%"></i></div>
+<div class="row" style="gap: 16px"><svg class="ring" sc-camel-view-box="0 0 100 100" width="88" height="88" role="img" aria-label="Daily goal 30 of 45 minutes"><circle class="tr" cx="50" cy="50" r="40"></circle><circle class="ar" cx="50" cy="50" r="40" sc-camel-path-length="100" stroke-dasharray="67 100" transform="rotate(-90 50 50)"></circle><text x="50" y="57" text-anchor="middle">30′</text></svg><span class="small" style="max-width: 160px">Daily goal ring · minutes, set by the reader</span></div>
+</div>
+<div class="panelx">
+<div class="row" style="gap: 14px"><svg sc-camel-view-box="0 0 28 40" width="28" height="40" aria-hidden="true"><path class="flame" d="M14 4 C18 10 19 13 19 16 a5 5 0 0 1 -10 0 C9 13 11 9 14 4 Z" style="fill: var(--accent)"></path><path d="M14 13 v5" style="stroke: var(--ink-2); stroke-width: 1.4; stroke-linecap: round; fill: none"></path><rect x="9" y="19" width="10" height="16" rx="1.5" style="fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.4"></rect><path d="M5 37 H23" style="stroke: var(--ink-2); stroke-width: 1.4; stroke-linecap: round"></path></svg><span style="font-family: 'Playfair Display', serif; font-size: 28px">13</span><span class="small">evenings</span></div>
+<div class="row" style="gap: 10px; align-items: flex-end">
+<svg class="jar" sc-camel-view-box="0 0 30 36" width="30" height="36" aria-hidden="true"><path class="glass" d="M6 32 V14 a9 9 0 0 1 18 0 V32 Z"></path><path d="M15 5 v-3 M3 33 H27"></path><path d="M15 26 v-5" style="stroke: var(--accent)"></path></svg>
+<svg class="jar used" sc-camel-view-box="0 0 30 36" width="30" height="36" aria-hidden="true"><path class="glass" d="M6 32 V14 a9 9 0 0 1 18 0 V32 Z"></path><path d="M15 5 v-3 M3 33 H27"></path></svg>
+<span class="small" style="max-width: 180px">Streak freeze = a bell jar over the candle. Saved / used.</span>
+</div>
+</div>
+</div>
+</section>
+
+<section class="blk">
+<span class="eyebrow">Badges · wax seals and bookplates</span>
+<div class="row" style="gap: 40px; align-items: flex-start">
+<div class="badge"><svg class="seal" sc-camel-view-box="0 0 100 100" aria-hidden="true"><path class="wax" d="M50 6 C58 6 60 12 67 13 C75 14 80 10 86 17 C91 23 86 29 89 36 C92 43 97 46 95 55 C93 63 87 64 85 71 C83 78 86 85 78 90 C71 95 66 89 58 92 C50 95 46 98 38 94 C31 90 31 84 24 81 C17 78 10 79 7 70 C4 62 10 58 9 50 C8 42 3 37 8 29 C13 21 19 24 25 18 C31 12 31 6 40 6 C44 6 46 6 50 6 Z"></path><circle class="rim" cx="50" cy="50" r="30"></circle><path class="gl" d="M50 34 C54 40 55 43 55 46 a5 5 0 0 1 -10 0 C45 43 47 39 50 34 Z M45 52 H55 V66 H45 Z"></path></svg><span class="bt">Seal · earned</span><span class="bd">Seven evenings</span></div>
+<div class="badge locked"><svg class="seal" sc-camel-view-box="0 0 100 100" aria-hidden="true"><path class="wax" d="M50 6 C58 6 60 12 67 13 C75 14 80 10 86 17 C91 23 86 29 89 36 C92 43 97 46 95 55 C93 63 87 64 85 71 C83 78 86 85 78 90 C71 95 66 89 58 92 C50 95 46 98 38 94 C31 90 31 84 24 81 C17 78 10 79 7 70 C4 62 10 58 9 50 C8 42 3 37 8 29 C13 21 19 24 25 18 C31 12 31 6 40 6 C44 6 46 6 50 6 Z"></path><circle class="rim" cx="50" cy="50" r="30"></circle><path class="gl" d="M38 50 a12 12 0 1 0 24 0 a12 12 0 1 0 -24 0 M50 42 V50 L56 54"></path></svg><span class="bt">Seal · locked</span><span class="bd">Shows how to earn it</span></div>
+<div class="badge"><svg class="plate" sc-camel-view-box="0 0 100 100" aria-hidden="true"><rect class="pf" x="14" y="8" width="72" height="84" rx="3"></rect><rect class="pi" x="20" y="14" width="60" height="72" rx="2"></rect><text class="exl" x="50" y="34" text-anchor="middle">EX LIBRIS</text><text x="50" y="58" text-anchor="middle" font-size="20" font-style="italic">Walden</text><path class="pi" d="M36 70 H64"></path></svg><span class="bt">Bookplate · earned</span><span class="bd">First book finished</span></div>
+<div class="badge locked"><svg class="plate" sc-camel-view-box="0 0 100 100" aria-hidden="true"><rect class="pf" x="14" y="8" width="72" height="84" rx="3"></rect><rect class="pi" x="20" y="14" width="60" height="72" rx="2"></rect><text class="exl" x="50" y="34" text-anchor="middle">EX LIBRIS</text><text x="50" y="58" text-anchor="middle" font-size="20" font-style="italic">Folio</text><path class="pi" d="M36 70 H64"></path></svg><span class="bt">Bookplate · locked</span><span class="bd">A week in Folio</span></div>
+</div>
+<span class="small">Seals mark habits (evenings, questions). Bookplates mark books and league milestones. Earning one stamps in: scale 1.25 → 1 with a slight turn, 600 ms, once.</span>
+</section>
+
+<section class="blk">
+<span class="eyebrow">League · tiers, rows, zones, celebration</span>
+<div class="row" style="gap: 8px"><span class="tier done"><i></i>Pamphlet</span><span class="tier done"><i></i>Paperback</span><span class="tier cur"><i></i>Hardcover</span><span class="tier next"><i></i>Folio</span><span class="tier"><i></i>First Edition</span><span class="tier"><i></i>Illuminated</span></div>
+<div class="g2" style="gap: 24px">
+<ol style="list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line)">
+<li class="lr"><span class="rk">3</span><span class="avr">IN</span><span class="nm">inkwell</span><span>655 XP</span></li>
+<li class="lr you"><span class="rk">4</span><span class="avr">FR</span><span class="nm">You<span class="up"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M5 12l7-7 7 7M12 19V5"></path></svg>up 3</span></span><span>502 XP</span></li>
+<li class="zone pro"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M5 12l7-7 7 7M12 19V5"></path></svg>Promotion zone · the top 5 move up</li>
+<li class="zone"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="M19 12l-7 7-7-7M12 5v14"></path></svg>The bottom 5 move down next week</li>
+</ol>
+<div class="celeb-b"><svg class="seal" sc-camel-view-box="0 0 100 100" aria-hidden="true"><path class="wax" d="M50 6 C58 6 60 12 67 13 C75 14 80 10 86 17 C91 23 86 29 89 36 C92 43 97 46 95 55 C93 63 87 64 85 71 C83 78 86 85 78 90 C71 95 66 89 58 92 C50 95 46 98 38 94 C31 90 31 84 24 81 C17 78 10 79 7 70 C4 62 10 58 9 50 C8 42 3 37 8 29 C13 21 19 24 25 18 C31 12 31 6 40 6 C44 6 46 6 50 6 Z"></path><circle class="rim" cx="50" cy="50" r="30"></circle><path class="gl" d="M50 34 L50 66 M36 48 L50 34 L64 48"></path></svg><div><b>You’re in the promotion zone.</b><div class="small" style="color: var(--ink-2)">Calm celebration: one seal stamps in, no confetti, no sound.</div></div></div>
+</div>
+</section>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;terracotta&quot;,&quot;sage&quot;],&quot;default&quot;:&quot;terracotta&quot;},&quot;$preview&quot;:{&quot;width&quot;:2960,&quot;height&quot;:4300}}">
+class Component extends DCLogic {
+  renderVals() {
+    const a = this.props.accent ?? 'terracotta';
+    return {
+      themes: [
+        { id: 'p', name: 'Paper', cls: 't-paper a-' + a, h1: '#F4E2A8', h2: '#DCE6CF', h3: '#D5E2EC', h4: '#F0D6D0', h5: '#E4DCEC' },
+        { id: 'l', name: 'Lamplight', cls: 't-lamplight a-' + a, h1: 'honey 30%', h2: 'sage 26%', h3: 'sky 28%', h4: 'rose 28%', h5: 'lilac 28%' }
+      ]
+    };
+  }
+}
+</script>
+
+
+</body></html>

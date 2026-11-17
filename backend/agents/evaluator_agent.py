@@ -23,12 +23,16 @@ from backend.agents.evaluation import feedback, grader
 from backend.agents.evaluation.grader import GradeInput
 from backend.agents.state import AgentState, decision
 from backend.nlp import embedder, text
+from backend.regions import prose
+from backend.regions.garble import is_garbled
 from backend.services.supabase_client import fetch_all, supabase
 
 
 def reference_from_passage(passage: str) -> str:
-    """The passage's most informative sentences, in reading order: what an ungrounded question is graded against."""
-    sentences = text.split_sentences(passage)
+    """The passage's most informative sentences, in reading order: what an ungrounded question is graded against.
+    Sentences with a placeholder or garbled text are never evidence (C18.6b)."""
+    sentences = [sentence for sentence in text.split_sentences(prose.mask(passage))
+                 if prose.MASK not in sentence and not is_garbled(" ".join(sentence.split()))]
     best = set(sorted(sentences, key=text.informativeness, reverse=True)[:policy.GRADE_FALLBACK_SENTENCES])
     return "\n\n".join(sentence for sentence in sentences if sentence in best)
 
@@ -61,11 +65,12 @@ def grade_answers(questions: list[dict], answers: list[str], passage: str = "") 
 def load_passage(book_id: str, chunk_indices: list[int]) -> str:
     if not chunk_indices:
         return ""
-    resp = supabase.table("chunks").select("chunk_index, content").eq("book_id", book_id).in_(
+    # "*": a chunk's prose (migration 020) is the passage when it has one; the query works before 020 too.
+    resp = supabase.table("chunks").select("*").eq("book_id", book_id).in_(
         "chunk_index", chunk_indices
     ).execute()
     chunks = sorted(cast(list[dict], resp.data or []), key=lambda chunk: chunk["chunk_index"])
-    return "\n\n".join(chunk["content"] for chunk in chunks)
+    return "\n\n".join(chunk.get("prose") or chunk["content"] for chunk in chunks)
 
 
 def needs_passage(questions: list[dict]) -> bool:

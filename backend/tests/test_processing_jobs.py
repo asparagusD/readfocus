@@ -33,6 +33,15 @@ def test_create_makes_one_queued_job_per_book(db):
     assert jobs.get("book-2") is None
 
 
+def test_each_kind_has_its_own_job_per_book(db):
+    ingest = jobs.create("book-1", "user-1", now=NOW)
+    regions = jobs.create("book-1", "user-1", now=NOW, kind=jobs.REGIONS)
+    assert len(db.tables["processing_jobs"]) == 2 and ingest["id"] != regions["id"]
+    assert regions["kind"] == "regions"
+    assert jobs.get("book-1")["id"] == ingest["id"]
+    assert jobs.get("book-1", kind=jobs.REGIONS)["id"] == regions["id"]
+
+
 @pytest.mark.parametrize("fields, manual, expected", [
     ({"status": "queued"}, False, (True, "queued")),
     ({"status": "failed"}, False, (True, "failed")),

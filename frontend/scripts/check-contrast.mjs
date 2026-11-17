@@ -41,6 +41,7 @@ const ratio = (a, b) => {
 };
 
 const grounds = ['--paper', '--paper-2', '--surface', '--page'];
+const HUES = ['honey', 'sage', 'sky', 'rose', 'lilac'];
 const washes = ['--accent-soft', '--warn-soft'];
 const rules = [
   // Text, 4.5:1 on every ground and wash.
@@ -58,6 +59,9 @@ const rules = [
   ['--accent-inverse', '--ink', 4.5, 'inverse accent'],
   // D5: cream title on each cover.
   ...['--cover-moss', '--cover-oxblood', '--cover-ink', '--cover-ochre', '--cover-slate'].map((bg) => ['--cover-title', bg, 4.5, 'cover']),
+  // C21.2: ink on each highlight, and each 2 px underline as a boundary on every ground.
+  ...HUES.map((hue) => ['--ink', `--hl-${hue}`, 4.5, 'highlight']),
+  ...HUES.flatMap((hue) => grounds.map((bg) => [`--ul-${hue}`, bg, 3, 'underline'])),
 ];
 
 let failures = 0;

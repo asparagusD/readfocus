@@ -1,0 +1,71 @@
+/* Setting focus mode's bookmark (C23.6b, handoff screen 22). */
+.rf-placing {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  inset-inline: 0;
+  z-index: 8;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2) var(--space-4);
+  inline-size: fit-content;
+  max-inline-size: calc(100% - 2 * var(--space-4));
+  margin-inline: auto;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--elevation-lift);
+  animation: rf-placing-arrive var(--dur-4) var(--ease-arrive, ease-out) both;
+}
+
+@keyframes rf-placing-arrive {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.rf-placing-hint {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+}
+
+.rf-placing-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.rf-placing-button {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: var(--border-hair) solid var(--line-2);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  cursor: pointer;
+}
+
+.rf-placing-button:hover { background: var(--paper-2); }
+.rf-placing-button[data-picked] { border-color: var(--accent); color: var(--accent-text); }
+.rf-placing-cancel { border-color: transparent; color: var(--ink-2); }
+
+.rf-placing-button:focus-visible,
+.rf-ov-ribbon--placing:focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Placing: the ribbon is longer and wider (22 x 150), and it can be held and moved. */
+.rf-ov-ribbon--placing { height: 150px; cursor: grab; touch-action: none; }
+.rf-ov-ribbon--placing .rf-ov-ribbon-tail { width: 22px; box-shadow: var(--elevation-accent); }
+.rf-ov-ribbon--placing[data-dragging] { cursor: grabbing; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-placing { animation: none; }
+}
+
+@media (width < 760px) {
+  .rf-placing { padding: var(--space-2) var(--space-3); }
+  .rf-placing-hint { flex-basis: 100%; text-align: center; font-size: var(--text-label); }
+}

@@ -1,40 +1,59 @@
-// Offline fixtures for the reader e2e (C12.10): a stored Supabase session that never refreshes,
-// and every backend call answered from the Walden fixture. Nothing leaves the machine; any call
-// that is not mocked fails the test that made it.
+// Offline fixtures for the reader e2e (C12.10; the original view since C17.5): a stored Supabase
+// session that never refreshes, and every backend call answered from a fixture book in
+// e2e/fixtures/books, a PDF or an illustrated EPUB (the `book` option). Nothing leaves the
+// machine; any call that is not mocked fails the test that made it.
+import { readFileSync } from 'node:fs';
 import { test as base, expect } from '@playwright/test';
-import { WALDEN_BLOCKS } from '../src/gallery/readerFixture.js';
 
 export const BOOK = 'e2e-book';
+export const GOOD_KEY = 'AIzaSyReaderOwnKey-not-real-abcdefghij12'; // a made-up Gemini key (C20.3)
+export const STEVE_NOTICE = { version: '2026-11-14', terms_url: 'https://aistudio.google.com/docs/terms',
+  text: "Steve is a study assistant built on Google's Gemini.\n\nYou can turn Steve off at any time in his settings." };
+
+/** A whole /steve/ask stream (C20.7b): start, the text in a few tokens, done with the checked text and citations. */
+export function steveStream(text, citations = [], { pages = ['p. 1', 'p. 2'], tokens = 3, finalText = null } = {}) {
+  const size = Math.ceil(text.length / tokens);
+  const events = [['start', { thread_id: 'thread-1', pages }]];
+  for (let i = 0; i < text.length; i += size) events.push(['token', { text: text.slice(i, i + size) }]);
+  events.push(['done', { message_id: 'm-1', thread_id: 'thread-1', text: finalText ?? text, citations,
+    usage: { model: 'gemini-test', tokens_in: 100, tokens_out: 20, cached: false } }]);
+  return { sse: events.map(([name, data]) => `event: ${name}\ndata: ${JSON.stringify(data)}\n\n`).join('') };
+}
+
 const API = 'http://localhost:8000';
 const SUPABASE_REF = 'lvfhuszvuiowyeizstru'; // frontend/.env's project, as baked into the build
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
 
 export const LOOKUPS = {
-  woods: { term: 'woods', phonetic: '/wʊdz/', audio_url: null, source: 'dictionary', found: true, ambiguous: false, url: null, wiki: null,
-    meanings: [{ part_of_speech: 'noun', definitions: ['A dense collection of trees covering a relatively small area.'], example: 'A walk in the woods.' }] },
-  Concord: { term: 'Concord', phonetic: null, audio_url: null, source: 'wikipedia', found: true, ambiguous: false, meanings: [],
-    url: 'https://en.wikipedia.org/wiki/Concord,_Massachusetts',
-    wiki: { title: 'Concord, Massachusetts', description: 'Town in Massachusetts, United States',
-      extract: 'Concord is a town in Middlesex County, Massachusetts. Thoreau was born there in 1817.',
-      url: 'https://en.wikipedia.org/wiki/Concord,_Massachusetts', thumbnail_url: null } },
+  lamp: { term: 'lamp', phonetic: '/læmp/', audio_url: null, source: 'dictionary', found: true, ambiguous: false, url: null, wiki: null,
+    meanings: [{ part_of_speech: 'noun', definitions: ['A device for giving light.'], example: 'A lamp on the desk.' }] },
+  Signals: { term: 'Signals', phonetic: null, audio_url: null, source: 'wikipedia', found: true, ambiguous: false, meanings: [],
+    url: 'https://en.wikipedia.org/wiki/Signal',
+    wiki: { title: 'Signal', description: 'Function that conveys information',
+      extract: 'A signal is a function that conveys information about a phenomenon.',
+      url: 'https://en.wikipedia.org/wiki/Signal', thumbnail_url: null } },
 };
 
-/** Today's three chunks, as /sessions/start returns them (blocks grouped by their chunk). */
-function chunks() {
-  const byChunk = new Map();
-  for (const block of WALDEN_BLOCKS) {
-    const index = Number(block.id.split('.')[0]);
-    byChunk.set(index, [...(byChunk.get(index) ?? []), block]);
-  }
-  return [...byChunk].map(([chunk_index, blocks]) => ({
-    id: `chunk-${chunk_index}`, chunk_index, blocks, content: blocks.map((b) => b.text).join('\n\n'),
-  }));
-}
+// The fixture books (tools/make_reader_fixtures.py) and the chunks the server would have cut from them.
+const PDF_TITLES = ['Preface', 'A second front page', 'Chapter 1 Signals', 'More on signals', 'Chapter 2 Noise', 'The end'];
+const pdfPage = (n) => [PDF_TITLES[n - 1], ...Array.from({ length: 14 }, (_, r) => `Line ${r + 1} of page ${n}: the lamp threw a small circle of light.`)].join('\n');
+const PARA = 'The lamp on the desk threw a small circle of light, and inside it the page was the only thing that mattered. '.repeat(6).trim();
+const epubChapter = (n) => `Chapter ${n}\n\n${PARA}\n\n${PARA}`;
+export const BOOKS = {
+  // Today: pages 1-5 (chunks 0-2); the next chunk starts on page 6.
+  pdf: { file: 'sample.pdf', type: 'application/pdf', today: [0, 1, 2],
+    chunks: [pdfPage(1) + pdfPage(2), pdfPage(3) + pdfPage(4), pdfPage(5), pdfPage(6)] },
+  // Today: chapters 1 and 2 (after the cover); the next chunk is chapter 3.
+  epub: { file: 'reflow.epub', type: 'application/epub+zip', today: [0, 1], chunks: [epubChapter(1), epubChapter(2), epubChapter(3)] },
+};
+const FILES = new URL('./fixtures/books/', import.meta.url);
+const chunk = (book, chunk_index) => ({ id: `chunk-${chunk_index}`, chunk_index, content: BOOKS[book].chunks[chunk_index], blocks: null });
 
 const json = (route, body, status = 200) => route.fulfill({ status, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 /** Routes for one page: the API remembers the saved position across reloads, like the server. */
-async function mockBackend(page, api) {
+export async function mockBackend(page, api, book) {
+  const { file, type, today, chunks } = BOOKS[book];
   await page.route(/supabase\.co/, (route) => { api.unmocked.push(route.request().url()); return route.abort(); });
   await page.route(`${API}/**`, async (route) => {
     const request = route.request();
@@ -45,12 +64,34 @@ async function mockBackend(page, api) {
     if (path === '/auth/profile') return json(route, { id: 'e2e-reader', is_calibrated: true, wpm: 240 });
     if (path === '/books' && request.method() === 'GET') return json(route, []);
     if (path === '/dashboard') return json(route, { book_progress: [], score_over_time: [], reading_streak: 0, words_this_week: 0, recent_feedback: [] });
+    if (path === '/badges') return json(route, badgesBody(api.badgesEarned)); // C24.6b: the shelf
+    if (path === '/leagues/current') { // C24.6c
+      return api.league ? json(route, api.league) : json(route, { detail: 'down' }, 503);
+    }
+    if (path === '/me/progress' && request.method() === 'PUT') { // C24.6d: settings; a name with admin is refused
+      const body = request.postDataJSON();
+      api.progressPuts.push(body);
+      if (/admin/i.test(body.display_name ?? '')) return json(route, { detail: 'That name is reserved.' }, 422);
+      Object.assign(api.progress, body);
+      if ('leaderboard_opt_out' in body && api.league) api.league.opted_out = body.leaderboard_opt_out;
+      return json(route, api.progress);
+    }
+    if (path === '/me/progress' && request.method() === 'GET') { // C24.6a: the header's progress (a test may set api.progress)
+      api.progressReads += 1;
+      return api.progress ? json(route, api.progress) : json(route, { detail: 'down' }, 503);
+    }
     if (path === '/sessions/start') {
       api.starts += 1;
+      if (BOOKS[book].pagesOnly) { // C19.4: a fully scanned book with no chunks opens pages-only
+        return json(route, { session_id: null, pages_only: true, chunk_indices: [], chunks: [], position: null,
+          focus_duration_minutes: 0, reason: '', chapter_before: null, scanned_pages: BOOKS[book].scanned,
+          book: { title: 'Scanned', author: 'A Scanner', toc: [], format: 'pdf', storage_mode: 'cloud' } });
+      }
       return json(route, {
-        session_id: 'e2e-session', chunks: chunks(), chunk_indices: [0, 1, 2], position: api.position,
+        // C23.G: a test may shorten today's reading (api.today) to leave pages beyond it.
+        session_id: 'e2e-session', chunks: (api.today ?? today).map((i) => chunk(book, i)), chunk_indices: api.today ?? today, position: api.position,
         focus_duration_minutes: 20, reason: 'A steady pace for this book.', chapter_before: '',
-        book: { title: 'Walden', author: 'Henry David Thoreau' },
+        book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' },
       });
     }
     if (path === '/sessions/e2e-session/position') {
@@ -59,19 +100,270 @@ async function mockBackend(page, api) {
       return json(route, { position: api.position });
     }
     if (path === `/books/${BOOK}/contents`) return json(route, { toc: [], toc_source: 'none', total_chunks: 3 });
-    if (path === `/books/${BOOK}/pages`) return json(route, { chunks: [] });
+    if (path === `/books/${BOOK}/pages`) {
+      const start = Number(url.searchParams.get('start'));
+      return json(route, { chunks: start < chunks.length ? [chunk(book, start)] : [] });
+    }
+    if (path === `/books/${BOOK}/file`) return json(route, { url: `${API}/e2e-files/${file}` });
+    if (path === `/e2e-files/${file}`) {
+      api.fileLoads += 1;
+      return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': type }, body: readFileSync(BOOKS[book].source ?? new URL(file, FILES)) });
+    }
+    if (path === `/books/${BOOK}/regions`) { // C18.6d: boxes word lookup skips; none unless a test sets them
+      api.regionAsks += 1;
+      return json(route, { regions: api.regions });
+    }
+    if (path === `/books/${BOOK}/ocr`) { // C19.4: scanned pages, as a book's BOOKS entry lists them
+      const scanned = BOOKS[book].scanned ?? [];
+      if (request.method() === 'POST') {
+        const body = JSON.parse(request.postData() || '{}');
+        api.ocrPosts.push({ ...body, at: Date.now() });
+        api.ocr.set(body.page, (body.words ?? []).filter((w) => w.c >= 60).map(({ t, b, c }) => ({ t, b, c })));
+        const reingest = scanned.every((p) => api.ocr.has(p)) && Boolean(BOOKS[book].pagesOnly);
+        return json(route, { page: body.page, words: api.ocr.get(body.page).length, dropped: 0, done: api.ocr.size, scanned: scanned.length, reingest });
+      }
+      const first = Number(url.searchParams.get('first'));
+      const last = Number(url.searchParams.get('last'));
+      const pages = first ? [...api.ocr].filter(([p]) => p >= first && p <= last).map(([p, words]) => ({ page: p, words })) : undefined;
+      return json(route, { scanned_pages: scanned, done: [...api.ocr.keys()], ...(pages ? { pages } : {}) });
+    }
+    if (path === `/books/${BOOK}/status`) return json(route, { status: 'processing', total_chunks: 0 });
+    if (path.startsWith('/focus/')) return focusRoute(route, request, api.focus, path); // C23.6
+    if (path === '/sessions/focus-1/evaluate-single') return json(route, { status: 'graded' }); // C23.6b
+    if (path === '/sessions/focus-1') { // C23.6b: a focus quiz is kept on a sessions row with the focus session's id
+      return json(route, { id: 'focus-1', book_id: BOOK, status: 'testing', test_questions: FOCUS_QUIZ });
+    }
+    if (path === `/books/${BOOK}/body-start`) { // C23.1: none unless a test sets api.bodyStart; a PUT is the reader's
+      if (api.bodyStartFail) return json(route, { detail: 'down' }, 503);
+      if (request.method() === 'PUT') {
+        const body = JSON.parse(request.postData() || '{}');
+        api.bodyStartPuts.push(body);
+        const start = body.page ? { kind: 'pdf', page: body.page } : { kind: 'epub', spine_index: body.spine_index };
+        api.bodyStart = { source: 'user', body_start: { ...start, title: body.title ?? null } };
+      }
+      return json(route, api.bodyStart ?? { source: null, body_start: null });
+    }
     if (path === '/lookup') {
       const term = url.searchParams.get('term');
       api.lookups.push({ term, proper: url.searchParams.get('proper') === '1' });
       return json(route, LOOKUPS[term] ?? { term, found: false, meanings: [], wiki: null, ambiguous: false });
+    }
+    if (path === '/steve/settings') { // C20.7b: consent and the off switch, as the server keeps them
+      if (request.method() === 'PUT') {
+        const change = request.postDataJSON();
+        api.steve.puts.push(change);
+        if ('enabled' in change) api.steve.enabled = change.enabled;
+        if (change.consent === true) api.steve.consented = true;
+        if (change.consent === false) api.steve.consented = false;
+      }
+      return json(route, { enabled: api.steve.enabled, consent: { given: api.steve.consented, current: api.steve.consented,
+        at: null, version: api.steve.consented ? STEVE_NOTICE.version : null }, notice: STEVE_NOTICE });
+    }
+    if (path === '/steve/ask') { // C20.7b: the next queued reply, as SSE text or a refusal {status, detail}
+      api.steve.asks.push(request.postDataJSON());
+      const reply = api.steve.replies.shift() ?? steveStream('He counts twice [p. 2].', [{ label: 'p. 2', anchor: { kind: 'pdf', page: 2 } }]);
+      if (reply.status) return json(route, { detail: reply.detail }, reply.status);
+      return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': 'text/event-stream' }, body: reply.sse });
+    }
+    if (path === '/steve/latex') { // C20.8: a PDF equation as LaTeX, or the queued refusal
+      api.steve.latexAsks.push(request.postDataJSON());
+      const reply = api.steve.latexReplies.shift() ?? { latex: String.raw`a_n = \frac{1}{\pi}`, cached: false, model: 'gemini-test' };
+      if (reply.status) return json(route, { detail: reply.detail }, reply.status);
+      return json(route, reply);
+    }
+    if (path === `/books/${BOOK}/region-at`) { // C20.8c: an EPUB region by section and element path
+      const detail = api.regionAt[`${url.searchParams.get('spine_index')}:${url.searchParams.get('path')}`];
+      api.regionAtAsks.push(`${url.searchParams.get('spine_index')}:${url.searchParams.get('path')}`);
+      return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
+    }
+    if (path.startsWith(`/books/${BOOK}/regions/`)) { // C20.8: one region's details
+      const detail = api.regionDetails[path.split('/').pop()];
+      return detail ? json(route, detail) : json(route, { detail: 'Region not found' }, 404);
+    }
+    if (path === `/books/${BOOK}/annotations`) { // C21.2: highlights and underlines, kept like the server keeps them
+      if (request.method() === 'POST') {
+        const body = request.postDataJSON();
+        api.annotationPosts.push(body);
+        if (api.annotationFail) return json(route, { detail: 'Not saved' }, api.annotationFail);
+        const row = { id: `ann-${api.annotations.length + 1}`, ...body, orphaned: false,
+          text_snapshot: body.anchors.map((a) => a.text).join(' ') };
+        api.annotations.push(row);
+        return json(route, row, 201);
+      }
+      return json(route, { annotations: api.annotations });
+    }
+    if (path.startsWith('/annotations/')) { // C21.4: restyle or delete one
+      const id = path.split('/').pop();
+      const row = api.annotations.find((a) => a.id === id);
+      if (request.method() === 'PATCH') api.annotationPatches.push({ id, ...request.postDataJSON() });
+      if (request.method() === 'DELETE') api.annotationDeletes.push(id);
+      if (api.annotationFail) return json(route, { detail: 'Not saved' }, api.annotationFail);
+      if (!row) return json(route, { detail: 'Annotation not found' }, 404);
+      if (request.method() === 'DELETE') {
+        api.annotations = api.annotations.filter((a) => a.id !== id);
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      Object.assign(row, request.postDataJSON(), { updated_at: '2026-11-14T20:00:00Z' });
+      return json(route, row);
+    }
+    if (path === `/books/${BOOK}/notes`) { // C22.2: note blocks, kept like the server keeps them
+      if (request.method() === 'POST') {
+        const body = request.postDataJSON();
+        api.notePosts.push(body);
+        if (api.noteFail) return json(route, { detail: 'Not saved' }, api.noteFail);
+        const row = { id: `note-${api.notes.length + 1}`, ...body, version: 1, orphaned: false, deleted_at: null,
+          created_at: `2026-11-14T20:00:${String(api.notes.length).padStart(2, '0')}Z`, urls: {} };
+        api.notes.push(row);
+        return json(route, row, 201);
+      }
+      api.noteLists += 1;
+      const urls = (n) => Object.fromEntries([n.thumbnail_path, n.content?.image_path].filter((p) => api.noteFiles[p]).map((p) => [p, api.noteFiles[p]]));
+      return json(route, { notes: api.notes.filter((n) => !n.deleted_at).map((n) => ({ ...n, urls: urls(n) })) });
+    }
+    if (path === `/books/${BOOK}/note-files`) { // C22.3: a drawing's thumbnail; "signed" as a data URL, no outside host
+      const body = request.postDataJSON();
+      api.noteFilePosts.push(body);
+      const filePath = `e2e-reader/${BOOK}/file-${api.noteFilePosts.length}.${body.content_type === 'image/png' ? 'png' : 'webp'}`;
+      api.noteFiles[filePath] = `data:${body.content_type};base64,${body.data}`;
+      return json(route, { path: filePath, url: api.noteFiles[filePath] }, 201);
+    }
+    if (path.startsWith('/notes/')) { // C22.2: autosave with If-Match, and soft delete
+      const id = path.split('/').pop();
+      const row = api.notes.find((n) => n.id === id && !n.deleted_at);
+      if (request.method() === 'DELETE') api.noteDeletes.push(id);
+      if (api.noteFail) return api.noteFail === 'abort' ? route.abort('internetdisconnected') : json(route, { detail: 'Not saved' }, api.noteFail);
+      if (!row) return json(route, { detail: 'Note not found' }, 404);
+      if (request.method() === 'DELETE') {
+        row.deleted_at = '2026-11-14T21:00:00Z';
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      const version = Number((request.headers()['if-match'] ?? '').replaceAll('"', ''));
+      api.notePatches.push({ id, version, ...request.postDataJSON() });
+      if (version !== row.version) return json(route, { detail: { message: 'This note changed since you opened it', version: row.version } }, 409);
+      Object.assign(row, request.postDataJSON(), { version: row.version + 1 });
+      return json(route, row);
+    }
+    if (path === '/steve/key') { // C20.3: GOOD_KEY is accepted, anything else is what Google refuses
+      if (request.method() === 'PUT') {
+        const { key } = request.postDataJSON();
+        api.steveKeyPuts.push(key);
+        if (key !== GOOD_KEY) return json(route, { detail: 'Google did not accept this key. Check that you copied all of it, from Google AI Studio.' }, 400);
+        api.steveKey = key.slice(-4);
+      }
+      if (request.method() === 'DELETE') api.steveKey = null;
+      return json(route, { has_key: api.steveKey !== null, last4: api.steveKey });
     }
     api.unmocked.push(`${request.method()} ${path}`);
     return json(route, { detail: 'not mocked' }, 404);
   });
 }
 
+/** C24.6a: GET /me/progress for a reader part way through a week (GAMIFICATION; C24.5's shape). */
+export const PROGRESS = {
+  total_xp: 1240, daily_goal: 50, timezone: 'Europe/London', display_name: null, leaderboard_opt_out: false,
+  today: { day: '2026-11-18', xp: 30, goal: 50, met: false },
+  streak: { days: 7, freezes: 1, frozen_days: [] }, tier: 'Hardcover',
+  badges: [{ id: 'first_focus', name: 'First focus session', awarded_at: '2026-11-10T20:00:00+00:00' }],
+};
+
+/** C24.6c: GET /leagues/current: a Hardcover group of 12 this week (rank 7 keeps off others' boards), last week up. */
+export const LEAGUE = {
+  week: { starts_at: '2026-11-16T00:00:00+00:00', ends_at: '2026-11-23T00:00:00+00:00' },
+  tier: 'Hardcover', in_group: true, opted_out: false, zones: { size: 12, promote: 3, demote: 2 },
+  rows: [[1, 'Marginalia', 742], [2, 'Slow Reader', 690], [3, 'Inkwell', 655], [4, 'Quiet Owl', 502, true],
+    [5, 'Dogeared', 488], [6, 'Reader 3f2a', 470], [8, 'Folio Fox', 455], [9, 'Nightlamp', 300],
+    [10, 'Tea And Proofs', 160], [11, 'Reader 9c01', 40], [12, 'Heron', 0]].map(([rank, name, xp, you]) => (
+    { id: `p${rank}`.padEnd(12, '0'), rank, display_name: name, weekly_xp: xp, zone: null, you: Boolean(you) })),
+  last_week: { starts_at: '2026-11-09T00:00:00+00:00', tier: 'Paperback', rank: 2, size: 9, weekly_xp: 380,
+    outcome: 'promoted', now_in: 'Hardcover' },
+};
+
+/** C24.6b: GET /badges, the catalogue of backend/xp/badges.py with the reader's awards ({id: awarded_at}). */
+const CATALOGUE = [
+  ['first_focus', 'First focus session', 'Finish a focus session and pass its quiz.', 20, 'seal'],
+  ['first_chapter', 'First chapter', 'Pass a focus session that reaches the end of a book’s first chapter.', 30, 'bookplate'],
+  ['focus_10h', '10 focused hours', 'Spend 10 hours in focus sessions you passed.', 100, 'seal'],
+  ['focus_50h', '50 focused hours', 'Spend 50 hours in focus sessions you passed.', 250, 'seal'],
+  ['focus_100h', '100 focused hours', 'Spend 100 hours in focus sessions you passed.', 500, 'seal'],
+  ['perfect_quiz', 'Perfect quiz', 'Answer every question of a bookmark quiz correctly.', 25, 'seal'],
+  ['streak_7', '7-day streak', 'Meet your daily goal 7 days running.', 50, 'seal'],
+  ['streak_30', '30-day streak', 'Meet your daily goal 30 days running.', 150, 'seal'],
+  ['streak_100', '100-day streak', 'Meet your daily goal 100 days running.', 500, 'seal'],
+  ['first_note', 'First note', 'Write your first typed note.', 10, 'seal'],
+  ['first_drawing', 'First drawing', 'Save your first drawing.', 10, 'seal'],
+  ['first_steve', 'First Ask Steve', 'Get your first answer from Steve.', 10, 'seal'],
+  ['finished_book', 'Finished a book', 'Reach the last page of a book.', 200, 'bookplate'],
+  ['technical_reader', 'Technical-book reader', 'Pass a focus session in a book where at least a fifth of the page regions are math or code.', 50, 'bookplate'],
+];
+export function badgesBody(earned = {}) {
+  const badges = CATALOGUE.map(([id, name, description, xp_reward, kind]) => ({
+    id, name, description, xp_reward, kind, earned: id in earned, awarded_at: earned[id] ?? null }));
+  return { total: badges.length, earned: badges.filter((b) => b.earned).length, badges };
+}
+
+/** C23.6b: the focus quiz the fake server builds: three questions, the first multiple choice. */
+const FOCUS_QUIZ = [
+  { question: 'What did the lamp throw?\n(a) A shadow  (b) A small circle of light  (c) A spark', type: 'factual',
+    options: ['A shadow', 'A small circle of light', 'A spark'] },
+  { question: 'What mattered inside the circle of light?', type: 'factual' },
+  { question: 'In your own words, what is the main idea of the pages you read?', type: 'summary' },
+];
+
+/** C23.6: focus sessions as the server keeps them; tests set `api.focus.active` to move the server's clock. */
+function focusRoute(route, request, focus, path) {
+  const body = JSON.parse(request.postData() || 'null');
+  const view = () => focus.session && { ...focus.session, active_seconds: focus.active,
+    cap_remaining_s: Math.max(0, 10800 - focus.active), capped: focus.active >= 10800,
+    points_time: Math.floor(focus.active / 6), bookmark_set: Boolean(focus.session.end_anchor) };
+  const [, , id, action, sub] = path.split('/');
+  focus.calls.push({ method: request.method(), path, body });
+  if (path === '/focus/current') return json(route, { session: focus.session ? view() : null });
+  if (path === '/focus/start') {
+    focus.session = { id: 'focus-1', book_id: body.book_id, status: 'active', state: 'running', reasons: {},
+      points_time: 0, points_total: 0, ignored_events: 0, started_at: '2026-11-15T09:00:00Z', ended_at: null };
+    return json(route, view());
+  }
+  if (!focus.session || id !== focus.session.id) return json(route, { detail: 'Focus session not found' }, 404);
+  const s = focus.session;
+  if (action === 'event') {
+    if (body.kind === 'hidden') s.state = 'hidden';
+    if (body.kind === 'visible') s.state = 'running';
+    focus.events.push(body);
+    return json(route, { accepted: true, reason: null, session: view() });
+  }
+  if (action === 'pause') Object.assign(s, { status: 'paused', state: 'paused' });
+  if (action === 'resume') Object.assign(s, { status: 'active', state: 'running' });
+  if (action === 'end') {
+    if (s.status === 'awaiting_quiz' && s.end_anchor) return json(route, { detail: 'This focus session is awaiting quiz.' }, 409);
+    Object.assign(s, { status: 'awaiting_quiz', state: 'awaiting_quiz', end_anchor: body.bookmark_anchor });
+  }
+  if (action === 'quiz' && !sub) {
+    return json(route, { questions: FOCUS_QUIZ, count: FOCUS_QUIZ.length, words_in_range: 1200 });
+  }
+  if (action === 'quiz' && sub === 'answers') {
+    focus.answers = body.answers;
+    Object.assign(s, { status: 'scored', state: 'scored' });
+    const pts = Math.floor(focus.active / 6);
+    const passed = focus.passed !== false; // C23.7: a test can fail the quiz (1 of 3)
+    const lines = [{ code: 'counted', label: 'Focused reading', seconds: focus.active, points: pts },
+      { code: 'page_cap', label: 'Time on one page beyond 30 minutes without turning it', seconds: 600, points: 0 },
+      { code: 'quiz_bonus', label: `Quiz: ${passed ? 2 : 1} of 3 correct`, points: passed ? 40 : 0 },
+      ...(passed ? [] : [{ code: 'quiz_failed', label: 'Quiz below 40%: this session earns 0 points', points: 0 }])];
+    return json(route, { ...view(), passed, quiz_score: passed ? 2 / 3 : 1 / 3, points_time: passed ? pts : 0,
+      points_bonus: passed ? 40 : 0, points_total: passed ? pts + 40 : 0, quiz_correct: passed ? 2 : 1, quiz_total: 3,
+      total_score: passed ? 20 : 10, max_score: 30, percentage: passed ? 66.7 : 33.3, lines, per_question: [
+        { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' },
+        passed ? { score: 10, max_score: 10, feedback: 'Right.', confidence: 'high' } : { score: 0, max_score: 10, feedback: 'Not this time.', confidence: 'high' },
+        { score: 0, max_score: 10, feedback: 'Say what the pages were about.', confidence: 'high' }] });
+  }
+  if (action === 'discard') Object.assign(s, { status: 'abandoned', state: 'abandoned' });
+  const out = view();
+  if (action === 'discard') focus.session = null;
+  return json(route, out);
+}
+
 /** A signed-in reader for the app: a session in Supabase's storage that is far from expiring. */
-async function signIn(page) {
+export async function signIn(page) {
   const session = {
     access_token: 'e2e-token', refresh_token: 'e2e-refresh', token_type: 'bearer', expires_in: 3600,
     expires_at: Math.floor(Date.now() / 1000) + 24 * 3600,
@@ -85,16 +377,24 @@ async function signIn(page) {
 export const test = base.extend({
   // A spec that starts signed out (the sign-in page) sets test.use({ signedIn: false }).
   signedIn: [true, { option: true }],
+  // The book the reading page opens: 'pdf' (sample.pdf) or 'epub' (reflow.epub, illustrated).
+  book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
-  api: [async ({ page, signedIn }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [] };
+  api: [async ({ page, signedIn, book }, use, info) => {
+    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
+      steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
+      regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
+      notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
+      bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
+      focus: { session: null, active: 0, calls: [], events: [] },
+      progress: structuredClone(PROGRESS), progressReads: 0, progressPuts: [], league: structuredClone(LEAGUE), badgesEarned: { first_focus: '2026-11-10T12:00:00+00:00' } };
     const trail = []; // printed when a test fails: what the page said and asked for
     page.on('console', (m) => trail.push(`${m.type()}: ${m.text()}`.slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('console', (m) => console.log('PAGE', m.type(), m.text().slice(0, 300)));
     if (process.env.E2E_TRACE) page.on('framenavigated', (f) => { if (f === page.mainFrame()) console.log('NAV', f.url()); });
     page.on('request', (r) => { if (!r.url().startsWith('http://localhost:4174')) trail.push(`${r.method()} ${r.url().slice(0, 120)}`); });
     page.on('framenavigated', (f) => { if (f === page.mainFrame()) trail.push(`navigated ${f.url()}`); });
-    await mockBackend(page, api);
+    await mockBackend(page, api, book);
     if (signedIn) await signIn(page);
     await use(api);
     if (info.status !== info.expectedStatus) console.log([`--- ${info.title}`, ...trail].join(String.fromCharCode(10)));
@@ -103,38 +403,78 @@ export const test = base.extend({
 });
 export { expect };
 
-/** Open today's reading and wait for the book and its fonts. */
+/** Open today's reading and wait until the book stands at its first place. */
 export async function openReader(page) {
   await page.goto(`/read/${BOOK}`);
-  await page.locator('.rf-viewport .rf-flow p').first().waitFor();
+  await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 15_000 });
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(300); // the first pagination after fonts
+  await page.waitForTimeout(300); // an EPUB lays out again once its fonts are in
 }
 
-/** The polite page announcement, e.g. "Pages 3 and 4 of 9". */
-export const spoken = (page) => page.locator('.rf-live').first();
+/** The polite page announcement, e.g. "pp. ii–1 of 6" or "End of today's reading". */
+export const spoken = (page) => page.locator('.rf-ov-live');
 
-/** The centre of the first visible occurrence of a word in the book's text. */
-export async function wordPoint(page, word) {
-  return page.evaluate((w) => {
-    const flow = document.querySelector('.rf-viewport .rf-flow');
-    const vp = document.querySelector('.rf-viewport').getBoundingClientRect();
-    const walker = document.createTreeWalker(flow, NodeFilter.SHOW_TEXT);
-    let node;
-    while ((node = walker.nextNode())) {
-      let i = -1;
-      while ((i = node.data.indexOf(w, i + 1)) >= 0) {
-        const range = document.createRange();
-        range.setStart(node, i);
-        range.setEnd(node, i + w.length);
-        const r = range.getClientRects()[0];
-        if (r && r.left >= vp.left && r.right <= vp.right && r.top >= vp.top && r.bottom <= vp.bottom) {
-          return { x: r.x + r.width / 2, y: r.y + r.height / 2, top: r.top, bottom: r.bottom };
-        }
-      }
+/** The book on the page: focus it before keys. */
+export const book = (page) => page.locator('.rf-ov-stage');
+
+/** The place shown: { start, end } as the frame reports them ("5", or "2:340" for an EPUB). */
+export const shown = (page) => page.locator('.rf-ov').evaluate((el) => ({ start: el.dataset.start, end: el.dataset.end }));
+
+/**
+ * The place shown once a turn has landed (DEBUG_LOG C17.6): no leaf turning and the same place on two
+ * reads 300 ms apart, different from `away` when given. A place read at the first change can be one
+ * the renderer moves past a moment later.
+ */
+export async function settled(page, away = null) {
+  let last = null;
+  await expect.poll(async () => {
+    const leaves = await page.locator('.rf-ov-leaf').count();
+    const now = JSON.stringify(await shown(page));
+    const ok = leaves === 0 && now === last && now !== JSON.stringify(away);
+    last = now;
+    return ok;
+  }, { intervals: [300], timeout: 10_000 }).toBe(true);
+  return JSON.parse(last);
+}
+
+/** The boxes of every whole-word occurrence of `w` in a document's book text (the PDF's spread, or a section's body). */
+function wordBoxes(w) {
+  const root = document.querySelector('.rf-pdf-spread') ?? (document.querySelector('.rf-ov') ? null : document.body);
+  if (!root) return [];
+  const boxes = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const pattern = new RegExp(`\\b${w}\\b`, 'g');
+    for (let match = pattern.exec(node.data); match; match = pattern.exec(node.data)) {
+      const range = document.createRange();
+      range.setStart(node, match.index);
+      range.setEnd(node, match.index + w.length);
+      const r = range.getClientRects()[0];
+      if (r) boxes.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
     }
-    return null;
-  }, word);
+  }
+  return boxes;
+}
+
+/**
+ * The first visible occurrence of a word in the book's text, in page coordinates: { x, y } at its
+ * centre and its box. An EPUB's sections are iframes in foliate's closed shadow roots, so they are
+ * reached as Playwright frames and shifted by their frame element's box.
+ */
+export async function wordPoint(page, word) {
+  const view = await page.locator('.rf-ov-book').boundingBox();
+  const frames = page.frames().filter((f) => f !== page.mainFrame() && !f.isDetached());
+  for (const frame of frames.length ? frames : [page.mainFrame()]) {
+    const offset = frame === page.mainFrame() ? { x: 0, y: 0 } : await (await frame.frameElement()).boundingBox();
+    if (!offset) continue;
+    for (const r of await frame.evaluate(wordBoxes, word)) {
+      const box = { left: offset.x + r.left, right: offset.x + r.right, top: offset.y + r.top, bottom: offset.y + r.bottom };
+      const x = (box.left + box.right) / 2;
+      const y = (box.top + box.bottom) / 2;
+      if (x > view.x + 2 && x < view.x + view.width - 2 && y > view.y + 2 && y < view.y + view.height - 2) return { x, y, ...box };
+    }
+  }
+  return null;
 }
 
 /**

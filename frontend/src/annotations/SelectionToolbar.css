@@ -1,0 +1,85 @@
+/* The selection toolbar (C21.2, handoff screen 18 .seltool): a small bar on the page's own surface, a hairline
+   and the soft lift; colour dots, then text buttons after a rule. Rises 4 px into place, less than its 8 px gap,
+   so it never passes over the line even while moving (C21.4). */
+.rf-seltool {
+  z-index: var(--z-popover);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line-2);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  white-space: nowrap;
+  animation: rf-seltool-rise var(--dur-2) var(--ease-settle) backwards;
+}
+.rf-seltool[data-side="bottom"] { animation-name: rf-seltool-drop; }
+
+@keyframes rf-seltool-rise { from { opacity: 0; transform: translateY(4px); } }
+@keyframes rf-seltool-drop { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes rf-seltool-fade { from { opacity: 0; } }
+
+/* Reduced motion: the fade alone (see WordCard.css for why this sits in the base layer). */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    .rf-seltool.rf-seltool { animation: rf-seltool-fade var(--dur-1) linear backwards !important; }
+  }
+}
+
+.rf-seltool button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle), box-shadow var(--dur-1) var(--ease-settle);
+}
+.rf-seltool button:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
+.rf-seltool button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+/* A dot: the swatch colour, a 2 px surface gap and a --line-field ring (3:1 as a boundary in both themes). */
+.rf-seltool-dot > span {
+  inline-size: 28px;
+  block-size: 28px;
+  border: var(--border-strong) solid var(--surface);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 var(--border-hair) var(--line-field);
+}
+.rf-seltool-dot[data-colour="honey"] > span { background: var(--dot-honey); }
+.rf-seltool-dot[data-colour="sage"] > span { background: var(--dot-sage); }
+.rf-seltool-dot[data-colour="sky"] > span { background: var(--dot-sky); }
+.rf-seltool-dot[data-colour="rose"] > span { background: var(--dot-rose); }
+.rf-seltool-dot[data-colour="lilac"] > span { background: var(--dot-lilac); }
+.rf-seltool-dot:hover > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-3); }
+.rf-seltool-dot[data-last] > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-2); } /* what H and U use */
+
+.rf-seltool .rf-seltool-btn { gap: var(--space-2); padding-inline: var(--space-2); font-size: var(--text-ui); font-weight: 500; }
+.rf-seltool-btn:hover:not(:disabled) { background: var(--paper-2); }
+.rf-seltool-btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); }
+
+.rf-seltool-sep {
+  flex: none;
+  inline-size: var(--border-hair);
+  block-size: 22px;
+  margin-inline: var(--space-1);
+  background: var(--line);
+}
+
+/* Narrow screens: Ask Steve keeps its name for screen readers and drops the word, so the bar fits 375 px. */
+@media (max-width: 480px) {
+  .rf-seltool-label { display: none; }
+}
+/* Touch: 44 px targets. */
+@media (pointer: coarse) {
+  .rf-seltool button { min-inline-size: 44px; block-size: 44px; }
+}

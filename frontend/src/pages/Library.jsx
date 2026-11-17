@@ -14,7 +14,19 @@ import { MasteryBar } from '../components/ui/MasteryBar';
 import { BookCover } from '../components/BookCover';
 import { EmptyShelf, OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { forgetBookFile, saveBookFile } from '../reader/fileStore';
 import './Library.css';
+
+// Files a reader can add (C19.2c): PDF and EPUB open as they are; Markdown (alone, or zipped with its
+// images) and Jupyter notebooks are converted to an EPUB on the server.
+const ACCEPTED = ['pdf', 'epub', 'md', 'markdown', 'zip', 'ipynb'];
+const CONVERTED = ['md', 'markdown', 'zip', 'ipynb'];
+
+/** The toast for images a converted book left out (remote ones are never downloaded). */
+function missingImages(notes) {
+  const n = notes.length;
+  return `${n} ${n === 1 ? 'image' : 'images'} couldn’t be included: ${notes.slice(0, 2).map((note) => note.replace(/^Image not included: /, '')).join('; ')}${n > 2 ? ` and ${n - 2} more` : ''}.`;
+}
 
 /** Share of the book read so far, 0-100, from GET /books's progress. */
 function readPct(book) {
@@ -74,9 +86,11 @@ export function Library() {
   const fileInputRef = useRef(null);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const converting = CONVERTED.includes(selectedFile?.name.split('.').pop().toLowerCase());
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadAuthor, setUploadAuthor] = useState('');
   const [uploadErrors, setUploadErrors] = useState({});
+  const [deviceOnly, setDeviceOnly] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   const loadBooks = useCallback(async () => {
@@ -106,6 +120,7 @@ export function Library() {
     setIsRemoving(true);
     try {
       await fetchApi(`/books/${book.id}`, { method: 'DELETE' });
+      forgetBookFile(book.id);
       setBooks(prev => prev.filter(b => b.id !== book.id));
       setRemoving(null);
       toast({ kind: 'neutral', message: `${book.title} is off your shelf.` });
@@ -186,8 +201,8 @@ export function Library() {
 
   const handleFileSelection = (file) => {
     const ext = file.name.split('.').pop().toLowerCase();
-    if (ext !== 'pdf' && ext !== 'epub') {
-      toast({ kind: 'warning', message: `${file.name} isn’t a PDF or EPUB, so it can’t go on the shelf.` });
+    if (!ACCEPTED.includes(ext)) {
+      toast({ kind: 'warning', message: `${file.name} isn’t a PDF, EPUB, Markdown file or notebook, so it can’t go on the shelf.` });
       return;
     }
     setSelectedFile(file);
@@ -198,6 +213,7 @@ export function Library() {
     setUploadTitle(cleanTitle);
     setUploadAuthor('');
     setUploadErrors({});
+    setDeviceOnly(false);
     setUploadModalOpen(true);
     // Reset file input so same file can be selected again if cancelled
     if (fileInputRef.current) fileInputRef.current.value = null;
@@ -221,6 +237,8 @@ export function Library() {
     formData.append('file', selectedFile);
     formData.append('title', uploadTitle.trim());
     formData.append('author', uploadAuthor.trim());
+    const keepHere = deviceOnly && !converting; // a converted book is kept on the server (C19.2c)
+    formData.append('storage_mode', keepHere ? 'device' : 'cloud');
 
     try {
       const resp = await fetchApi('/books/upload', {
@@ -234,11 +252,17 @@ export function Library() {
         title: uploadTitle.trim(),
         author: uploadAuthor.trim(),
         status: 'processing',
-        file_type: selectedFile.name.split('.').pop().toLowerCase(),
+        file_type: converting ? 'epub' : selectedFile.name.split('.').pop().toLowerCase(),
+        storage_mode: keepHere ? 'device' : 'cloud',
       };
+      // A device-only book's original exists nowhere else, so it is kept in this browser (C17.1).
+      if (keepHere && !(await saveBookFile(resp.book_id, selectedFile))) {
+        toast({ kind: 'warning', message: 'This browser couldn’t keep the file. Add it again before you read.' });
+      }
       setBooks(prev => [optimbook, ...prev]);
       setUploadModalOpen(false);
       toast({ kind: 'success', message: `${optimbook.title} is on your shelf. We’re reading its pages now.` });
+      if (resp.notes?.length) toast({ kind: 'warning', message: missingImages(resp.notes) });
     } catch (err) {
       toast({ kind: 'warning', message: `We couldn’t add that book: ${err.message || 'the upload failed'}.` });
     } finally {
@@ -346,6 +370,7 @@ export function Library() {
                       <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />
                     </button>
                   </div>
+                  {book.storage_mode === 'device' && <p className="rf-shelf__caption rf-shelf__device">This book is only on this device</p>}
                 </m.li>
               );
             })}
@@ -354,16 +379,29 @@ export function Library() {
         </section>
       )}
 
-      <input type="file" ref={fileInputRef} hidden accept=".pdf,.epub" onChange={handleFileChange} />
+      <input type="file" ref={fileInputRef} hidden accept={ACCEPTED.map((ext) => `.${ext}`).join(',')} onChange={handleFileChange} />
 
       <Modal isOpen={uploadModalOpen} onClose={() => !isUploading && setUploadModalOpen(false)} title="Add to your shelf">
         <form className="rf-library__form" onSubmit={submitUpload} noValidate>
           <p className="rf-library__file">{selectedFile?.name}</p>
           <TextInput label="Title" name="title" value={uploadTitle} error={uploadErrors.title} onChange={(e) => setUploadTitle(e.target.value)} />
           <TextInput label="Author" name="author" value={uploadAuthor} error={uploadErrors.author} onChange={(e) => setUploadAuthor(e.target.value)} />
+          {converting ? (
+            <p className="rf-library__convert">
+              We’ll turn it into a book on our server, keeping its equations, code and images, and store that book for you.
+            </p>
+          ) : (
+            <label className="rf-library__keep">
+              <input type="checkbox" name="device_only" checked={deviceOnly} onChange={(e) => setDeviceOnly(e.target.checked)} />
+              <span>
+                Keep the file on this device only
+                <small>We read it once to plan your sessions and don’t store it. You can open it only in this browser.</small>
+              </span>
+            </label>
+          )}
           <div className="rf-library__form-actions">
             <Button variant="secondary" onClick={() => setUploadModalOpen(false)} disabled={isUploading}>Cancel</Button>
-            <Button type="submit" loading={isUploading} loadingLabel="Uploading…">Add book</Button>
+            <Button type="submit" loading={isUploading} loadingLabel={converting ? 'Converting…' : 'Uploading…'}>Add book</Button>
           </div>
         </form>
       </Modal>

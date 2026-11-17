@@ -19,7 +19,7 @@ env:
   # errors, so CI fails only when a count goes UP. Lower these numbers in the
   # same commit that lowers the CLAUDE.md table.
   RUFF_BASELINE: 27
-  ESLINT_ERROR_BASELINE: 4
+  ESLINT_ERROR_BASELINE: 3
   ESLINT_WARNING_BASELINE: 0
 
 jobs:
@@ -57,6 +57,11 @@ jobs:
       # Tests that need the embedding model skip when it is not cached.
       - name: Pytest (offline)
         run: pytest backend/tests -q
+
+      # C25.2: Google's Gemini SDK may be imported by backend/steve/provider.py and nothing else, anywhere in the
+      # repo (every Python file, frontend/package.json, frontend/src). Standard library only.
+      - name: Gemini SDK only in backend/steve/provider.py
+        run: python tools/check_gemini_sdk.py
 
       - name: Import the app
         env:
@@ -104,6 +109,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      # C25.2: the initial route's JavaScript within its gzip budget, and pdf.js, foliate-js, Excalidraw, TipTap
+      # and tesseract.js only in chunks loaded on demand. Reads the stats the build just wrote.
+      - name: Bundle budget check
+        run: npm run check:bundle
+
       - name: Unit tests
         run: npm run test:unit
 
@@ -112,6 +122,42 @@ jobs:
 
       - name: Image budget check
         run: npm run check:images
+
+  # ── Frontend end-to-end (C25.2) ───────────────────────────────
+  # The whole offline Playwright suite, phase 2's specs included (focus, notes, Steve, leagues, privacy, ...):
+  # every API call is mocked by e2e/fixtures.js, so nothing reaches Supabase or Google. The config asks for
+  # Microsoft Edge, installed here; the suite builds the app and serves it with vite preview on port 4174.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Microsoft Edge for Playwright
+        run: npx playwright install --with-deps msedge
+
+      - name: End-to-end tests (offline)
+        run: npm run test:e2e
+
+      - name: Keep the failures' traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: frontend/test-results/
+          retention-days: 7
 
   # ── Repo graph is up to date ──────────────────────────────────
   # The graph tooling uses only the standard library, so nothing is installed
@@ -145,7 +191,7 @@ jobs:
   # push deploys. `ref` pins the deploy to the commit that was just checked.
   deploy-render:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [backend, frontend, graph]
+    needs: [backend, frontend, e2e, graph]
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-render

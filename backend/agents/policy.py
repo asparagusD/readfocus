@@ -299,3 +299,143 @@ OPT_OUTCOME_HISTORY = 15
 # reading_progress.average_score is the mean of this many latest tests (this
 # one included); the value the evaluator used before C8 follow-up.
 ROLLING_AVERAGE_TESTS = 10
+
+# --- Original book files (backend/routers/books.py, C17.1) -------------------
+
+# Bytes of original files a reader may keep on our server (storage_mode
+# 'cloud'); device-only books do not count. Supabase Free storage is shared
+# by every reader, so this is a fairness cap, not a quota we sell.
+MAX_SHELF_BYTES_PER_USER = 300 * 1024 * 1024
+# One upload is read into memory on Render Free, so it stops here.
+MAX_BOOK_FILE_BYTES = 50 * 1024 * 1024
+# Lifetime of the signed URL GET /books/{id}/file returns.
+BOOK_FILE_URL_SECONDS = 300
+
+# --- Converted sources (backend/convert/sources.py, C19.2c) ------------------
+
+# A .zip of Markdown and images is unpacked in memory on Render Free: at most
+# this many entries and this many bytes once unpacked (a zip bomb stops here).
+MAX_CONVERT_ZIP_ENTRIES = 2000
+MAX_CONVERT_UNPACKED_BYTES = 100 * 1024 * 1024
+
+# --- Scanned pages and OCR (backend/services/ocr_pages.py, C19.4) ------------
+
+# A PDF page whose pypdf text has fewer visible characters than this has no
+# text layer worth reading: it is flagged in books.scanned_pages for OCR.
+OCR_MIN_PAGE_CHARS = 20
+# tesseract's word confidence (0-100) below which a word is dropped.
+OCR_MIN_CONFIDENCE = 60
+# A word longer than this is not a word (a run-on of misread marks).
+OCR_MAX_WORD_CHARS = 48
+# Words one page may post; a dense page has about 600.
+OCR_MAX_WORDS_PER_PAGE = 4000
+# A figure covering at least this share of the page is the scan itself, not a drawing, so OCR may read it.
+OCR_FULL_PAGE_FIGURE = 0.8
+
+# --- Annotations (backend/routers/annotations.py, C21.1; docs/ANCHORS.md) -----
+
+# The handoff's highlight palette (tokens --hl-<name>) and the two styles; migration 026 checks the same lists.
+ANNOTATION_COLORS = ("honey", "sage", "sky", "rose", "lilac")
+ANNOTATION_STYLES = ("highlight", "underline")
+# Anchors one annotation may hold: one per PDF page or EPUB spine item it crosses (A2).
+ANNOTATION_ANCHORS_MAX = 16
+# Characters of text kept with an annotation (A1 text, whitespace collapsed).
+ANNOTATION_TEXT_MAX = 5_000
+# Annotations one list request returns, in reading order.
+ANNOTATIONS_LIST_MAX = 2_000
+
+# --- Note blocks (backend/routers/notes.py, C22.1; docs/ANCHORS.md) -------------
+
+# Block kinds and anchoring scopes (a selection, or the pages shown); migration 027 checks the same lists.
+NOTE_KINDS = ("text", "drawing", "equation", "code", "figure")
+NOTE_SCOPES = ("selection", "view")
+# One block's content as JSON, also a check in 027 (octet_length of content::text).
+NOTE_CONTENT_MAX_BYTES = 262_144
+NOTE_TEXT_MAX = 20_000  # characters of text in a text block
+NOTE_DOC_DEPTH_MAX = 12  # nesting of a TipTap document
+NOTE_CODE_MAX = 20_000
+NOTE_LATEX_MAX = 4_000
+NOTE_CAPTION_MAX = 1_000
+NOTE_DRAWING_ELEMENTS_MAX = 2_000
+NOTE_DRAWING_FILES_MAX = 20
+# A code block's language ("" for none); the region map's language guesses (A9) are among them.
+NOTE_CODE_LANGUAGES = ("", "python", "javascript", "typescript", "java", "c", "cpp", "csharp", "go", "rust",
+                       "ruby", "php", "swift", "kotlin", "scala", "r", "matlab", "julia", "haskell", "scheme", "sql",
+                       "bash", "html", "css", "json", "yaml", "xml", "latex", "text")
+# Images and thumbnails in the private "notes" bucket (027 sets the same limit and types).
+NOTE_FILE_BYTES_MAX = 262_144
+NOTE_FILE_TYPES = ("image/webp", "image/png")
+NOTE_FILE_URL_SECONDS = 3_600
+# Note blocks one list request returns, in reading order.
+NOTES_LIST_MAX = 2_000
+
+# --- Body start (C23.1, docs/FOCUS_RULES.md F2) ------------------------------------------------------------
+# How books.body_start was found (028 checks the same values): the outline, a heading in the region map, the
+# first page after the contents with enough prose, or the reader's own choice (which always wins).
+BODY_START_SOURCES = ("outline", "heading", "prose", "user")
+# Outline entries that are front matter, never the body (matched at the start of the title, lower case).
+BODY_START_FRONT_MATTER = (
+    "cover", "title", "half title", "halftitle", "frontispiece", "copyright", "imprint", "contents",
+    "table of contents", "dedication", "epigraph", "foreword", "preface", "acknowledgments", "acknowledgements",
+    "about the author", "about the authors", "list of figures", "list of tables", "list of illustrations",
+    "illustrations", "abbreviations", "praise", "also by", "other books by", "introduction", "note on the text",
+    "a note on", "how to use this book", "maps",
+)
+BODY_START_MIN_PROSE_WORDS = 300  # (3) a page or EPUB section with at least this much prose
+BODY_START_HEADING_MAX_CHARS = 80  # a region's first line longer than this is not a heading
+BODY_START_HEADING_TOP = 3  # a numbered heading ("1 Springs") is among the first regions of its page
+BODY_START_CONTENTS_LINES = 3  # a page with this many chapter-like lines is a contents page
+BODY_START_SCAN_UNITS = 80  # (2) and (3) look at the first pages or EPUB sections only
+BODY_START_TITLE_MAX = 200
+
+# --- Focus mode (C23, docs/FOCUS_RULES.md: the defaults table there is the source; test_focus_policy.py checks) ---
+FOCUS_POINTS_PER_MINUTE = 10  # F4
+FOCUS_HEARTBEAT_S = 30  # F3: the tab sends one every 30 s while visible (C23.6)
+FOCUS_IDLE_PROMPT_MIN = 10  # F6
+FOCUS_IDLE_ANSWER_S = 60  # F6
+FOCUS_PAGE_CAP_MIN = 30  # F7
+FOCUS_SESSION_CAP_MIN = 180  # F8
+QUIZ_WORDS_PER_QUESTION = 400  # F10
+QUIZ_MIN_QUESTIONS = 3  # F10
+QUIZ_MAX_QUESTIONS = 15  # F10
+QUIZ_POINTS_PER_CORRECT = 20  # F11
+QUIZ_PASS_SCORE = 0.40  # F12
+FOCUS_MAX_GAP_S = 45  # F3: two heartbeats further apart than this credit nothing between them
+FOCUS_MIN_HEARTBEAT_GAP_S = 5  # F3: a heartbeat sooner than this after the last one counted is ignored
+FOCUS_HEARTBEAT_RATE_S = 25  # F3: the API stores at most one heartbeat per this many seconds; extras are counted
+FOCUS_EVENT_RATE_S = 2  # F3: and at most one other event of the same kind per this many seconds
+QUIZ_CORRECT_FROM = MASTERY_CORRECT_FROM  # F11: an answer scoring this share of its maximum is correct
+QUIZ_LOW_CONFIDENCE_WEIGHT = 0.5  # F11: a correct answer the grader is unsure of counts half
+FOCUS_ABANDON_AFTER_MIN = 120  # F1: an open session with no event for this long is abandoned (0 points)
+# focus_sessions.status and focus_events.kind (029 checks the same values). Open sessions: one per reader.
+FOCUS_STATUSES = ("active", "paused", "awaiting_quiz", "scored", "abandoned")
+FOCUS_OPEN_STATUSES = ("active", "paused")
+FOCUS_EVENT_KINDS = ("start", "heartbeat", "page_turn", "hidden", "visible", "idle_prompt", "idle_confirm",
+                     "pause", "resume", "end")
+FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" or "s3:4"
+# Stored on each session at its start and again when it is scored, so the row names the rules that scored it.
+# A date, with ".n" for a later revision the same day. 2026-11-15.2: the quiz bonus is capped at the time points.
+FOCUS_RULES_VERSION = "2026-11-15.2"
+
+# --- XP, the daily goal and streaks (C24.1, docs/GAMIFICATION.md G4-G9) ---
+XP_SOURCES = ("focus", "badge", "adjustment")  # xp_events.source (031 checks the same values); only focus earns in C24
+DAILY_GOAL_XP = 50  # G5: the default daily goal, in XP (five active minutes)
+DAILY_GOAL_MIN_XP = 10  # G5: the reader may set it within these bounds
+DAILY_GOAL_MAX_XP = 500
+STREAK_FREEZE_MAX = 2  # G8: freezes held at most
+STREAK_FREEZE_EVERY_DAYS = 7  # G8: one earned at every 7 consecutive counted days, while fewer than the max held
+XP_TIMEZONE_MAX = 64  # user_progress.timezone: an IANA name such as "America/Argentina/ComodRivadavia"
+DISPLAY_NAME_MAX = 40  # user_progress.display_name, shown on leaderboards (G3)
+TECH_BOOK_SHARE = 0.20  # Badges: a book is technical when this share of its page regions is math or code
+
+# --- weekly leagues (C24.3, docs/GAMIFICATION.md G10-G14) ---
+LEAGUE_TIERS = ("Pamphlet", "Paperback", "Hardcover", "Folio", "First Edition", "Illuminated")  # G10, lowest first
+LEAGUE_OUTCOMES = ("promoted", "stayed", "demoted")  # league_members.outcome (033 checks the same values)
+LEAGUE_GROUP_SIZE = 30  # G12: groups of about this many readers of one tier
+LEAGUE_PROMOTE = 7  # G13: the top this many of a full group move up (scaled by n / 30 in a smaller one)
+LEAGUE_DEMOTE = 5  # G13: the bottom this many move down (scaled likewise)
+LEAGUE_DEMOTE_MIN_GROUP = 10  # G13 (C24.3): a group smaller than this demotes nobody
+LEAGUE_ACTIVE_DAYS = 14  # G12 (C24.3): readers with XP in this many days before a week are grouped for it
+CRON_SECRET_MIN_LENGTH = 32  # C24.4: /internal endpoints refuse to run (503) under a shorter CRON_SECRET
+DAILY_GOAL_SET_MIN_XP = 20  # C24.5: the goal a reader may set in settings (the database allows 10-500, G5)
+DAILY_GOAL_SET_MAX_XP = 200

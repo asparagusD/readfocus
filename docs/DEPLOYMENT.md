@@ -9,9 +9,9 @@ figures were read from each provider's own docs on 2026-11-12.
 
 | Part | Provider and plan | Address | Builds from |
 |---|---|---|---|
-| Frontend (React + Vite, static) | Vercel Hobby | https://readfocus-lake.vercel.app | `frontend/` (Root Directory), production branch **`readfocus-2.0`** until the release |
-| Backend (FastAPI, Docker) | Render Free web service `readfocus-api` | https://readfocus-api.onrender.com | `Dockerfile` at the repo root, branch **`readfocus-2.0`** until the release, auto-deploy off |
-| Database, auth, file storage | Supabase Free, project `lvfhuszvuiowyeizstru` (ap-south-1, Mumbai) | https://lvfhuszvuiowyeizstru.supabase.co | `supabase/migrations/` 001-015, all applied |
+| Frontend (React + Vite, static) | Vercel Hobby | https://readfocus-lake.vercel.app | `frontend/` (Root Directory), production branch **`main`** (since the C15 release) |
+| Backend (FastAPI, Docker) | Render Free web service `readfocus-api` | https://readfocus-api.onrender.com | `Dockerfile` at the repo root, branch **`main`** (since the C15 release), auto-deploy off: CI deploys after its checks |
+| Database, auth, file storage | Supabase Free, project `lvfhuszvuiowyeizstru` (ap-south-1, Mumbai) | https://lvfhuszvuiowyeizstru.supabase.co | `supabase/migrations/` 001-033, all applied (016-033 by hand after a dump each; the migration history is reconciled at Gate G8, C25.4) |
 | CI | GitHub Actions, `.github/workflows/ci.yml` | github.com/asparagusD/readfocus/actions | every push |
 
 Notes:
@@ -44,9 +44,17 @@ Values live only in each provider's settings, never in git.
 | `FRONTEND_URL` | `https://readfocus-lake.vercel.app`; one origin or several, comma-separated, no trailing `/` (`backend/cors.py`) |
 | `FASTEMBED_CACHE` | `/app/.cache/fastembed`, where the image holds the model |
 | `ENV` | `production`: no localhost origins in CORS |
+| `CRON_SECRET` | 32+ random characters; the bearer token of `POST /internal/leagues/rollover` (C24.4); unset or shorter, the endpoint answers 503 |
+| `GEMINI_API_KEY` | Steve's key from Google AI Studio, on a project with **no billing account** (free tier); unset, Steve answers "not configured" and the rest of the app is unaffected |
+| `GEMINI_MODEL_CHAT` | the chat model's id, checked against Google's current model list when set (`docs/STEVE.md` S10) |
+| `GEMINI_MODEL_VISION` | the model for equation, figure and code pictures, checked the same way |
+| `STEVE_DAILY_LIMIT_PER_USER` | questions a reader may ask a day on our key; 15 when unset |
+| `KEY_ENCRYPTION_SECRET` | 32+ random characters; encrypts readers' own Gemini keys. Unset or shorter, own keys are off (503). Changing it makes every stored key unreadable: readers add theirs again |
 
-`PORT` is set by Render (10000); do not set it. No LLM or embedding key
-of any kind (CLAUDE.md constraint 1).
+`PORT` is set by Render (10000); do not set it. The only generative-AI
+key is Steve's `GEMINI_API_KEY` (free tier, no billing account; CLAUDE.md
+constraint 1); no other LLM or embedding key. `render.yaml` lists every
+name above with `sync: false` (C25.2), never a value.
 
 **Vercel (Settings > Environment Variables, Production and Preview, type Config)**
 
@@ -69,6 +77,15 @@ System Environment Variables" on, for `VERCEL=1`.
 | Name | What |
 |---|---|
 | `RENDER_DEPLOY_HOOK` | the deploy hook URL of `readfocus-api` (Render > Settings > Deploy Hook) |
+| `BACKEND_URL` | `https://readfocus-api.onrender.com`, for `league-rollover.yml` (C24.4) |
+| `CRON_SECRET` | the same value as Render's `CRON_SECRET`, for `league-rollover.yml` |
+
+`league-rollover.yml` runs the weekly league rollover every Monday at
+00:05 UTC (and by hand from the Actions tab), retrying through Render's
+cold start. GitHub runs schedules only from `main`, may delay or drop them,
+and pauses them after 60 days without repository activity; the rollover is
+idempotent and catches up on the next run (and, from C24.5, on any league
+read), so a missed Monday only delays the result.
 
 **Supabase (Authentication > URL Configuration):** Site URL
 `https://readfocus-lake.vercel.app`; redirect URLs

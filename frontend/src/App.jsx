@@ -20,9 +20,13 @@ const Library = named(() => import('./pages/Library'), 'Library');
 const Dashboard = named(() => import('./pages/Dashboard'), 'Dashboard');
 const ReadingSession = named(() => import('./pages/ReadingSession'), 'ReadingSession');
 const ComprehensionTest = named(() => import('./pages/ComprehensionTest'), 'ComprehensionTest');
+const FocusQuiz = named(() => import('./pages/ComprehensionTest'), 'FocusQuiz'); // C23.6b
+const QuizMe = named(() => import('./pages/ComprehensionTest'), 'QuizMe'); // C23.7b
 const Results = named(() => import('./pages/Results'), 'Results');
+const League = named(() => import('./pages/League'), 'League'); // C24.6c
 const Login = named(() => import('./pages/Login'), 'Login');
 const NotFound = named(() => import('./pages/NotFound'), 'NotFound');
+const Privacy = named(() => import('./pages/Privacy'), 'Privacy'); // C25.1
 const page = (Page) => <Suspense fallback={null}><Page /></Suspense>;
 
 // Dev-only review page for the illustrations (C11.1). In a production
@@ -31,18 +35,24 @@ const page = (Page) => <Suspense fallback={null}><Page /></Suspense>;
 const IllustrationGallery = import.meta.env.DEV
   ? lazy(() => import('./gallery/IllustrationGallery.jsx'))
   : null;
-// Dev-only review page for the paginated reader (C12.3), dropped the same way.
-const ReaderGallery = import.meta.env.DEV ? lazy(() => import('./gallery/ReaderGallery.jsx')) : null;
+// Dev-only review page for the PDF renderer (C17.2), dropped the same way.
+const PdfGallery = import.meta.env.DEV ? lazy(() => import('./gallery/PdfGallery.jsx')) : null;
+// Dev-only review page for the EPUB renderer (C17.3), dropped the same way.
+const EpubGallery = import.meta.env.DEV ? lazy(() => import('./gallery/EpubGallery.jsx')) : null;
+// Dev-only review page for the shared book frame (C17.4), dropped the same way.
+const BookGallery = import.meta.env.DEV ? lazy(() => import('./gallery/BookGallery.jsx')) : null;
 
 /**
- * Signed-out visitors at "/" get the static landing page (C13.10a), outside
- * the backend gate so it never waits on a sleeping backend. Everyone else,
- * and every other route, goes through the gate exactly as before.
+ * Signed-out visitors at "/" get the static landing page (C13.10a), and
+ * everyone at "/privacy" the privacy page (C25.1), outside the backend gate
+ * so they never wait on a sleeping backend. Everyone else, and every other
+ * route, goes through the gate exactly as before.
  */
 function PublicHome({ children }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
   if (!user && pathname === '/') return <Landing />;
+  if (pathname === '/privacy') return page(Privacy); // public and static, for everyone (C25.1)
   return <BackendGate>{children}</BackendGate>;
 }
 
@@ -97,16 +107,25 @@ function App() {
                     {IllustrationGallery && (
                       <Route path="/__illustrations" element={<Suspense fallback={null}><IllustrationGallery /></Suspense>} />
                     )}
-                    {ReaderGallery && (
-                      <Route path="/__reader" element={<Suspense fallback={null}><ReaderGallery /></Suspense>} />
+                    {PdfGallery && (
+                      <Route path="/__pdf" element={<Suspense fallback={null}><PdfGallery /></Suspense>} />
+                    )}
+                    {EpubGallery && (
+                      <Route path="/__epub" element={<Suspense fallback={null}><EpubGallery /></Suspense>} />
+                    )}
+                    {BookGallery && (
+                      <Route path="/__book" element={<Suspense fallback={null}><BookGallery /></Suspense>} />
                     )}
                     <Route path="/read/:bookId" element={<AuthGuard>{page(ReadingSession)}</AuthGuard>} />
                     <Route path="/test/:sessionId" element={<AuthGuard>{page(ComprehensionTest)}</AuthGuard>} />
+                    <Route path="/focus/:sessionId/quiz" element={<AuthGuard>{page(FocusQuiz)}</AuthGuard>} />
+                    <Route path="/quiz/:sessionId" element={<AuthGuard>{page(QuizMe)}</AuthGuard>} />
                     <Route path="/*" element={
                       <Layout>
                         <AnimatedRoutes scope={pageOf}>
                           <Route path="/" element={<AuthGuard>{page(Library)}</AuthGuard>} />
                           <Route path="dashboard" element={<AuthGuard>{page(Dashboard)}</AuthGuard>} />
+                          <Route path="league" element={<AuthGuard>{page(League)}</AuthGuard>} />
                           <Route path="results/:sessionId" element={<AuthGuard>{page(Results)}</AuthGuard>} />
                           <Route path="*" element={page(NotFound)} />
                         </AnimatedRoutes>

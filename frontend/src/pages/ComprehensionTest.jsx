@@ -63,8 +63,9 @@ const chosen = (options, answer) => options.find((o) => asAnswer(options, o) ===
  * evaluate-single when leaving a changed answer, and submit-answers by
  * hand or when the five minutes run out.
  */
-export function ComprehensionTest() {
-  useDocumentTitle('Test');
+export function ComprehensionTest({ focus = false, quizMe = false }) {
+  useDocumentTitle(focus ? 'Focus questions' : quizMe ? 'Quiz me' : 'Test');
+  const clockless = focus || quizMe; // C23.7b: Quiz me has no clock either
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -84,13 +85,18 @@ export function ComprehensionTest() {
   const moved = useRef(false);
   // The latest answers and time for the automatic submit at zero (docs/DEBUG_LOG.md, C13.5).
   const latest = useRef({ answers, timeLeft });
+  const began = useRef(0); // C23.6b: a focus quiz has no clock; its time is measured, not shown
   useEffect(() => { latest.current = { answers, timeLeft }; });
 
   useEffect(() => {
     async function fetchSession() {
       try {
-        const data = await fetchApi(`/sessions/${sessionId}`);
-        const list = data.test_questions ?? [];
+        // C23.6b: a focus session's quiz is built (once) from its start to its bookmark; a test is the session's.
+        const data = focus
+          ? await fetchApi(`/focus/${sessionId}/quiz`, { method: 'POST' })
+          : await fetchApi(`/sessions/${sessionId}`);
+        const list = (focus ? data.questions : data.test_questions) ?? [];
+        began.current = Date.now();
         if (!list.length) {
           toast({ kind: 'warning', message: 'This session has no test yet. Finish today’s reading first.' });
           navigate('/');
@@ -107,7 +113,7 @@ export function ComprehensionTest() {
       }
     }
     fetchSession();
-  }, [sessionId, navigate, toast]);
+  }, [sessionId, navigate, toast, focus]);
 
   useEffect(() => {
     if (!loading) writeSaved(sessionId, answers);
@@ -117,21 +123,22 @@ export function ComprehensionTest() {
     setIsSubmitting(true);
     const { answers: current, timeLeft: left } = latest.current;
     try {
-      const data = await fetchApi(`/sessions/${sessionId}/submit-answers`, {
+      const taken = clockless ? Math.round((Date.now() - began.current) / 1000) : TEST_SECONDS - (auto ? 0 : left);
+      const data = await fetchApi(focus ? `/focus/${sessionId}/quiz/answers` : `/sessions/${sessionId}/submit-answers`, {
         method: 'POST',
-        body: JSON.stringify({ answers: current, time_taken_seconds: TEST_SECONDS - (auto ? 0 : left) }),
+        body: JSON.stringify({ answers: current, time_taken_seconds: taken }),
       });
       clearSaved(sessionId);
-      navigate(`/results/${sessionId}`, { state: { resultsData: data, userAnswers: current } });
+      navigate(`/results/${sessionId}`, { state: { resultsData: data, userAnswers: current, focus, quizMe } });
     } catch (err) {
       toast({ kind: 'warning', message: `Your answers couldn’t be graded just now: ${err.message}. They are kept; try Submit again.` });
       setIsSubmitting(false);
     }
-  }, [sessionId, navigate, toast]);
+  }, [sessionId, navigate, toast, focus, quizMe, clockless]);
 
   // One tick a second; at zero the test submits itself with the answers as they are.
   useEffect(() => {
-    if (loading || isSubmitting || timeUp) return undefined;
+    if (loading || isSubmitting || timeUp || clockless) return undefined; // no countdown on a focus quiz or Quiz me
     const interval = setInterval(() => {
       const left = latest.current.timeLeft - 1;
       setTimeLeft(Math.max(0, left));
@@ -142,7 +149,7 @@ export function ComprehensionTest() {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [loading, isSubmitting, timeUp, submit]);
+  }, [loading, isSubmitting, timeUp, submit, clockless]);
 
   const setAnswer = (value) => setAnswers((list) => list.map((a, i) => (i === index ? value : a)));
 
@@ -209,7 +216,7 @@ export function ComprehensionTest() {
           <span>Leave test</span>
         </button>
         <nav className="rf-test__where" aria-label="Questions">
-          <p className="rf-test__label">Comprehension test</p>
+          <p className="rf-test__label">{focus ? 'From the pages you just read' : quizMe ? 'Quiz me' : 'Comprehension test'}</p>
           <ol className="rf-test__dots">
             {questions.map((_, i) => (
               <li key={i}>
@@ -225,7 +232,8 @@ export function ComprehensionTest() {
             ))}
           </ol>
         </nav>
-        <TimerPill seconds={timeLeft} />
+        {focus ? <span className="rf-test__nosteve">No Steve during questions</span>
+          : quizMe ? <span className="rf-test__nosteve">No points, just practice</span> : <TimerPill seconds={timeLeft} />}
       </header>
 
       <main className="rf-test__main">
@@ -295,4 +303,14 @@ export function ComprehensionTest() {
       </Modal>
     </div>
   );
+}
+
+/** C23.7b: Quiz me, built by POST /focus/quiz-me and graded by submit-answers like a test; no clock, no points. */
+export function QuizMe() {
+  return <ComprehensionTest quizMe />;
+}
+
+/** C23.6b: the focus session's bookmark quiz, on the test's own screen (FOCUS_RULES F10). */
+export function FocusQuiz() {
+  return <ComprehensionTest focus />;
 }

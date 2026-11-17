@@ -101,14 +101,14 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
     expect(first.status(), 'POST /sessions/start').toBe(200);
     const firstPlan = await first.json();
     const sessionId = firstPlan.session_id;
-    await page.locator('.rf-viewport .rf-flow p').first().waitFor({ timeout: 60_000 });
+    await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 60_000 });
     await page.evaluate(() => document.fonts.ready);
-    await expect(page.locator('.rf-viewport .rf-note')).toContainText(/Starting the book with/);
+    await expect(page.locator('.rf-ov-note .rf-note')).toContainText(/Starting the book with/);
     step('session 1 open');
 
-    await page.locator('.rf-book').focus();
+    await page.locator('.rf-ov-stage').focus();
     const saved = page.waitForResponse((r) => r.url().startsWith(`${api.origin}/sessions/${sessionId}/position`) && r.request().method() !== 'OPTIONS', { timeout: 30_000 });
-    const live = page.locator('.rf-live').first();
+    const live = page.locator('.rf-ov-live');
     const before = await live.textContent();
     await page.keyboard.press('ArrowRight');
     await expect(live).not.toHaveText(before ?? '');
@@ -139,7 +139,7 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
 
     // 5. Finish reading and take the test, answering every question badly on purpose.
     await page.mouse.move(5, 5); // off the word, so its hover card does not open again
-    await page.locator('.rf-book').focus();
+    await page.locator('.rf-ov-stage').focus();
     await page.keyboard.press('End');
     const end = page.locator('.rf-end');
     await expect(end.getByRole('button', { name: 'Start test' })).toBeVisible();
@@ -198,7 +198,7 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
     expect(second.session_id).not.toBe(sessionId);
     expect(second.reason, 'the second plan reacts to the first test').toMatch(FROM_PERFORMANCE);
     if (promised) expect(second.reason).toBe(promised); // what Results promised is what the reader gets
-    await expect(page.locator('.rf-viewport .rf-note')).toContainText(second.reason.replace(/\*/g, ''), { timeout: 60_000 });
+    await expect(page.locator('.rf-ov-note .rf-note')).toContainText(second.reason.replace(/\*/g, ''), { timeout: 60_000 });
     step('session 2 open');
     console.log(`plan 1: ${firstPlan.reason}`);
     console.log(`plan 2: ${second.reason}`);

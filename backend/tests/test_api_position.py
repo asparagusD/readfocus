@@ -105,3 +105,81 @@ def test_a_failed_position_read_never_fails_the_start(api, progress):  # noqa: F
     api.db.broken.add("reading_progress")
     started = api.client.post("/sessions/start", json={"book_id": BOOK})
     assert started.status_code == 200 and started.json()["position"] is None
+
+
+# C17.5: the original view saves an anchor in the PDF or EPUB itself (docs/ANCHORS.md A1, A3).
+PDF_PLACE = {"chunk_index": 0, "anchor": {"kind": "pdf", "page": 12, "quads": [[0, 0, 0, 0]], "text": ""}}
+EPUB_PLACE = {"chunk_index": 0, "anchor": {"kind": "epub", "cfi": "epubcfi(/6/4!/4/2/1:0)", "text": ""}}
+
+
+@pytest.mark.parametrize("place", [PDF_PLACE, EPUB_PLACE])
+def test_an_anchor_is_stored_as_sent_and_returned_by_the_next_start(api, progress, place):  # noqa: F811
+    session_id = start(api)["session_id"]
+    saved = put(api, session_id, place)
+    assert saved.status_code == 200 and saved.json() == {"position": place}
+    assert api.db.tables["reading_progress"][0]["position"] == place  # no empty block_id or char_offset beside it
+    assert start(api)["position"] == place
+
+
+def test_a_backfilled_place_keeps_its_c12_keys_beside_the_anchor(api, progress):  # noqa: F811
+    session_id = start(api)["session_id"]
+    both = {**PLACE, "anchor": PDF_PLACE["anchor"]}
+    assert put(api, session_id, both).status_code == 200
+    assert api.db.tables["reading_progress"][0]["position"] == both
+
+
+@pytest.mark.parametrize("place", [
+    {"chunk_index": 0},  # neither a block nor an anchor
+    {"chunk_index": 0, "block_id": "0.3", "anchor": PDF_PLACE["anchor"]},  # a block without its offset
+    {"chunk_index": 0, "anchor": {"kind": "djvu", "page": 1}},
+    {"chunk_index": 0, "anchor": {"kind": "pdf", "page": 0, "quads": [[0, 0, 0, 0]]}},
+    {"chunk_index": 0, "anchor": {"kind": "pdf", "page": 3, "quads": [[0, 0, 0]]}},
+    {"chunk_index": 0, "anchor": {"kind": "pdf", "page": 3, "quads": []}},
+    {"chunk_index": 0, "anchor": {"kind": "pdf", "page": 3, "quads": [[0, 0, 0, 0]], "note": "extra"}},
+    {"chunk_index": 0, "anchor": {"kind": "epub", "cfi": "/6/4!/4/2"}},
+    {"chunk_index": 0, "anchor": {"kind": "epub", "cfi": "epubcfi(" + "/2" * 600 + ")"}},
+    {"chunk_index": 0, "anchor": {"kind": "epub", "cfi": "epubcfi(/6/4!)", "text": "x" * 2001}},
+])
+def test_a_malformed_anchor_is_refused_and_nothing_is_stored(api, progress, place):  # noqa: F811
+    session_id = start(api)["session_id"]
+    assert put(api, session_id, place).status_code == 422
+    assert "position" not in api.db.tables["reading_progress"][0]
+
+
+def test_start_names_the_books_file_format_for_the_renderer(api, progress):  # noqa: F811
+    book = next(row for row in api.db.tables["books"] if row["id"] == BOOK)
+    book.update(file_format="epub", storage_mode="device")
+    assert start(api)["book"]["format"] == "epub" and start(api)["book"]["storage_mode"] == "device"
+
+
+# --- badges (C24.2): a saved place with an anchor asks for "Finished a book"; nothing else does -------------------
+
+@pytest.fixture
+def badge_calls(monkeypatch):
+    from backend.xp import badge_award
+    calls = []
+    monkeypatch.setattr(badge_award, "evaluate_badges", lambda *args, **kwargs: calls.append((args, kwargs)) or [])
+    return calls
+
+
+def test_a_place_with_an_anchor_asks_for_the_finished_book_badge(api, progress, badge_calls):  # noqa: F811
+    session_id = start(api)["session_id"]
+    assert put(api, session_id, PDF_PLACE).status_code == 200
+    assert badge_calls == [((USER, "place"), {"book_id": BOOK, "anchor": PDF_PLACE["anchor"]})]
+
+
+def test_a_place_without_an_anchor_asks_for_nothing(api, progress, badge_calls):  # noqa: F811
+    session_id = start(api)["session_id"]
+    assert put(api, session_id, PLACE).status_code == 200
+    assert badge_calls == []
+
+
+def test_a_badge_failure_never_fails_the_save(api, progress, monkeypatch, caplog):  # noqa: F811
+    from backend.xp import badge_award
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("user_badges is down")
+    monkeypatch.setattr(badge_award, "evaluate_badges", broken)
+    session_id = start(api)["session_id"]
+    assert put(api, session_id, PDF_PLACE).status_code == 200
+    assert api.db.tables["reading_progress"][0]["position"] == PDF_PLACE and "Badge check failed" in caplog.text

@@ -27,6 +27,7 @@ DUMMY_ENV = {
     "SUPABASE_ANON_KEY": "offline-anon-key",
     "ENV": "test",
     "INGEST_SWEEP": "0",  # no ingestion sweep on the fake database at startup
+    "FOCUS_SWEEP": "0",  # nor the abandoned focus-session sweep (C23.4)
     "EMBED_PRELOAD": "0",  # no real model load at startup
 }
 os.environ.update(DUMMY_ENV)

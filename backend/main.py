@@ -6,8 +6,25 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from backend.cors import add_cors
+from backend.focus import store as focus_store
 from backend.nlp import embedder
-from backend.routers import agent, auth, books, dashboard, lookup, mastery, sessions
+from backend.routers import (
+    agent,
+    annotations,
+    auth,
+    books,
+    dashboard,
+    focus,
+    internal,
+    lookup,
+    mastery,
+    notes,
+    ocr,
+    progress,
+    sessions,
+    steve,
+    steve_ask,
+)
 from backend.services import ingestion_worker
 
 load_dotenv()
@@ -21,6 +38,14 @@ async def lifespan(app: FastAPI):
         embedder.preload()
     # Resume ingestion jobs a stopped server left behind (processing_jobs).
     sweep = asyncio.create_task(ingestion_worker.sweep_forever()) if ingestion_worker.sweep_enabled() else None
+    # C23.4: focus sessions left open with no event for two hours are abandoned (FOCUS_RULES F1).
+    if focus_store.sweep_enabled():
+        try:
+            swept = await asyncio.to_thread(focus_store.sweep_abandoned)
+            if swept:
+                print(f"Focus sweep: {swept} session(s) abandoned")
+        except Exception as e:  # noqa: BLE001 - a sweep that fails must not stop the server starting
+            print(f"Focus sweep failed: {e}")
     yield
     if sweep:
         sweep.cancel()
@@ -32,11 +57,19 @@ add_cors(app)  # FRONTEND_URL only; localhost too when ENV=development (backend/
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])
+app.include_router(ocr.router, prefix="/books", tags=["Books"])
 app.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
 app.include_router(agent.router, prefix="/agent", tags=["Agent"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 app.include_router(mastery.router, prefix="/mastery", tags=["Mastery"])
 app.include_router(lookup.router, prefix="/lookup", tags=["Lookup"])
+app.include_router(steve.router, prefix="/steve", tags=["Steve"])
+app.include_router(steve_ask.router, prefix="/steve", tags=["Steve"])
+app.include_router(annotations.router, tags=["Annotations"])
+app.include_router(notes.router, tags=["Notes"])
+app.include_router(focus.router, prefix="/focus", tags=["Focus"])
+app.include_router(internal.router, prefix="/internal", tags=["Internal"])  # C24.4: scheduled jobs
+app.include_router(progress.router, tags=["Progress"])  # C24.5: progress, badges, league
 
 @app.get("/health")
 def health_check():

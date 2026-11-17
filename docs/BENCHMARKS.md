@@ -105,6 +105,26 @@ Commands: `docker run --rm --network none --memory=512m --memory-swap=512m [--cp
 -e EMBED_PRELOAD=0 -e INGEST_SWEEP=0 readfocus-c25-measure python scripts/dev/measure_c26.py --book <file>
 [--book <file>] --until ingest|all [--no-queue]`.
 
+Live runs (approved in chat, 2026-11-17): today's code in a local backend (`.env`: the shared project), test user A.
+
+- `npm run test:live` (`e2e/journey.spec.js`, rewritten in C26.6c): **passed** in 51.7 s. Steps (s): signed in 7.6,
+  uploaded 2.9, ingested 6.9, book open 7.8, pages turned and the place saved 4.1, word card 2.0, Quiz me answered
+  (3 questions) 5.1, results 2.3, dashboard (7 concepts tested) 2.6, reopened at the saved place 7.4, book removed
+  2.4. Hosts: localhost:5175, localhost:8000 and the project only.
+- `python scripts/bench.py` (after the fix in DEBUG_LOG 2026-11-17 C26.G), 3 flows on `sample.pdf`, local backend
+  on this machine (not Render):
+
+| Step | Runs | p50 | p95 |
+|---|---|---|---|
+| `POST /books/upload` | 3 | 1.61 s | 2.10 s |
+| upload -> questions ready (ingestion job done) | 3 | 6.62 s | 6.66 s |
+| `GET /books/{id}/open` | 3 | 496 ms | 801 ms |
+| `POST /focus/quiz-me` | 3 | 1.42 s | 1.43 s |
+| `POST /sessions/{id}/submit-answers` | 3 | 1.01 s | 1.54 s |
+| `GET /books` / `GET /dashboard` / `GET /health` (20 each) | 20 | 299 / 213 / 0.9 ms | 434 / 230 / 2 ms |
+
+Every book a run made was deleted by it; test user A's shelf afterwards: "Walden" (2026-11-11) only, as before.
+
 ## Phase 2 deployment check (C25.2, 2026-11-16 to 2026-11-17)
 
 The production image built from `ff0936c` (`docker build -t readfocus-c25 .`, the repo `Dockerfile`) with

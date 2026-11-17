@@ -5049,3 +5049,34 @@ filtered it); alone it passed 10 of 10, and it passed on GitHub's run 3 and in t
 
 ### Commit
 `fix(e2e): measure the page-turn frame rate without a trace recording`
+
+
+## 2026-11-17 C26.G — the bench left a book in the shared project
+
+**Status:** fixed
+
+### Symptom
+`python scripts/bench.py` against the local backend (today's code, the shared project, test user A, approved in
+chat) ended in `httpx.RemoteProtocolError: Server disconnected without sending a response.` from the cleanup
+`client.delete(...)` of the first flow. The backend's log had `POST /focus/quiz-me 409` and no DELETE line; the
+book (`20ace32a…`) was still on test user A's shelf.
+
+### Repro and hypotheses
+1. Quiz me refused: since C26.3a it answers 409 "preparing" while the ingestion job runs, and the bench waited only
+   for `status == "ready"` (after the first batch). Confirmed by the log and by the code.
+2. The DELETE was lost on a dropped connection: the bench slept 5 s before it, uvicorn closes an idle kept-alive
+   connection after 5 s, and httpx reused it. Consistent with no request in the log; the delete had no retry.
+
+### Fix
+`scripts/bench.py`: `wait_until_ready` waits for status ready and the ingestion job done (the step is now
+"upload -> questions ready"); `delete_book` sends the DELETE again (3 tries) on a transport error and stops the run
+loudly if the book is still there. The left book was deleted through the API as test user A (200), and the shelf
+checked: only "Walden" (2026-11-11), as before the runs.
+
+### Regression test
+`backend/tests/test_bench.py`: 4 new tests (wait for the questions, a failed job stops the wait, the delete is sent
+again after a dropped connection, an undeletable book stops the run). Against the old `bench.py` 4 failed; with
+the fix 14 passed. The bench again: 3 flows, every book deleted, the shelf as before.
+
+### Commit
+`fix(bench): wait for a book's questions and never leave a book behind`

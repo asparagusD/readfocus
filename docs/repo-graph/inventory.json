@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17234,
+      "size_bytes": 17266,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1305,10 +1305,10 @@
     {
       "path": "backend/tests/test_bench.py",
       "language": "python",
-      "lines": 108,
-      "size_bytes": 4395,
+      "lines": 153,
+      "size_bytes": 6342,
       "role": "test",
-      "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
+      "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py. C26.G: waits for the questions, a failed job stops the wait, the delete is resent after a dropped connection, an undeletable book stops the run."
     },
     {
       "path": "backend/tests/test_block_paths.py",
@@ -2113,16 +2113,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1690,
-      "size_bytes": 97108,
+      "lines": 1710,
+      "size_bytes": 98333,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5051,
-      "size_bytes": 230892,
+      "lines": 5082,
+      "size_bytes": 232657,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2186,7 +2186,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5941,
-      "size_bytes": 1072367,
+      "size_bytes": 1072482,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5577,10 +5577,10 @@
     {
       "path": "scripts/bench.py",
       "language": "python",
-      "lines": 371,
-      "size_bytes": 16330,
+      "lines": 390,
+      "size_bytes": 17462,
       "role": "script",
-      "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md. C26.6c: the flow is upload, ready, GET /books/{id}/open, POST /focus/quiz-me, submit-answers."
+      "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md. C26.6c: the flow is upload, ready, GET /books/{id}/open, POST /focus/quiz-me, submit-answers. C26.G: waits for the questions (status ready and the ingestion job done) before Quiz me, and deletes each book again on a dropped connection, stopping loudly if it cannot."
     },
     {
       "path": "scripts/dev/build_math_labels.py",
@@ -6178,7 +6178,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 781,
-      "size_bytes": 253173,
+      "size_bytes": 253490,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

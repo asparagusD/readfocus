@@ -1,8 +1,53 @@
 """Tests for the pure helpers in scripts/bench.py. No server, no network."""
 
+import httpx
 import pytest
 
 from scripts import bench
+
+
+class FakeClient:
+    """GET /books/{id}/status answers in turn; DELETE fails with the given exceptions or codes first."""
+
+    def __init__(self, statuses=(), deletes=()):
+        self.statuses, self.deletes, self.deleted = list(statuses), list(deletes), 0
+
+    def get(self, path):
+        body = self.statuses.pop(0)
+        return type("R", (), {"json": lambda _self: body})()
+
+    def delete(self, path):
+        self.deleted += 1
+        outcome = self.deletes.pop(0) if self.deletes else 200
+        if isinstance(outcome, Exception):
+            raise outcome
+        return type("R", (), {"status_code": outcome})()
+
+
+def test_the_flow_waits_for_the_questions_not_just_the_first_batch():
+    """C26.G: ready after the first batch is not enough; Quiz me waits for the ingestion job (C26.3a)."""
+    client = FakeClient([{"status": "processing"}, {"status": "ready", "ingestion": {"status": "running"}},
+                         {"status": "ready", "ingestion": {"status": "done"}}])
+    step = bench.Step("upload -> questions ready")
+    assert bench.wait_until_ready(client, step, "b1", pause=0) is True
+    assert client.statuses == [] and len(step.samples) == 1
+
+
+def test_a_failed_job_stops_the_wait():
+    client = FakeClient([{"status": "ready", "ingestion": {"status": "failed"}}])
+    step = bench.Step("upload -> questions ready")
+    assert bench.wait_until_ready(client, step, "b1", pause=0) is False and step.samples == []
+
+
+def test_the_cleanup_delete_is_sent_again_when_the_connection_drops():
+    client = FakeClient(deletes=[httpx.RemoteProtocolError("Server disconnected without sending a response.")])
+    assert bench.delete_book(client, "b1", pause=0) == 200 and client.deleted == 2
+
+
+def test_a_book_that_cannot_be_deleted_is_said_loudly():
+    client = FakeClient(deletes=[500, 500, 500])
+    with pytest.raises(SystemExit, match="b1 was NOT deleted"):
+        bench.delete_book(client, "b1", pause=0)
 
 
 def test_percentile_interpolates_between_samples():

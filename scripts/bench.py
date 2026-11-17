@@ -126,17 +126,20 @@ def timed(step, call):
     return resp.json()
 
 
-def wait_until_ready(client, step, book_id, timeout=300):
+def wait_until_ready(client, step, book_id, timeout=300, pause=0.5):
+    """Until the book's questions are all made: status ready and its ingestion job done. C26.3a: Quiz me answers
+    409 "preparing" while the job still runs, though the book is ready (readable) after its first batch."""
     began = time.perf_counter()
     while time.perf_counter() - began < timeout:
-        status = client.get(f"/books/{book_id}/status").json().get("status")
-        if status == "ready":
+        body = client.get(f"/books/{book_id}/status").json()
+        status, job = body.get("status"), (body.get("ingestion") or {}).get("status")
+        if status == "ready" and job in (None, "done"):
             step.samples.append(time.perf_counter() - began)
             return True
-        if status == "error":
+        if status == "error" or job == "failed":
             step.note = "ingestion ended with status error"
             return False
-        time.sleep(0.5)
+        time.sleep(pause)
     step.note = f"not ready after {timeout} s"
     return False
 
@@ -172,7 +175,23 @@ def run_flow(client, steps, pdf, keep):
     finally:
         if not keep:
             time.sleep(5)  # let background ingestion finish its last inserts
-            client.delete(f"/books/{book['book_id']}")
+            delete_book(client, book["book_id"])
+
+
+def delete_book(client, book_id, attempts=3, pause=1.0):
+    """Delete a book the run made, again if the connection drops (C26.G: the server had closed the kept-alive
+    connection after 5 s idle, so the first DELETE never arrived and the book stayed). Raises after the last try."""
+    for attempt in range(1, attempts + 1):
+        try:
+            resp = client.delete(f"/books/{book_id}")
+            if resp.status_code in (200, 404):  # 404: already gone
+                return resp.status_code
+            error = f"HTTP {resp.status_code}"
+        except httpx.TransportError as exc:
+            error = type(exc).__name__
+        if attempt < attempts:
+            time.sleep(pause)
+    raise SystemExit(f"book {book_id} was NOT deleted ({error}); delete it by hand")
 
 
 def rest_count(env, token, table, query):
@@ -352,7 +371,7 @@ def main():
             timed(step, lambda path=path: client.get(path))
     flow = [
         Step("POST /books/upload", note="sample.pdf, 3.6 MB"),
-        Step("upload -> status ready", note="polled every 0.5 s; ready after 5 chunks are embedded"),
+        Step("upload -> questions ready", note="polled every 0.5 s; status ready and the ingestion job done"),
         Step("GET /books/{id}/open", note="the saved place; makes the progress row"),
         Step("POST /focus/quiz-me", note="pages 1-3, questions from the bank (generated if missing)"),
         Step("POST /sessions/{id}/submit-answers", note="5 grades, then the optimizer"),

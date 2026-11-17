@@ -1825,8 +1825,8 @@
     {
       "path": "backend/tests/test_steve_keys.py",
       "language": "python",
-      "lines": 178,
-      "size_bytes": 7236,
+      "lines": 179,
+      "size_bytes": 7303,
       "role": "test",
       "purpose": "Pytest for /steve/key and keys.py: a good key checked, encrypted and stored with its last four; refused, malformed and unchecked keys store nothing and are never echoed; delete; only the caller's row; no secret; key never in a response or log; rotated secret; the service uses the stored key and never counts it."
     },
@@ -2105,8 +2105,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4858,
-      "size_bytes": 219076,
+      "lines": 4903,
+      "size_bytes": 221470,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2169,8 +2169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5744,
-      "size_bytes": 1046062,
+      "lines": 5834,
+      "size_bytes": 1057918,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

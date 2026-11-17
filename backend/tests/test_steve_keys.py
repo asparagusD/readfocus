@@ -150,7 +150,8 @@ def test_a_cipher_made_with_another_secret_reads_as_no_usable_key(db, monkeypatc
     assert caught.value.reason == "key_rejected" and KEY not in repr(caught.value)
 
 
-def test_encryption_is_not_deterministic_and_round_trips():
+def test_encryption_is_not_deterministic_and_round_trips(monkeypatch):
+    monkeypatch.setenv("KEY_ENCRYPTION_SECRET", SECRET)
     assert keys.encrypt(KEY) != keys.encrypt(KEY)
     assert keys.decrypt(keys.encrypt(KEY)) == KEY
     assert keys.last4(KEY) == "ij12"

@@ -4856,3 +4856,48 @@ the old select (ids null), passes with `id` selected.
 
 ### Commit
 fix(api): return region ids from GET /books/{id}/regions
+
+## 2026-11-17 C25.5 — CI on the release commit failed; Render was not deployed
+
+**Status:** fixed (backend, graph); e2e: see below
+
+### Symptom
+After `git push origin main` (release `8af00aa`), GitHub Actions CI run 44022135029: `frontend` passed;
+`backend` failed at "Pytest (offline)", `graph` at "Fail if docs/repo-graph/ is stale", `e2e` (first run on
+GitHub) at "End-to-end tests (offline)"; `deploy-render` was skipped, so Render was not redeployed. The job logs
+need a GitHub token (API 403); the check-run annotations say only "Process completed with exit code 1" and
+"docs/repo-graph/ is stale. Run 'make graph' and commit the result." The earlier `readfocus-2.0` run on
+`bae1ed8` (C24 merge) had failed at the same pytest step, unnoticed.
+
+### Repro
+A clean checkout of the release, without this machine's `.env`:
+
+    git worktree add --detach <scratch>/wt-release 8af00aa
+    cd <scratch>/wt-release && <repo>/.venv/Scripts/python -m pytest backend/tests -q
+
+    FAILED backend/tests/test_steve_keys.py::test_encryption_is_not_deterministic_and_round_trips
+      backend\steve\keys.py:33: KeysNotConfigured
+    1 failed, 2002 passed, 11 skipped
+
+and in the repo, `make graph` changes `docs/repo-graph/REPO_MAP.md` and `inventory.json` (PROGRESS.md 5744 -> 5834
+lines).
+
+### Hypotheses
+1. A test reads a variable that only the local `.env` supplies. Evidence: passes here, fails on CI; `backend.main`
+   calls `load_dotenv()`. Ruled out if the clean checkout passes. Result: confirmed, the test above.
+2. A test needs files that are not in git (the shelf under `samples/`). Result: those tests skip (11 skipped), not fail.
+3. Graph: C25.5 changed PROGRESS.md and `make graph` was not run. Result: confirmed by the diff above.
+
+### Root cause
+`test_encryption_is_not_deterministic_and_round_trips` (`backend/tests/test_steve_keys.py:153`, since C20.3
+`a3af6c9`) used no fixture that sets `KEY_ENCRYPTION_SECRET` (the `db` fixture does it for the others), so it
+passed only where `.env` defines the secret. The graph's inventory counts PROGRESS.md's lines.
+
+### Fix
+The test sets the secret with `monkeypatch.setenv`, as its neighbours do. `make graph` re-run and committed.
+
+### Regression test
+The test itself in the clean checkout (no `.env`): failed before the fix (above); passes after.
+
+### Commit
+`fix(api): make the reader-key encryption test independent of the local .env`

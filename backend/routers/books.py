@@ -12,7 +12,7 @@ from pypdf import PdfReader
 from backend.agents import policy
 from backend.convert.epub_builder import build_epub
 from backend.convert.sources import FORMATS as CONVERTED, convert_upload
-from backend.services import body_start, book_ingestor
+from backend.services import body_start, ingestion_worker
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 from backend.dependencies import get_current_user
@@ -146,7 +146,7 @@ async def upload_book(
     # stops, the job row keeps the cursor and the sweep or /resume picks it up.
     job = jobs.claim(jobs.create(book_id, user_id))
     if job:
-        background_tasks.add_task(book_ingestor.run_job, job, file_bytes)
+        background_tasks.add_task(ingestion_worker.run, job, file_bytes)
     
     # 6. Return immediately
     return {"book_id": book_id, "status": "processing", "source_format": source_format, "notes": notes}
@@ -376,7 +376,7 @@ async def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: 
     if status == "error":
         supabase.table("books").update({"status": "processing"}).eq("id", book_id).execute()
         status = "processing"
-    background_tasks.add_task(book_ingestor.run_job, claimed)
+    background_tasks.add_task(ingestion_worker.run, claimed)
     return {"book_id": book_id, "status": status, "ingestion": public_job(claimed)}
 
 logger = logging.getLogger(__name__)

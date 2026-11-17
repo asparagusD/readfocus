@@ -6,10 +6,15 @@ or running job not updated within the window is claimed and run again from
 its cursor, one job at a time (each kind by its own runner), or marked
 failed once it has used MAX_ATTEMPTS. Losing this loop loses nothing, because the next start sweeps
 again. INGEST_SWEEP=0 turns it off (the test suite does).
+
+C26.1: every job in the process runs through `run`, one at a time in the order they arrive (uploads,
+resumes, OCR re-reads and the sweep alike), so two uploads never parse at once on Render's 512 MB. A
+book's regions job runs inside its ingest job, so ingest always comes before regions.
 """
 
 import asyncio
 import os
+import weakref
 from datetime import UTC, datetime
 
 from backend.services import book_ingestor, region_job
@@ -17,6 +22,30 @@ from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 
 MIN_SWEEP_SECONDS = 30
+
+
+# One lock per event loop: an asyncio.Lock is bound to the loop it first waits on, and the test
+# client runs each request on its own loop. asyncio.Lock wakes its waiters in arrival order.
+_locks: "weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, asyncio.Lock]" = weakref.WeakKeyDictionary()
+
+
+def _lock() -> asyncio.Lock:
+    loop = asyncio.get_running_loop()
+    lock = _locks.get(loop)
+    if lock is None:
+        lock = _locks[loop] = asyncio.Lock()
+    return lock
+
+
+async def run(job: dict, file_bytes: bytes | None = None) -> dict:
+    """Run a claimed job after every job queued before it; a job that raises never stops the ones after."""
+    runner = region_job.run_job if job.get("kind") == jobs.REGIONS else book_ingestor.run_job
+    async with _lock():
+        try:
+            return await runner(job, file_bytes)
+        except Exception as error:  # noqa: BLE001 - the runners record their own failures; this is the backstop
+            print(f"Job for book {job.get('book_id')} stopped: {error}")
+            return {"status": "error", "error": str(error)}
 
 
 def sweep_enabled() -> bool:
@@ -51,8 +80,7 @@ async def sweep(now: datetime | None = None) -> dict:
                 continue
             claimed = jobs.claim(job, moment)
             if claimed:
-                runner = region_job.run_job if claimed.get("kind") == jobs.REGIONS else book_ingestor.run_job
-                await runner(claimed)
+                await run(claimed)
                 report["resumed"].append(job["book_id"])
         except Exception as error:  # noqa: BLE001 - one bad job must not stop the others
             print(f"Ingestion sweep could not resume book {job.get('book_id')}: {error}")

@@ -7230,7 +7230,7 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
-      "to": "file:backend/services/book_ingestor.py"
+      "to": "file:backend/services/ingestion_worker.py"
     },
     {
       "type": "imports",
@@ -7370,7 +7370,7 @@
     {
       "type": "imports",
       "from": "file:backend/routers/ocr.py",
-      "to": "file:backend/services/book_ingestor.py"
+      "to": "file:backend/services/ingestion_worker.py"
     },
     {
       "type": "imports",

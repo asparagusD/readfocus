@@ -5832,3 +5832,102 @@ repo's: G5 = C18.G, G6 = C19.G, G7 = C20.G (Steve) and C23.G (focus), G8 = C25.4
 | No payment method anywhere | Pass | 0 files match `stripe|paypal|billing|payment` in backend/ and frontend/src; Steve on the free tier (constraint 1) | Google project billing state is the user's to confirm |
 | Memory within budget | Partial | C25.2: SICP 451.6 MiB RSS, container 395.1 MiB at 512 MB / 0.1 CPU, accepted 2026-11-17; `sample.pdf` 372.6 | 1.6 MiB over the plan's 450 line; Render under real traffic not measured |
 | G8 PASS | Pass | C25.4 `fc465df`: drift 656/656, history 001-033, dry run empty | — |
+
+## C26 — free reading, fast processing, big books
+
+After the release (2026-11-17), from your requests: remove today's suggested reading completely; books over
+50 MB; and "Reading the pages" taking too long. Your decisions in chat, 2026-11-17: opening a book resumes at
+your last place; the pace check goes; books over 50 MB stay on the device and the browser reads their text;
+fix the logic and stay on Render (no host change; other free hosts compared in chat: Hugging Face needs a paid
+plan for Docker Spaces, Cloud Run/AWS/Oracle need a card, Vercel Functions and Modal kept as later options).
+
+### Plan (written at chunk start, 2026-11-17, before any code)
+
+Measured before planning (scratch `profile_ready.py`, the real pipeline on MemoryDb up to `mark_ready`):
+
+| Book | this machine | Render-like (0.1 CPU, 512 MB) | of which: whole-book text | whole-book structure |
+|---|---|---|---|---|
+| Interactive Linear Algebra (PDF, 4.5 MB) | 22.4 s | 193.6 s | 85.8 s | 90.8 s |
+| SICP (PDF, 7.4 MB, 883 pages) | 32.7 s | 278.8 s | 129.5 s | 139.4 s |
+| Alice (EPUB, 18.4 MB) | 3.6 s | 32.6 s | 1.0 s | 2.0 s |
+
+About 93% of a PDF's wait is two whole-book pypdf passes; the second (`book_structure.pdf_contents`) re-extracts
+every page only to find where pages start for the outline. Render's 0.1 CPU makes everything about 9x slower.
+Also found: every upload starts its own ingestion in-process (`books.py:149`), so two uploads run at once; the
+production journey of 2026-11-17 saw the API drop for about 90 s exactly then (cause to confirm in Render).
+
+**C26.1 one ingestion at a time** (~80 + tests) — 0.75 h. Uploads and resumes queue their job; one worker
+in the process runs jobs in order (ingest before regions); the sweep uses the same worker. Test: two uploads,
+the second job starts only after the first finishes; a failed job does not stop the queue. Container check:
+two books uploaded back to back at 512 MB / 0.1 CPU, peak memory as one.
+
+**C26.2 one text pass for PDFs** (~40 + tests) — 0.5 h. `pdf_contents` takes the page texts the ingest
+already extracted; `page_texts` runs once. Same chunks, blocks and contents (a test compares both ways on the
+fixture PDFs). Container: ILA and SICP upload -> ready before and after.
+
+**C26.3 open a book before it is processed** (~150 + tests) — 1.5 h. A book whose file is stored opens in the
+original view at once (status `processing` no longer blocks the Library or the reader); its text, questions
+and region map follow in the background. What needs the processed text says so until it is there: Steve and
+block actions ("Steve can read this book in a moment"), Quiz me and the focus quiz (questions not ready yet:
+the session is kept and its quiz offered when they are), word lookup works at once (it uses the page). The
+Library card shows "Preparing quizzes… n%" instead of blocking. e2e: open while processing, each notice.
+
+**C26.4 a book-level place and open** (~150 + tests) — 1.0 h. `GET /books/{id}/open` (title, format,
+storage mode, pages-only flag, saved place; creates `reading_progress` if missing) and
+`PUT /books/{id}/position` (every page turn, the "Finished a book" badge as before). `/sessions/start` and
+`PUT /sessions/{id}/position` stay for old clients until C26.6 removes their callers.
+
+**C26.5 the reader without today's reading** (frontend; ~400, split a/b) — 3.0 h.
+- a: ReadingSession opens with `/open`, resumes at the saved place (first page for a new book), saves every
+  turn through the book route; the pace check is no longer shown (CalibrationFlow kept in the tree until 26.6).
+- b: removed: the opening note and lamp, the closing page at today's end (the end-of-book page stays), Home and
+  End jumping to today's range, "today" in contents, "Beyond today's reading", "…: today's reading" in the h1,
+  the Library "Continue reading … planned when you open it" copy, Dashboard "For tonight", Results "Suggested
+  next", `today.js` and `readAhead.js` (`compare` and `placeEnd` move to `focus/`). e2e: reading.spec rewritten
+  for resume and end-of-book; reader, results, dashboard, library, journey specs updated.
+
+**C26.6 backend and copy follow** (~200 + tests) — 1.25 h. Steve's context: the pages around the reader's
+place instead of the session's chunk range; the planner no longer runs on open, `next_session` dropped from
+quiz results; the pace check route and component removed; README, ARCHITECTURE, CLAUDE.md product line, landing,
+FAQ, privacy page and Steve's consent text updated (question 1).
+
+**C26.7 books over 50 MB, on the device** (~250 + tests) — 2.5 h. Over 50 MB the upload dialog keeps the file
+in the browser only (as "keep on this device" does now); the browser reads its pages' text with pdf.js and
+sends it in batches to a new `POST /books/{id}/pages`; the server chunks, embeds and builds questions from that
+text, never holding the file. Cap 300 MB (question 3). Those books have no server region map (no math/code/
+figure placeholders or block actions from the server); a notice says so. EPUB over 50 MB: text from the
+browser's foliate sections the same way. e2e with a generated 60 MB PDF.
+
+**C26.G gate: measured, not assumed** — 0.75 h. Container at 512 MB / 0.1 CPU: upload -> openable,
+upload -> first questions, two uploads back to back (peak memory), for ILA, SICP and Alice; before and after.
+Standard checks; the production journey and isolation after release, with your approval.
+
+Estimate: 11.25 h. Stop and propose cuts at 16.9 h. Safe to cut, in order: EPUB over 50 MB (PDF only), the
+"Preparing quizzes n%" Library detail, C26.2 (C26.3 already removes the wait from the reader's view).
+
+Questions:
+
+1. Steve's consent notice says he reads "pages of your current session". With no sessions it becomes "the pages
+   around where you are reading". Change the text and bump the consent version (every reader sees the notice
+   once more), or change the text without a new version?
+2. The planner, test-generator and evaluator agents stay (quizzes are still graded through them); only the
+   planning on open stops. Keep the planner code dormant, or delete it in C26.6?
+3. Device-only books over 50 MB: cap at 300 MB (browser memory on phones), or another limit?
+4. Budget: C26 at 11.25 h as a new chunk after phase 2 (45.5 h, closed)?
+
+Answers, 2026-11-17: (1) new consent text **and** a new consent version; (2) keep the planner dormant (not
+called, code and tests kept); (3) 300 MB cap for device-only books; (4) plan approved as written ("Approve,
+don't start"): C26.1 waits for your go.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C26.1 one ingestion at a time | (this commit) | `ingestion_worker.run`: one in-process FIFO (per-loop asyncio.Lock) for every job; upload, resume, OCR re-read and the sweep go through it; regions stay inside ingest | pytest 2018 (4 new: order, failed job, regions runner, upload/resume queue; order test fails with the lock removed); ruff 27, ESLint 3, build, graph 64, contrast, images, bundle, unit 267, e2e 320 | 0.5 h | container check (two uploads back to back, 512 MB / 0.1 CPU) moved to C26.G; a queued upload keeps its bytes (<= 50 MB) in memory while it waits |
+| [ ] C26.2 one text pass for PDFs | | | | | |
+| [ ] C26.3 open a book before it is processed | | | | | |
+| [ ] C26.4 a book-level place and open | | | | | |
+| [ ] C26.5 the reader without today's reading | | | | | |
+| [ ] C26.6 backend and copy follow | | | | | |
+| [ ] C26.7 books over 50 MB, on the device | | | | | |
+| [ ] C26.G gate: measured, not assumed | | | | | |

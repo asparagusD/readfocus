@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 221,
-      "size_bytes": 16890,
+      "size_bytes": 16908,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -618,7 +618,7 @@
       "path": "backend/routers/books.py",
       "language": "python",
       "lines": 430,
-      "size_bytes": 22302,
+      "size_bytes": 22303,
       "role": "router",
       "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database."
     },
@@ -674,7 +674,7 @@
       "path": "backend/routers/ocr.py",
       "language": "python",
       "lines": 88,
-      "size_bytes": 4724,
+      "size_bytes": 4726,
       "role": "router",
       "purpose": "OCR endpoints (C19.4): POST /books/{id}/ocr stores one scanned page's tesseract.js words (owner only, flagged pages only, cleaned by ocr_pages) and, when that completes a fully scanned book with no chunks, requeues and runs ingestion from the OCR text; GET /books/{id}/ocr gives scanned_pages, done, and with first..last (at most 20) each page's words for the text layer."
     },
@@ -769,10 +769,10 @@
     {
       "path": "backend/services/ingestion_worker.py",
       "language": "python",
-      "lines": 67,
-      "size_bytes": 2717,
+      "lines": 95,
+      "size_bytes": 3988,
       "role": "service",
-      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off."
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job."
     },
     {
       "path": "backend/services/lookup.py",
@@ -1561,8 +1561,8 @@
     {
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
-      "lines": 125,
-      "size_bytes": 5871,
+      "lines": 187,
+      "size_bytes": 8417,
       "role": "test",
       "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
     },
@@ -2169,8 +2169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5834,
-      "size_bytes": 1057918,
+      "lines": 5933,
+      "size_bytes": 1065516,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6146,7 +6146,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 777,
-      "size_bytes": 243450,
+      "size_bytes": 243713,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

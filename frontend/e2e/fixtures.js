@@ -94,6 +94,17 @@ export async function mockBackend(page, api, book) {
         book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' },
       });
     }
+    if (path === `/books/${BOOK}/open`) { // C26.4: a test sets api.processing to open a book still being processed
+      api.opens += 1;
+      return json(route, { book_id: BOOK, status: api.processing ? 'processing' : 'ready', pages_only: Boolean(BOOKS[book].pagesOnly),
+        scanned_pages: BOOKS[book].scanned ?? [], position: api.bookPosition,
+        book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' } });
+    }
+    if (path === `/books/${BOOK}/position` && request.method() === 'PUT') { // C26.4: the book's place, no session
+      api.bookPosition = JSON.parse(request.postData() || 'null');
+      api.saves += 1;
+      return json(route, { position: api.bookPosition });
+    }
     if (path === '/sessions/e2e-session/position') {
       api.position = JSON.parse(request.postData() || 'null');
       api.saves += 1;
@@ -127,7 +138,7 @@ export async function mockBackend(page, api, book) {
       const pages = first ? [...api.ocr].filter(([p]) => p >= first && p <= last).map(([p, words]) => ({ page: p, words })) : undefined;
       return json(route, { scanned_pages: scanned, done: [...api.ocr.keys()], ...(pages ? { pages } : {}) });
     }
-    if (path === `/books/${BOOK}/status`) return json(route, { status: 'processing', total_chunks: 0 });
+    if (path === `/books/${BOOK}/status`) return json(route, api.processing ?? { status: 'processing', total_chunks: 0 });
     if (path.startsWith('/focus/')) return focusRoute(route, request, api.focus, path); // C23.6
     if (path === '/sessions/focus-1/evaluate-single') return json(route, { status: 'graded' }); // C23.6b
     if (path === '/sessions/focus-1') { // C23.6b: a focus quiz is kept on a sessions row with the focus session's id
@@ -338,6 +349,10 @@ function focusRoute(route, request, focus, path) {
     Object.assign(s, { status: 'awaiting_quiz', state: 'awaiting_quiz', end_anchor: body.bookmark_anchor });
   }
   if (action === 'quiz' && !sub) {
+    if (focus.preparing > 0) { // C26.3: the book's questions are still being made; a test sets how many asks wait
+      focus.preparing -= 1;
+      return json(route, { detail: { code: 'preparing', message: 'Your questions are still being prepared. Try again in a few minutes.' } }, 409);
+    }
     return json(route, { questions: FOCUS_QUIZ, count: FOCUS_QUIZ.length, words_in_range: 1200 });
   }
   if (action === 'quiz' && sub === 'answers') {
@@ -381,7 +396,7 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
+    const api = { position: null, saves: 0, starts: 0, opens: 0, processing: null, bookPosition: null, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],

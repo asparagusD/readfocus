@@ -91,7 +91,7 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
     expect(bookId).toBeTruthy();
     await expect(dialog).toBeHidden();
     step('uploaded');
-    await expect(page.getByText(`${title} is ready on your shelf.`)).toBeVisible({ timeout: 12 * 60_000 });
+    await expect(page.getByText(`${title}: your first quizzes are ready.`)).toBeVisible({ timeout: 12 * 60_000 });
     step('ingested (ready)');
 
     // 3. Read: today's session opens with the planner's note, then pages turn with the arrow keys.

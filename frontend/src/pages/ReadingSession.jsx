@@ -118,6 +118,10 @@ export function ReadingSession() {
   // C19.4: scanned pages get a text layer read by OCR in this browser. A fully scanned book with no chunks
   // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
   const pagesOnly = Boolean(sessionData?.pages_only);
+  // C26.3: a book opened before it is processed (GET /books/{id}/open): no session, its place saved on the book,
+  // and "Preparing quizzes… n%" until its questions are made.
+  const processing = Boolean(sessionData?.processing);
+  const [prepared, setPrepared] = useState(null); // null while processing, else { progress } or { done: true }
   const body = useBodyStart(bookId, Boolean(sessionData) && !pagesOnly); // C23.1: where focus mode starts
   const [focusWanted, setFocusWanted] = useState(false); // C23.6: the reader's Focus mode switch
   const [leavingFocus, setLeavingFocus] = useState(false);
@@ -144,6 +148,21 @@ export function ReadingSession() {
     }, 4000);
     return () => clearInterval(timer);
   }, [preparingFirst, bookId]);
+  const quizzesDone = Boolean(prepared?.done);
+  useEffect(() => { // C26.3: how far the quizzes are, until the book's ingestion is done; the reader stays open
+    if (!processing || quizzesDone) return undefined;
+    let live = true;
+    const check = () => fetchApi(`/books/${bookId}/status`).then((s) => {
+      if (!live) return;
+      const job = s?.ingestion;
+      if (job?.status === 'done' || (s?.status === 'ready' && !job)) setPrepared({ done: true });
+      else if (s?.status === 'error' || job?.status === 'failed') setPrepared({ done: true }); // nothing more to wait for
+      else setPrepared({ progress: typeof job?.progress === 'number' ? job.progress : null });
+    }).catch(() => {});
+    check();
+    const timer = setInterval(check, 5000);
+    return () => { live = false; clearInterval(timer); };
+  }, [processing, quizzesDone, bookId]);
   const scannedCount = ocrProgress?.scanned?.length ?? sessionData?.scanned_pages?.length ?? 0;
   const readCount = ocrProgress?.done?.length ?? 0;
 
@@ -152,7 +171,8 @@ export function ReadingSession() {
   const [place, setPlace] = useState(null);
   const ready = useRef(null); // the bounds once the reader stands at its first place; moves before that are not saved
   const todayAnchor = useRef(null); // the last place inside today's reading, to come back to
-  const { save, saveNow } = usePlaceSaver(sessionData?.session_id);
+  const { save, saveNow } = usePlaceSaver(sessionData?.session_id ? `/sessions/${sessionData.session_id}/position`
+    : processing ? `/books/${bookId}/position` : null);
   const todayChunks = useMemo(() => new Set(sessionData?.chunk_indices ?? []), [sessionData]);
   const lastChunk = sessionData?.chunk_indices?.length ? Math.max(...sessionData.chunk_indices) : null;
 
@@ -161,7 +181,7 @@ export function ReadingSession() {
     const book = reader.current;
     if (!book || !sessionData || ready.current) return;
     const saved = sessionData.position;
-    const resume = saved?.anchor?.kind === kind && todayChunks.has(saved.chunk_index) ? saved.anchor : null;
+    const resume = saved?.anchor?.kind === kind && (processing || todayChunks.has(saved.chunk_index)) ? saved.anchor : null;
     let from = resume?.page ?? 1;
     const starts = [];
     for (const chunk of [...(sessionData.chunks ?? [])].sort((a, b) => a.chunk_index - b.chunk_index)) {
@@ -177,7 +197,7 @@ export function ReadingSession() {
     const found = { start, end, starts };
     ready.current = found;
     setBounds(found);
-  }, [sessionData, kind, todayChunks, lastChunk, bookId]);
+  }, [sessionData, kind, todayChunks, lastChunk, bookId, processing]);
 
   const outside = beyond(place, bounds ?? {});
   const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
@@ -422,6 +442,13 @@ export function ReadingSession() {
     if (!profileChecked || !isCalibrated) return;
     async function startSession() {
       try {
+        // C26.3: a book still being processed opens at once, with no session (a failed look falls back to a session).
+        const early = await fetchApi(`/books/${bookId}/open`).catch(() => null);
+        if (early?.status === 'processing' && !early.pages_only) {
+          setSessionData({ ...early, processing: true, session_id: null, chunk_indices: [], chunks: [], reason: '' });
+          setLoading(false);
+          return;
+        }
         const data = await fetchApi('/sessions/start', { method: 'POST', body: JSON.stringify({ book_id: bookId }) });
         setSessionData(data);
         setLoading(false);
@@ -436,7 +463,7 @@ export function ReadingSession() {
   // C23.7: the planner's choice as a gentle note over the first page of today's reading ("Suggested next:
   // revisit §3.2"), named by the first contents entry inside it; no minutes, no clock.
   const suggested = entries.find((e) => e.today)?.title || sessionData?.chapter_before || '';
-  const note = useMemo(() => sessionData && !pagesOnly && (
+  const note = useMemo(() => sessionData && !pagesOnly && !processing && (
     <>
       <ReadingLamp className="rf-note-lamp" />
       <p>
@@ -444,13 +471,19 @@ export function ReadingSession() {
         {sessionData.reason ? ` ${sessionData.reason}` : ''}
       </p>
     </>
-  ), [sessionData, pagesOnly, suggested]);
+  ), [sessionData, pagesOnly, processing, suggested]);
   // The closing page mounts only when it is shown, so its lamp's one glow pulse (moment 3) lands then.
   const closing = pagesOnly ? (
     <>
       <ReadingLamp className="rf-end-lamp" />
       <h2 className="rf-end-title">That's the end of the book.</h2>
       <p className="rf-end-text">Your first session starts once every page has been read.</p>
+    </>
+  ) : processing ? (
+    <>
+      <ReadingLamp className="rf-end-lamp" />
+      <h2 className="rf-end-title">That's the end of the book.</h2>
+      <p className="rf-end-text">Your place is kept.</p>
     </>
   ) : (
     <>
@@ -520,6 +553,13 @@ export function ReadingSession() {
               <span>Quiz me</span>
             </button>
           )}
+          {processing && !quizzesDone ? (
+            <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Quizzes">
+              <span className="rf-session-time" role="status">
+                {prepared?.progress != null ? `Preparing quizzes… ${Math.round(prepared.progress * 100)}%` : 'Preparing quizzes…'}
+              </span>
+            </div>
+          ) : null}
           {pagesOnly ? (
             <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Pages read">
               <span className="rf-session-time" role="status">

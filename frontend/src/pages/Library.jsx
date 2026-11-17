@@ -44,7 +44,8 @@ function nextBook(books) {
 
 function caption(book, pct) {
   if (book.status === 'error') return 'We couldn’t read this file';
-  if (book.status !== 'ready') return pct == null ? 'Reading the pages…' : `Reading the pages… ${pct}%`;
+  // C26.3: a book opens while it is processed; only its quizzes wait.
+  if (book.status !== 'ready') return pct == null ? 'Preparing quizzes…' : `Preparing quizzes… ${pct}%`;
   return book.progress ? `${readPct(book)}% read` : 'New · not started';
 }
 
@@ -144,7 +145,7 @@ export function Library() {
         for (const book of data) {
           if (was.get(book.id) === 'processing' && book.status === 'ready') {
             setArrived((prev) => new Set(prev).add(book.id));
-            toast({ kind: 'success', message: `${book.title} is ready on your shelf.`, action: { label: 'Begin reading', onClick: () => navigate(`/read/${book.id}`) } });
+            toast({ kind: 'success', message: `${book.title}: your first quizzes are ready.`, action: { label: 'Begin reading', onClick: () => navigate(`/read/${book.id}`) } });
           }
         }
         setBooks(data);
@@ -261,7 +262,7 @@ export function Library() {
       }
       setBooks(prev => [optimbook, ...prev]);
       setUploadModalOpen(false);
-      toast({ kind: 'success', message: `${optimbook.title} is on your shelf. We’re reading its pages now.` });
+      toast({ kind: 'success', message: `${optimbook.title} is on your shelf. Open it now; its quizzes follow in a few minutes.` });
       if (resp.notes?.length) toast({ kind: 'warning', message: missingImages(resp.notes) });
     } catch (err) {
       toast({ kind: 'warning', message: `We couldn’t add that book: ${err.message || 'the upload failed'}.` });
@@ -346,7 +347,7 @@ export function Library() {
           <AnimatePresence>
           <m.ul key="shelf" className="rf-shelf" variants={stagger()} initial="hidden" animate="visible">
             {books.map((book, i) => {
-              const ready = book.status === 'ready';
+              const openable = book.status !== 'error'; // C26.3: a book being processed opens too
               const face = (
                 <>
                   <BookCover title={book.title} author={book.author} coverUrl={book.cover_url} processing={book.status === 'processing'} progress={ingest[book.id]} decorative priority={i < 5} />
@@ -362,7 +363,7 @@ export function Library() {
                   initial={arrived.has(book.id) ? 'hidden' : undefined}
                   animate={arrived.has(book.id) ? 'visible' : undefined}
                 >
-                  {ready ? <Link to={`/read/${book.id}`} className="rf-shelf__book">{face}</Link> : <div className="rf-shelf__book">{face}</div>}
+                  {openable ? <Link to={`/read/${book.id}`} className="rf-shelf__book">{face}</Link> : <div className="rf-shelf__book">{face}</div>}
                   <MasteryBar value={readPct(book)} className="rf-shelf__bar" />
                   <div className="rf-shelf__foot">
                     <p className={`rf-shelf__caption${book.status === 'error' ? ' is-error' : ''}`} aria-live={book.status === 'processing' ? 'polite' : undefined}>{caption(book, ingest[book.id])}</p>

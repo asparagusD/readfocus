@@ -2483,6 +2483,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/processing.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/quiz-me.spec.js",
       "type": "file",
       "role": "config",
@@ -5667,6 +5673,11 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:GET /books/{book_id}/open"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:GET /books/{book_id}/status"
     },
     {
@@ -5688,11 +5699,6 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/reader/usePlaceSaver.js",
-      "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
       "type": "calls_endpoint",
@@ -10096,6 +10102,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/privacy.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/processing.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {

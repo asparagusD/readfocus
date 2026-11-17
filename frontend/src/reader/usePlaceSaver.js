@@ -4,14 +4,14 @@ import { fetchApi } from '../lib/api';
 const DELAY_MS = 1000;
 
 /**
- * Saves the reader's place for a session (PUT /sessions/{id}/position, C12.2;
- * since C17.5 a place is { chunk_index, anchor } in the PDF or EPUB itself),
+ * Saves the reader's place with a PUT to `path`: a session's (/sessions/{id}/position, C12.2; since C17.5 a
+ * place is { chunk_index, anchor } in the PDF or EPUB itself) or, C26.3, the book's (/books/{id}/position),
  * debounced: at most one request a second while pages turn, and the last
  * place is sent with keepalive when the page is hidden or closed. A failed
  * save is dropped quietly; the next turn sends a newer place anyway.
  * Returns { save, saveNow }; saveNow skips the wait (the ribbon).
  */
-export function usePlaceSaver(sessionId) {
+export function usePlaceSaver(path) {
   const pending = useRef(null);
   const timer = useRef(null);
 
@@ -19,10 +19,10 @@ export function usePlaceSaver(sessionId) {
     clearTimeout(timer.current);
     timer.current = null;
     const place = pending.current;
-    if (!place || !sessionId) return;
+    if (!place || !path) return;
     pending.current = null;
-    fetchApi(`/sessions/${sessionId}/position`, { method: 'PUT', keepalive, body: JSON.stringify(place) }).catch(() => {});
-  }, [sessionId]);
+    fetchApi(path, { method: 'PUT', keepalive, body: JSON.stringify(place) }).catch(() => {});
+  }, [path]);
 
   const save = useCallback((place) => {
     pending.current = place;

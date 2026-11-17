@@ -100,6 +100,11 @@ database here also holds ILA's rows, which production keeps in Postgres), 81 MiB
 The cost: the second book's first questions wait for the first book's whole job, its region map included (225 s
 with no cap; at 0.1 CPU that is tens of minutes). The second book opens at once all the same (C26.3).
 
+C27.1 (2026-11-18): the region map queued as its own job behind waiting ingests, the same two uploads (ILA, then
+SICP, `--until all`, 512 MB, no CPU cap): ILA first questions / ingest / region map 11.8 / 108.0 / 303.7 s;
+**SICP first questions 123.6 s** (224.6 before: it now waits only for ILA's ingest), ingest 196.0 s, region map
+469.9 s; peak **452.2 MiB RSS / 398.6 MiB cgroup** (463.4 / 410.9 before); not killed.
+
 Commands: `docker run --rm --network none --memory=512m --memory-swap=512m [--cpus=0.1] -v <repo>:/repo:ro
 -w /repo -e PYTHONPATH=/repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline
 -e EMBED_PRELOAD=0 -e INGEST_SWEEP=0 readfocus-c25-measure python scripts/dev/measure_c26.py --book <file>

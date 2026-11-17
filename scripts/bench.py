@@ -5,8 +5,9 @@ then measures:
 
 - cheap reads, `--runs` times each: GET /health, GET /books, GET /dashboard;
 - the reading flow, `--flow-runs` times: upload sample.pdf, poll
-  /books/{id}/status until ready, POST /sessions/start, finish-reading,
-  submit-answers. Each flow's book is deleted afterwards unless --keep.
+  /books/{id}/status until ready, GET /books/{id}/open, POST /focus/quiz-me
+  to page 3, submit-answers (C26.6c: no session start). Each flow's book is
+  deleted afterwards unless --keep.
 
 Since C8.8 the flow calls no LLM or embedding API. A step that does not
 return 200 is reported as "not measurable" with the reason; no number is
@@ -149,21 +150,23 @@ def run_flow(client, steps, pdf, keep):
     try:
         if not wait_until_ready(client, ready, book["book_id"]):
             return
-        session = timed(start, lambda: client.post("/sessions/start", json={"book_id": book["book_id"]}))
-        if not session:
+        opened = timed(start, lambda: client.get(f"/books/{book['book_id']}/open"))
+        if not opened:
             return
-        sid = session["session_id"]
-        test = timed(finish, lambda: client.post(f"/sessions/{sid}/finish-reading", json={"actual_duration_minutes": 1}))
+        place = {"kind": "pdf", "page": 3, "quads": [[0, 700, 0, 700]], "text": ""}  # the end of page 3
+        test = timed(finish, lambda: client.post("/focus/quiz-me", json={
+            "book_id": book["book_id"], "scope": "since_last", "anchor": place}))
         if not test:
             return
+        sid = test["session_id"]
         answers = {"answers": [ANSWER] * len(test["questions"]), "time_taken_seconds": 60}
         result = timed(submit, lambda: client.post(f"/sessions/{sid}/submit-answers", json=answers))
         if result:
             pace = (result.get("pace_recommendation") or {}).get("reason", "")
-            print(f"  flow: plan reason {session.get('reason', '')[:60]!r}, score "
+            print(f"  flow: {test.get('count')} questions, score "
                   f"{result.get('total_score')}/{result.get('max_score')}, pace reason {pace[:60]!r}")
-            # The app hides a failed LLM call behind canned results; say so.
-            if session.get("reason", "").startswith("MOCK LLM") or pace == "Fallback duration.":
+            # The app hides a failed step behind canned results; say so.
+            if pace == "Fallback duration.":
                 for step in (start, finish, submit):
                     step.note = FALLBACK
     finally:
@@ -350,8 +353,8 @@ def main():
     flow = [
         Step("POST /books/upload", note="sample.pdf, 3.6 MB"),
         Step("upload -> status ready", note="polled every 0.5 s; ready after 5 chunks are embedded"),
-        Step("POST /sessions/start", note="planner"),
-        Step("POST /sessions/{id}/finish-reading", note="called right after start, so questions are generated in the request"),
+        Step("GET /books/{id}/open", note="the saved place; makes the progress row"),
+        Step("POST /focus/quiz-me", note="pages 1-3, questions from the bank (generated if missing)"),
         Step("POST /sessions/{id}/submit-answers", note="5 grades, then the optimizer"),
     ]
     pdf = (ROOT / "sample.pdf").read_bytes()

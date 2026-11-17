@@ -163,20 +163,6 @@ def test_another_readers_book_is_not_found(api):
     assert api.client.get("/books/b1/ocr").status_code == 404
 
 
-def test_a_fully_scanned_book_opens_pages_only(api, monkeypatch):
-    async def no_chunks(user_id, book_id):
-        return SimpleNamespace(chunk_indices=[]), {}
-
-    monkeypatch.setattr(sessions, "run_start", no_chunks)
-    monkeypatch.setattr(sessions, "owns_book", lambda user_id, book_id: True)
-    monkeypatch.setattr(sessions, "read_book", lambda user_id, book_id, first: ({"title": "Scans", "format": "pdf"}, None))
-    data = api.client.post("/sessions/start", json={"book_id": "b1"}).json()
-    assert data["pages_only"] is True and data["session_id"] is None and data["scanned_pages"] == [1, 2]
-    assert data["book"]["title"] == "Scans"
-    # A book with chunks but nothing left to read is still the old 400.
-    assert api.client.post("/sessions/start", json={"book_id": "b2"}).status_code == 400
-
-
 def ingest(monkeypatch, texts: list[str], ocr: dict[int, str]):
     """Run the ingest job on a PDF whose pypdf page texts are `texts`, with `ocr` stored; (db, region job calls)."""
     db = MemoryDb()

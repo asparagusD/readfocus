@@ -1,5 +1,6 @@
-// The full reading journey (C15.1), live: a real sign-in, upload, ingestion, reading, test, grade,
-// dashboard and the next session's plan, against a real backend and the shared Supabase project.
+// The full reading journey (C15.1; C26.6c: no sessions), live: a real sign-in, upload, ingestion, the book opened
+// at its first page, pages turned and the place saved, a word card, Quiz me graded, the dashboard, and the book
+// opened again at the saved place, against a real backend and the shared Supabase project.
 // Not part of `npm run test:e2e` (playwright.config.js ignores this file); run it with
 // `npm run test:live` (playwright.live.config.js). It signs in as test user A from ../.env.test
 // (or TEST_USER_A_EMAIL / TEST_USER_A_PASSWORD), never prints the credentials, and deletes the
@@ -30,7 +31,6 @@ function credentials() {
 }
 
 /** The planner's and optimizer's reasons that come from a previous test, not from the book alone. */
-const FROM_PERFORMANCE = /your last test|you missed it|still needs work|due for review|scoring well|lighter session/;
 /** Plainly wrong, off-topic answers: the score lands low, so the next plan has to react to it. */
 const WRONG = 'Bananas are yellow and the weather was nice on Tuesday.';
 /** Common words a technical PDF is likely to show on its first pages, tried in order for a card. */
@@ -94,28 +94,24 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
     await expect(page.getByText(`${title}: your first quizzes are ready.`)).toBeVisible({ timeout: 12 * 60_000 });
     step('ingested (ready)');
 
-    // 3. Read: today's session opens with the planner's note, then pages turn with the arrow keys.
-    const sessionStarted = page.waitForResponse(isApi(/^\/sessions\/start$/, 'POST'), { timeout: 120_000 });
+    // 3. Read: the book opens at its first page (GET /books/{id}/open, no session), pages turn and the place is saved.
+    const opening = page.waitForResponse(isApi(new RegExp(`^/books/${bookId}/open$`), 'GET'), { timeout: 120_000 });
     await page.goto(`/read/${bookId}`);
-    const first = await sessionStarted;
-    expect(first.status(), 'POST /sessions/start').toBe(200);
-    const firstPlan = await first.json();
-    const sessionId = firstPlan.session_id;
+    expect((await opening).status(), 'GET /books/{id}/open').toBe(200);
     await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 60_000 });
     await page.evaluate(() => document.fonts.ready);
-    await expect(page.locator('.rf-ov-note .rf-note')).toContainText(/Starting the book with/);
-    step('session 1 open');
+    await expect(page.locator('.rf-ov-note .rf-note')).toHaveCount(0); // no suggested reading
+    step('book open');
 
     await page.locator('.rf-ov-stage').focus();
-    const saved = page.waitForResponse((r) => r.url().startsWith(`${api.origin}/sessions/${sessionId}/position`) && r.request().method() !== 'OPTIONS', { timeout: 30_000 });
+    const saved = page.waitForResponse((r) => r.url() === `${api.origin}/books/${bookId}/position` && r.request().method() === 'PUT', { timeout: 30_000 });
     const live = page.locator('.rf-ov-live');
     const before = await live.textContent();
     await page.keyboard.press('ArrowRight');
     await expect(live).not.toHaveText(before ?? '');
-    // Forward one view and back again: a short session can be a single spread and its closing page.
-    await page.keyboard.press('ArrowLeft');
-    await expect(live).toHaveText(before ?? '');
     expect((await saved).status(), 'reading position saved').toBeLessThan(300);
+    await page.waitForTimeout(1500); // the last turn's save (one a second)
+    const place = await page.locator('.rf-ov').getAttribute('data-start');
     step('pages turned, position saved');
 
     // 4. Hover a word: its definition card comes from the real lookup.
@@ -137,42 +133,41 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
     await expect(card).toHaveCount(0);
     step(`word card (${looked})`);
 
-    // 5. Finish reading and take the test, answering every question badly on purpose.
+    // 5. Quiz me on what was read so far, answering every question badly on purpose.
     await page.mouse.move(5, 5); // off the word, so its hover card does not open again
-    await page.locator('.rf-ov-stage').focus();
-    await page.keyboard.press('End');
-    const end = page.locator('.rf-end');
-    await expect(end.getByRole('button', { name: 'Start test' })).toBeVisible();
-    await end.getByRole('button', { name: 'Start test' }).click();
-    await expect(page).toHaveURL(new RegExp(`/test/${sessionId}$`), { timeout: 120_000 });
+    const built = page.waitForResponse(isApi(/^\/focus\/quiz-me$/, 'POST'), { timeout: 180_000 });
+    await page.getByRole('button', { name: 'Quiz me' }).click();
+    await page.getByRole('dialog', { name: 'Quiz me' }).getByRole('button', { name: 'Since my last quiz' }).click();
+    const quiz = await built;
+    expect(quiz.status(), 'POST /focus/quiz-me').toBe(200);
+    const sessionId = (await quiz.json()).session_id;
+    await expect(page).toHaveURL(new RegExp(`/quiz/${sessionId}$`), { timeout: 120_000 });
     const counter = page.getByText(/^Question 1 of \d+/);
     await expect(counter).toBeVisible({ timeout: 120_000 });
     const total = Number(/of (\d+)/.exec(await counter.textContent())[1]);
     expect(total).toBeGreaterThan(0);
     for (let i = 1; i <= total; i += 1) {
-      await page.getByRole('button', { name: new RegExp(`^Question ${i}(,|$)`) }).click();
       await expect(page.getByText(new RegExp(`^Question ${i} of ${total}`))).toBeVisible();
       const radios = page.getByRole('radio');
       if (await radios.count()) await radios.last().check();
       else await page.getByLabel('Your answer').fill(WRONG);
+      if (i < total) await page.locator('[data-test-next]').click();
     }
-    step(`test answered (${total} questions)`);
+    step(`quiz answered (${total} questions)`);
     const submitted = page.waitForResponse(isApi(new RegExp(`^/sessions/${sessionId}/submit-answers$`), 'POST'), { timeout: 180_000 });
     await page.getByRole('button', { name: 'Submit answers' }).click();
     const submit = await submitted;
     expect(submit.status(), 'POST submit-answers').toBe(200);
     const graded = await submit.json();
+    expect(graded.next_session, 'no next session is planned (C26.6)').toBeUndefined();
 
-    // 6. Results: the score, feedback on each answer, and the next session.
+    // 6. Results: the score, feedback on each answer, and Read on (no suggested reading).
     await expect(page).toHaveURL(new RegExp(`/results/${sessionId}$`));
-    await expect(page.getByRole('heading', { level: 1, name: 'Session results' })).toBeVisible();
     await expect(page.getByText(`Score: ${Math.round(graded.percentage)}%`)).toBeVisible();
     const feedback = page.locator('.rf-results__feedback');
     await expect(feedback.first()).toBeVisible();
     expect((await feedback.first().textContent()).trim().length).toBeGreaterThan(0);
-    const nextCard = page.getByRole('region', { name: 'Next session' });
-    await expect(nextCard).toBeVisible();
-    const promised = graded.next_session?.reason ?? '';
+    await expect(page.getByRole('region', { name: 'Read on' })).toBeVisible();
     step(`results (${Math.round(graded.percentage)}%)`);
 
     // 7. Dashboard: the book's concepts now carry this test's attempts.
@@ -190,18 +185,12 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
     await expect(panel).toContainText(tested[0].label);
     step(`dashboard (${tested.length} concepts tested)`);
 
-    // 8. The next session: its plan names the last test, not just the next pages.
-    const secondStarted = page.waitForResponse(isApi(/^\/sessions\/start$/, 'POST'), { timeout: 120_000 });
+    // 8. Back to the book: it opens at the place saved in step 3.
     await page.goto(`/results/${sessionId}`);
-    await page.getByRole('region', { name: 'Next session' }).getByRole('button', { name: 'Start next session' }).click();
-    const second = await (await secondStarted).json();
-    expect(second.session_id).not.toBe(sessionId);
-    expect(second.reason, 'the second plan reacts to the first test').toMatch(FROM_PERFORMANCE);
-    if (promised) expect(second.reason).toBe(promised); // what Results promised is what the reader gets
-    await expect(page.locator('.rf-ov-note .rf-note')).toContainText(second.reason.replace(/\*/g, ''), { timeout: 60_000 });
-    step('session 2 open');
-    console.log(`plan 1: ${firstPlan.reason}`);
-    console.log(`plan 2: ${second.reason}`);
+    await page.getByRole('region', { name: 'Read on' }).getByRole('button', { name: 'Back to the book' }).click();
+    await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 60_000 });
+    await expect.poll(() => page.locator('.rf-ov').getAttribute('data-start'), { timeout: 15_000 }).toBe(place);
+    step('book reopened at the saved place');
 
     // 9. Remove the book through the UI.
     await page.goto('/');

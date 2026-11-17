@@ -19,8 +19,8 @@ def test_row_reports_p50_p95_and_run_count():
 
 
 def test_row_says_not_measurable_instead_of_inventing_numbers():
-    step = bench.Step("POST /sessions/start", samples=[], note="HTTP 500: planner failed")
-    assert bench.row(step) == "| `POST /sessions/start` | 0 | not measurable | not measurable | HTTP 500: planner failed |"
+    step = bench.Step("GET /books/{id}/open", samples=[], note="HTTP 500: open failed")
+    assert bench.row(step) == "| `GET /books/{id}/open` | 0 | not measurable | not measurable | HTTP 500: open failed |"
 
 
 def test_long_durations_are_shown_in_seconds():

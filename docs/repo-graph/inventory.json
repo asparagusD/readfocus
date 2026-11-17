@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 919,
-    "inventoried": 776,
+    "tracked": 915,
+    "inventoried": 772,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 221,
-      "size_bytes": 17055,
+      "size_bytes": 17091,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -609,10 +609,10 @@
     {
       "path": "backend/routers/auth.py",
       "language": "python",
-      "lines": 50,
-      "size_bytes": 1960,
+      "lines": 23,
+      "size_bytes": 952,
       "role": "router",
-      "purpose": "GET /auth/profile and POST /auth/profile/calibrate: read the profile and save the calibrated reading speed."
+      "purpose": "GET /auth/profile and POST /auth/profile/calibrate: read the profile and save the calibrated reading speed. C26.6c: POST /auth/profile/calibrate removed (the pace check is gone)."
     },
     {
       "path": "backend/routers/books.py",
@@ -697,10 +697,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 409,
-      "size_bytes": 21500,
+      "lines": 241,
+      "size_bytes": 12149,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted. C23.7: start also returns the planner's mode for the reader's 'Suggested next' note. C24.2: a saved place with an anchor checks 'Finished a book' after the response. C26.6b: submit-answers returns no next_session; its flow runs no planner."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted. C23.7: start also returns the planner's mode for the reader's 'Suggested next' note. C24.2: a saved place with an anchor checks 'Finished a book' after the response. C26.6b: submit-answers returns no next_session; its flow runs no planner. C26.6c: POST /sessions/start and PUT /sessions/{id}/position removed (with read_book, read_position, owns_book, scanned_book and their models); the book opens and saves its place through routers/reading.py."
     },
     {
       "path": "backend/routers/steve.py",
@@ -1175,14 +1175,6 @@
       "purpose": "Pytest on the in-memory database: GET /books/{id}/pages returns chunks start..end in order with only index, content, word count and blocks, one chunk without end, nothing past the end, refuses a bad or over-four range (422) and another reader's book (404), and writes nothing."
     },
     {
-      "path": "backend/tests/test_api_position.py",
-      "language": "python",
-      "lines": 185,
-      "size_bytes": 8799,
-      "role": "test",
-      "purpose": "Pytest on the in-memory database through TestClient: PUT /sessions/{id}/position stores the place on the progress row and the next start returns it, a later save replaces it, malformed places and chunks outside the book are 422, another reader's session 404, no progress row 409 without creating one, the submit flow keeps the place, 401 without a reader, and a failed read never fails the start. C17.5: PDF and EPUB anchors stored as sent and returned, a backfilled place keeps its C12 keys beside its anchor, malformed anchors 422, and start names the book's file format."
-    },
-    {
       "path": "backend/tests/test_api_quiz_me.py",
       "language": "python",
       "lines": 99,
@@ -1209,18 +1201,10 @@
     {
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
-      "lines": 638,
-      "size_bytes": 30917,
+      "lines": 579,
+      "size_bytes": 27849,
       "role": "test",
-      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time."
-    },
-    {
-      "path": "backend/tests/test_api_start_reader.py",
-      "language": "python",
-      "lines": 59,
-      "size_bytes": 2760,
-      "role": "test",
-      "purpose": "Pytest on the in-memory database: /sessions/start sends each chunk's blocks, the book's title, author and contents (an empty list when none), the chapter in effect before the first chunk (from books.toc), copes with a book without toc or blocks, and still starts when the book read fails."
+      "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time. C26.6c: begin() makes the reading session row and its test as /sessions/start did; the start-only tests removed."
     },
     {
       "path": "backend/tests/test_auth.py",
@@ -1314,7 +1298,7 @@
       "path": "backend/tests/test_bench.py",
       "language": "python",
       "lines": 108,
-      "size_bytes": 4401,
+      "size_bytes": 4395,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py."
     },
@@ -1673,10 +1657,10 @@
     {
       "path": "backend/tests/test_ocr_pages.py",
       "language": "python",
-      "lines": 224,
-      "size_bytes": 11512,
+      "lines": 210,
+      "size_bytes": 10700,
       "role": "test",
-      "purpose": "Pytest for C19.4: clean_page (paragraphs, unsure/long/off-page/skipped words, garbled lines), skip_boxes ignoring the full-page scan, ready_to_reingest cases, scanned pages flagged and OCR text standing in at extraction, the POST/GET endpoints (store, replace, read back, refusals, owner only), re-ingest on the last page, a book with chunks kept, the pages-only session start, and ingestion recording scanned pages and skipping the region job after OCR."
+      "purpose": "Pytest for C19.4: clean_page (paragraphs, unsure/long/off-page/skipped words, garbled lines), skip_boxes ignoring the full-page scan, ready_to_reingest cases, scanned pages flagged and OCR text standing in at extraction, the POST/GET endpoints (store, replace, read back, refusals, owner only), re-ingest on the last page, a book with chunks kept, the pages-only session start, and ingestion recording scanned pages and skipping the region job after OCR. C26.6c: the pages-only start test removed (GET /books/{id}/open covers it)."
     },
     {
       "path": "backend/tests/test_offline.py",
@@ -2186,7 +2170,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5940,
-      "size_bytes": 1069826,
+      "size_bytes": 1070401,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2305,10 +2289,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 529,
-      "size_bytes": 34191,
+      "lines": 510,
+      "size_bytes": 32987,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -2425,10 +2409,10 @@
     {
       "path": "frontend/e2e/journey.spec.js",
       "language": "javascript",
-      "lines": 229,
-      "size_bytes": 13397,
+      "lines": 218,
+      "size_bytes": 12855,
       "role": "config",
-      "purpose": "Live Playwright journey (C15.1), not in test:e2e: waits for /health model_ready, signs in as test user A from .env.test, uploads sample.pdf, waits for ready, turns pages (position PUT), opens a word card (real /lookup), takes the test with wrong answers, checks Results, the Dashboard's mastery for the book and that the next session's reason reacts to the test, then removes the book (API delete in finally if not); fails on any host outside the site, the API and the Supabase project."
+      "purpose": "Live Playwright journey (C15.1), not in test:e2e: waits for /health model_ready, signs in as test user A from .env.test, uploads sample.pdf, waits for ready, turns pages (position PUT), opens a word card (real /lookup), takes the test with wrong answers, checks Results, the Dashboard's mastery for the book and that the next session's reason reacts to the test, then removes the book (API delete in finally if not); fails on any host outside the site, the API and the Supabase project. C26.6c: rewritten without sessions: open at the first page, turns saved on the book, Quiz me graded, Read on, reopened at the saved place (not run: live only)."
     },
     {
       "path": "frontend/e2e/landing.spec.js",
@@ -3005,22 +2989,6 @@
       "size_bytes": 3140,
       "role": "component",
       "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative. C26.3: a processing cover is named \"quizzes being prepared\"."
-    },
-    {
-      "path": "frontend/src/components/CalibrationFlow.css",
-      "language": "css",
-      "lines": 44,
-      "size_bytes": 962,
-      "role": "component",
-      "purpose": "Reading pace layout on tokens: one column, the passage at the reading size and measure."
-    },
-    {
-      "path": "frontend/src/components/CalibrationFlow.jsx",
-      "language": "jsx",
-      "lines": 60,
-      "size_bytes": 3779,
-      "role": "component",
-      "purpose": "First-session reading pace: an intro, then a 200-word passage timed to words per minute (clamped 50-1000) and posted to /auth/profile/calibrate; a failed save is a warning toast and the session goes on at 200."
     },
     {
       "path": "frontend/src/components/ErrorScreen.css",
@@ -5561,10 +5529,10 @@
     {
       "path": "scripts/bench.py",
       "language": "python",
-      "lines": 368,
-      "size_bytes": 16239,
+      "lines": 371,
+      "size_bytes": 16330,
       "role": "script",
-      "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md."
+      "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md. C26.6c: the flow is upload, ready, GET /books/{id}/open, POST /focus/quiz-me, submit-answers."
     },
     {
       "path": "scripts/dev/build_math_labels.py",
@@ -6153,8 +6121,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 778,
-      "size_bytes": 249678,
+      "lines": 774,
+      "size_bytes": 249108,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

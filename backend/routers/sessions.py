@@ -1,23 +1,20 @@
-import asyncio
 from datetime import datetime
 from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from backend.agents.evaluator_agent import evaluate_single_answer, load_passage, warm_up
 from backend.agents.question_generation.assembler import public_question
 from backend.agents.workflow import (
     run_abandon,
     run_finish,
-    run_start,
     run_submit,
     save_decisions,
 )
 from backend.dependencies import get_current_user, require_model
 from backend.services.supabase_client import supabase
-from backend.xp import badge_award
 
 router = APIRouter()
 
@@ -37,9 +34,6 @@ async def abandon_background(session_id: str, user_id: str, book_id: str, chunk_
     except Exception as e:  # noqa: BLE001 - the session is already marked abandoned
         print(f"Abandon flow failed for session {session_id}: {e}")
 
-
-class StartSessionRequest(BaseModel):
-    book_id: str
 
 class FinishReadingRequest(BaseModel):
     actual_duration_minutes: int
@@ -93,168 +87,6 @@ class EpubAnchor(BaseModel):
     cfi: str = Field(pattern=r"^epubcfi\(.+\)$", max_length=1_024)
     text: str = Field(default="", max_length=2_000)
 
-
-class PositionRequest(BaseModel):
-    """A place in a book: its chunk, and either C12's reader block ("<chunk>.<n>", chunks.blocks) with the
-    offset in its text, or (C17.5) an original-view anchor in the PDF or EPUB itself."""
-
-    chunk_index: int = Field(ge=0)
-    block_id: str | None = Field(default=None, pattern=r"^\d+\.\d+$", max_length=24)
-    char_offset: int | None = Field(default=None, ge=0, le=100_000)
-    anchor: Annotated[PdfAnchor | EpubAnchor, Field(discriminator="kind")] | None = None
-
-    @model_validator(mode="after")
-    def a_place(self):
-        if self.anchor is None and (self.block_id is None or self.char_offset is None):
-            raise ValueError("a place needs an anchor, or a block_id and char_offset")
-        if (self.block_id is None) != (self.char_offset is None):
-            raise ValueError("block_id and char_offset come together")
-        if self.block_id is not None and self.block_id.split(".")[0] != str(self.chunk_index):
-            raise ValueError("block_id must be a block of chunk_index")
-        return self
-
-
-def read_book(user_id: str, book_id: str, first_chunk: int):
-    """The book's title and author, and the chapter in effect before the session's first chunk (C12.3b).
-
-    A chapter that starts inside the session is found by the reader in the blocks themselves; this is
-    the chapter the first pages belong to when they open mid-chapter. A failed read gives (None, None).
-    """
-    try:
-        rows = supabase.table("books").select("title, author, toc, file_format, storage_mode").eq("id", book_id).eq(
-            "user_id", user_id).execute().data
-        if not rows:
-            return None, None
-        row = cast(dict[str, Any], rows[0])
-        earlier = [entry for entry in row.get("toc") or [] if entry.get("chunk_index", 0) < first_chunk]
-        book = {"title": row.get("title"), "author": row.get("author"), "toc": row.get("toc") or [],  # toc: contents drawer
-                "format": row.get("file_format"), "storage_mode": row.get("storage_mode")}  # C17.5: which renderer
-        return book, (earlier[-1]["title"] if earlier else None)
-    except Exception as e:  # noqa: BLE001 - the running head shows less, the session still starts
-        print(f"Book details not read: {e}")
-        return None, None
-
-
-def read_position(user_id: str, book_id: str):
-    """The saved place for /start; a failed read is no place, never a failed start."""
-    try:
-        rows = supabase.table("reading_progress").select("position").eq("user_id", user_id).eq(
-            "book_id", book_id).execute().data
-        return cast(dict[str, Any], rows[0]).get("position") if rows else None
-    except Exception as e:  # noqa: BLE001 - the reader starts at the plan's first page instead
-        print(f"Reading position not read: {e}")
-        return None
-
-def owns_book(user_id: str, book_id: str) -> bool:
-    """True when the book is the caller's; the service-role client bypasses RLS, so this is the check (issue 17)."""
-    return bool(supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute().data)
-
-
-def scanned_book(user_id: str, book_id: str) -> dict | None:
-    """The pages-only opening of a fully scanned book with no chunks yet (C19.4), else None.
-
-    No session, no test: the reader turns the pages while each scanned page is read by OCR in the
-    browser; once all are, the book is ingested again and its first session can start.
-    """
-    rows = supabase.table("books").select("scanned_pages, total_chunks").eq("id", book_id).eq(
-        "user_id", user_id).execute().data or []
-    if not rows or not rows[0].get("scanned_pages") or rows[0].get("total_chunks"):
-        return None
-    book, _ = read_book(user_id, book_id, 0)
-    return {"session_id": None, "pages_only": True, "chunk_indices": [], "chunks": [], "position": None,
-            "focus_duration_minutes": 0, "reason": "", "book": book, "chapter_before": None,
-            "scanned_pages": rows[0]["scanned_pages"]}
-
-
-@router.post("/start")
-async def start_session(req: StartSessionRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
-    # 0. Only the caller's own book: nothing is planned, created or read for anyone else's
-    try:
-        owned = await run_in_threadpool(owns_book, user_id, req.book_id)
-    except Exception as e:  # noqa: BLE001 - fail closed: a book we cannot check is not served
-        print(f"Book ownership not checked: {e}")
-        raise HTTPException(status_code=503, detail="Could not open this book just now; try again.")
-    if not owned:
-        raise HTTPException(status_code=404, detail="Book not found.")
-
-    # 1. Run the start_session flow: the planner
-    plan, run = await run_start(user_id, req.book_id)
-    if not plan:
-        raise HTTPException(status_code=500, detail="Planner failed to generate a session plan.")
-        
-    chunk_indices = plan.chunk_indices
-    if not chunk_indices:
-        pages_only = await run_in_threadpool(scanned_book, user_id, req.book_id)
-        if pages_only:  # C19.4: a fully scanned book opens with no session until its OCR text is read
-            return pages_only
-        raise HTTPException(status_code=400, detail="No more chunks available to read.")
-        
-    # 2-3. Fetch the chunk content and create the session row; neither needs the other, so they run at once
-    chunk_query = supabase.table("chunks").select("chunk_index, content, word_count, blocks").eq(
-        "book_id", req.book_id).in_("chunk_index", chunk_indices)
-    session_query = supabase.table("sessions").insert({
-        "user_id": user_id,
-        "book_id": req.book_id,
-        "chunk_start_index": chunk_indices[0],
-        "chunk_end_index": chunk_indices[-1],
-        "assigned_words": getattr(plan, "assigned_words", 0),
-        "focus_duration_minutes": getattr(plan, "focus_duration_minutes", 20),
-        "status": "reading",
-        "started_at": datetime.utcnow().isoformat()
-    })
-    resp, session_resp, position, (book, chapter_before) = await asyncio.gather(
-        run_in_threadpool(chunk_query.execute), run_in_threadpool(session_query.execute),
-        run_in_threadpool(read_position, user_id, req.book_id),
-        run_in_threadpool(read_book, user_id, req.book_id, chunk_indices[0]))
-    chunks_data: list[dict[str, Any]] = sorted(cast(list[dict[str, Any]], resp.data or []), key=lambda x: x["chunk_index"])
-
-    if not session_resp.data:
-        raise HTTPException(status_code=500, detail="Failed to create session.")
-        
-    session_id = cast(dict[str, Any], session_resp.data[0])["id"]
-    
-    # 4. After the response: store the planner's decisions, and assemble the test from the question bank
-    background_tasks.add_task(save_decisions, run, session_id)
-    background_tasks.add_task(
-        assemble_test_background, session_id, user_id, req.book_id, chunk_indices, getattr(plan, "question_mix", None)
-    )
-    
-    return {
-        "session_id": session_id,
-        "chunk_indices": chunk_indices,
-        "focus_duration_minutes": getattr(plan, "focus_duration_minutes", 20),
-        "reason": getattr(plan, "reason", ""),
-        "mode": getattr(plan, "mode", "new"),  # C23.7: "Suggested next: revisit ..." for a re-read or review
-        "chunks": chunks_data,
-        "position": position,  # the last saved place in this book, or None; the reader decides whether to resume
-        "book": book,  # {title, author} for the running head, or None
-        "chapter_before": chapter_before,  # the chapter the first page belongs to when it opens mid-chapter
-    }
-
-
-@router.put("/{session_id}/position")
-async def save_position(session_id: str, req: PositionRequest, background_tasks: BackgroundTasks,
-                        user_id: str = Depends(get_current_user)):
-    """Save the reader's place (sent debounced as pages turn). Only reading_progress.position changes."""
-    sess = await run_in_threadpool(
-        supabase.table("sessions").select("book_id").eq("id", session_id).eq("user_id", user_id).execute)
-    if not sess.data:
-        raise HTTPException(status_code=404, detail="Session not found.")
-    book_id = cast(dict[str, Any], sess.data[0])["book_id"]
-    chunk = await run_in_threadpool(supabase.table("chunks").select("id").eq("book_id", book_id).eq(
-        "chunk_index", req.chunk_index).limit(1).execute)
-    if not chunk.data:
-        raise HTTPException(status_code=422, detail="No such chunk in this book.")
-    position = req.model_dump(exclude_none=True)
-    # Update only: the planner creates this row on a first start, and a row made here would reset its cursor.
-    updated = await run_in_threadpool(supabase.table("reading_progress").update({"position": position}).eq(
-        "user_id", user_id).eq("book_id", book_id).execute)
-    if not updated.data:
-        raise HTTPException(status_code=409, detail="This book has no reading progress yet.")
-    if position.get("anchor"):  # C24.2: Finished a book, after the response (saves are sent as pages turn)
-        background_tasks.add_task(badge_award.check_quietly, user_id, "place", book_id=book_id,
-                                  anchor=position["anchor"])
-    return {"position": position}
 
 def refuse_focus_quiz(session_id: str, user_id: str) -> None:
     """C23.G: a focus session's quiz is answered and scored only through /focus/{id}/quiz/answers (F12, F14)."""

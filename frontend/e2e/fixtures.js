@@ -40,7 +40,7 @@ const pdfPage = (n) => [PDF_TITLES[n - 1], ...Array.from({ length: 14 }, (_, r) 
 const PARA = 'The lamp on the desk threw a small circle of light, and inside it the page was the only thing that mattered. '.repeat(6).trim();
 const epubChapter = (n) => `Chapter ${n}\n\n${PARA}\n\n${PARA}`;
 export const BOOKS = {
-  // Today: pages 1-5 (chunks 0-2); the next chunk starts on page 6.
+  // The chunks the server would have cut (`today` was the old session's range; unused since C26.6c).
   pdf: { file: 'sample.pdf', type: 'application/pdf', today: [0, 1, 2],
     chunks: [pdfPage(1) + pdfPage(2), pdfPage(3) + pdfPage(4), pdfPage(5), pdfPage(6)] },
   // Today: chapters 1 and 2 (after the cover); the next chunk is chapter 3.
@@ -55,7 +55,7 @@ const json = (route, body, status = 200) => route.fulfill({ status, headers: { .
 
 /** Routes for one page: the API remembers the saved position across reloads, like the server. */
 export async function mockBackend(page, api, book) {
-  const { file, type, today, chunks } = BOOKS[book];
+  const { file, type, chunks } = BOOKS[book];
   await page.route(/supabase\.co/, (route) => { api.unmocked.push(route.request().url()); return route.abort(); });
   await page.route(`${API}/**`, async (route) => {
     const request = route.request();
@@ -82,20 +82,6 @@ export async function mockBackend(page, api, book) {
       api.progressReads += 1;
       return api.progress ? json(route, api.progress) : json(route, { detail: 'down' }, 503);
     }
-    if (path === '/sessions/start') {
-      api.starts += 1;
-      if (BOOKS[book].pagesOnly) { // C19.4: a fully scanned book with no chunks opens pages-only
-        return json(route, { session_id: null, pages_only: true, chunk_indices: [], chunks: [], position: null,
-          focus_duration_minutes: 0, reason: '', chapter_before: null, scanned_pages: BOOKS[book].scanned,
-          book: { title: 'Scanned', author: 'A Scanner', toc: [], format: 'pdf', storage_mode: 'cloud' } });
-      }
-      return json(route, {
-        // Old clients only (C26.5: the reader opens with /books/{id}/open); kept until C26.6 removes the route.
-        session_id: 'e2e-session', chunks: (api.today ?? today).map((i) => chunk(book, i)), chunk_indices: api.today ?? today, position: api.position,
-        focus_duration_minutes: 20, reason: 'A steady pace for this book.', chapter_before: '',
-        book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' },
-      });
-    }
     if (path === `/books/${BOOK}/open`) { // C26.4: a test sets api.processing to open a book still being processed
       api.opens += 1;
       return json(route, { book_id: BOOK, status: api.processing ? 'processing' : 'ready', pages_only: Boolean(BOOKS[book].pagesOnly),
@@ -103,11 +89,6 @@ export async function mockBackend(page, api, book) {
         book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' } });
     }
     if (path === `/books/${BOOK}/position` && request.method() === 'PUT') { // C26.5: the book's place, every turn
-      api.position = JSON.parse(request.postData() || 'null');
-      api.saves += 1;
-      return json(route, { position: api.position });
-    }
-    if (path === '/sessions/e2e-session/position') {
       api.position = JSON.parse(request.postData() || 'null');
       api.saves += 1;
       return json(route, { position: api.position });

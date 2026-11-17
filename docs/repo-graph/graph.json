@@ -240,13 +240,6 @@
       "handler": "update_note"
     },
     {
-      "id": "endpoint:POST /auth/profile/calibrate",
-      "type": "endpoint",
-      "method": "POST",
-      "path": "/auth/profile/calibrate",
-      "handler": "calibrate_profile"
-    },
-    {
       "id": "endpoint:POST /books/upload",
       "type": "endpoint",
       "method": "POST",
@@ -359,13 +352,6 @@
       "handler": "league_rollover"
     },
     {
-      "id": "endpoint:POST /sessions/start",
-      "type": "endpoint",
-      "method": "POST",
-      "path": "/sessions/start",
-      "handler": "start_session"
-    },
-    {
       "id": "endpoint:POST /sessions/{session_id}/abandon",
       "type": "endpoint",
       "method": "POST",
@@ -427,13 +413,6 @@
       "method": "PUT",
       "path": "/me/progress",
       "handler": "put_progress"
-    },
-    {
-      "id": "endpoint:PUT /sessions/{session_id}/position",
-      "type": "endpoint",
-      "method": "PUT",
-      "path": "/sessions/{session_id}/position",
-      "handler": "save_position"
     },
     {
       "id": "endpoint:PUT /steve/key",
@@ -1451,12 +1430,6 @@
       "language": "python"
     },
     {
-      "id": "file:backend/tests/test_api_position.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
       "id": "file:backend/tests/test_api_quiz_me.py",
       "type": "file",
       "role": "test",
@@ -1476,12 +1449,6 @@
     },
     {
       "id": "file:backend/tests/test_api_sessions.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:backend/tests/test_api_start_reader.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2820,18 +2787,6 @@
     },
     {
       "id": "file:frontend/src/components/BookCover.jsx",
-      "type": "file",
-      "role": "component",
-      "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/components/CalibrationFlow.css",
-      "type": "file",
-      "role": "component",
-      "language": "css"
-    },
-    {
-      "id": "file:frontend/src/components/CalibrationFlow.jsx",
       "type": "file",
       "role": "component",
       "language": "jsx"
@@ -5525,11 +5480,6 @@
     },
     {
       "type": "calls_endpoint",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "endpoint:POST /auth/profile/calibrate"
-    },
-    {
-      "type": "calls_endpoint",
       "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
       "to": "endpoint:GET /mastery"
     },
@@ -5983,11 +5933,6 @@
     },
     {
       "type": "defines_endpoint",
-      "from": "file:backend/routers/auth.py",
-      "to": "endpoint:POST /auth/profile/calibrate"
-    },
-    {
-      "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
       "to": "endpoint:DELETE /books/{book_id}"
     },
@@ -6199,11 +6144,6 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
-      "to": "endpoint:POST /sessions/start"
-    },
-    {
-      "type": "defines_endpoint",
-      "from": "file:backend/routers/sessions.py",
       "to": "endpoint:POST /sessions/{session_id}/abandon"
     },
     {
@@ -6220,11 +6160,6 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:POST /sessions/{session_id}/submit-answers"
-    },
-    {
-      "type": "defines_endpoint",
-      "from": "file:backend/routers/sessions.py",
-      "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
       "type": "defines_endpoint",
@@ -7492,11 +7427,6 @@
     },
     {
       "type": "imports",
-      "from": "file:backend/routers/sessions.py",
-      "to": "file:backend/xp/badge_award.py"
-    },
-    {
-      "type": "imports",
       "from": "file:backend/routers/steve.py",
       "to": "file:backend/dependencies.py"
     },
@@ -8242,26 +8172,6 @@
     },
     {
       "type": "imports",
-      "from": "file:backend/tests/test_api_position.py",
-      "to": "file:backend/dependencies.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_api_position.py",
-      "to": "file:backend/main.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_api_position.py",
-      "to": "file:backend/tests/test_api_sessions.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_api_position.py",
-      "to": "file:backend/xp/badge_award.py"
-    },
-    {
-      "type": "imports",
       "from": "file:backend/tests/test_api_quiz_me.py",
       "to": "file:backend/focus/quiz_me.py"
     },
@@ -8384,11 +8294,6 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/services/question_bank.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_api_start_reader.py",
-      "to": "file:backend/tests/test_api_sessions.py"
     },
     {
       "type": "imports",
@@ -10384,31 +10289,6 @@
       "type": "imports",
       "from": "file:frontend/src/components/BookCover.jsx",
       "to": "file:frontend/src/lib/coverColor.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/components/CalibrationFlow.css"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/components/ui/Button.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/components/ui/toastContext.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/lib/api.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/lib/useDocumentTitle.js"
     },
     {
       "type": "imports",
@@ -13558,16 +13438,6 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
-      "to": "table:books"
-    },
-    {
-      "type": "reads_table",
-      "from": "file:backend/routers/sessions.py",
-      "to": "table:chunks"
-    },
-    {
-      "type": "reads_table",
-      "from": "file:backend/routers/sessions.py",
       "to": "table:focus_sessions"
     },
     {
@@ -14042,11 +13912,6 @@
     },
     {
       "type": "writes_table",
-      "from": "file:backend/routers/auth.py",
-      "to": "table:profiles"
-    },
-    {
-      "type": "writes_table",
       "from": "file:backend/routers/books.py",
       "to": "table:books"
     },
@@ -14073,11 +13938,6 @@
     {
       "type": "writes_table",
       "from": "file:backend/routers/reading.py",
-      "to": "table:reading_progress"
-    },
-    {
-      "type": "writes_table",
-      "from": "file:backend/routers/sessions.py",
       "to": "table:reading_progress"
     },
     {

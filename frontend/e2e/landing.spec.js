@@ -31,11 +31,11 @@ test.describe('signed out', () => {
     await expect(page.locator('.rf-warm')).toHaveCount(0);
   });
 
-  test('Start reading opens Create account; Sign in opens sign in', async ({ page }) => {
+  test('Start reading opens the new-reader words; Sign in opens sign in', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('link', { name: 'Start reading' }).first().click();
     await expect(page).toHaveURL(/\/login\?tab=signup$/);
-    await expect(page.getByRole('tab', { name: 'Create account' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('heading', { level: 1, name: 'Make yourself a shelf' })).toBeVisible();
     await page.goto('/');
     await page.getByRole('link', { name: 'Sign in', exact: true }).click();
     await expect(page).toHaveURL(/\/login$/);

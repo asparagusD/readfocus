@@ -5959,3 +5959,16 @@ on `chunk/C27-region-queue` from `readfocus-2.0` at `1a60070`.
 |---|---|---|---|---|---|
 | [x] C27.1 region maps queue behind waiting ingests | `880f12e` | `ingestion_worker`: a priority slot (ingest 0, regions 1, then arrival), `defer` and `drain`; `region_job.after_ingest` defers on the worker; `measure_c26.py` waits for and times the region maps | pytest 2031 (4 new; 2 fail on the old code); container: SICP's first questions 224.6 -> 123.6 s, peak 452.2 MiB RSS / 398.6 MiB cgroup; standard checks | 0.75 h | C27.2 |
 | [x] C27.2 the sweep leaves the worker's own jobs alone | (this commit) | `ingestion_worker._held`: the ids of the jobs this process holds (waiting or running, deferred ones too); the sweep skips them; DEBUG_LOG 2026-11-18 C27 (both fixes) | pytest 2033 (2 new; the waiting-job test fails on the C27.1 worker); standard checks | 0.5 h | one process only (Render runs one instance) |
+
+## C28 — Google sign-in
+
+New readers could not get in: sign-up waited on a confirmation email that never arrived (Supabase's built-in
+mailer only sends to the project team's own addresses and a few an hour). C28 replaces email and password with
+Google sign-in through Supabase OAuth, for new and returning readers.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C28.1a sign in with Google only | (this commit) | `useAuth`: `signInWithGoogle` (back to `/login`); `supabase.js`: PKCE flow; `Login`: one Continue with Google button, Google's refusal shown from `?error_description`, signed-in readers sent to the shelf; `Privacy`: what Google sign-in gives us; e2e `login.spec` rewritten (authorize URL, PKCE exchange, refusal), `landing.spec` follows | standard checks (e2e 324); preview at 1440 and 375 px | 1 h | Google provider must be enabled in Supabase (client id and secret from Google Cloud) and `/login` added to the redirect URLs; not tried against real Google yet |
+| [x] C28.1b live journeys sign in without the form | (this commit) | `e2e/liveSignIn.js`: `signInAs` signs a password test user in with Supabase Auth and stores the session for the page; `journey.spec` and `phase2_journey.spec` use it | standard checks (the journeys are outside them) | 0.2 h | the live journeys were not run (they write to the Supabase project) |

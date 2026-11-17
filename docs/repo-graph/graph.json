@@ -1545,6 +1545,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_book_delete.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_book_files.py",
       "type": "file",
       "role": "test",
@@ -2439,6 +2445,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/phase2_journey.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/privacy.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/quiz-me.spec.js",
       "type": "file",
       "role": "config",
@@ -2559,7 +2577,19 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/playwright.phase2.config.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/public/robots.txt",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/check-bundle.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -2590,6 +2620,12 @@
     },
     {
       "id": "file:frontend/scripts/live/check-isolation.mjs",
+      "type": "file",
+      "role": "config",
+      "language": "text"
+    },
+    {
+      "id": "file:frontend/scripts/live/check-phase2-isolation.mjs",
       "type": "file",
       "role": "config",
       "language": "text"
@@ -3030,6 +3066,12 @@
       "id": "file:frontend/src/components/ui/toastContext.js",
       "type": "file",
       "role": "component",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/deploy/bundleBudget.test.js",
+      "type": "file",
+      "role": "asset",
       "language": "javascript"
     },
     {
@@ -3993,6 +4035,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/pages/Privacy.css",
+      "type": "file",
+      "role": "page",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/pages/Privacy.jsx",
+      "type": "file",
+      "role": "page",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/pages/ReadingSession.css",
       "type": "file",
       "role": "page",
@@ -4051,6 +4105,12 @@
       "type": "file",
       "role": "page",
       "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/pages/landing/claims.test.js",
+      "type": "file",
+      "role": "page",
+      "language": "javascript"
     },
     {
       "id": "file:frontend/src/pages/landing/demoDefinitions.json",
@@ -4737,6 +4797,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/measure_phase2.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/measure_regions.py",
       "type": "file",
       "role": "script",
@@ -5038,6 +5104,12 @@
     },
     {
       "id": "file:tools/__init__.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:tools/check_gemini_sdk.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -5693,6 +5765,12 @@
     },
     {
       "type": "calls_external",
+      "from": "file:frontend/e2e/phase2_journey.spec.js",
+      "to": "external:supabase",
+      "line": 23
+    },
+    {
+      "type": "calls_external",
       "from": "file:frontend/src/lib/supabase.js",
       "to": "external:supabase",
       "line": 1
@@ -5806,6 +5884,11 @@
     {
       "type": "declares_env",
       "from": "file:render.yaml",
+      "to": "env:CRON_SECRET"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
       "to": "env:ENV"
     },
     {
@@ -5817,6 +5900,31 @@
       "type": "declares_env",
       "from": "file:render.yaml",
       "to": "env:FRONTEND_URL"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:GEMINI_API_KEY"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:GEMINI_MODEL_CHAT"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:GEMINI_MODEL_VISION"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:KEY_ENCRYPTION_SECRET"
+    },
+    {
+      "type": "declares_env",
+      "from": "file:render.yaml",
+      "to": "env:STEVE_DAILY_LIMIT_PER_USER"
     },
     {
       "type": "declares_env",
@@ -8421,6 +8529,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_book_files.py",
       "to": "file:backend/agents/policy.py"
     },
@@ -9013,6 +9141,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_model_ready.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_no_paid_ai.py",
+      "to": "file:tools/check_gemini_sdk.py"
     },
     {
       "type": "imports",
@@ -9871,6 +10004,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/phase2_journey.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/privacy.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/quiz-me.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -9943,6 +10086,11 @@
       "type": "imports",
       "from": "file:frontend/playwright.gate.config.js",
       "to": "file:frontend/playwright.config.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/playwright.phase2.config.js",
+      "to": "file:frontend/playwright.live.config.js"
     },
     {
       "type": "imports",
@@ -10428,6 +10576,11 @@
       "type": "imports",
       "from": "file:frontend/src/components/ui/Tooltip.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/deploy/bundleBudget.test.js",
+      "to": "file:frontend/scripts/check-bundle.mjs"
     },
     {
       "type": "imports",
@@ -11791,6 +11944,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/Privacy.jsx",
+      "to": "file:frontend/src/pages/Privacy.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Privacy.jsx",
+      "to": "file:frontend/src/pages/landing/LandingFooter.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/annotations/useAnnotations.js"
     },
@@ -12836,6 +12999,31 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/dev/measure_phase2.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_phase2.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_phase2.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_phase2.py",
+      "to": "file:backend/steve/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_phase2.py",
+      "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/dev/measure_regions.py",
       "to": "file:backend/regions/extract.py"
     },
@@ -12938,6 +13126,11 @@
       "type": "imports",
       "from": "file:scripts/steve_eval.py",
       "to": "file:backend/steve/provider.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:tools/check_gemini_sdk.py",
+      "to": "file:tools/no_paid_ai.py"
     },
     {
       "type": "imports",

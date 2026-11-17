@@ -644,3 +644,15 @@
 /* The footer's theme toggle is the page's only one: full 44 px targets (the knob moves by its own width). */
 .rf-colophon .rf-theme-toggle__option,
 .rf-colophon .rf-theme-toggle__knob { width: 44px; height: 44px; }
+
+/* Links inside the honesty note and the answers (C25.1), styled as the colophon's (WCAG 1.4.1). */
+.rf-isnt__list a,
+.rf-faq__a a {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--line-field);
+  text-underline-offset: 3px;
+}
+
+.rf-isnt__list a:hover,
+.rf-faq__a a:hover { color: var(--ink); text-decoration-color: var(--ink); }

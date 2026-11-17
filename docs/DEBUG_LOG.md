@@ -4635,3 +4635,224 @@ The test itself: `--repeat-each 20`, 40 of 40 passed (EPUB and PDF), twice; befo
 
 ### Commit
 fix(frontend): read the EPUB read-on test's places once each turn has landed
+
+## 2026-11-16 C25.1 — the PDF Lamplight highlight e2e test failed once in a full run (pre-existing)
+
+**Status:** open (intermittent; not reproduced alone)
+
+### Symptom
+C25.1's full `npm --prefix frontend run test:e2e`: 319 passed, 1 failed:
+
+    x 13 e2e\annotations-render.spec.js:69:3 › pdf in lamplight › highlights lighten the recoloured page so the light text keeps its colour (1.9s)
+
+The assertion's message was not kept (the run's `test-results/` was replaced by the repro below).
+
+### Repro
+`npx playwright test e2e/annotations-render.spec.js --repeat-each 5`: 25 of 25 passed, this test 5 of 5. C25.1
+changes no annotation, reader or theme code: `git diff --stat -- frontend/src/annotations frontend/src/originalview
+frontend/src/theme frontend/e2e/annotations-render.spec.js` is empty.
+
+### Hypotheses
+1. Under full-suite load the highlight is read before the Lamplight recolouring or the highlight's style has applied
+   (the test checks `.rf-anno` once it is visible, then reads computed styles without waiting). Not yet tested.
+2. The dark colour scheme reaches the page after the first paint in a busy run. Not yet tested.
+
+A second full run on the same tree: 320 of 320 passed.
+
+### Next step
+On the next failure keep `test-results/` and read the assertion before changing the test.
+Not fixed in C25.1, which does not touch this code.
+
+## 2026-11-16 C25.1 — deleting a book leaves its note pictures in storage
+
+**Status:** fixed
+
+### Symptom
+Found while writing the privacy page (C25.1), not from a failing check. `DELETE /books/{id}`
+(`backend/routers/books.py` `delete_book`) removes the book's original from the `books` bucket and the `books` row
+(the database cascades to `note_blocks`), but every file `POST /books/{id}/note-files` stored at
+`notes/<user>/<book>/<uuid>.<ext>` (equation and figure crops, drawing images and thumbnails) stays in the private
+`notes` bucket with nothing pointing at it. Expected: a deleted book takes its note pictures with it, as the privacy
+page should be able to say.
+
+### Repro
+A test that uploads note files for a book, deletes the book through the API and looks at the bucket:
+
+    pytest backend/tests/test_book_delete.py -q
+
+### Hypotheses
+1. `delete_book` never touches the `notes` bucket; the cascade only reaches rows. Evidence: the handler names only
+   `from_("books")`; `grep -rn 'from_(BUCKET)\|from_("notes")' backend` finds only `notes.py`'s list and upload.
+   Ruled out if: a trigger, storage policy or another job removes the folder. Result: confirmed by reading: no
+   migration, trigger or job removes storage objects, and the repro test fails.
+
+### Root cause
+`backend/routers/books.py` `delete_book` removed only the original from the `books` bucket; the `ON DELETE CASCADE`
+from `books` to `note_blocks` (migration 027) removes rows, never Storage objects, and nothing else ever removed
+the book's folder in the `notes` bucket.
+
+### Fix
+`_remove_note_files(user, book)` lists `notes/<user>/<book>/` a page (`NOTE_FILES_PAGE` = 100) at a time and removes
+each page until the folder is empty, before the row is deleted. The whole folder, not the paths the note rows name,
+so a file uploaded for a note that was never saved goes too. If a remove removes nothing it stops instead of
+listing the same files again. A storage failure is logged (`exc_info`, ids only) and the book is still deleted,
+as the original's removal already was. `memory_db.Bucket` gains `list` and `remove` as supabase-py has them.
+
+### Regression test
+`backend/tests/test_book_delete.py` (5): the book's three note pictures and its original go, another book's and
+another reader's files stay; a folder of 8 removed whole with 2 a page; another reader's book 404 and nothing
+removed; a storage failure logged and the book deleted; a remove that removes nothing listed once, logged, book
+deleted. Before the fix (`git stash push -- backend/routers/books.py`): 4 failed, 1 passed (the 404 case). After:
+5 passed.
+
+### Commit
+fix(api): remove a book's note pictures when the book is deleted
+
+## 2026-11-16 C25.G — the notes editor phone e2e test failed once in a full run (pre-existing)
+
+**Status:** open (intermittent; not reproduced alone)
+
+### Symptom
+The C25.G fix's full `npm --prefix frontend run test:e2e`: 319 passed, 1 failed:
+
+    x 189 e2e
+otes-editor.spec.js:176:3 › phone › the editor in the sheet: 44 px tools, nothing sideways (2.5s)
+
+### Repro
+`npx playwright test e2e/notes-editor.spec.js -g "the editor in the sheet" --repeat-each 10`: 10 of 10 passed. The
+fix changes no notes or editor code (`git diff -- frontend/src/notes frontend/e2e/notes-editor.spec.js` is empty).
+
+### Hypotheses
+1. Like the 2026-11-16 C25.1 entry, a measurement taken before layout settles under full-suite load (the editor
+   sheet's tools are lazy TipTap chunks). Not yet tested.
+
+A second full run on the same tree: 320 of 320 passed.
+
+### Next step
+On the next failure keep `test-results/` and read the assertion; if both entries recur, look at the suite's worker
+count and fixed waits together.
+
+## 2026-11-17 C25.3 — the live phase-2 journey drew 2 of 45 EPUB images
+
+**Status:** fixed (in the spec; the reader was right)
+
+### Symptom
+First local run of `npm --prefix frontend run test:live:phase2` (approved 2026-11-17, "Yes, run both"):
+
+    Error: every packaged image drawn
+    Expected: 45
+    Received: 2
+      at e2e/phase2_journey.spec.js:223
+
+Steps before it passed: both books ingested with their region maps (229.8 s), equation pages 9 and 10 match PDFium.
+
+### Repro
+The same run; the EPUB walk stops on its first `.rf-end`.
+
+### Hypotheses
+1. The walk takes the closing page after today's reading for the book's end. Evidence: the walk is Gate G5's,
+   which ran offline with a mocked session spanning the whole book (`today: [0]`, text no book holds); a live
+   session is a few passages, so `.rf-end` comes after the first section, and `reader.spec.js` "the closing page
+   lets the reader read on" shows ArrowRight continues past it. Result: confirmed by reading; 2 images is the
+   first section's.
+
+### Root cause
+`frontend/e2e/phase2_journey.spec.js` broke out of the page walk as soon as `.rf-end` was shown.
+
+### Fix
+The walk keeps pressing ArrowRight past the closing page and stops only when two presses in a row change neither
+the place nor the closing page (the book's own end).
+
+### Regression test
+The spec itself, re-run live. Attempt 1 (read on past the closing page): 42 of 45, the first five sections
+never seen. Attempt 2 (wait for images, three still presses, per-section log): 42 of 45 again, and the log showed
+why: the walk began at section 5 (the reader opens at today's reading, after the front matter) and reached the
+last section (19:2120), every image it saw loaded. Attempt 3 (walk back to the first page, `0:`, before
+counting): 20 of 20 sections, 45 of 45 images, per section the same as expected.
+
+### Commit
+test(e2e): phase-2 journey and cross-user isolation
+
+## 2026-11-17 C25.3 — the live journey could not click Focus mode
+
+**Status:** fixed (in the spec)
+
+### Symptom
+Fourth local run, after the EPUB fix: `locator.click: Timeout 60000ms exceeded` on
+`getByRole('switch', { name: 'Focus mode' })`; `<div class="rf-reading-chrome"> intercepts pointer events`.
+
+### Root cause
+`frontend/src/reader/useChromeVisible.js`: the reading toolbar fades after 2.6 s without mouse movement, and keys
+that turn pages do not wake it (as designed). The spec reached the body start by keyboard, then clicked.
+
+### Fix
+The spec moves the mouse before reaching for the toolbar or the focus bar (`wake()`), as a reader does.
+
+### Commit
+test(e2e): phase-2 journey and cross-user isolation
+
+## 2026-11-17 C25.3 — the live journey's focus quiz scored 0 of 3 with the right answers
+
+**Status:** fixed (in the spec; the app was right)
+
+### Symptom
+Fifth local run: every step through the quiz passed, then `points earned (quiz passed)`: expected > 0, received 0.
+
+### Repro
+Two diagnostic runs. The first printed the session: `active_seconds` 150 (heartbeats every 30 s, five page turns),
+`quiz_correct` 0 of 3, and a test result whose question 1 had been graded 10 of 10 while the quiz was open. The
+second printed the submit request: answers `["<question 3's answer>", "", ""]` against the stored
+`["HTML-friendly SVG", "Steven Wittens", "<question 3's answer>"]`; graded 0, "No answer was given", "No answer".
+
+### Hypotheses
+1. Every answer was written into the first question's box: the spec's `Question N` navigator click matched a
+   control but did not move the quiz. Evidence: the submitted list above (the last answer written, in slot 1).
+   Result: confirmed.
+2. Submit grading disagrees with the per-question grade. Ruled out by the same list: the server graded what it
+   was sent.
+
+### Root cause
+`frontend/e2e/phase2_journey.spec.js` moved between questions with
+`getByRole('button', { name: /^Question N(,|$)/ })`, copied from the C15 journey; on the focus quiz it did not
+change the question shown.
+
+### Fix
+The spec answers one question at a time, checks "Question i of N" is showing first, and moves on with the quiz's
+own `[data-test-next]` (as `focus-end.spec.js` does).
+
+### Commit
+test(e2e): phase-2 journey and cross-user isolation
+
+## 2026-11-17 C25.3 — GET /books/{id}/regions returns id null for every region
+
+**Status:** fixed
+
+### Symptom
+Found writing the phase-2 isolation check: on the real database every region from
+`GET /books/{id}/regions` has `"id": null`. `frontend/src/originalview/pdf/regions.js` (`regionsOf`, `regionAt`)
+keeps only regions with an id, so on real data the PDF block actions (Explain this equation, code or figure; Add
+to notes from a PDF region) find no region to attach to.
+
+### Repro
+`backend/tests/test_api_regions.py` with the in-memory database returning only the selected columns, as
+PostgREST does (`MemoryDb.project_columns`): the region ids come back null.
+
+### Hypotheses
+1. The handler's select leaves out `id`: `select("page, kind, bbox, order_in_page, meta")` while the response
+   reads `row.get("id")`. Evidence: `backend/routers/books.py` get_regions. The offline test passed because
+   `MemoryDb` ignored the column list and returned whole rows. Result: confirmed by the repro.
+
+### Root cause
+`backend/routers/books.py` get_regions selected `page, kind, bbox, order_in_page, meta` from `page_regions` and
+then returned `row.get("id")`, which PostgREST never sent.
+
+### Fix
+The select names `id` too. `backend/tests/memory_db.py` gains `project_columns` (off by default): on, a select
+returns only the columns it names, as PostgREST does.
+
+### Regression test
+`backend/tests/test_api_regions.py::test_region_ids_come_back_from_the_columns_the_database_returns`: failed with
+the old select (ids null), passes with `id` selected.
+
+### Commit
+fix(api): return region ids from GET /books/{id}/regions

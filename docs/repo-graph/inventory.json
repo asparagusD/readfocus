@@ -1,24 +1,24 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 906,
-    "inventoried": 763,
+    "tracked": 918,
+    "inventoried": 775,
     "excluded": 143
   },
   "files": [
     {
       "path": ".claude/skills/atomic-commit/SKILL.md",
       "language": "markdown",
-      "lines": 190,
-      "size_bytes": 6080,
+      "lines": 191,
+      "size_bytes": 6119,
       "role": "doc",
       "purpose": "Project skill: commit size limit, pre-commit checklist, explicit staging, and the commit message format with types and scopes."
     },
     {
       "path": ".claude/skills/debug-protocol/SKILL.md",
       "language": "markdown",
-      "lines": 204,
-      "size_bytes": 6420,
+      "lines": 205,
+      "size_bytes": 6459,
       "role": "doc",
       "purpose": "Project skill: the ten-step failure procedure and the docs/DEBUG_LOG.md entry template."
     },
@@ -73,10 +73,10 @@
     {
       "path": ".github/workflows/ci.yml",
       "language": "yaml",
-      "lines": 162,
-      "size_bytes": 5865,
+      "lines": 208,
+      "size_bytes": 7736,
       "role": "config",
-      "purpose": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit."
+      "purpose": "CI on every push (C14.5): backend on Python 3.11 from requirements-dev.txt (ruff no worse than its baseline, offline pytest, import); frontend on Node 22 (ESLint no worse than its baseline, build, unit, contrast and image checks); repo graph freshness and tooling tests; on main only, after all three, the Render deploy hook for the tested commit; C25.2: a Gemini SDK step (tools/check_gemini_sdk.py), the bundle budget check after the build, and an e2e job (the whole offline Playwright suite on Microsoft Edge, traces kept on failure) that deploy-render now also waits for."
     },
     {
       "path": ".github/workflows/league-rollover.yml",
@@ -97,8 +97,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 219,
-      "size_bytes": 16472,
+      "lines": 221,
+      "size_bytes": 16890,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -121,10 +121,10 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 213,
-      "size_bytes": 9525,
+      "lines": 267,
+      "size_bytes": 13014,
       "role": "doc",
-      "purpose": "Product overview for 2.0 (C15.4): the honest positioning (policy-driven LangGraph agents, on-device embeddings, rule-based knowledge tracing, no generative AI, $0 API cost), live URL, how it works in seven steps, the architecture in brief with links to docs/ARCHITECTURE.md and the repo graph, local setup, the standard and live checks, and limitations."
+      "purpose": "Product overview (C15.4, phase 2 in C25.1): the honest positioning (algorithmic quizzes, grading, planning and scoring on our servers; Steve alone uses Google's Gemini, opt-in, free tier or the reader's key), live URL, how it works in nine steps (upload and conversion, plan, the original view, focus, Steve, test, grade, adapt, progress), the architecture in brief, local setup, the standard and live checks, and limitations."
     },
     {
       "path": "backend/__init__.py",
@@ -497,10 +497,10 @@
     {
       "path": "backend/nlp/embedder.py",
       "language": "python",
-      "lines": 130,
-      "size_bytes": 4561,
+      "lines": 135,
+      "size_bytes": 4996,
       "role": "lib",
-      "purpose": "Local embeddings: one thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE), preloaded and warmed on a daemon thread at startup unless EMBED_PRELOAD=0, or loaded on first use; a ready event that requests wait on and /health reports, and the load error if any; embed and embed_one return unit-length float32 vectors."
+      "purpose": "Local embeddings: one thread-safe fastembed model (all-MiniLM-L6-v2, 384 dimensions, cache in FASTEMBED_CACHE), preloaded and warmed on a daemon thread at startup unless EMBED_PRELOAD=0, or loaded on first use; a ready event that requests wait on and /health reports, and the load error if any; embed and embed_one return unit-length float32 vectors; C25.2: the model is built with onnxruntime's CPU memory arena off (SESSION_OPTIONS), so a large batch's memory goes back."
     },
     {
       "path": "backend/nlp/text.py",
@@ -617,10 +617,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 405,
-      "size_bytes": 21068,
+      "lines": 430,
+      "size_bytes": 22302,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages)."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -1073,10 +1073,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 160,
-      "size_bytes": 5763,
+      "lines": 180,
+      "size_bytes": 7141,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1); project_columns (C25.G, on by default) returns only the selected columns, as PostgREST does."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -1185,10 +1185,10 @@
     {
       "path": "backend/tests/test_api_regions.py",
       "language": "python",
-      "lines": 95,
-      "size_bytes": 5114,
+      "lines": 101,
+      "size_bytes": 5606,
       "role": "test",
-      "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused."
+      "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused; C25.G: region ids come back when the database returns only the selected columns."
     },
     {
       "path": "backend/tests/test_api_sessions.py",
@@ -1319,6 +1319,14 @@
       "purpose": "Pytest for body start detection: EPUB nav and PDF outline, chapter-one spellings and near misses, Part I with a chapter after it, bare Introduction, unnumbered novels, region headings with contents pages and numbered lists skipped, the prose fallback, outlines with chunk pages only, cases from the project's own books."
     },
     {
+      "path": "backend/tests/test_book_delete.py",
+      "language": "python",
+      "lines": 84,
+      "size_bytes": 3625,
+      "role": "test",
+      "purpose": "DELETE /books/{id} (C25.1 fix): the book's original and every file in notes/<user>/<book>/ go with it, page by page; another book's and another reader's files stay; another reader's book is 404; a storage failure, or a remove that removes nothing, is logged once and the book is still deleted."
+    },
+    {
       "path": "backend/tests/test_book_files.py",
       "language": "python",
       "lines": 115,
@@ -1401,16 +1409,16 @@
     {
       "path": "backend/tests/test_deploy_config.py",
       "language": "python",
-      "lines": 89,
-      "size_bytes": 3357,
+      "lines": 92,
+      "size_bytes": 3818,
       "role": "test",
       "purpose": "Pytest, C14.1: the Dockerfile is python:3.11-slim, bakes the model through the app's embedder before going offline, binds ${PORT:-8000} with one worker; .dockerignore is an allowlist; render.yaml is a free Docker service with /health, auto-deploy off, secrets unset and no AI key; /health exists."
     },
     {
       "path": "backend/tests/test_embedder.py",
       "language": "python",
-      "lines": 216,
-      "size_bytes": 7314,
+      "lines": 227,
+      "size_bytes": 7847,
       "role": "test",
       "purpose": "Pytest: embedder output shape, unit length, batching, lazy single load across threads and env settings on a fake model; the startup preload loads and warms once on a daemon thread, a caller's wait times out while it loads, a failed load is recorded and retried by the next ensure_loading, ensure_loading never waits for a load in progress, a lazy load also marks it ready, EMBED_PRELOAD; similar sentences beat unrelated ones on the real model when it is cached."
     },
@@ -1625,8 +1633,8 @@
     {
       "path": "backend/tests/test_no_paid_ai.py",
       "language": "python",
-      "lines": 128,
-      "size_bytes": 5297,
+      "lines": 136,
+      "size_bytes": 5644,
       "role": "test",
       "purpose": "Pytest, hard constraint 1, with the deny-list from tools/no_paid_ai.py: no backend file imports a banned SDK or the LangChain chat-model stack (AST scan), reads a provider key or names a provider at all (Gate G3's grep), requirements.txt lists no banned package and keeps langgraph, .env.example and render.yaml declare no provider key, and the old llm.py and embeddings.py are gone."
     },
@@ -2073,10 +2081,10 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
-      "lines": 322,
-      "size_bytes": 19163,
+      "lines": 464,
+      "size_bytes": 29971,
       "role": "doc",
-      "purpose": "Architecture of 2.0 (C15.4): the system, the five agents' pure decide() contracts (inputs, outputs, what each decides), the LangGraph diagram copied from docs/repo-graph/AGENT_GRAPH.md with its routing conditions, event flows per endpoint, ingestion, the data model by migration, the book reader and the word-lookup path, and the security layers."
+      "purpose": "Architecture (C15.4, phase 2 in C25.1): the system with Gemini for Steve only, the five agents' pure decide() contracts, the LangGraph diagram, event flows per endpoint, ingestion, conversions to EPUB, the region map, the data model through migration 033, the original view (PDF.js, foliate-js, OCR; the book view retired), word lookup, annotations, notes, Steve, focus mode, XP and leagues, and the security layers."
     },
     {
       "path": "docs/ASSETS.md",
@@ -2089,16 +2097,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1591,
-      "size_bytes": 89767,
+      "lines": 1653,
+      "size_bytes": 94367,
       "role": "doc",
-      "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats."
+      "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4637,
-      "size_bytes": 208211,
+      "lines": 4858,
+      "size_bytes": 219076,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2113,8 +2121,8 @@
     {
       "path": "docs/DEPLOYMENT.md",
       "language": "markdown",
-      "lines": 228,
-      "size_bytes": 13699,
+      "lines": 235,
+      "size_bytes": 14679,
       "role": "doc",
       "purpose": "Deployment guide (C14.6): where each part runs (Vercel Hobby, Render Free readfocus-api, the shared Supabase Free project), env var names per provider, free-tier limits with doc links, cold start, Supabase pause, manual backups, the release step, redeploy, rollback, verification commands and what was verified."
     },
@@ -2161,8 +2169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5499,
-      "size_bytes": 1016920,
+      "lines": 5744,
+      "size_bytes": 1046062,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2185,8 +2193,8 @@
     {
       "path": "frontend/.gitignore",
       "language": "gitignore",
-      "lines": 33,
-      "size_bytes": 517,
+      "lines": 35,
+      "size_bytes": 631,
       "role": "config",
       "purpose": "Vite template ignore rules: logs, node_modules, dist, editor files."
     },
@@ -2409,8 +2417,8 @@
     {
       "path": "frontend/e2e/landing.spec.js",
       "language": "javascript",
-      "lines": 254,
-      "size_bytes": 12242,
+      "lines": 263,
+      "size_bytes": 13149,
       "role": "config",
       "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset. Demo: hover opens the real card below the word's line and pointer-leave closes it with no lookup sent; Quadi shows the Wikipedia summary and link; Enter focuses the card and Esc returns to the word; a touch long-press opens the compact card. Features: the three sections and the isn't note; the five questions open with Enter and close with Space; the footer links GitHub, credits CC BY-SA sources, switches the theme and Start reading opens Create account."
     },
@@ -2511,6 +2519,22 @@
       "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page."
     },
     {
+      "path": "frontend/e2e/phase2_journey.spec.js",
+      "language": "javascript",
+      "lines": 447,
+      "size_bytes": 30096,
+      "role": "config",
+      "purpose": "Live phase-2 journey (C25.3), npm run test:live:phase2 (playwright.phase2.config.js), opt-in and approved per run: test user A uploads Interactive Linear Algebra and the illustrated Alice EPUB, waits for ingestion and the region map; two equation pages as the original view draws them match PDFium (scripts/dev/g5_page_diff.py); every EPUB image drawn (g5_epub_expect.py), walked from the first page past today's closing page; highlight, lookup off, Ask Steve (mocked in the browser unless STEVE_LIVE=1) with the highlight's page as anchor, the citation moves the book back; save to notes, a drawing note, the notepad follows the pages; focus mode from chapter 1, page turns, the ribbon, a quiz of clamp(round(words/400),3,15) answered from the stored questions (service key, this machine), the points breakdown, XP, today's goal (set to 20 for the run), streak and league; deletes both books and restores the goal; only the site, the API and Supabase contacted."
+    },
+    {
+      "path": "frontend/e2e/privacy.spec.js",
+      "language": "javascript",
+      "lines": 64,
+      "size_bytes": 3905,
+      "role": "config",
+      "purpose": "Playwright e2e for /privacy (C25.1): the lead statement, its five sections, Google's terms link, no backend request; linked from the landing footer and an answer; 375 and 1440 in Paper and Lamplight with no sideways scroll, a reading measure and the skip link; the account menu's Privacy link when signed in."
+    },
+    {
       "path": "frontend/e2e/quiz-me.spec.js",
       "language": "javascript",
       "lines": 93,
@@ -2577,8 +2601,8 @@
     {
       "path": "frontend/e2e/steve-panel.spec.js",
       "language": "javascript",
-      "lines": 176,
-      "size_bytes": 9916,
+      "lines": 177,
+      "size_bytes": 10043,
       "role": "config",
       "purpose": "E2E for Steve's panel (C20.7b): consent stored to its version, Not now, a streamed answer with KaTeX math, tinted code and a citation chip that moves the book, checked chips only, resting with the own key, errors and Try again, the off switch, keyboard and focus return, side by side at 1440, the sheet at 375, Lamplight with reduced motion."
     },
@@ -2634,25 +2658,25 @@
       "path": "frontend/index.html",
       "language": "html",
       "lines": 59,
-      "size_bytes": 3458,
+      "size_bytes": 3432,
       "role": "entry",
       "purpose": "HTML entry: an inline script applies the stored theme and accent (or the OS scheme) to <html> before first paint; mounts main.jsx. C13.10e: full title, description, theme-color for both schemes, Open Graph and Twitter tags (og.png); the inline script also hides the prerendered landing ([data-prerendered]) off / and when a Supabase session is stored."
     },
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 76,
-      "size_bytes": 2458,
+      "lines": 79,
+      "size_bytes": 2662,
       "role": "config",
-      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation."
+      "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation; C25.3: test:live:phase2 and test:phase2-isolation."
     },
     {
       "path": "frontend/playwright.config.js",
       "language": "javascript",
       "lines": 25,
-      "size_bytes": 934,
+      "size_bytes": 960,
       "role": "config",
-      "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1)."
+      "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1); ignores phase2_journey.spec.js (live, C25.3)."
     },
     {
       "path": "frontend/playwright.gate.config.js",
@@ -2671,12 +2695,28 @@
       "purpose": "Playwright config for the live journey (C15.1, npm run test:live): only journey.spec.js on Edge; BASE_URL unset starts Vite dev on 5175 (backend on 8000 started separately), set targets that site with the API on Render (API_URL overrides); action 60 s, navigation 120 s, test 20 min."
     },
     {
+      "path": "frontend/playwright.phase2.config.js",
+      "language": "javascript",
+      "lines": 7,
+      "size_bytes": 496,
+      "role": "config",
+      "purpose": "Playwright config for the live phase-2 journey (C25.3): the live config (base URL, API, Vite on 5175 when local) with testMatch phase2_journey.spec.js and a 60-minute timeout."
+    },
+    {
       "path": "frontend/public/robots.txt",
       "language": "text",
-      "lines": 9,
-      "size_bytes": 310,
+      "lines": 10,
+      "size_bytes": 341,
       "role": "config",
       "purpose": "robots.txt (C13.10e): only / (plus its /assets/, og.png and favicon) is open to crawlers; every app route is disallowed."
+    },
+    {
+      "path": "frontend/scripts/check-bundle.mjs",
+      "language": "text",
+      "lines": 72,
+      "size_bytes": 3787,
+      "role": "config",
+      "purpose": "Bundle budgets (C25.2), npm run check:bundle after a build, a standard check and CI step: reads .bundle-stats.json (vite.config.js bundleStats); the initial route (the entry chunk and its static imports) within INITIAL_JS_GZIP_BUDGET gzipped; pdfjs-dist, vendored foliate-js, Excalidraw, TipTap and tesseract.js each bundled and only in chunks loaded on demand."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -2719,6 +2759,14 @@
       "purpose": "Live cross-user isolation check (C15.2, npm run test:isolation; writes to the shared project, approval only): test user A uploads sample.pdf and reads, finishes and submits a session through the API; test user B then probes every id-taking API endpoint and, with supabase-js and the anon key, selects, updates and deletes in every per-user table, inserts a book as A, calls both search RPCs and probes A's Storage folder; term_lookups is readable by signed-in users and writable by none; no token and a raw user id are 401. Rows of B's own are reported but only A's count; A's row counts are compared before and after; A deletes the book and the rows and PDF left are reported. Exit 1 on any probe not denied."
     },
     {
+      "path": "frontend/scripts/live/check-phase2-isolation.mjs",
+      "language": "text",
+      "lines": 322,
+      "size_bytes": 23705,
+      "role": "config",
+      "purpose": "Live phase-2 isolation (C25.3), npm run test:phase2-isolation, approved per run: test user A's highlight, note and picture, focus session and events made through the API, a Steve thread and message, XP, badge, progress and an equation's LaTeX seeded with the service key; test user B probes about 21 phase-2 API routes with A's ids, RLS reads, updates, deletes and forged inserts on 12 tables through B's session and anon, A's note picture in Storage, and equation_latex (B's own copy of the same file gets the cached LaTeX, A's book through B does not); deletes both books and every seeded row and reports what is left."
+    },
+    {
       "path": "frontend/scripts/live/check-xp-isolation.mjs",
       "language": "text",
       "lines": 146,
@@ -2745,8 +2793,8 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 142,
-      "size_bytes": 6700,
+      "lines": 145,
+      "size_bytes": 6929,
       "role": "entry",
       "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4). C23.6b: /focus/:sessionId/quiz (FocusQuiz). C23.7b: /quiz/:sessionId (QuizMe). C24.6c: /league (lazy, signed in)."
     },
@@ -2897,16 +2945,16 @@
     {
       "path": "frontend/src/components/AccountMenu.css",
       "language": "css",
-      "lines": 203,
-      "size_bytes": 4422,
+      "lines": 206,
+      "size_bytes": 4511,
       "role": "component",
       "purpose": "Account button and panel styles: 44 px round initials with a field border, a raised surface panel with a lift shadow (full width under 640 px), segmented radio rows on paper-2 with the checked one raised, accent swatches, the theme row only under 640 px, Sign out."
     },
     {
       "path": "frontend/src/components/AccountMenu.jsx",
       "language": "jsx",
-      "lines": 147,
-      "size_bytes": 5406,
+      "lines": 151,
+      "size_bytes": 5655,
       "role": "component",
       "purpose": "AccountMenu (D4): the initials button and a disclosure panel (aria-expanded, aria-controls; not an ARIA menu, as it holds form controls) with name and email, reading settings (text size in the book via reader/textSize, theme, accent) and Sign out; Esc closes and returns focus, a press outside closes; the panel slides down as it opens (pop) and fades out, opacity only under reduced motion."
     },
@@ -3301,6 +3349,14 @@
       "size_bytes": 463,
       "role": "component",
       "purpose": "ToastContext and useToast(), which returns { toast, dismiss } and throws without a ToastProvider."
+    },
+    {
+      "path": "frontend/src/deploy/bundleBudget.test.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 2191,
+      "role": "asset",
+      "purpose": "node --test (C25.2) for scripts/check-bundle.mjs on made-up chunks: the initial route is the entry and its static imports, not its dynamic ones; lazy libraries in lazy chunks pass; a heavy library in the initial route, or in no chunk, fails; over the gzip budget fails."
     },
     {
       "path": "frontend/src/deploy/csp.js",
@@ -4513,8 +4569,8 @@
     {
       "path": "frontend/src/pages/Landing.css",
       "language": "css",
-      "lines": 646,
-      "size_bytes": 17051,
+      "lines": 658,
+      "size_bytes": 17416,
       "role": "page",
       "purpose": "Styles for the landing page (C13.10): masthead, skip link, hero grid and illustration scene, the book spread (pages, spine shade, flyleaf, caption, one page under 640 px), the contents page (numerals, leaders), the word demo (marked words, page, pointer/touch hints), the features, the honesty note, the questions and the colophon (44 px theme toggle), on the project tokens."
     },
@@ -4583,6 +4639,22 @@
       "purpose": "404 page inside Layout: ErrorScreen with \"This page isn't on the shelf.\", Back to your shelf and \"404 · <path>\"."
     },
     {
+      "path": "frontend/src/pages/Privacy.css",
+      "language": "css",
+      "lines": 66,
+      "size_bytes": 2048,
+      "role": "page",
+      "purpose": "Privacy page styles (C25.1): one column at a reading measure with the landing masthead and colophon, underlined running-text links, a smaller title and headings under 640 px."
+    },
+    {
+      "path": "frontend/src/pages/Privacy.jsx",
+      "language": "jsx",
+      "lines": 127,
+      "size_bytes": 7613,
+      "role": "page",
+      "purpose": "Public privacy page at /privacy (C25.1), outside the backend gate: the honest Steve statement, what ReadFocus keeps, what goes to Google and when, other services, who sees what (leagues), and deleting books, notes, highlights, the Gemini key and the account (by request; PRIVACY_CONTACT empty until the owner names an address)."
+    },
+    {
       "path": "frontend/src/pages/ReadingSession.css",
       "language": "css",
       "lines": 69,
@@ -4626,31 +4698,31 @@
       "path": "frontend/src/pages/landing/Contents.jsx",
       "language": "jsx",
       "lines": 44,
-      "size_bytes": 2130,
+      "size_bytes": 2187,
       "role": "page",
-      "purpose": "How it works as a book's contents page (C13.10b): four steps with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works."
+      "purpose": "How it works as a book's contents page (C13.10b): four steps (C25.1: any supported book, read as published, focus mode) with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works."
     },
     {
       "path": "frontend/src/pages/landing/Faq.jsx",
       "language": "jsx",
-      "lines": 22,
-      "size_bytes": 1236,
+      "lines": 43,
+      "size_bytes": 3409,
       "role": "page",
-      "purpose": "Landing questions (C13.10d) as native details/summary: which files work, is it free, where definitions come from, why the first load is slow, deleting books; answers checked against the code."
+      "purpose": "Landing questions (C13.10d, C25.1) as native details/summary: which files work, is it free, is Steve free, what is sent to Google, why Steve rests, how points are calculated, where definitions come from, why the first load is slow, deleting books (with links to /privacy); answers checked against the code and the specs."
     },
     {
       "path": "frontend/src/pages/landing/Features.jsx",
       "language": "jsx",
-      "lines": 50,
-      "size_bytes": 2271,
+      "lines": 65,
+      "size_bytes": 3761,
       "role": "page",
-      "purpose": "Landing features (C13.10d): Feels like a book, Understand every word, Reading that adapts as three editorial sections with text and an illustration alternating sides (one plain sentence on rule-based agents and one small embedding model on the server), then the What ReadFocus isn't note."
+      "purpose": "Landing features (C13.10d, C25.1): Feels like a book, Understand every word, Reading that adapts, Notes and Steve beside the book, Focus, points and a weekly league as editorial sections with text and an illustration alternating sides, then the 'What ReadFocus isn't' note naming Steve as the one generative model and linking /privacy."
     },
     {
       "path": "frontend/src/pages/landing/LandingFooter.jsx",
       "language": "jsx",
       "lines": 26,
-      "size_bytes": 1212,
+      "size_bytes": 1248,
       "role": "page",
       "purpose": "Landing colophon (C13.10d): closing line with Start reading, credits for Wiktionary/Free Dictionary, Wikipedia and Project Gutenberg with licences, the GitHub source link (REPO_URL) and the ThemeToggle."
     },
@@ -4661,6 +4733,14 @@
       "size_bytes": 5852,
       "role": "page",
       "purpose": "Landing's Try it section (C13.10c): Meditations Book I.XV with seven marked words (buttons) that open the reader's real WordCard through useWordCard and a bundled client; mouse hover after HOVER_MS, touch long-press (createLongPress), click or tap, Enter opens and focuses, Esc returns focus; polite live announcement; no network calls."
+    },
+    {
+      "path": "frontend/src/pages/landing/claims.test.js",
+      "language": "javascript",
+      "lines": 43,
+      "size_bytes": 2190,
+      "role": "page",
+      "purpose": "node --test (C25.1): no page, component or index.html claims ReadFocus has no AI; the privacy and landing pages name Steve's use of Gemini and the off switch; no loss or guilt words in the gamification copy or the league page."
     },
     {
       "path": "frontend/src/pages/landing/demoDefinitions.json",
@@ -4993,8 +5073,8 @@
     {
       "path": "frontend/src/steve/StevePanel.jsx",
       "language": "jsx",
-      "lines": 259,
-      "size_bytes": 12343,
+      "lines": 262,
+      "size_bytes": 12544,
       "role": "asset",
       "purpose": "Steve's side panel (C20.7b, handoff screens 13-17): a 380 px column beside the book or a pull-up sheet under 760 px; consent, off, empty with suggestions, the conversation with streaming answers, Stop, citations that move the book, errors, resting with the own-key link, and settings; Esc returns focus to the toolbar."
     },
@@ -5337,10 +5417,10 @@
     {
       "path": "frontend/vite.config.js",
       "language": "javascript",
-      "lines": 156,
-      "size_bytes": 6633,
+      "lines": 189,
+      "size_bytes": 8217,
       "role": "config",
-      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings; pdfjsAssets serves PDF.js's standard fonts, wasm decoders and ICC profiles under /pdfjs/ in dev and copies them into the build (not quickjs-eval or the JS fallbacks); contentSecurityPolicyMeta puts the CSP (src/deploy/csp.js) first in the built page's head (C17.3)."
+      "purpose": "Vite config: React and Tailwind v4 plugins, a build-only plugin that preloads the Latin Lora and DM Sans font files, an /api dev proxy to port 8000, and a vendor chunk that leaves Motion out so its features load on demand. C13.10e: preloads Playfair Display too; siteUrls() adds canonical and og:url and makes share images absolute when VITE_SITE_URL is set; vendor chunk limited to React, the router and Supabase. C14.2: deployEnv() stops a Vercel build (VERCEL=1, production mode) whose VITE_ variables fail src/deploy/deployEnv.js, and prints its warnings; pdfjsAssets serves PDF.js's standard fonts, wasm decoders and ICC profiles under /pdfjs/ in dev and copies them into the build (not quickjs-eval or the JS fallbacks); contentSecurityPolicyMeta puts the CSP (src/deploy/csp.js) first in the built page's head (C17.3); bundleStats (C25.2) writes .bundle-stats.json beside dist (per JS chunk: file, entry or dynamic entry, imports, bytes, packages) for check:bundle, skipping the SSR build."
     },
     {
       "path": "package.json",
@@ -5377,10 +5457,10 @@
     {
       "path": "render.yaml",
       "language": "yaml",
-      "lines": 29,
-      "size_bytes": 1018,
+      "lines": 46,
+      "size_bytes": 1758,
       "role": "config",
-      "purpose": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key."
+      "purpose": "Render blueprint: one Docker web service on the Free plan, health check /health, auto-deploy off (CI deploys); Supabase keys and FRONTEND_URL entered in the dashboard (sync: false), FASTEMBED_CACHE and ENV=production fixed; no AI provider key; C25.2: Steve's three Gemini names, STEVE_DAILY_LIMIT_PER_USER, KEY_ENCRYPTION_SECRET and CRON_SECRET, all sync: false (set in the dashboard)."
     },
     {
       "path": "requirements-dev.txt",
@@ -5573,6 +5653,14 @@
       "size_bytes": 3047,
       "role": "script",
       "purpose": "Measures the embedding model in a fresh process: psutil RSS before and after import, load and batches, model load time, and the latency of a batch of short and of chunk-sized texts."
+    },
+    {
+      "path": "scripts/dev/measure_phase2.py",
+      "language": "python",
+      "lines": 189,
+      "size_bytes": 8644,
+      "role": "script",
+      "purpose": "Phase-2 memory check (C25.2), run in the production image at --memory=512m --cpus=0.1 with --network none: imports backend.main and loads the model, ingests a shelf book through the real pipeline on MemoryDb (gate_g5's harness: ingest, regions job, prose rebuild, RSS peaks per phase) while a thread streams Steve answers through the real provider and Gemini SDK, with a context at the policy cap, from a fake Gemini endpoint on 127.0.0.1; prints idle, after-SDK and peak RSS and the cgroup's memory.peak."
     },
     {
       "path": "scripts/dev/measure_regions.py",
@@ -5983,6 +6071,14 @@
       "purpose": "Package marker for tools."
     },
     {
+      "path": "tools/check_gemini_sdk.py",
+      "language": "python",
+      "lines": 83,
+      "size_bytes": 3557,
+      "role": "script",
+      "purpose": "Repo-wide Gemini SDK guard (C25.2), standard library only, a CI step: every Python file git knows may import google.genai or google.generativeai only in backend/steve/provider.py (tools/no_paid_ai.steve_sdk_allowed); no Google AI package in frontend/package.json and no frontend/src file importing one or naming Gemini's API host. Exit 1 with the offenders."
+    },
+    {
       "path": "tools/make_converted_fixture.py",
       "language": "python",
       "lines": 80,
@@ -6018,7 +6114,7 @@
       "path": "tools/no_paid_ai.py",
       "language": "python",
       "lines": 59,
-      "size_bytes": 3030,
+      "size_bytes": 3031,
       "role": "script",
       "purpose": "The deny-list for hard constraint 1: banned SDK modules, packages and provider key names, and Gate G3's search pattern; kept outside backend/ so the application names no provider."
     },
@@ -6049,8 +6145,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 765,
-      "size_bytes": 236563,
+      "lines": 777,
+      "size_bytes": 243450,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

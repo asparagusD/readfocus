@@ -85,8 +85,8 @@ def test_requirements_list_no_banned_package_and_keep_langgraph():
 
 
 def test_config_declares_no_provider_key():
-    """render.yaml names no provider key; .env.example only Steve's Gemini names (C16.4)."""
-    assert not BANNED_KEYS.search((ROOT / "render.yaml").read_text(encoding="utf-8"))
+    """render.yaml (C25.2) and .env.example (C16.4) name no provider key but Steve's Gemini names."""
+    assert not provider_keys_outside_steve((ROOT / "render.yaml").read_text(encoding="utf-8"))
     assert not provider_keys_outside_steve((ROOT / ".env.example").read_text(encoding="utf-8"))
 
 
@@ -126,3 +126,11 @@ def test_a_second_file_naming_the_sdk_or_a_gemini_variable_is_still_caught():
     assert steve_gate_text("backend/steve/service.py", "google" + "_genai") == "google" + "_genai"
     assert steve_gate_text(STEVE_PROVIDER, "logging.getLogger('google" + "_genai')") == "logging.getLogger('')"
     assert GATE_PATTERN.search(steve_gate_text(STEVE_PROVIDER, "import open" + "ai"))
+
+
+def test_only_the_provider_imports_the_sdk_anywhere_in_the_repo():
+    """C25.2: tools/check_gemini_sdk.py (also its own CI step): every Python file, frontend/package.json and
+    frontend/src; only backend/steve/provider.py may import the SDK."""
+    from tools.check_gemini_sdk import offenders
+
+    assert offenders() == []

@@ -214,3 +214,14 @@ def test_ensure_loading_retries_after_a_failed_preload(fresh, monkeypatch):
     assert not embedder.is_ready() and "download interrupted" in embedder.load_error()
     embedder.ensure_loading()
     assert embedder.wait_ready(5) and len(attempts) == 2
+
+
+def test_the_model_is_built_with_onnx_runtimes_memory_arena_off(monkeypatch):
+    """C25.2: with the arena on, the server kept the largest batch's memory for good (docs/BENCHMARKS.md)."""
+    import fastembed
+
+    built = []
+    monkeypatch.setattr(fastembed, "TextEmbedding", lambda **kwargs: built.append(kwargs) or object())
+    embedder._load()
+    assert built == [{"model_name": embedder.MODEL_NAME, "cache_dir": embedder.cache_dir(),
+                      "threads": embedder.thread_count(), "enable_cpu_mem_arena": False}]

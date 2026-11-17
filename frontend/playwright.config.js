@@ -6,7 +6,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   // live, opt-in: npm run test:live (playwright.live.config.js); Gate G5's renderer walk (playwright.gate.config.js)
-  testIgnore: ['journey.spec.js', 'gate-g5.spec.js'],
+  testIgnore: ['journey.spec.js', 'phase2_journey.spec.js', 'gate-g5.spec.js'],
   timeout: 30_000,
   workers: 1,
   reporter: [['list']],

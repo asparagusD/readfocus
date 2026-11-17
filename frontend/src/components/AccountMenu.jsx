@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { LogOut, ShieldCheck } from 'lucide-react';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { fadeIn, pop } from '../motion/presets';
 import { useAuth } from '../hooks/useAuth';
@@ -33,7 +33,7 @@ function Choice({ legend, name, options, value, onChange }) {
 
 /**
  * The initials button and its account panel (D4): name and email, reading
- * settings (text size, theme, accent), Steve's own-key setting (C20.3) and Sign out. The panel mixes form
+ * settings (text size, theme, accent), Steve's own-key setting (C20.3), Privacy (C25.1) and Sign out. The panel mixes form
  * controls with a button, so it is a disclosure (aria-expanded,
  * aria-controls), not an ARIA menu. Esc closes it and returns focus to the
  * button; a press outside closes it. The theme toggle sits here, and in
@@ -135,6 +135,10 @@ export function AccountMenu() {
           <h2 id={`${panelId}-steve`} className="eyebrow">Steve</h2>
           <OwnKeyForm />
         </section>
+        <Link to="/privacy" className="rf-account__signout" onClick={() => setOpen(false)}>
+          <ShieldCheck size={18} strokeWidth={1.75} aria-hidden="true" />
+          <span>Privacy</span>
+        </Link>
         <button type="button" className="rf-account__signout" onClick={leave}>
           <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
           <span>Sign out</span>

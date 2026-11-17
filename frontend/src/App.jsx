@@ -26,6 +26,7 @@ const Results = named(() => import('./pages/Results'), 'Results');
 const League = named(() => import('./pages/League'), 'League'); // C24.6c
 const Login = named(() => import('./pages/Login'), 'Login');
 const NotFound = named(() => import('./pages/NotFound'), 'NotFound');
+const Privacy = named(() => import('./pages/Privacy'), 'Privacy'); // C25.1
 const page = (Page) => <Suspense fallback={null}><Page /></Suspense>;
 
 // Dev-only review page for the illustrations (C11.1). In a production
@@ -42,14 +43,16 @@ const EpubGallery = import.meta.env.DEV ? lazy(() => import('./gallery/EpubGalle
 const BookGallery = import.meta.env.DEV ? lazy(() => import('./gallery/BookGallery.jsx')) : null;
 
 /**
- * Signed-out visitors at "/" get the static landing page (C13.10a), outside
- * the backend gate so it never waits on a sleeping backend. Everyone else,
- * and every other route, goes through the gate exactly as before.
+ * Signed-out visitors at "/" get the static landing page (C13.10a), and
+ * everyone at "/privacy" the privacy page (C25.1), outside the backend gate
+ * so they never wait on a sleeping backend. Everyone else, and every other
+ * route, goes through the gate exactly as before.
  */
 function PublicHome({ children }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
   if (!user && pathname === '/') return <Landing />;
+  if (pathname === '/privacy') return page(Privacy); // public and static, for everyone (C25.1)
   return <BackendGate>{children}</BackendGate>;
 }
 

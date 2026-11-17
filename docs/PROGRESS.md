@@ -2984,7 +2984,7 @@ C20 prompt): Steve became C20, merging the stubs "Steve backend" and
 "Steve in the reader"; anchors and highlights C21, notepad C22, focus
 mode C23, XP and leagues C24, verification C25. Each chunk gets its full plan (what there is to
 build on, decisions, subchunks with verification and cuts, an estimate)
-at its own start, before any code. The phase 2 budget is 43.25 hours
+at its own start, before any code. The phase 2 budget is 45.5 hours
 (31 h until the C19 start, raised by C19's 5.5 h on 2026-11-13, then
 36.5 h until the C20 start, raised by 1.75 h on 2026-11-14 for C20's
 7.75 h against the stubs' 6.0 h, then 38.25 h until the C21 start, raised
@@ -2994,7 +2994,9 @@ by 0.75 h on 2026-11-14 for C21's 4.25 h against the stub's 3.5 h, then
 40.75 h until the C23 start, raised by 1.5 h on 2026-11-15 for C23's
 5.0 h against the stub's 3.5 h, then
 42.25 h until the C24 start, raised by 1.0 h on 2026-11-15 for C24's
-4.0 h against the stub's 3.0 h; C16
+4.0 h against the stub's 3.0 h, then
+43.25 h until the C25 start, raised by 2.25 h on 2026-11-15 for C25's
+4.0 h against the stub's 1.75 h; C16
 3.25 h, the rest below); the 50%-over rule applies per chunk. Rules:
 CLAUDE.md "Phase 2"; specs: `docs/ANCHORS.md`, `docs/FOCUS_RULES.md`,
 `docs/GAMIFICATION.md`; skills: `free-intelligence`, `steve-guardrails`.
@@ -5491,9 +5493,342 @@ Questions:
 | [x] C24.7 gamification tests and e2e | this commit (`test(xp): end-to-end gamification and isolation tests`); C24.G time zone `d29a9e5` | The C24.7 prompt over the plan's file list. `backend/tests/test_gamification_journey.py` (new): readers A and B, plus C (a group of 3 promotes one: 7 x 3 / 30 half up), on one in-memory database with the real unique keys and a fake clock patched into `progress`, `league_store` and `badge_award`; each step runs the code the app runs: `grade()`'s two hooks (`award_focus_xp`, `check_quietly`), `PUT`/`GET /me/progress`, `GET /badges`, `GET /leagues/current`, and `POST /internal/leagues/rollover` with a test `CRON_SECRET` (the dev rollover). Steps: 12 Nov a passed session credited twice (a retried grade) gives one ledger row and First focus once; 16 Nov the rollover forms one group of 3 (a repeat does nothing); 16-22 Nov A meets the goal daily, each grade replayed: streak 2 on the 17th, 7 with a freeze and the 7-day badge on the 22nd; A's board shows all three, B opts out and leaves it (ranks 1 and 3, a gap), B still sees their own row; 23 Nov the rollover closes the week: A 1st of 3 with 470 XP, promoted, now Paperback; A misses the 23rd; 24 Nov the view shows the 23rd frozen and the streak at 7, then the goal makes it 8 with the freeze spent. The answers A and B got are kept in `frontend/e2e/fixtures/gamification-journey.json` (new; the test fails when it drifts, `UPDATE_JOURNEY=1` rewrites it). `frontend/e2e/gamification.spec.js` (new, offline, part of `test:e2e`): replays them with `page.clock` at each step's moment (zone Europe/London; the stored sign-in's expiry moved past the fake dates): the header's XP and goal unchanged over a reload and no PUT, 2 days on the 17th, 7 days with 1 freeze held, the 24th before reading 7 days and no freeze, then 8; the shelf 2 of 14 earned, each once with its day; B in a second browser context ticks the opt-out (one PUT `{leaderboard_opt_out: true}`), is told only they see their place and keeps their row, and A's reloaded board has 2 rows, a gap and no Marginalia; on the 23rd "Paperback league" and "Last week you came 1st of 3 with 470 XP and moved up to Paperback." `frontend/scripts/live/check-xp-isolation.mjs` (new; `npm --prefix frontend run test:xp-isolation`; README): the service key seeds A an `adjustment` row dated 2000-01-01 (outside every day and league window), badge `isolation-check` (not in the catalogue, never shown) and a `user_progress` row only if A has none; A reads each through the anon key (control); B and a token-less anon client select by A's id and in bulk on `xp_events`, `user_badges`, `user_progress`, `league_members`, `league_weeks`, `league_groups`; B updates, deletes and forges rows (as A and as B); the service key then checks A's rows unchanged and nothing forged, and deletes what the run seeded. `tools/repo_graph/purposes.json`: the four files. | Journey test passed on the first full run; negative control (no unique key on `xp_events` and the existence check patched off): it fails at the first retried grade (`awarded` True). e2e spec 5 passed; its first run failed one test (the shelf: the fixtures' empty dashboard shows no shelf), fixed by mocking a dashboard with a book as `dashboard-badges.spec.js` does. Live isolation (your approval, 2026-11-15: "Yes, run it"; shared project): 35 probes, 35 denied (A's 3 controls 1 row each; B and anon 0 of A's rows in all 6 tables; B's 5 updates and deletes 0 rows; 4 inserts refused 42501; A's rows unchanged, nothing forged), `user_progress` for A made and removed, rows left after cleanup 0. Standard checks: ruff 27 (28 before removing an unused import), pytest 2006, ESLint 3 errors, build, import, graph 64, contrast 304/0, images 0 failing, unit 260, e2e 313. | 2026-11-15 | The e2e replays the server's answers rather than running the server: the server logic is proven by the pytest journey, the screens by the spec, and the JSON ties them. Not covered by this commit (the plan's C24.7 list beyond the prompt): `gamification-copy.test.js` (no loss or guilt words), the progress panel and promotion page specs (neither was built; the frozen day is not shown in the UI, only the streak and freezes held), and the C24 close (GAMIFICATION As built, ARCHITECTURE, self-review). The live check covers RLS through the anon key only, not the API (the deployed backend runs `main`, without C24). |
 | [x] C24 close: checks and self-review | this commit (`docs(progress): close C24`); C24.7 `0bc7454` | Step 1: standard checks on `0bc7454`; `make graph` was not clean: PROGRESS.md's and CLAUDE.md's line counts were stale (C24.7 regenerated the graph before adding its row and the baselines), refreshed here. Step 2: C24.1-C24.7 ticked; scheduler approved (2026-11-15, "Yes, GitHub Action") and its dry run recorded in the C24.4 row (a throwaway postgres:16, no Supabase write). Step 3: `git diff readfocus-2.0...HEAD` (77 files): the backend, migrations and workflow by an independent reviewer given only the code and GAMIFICATION.md (privacy leaks, dark patterns, double credit); the frontend read by hand (no loss or guilt words in `frontend/src/gamification` or `League.jsx`; demotion reads "a fresh start"; the board shows only a display name or "Reader" and four letters; the time-zone button is `type=button`). No BLOCKING finding: RLS is select-own on every new table, none on `league_weeks`/`league_groups`, no client write policy; every service-role query filters on the signed-in reader except the board, which returns pseudonyms; `PUT /me/progress` forbids extra fields; focus XP keyed (source, source_id), badge XP only after the badge's key insert; `CRON_SECRET` compared in constant time and never logged; no notifications, purchases or invented readers. | Standard checks: ruff 27, pytest 2006, ESLint 3 errors, build, import, graph 64, contrast 304/0, images 0 failing, unit 260, e2e 313 (gamification.spec.js 5 of them). | 2026-11-15 | Time: about 5.9 h by commit times (plan commit 17:24 to this close), against the 4.0 h estimate: 48% over, under the 6.0 h stop line. Non-blocking, for C25 or later: (a) "Finished a book" (+200 XP, counted in the week's league XP) is earned by one `PUT /sessions/{id}/position` whose anchor names the last page, without having read there (GAMIFICATION open question 3); (b) `PUT /me/progress` accepts any IANA zone, `Etc/GMT+12` and `Etc/GMT-14` included, so switching zones can move a session to the day before or after and save or add a streak day (about one day per switch; the frontend never offers `Etc/*`); (c) a display name may copy the fallback form "Reader 3f9c" (not reserved in `names.py`). Still open from the plan: the copy check `gamification-copy.test.js`, GAMIFICATION "As built (C24)" with its open questions answered, ARCHITECTURE's gamification section. |
 
-## C25 — phase 2 verification and release
+## C25 — verify and release
 
-Goal: live journey and isolation checks extended to highlights, notes,
-Steve (consent, quota, no book text in logs) and focus scoring; docs and
-the acceptance checklist for phase 2; release only on the user's word.
-Depends on: C17-C24. Estimate: 1.75 h. Safe to cut: Lighthouse.
+Stub (C16.4, as renumbered): live journey and isolation checks extended to
+highlights, notes, Steve (consent, quota, no book text in logs) and focus
+scoring; docs and the acceptance checklist for phase 2; release only on
+the user's word. Depends on: C17-C24. Estimate: 1.75 h. Safe to cut:
+Lighthouse.
+
+Branch `chunk/C25-verify-release`, created from `readfocus-2.0` at
+`bae1ed8`. Goal as given at chunk start: make every public claim true
+again, re-check memory and deployment config for the new dependencies,
+run the phase-2 end-to-end journeys, apply production migrations with
+approval, and release when the user says so. Constraints: no production
+change without explicit approval and a backup; test users only; real
+numbers; secrets only in provider env settings.
+
+### Plan (written at chunk start, 2026-11-15, before any code)
+
+What there is to build on (read from the code, the docs and this file):
+
+- **Claims that are now false.** `README.md` lines 7-12: "no generative
+  AI ... No LLM writes, grades or explains anything" (Steve calls Gemini
+  since C20). Landing `pages/landing/Features.jsx`: "No generative AI.
+  Questions come from your book's own sentences." `render.yaml`: "No LLM
+  or embedding API key". `docs/DEPLOYMENT.md`: "001-015, all applied",
+  both services "build `readfocus-2.0` until the release" (they build
+  `main` since the C15 release), no Steve or encryption variables. There
+  is no privacy page in the app: Steve's consent notice
+  (`steve/StevePanel.jsx`) and `docs/STEVE.md` are the only places that
+  say what leaves the reader's device. The FAQ (`pages/landing/Faq.jsx`)
+  says nothing about Steve, keys, leaderboards or what is stored.
+  `docs/ARCHITECTURE.md` has no gamification or focus section (C24 close).
+- **Production today.** Render and Vercel serve `main` at `f914389` (the
+  C15 release); `readfocus-2.0` is 188 commits ahead. The Supabase project
+  is shared, so every migration is already live: 001-015 through `db push`
+  (history matches), **016-033 applied by hand** with `db query` after a
+  dump and your approval each (C17-C24 rows), so the remote's migration
+  history lacks 016-033 and `db push --dry-run` would try to re-run them.
+  The old `main` backend has run against the 016-033 schema since they
+  were applied (additive, so nothing broke).
+- **New dependencies since the last memory measurement** (C14.1: idle
+  251-255 MiB, ingestion peak 301-308 MiB at 512 MB / 0.1 CPU):
+  `pypdfium2`, `pdfplumber`/`pdfminer.six` (region map, C18), `markdown-it`
+  and `latex2mathml` (C19), `google-genai` (C20), `cryptography` (reader
+  keys), `tzdata` (C24); C18-C19 measured parts of this one at a time
+  (BENCHMARKS), never the whole backend in one container.
+- **Env vars not yet on Render** (names only): `GEMINI_API_KEY`,
+  `GEMINI_MODEL_CHAT`, `GEMINI_MODEL_VISION`, `STEVE_DAILY_LIMIT_PER_USER`,
+  `KEY_ENCRYPTION_SECRET`, `CRON_SECRET`; GitHub secrets `BACKEND_URL` and
+  `CRON_SECRET` (C24.4). `render.yaml` lists none of them.
+- **Bundle.** `frontend/dist` is 41 MB in 280 files (pdf.js worker, cmaps
+  and standard fonts, KaTeX fonts); the only guards are
+  `chunkSizeWarningLimit: 1000` and the image budgets. Nothing fails a
+  build that doubles the reader's first load.
+- **Live checks that exist.** `frontend/e2e/journey.spec.js` with
+  `playwright.live.config.js` (C15.1: sign-in to dashboard, the 2.0
+  journey only), `scripts/live/check-isolation.mjs` (C15.2: 11 tables,
+  RPCs, Storage), `check-xp-isolation.mjs` (C24.7: the six XP tables,
+  anon key only). Nothing live covers annotations, note blocks, Steve's
+  tables, reader keys or focus sessions, and nothing has driven phase 2
+  through the API with a second reader.
+- **Carried from the C24 close (non-blocking):** (a) "Finished a book"
+  earned by one position save naming the last page; (b) `PUT /me/progress`
+  accepts `Etc/GMT+12` / `Etc/GMT-14`, so zone switching can add a streak
+  day; (c) a display name may copy the fallback "Reader 3f9c"; and the
+  copy check, GAMIFICATION "As built", ARCHITECTURE's section.
+
+Decisions:
+
+- **D1 Live runs stay opt-in**, never standard checks (as C15): their own
+  commands, credentials from `.env.test`, never printed or committed;
+  each run against the shared project is approved, uses test users A and
+  B only, and deletes what it made in a `finally`, reporting rows left.
+- **D2 Two passes for every live check:** local backend (this branch)
+  against the shared project before the release, production after it.
+  Production cannot pass phase-2 probes before the release: its backend
+  is `main`.
+- **D3 Fixes found by verification** are their own `fix(...)` commits
+  through the debug protocol, with an offline regression test, before the
+  subchunk that found them is ticked.
+- **D4 Honest wording, one source.** The claim everywhere becomes: the
+  reading, tests, grading and pacing are algorithmic and local; one
+  optional assistant, Steve, uses Google's Gemini through our server,
+  only after consent, on the free tier or the reader's own key, and can
+  be turned off. Each surface says it in its own length; none says "no
+  AI" or "no generative AI".
+
+Subchunks:
+
+**C25.1 honesty pass: landing, README, FAQ, ARCHITECTURE, privacy** —
+0.75 h (two commits, ~200 lines each; the UI half through design-review)
+- C25.1a docs (~180): `README.md` intro, "How it works" and limitations
+  for phase 2 (original view, region map, annotations, notepad, Steve,
+  focus, XP and leagues); `docs/ARCHITECTURE.md` focus and gamification
+  sections and Steve's data flow; `docs/GAMIFICATION.md` "As built (C24)"
+  with its open questions answered or listed as yours; `render.yaml`
+  comment and variable names; a new `docs/PRIVACY.md` (what is stored,
+  where, for how long; what goes to Gemini and when; reader keys
+  encrypted, never logged or returned; leaderboards show a chosen name
+  and XP only; how to opt out and delete). Verified by: a claims grep
+  (`no generative AI|no LLM|no AI|never leaves|offline`) over `README.md`,
+  `docs/`, `frontend/src`, `render.yaml`, every hit read and listed.
+- C25.1b app copy (~200): `Features.jsx` bullet rewritten per D4; FAQ
+  entries "Does ReadFocus use AI?", "What does Steve send to Google?",
+  "Can I use my own Gemini key?", "Who sees my reading?" (leaderboard,
+  opt-out); a `/privacy` page (prerendered like the landing page) from
+  `docs/PRIVACY.md`, linked from the landing footer, Steve's consent
+  notice and the account menu; `gamification-copy.test.js` (no loss or
+  guilt words, the C24 plan's check) and a `claims.test.js` that fails
+  if "no generative AI" or "no AI" reappears in `frontend/src`. e2e: the
+  privacy page at 375 and 1440, Paper and Lamplight, linked from all
+  three places. Cut: the account-menu link.
+
+**C25.2 deployment config: memory, env vars, CI, bundle budgets** —
+0.75 h
+- C25.2a memory (no code, BENCHMARKS + DEPLOYMENT): the Docker image
+  built from this branch, run at `--memory=512m --cpus=0.1`, psutil RSS
+  polled: idle after the model loads; peak while ingesting `sample.pdf`,
+  a scanned PDF (region map + OCR path) and an EPUB; peak during a Steve
+  turn with Gemini mocked (an offline stub server, no real call); image
+  size. Pass: peak under 450 MiB (headroom for Render's own overhead).
+  If over: stop and propose cuts before anything else (constraint 5).
+- C25.2b config (~150): `render.yaml` the six new variables (`sync:
+  false`, no values); `.env.example` checked against every `os.getenv`
+  in `backend/` (a test that fails on an unlisted name);
+  `docs/DEPLOYMENT.md` rewritten for phase 2 (branches, migrations
+  001-033 and how they were applied, every variable per provider with
+  where to set it, the rollover Action, Gemini free-tier limits read
+  from Google's docs with the date); `frontend/scripts/check-bundle.mjs`
+  (new): gzip budgets for the entry chunk, the reader route and the
+  largest lazy chunk, set at today's measured size + 10%, pdf.js cmaps
+  and fonts counted separately; `npm run check:bundle`. CI: the bundle
+  check in the frontend job. Your steps (each its own approval): the six
+  Render variables and the two GitHub secrets, set by you in the
+  dashboards, never pasted here. Cut: the CI wiring (local check only).
+
+**C25.3 phase-2 e2e journey + isolation tests** — 1.25 h
+- C25.3a offline isolation (~150 + tests): `backend/tests/
+  test_phase2_isolation.py`: readers A and B on one in-memory database;
+  B's token against every phase-2 route that takes an id (annotations,
+  note blocks, Steve threads and messages, reader key status, focus
+  sessions, quiz, bookmark, progress, badges, league) gets 404 or an
+  empty list, never A's data; A's reader key never returned in full;
+  Steve's logs captured during a turn hold no book text and no key.
+  Standard check, offline.
+- C25.3b live isolation (~200): `check-isolation.mjs` extended to
+  `annotations`, `note_blocks`, Steve's tables, the reader-key table,
+  `focus_sessions` and their quiz rows, through the anon key with B's
+  JWT and without one, plus B's token against the local backend's
+  phase-2 routes with A's ids. Run per D2 (local now, production after
+  the release). Needs your approval per run.
+- C25.3c live journey (~200): `journey.spec.js` gains a phase-2 path as
+  test user A: upload `sample.pdf`, wait for ready, the original view
+  (a page renders, the region map loaded), highlight a sentence and
+  reload (it is still there), add a note and a drawing, focus session
+  (start after the body start, read for about two minutes, bookmark,
+  quiz, points shown), XP and a badge on the Dashboard, the league page;
+  Steve: consent shown first, one question about the highlight answered
+  with a citation (one real Gemini free-tier call, the shortest context
+  the builder allows), then the daily-limit counter moved by one; the
+  request log fails on any host outside the site, the API and Supabase
+  (Gemini is called by the backend, never the browser); delete the book.
+  Run per D2. Cut: the drawing, then Steve's live call (mocked Steve
+  stays in `test:e2e`).
+- C25.3d C24 carry-overs as `fix(...)` commits if you agree (question
+  6): (a) "Finished a book" also needs a passed focus session reaching
+  the last page or the place saved twice on different days; (b) refuse
+  `Etc/*` and other offset-only zones in `PUT /me/progress`; (c) reserve
+  "Reader" + four hex characters in `names.py`.
+
+**C25.4 🚦 Gate G8: production migrations 013+ (approval required)** —
+0.5 h. Because the project is shared, 013-033 are already live (see
+above); G8 makes the record and the history match the files, and turns
+Steve and the rollover on in production.
+1. Read-only drift check (`npx supabase db query --linked` selects on
+   `information_schema` and `pg_catalog`, no writes): for each of 013-033, every table, column, type,
+   default, check, index, RLS flag, policy and trigger the file creates
+   is present and identical; any difference reported, not fixed.
+2. Your approval, then a fresh dump (roles, schema, data) outside the
+   repo, confirmed by you.
+3. Your approval, then `npx supabase migration repair --status applied
+   016 ... 033` (writes only `supabase_migrations.schema_migrations`),
+   then `db push --linked --dry-run` shows nothing to apply.
+4. Production env: you set the Render variables (C25.2b) on the live
+   service; `GET /health` still ok on the old code.
+G8 passes when the drift check is clean, the history lists 001-033 and
+the dry run is empty. Verdict recorded with every number. If drift is
+found: stop, a new additive migration (034) proposed, and its own
+approval, dump and apply.
+
+**C25.5 final acceptance checklist, report, release on "release"** —
+0.75 h
+- `docs/FINAL_REPORT.md` gains "Phase 2": a checklist like C15.5's over
+  the phase-2 features (original view, region map, anchors and
+  highlights, notepad, Steve consent / quota / grounding / key handling,
+  focus timing and scoring, XP, streaks, badges, leagues), the five hard
+  constraints and the product goal, each Pass or Fail with its evidence;
+  measured numbers (memory, bundle, test counts, live journey step times,
+  isolation probes, cold start); what is not done; the time per chunk.
+- C25 close: standard checks, `make graph`, an independent review of
+  the chunk diff, merge into `readfocus-2.0`.
+- **Release only on your word "release":** merge `readfocus-2.0` into
+  `main` with `--no-ff`, push; CI deploys Render on the passing commit,
+  Vercel builds `main`; then `/health`, CORS and bundle scan per
+  DEPLOYMENT "Verifying a deploy"; the rollover Action run once by hand
+  (your approval); the live journey and isolation re-run against
+  production (D2); the report updated with those results. Rollback
+  stays the documented revert.
+
+Estimate: 4.0 h (C25.1 0.75, C25.2 0.75, C25.3 1.25, C25.4 0.5, C25.5
+0.75) against the stub's 1.75 h; approved 2026-11-15 ("Approve and
+commit", with "do not start C25.1 yet"), phase 2 budget raised by 2.25 h
+to 45.5 h. Questions 1-7 below are still open: each is asked again before
+the subchunk that needs its answer. Stop and propose cuts at 6.0 h. Safe to cut, in
+order: Lighthouse, the drawing and Steve's live call in the journey,
+C25.3d (left as open issues), the bundle check's CI wiring, the
+account-menu privacy link.
+
+Questions:
+
+1. Gate G8: 013-033 are already applied to the one project. Is G8 the
+   drift check plus `migration repair` for 016-033 (history only, after
+   a dump), as planned, or did you mean something else by "production
+   migrations 013+"?
+2. Steve live: may the journey send one short `sample.pdf` passage and
+   question to Gemini's free tier as test user A (local run, then
+   production after the release)?
+3. Privacy: a `/privacy` page in the app plus `docs/PRIVACY.md` (as
+   planned), or FAQ entries only?
+4. Bundle budgets: an eleventh standard check (`check:bundle`) and a CI
+   step, or a report only?
+5. The estimate: 4.0 h against the stub's 1.75 h (phase 2 to 45.5 h)?
+6. Fix the C24 carry-overs (a)-(c) in C25.3d, or leave them as open
+   issues?
+7. Test users: reuse `.env.test` A and B (they live in the shared
+   project), as C15 and C24.7 did?
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C25.1 honesty pass: landing page, README, FAQ, ARCHITECTURE, privacy | C25.1a `docs: update ARCHITECTURE and deployment notes for Steve and phase 2`; C25.1b this commit (`docs: update landing, README, FAQ and privacy for Steve and phase 2`) | Claims found by grep (`generative|no ai|no llm|chatbot|nothing writes|offline|never leaves|on.device`) over README, docs/ARCHITECTURE.md, DEPLOYMENT.md, render.yaml, frontend/src and index.html: README "no generative AI ... No LLM writes", ARCHITECTURE "no LLM, no generative AI", Features "No generative AI" and "no chatbot and nothing writes text", index.html og:description "no generative AI", render.yaml and DEPLOYMENT "No LLM ... key"; each rewritten to the prompt's statement (quizzes, grading, planning and scoring algorithmic on our servers; Steve uses Gemini, passages and question sent to Google, free tier may improve Google's products, can be turned off). C25.1b README (intro, nine steps with conversions, the original view, focus, Steve; architecture; test counts; limitations: English only, Steve's limits, no self-service account deletion), ARCHITECTURE (intro, system, conversions, region map, the original view replacing the retired book reader, Steve, focus mode, XP and leagues, data model 016-033, security) with C25.1a's DEPLOYMENT key line and render.yaml comment. C25.1b also: `pages/Privacy.jsx` + `.css` (new, `/privacy`, public, outside the backend gate: what we keep, what goes to Google and when, other services, who sees what, deleting); links from the landing footer, the honesty note, two FAQ answers, Steve's consent notice and the account menu; landing features Notes and Steve, Focus and a weekly league; FAQ 9 questions (Which files work, Is Steve free, What's sent to Google, Why Steve rests, How points are calculated added or rewritten); How it works steps 1-2; robots.txt allows `/privacy`; `claims.test.js` (no false AI claim in frontend/src or index.html; Steve named on the privacy and landing pages; no loss or guilt words in the gamification copy, the C24 plan's check); `privacy.spec.js` 7. | Unit 263 (claims 3 new); e2e: landing, steve-panel, shell and privacy specs 46 passed; first full run 319 passed and 1 failed (`annotations-render.spec.js` PDF Lamplight highlight, not touched here: 25 of 25 alone, DEBUG_LOG 2026-11-16, open), second full run 320 passed. Design check in the in-app browser on `vite preview`: /privacy at 1440 Paper, 800 and 375 Lamplight, 375 Paper (Deleting section); the landing's new features at 1440 Paper and 375 Lamplight; no sideways scroll at 375. Standard checks: ruff 27, pytest 2006, ESLint 3 errors, build, import, graph 64, contrast 304/0, images 0 failing, unit 263, e2e 320. | 2026-11-16 | Open, for you: **the account-deletion contact** (`PRIVACY_CONTACT` in `Privacy.jsx` is empty, your choice 2026-11-16: "Leave a placeholder"; the page says the address will be given) must be filled before the release. Found while writing the page and stated on it, not fixed: deleting a book leaves its note pictures (crops, drawing thumbnails) in the `notes` bucket; a deleted note is a soft delete until its book goes; no self-service account deletion. The privacy page is not prerendered (it loads as a small lazy chunk). C25.1b is about 560 changed lines (about 160 of them tests, about 120 README prose), over the ~200 guide, kept as one half as the prompt allowed a/b only. |
+| [x] C25.G fix: a deleted book's note pictures were left in storage | this commit (`fix(api): remove a book's note pictures when the book is deleted`); C25.1b `09068af` | Your go-ahead, 2026-11-16 ("Yes, fix it here"). Found while writing the privacy page. `backend/routers/books.py`: `delete_book` now calls `_remove_note_files`, which lists `notes/<user>/<book>/` 100 at a time and removes each page until the folder is empty (the whole folder, so files uploaded for a note never saved go too), before the row is deleted; a remove that removes nothing stops the loop; a storage failure is logged with ids only and the book is still deleted. `backend/tests/memory_db.py`: `Bucket.list` and `Bucket.remove`. `Privacy.jsx` and `Faq.jsx`: the caveat "pictures in your notes are not yet removed" replaced by "pictures in notes included". DEBUG_LOG 2026-11-16 (fixed). | `backend/tests/test_book_delete.py` 5: failed 4 of 5 without the fix (`git stash push -- backend/routers/books.py`), 5 passed with it. Standard checks: see the commit. | 2026-11-16 | Books deleted before this fix left their note pictures behind; none are cleaned up here (a backfill over the `notes` bucket would be a production write: your approval and a run of its own if you want one). The reader's account itself still has no self-service deletion. |
+| [x] C25.2 deployment config: memory, env vars, CI, bundle budgets | this commit (`build(deploy): phase-2 env vars, memory check and bundle budgets`); C25.G fix `ff0936c` | Memory (docs/BENCHMARKS.md, C25.2): the production image (964 MB) at `--memory=512m --memory-swap=512m --cpus=0.1`, offline, `scripts/dev/measure_phase2.py` (new): the app and model loaded, a shelf book through the real ingest, regions and prose steps on MemoryDb, one Steve request through the real provider and SDK, at the context cap, against a fake Gemini endpoint on loopback, as the prose rebuild starts. First result: SICP 481.8 MiB RSS (container 428.7) with Steve asking non-stop, over the plan's 450 line; your choice 2026-11-17 "Fix memory first". Found: Steve adds about 3 MiB at the peak and glibc's arenas about 6; idle is 302-309 MiB with everything the server imports (all but mcp needed while ingesting); onnxruntime's memory arena kept the largest embedding batch's memory for good (64 passages: 553 MiB, staying at 552; off: 320, falling to 119, and faster). Fix: `backend/nlp/embedder.py` builds the model with `enable_cpu_mem_arena` off (`SESSION_OPTIONS`). After: SICP 451.6 MiB RSS, container 395.1, 2,589 s at 0.1 CPU, not killed; `sample.pdf` 372.6 / 315.9; accepted 2026-11-17 ("Accept and commit"). `render.yaml`: `GEMINI_API_KEY`, `GEMINI_MODEL_CHAT`, `GEMINI_MODEL_VISION`, `STEVE_DAILY_LIMIT_PER_USER`, `KEY_ENCRYPTION_SECRET`, `CRON_SECRET`, all `sync: false`; `test_deploy_config.py` and `test_no_paid_ai.py` allow Steve's names there only without values; `tools/no_paid_ai.py` comment. `docs/DEPLOYMENT.md`: the five new Render variables, branches `main`, migrations 001-033. `tools/check_gemini_sdk.py` (new): every Python file git knows, `frontend/package.json` and `frontend/src`: only `backend/steve/provider.py` imports the Gemini SDK; also a pytest. `frontend/vite.config.js` `bundleStats` writes `.bundle-stats.json` (ignored); `frontend/scripts/check-bundle.mjs` (new, `npm run check:bundle`, now a standard check): the initial route's JS within 200 KB gzipped, pdfjs-dist, foliate-js, Excalidraw, TipTap and tesseract.js each bundled and only lazy; `src/deploy/bundleBudget.test.js` (new, 4). `.github/workflows/ci.yml`: the Gemini step, the bundle step after the build, and a new `e2e` job (the whole offline suite on Microsoft Edge, `npx playwright install --with-deps msedge`, traces kept on failure) that `deploy-render` now waits for. CLAUDE.md, README and the atomic-commit and debug-protocol skills list `check:bundle`. | `pytest backend/tests/test_embedder.py`: the new test fails with `SESSION_OPTIONS = {}` and passes with the fix. `python tools/check_gemini_sdk.py`: 275 files, 0 offenders; a scratch `from google import genai` in scripts/dev was caught. `npm run check:bundle`: 237 chunks, 0 failing (it failed at a first 175 KB budget against 180.4 KB measured; set to 200). Standard checks: ruff 27, pytest 2013, ESLint 3 errors (4 before `Buffer` in the config was replaced), build, import, graph 64, contrast 304/0, images 0 failing, bundle 0 failing, unit 267, e2e 320 (a full run after both the embedder and the `Buffer` fixes). | 2026-11-17 | Not verified: the CI `e2e` job has not run on GitHub (it needs a push; Edge on Linux may render differently from this machine), and Render's own memory with real traffic. The prose rebuild's `plan` still loads the whole book (SICP 436.5 MiB without Steve); page windows would cut it. `--steve loop` (non-stop requests, far past the free tier) reached 495.6 MiB, not killed. Your steps before release: the five new Render variables (and `CRON_SECRET` if not yet set), set in the dashboard. |
+| [x] C25.3 phase-2 e2e journey + isolation tests (local; production after Gate G8) | this commit (`test(e2e): phase-2 journey and cross-user isolation`); C25.2 `1c31968` | `frontend/e2e/phase2_journey.spec.js` (new; `npm run test:live:phase2`, `playwright.phase2.config.js` new; ignored by `test:e2e`): as test user A, Interactive Linear Algebra and the illustrated Alice EPUB uploaded and processed with their region maps; the two first pages with display equations, as the original view draws them, compared with PDFium (`scripts/dev/g5_page_diff.py`); every packaged EPUB image drawn (Gate G5's count from `g5_epub_expect.py`), walked from the first page and on past today's closing page; a highlight on chapter 1's first page, lookup off, Ask Steve from the highlight (Steve mocked in the browser, every `/steve/*` answered by the spec, unless `STEVE_LIVE=1`): the request carries the highlight's page, the citation chip brings the book back to that page with the passage on it; Save to notes, a drawing note (picture uploaded), the notepad marking notes on the cited page and not two views on; focus mode from chapter 1 with page turns for about 2.5 minutes, the ribbon, a quiz of clamp(round(words/400), 3, 15) questions answered from the stored questions (service key, this machine only) one at a time; the points breakdown, XP, today's goal (set to 20 for the run, set back after), streak and league; both books deleted; only the site, the API and Supabase contacted. `frontend/scripts/live/check-phase2-isolation.mjs` (new; `npm run test:phase2-isolation`): A's highlight, note, note picture, focus session and events through the API; a Steve thread and message, XP, a badge, progress and an equation's LaTeX seeded with the service key; B's probes of 21 phase-2 API routes with A's ids plus B's own progress, badges, league and threads, RLS select / update / delete on 12 tables through B and anon, forged inserts, A's note picture in Storage, and equation_latex by file hash; every row and file deleted after. README lists both. | Your approval 2026-11-17 ("Yes, run both"), local backend (`.env`, the shared project) and Vite on 5175. Isolation: first run 97 of 98 (the note PATCH probe sent no If-Match and got 428 before any lookup: the probe's fault, fixed), second run **98 of 98** as expected, 74 s, rows and files left 0. Journey: seven runs, the last **passed** in 11.7 min: ingestion and region maps 240.9 s; equation pages 9 and 10 match PDFium (largest blob 7 px and 0 px, limit 9); EPUB 20 of 20 sections, 45 of 45 images, as expected per section (0 captions in this book); Steve answered with p. N, the citation moved the book back; notes and drawing saved; the notepad followed; focus 150 s active, a quiz of 3 for 503 words, 2 of 3 right; points 25 + 25 = 50; XP +50, today's goal met, streak 1; league: not in a group (joins next Monday); cleanup rows left 0, goal back to 50; hosts localhost:5175, localhost:8000 and the Supabase project only. The six failed runs were the spec's, each in DEBUG_LOG 2026-11-17 C25.3: the EPUB walk stopped at today's closing page, then began after the front matter; the toolbar had faded before a click; the quiz answers all went into question 1's box. Standard checks: see the commit. | 2026-11-17 | Not run: production (after Gate G8 and the release), and Steve live (`STEVE_LIVE=1`, not allowed). Test user A keeps the run's 50 XP, its streak day and any badge it earned (as a reader would; only the books are deleted). The Alice EPUB has no figcaptions, so captions were checked as 0 of 0; image alt text is not asserted. Found, not fixed: `GET /books/{id}/regions` returns `id: null` for every region (its select leaves out `id`). |
+| [x] C25.G fix: GET /books/{id}/regions returned id null for every region | this commit (`fix(api): return region ids from GET /books/{id}/regions`); C25.3 `66da417` | Your go-ahead, 2026-11-17 ("Yes, fix it here"). Found writing the phase-2 isolation check. `backend/routers/books.py` get_regions selects `id` as well (it returned `row.get("id")` from a select without it, so on PostgREST every id was null and `frontend/src/originalview/pdf/regions.js` `regionsOf`/`regionAt`, which keep only regions with an id, found none for the PDF block actions). `backend/tests/memory_db.py`: `project_columns` (off by default) returns only the selected columns, as PostgREST does; the offline test had passed because the fake returned whole rows. DEBUG_LOG 2026-11-17 (fixed). | `test_api_regions.py::test_region_ids_come_back_from_the_columns_the_database_returns`: failed with the old select, passes with the fix. Standard checks: see the commit. | 2026-11-17 | Not checked against the real database here (no book with regions was left after C25.3's cleanup); C25.3's live journey on production after the release will exercise it. Other handlers were not audited for the same pattern (a field read that the select leaves out). |
+| [x] C25.G audit: other handlers reading a column their select leaves out | this commit (`test(api): project selected columns in the in-memory database by default`); C25.G fix `18e241e` | Your go-ahead, 2026-11-17 ("Yes, audit here"). Dynamic: the whole backend suite run with `MemoryDb.project_columns` forced on (31 test files use MemoryDb): 2014 passed, so no handler those tests reach reads a column it did not select. Static: an AST scan of every function under `backend/` (tests excluded) with a named-column `.select(...)`, listing the `["key"]` and `.get("key")` reads not in its selects: 44 functions flagged, each read by hand; all were keys of request bodies, JSON columns (`meta`, `answers`, `anchors`, `pace_recommendation`), rows from `select("*")` (`focus.store.load_session`, `badge_award._book`) or rows passed in by a caller that selects them (`focus._book` for `quiz_me` and `body_start.for_book`, `book_ingestor.run_job` for `region_job`, `ocr.BOOK_FIELDS` for `ocr_pages`). No other bug found. `backend/tests/memory_db.py`: `project_columns` is now on by default, so a future select that leaves out a column its handler reads fails offline; `test_api_regions.py` no longer sets it. | `pytest backend/tests -q` with projection on by default: 2014 passed. Standard checks: see the commit. | 2026-11-17 | Not covered: handlers tested only with MagicMock fakes and never through MemoryDb rely on the static scan, which follows rows within a function and into the callers checked by hand above, not every call chain; `scripts/` was not audited (local tools, not the server). |
+| [x] C25.4 🚦 Gate G8: production migrations 013+ — **G8: PASS (approved 2026-11-17, backup confirmed)** | this commit (`docs(progress): record gate G8 phase-2 production migration approval`); C25.3 fixes `18e241e`, `ce97009` | No file changes but this row: G8 was a record and history fix, since 013-033 were already live on the one shared project (`lvfhuszvuiowyeizstru`). 1. Read-only: `supabase migration list --linked` showed remote 001-015 only (016-033 applied by hand), so a plain `db push` would have re-run them (018's `CREATE POLICY` and 019's `ADD CONSTRAINT` are not idempotent). Drift check (catalog selects through `supabase db query --linked`, scratch script `g8_drift.py`, not committed): 174 columns (type, nullability, default), 59 constraints, 15 indexes, RLS on 17 tables, 15 policies (incl. storage "Readers access their own note files"), 3 triggers, 5 functions (body md5 equal to the files, `search_path=''`, quota functions executable by `service_role` only), the `notes` bucket (private, 262144 bytes, webp/png): **656 of 656 match, 0 drift**. 2. Your approval and your confirmation of a fresh dump (2026-11-17, "Approved, dump done"). 3. `npx supabase migration repair --status applied 016 … 033 --linked` (writes `supabase_migrations.schema_migrations` only). 4. Backfills, dry run then write on your "Yes, run all three": `backfill_book_files.py` 2 books (`6b09b234`, `f450cf54` "Sample PDF Test", no stored file) got `file_format=pdf` only, every other book already hashed; `backfill_body_start.py` dry run 7 of 8 found (outline 3, heading 1, prose 3), all 7 already stored by readers' first requests and equal to the dry run, the write handled the one pending book (`f450cf54`), nothing found, stays null; `backfill_prose.py` all 7 server-kept books already had region maps (no regions job run), 0 chunks changed on the 6 PDFs, Walden (EPUB) 3 of 3 chunks' prose stored and embedded again, 0 re-questioned. | `migration list --linked`: 001-033 local and remote. `db push --linked --dry-run`: "Remote database is up to date". Production `GET /health` 200 (32.5 s cold start). A `books` select after the writes: the values above. `backfill_prose.py --dry-run --book-id e607231c…` after the write: would store 0 of 3 (idempotent). Standard checks: see the commit. | 2026-11-17 | Your steps, not verified here: the six Render variables (`GEMINI_API_KEY`, `GEMINI_MODEL_CHAT`, `GEMINI_MODEL_VISION`, `STEVE_DAILY_LIMIT_PER_USER`, `KEY_ENCRYPTION_SECRET`, `CRON_SECRET`) and the GitHub secrets `BACKEND_URL` and `CRON_SECRET` for `league-rollover.yml`; the rollover's first manual run waits for the release (C25.5), since production still serves the old code. Not run: `backfill_block_paths.py` (the C23.G EPUB path fix; not in the G8 list, its dry run was refused by the permission check). Found: book `6b09b234` "Sample PDF Test" has status `processing` with no stored file, a stale row from before this gate (left as is). |
+| [x] C25.5 phase-2 acceptance checklist (release waits for your "release") | this commit (`docs(progress): record phase-2 acceptance checklist`); G8 `fc465df` | The checklist below: 8 areas, 44 items, each Pass, Partial or Not verified with its evidence (the gate rows, live runs and test files already recorded above, read again for this table; nothing in it is new code). Totals: 35 Pass, 8 Partial, 1 Not verified, 0 Fail. | Standard checks re-run for this commit (see the commit); every evidence line names the run it comes from. Spot-checked in the code: `Privacy.jsx:14` `PRIVACY_CONTACT = ''`; `retriever.py` ranks and returns `chunks.content`; no payment code (`stripe|paypal|billing|payment` in backend/ and frontend/src: 0 files). | 2026-11-17 | Before the release: the privacy contact (empty, your choice at C25.1). Production still serves pre-phase-2 code, so no item here was checked on the deployed site; the smoke checks after the release are the first. |
+
+### C25.5 phase-2 acceptance checklist (2026-11-17)
+
+"Live" means a local backend against the shared Supabase project (production data, pre-release code);
+"mocked" means the offline suites (pytest offline, e2e with every API call mocked). Gate names are the
+repo's: G5 = C18.G, G6 = C19.G, G7 = C20.G (Steve) and C23.G (focus), G8 = C25.4.
+
+**1. Original view**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| PDF and EPUB as published, book view retired | Pass (sampled) | G5 PASS (`30b4bc8`): 10 pages equal to PDFium, 5 EPUBs walked; C25.3 live: ILA pp. 9-10 equal to PDFium, Alice 45 of 45 images; C17.5d retired the book reader | Sampled books, not every book |
+| Converted Markdown and notebooks keep images and plots | Pass | G6 PASS (`155b896`): epubcheck 0/0/0, `gate-g6.spec.js` Markdown 2/2 images, notebook 3/3 with plots | LaTeX sources skipped (C19.3); pandas HTML tables as text |
+| Zero garbled text in quizzes and grading | Pass | G5: 0 flagged across 5 books in prose and every question's prompt, answer, evidence and options | SICP loses about 1 sentence in 5 to `[Unreadable text]` (no ligature repair map) |
+| Zero garbled text in search | Not verified | Not part of G5; `backend/services/retriever.py` ranks on `chunks.content`, which keeps the originals' artefacts; Steve's passages use `prose` | Search on `prose` is deferred work |
+| Code copies with correct indentation | Pass (mocked) | C18.4 rebuilds SICP pp. 50, 76, 121 exactly; C20.8b e2e "code exact" | Proportional-font code not detected; a block split by a page break is two blocks |
+| Equations explain and copy as LaTeX | Partial | C20.8b and C20.8c e2e (Steve mocked); EPUB copy is local; migration 025 live | PDF copy goes through Gemini and was never run live |
+| Figures explain | Partial | C20.8b e2e (mocked) | Not run live; inline-SVG EPUB figures have no Explain |
+| Scanned pages become selectable | Pass (desktop) | G6 `ocr.spec.js` with real tesseract.js: 185 words, a text layer, a word card; 1.2 s first page, 0.8 s after | Not tried on a phone; the tab must stay open until every page is read |
+
+**2. Steve**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| Consent before first use | Pass | G7 (C20.G): 0 DNS lookups and 0 Google requests before consent; `test_steve_api.py` consent test, `steve-panel.spec.js` | — |
+| Can be turned off | Pass | G7: off gives 403 `disabled` with 0 lookups, composer disabled; C21.4 hides Explain while off | Entry points show until the panel loads settings (the server refuses); no per-book switch |
+| Whole-book awareness: session text + retrieval | Partial | C20.4 context builder; C20.9 live 15/15 | The live retrieval items used a focus phrase in place of the real retriever |
+| Valid citations | Pass | C20.9 live (`gemini-3.5-flash-lite`): 15/15 valid, expected page 12/12 | A citation inside `$$…$$` is not linked |
+| Honest "not covered" | Pass | C20.9 live 3/3 (bar 2/3) | Three items |
+| Quota resting state | Pass (mocked 429) | G7: one SDK call for two asks; "resting until 01:17 PM" and "until tomorrow" with the book still turning; `test_steve_service.py` | Breaker and cache are in process memory; no global daily budget |
+| Own-key option | Pass (mocked) | C20.3, `steve-key.spec.js`, `test_steve_keys.py` | No own-key live call |
+| Keys never exposed | Pass | G7: key in no response, log line or stored row; secrets in 0 of 121 bundle files; `tools/check_gemini_sdk.py` (C25.2): only `provider.py` imports the SDK | — |
+
+**3. Annotations**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| 5 colours + underline in PDFs and EPUBs | Pass | C21.2 `annotations-toolbar.spec.js` 9 (mocked); migration 026's honey, sage, sky, rose, lilac; C25.3 live highlight | Real touch selection not tested |
+| Survive resize, zoom and font size | Pass (mocked) | C21.3 `annotations-render` 5, C21.5 `annotations` 4: zoom, resize, Larger text, reload | No orphan re-find (ANCHORS A5); `annotations-render` PDF Lamplight flaky (DEBUG_LOG) |
+| Ask Steve on hover with lookup off | Pass | C21.4 `annotations-hover.spec.js` 10; C25.3 live Ask Steve from a highlight (Steve mocked) | — |
+
+**4. Notes**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| Text + drawings | Pass | C22.2b `notes-editor` 8, C22.3 `notes-drawing`; C25.3 live drawing note saved, picture uploaded | — |
+| Every note anchored | Pass | C22.4 `notes-anchor` 8 | Steve's "Save to notes" anchors at the reader's place, not the passage |
+| Two-way sync | Pass | C22.5 `notes-sync` 6 (mocked); C25.3 live "the notepad followed" | Swipe page turns not driven |
+| Offline edits sync | Partial | `notes-editor` and `notes.spec` offline e2e, `autosave.test.js` 8 | Mocked only (Playwright offline + IndexedDB); phone notes-editor e2e flaky (DEBUG_LOG) |
+
+**5. Focus mode**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| Locked before chapter 1 | Pass | C23.1 body start, `focus.spec.js` "locked on the preface"; body starts on all 7 production books with one found (G8) | Digital Design detected one page late |
+| Server-scored | Pass | G7 (C23.G) PASS after one FAIL (`cd97676`): 27 scenarios, 103 backend + 25 e2e; live walk, stored row equal to the engine re-score (165) | — |
+| Hidden-tab pause | Pass | Scenario "hidden 20 min"; e2e nothing sent while hidden | — |
+| 30-minute page rule | Pass | Scenarios: 29-min page 290 points, 45-min stall 900 s voided | — |
+| 3-hour cap | Pass | Scenarios 3 h and 3 h 20: 1800 | Capped quiz range trusts the client's position (C23 close b) |
+| Bookmark quiz with scaled count | Pass | clamp(round(words/400), 3, 15); C25.3 live: 3 questions for 503 words | "One short questions" copy bug from the G7 walk, still open |
+| Under 40% gives 0 points | Pass | Scenario 39/100 → 0; e2e 1 of 5 gives none | — |
+| Quiz me outside focus mode | Pass | C23.7b, `quiz-me` spec | No rate limit (C23 close a) |
+| Fixed timer gone | Pass | C23.7a retired the timer and its tests | — |
+
+**6. Gamification**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| XP once per session | Pass | `test_gamification_journey.py`: a retried grade writes one ledger row; `UNIQUE (source, source_id)` live (G8 drift check) | — |
+| Daily goal | Pass | Journey test, `gamification.spec.js`; C25.3 live: goal met | — |
+| Streaks with earned freezes | Pass | Journey: 7 days with a freeze, then 8; C25.3 live streak 1 | `Etc/*` zones can gain a day (C24 close b) |
+| Badges once | Partial | Primary key (user, badge) live; each badge awarded once | "Finished a book" (+200 XP) reachable by one position PUT (C24 close a) |
+| Weekly leagues roll over idempotently | Partial | Journey: a second rollover does nothing; C24.4 dry run on postgres:16 | The scheduled Action has never run in production (after the release) |
+| Leaderboard privacy and opt-out | Pass | Opt-out (G14); live isolation 35/35 (C24.7) and 98/98 (C25.3) | A display name can imitate "Reader 3f9c" |
+| No dark patterns | Pass | C24 close review; `claims.test.js` bans loss and guilt words; freezes, no guilt notifications, no fake users | — |
+
+**7. Honesty and privacy**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| Public copy matches reality | Pass | C25.1 grep and rewrite; `claims.test.js` 3, `privacy.spec.js` 7 | Goes live only with the release |
+| Privacy page live | Partial | `/privacy` built and tested (C25.1) | Not live until the release; `PRIVACY_CONTACT` empty; no self-service account deletion |
+
+**8. Deployment**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| No payment method anywhere | Pass | 0 files match `stripe|paypal|billing|payment` in backend/ and frontend/src; Steve on the free tier (constraint 1) | Google project billing state is the user's to confirm |
+| Memory within budget | Partial | C25.2: SICP 451.6 MiB RSS, container 395.1 MiB at 512 MB / 0.1 CPU, accepted 2026-11-17; `sample.pdf` 372.6 | 1.6 MiB over the plan's 450 line; Render under real traffic not measured |
+| G8 PASS | Pass | C25.4 `fc465df`: drift 656/656, history 001-033, dry run empty | — |

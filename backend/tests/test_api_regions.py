@@ -93,3 +93,9 @@ def test_another_readers_region_is_not_found(client, url):
 
 def test_a_bad_path_is_refused(client):
     assert client.get(f"/books/{BOOK}/region-at", params={"spine_index": 0, "path": "/4/x"}).status_code == 422
+
+def test_region_ids_come_back_from_the_columns_the_database_returns(client, db):
+    """DEBUG_LOG 2026-11-17: the select left out id, so on PostgREST (which returns only the columns asked for)
+    every id was null and the PDF block actions found no region. MemoryDb projects columns as PostgREST does."""
+    regions = client.get(f"/books/{BOOK}/regions", params={"first": 1, "last": 3}).json()["regions"]
+    assert [r["id"] for r in regions] == ["r-block", "r-block", "r-math", "r-code"]

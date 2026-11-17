@@ -26,7 +26,7 @@ BANNED_PACKAGES = frozenset({
 BANNED_KEYS = re.compile(r"GROQ|GOOGLE_AI_STUDIO|GEMINI|OPENAI|ANTHROPIC|CEREBRAS|SAMBANOVA|OPENROUTER")
 
 # Steve's env names (C16.4): the only provider names .env.example may declare, and (C20.2) the
-# only ones backend/steve/provider.py may read. render.yaml stays free of them until Steve ships.
+# only ones backend/steve/provider.py may read; render.yaml lists them without values since C25.2.
 STEVE_ENV_NAMES = frozenset({"GEMINI_API_KEY", "GEMINI_MODEL_CHAT", "GEMINI_MODEL_VISION"})
 
 # C20.2: the guard is narrowed to one file. Steve's provider, and nothing else in backend/, may

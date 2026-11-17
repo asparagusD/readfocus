@@ -1,15 +1,21 @@
 # ReadFocus
 
-**ReadFocus** is a book comprehension app. Upload a PDF or EPUB, read it in
-paced sessions in a reader that turns like a book, take a short test after
-each session, and the next session adapts to how you did.
+**ReadFocus** is a book comprehension app. Upload a PDF, EPUB, Markdown
+file or Jupyter notebook, read it as published, take a short test after
+each session, and the next session adapts to how you did. Highlights, a
+notepad beside the book, a focus mode with server-scored points, and XP,
+streaks, badges and weekly leagues come with it.
 
-**What is under the hood, plainly:** LangGraph-orchestrated, policy-driven
-agents + on-device transformer embeddings + knowledge tracing; no
-generative AI, $0 API cost. Every decision (what to read next, which
-questions to ask, how to grade, how fast to go) is an algorithm with its
-constants in one file, or a cosine from a small local embedding model. No
-LLM writes, grades or explains anything.
+**What is under the hood, plainly:** ReadFocus's quizzes, grading,
+planning and scoring are algorithmic and run on our servers:
+LangGraph-orchestrated, policy-driven agents, a small local embedding model
+and rule-based knowledge tracing, with every constant in a policy file.
+Steve, the optional study assistant, uses Google's Gemini; when you ask
+Steve something, the relevant passages and your question are sent to Google
+and, on the free tier, may be used to improve Google's products. You can
+turn Steve off. Steve never writes a question, grades an answer or scores
+a session. $0 API cost: Gemini's free tier, or a reader's own key.
+What is stored and sent is on the app's Privacy page (`/privacy`).
 
 - Live: [readfocus-lake.vercel.app](https://readfocus-lake.vercel.app)
   (frontend on Vercel Hobby, API on Render Free; the first request after
@@ -28,38 +34,58 @@ LLM writes, grades or explains anything.
 
 ## How it works
 
-1. **Upload.** The file goes to private Supabase Storage. The backend cuts
-   the text into sections of about 600 words, embeds each with a local
-   model (all-MiniLM-L6-v2, 384 dimensions, on the CPU), extracts its key
-   concepts (YAKE) and pre-builds a bank of questions from the section's
-   own sentences: cloze, multiple choice, definition, why/how and main
-   idea, each keeping the sentence it came from as evidence. The book is
-   readable after the first batch, in seconds; the rest follows. A cover
-   comes from Open Library.
+1. **Upload.** A PDF or EPUB goes to private Supabase Storage (or, if you
+   tick "keep on this device", stays in your browser while its text is
+   processed on the server). Markdown (alone or zipped with its images)
+   and Jupyter notebooks are converted to EPUB on the server, images kept.
+   The backend cuts the text into sections of about 600 words, embeds each
+   with a local model (all-MiniLM-L6-v2, 384 dimensions, on the CPU),
+   extracts its key concepts (YAKE) and pre-builds a bank of questions
+   from the section's own sentences: cloze, multiple choice, definition,
+   why/how and main idea, each keeping the sentence it came from as
+   evidence. The book is readable after the first batch; the rest
+   follows. Then a region map splits every page into prose, math, code,
+   figure and table regions, so questions and Steve read prose only. A
+   cover comes from Open Library. A scanned PDF's pages are read with
+   text recognition (tesseract.js) in your browser.
 2. **Plan.** When you start, the planner picks today's sections: anything on
    your re-read list first, otherwise sections scored on weak concepts,
    what is unread, difficulty and reviews due, sized to your reading speed
    and recent results. It writes one plain sentence saying why, shown on
    the first page.
-3. **Read.** Today's sections open as a paginated book (two pages on a wide
-   screen, one on a phone) with page turns, a ribbon bookmark, a contents
-   drawer, text size, light and dark paper, and a session timer. Your
-   place is saved as you go. Hover or select a word for a card with its
-   definition (Free Dictionary API) or a Wikipedia summary.
-4. **Test.** About five questions from the bank for the sections you read,
+3. **Read.** The book opens as published (PDF.js for PDFs, foliate-js for
+   EPUBs: images, figures, math and code as printed), two pages on a wide
+   screen, one on a phone, with today's suggested pages marked and the
+   freedom to read on. Your place is saved as you go. Hover or select a
+   word for a card with its definition (Free Dictionary API) or a
+   Wikipedia summary. Highlight or underline a passage, and keep notes,
+   equations, code and drawings in the notepad beside the book, each tied
+   to its place.
+4. **Focus (optional).** From chapter 1 on, focus mode runs a stopwatch
+   timed by the server. Place a bookmark to end the session; a short quiz
+   on the pages read decides whether the points count (10 a focused
+   minute, 20 a right answer, nothing below 40%). Final points become XP:
+   a daily goal, a streak with earned freezes, badges, and a weekly league
+   you can leave.
+5. **Ask Steve (optional).** After a consent notice, Steve explains a
+   passage, an equation, code or a figure, citing the page or section. He
+   is off during a test or quiz, rests when his daily limit or Google's
+   free tier runs out, and can be switched off.
+6. **Test.** About five questions from the bank for the sections you read,
    in the mix the optimizer last chose; one at a time, timed.
-5. **Grade.** Closed questions are string matches. Written answers are
+7. **Grade.** Closed questions are string matches. Written answers are
    scored from meaning (cosine to the evidence sentences), key-term
    coverage and relevance, with a confidence that is never above "medium"
    for free text. Feedback comes from templates and quotes the passage; it
    never invents a fact.
-6. **Adapt.** Each concept's mastery moves up or down with your answers and
+8. **Adapt.** Each concept's mastery moves up or down with your answers and
    gets a review date. The optimizer sets the next session's size, time and
    question mix and puts low-scoring sections on a re-read list. Results
    shows the next session's plan and why, for example "Re-reading section 1
    before moving on — your last test on it was low."
-7. **Progress.** The dashboard shows your score trend, streak, words this
-   week, each book's progress and its concepts, weakest first.
+9. **Progress.** The dashboard shows your score trend, focus this week,
+   your badges, each book's progress and its concepts, weakest first; the
+   header carries your level, today's goal and your streak.
 
 Every agent decision is stored with its inputs and reason
 (`agent_decisions`), so the app can explain itself.
@@ -68,11 +94,14 @@ Every agent decision is stored with its inputs and reason
 
 ```
 React + Vite (Vercel) ──JWT──► FastAPI (Render, Docker) ──service role──► Supabase
-  Library, Reader, Test,         /books /sessions /dashboard                Postgres + pgvector
-  Results, Dashboard             /mastery /lookup /auth                      Storage, Auth, RLS
-                                 LangGraph: planner · test generator ·
-                                 evaluator · knowledge state · optimizer
-                                 fastembed all-MiniLM-L6-v2 (local)
+  Library, original view          /books /sessions /dashboard                Postgres + pgvector
+  (PDF.js, foliate-js),           /mastery /lookup /auth /focus              Storage, Auth, RLS
+  notepad, Test, Results,         /steve /me /badges /leagues
+  Dashboard, League               LangGraph: planner · test generator ·
+                                  evaluator · knowledge state · optimizer
+                                  fastembed all-MiniLM-L6-v2 (local)
+                                  region map, EPUB converters
+                                  backend/steve/provider.py ──consent──► Google Gemini (Steve only)
 ```
 
 | Layer | Choice |
@@ -82,7 +111,9 @@ React + Vite (Vercel) ──JWT──► FastAPI (Render, Docker) ──service 
 | Agents | LangGraph `StateGraph` of five pure `decide()` agents (`backend/agents/`), every constant in `backend/agents/policy.py` |
 | Local NLP | fastembed all-MiniLM-L6-v2 (ONNX), YAKE, rapidfuzz (`backend/nlp/`) |
 | Data | Supabase Postgres, pgvector, Storage, Auth, row-level security (`supabase/migrations/`, additive only) |
+| Reader | PDF.js and foliate-js (vendored), KaTeX, TipTap and Excalidraw for notes, tesseract.js for scanned pages (all in the browser) |
 | Free APIs | Free Dictionary API and Wikipedia (word lookup), Open Library (covers) |
+| Generative AI | Google Gemini, for Steve only, through `backend/steve/provider.py`, after consent; free tier or the reader's own key (`docs/STEVE.md`) |
 
 The agent graph, each agent's input and output, the event flows, the data
 model, the reader and the lookup path are in
@@ -143,17 +174,19 @@ python -c "import backend.main"
 pytest tools/repo_graph/tests -q
 npm --prefix frontend run check:contrast
 npm --prefix frontend run check:images
+npm --prefix frontend run check:bundle
 npm --prefix frontend run test:unit
 npm --prefix frontend run test:e2e
 ```
 
-At the end of the sprint: 811 backend tests, 62 graph tests, 70 frontend
-unit tests and 103 Playwright tests (on the installed Microsoft Edge, every
-API call mocked). ruff and ESLint still report 27 and 4 errors in older
-code; CI fails a push that raises either count. The current numbers are in
+At the end of phase 2 (C24): 2006 backend tests, 64 graph tests, 260
+frontend unit tests and 313 Playwright tests (on the installed Microsoft
+Edge, every API call mocked; Steve's provider is faked, so nothing reaches
+Google). ruff and ESLint still report 27 and 3 errors in older code; CI
+fails a push that raises either count. The current numbers are in
 [CLAUDE.md](CLAUDE.md).
 
-Three live checks use real test users against a real backend and write to
+Five live checks use real test users against a real backend and write to
 the Supabase project, so they are run by hand, never in CI:
 
 ```bash
@@ -168,12 +201,25 @@ npm --prefix frontend run test:isolation
 npm --prefix frontend run test:xp-isolation
 ```
 
+```bash
+npm --prefix frontend run test:live:phase2
+```
+
+```bash
+npm --prefix frontend run test:phase2-isolation
+```
+
 `test:live` is the full reading journey in a browser (sign in, upload,
 read, look up a word, test, results, dashboard, next plan); `test:isolation`
 checks with two users that neither can read or change the other's data
 through the API or Supabase; `test:xp-isolation` does the same for XP,
 badges, progress and leagues (rows seeded for user A with the service key).
-Each deletes what it creates. Grader agreement
+`test:live:phase2` is the phase-2 journey (a math PDF's equations against
+PDFium, an illustrated EPUB's images, a highlight, Steve (mocked in the
+browser unless `STEVE_LIVE=1`), notes, focus mode, its quiz, points, XP,
+streak and league); `test:phase2-isolation` checks highlights, notes and
+their pictures, focus sessions, Steve threads, XP and equation LaTeX across
+two users. Each deletes what it creates. Grader agreement
 with the labelled answers: `python scripts/eval_grader.py`.
 
 ## Limitations
@@ -199,8 +245,17 @@ with the labelled answers: `python scripts/eval_grader.py`.
 - **Knowledge tracing is a rule, not a fitted model.** Mastery moves by fixed
   steps (`MASTERY_GAIN`, `MASTERY_LOSS`) with spaced reviews; there is no
   Bayesian Knowledge Tracing and nothing is learned from other readers.
-- **Text only, English only.** No OCR: a scanned PDF has no text to
-  read. Word lookup is English.
+- **English only.** Word lookup, text recognition for scanned pages and
+  the question bank are English; Bengali/Bangla books are out of scope.
+  Text recognition skips math, code, tables and figures.
+- **Steve depends on Google's free tier.** Each reader gets a daily number
+  of questions on our key, and Google's own limit is shared by everyone on
+  it; when either runs out Steve rests until it resets. A reader's own key
+  has its own limits. Free-tier prompts and answers may be used by Google
+  to improve its products.
+- **No self-service account deletion.** Deleting a book removes its file,
+  text, highlights, notes, Steve conversations and focus sessions; removing
+  the whole account is done by hand on request (see the Privacy page).
 - **Free hosting.** The Render API sleeps after 15 idle minutes and takes
   about a minute to wake (the app shows a warm-up screen); the container has
   0.1 CPU and 512 MB. A whole novel takes minutes to finish ingesting
@@ -208,6 +263,5 @@ with the labelled answers: `python scripts/eval_grader.py`.
   though reading can start after the first batch.
   Supabase Free pauses after a week without activity and has no automatic
   backups; development and production share one project.
-- **Not yet deployed at the end of the sprint:** the closing-page fix and
-  the session ownership check (C15.1, C15.2) reach production with the C15
-  release.
+- **Not yet deployed:** production still runs the C15 release; phase 2
+  (C16-C24) reaches it with the C25 release.

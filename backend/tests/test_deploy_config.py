@@ -1,4 +1,4 @@
-"""The Render deploy config (C14.1): Dockerfile, .dockerignore and render.yaml.
+"""The Render deploy config (C14.1; phase-2 variables C25.2): Dockerfile, .dockerignore and render.yaml.
 
 Read as text: no YAML parser is a backend dependency, and the checks are
 about which lines are present.
@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 
 from backend.nlp import embedder
-from tools.no_paid_ai import BANNED_KEYS
+from tools.no_paid_ai import BANNED_KEYS, STEVE_ENV_NAMES, provider_keys_outside_steve
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCKERFILE = (ROOT / "Dockerfile").read_text(encoding="utf-8")
@@ -17,6 +17,8 @@ BLUEPRINT = (ROOT / "render.yaml").read_text(encoding="utf-8")
 
 IMAGE_CACHE = "/app/.cache/fastembed"
 SECRETS = ["SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_KEY", "FRONTEND_URL"]
+# C25.2: Steve, readers' key encryption and the league rollover; set in the dashboard, never in git.
+PHASE2 = [*sorted(STEVE_ENV_NAMES), "STEVE_DAILY_LIMIT_PER_USER", "KEY_ENCRYPTION_SECRET", "CRON_SECRET"]
 
 
 def blueprint_env():
@@ -27,7 +29,7 @@ def blueprint_env():
         if found:
             key = found.group(1)
             entries[key] = []
-        elif key and line.strip():
+        elif key and line.strip() and not line.strip().startswith("#"):
             entries[key].append(line.strip())
     return entries
 
@@ -71,16 +73,17 @@ def test_blueprint_is_a_free_docker_service_with_a_health_check():
 
 def test_blueprint_env_vars_secrets_unset_and_config_fixed():
     env = blueprint_env()
-    assert list(env) == [*SECRETS, "FASTEMBED_CACHE", "ENV"]
-    for key in SECRETS:
+    assert list(env) == [*SECRETS, "FASTEMBED_CACHE", "ENV", *PHASE2]
+    for key in [*SECRETS, *PHASE2]:
         assert env[key] == ["sync: false"], key  # entered in the dashboard, never in git
     assert env["FASTEMBED_CACHE"] == [f"value: {IMAGE_CACHE}"]
     assert env["ENV"] == ["value: production"]
 
 
 def test_deploy_config_names_no_ai_provider_key():
-    for text in (DOCKERFILE, BLUEPRINT):
-        assert not BANNED_KEYS.search(text)
+    """The image names no provider key; the blueprint only Steve's names (without values: the test above)."""
+    assert not BANNED_KEYS.search(DOCKERFILE)
+    assert not provider_keys_outside_steve(BLUEPRINT)
 
 
 def test_health_route_exists():

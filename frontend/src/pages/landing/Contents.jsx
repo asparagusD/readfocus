@@ -2,8 +2,8 @@ import { m, useReducedMotion } from 'motion/react';
 import { fadeIn, rise, stagger } from '../../motion/presets';
 
 const STEPS = [
-  { title: 'Upload a PDF or EPUB', note: 'your shelf', body: 'Add a book you own. ReadFocus splits it into short passages and keeps it on your account only.' },
-  { title: 'Read in focused sessions', note: 'a few passages', body: 'Each session sets a handful of passages as pages you turn, with a quiet clock you can pause.' },
+  { title: 'Upload a book', note: 'your shelf', body: 'Add a PDF, EPUB, Markdown file or notebook you own. ReadFocus splits it into short passages and keeps it on your account only.' },
+  { title: 'Read in focused sessions', note: 'a few passages', body: 'Each session marks a handful of pages in the book as published. Read on when you like, or turn on focus mode to earn points.' },
   { title: 'Answer a few questions', note: 'a short test', body: 'A short test follows each session, written from sentences in the passages you just read.' },
   { title: 'Your next session adapts', note: 'your plan', body: 'Missed something? It comes back for a re-read or a review, and the next session grows or shrinks with your scores.' },
 ];

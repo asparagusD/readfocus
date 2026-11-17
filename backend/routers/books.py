@@ -1,5 +1,6 @@
 import hashlib
 import io
+import logging
 import re
 import uuid
 from datetime import UTC, datetime
@@ -229,7 +230,7 @@ async def get_regions(book_id: str, first: int = Query(ge=1), last: int = Query(
     owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
     if not owned.data:
         raise HTTPException(status_code=404, detail="Book not found")
-    rows = (supabase.table("page_regions").select("page, kind, bbox, order_in_page, meta").eq("book_id", book_id)
+    rows = (supabase.table("page_regions").select("id, page, kind, bbox, order_in_page, meta").eq("book_id", book_id)
             .gte("page", first).lte("page", last).execute().data or [])
     out = []
     for row in sorted(rows, key=lambda r: (r["page"], r["order_in_page"])):
@@ -378,6 +379,24 @@ async def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: 
     background_tasks.add_task(book_ingestor.run_job, claimed)
     return {"book_id": book_id, "status": status, "ingestion": public_job(claimed)}
 
+logger = logging.getLogger(__name__)
+NOTE_FILES_PAGE = 100  # objects listed per call when clearing a book's note folder
+
+
+def _remove_note_files(user_id: str, book_id: str) -> int:
+    """Remove every file in notes/<user>/<book>/ (note crops, drawings, thumbnails: POST /books/{id}/note-files),
+    listed a page at a time. The database cascade removes the note rows but never storage (DEBUG_LOG 2026-11-16)."""
+    bucket, folder, removed = supabase.storage.from_("notes"), f"{user_id}/{book_id}", 0
+    while True:
+        names = [o["name"] for o in bucket.list(folder, {"limit": NOTE_FILES_PAGE, "offset": 0}) or [] if o.get("id")]
+        if not names:
+            return removed
+        gone = bucket.remove([f"{folder}/{name}" for name in names]) or []
+        if not gone:  # nothing removed: stop rather than list the same files again
+            raise RuntimeError(f"{len(names)} note files could not be removed")
+        removed += len(gone)
+
+
 @router.delete("/{book_id}")
 async def delete_book(book_id: str, user_id: str = Depends(get_current_user)):
     # 1. Fetch book to get storage path and verify ownership
@@ -396,7 +415,13 @@ async def delete_book(book_id: str, user_id: str = Depends(get_current_user)):
             # We can log this, but we should still delete the db record
             print(f"Failed to delete storage object {storage_path}: {e}")
             
-    # 3. Delete from DB (CASCADE will handle related records)
+    # 3. Remove the book's note pictures: the cascade below reaches only rows
+    try:
+        _remove_note_files(user_id, book_id)
+    except Exception:
+        logger.warning("Deleting book %s: its note files were not all removed", book_id, exc_info=True)
+
+    # 4. Delete from DB (CASCADE will handle related records)
     try:
         supabase.table("books").delete().eq("id", book_id).eq("user_id", user_id).execute()
     except Exception as e:

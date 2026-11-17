@@ -60,6 +60,8 @@ test.describe('pdf', () => {
   test('while a note is being written the notepad stays put and offers the jump instead', async ({ page, api }) => {
     seedPdf(api);
     await openReader(page);
+    // Scroll anchoring would hide a jump measured before the pill above the notes goes (DEBUG_LOG 2026-11-17 C25.5).
+    await page.addStyleTag({ content: '.rf-notes, .rf-notes * { overflow-anchor: none !important; }' });
     await page.getByRole('button', { name: /^Notes/ }).click();
     await panel(page).getByRole('button', { name: /^Edit note at / }).first().click();
     await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();

@@ -180,7 +180,8 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
       </div>
       {state === 'ready' && notes.length > 0 && <NotesFilter value={filter} onChange={setFilter} />}
       {pill && pill === rangeKey && target && (
-        <button type="button" className="rf-notes-jump" onClick={() => { setPill(null); scrollTo(target, true); }}>
+        // The pill sits above the notes in the list: measure once it has gone, or the notes move up by its height.
+        <button type="button" className="rf-notes-jump" onClick={() => { setPill(null); requestAnimationFrame(() => scrollTo(target, true)); }}>
           Jump to notes for this page
         </button>
       )}

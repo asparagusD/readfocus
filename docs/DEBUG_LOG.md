@@ -4856,3 +4856,196 @@ the old select (ids null), passes with `id` selected.
 
 ### Commit
 fix(api): return region ids from GET /books/{id}/regions
+
+## 2026-11-17 C25.5 — CI on the release commit failed; Render was not deployed
+
+**Status:** fixed (backend, graph); e2e: see below
+
+### Symptom
+After `git push origin main` (release `8af00aa`), GitHub Actions CI run 44022135029: `frontend` passed;
+`backend` failed at "Pytest (offline)", `graph` at "Fail if docs/repo-graph/ is stale", `e2e` (first run on
+GitHub) at "End-to-end tests (offline)"; `deploy-render` was skipped, so Render was not redeployed. The job logs
+need a GitHub token (API 403); the check-run annotations say only "Process completed with exit code 1" and
+"docs/repo-graph/ is stale. Run 'make graph' and commit the result." The earlier `readfocus-2.0` run on
+`bae1ed8` (C24 merge) had failed at the same pytest step, unnoticed.
+
+### Repro
+A clean checkout of the release, without this machine's `.env`:
+
+    git worktree add --detach <scratch>/wt-release 8af00aa
+    cd <scratch>/wt-release && <repo>/.venv/Scripts/python -m pytest backend/tests -q
+
+    FAILED backend/tests/test_steve_keys.py::test_encryption_is_not_deterministic_and_round_trips
+      backend\steve\keys.py:33: KeysNotConfigured
+    1 failed, 2002 passed, 11 skipped
+
+and in the repo, `make graph` changes `docs/repo-graph/REPO_MAP.md` and `inventory.json` (PROGRESS.md 5744 -> 5834
+lines).
+
+### Hypotheses
+1. A test reads a variable that only the local `.env` supplies. Evidence: passes here, fails on CI; `backend.main`
+   calls `load_dotenv()`. Ruled out if the clean checkout passes. Result: confirmed, the test above.
+2. A test needs files that are not in git (the shelf under `samples/`). Result: those tests skip (11 skipped), not fail.
+3. Graph: C25.5 changed PROGRESS.md and `make graph` was not run. Result: confirmed by the diff above.
+
+### Root cause
+`test_encryption_is_not_deterministic_and_round_trips` (`backend/tests/test_steve_keys.py:153`, since C20.3
+`a3af6c9`) used no fixture that sets `KEY_ENCRYPTION_SECRET` (the `db` fixture does it for the others), so it
+passed only where `.env` defines the secret. The graph's inventory counts PROGRESS.md's lines.
+
+### Fix
+The test sets the secret with `monkeypatch.setenv`, as its neighbours do. `make graph` re-run and committed.
+
+### Regression test
+The test itself in the clean checkout (no `.env`): failed before the fix (above); passes after.
+
+### Commit
+`fix(api): make the reader-key encryption test independent of the local .env`
+
+## 2026-11-17 C25.5 — two e2e tests fail on GitHub's Linux runner only
+
+**Status:** fixed (test 1 reproduced and fixed; test 2 fixed on its confirmed cause, never reproduced)
+
+### Symptom
+CI run 44022135029 (release `8af00aa`), job `e2e` (Edge on ubuntu-latest, its first run on GitHub): 318 passed,
+2 failed. The log, pasted by the user:
+
+    1) e2e/annotations-render.spec.js:28:3 › pdf › a highlight is drawn on its words, stays on them at another
+       zoom, and comes back after a reload
+       Error: lamp
+       expect(received).toBe(expected) // Object.is equality
+       Expected: true
+       Received: false
+       > 32 | for (const word of ['lamp', 'small', 'circle']) expect(covers(await pdfBoxes(page), await wordPoint(page, word)), word).toBe(true);
+    2) e2e/notes-blocks.spec.js:132:3 › epub regions › an EPUB equation goes with its own LaTeX and a listing
+       with its text, on the device
+       Test timeout of 30000ms exceeded.
+       Error: locator.click: Test timeout of 30000ms exceeded.
+       - waiting for getByRole('toolbar', { name: 'Code, this page' }).getByRole('button', { name: 'Add to notes' })
+
+The uploaded artifact held only `error-context.md` page snapshots: `playwright.config.js` never turned traces or
+screenshots on, though the CI step is named "Keep the failures' traces and screenshots".
+
+### Repro
+Both pass on Windows (full suite 320 of 320, a clean checkout too). In Docker (`node:22`, Debian, Edge from
+`npx playwright install --with-deps msedge` as CI does, `--cpus=2`), test 1 fails now and then:
+
+    npx playwright test e2e/annotations-render.spec.js:28 --repeat-each 25
+
+1 of 3, then a scratch probe with the test's exact steps 2 of 15, 1 of 20, 1 of 25. Test 2: 0 failures in
+3 + 6 + 3 repeats in the container (1 and 2 CPUs).
+
+### Hypotheses
+1. Test 1: Linux fonts move the words. Ruled out: the probe's word points equal across runs (lamp at 621,256) and
+   the failing runs' screenshots show the highlight drawn on "lamp threw a small circle".
+2. Test 1: the box read is of an element not laid out. Evidence: the failing reads were all zeros
+   `[0,0,0,0]`. Probed in the same instant: the span had no parent and an empty computed style, so it was
+   detached: the optimistic `pending-N` annotation (`frontend/src/annotations/useAnnotations.js:25-26`) is drawn
+   at once and drawn again under its saved id when the POST returns; `toHaveCount(1)` matched the pending span
+   and the next read caught it being replaced. Confirmed.
+3. Test 2: the code block moves after it is measured. Evidence: the CI snapshot shows the notepad open ("Notes,
+   1" expanded) after the equation was added; a local probe: the book narrows from 1440 to 1060 px when it opens;
+   `find` waits for `settled`, which watches the page shown, not where a block sits. Not reproduced: on this
+   machine and in the container the re-layout ends before the read.
+
+### Root cause
+Both are test races, not app faults. Test 1 measured a PDF annotation before its save had replaced the pending
+element. Test 2 hovered a code block at a box read while the notepad's opening could still be re-laying the book.
+
+### Fix
+`frontend/e2e/annotations-render.spec.js`: a `saved` locator (page 1's `.rf-anno` whose id is not `pending-`);
+the three PDF tests that measure a new annotation wait for it first. `frontend/e2e/notes-blocks.spec.js`: `still`
+polls the code block's box until two reads 300 ms apart agree before hovering it. `frontend/playwright.config.js`:
+on CI only, `trace: 'retain-on-failure'` and `screenshot: 'only-on-failure'`.
+
+### Regression test
+The two tests themselves, in the container at 2 CPUs with `CI=true`, `--repeat-each 25`: 50 passed (test 1
+failed 5 of 63 runs before the fix in the same container).
+
+### Commit
+`fix(e2e): wait for saved highlights and settled blocks before measuring`
+
+## 2026-11-17 C25.5 — e2e on GitHub, second run: three different failures
+
+**Status:** fixed (one app bug, two test races); the GitHub run is the check still to come
+
+### Symptom
+CI run 44033823171 (`6b31fa6`, after the entry above): `annotations-render` passed; 317 passed, 3 failed. The log
+(pasted by the user) and the artifact, now with traces and screenshots:
+
+    1) e2e/notes-blocks.spec.js:145:3 › epub regions › an EPUB equation goes with its own LaTeX and a listing
+       with its text, on the device: locator.click timeout, waiting for toolbar 'Code, this page' › 'Add to notes'
+    2) e2e/notes-sync.spec.js:60:3 › pdf › while a note is being written the notepad stays put and offers the
+       jump instead: expect.poll(() => inView(page, 'n4a')).toBe(true): Received false (5000 ms)
+    3) e2e/reader.spec.js:344:3 › anchors across re-layout › zooming a PDF to 200% and back keeps the page and
+       the saved anchor: Test timeout of 30000ms exceeded
+
+### Repro and hypotheses, each confirmed
+1. notes-blocks: the screenshot shows the listing above a figure on GitHub's layout, and the figure's bar
+   ("Explain this figure · Add to notes", placed above the figure, over the listing's centre) open. The test moves
+   the pointer from the equation to the listing in 4 steps; that path crosses the figure, whose bar then holds the
+   pointer (`onPointerEnter={stay}`), so the listing never gets `pointerover`. The previous entry's re-layout was
+   real but not the cause. Not reproducible here: the blocks do not overlap on this machine's layout.
+2. notes-sync: **an app bug.** `Notepad.jsx`: the "Jump to notes for this page" pill sits inside the scrolling
+   list above the notes; its click measured the target and scrolled, then the pill was removed, so every note
+   moved up by the pill's height and the target's top ended above the view. Chromium's scroll anchoring hides it
+   on this machine. Repro: the same test with `.rf-notes, .rf-notes * { overflow-anchor: none }`: 3 of 3 failed.
+3. reader zoom: the trace: five Zoom in clicks and the 200% check done at 3.4 s, then the click on "Zoom: 200%"
+   waited 27 s. `useChromeVisible` fades the toolbar (`pointer-events: none`) 2.6 s after the last mouse movement
+   unless focus is inside it; at 200% Zoom in is disabled, focus leaves, and a Playwright click does not move the
+   mouse, so nothing wakes it. Locally the test reaches that click before 2.6 s. Repro: a 3 s wait before the
+   click: timeout (15 s) every time.
+
+### Root cause
+(1) and (3) are test races with the reader's hover bars and fading toolbar; (2) is a real misplaced scroll when
+the jump pill is used, visible wherever scroll anchoring does not correct it.
+
+### Fix
+`frontend/src/notes/Notepad.jsx`: the pill's click scrolls in the next frame, after the pill has gone.
+`frontend/e2e/notes-blocks.spec.js`: the pointer goes straight onto the listing. `frontend/e2e/fixtures.js`:
+`wake(page)` moves the mouse in the left margin and waits for the toolbar; `reader.spec.js` calls it before the
+click back to a fit.
+
+### Regression test
+`notes-sync.spec.js` "stays put" now turns scroll anchoring off in the notepad: without the Notepad fix
+(`git stash push -- frontend/src/notes/Notepad.jsx`) 1 failed; with it the spec's 6 passed. Zoom: with a forced
+3 s wait, without `wake` 1 failed (timeout), with it 1 passed. notes-blocks: only GitHub's layout shows it.
+
+### Commit
+`fix(notes): scroll to the page's notes after the jump pill has gone`
+
+## 2026-11-17 C25.5 — e2e on GitHub, third run: the PDF page-turn benchmark at 20.7 fps
+
+**Status:** fixed (the benchmark); one intermittent zoom failure seen once in the Linux container, open
+
+### Symptom
+CI run 44039982158 (`9d14b29`): 319 passed, 1 failed (log pasted by the user):
+
+    1) e2e/reader.spec.js:197:5 › pdf: pages and turns › page-turn frame rate (recorded in docs/BENCHMARKS.md)
+       Error: expect(received).toBeGreaterThan(expected)
+       Expected: > 30
+       Received:   20.7
+    {"book":"pdf","turn":{"frames":69,"seconds":3.28,"fps":20.7,"worstFrameMs":100.1,"over33ms":52}}
+
+### Repro and hypothesis
+The benchmark on GitHub, from each run's `reader-benchmarks-*.json`: run 1 (no tracing) PDF and EPUB 60 fps, 0
+frames over 33 ms; runs 2 and 3, after `6b31fa6` turned on `trace: 'retain-on-failure'` on CI, 50.5 / 48.9 and
+20.7 / 54.2 fps. Hypothesis: the trace's screencast takes frames from the page being measured. Test: the benchmark
+in the Linux container (`--cpus=2`) three times each way: trace on 54.1-58.8 fps with 1-10 frames over 33 ms; trace
+off 60 fps and 0 every time. Confirmed: the fault was this session's own CI change, not the reader.
+
+### Fix
+`frontend/playwright.config.js`: two projects: `e2e` (everything but the benchmark, CI tracing as before) and
+`frame-rate` (the two benchmark tests, `trace` and `screenshot` off). A `test.use` in the spec cannot do it:
+Playwright refuses recording options inside a describe group ("forces a new worker"). The 30 fps floor is unchanged.
+
+### Regression test
+The benchmark itself. Linux container, full suite with `CI=true`: PDF and EPUB 60 fps, 0 frames over 33 ms
+(before the fix the same setup gave PDF below 30 and failed). Local full suite: 320 passed, 73.7 and 75 fps.
+
+### Open
+The same container run failed `reader.spec.js:344` (zoom to 200% and back) once, with no error kept (my run
+filtered it); alone it passed 10 of 10, and it passed on GitHub's run 3 and in the previous container run.
+
+### Commit
+`fix(e2e): measure the page-turn frame rate without a trace recording`

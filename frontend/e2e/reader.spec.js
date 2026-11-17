@@ -1,7 +1,7 @@
 // The reader end to end (C12.10; on the original view since C17.5), on the real /read page with the
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { test, expect, book, openReader, settled, shown, spoken, timeToCard, wordPoint } from './fixtures.js';
+import { test, expect, book, openReader, settled, shown, spoken, timeToCard, wake, wordPoint } from './fixtures.js';
 
 /** "5" -> 5; "2:340" -> [2, 340]. */
 const at = (spot) => (spot.includes(':') ? spot.split(':').map(Number) : Number(spot));
@@ -352,6 +352,7 @@ test.describe('anchors across re-layout', () => {
     for (let i = 0; i < 5 && await zoomIn.isEnabled(); i += 1) await zoomIn.click();
     await expect(page.getByRole('button', { name: /^Zoom: 200%/ })).toBeVisible();
     expect(await shown(page)).toEqual(place);
+    await wake(page); // "Zoom in" is now disabled, so focus left the toolbar and it may have faded
     await page.getByRole('button', { name: /^Zoom:/ }).click(); // back to a fit
     await page.waitForTimeout(500);
     expect(await shown(page)).toEqual(place);

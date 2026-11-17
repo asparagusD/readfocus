@@ -421,6 +421,16 @@ export const book = (page) => page.locator('.rf-ov-stage');
 export const shown = (page) => page.locator('.rf-ov').evaluate((el) => ({ start: el.dataset.start, end: el.dataset.end }));
 
 /**
+ * Bring the reader's toolbar back: it fades 2.6 s after the last mouse movement (useChromeVisible) and a
+ * click does not move the mouse, so a slow run can find it faded. A reader moves the mouse; so does this.
+ */
+export async function wake(page) {
+  await page.mouse.move(40, 110); // the left margin, above the page: no word under the pointer
+  await page.mouse.move(50, 115, { steps: 3 });
+  await expect(page.locator('.rf-toolbar[data-visible="true"]')).toHaveCount(1);
+}
+
+/**
  * The place shown once a turn has landed (DEBUG_LOG C17.6): no leaf turning and the same place on two
  * reads 300 ms apart, different from `away` when given. A place read at the first change can be one
  * the renderer moves past a moment later.

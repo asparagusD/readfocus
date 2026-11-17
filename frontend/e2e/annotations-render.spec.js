@@ -5,6 +5,9 @@
 import { book, expect, openReader, test, wordPoint } from './fixtures';
 
 const toolbar = (page) => page.getByRole('toolbar', { name: 'Highlight the selection' });
+// A new PDF annotation is drawn at once as `pending-N` and drawn again under its saved id when the save returns
+// (useAnnotations); a box read in between can be the detached pending one (all zeros). Measure the saved one.
+const saved = (page) => page.locator('.rf-pdf-page[data-page="1"] .rf-anno:not([data-id^="pending-"])');
 
 async function highlight(page, from, to, button) {
   const a = await wordPoint(page, from);
@@ -28,6 +31,7 @@ test.describe('pdf', () => {
   test('a highlight is drawn on its words, stays on them at another zoom, and comes back after a reload', async ({ page, api }) => {
     await openReader(page);
     await highlight(page, 'lamp', 'circle', 'Sky highlight');
+    await expect(saved(page)).toHaveCount(1);
     await expect(page.locator('.rf-pdf-page[data-page="1"] .rf-anno')).toHaveCount(1);
     for (const word of ['lamp', 'small', 'circle']) expect(covers(await pdfBoxes(page), await wordPoint(page, word)), word).toBe(true);
     expect(covers(await pdfBoxes(page), await wordPoint(page, 'light')), 'not past the selection').toBe(false);
@@ -51,6 +55,7 @@ test.describe('pdf', () => {
     await openReader(page);
     await highlight(page, 'lamp', 'threw', 'Underline');
     await toolbar(page).getByRole('button', { name: 'Lilac underline' }).click();
+    await expect(saved(page)).toHaveCount(1);
     const lamp = await wordPoint(page, 'lamp');
     const [line] = await pdfBoxes(page);
     expect(line).toMatchObject({ style: 'underline', color: 'lilac' });
@@ -69,7 +74,8 @@ test.describe('pdf in lamplight', () => {
   test('highlights lighten the recoloured page so the light text keeps its colour', async ({ page }) => {
     await openReader(page);
     await highlight(page, 'lamp', 'circle', 'Honey highlight');
-    const anno = page.locator('.rf-anno').first();
+    const anno = saved(page);
+    await expect(anno).toHaveCount(1);
     await expect(anno).toBeVisible();
     expect(await anno.evaluate((el) => getComputedStyle(el).mixBlendMode)).toBe('lighten');
     const fill = await anno.evaluate((el) => getComputedStyle(el).backgroundColor);

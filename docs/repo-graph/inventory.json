@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17284,
+      "size_bytes": 17302,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -785,10 +785,10 @@
     {
       "path": "backend/services/ingestion_worker.py",
       "language": "python",
-      "lines": 160,
-      "size_bytes": 6325,
+      "lines": 176,
+      "size_bytes": 7042,
       "role": "service",
-      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job. C27.1: a priority slot instead of the lock: waiting ingest jobs before waiting regions jobs, each in arrival order, a cancelled waiter skipped; defer(job) queues a regions job from inside the worker (read from Storage on its turn), drain() waits for the deferred ones."
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job. C27.1: a priority slot instead of the lock: waiting ingest jobs before waiting regions jobs, each in arrival order, a cancelled waiter skipped; defer(job) queues a regions job from inside the worker (read from Storage on its turn), drain() waits for the deferred ones. C27.2: _held keeps the ids of the jobs this process holds (waiting or running, deferred ones from defer on); the sweep skips them, so a waiting job is never claimed twice or failed for waiting."
     },
     {
       "path": "backend/services/lookup.py",
@@ -1577,10 +1577,10 @@
     {
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
-      "lines": 265,
-      "size_bytes": 11872,
+      "lines": 303,
+      "size_bytes": 13535,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404). C27.1: a waiting ingest before an earlier regions job; an ingest on the worker queues its region map behind the next upload, read from Storage; outside the worker a region map runs at once; a cancelled waiter does not hold up the next."
+      "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404). C27.1: a waiting ingest before an earlier regions job; an ingest on the worker queues its region map behind the next upload, read from Storage; outside the worker a region map runs at once; a cancelled waiter does not hold up the next. C27.2: a job waiting in the worker is not swept again (each runs once, attempts unchanged; a 5 s limit turns the old deadlock into a failure); a job no longer held is swept as before."
     },
     {
       "path": "backend/tests/test_ingestor.py",
@@ -2121,8 +2121,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5082,
-      "size_bytes": 232657,
+      "lines": 5114,
+      "size_bytes": 234681,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2186,7 +2186,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5961,
-      "size_bytes": 1073962,
+      "size_bytes": 1074273,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6178,7 +6178,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 781,
-      "size_bytes": 254220,
+      "size_bytes": 254598,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

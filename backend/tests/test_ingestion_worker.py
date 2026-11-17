@@ -263,3 +263,41 @@ def test_a_cancelled_waiter_does_not_hold_up_the_next_job(monkeypatch):
         return gone.cancelled()
     assert asyncio.run(cancel_one()) is True
     assert [book for event, book in log if event == "start"] == ["a", "c"]
+
+
+# C27.2: the sweep leaves the worker's own jobs alone.
+
+def test_a_job_waiting_in_the_worker_is_not_swept_again(db, monkeypatch):
+    add_book(db, "busy", job={"status": "running", "attempts": 1})
+    add_book(db, "waiting", job={"status": "running", "attempts": 1})  # claimed at upload, not updated since
+    runs = []
+    gate = asyncio.Event()
+
+    async def ingest(job, file_bytes=None):
+        runs.append(job["book_id"])
+        if job["book_id"] == "busy":
+            await gate.wait()
+        return {"status": "ready"}
+
+    monkeypatch.setattr(book_ingestor, "run_job", ingest)
+
+    async def upload_then_sweep():
+        busy = asyncio.create_task(ingestion_worker.run(jobs.get("busy")))
+        await asyncio.sleep(0)
+        waiting = asyncio.create_task(ingestion_worker.run(jobs.get("waiting")))
+        await asyncio.sleep(0)
+        # Both look stale: one runs, one waits behind it. Before C27.2 the sweep claimed the running one again and
+        # waited behind it for good, so a limit makes that a failure, not a hang.
+        report = await asyncio.wait_for(ingestion_worker.sweep(), 5)
+        gate.set()
+        await asyncio.gather(busy, waiting)
+        return report
+    report = asyncio.run(upload_then_sweep())
+    assert report == {"resumed": [], "gave_up": []}
+    assert runs == ["busy", "waiting"]  # each once
+    assert jobs.get("waiting")["attempts"] == 1 and jobs.get("waiting")["status"] == "running"
+
+
+def test_a_job_no_longer_held_is_swept_as_before(db):
+    add_book(db, "left", job={"status": "running", "attempts": 1})
+    assert asyncio.run(ingestion_worker.sweep())["resumed"] == ["left"]  # a stopped server's job

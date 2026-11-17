@@ -65,6 +65,10 @@ class _Slot:
 _slots: "weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, _Slot]" = weakref.WeakKeyDictionary()
 _in_worker = contextvars.ContextVar("in_ingestion_worker", default=False)
 _deferred: set[asyncio.Task] = set()
+# C27.2: ids of the jobs this process holds, waiting for the slot or running. A held job is not updated while
+# it waits, so without this the sweep would take it for abandoned once the stale window passed, claim it again
+# (a second run) and, after MAX_ATTEMPTS, fail a job that was only waiting.
+_held: set[str] = set()
 
 
 def _slot() -> _Slot:
@@ -81,7 +85,14 @@ async def run(job: dict, file_bytes: bytes | None = None) -> dict:
     regions = job.get("kind") == jobs.REGIONS
     runner = region_job.run_job if regions else book_ingestor.run_job
     slot = _slot()
-    await slot.acquire(REGIONS_LATER if regions else INGEST_FIRST)
+    held = job.get("id")
+    if held:
+        _held.add(held)
+    try:
+        await slot.acquire(REGIONS_LATER if regions else INGEST_FIRST)
+    except BaseException:
+        _held.discard(held)
+        raise
     inside = _in_worker.set(True)
     try:
         return await runner(job, file_bytes)
@@ -90,6 +101,7 @@ async def run(job: dict, file_bytes: bytes | None = None) -> dict:
         return {"status": "error", "error": str(error)}
     finally:
         _in_worker.reset(inside)
+        _held.discard(held)
         slot.release()
 
 
@@ -98,6 +110,8 @@ def defer(job: dict) -> bool:
     runs it at once. It reads the book's file from Storage when its turn comes."""
     if not _in_worker.get():
         return False
+    if job.get("id"):
+        _held.add(job["id"])  # held from now: the task starts on the loop's next turn
     task = asyncio.get_running_loop().create_task(run(job))
     _deferred.add(task)
     task.add_done_callback(_deferred.discard)
@@ -138,6 +152,8 @@ async def sweep(now: datetime | None = None) -> dict:
         print(f"Ingestion sweep failed: {error}")
         return report
     for job in stale:
+        if job.get("id") in _held:  # C27.2: waiting or running in this process, not abandoned
+            continue
         try:
             if jobs.claimable(job, moment, jobs.stale_minutes()) == (False, "attempts"):
                 give_up(job)

@@ -1,7 +1,7 @@
 # ReadFocus
 
-**ReadFocus** is a book comprehension app. Upload a PDF, EPUB, Markdown
-file or Jupyter notebook, read it as published from where you left off,
+**ReadFocus** is a book comprehension app. Sign in with Google, upload a
+PDF, EPUB, Markdown file or Jupyter notebook, read it as published from where you left off,
 quiz yourself when you like, and see which ideas you hold. Highlights, a
 notepad beside the book, a focus mode with server-scored points, and XP,
 streaks, badges and weekly leagues come with it.
@@ -19,7 +19,8 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
 
 - Live: [readfocus-lake.vercel.app](https://readfocus-lake.vercel.app)
   (frontend on Vercel Hobby, API on Render Free; the first request after
-  15 idle minutes waits for the API to wake)
+  15 idle minutes waits for the API to wake). Production runs the C28
+  release of 2026-11-18 (Google sign-in).
 - Architecture in depth: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Measured numbers: [docs/BENCHMARKS.md](docs/BENCHMARKS.md)
 - Deployment and free-tier limits: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
@@ -34,9 +35,16 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
 
 ## How it works
 
-1. **Upload.** A PDF or EPUB goes to private Supabase Storage (or, if you
+1. **Sign in.** With a Google account only (since C28): one button, no
+   password and no confirmation email. Supabase Auth runs the OAuth flow
+   (PKCE) and brings the reader back to `/login`, which opens the shelf.
+   A first sign-in creates the account; Supabase links an older, confirmed
+   email account with the same address to it. We get the email, the name and a link to
+   the profile picture, never the Google password.
+2. **Upload.** A PDF or EPUB goes to private Supabase Storage (or, if you
    tick "keep on this device", stays in your browser while its text is
-   processed on the server). Markdown (alone or zipped with its images)
+   processed on the server). Over 50 MB a PDF or EPUB always stays on the
+   device and your browser reads its text, up to 300 MB (C26). Markdown (alone or zipped with its images)
    and Jupyter notebooks are converted to EPUB on the server, images kept.
    The backend cuts the text into sections of about 600 words, embeds each
    with a local model (all-MiniLM-L6-v2, 384 dimensions, on the CPU),
@@ -45,44 +53,47 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    why/how and main idea, each keeping the sentence it came from as
    evidence. The book opens at once, before any of this (C26); quizzes
    and Steve wait until its text is ready ("Preparing quizzes… n%"). One
-   book is processed at a time, in order. Then a region map splits every page into prose, math, code,
-   figure and table regions, so questions and Steve read prose only. A
+   book is processed at a time, in order. Then a region map splits every
+   page into prose, math, code, figure and table regions, so questions and
+   Steve read prose only; region maps wait behind any upload still in the
+   queue, so a new book's quizzes are never held up by an older book's map
+   (C27). A
    cover comes from Open Library. A scanned PDF's pages are read with
    text recognition (tesseract.js) in your browser.
-2. **Open.** A book opens at your last place, or its first page if it is
+3. **Open.** A book opens at your last place, or its first page if it is
    new, and every page turn saves the place. There is no session to start,
    no plan for the day and no pace check (removed in C26; the planner's
    code is kept but no longer runs).
-3. **Read.** The book opens as published (PDF.js for PDFs, foliate-js for
+4. **Read.** The book opens as published (PDF.js for PDFs, foliate-js for
    EPUBs: images, figures, math and code as printed), two pages on a wide
    screen, one on a phone. Hover or select a
    word for a card with its definition (Free Dictionary API) or a
    Wikipedia summary. Highlight or underline a passage, and keep notes,
    equations, code and drawings in the notepad beside the book, each tied
    to its place.
-4. **Focus (optional).** From chapter 1 on, focus mode runs a stopwatch
+5. **Focus (optional).** From chapter 1 on, focus mode runs a stopwatch
    timed by the server. Place a bookmark to end the session; a short quiz
    on the pages read decides whether the points count (10 a focused
    minute, 20 a right answer, nothing below 40%). Final points become XP:
    a daily goal, a streak with earned freezes, badges, and a weekly league
    you can leave.
-5. **Ask Steve (optional).** After a consent notice, Steve explains a
+6. **Ask Steve (optional).** After a consent notice, Steve explains a
    passage, an equation, code or a figure, citing the page or section. He
    is off during a test or quiz, rests when his daily limit or Google's
    free tier runs out, and can be switched off.
-6. **Quiz me.** About five questions from the bank on this chapter, or on
+7. **Quiz me.** About five questions from the bank on this chapter, or on
    what you read since your last quiz, in the mix the optimizer last chose;
    one at a time, no clock, no points.
-7. **Grade.** Closed questions are string matches. Written answers are
+8. **Grade.** Closed questions are string matches. Written answers are
    scored from meaning (cosine to the evidence sentences), key-term
    coverage and relevance, with a confidence that is never above "medium"
    for free text. Feedback comes from templates and quotes the passage; it
    never invents a fact.
-8. **Adapt.** Each concept's mastery moves up or down with your answers and
+9. **Adapt.** Each concept's mastery moves up or down with your answers and
    gets a review date. The optimizer sets the question mix for your next
    quizzes from your recent results. Results shows your score, feedback on
    each answer and the ideas to revisit.
-9. **Progress.** The dashboard shows your score trend, focus this week,
+10. **Progress.** The dashboard shows your score trend, focus this week,
    your badges, each book's progress and its concepts, weakest first; the
    header carries your level, today's goal and your streak.
 
@@ -110,6 +121,7 @@ React + Vite (Vercel) ──JWT──► FastAPI (Render, Docker) ──service 
 | Agents | LangGraph `StateGraph` of five pure `decide()` agents (`backend/agents/`), every constant in `backend/agents/policy.py` |
 | Local NLP | fastembed all-MiniLM-L6-v2 (ONNX), YAKE, rapidfuzz (`backend/nlp/`) |
 | Data | Supabase Postgres, pgvector, Storage, Auth, row-level security (`supabase/migrations/`, additive only) |
+| Sign-in | Google OAuth through Supabase Auth (PKCE), the only way in since C28; the Email provider stays on for the password test users of the live checks |
 | Reader | PDF.js and foliate-js (vendored), KaTeX, TipTap and Excalidraw for notes, tesseract.js for scanned pages (all in the browser) |
 | Free APIs | Free Dictionary API and Wikipedia (word lookup), Open Library (covers) |
 | Generative AI | Google Gemini, for Steve only, through `backend/steve/provider.py`, after consent; free tier or the reader's own key (`docs/STEVE.md`) |
@@ -143,10 +155,20 @@ npm --prefix frontend ci
 
 Copy `.env.example` to `.env` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_KEY`, `ENV=development`, optional `FRONTEND_URL` and
-`FASTEMBED_CACHE`) and `frontend/.env.example` to `frontend/.env`
-(`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
-`VITE_API_URL=http://localhost:8000`). The service-role key stays in the
-backend's `.env`; never put it in a `VITE_` variable.
+`FASTEMBED_CACHE`; for Steve, `GEMINI_API_KEY`, `GEMINI_MODEL_CHAT`,
+`GEMINI_MODEL_VISION`, `STEVE_DAILY_LIMIT_PER_USER`,
+`KEY_ENCRYPTION_SECRET`; `CRON_SECRET` for the league rollover) and
+`frontend/.env.example` to `frontend/.env` (`VITE_SUPABASE_URL`,
+`VITE_SUPABASE_ANON_KEY`, `VITE_API_URL=http://localhost:8000`,
+`VITE_SITE_URL`). The service-role key stays in the backend's `.env`; never
+put it in a `VITE_` variable.
+
+Signing in needs the Google provider on in the Supabase project: an OAuth
+client ID of type "Web application" from Google Cloud, with
+`https://<project-ref>.supabase.co/auth/v1/callback` as its redirect URI,
+pasted into Authentication → Providers → Google, and
+`http://localhost:5173/login` (plus the live site's `/login`) in
+Authentication → URL Configuration → Redirect URLs.
 
 ```bash
 make dev-backend
@@ -178,10 +200,10 @@ npm --prefix frontend run test:unit
 npm --prefix frontend run test:e2e
 ```
 
-At the end of phase 2 (C24): 2006 backend tests, 64 graph tests, 260
-frontend unit tests and 313 Playwright tests (on the installed Microsoft
-Edge, every API call mocked; Steve's provider is faked, so nothing reaches
-Google). ruff and ESLint still report 27 and 3 errors in older code; CI
+At C28: 2033 backend tests, 64 graph tests, 271 frontend unit tests and
+324 Playwright tests (on the installed Microsoft Edge, every API call
+mocked, Google sign-in included; Steve's provider is faked, so nothing
+reaches Google). ruff and ESLint still report 25 and 3 errors in older code; CI
 fails a push that raises either count. The current numbers are in
 [CLAUDE.md](CLAUDE.md).
 
@@ -208,8 +230,14 @@ npm --prefix frontend run test:live:phase2
 npm --prefix frontend run test:phase2-isolation
 ```
 
+The app signs in with Google only, so the live journeys sign their
+password test users (`TEST_USER_A_EMAIL`, `TEST_USER_A_PASSWORD` in
+`.env.test`) in through Supabase Auth and hand the session to the page
+(`frontend/e2e/liveSignIn.js`).
+
 `test:live` is the full reading journey in a browser (sign in, upload,
-read, look up a word, test, results, dashboard, next plan); `test:isolation`
+read, turn pages and save the place, look up a word, Quiz me, results,
+dashboard, reopen at the saved place); `test:isolation`
 checks with two users that neither can read or change the other's data
 through the API or Supabase; `test:xp-isolation` does the same for XP,
 badges, progress and leagues (rows seeded for user A with the service key).
@@ -258,9 +286,12 @@ with the labelled answers: `python scripts/eval_grader.py`.
 - **Free hosting.** The Render API sleeps after 15 idle minutes and takes
   about a minute to wake (the app shows a warm-up screen); the container has
   0.1 CPU and 512 MB. A whole novel takes minutes to finish ingesting
-  (Pride and Prejudice: about 134 s on a desktop; not measured on Render),
-  though reading can start after the first batch.
+  (Pride and Prejudice: about 134 s on a desktop; a 883-page PDF's first
+  questions about 2 minutes in a Render-like container), though the book
+  opens and can be read at once; only quizzes and Steve wait.
   Supabase Free pauses after a week without activity and has no automatic
   backups; development and production share one project.
-- **Not yet deployed:** production still runs the C15 release; phase 2
-  (C16-C24) reaches it with the C25 release.
+- **Google accounts only.** There is no email and password sign-in in the
+  app; a reader without a Google account cannot sign up, and an older
+  email account whose address is not a Google account can no longer sign
+  in.

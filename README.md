@@ -1,13 +1,13 @@
 # ReadFocus
 
 **ReadFocus** is a book comprehension app. Upload a PDF, EPUB, Markdown
-file or Jupyter notebook, read it as published, take a short test after
-each session, and the next session adapts to how you did. Highlights, a
+file or Jupyter notebook, read it as published from where you left off,
+quiz yourself when you like, and see which ideas you hold. Highlights, a
 notepad beside the book, a focus mode with server-scored points, and XP,
 streaks, badges and weekly leagues come with it.
 
-**What is under the hood, plainly:** ReadFocus's quizzes, grading,
-planning and scoring are algorithmic and run on our servers:
+**What is under the hood, plainly:** ReadFocus's quizzes, grading and
+scoring are algorithmic and run on our servers:
 LangGraph-orchestrated, policy-driven agents, a small local embedding model
 and rule-based knowledge tracing, with every constant in a policy file.
 Steve, the optional study assistant, uses Google's Gemini; when you ask
@@ -43,20 +43,19 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    extracts its key concepts (YAKE) and pre-builds a bank of questions
    from the section's own sentences: cloze, multiple choice, definition,
    why/how and main idea, each keeping the sentence it came from as
-   evidence. The book is readable after the first batch; the rest
-   follows. Then a region map splits every page into prose, math, code,
+   evidence. The book opens at once, before any of this (C26); quizzes
+   and Steve wait until its text is ready ("Preparing quizzes… n%"). One
+   book is processed at a time, in order. Then a region map splits every page into prose, math, code,
    figure and table regions, so questions and Steve read prose only. A
    cover comes from Open Library. A scanned PDF's pages are read with
    text recognition (tesseract.js) in your browser.
-2. **Plan.** When you start, the planner picks today's sections: anything on
-   your re-read list first, otherwise sections scored on weak concepts,
-   what is unread, difficulty and reviews due, sized to your reading speed
-   and recent results. It writes one plain sentence saying why, shown on
-   the first page.
+2. **Open.** A book opens at your last place, or its first page if it is
+   new, and every page turn saves the place. There is no session to start,
+   no plan for the day and no pace check (removed in C26; the planner's
+   code is kept but no longer runs).
 3. **Read.** The book opens as published (PDF.js for PDFs, foliate-js for
    EPUBs: images, figures, math and code as printed), two pages on a wide
-   screen, one on a phone, with today's suggested pages marked and the
-   freedom to read on. Your place is saved as you go. Hover or select a
+   screen, one on a phone. Hover or select a
    word for a card with its definition (Free Dictionary API) or a
    Wikipedia summary. Highlight or underline a passage, and keep notes,
    equations, code and drawings in the notepad beside the book, each tied
@@ -71,18 +70,18 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    passage, an equation, code or a figure, citing the page or section. He
    is off during a test or quiz, rests when his daily limit or Google's
    free tier runs out, and can be switched off.
-6. **Test.** About five questions from the bank for the sections you read,
-   in the mix the optimizer last chose; one at a time, timed.
+6. **Quiz me.** About five questions from the bank on this chapter, or on
+   what you read since your last quiz, in the mix the optimizer last chose;
+   one at a time, no clock, no points.
 7. **Grade.** Closed questions are string matches. Written answers are
    scored from meaning (cosine to the evidence sentences), key-term
    coverage and relevance, with a confidence that is never above "medium"
    for free text. Feedback comes from templates and quotes the passage; it
    never invents a fact.
 8. **Adapt.** Each concept's mastery moves up or down with your answers and
-   gets a review date. The optimizer sets the next session's size, time and
-   question mix and puts low-scoring sections on a re-read list. Results
-   shows the next session's plan and why, for example "Re-reading section 1
-   before moving on — your last test on it was low."
+   gets a review date. The optimizer sets the question mix for your next
+   quizzes from your recent results. Results shows your score, feedback on
+   each answer and the ideas to revisit.
 9. **Progress.** The dashboard shows your score trend, focus this week,
    your badges, each book's progress and its concepts, weakest first; the
    header carries your level, today's goal and your streak.
@@ -97,7 +96,7 @@ React + Vite (Vercel) ──JWT──► FastAPI (Render, Docker) ──service 
   Library, original view          /books /sessions /dashboard                Postgres + pgvector
   (PDF.js, foliate-js),           /mastery /lookup /auth /focus              Storage, Auth, RLS
   notepad, Test, Results,         /steve /me /badges /leagues
-  Dashboard, League               LangGraph: planner · test generator ·
+  Dashboard, League               LangGraph: (planner, dormant) · test gen. ·
                                   evaluator · knowledge state · optimizer
                                   fastembed all-MiniLM-L6-v2 (local)
                                   region map, EPUB converters

@@ -50,7 +50,7 @@
       "path": ".claude/skills/steve-guardrails/SKILL.md",
       "language": "markdown",
       "lines": 130,
-      "size_bytes": 5552,
+      "size_bytes": 5579,
       "role": "doc",
       "purpose": "Project skill: the rules for Steve's Gemini calls: one provider module, consent, context budget, book text as data, grounding, quota, keys and logging."
     },
@@ -97,8 +97,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 221,
-      "size_bytes": 17091,
+      "lines": 222,
+      "size_bytes": 17160,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -121,8 +121,8 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 267,
-      "size_bytes": 13014,
+      "lines": 266,
+      "size_bytes": 12925,
       "role": "doc",
       "purpose": "Product overview (C15.4, phase 2 in C25.1): the honest positioning (algorithmic quizzes, grading, planning and scoring on our servers; Steve alone uses Google's Gemini, opt-in, free tier or the reader's key), live URL, how it works in nine steps (upload and conversion, plan, the original view, focus, Steve, test, grade, adapt, progress), the architecture in brief, local setup, the standard and live checks, and limitations."
     },
@@ -890,9 +890,9 @@
       "path": "backend/steve/consent.py",
       "language": "python",
       "lines": 28,
-      "size_bytes": 1628,
+      "size_bytes": 1717,
       "role": "lib",
-      "purpose": "Steve's consent notice (C20.1): CONSENT_VERSION, CONSENT_TEXT quoting Google's free-tier terms, and TERMS_URL; served by GET /steve/settings and kept identical to docs/STEVE.md by a test."
+      "purpose": "Steve's consent notice (C20.1): CONSENT_VERSION, CONSENT_TEXT quoting Google's free-tier terms, and TERMS_URL; served by GET /steve/settings and kept identical to docs/STEVE.md by a test. C26.6d: notice version 2026-11-17, \"the pages around where you are reading\" (was \"of your current session\"); every reader sees the notice once more."
     },
     {
       "path": "backend/steve/context.py",
@@ -2081,8 +2081,8 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
-      "lines": 464,
-      "size_bytes": 29971,
+      "lines": 466,
+      "size_bytes": 30366,
       "role": "doc",
       "purpose": "Architecture (C15.4, phase 2 in C25.1): the system with Gemini for Steve only, the five agents' pure decide() contracts, the LangGraph diagram, event flows per endpoint, ingestion, conversions to EPUB, the region map, the data model through migration 033, the original view (PDF.js, foliate-js, OCR; the book view retired), word lookup, annotations, notes, Steve, focus mode, XP and leagues, and the security layers."
     },
@@ -2170,7 +2170,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5940,
-      "size_bytes": 1070401,
+      "size_bytes": 1070815,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2178,7 +2178,7 @@
       "path": "docs/STEVE.md",
       "language": "markdown",
       "lines": 442,
-      "size_bytes": 25713,
+      "size_bytes": 25787,
       "role": "doc",
       "purpose": "Steve's spec (C20.1): persona, consent and the notice text, scope, context rules, answers and citations, quota and paused states, keys, logging, data kept, models and evaluation. C26.6a: the reading text (the pages up to and at the reader's place) replaces the session text, <reading_text> in the system instruction."
     },
@@ -2418,7 +2418,7 @@
       "path": "frontend/e2e/landing.spec.js",
       "language": "javascript",
       "lines": 263,
-      "size_bytes": 13149,
+      "size_bytes": 13148,
       "role": "config",
       "purpose": "Playwright e2e for the landing page (C13.10): signed-out / shows it with exactly one GET /health and no warm-up even when the backend never answers, Start reading opens Create account, deep links still go to sign in, signed-in / is still the shelf. Hero: the spread cites Project Gutenberg and its flyleaf ends turned (m11 = -1); See how it works focuses the four-step contents; under reduced motion no flyleaf and the steps never offset. Demo: hover opens the real card below the word's line and pointer-leave closes it with no lookup sent; Quadi shows the Wikipedia summary and link; Enter focuses the card and Esc returns to the word; a touch long-press opens the compact card. Features: the three sections and the isn't note; the five questions open with Enter and close with Space; the footer links GitHub, credits CC BY-SA sources, switches the theme and Start reading opens Create account."
     },
@@ -2530,7 +2530,7 @@
       "path": "frontend/e2e/privacy.spec.js",
       "language": "javascript",
       "lines": 64,
-      "size_bytes": 3905,
+      "size_bytes": 3895,
       "role": "config",
       "purpose": "Playwright e2e for /privacy (C25.1): the lead statement, its five sections, Google's terms link, no backend request; linked from the landing footer and an answer; 375 and 1440 in Paper and Lamplight with no sideways scroll, a reading measure and the skip link; the account menu's Privacy link when signed in."
     },
@@ -4618,9 +4618,9 @@
       "path": "frontend/src/pages/Login.jsx",
       "language": "jsx",
       "lines": 158,
-      "size_bytes": 7372,
+      "size_bytes": 7368,
       "role": "page",
-      "purpose": "Sign in and create account (handoff screen 01): scene with the tagline, segmented tabs over one tabpanel, labelled fields validated before sending (errors inline, focus to the first), Supabase errors mapped to the field or a form alert, loading label on submit, inbox message after sign-up; the display name is collected and never sent, as before. The drawings fade in and the form rises 12 px without fading (text paints at once); a nested AnimatePresence lets them play on a first load; under reduced motion the form does not move. Opens on Create account when the URL has ?tab=signup (the landing page's Start reading)."
+      "purpose": "Sign in and create account (handoff screen 01): scene with the tagline, segmented tabs over one tabpanel, labelled fields validated before sending (errors inline, focus to the first), Supabase errors mapped to the field or a form alert, loading label on submit, inbox message after sign-up; the display name is collected and never sent, as before. The drawings fade in and the form rises 12 px without fading (text paints at once); a nested AnimatePresence lets them play on a first load; under reduced motion the form does not move. Opens on Create account when the URL has ?tab=signup (the landing page's Start reading). C26.6d: the subtitle no longer promises sessions or a plan."
     },
     {
       "path": "frontend/src/pages/NotFound.jsx",
@@ -4642,9 +4642,9 @@
       "path": "frontend/src/pages/Privacy.jsx",
       "language": "jsx",
       "lines": 127,
-      "size_bytes": 7613,
+      "size_bytes": 7624,
       "role": "page",
-      "purpose": "Public privacy page at /privacy (C25.1), outside the backend gate: the honest Steve statement, what ReadFocus keeps, what goes to Google and when, other services, who sees what (leagues), and deleting books, notes, highlights, the Gemini key and the account (by request; PRIVACY_CONTACT empty until the owner names an address)."
+      "purpose": "Public privacy page at /privacy (C25.1), outside the backend gate: the honest Steve statement, what ReadFocus keeps, what goes to Google and when, other services, who sees what (leagues), and deleting books, notes, highlights, the Gemini key and the account (by request; PRIVACY_CONTACT empty until the owner names an address). C26.6d: updated 17 November 2026; quizzes instead of sessions, no planning, Steve's pages around where you are reading."
     },
     {
       "path": "frontend/src/pages/ReadingSession.css",
@@ -4690,25 +4690,25 @@
       "path": "frontend/src/pages/landing/Contents.jsx",
       "language": "jsx",
       "lines": 44,
-      "size_bytes": 2187,
+      "size_bytes": 2241,
       "role": "page",
-      "purpose": "How it works as a book's contents page (C13.10b): four steps (C25.1: any supported book, read as published, focus mode) with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works."
+      "purpose": "How it works as a book's contents page (C13.10b): four steps (C25.1: any supported book, read as published, focus mode) with roman numerals in the margin and dotted leaders, staggered rise on first scroll into view (fade only under reduced motion); target of See how it works. C26.6d: the steps are Upload, Read where you left off, Answer a few questions (Quiz me, focus mode), See what slips."
     },
     {
       "path": "frontend/src/pages/landing/Faq.jsx",
       "language": "jsx",
       "lines": 43,
-      "size_bytes": 3409,
+      "size_bytes": 3422,
       "role": "page",
-      "purpose": "Landing questions (C13.10d, C25.1) as native details/summary: which files work, is it free, is Steve free, what is sent to Google, why Steve rests, how points are calculated, where definitions come from, why the first load is slow, deleting books (with links to /privacy); answers checked against the code and the specs."
+      "purpose": "Landing questions (C13.10d, C25.1) as native details/summary: which files work, is it free, is Steve free, what is sent to Google, why Steve rests, how points are calculated, where definitions come from, why the first load is slow, deleting books (with links to /privacy); answers checked against the code and the specs. C26.6d: Steve reads the pages around where you are reading."
     },
     {
       "path": "frontend/src/pages/landing/Features.jsx",
       "language": "jsx",
       "lines": 65,
-      "size_bytes": 3761,
+      "size_bytes": 3707,
       "role": "page",
-      "purpose": "Landing features (C13.10d, C25.1): Feels like a book, Understand every word, Reading that adapts, Notes and Steve beside the book, Focus, points and a weekly league as editorial sections with text and an illustration alternating sides, then the 'What ReadFocus isn't' note naming Steve as the one generative model and linking /privacy."
+      "purpose": "Landing features (C13.10d, C25.1): Feels like a book, Understand every word, Reading that adapts, Notes and Steve beside the book, Focus, points and a weekly league as editorial sections with text and an illustration alternating sides, then the 'What ReadFocus isn't' note naming Steve as the one generative model and linking /privacy. C26.6d: \"Quizzes that know what slips\"; no sessions or planning."
     },
     {
       "path": "frontend/src/pages/landing/LandingFooter.jsx",
@@ -6122,7 +6122,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 774,
-      "size_bytes": 249108,
+      "size_bytes": 249685,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

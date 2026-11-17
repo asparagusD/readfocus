@@ -78,7 +78,7 @@ test.describe('hero and how it works', () => {
     await expect(steps).toHaveCount(4);
     await expect(steps.nth(3)).toBeVisible();
     await expect(steps.nth(0)).toContainText('Upload a book');
-    await expect(steps.nth(3)).toContainText('Your next session adapts');
+    await expect(steps.nth(3)).toContainText('See what slips');
   });
 
   test.describe('reduced motion', () => {
@@ -165,7 +165,7 @@ test.describe('features, questions and footer', () => {
 
   test('five feature sections and the honesty note are there, with Steve named as the one generative model', async ({ page }) => {
     await page.goto('/');
-    for (const name of ['Feels like a book', 'Understand every word', 'Reading that adapts', 'Notes and Steve beside the book',
+    for (const name of ['Feels like a book', 'Understand every word', 'Quizzes that know what slips', 'Notes and Steve beside the book',
       'Focus, points and a weekly league', 'What ReadFocus isn’t']) {
       await expect(page.getByRole('heading', { level: 2, name })).toBeAttached();
     }

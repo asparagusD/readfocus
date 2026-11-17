@@ -7,7 +7,7 @@ import { test as base, expect } from '@playwright/test';
 
 export const BOOK = 'e2e-book';
 export const GOOD_KEY = 'AIzaSyReaderOwnKey-not-real-abcdefghij12'; // a made-up Gemini key (C20.3)
-export const STEVE_NOTICE = { version: '2026-11-14', terms_url: 'https://aistudio.google.com/docs/terms',
+export const STEVE_NOTICE = { version: '2026-11-17', terms_url: 'https://aistudio.google.com/docs/terms',
   text: "Steve is a study assistant built on Google's Gemini.\n\nYou can turn Steve off at any time in his settings." };
 
 /** A whole /steve/ask stream (C20.7b): start, the text in a few tokens, done with the checked text and citations. */

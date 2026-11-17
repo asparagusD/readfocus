@@ -17,10 +17,10 @@ const FEATURES = [
     ],
   },
   {
-    id: 'adapts', title: 'Reading that adapts', Art: BookStack,
+    id: 'adapts', title: 'Quizzes that know what slips', Art: BookStack,
     body: [
-      'After each session a few questions are written from sentences in the passages you read: a missing word, the right statement, the main idea. Each is tied to a concept, so ReadFocus learns which ideas you hold and which slip, and the next session brings those back.',
-      'The quizzes, grading, planning and scoring are algorithmic and run on our servers: five rule-based agents and one small sentence-embedding model. A generative model never writes a question or marks an answer.',
+      'When you ask, a few questions are written from sentences in the pages you read: a missing word, the right statement, the main idea. Each is tied to a concept, so ReadFocus learns which ideas you hold and which slip.',
+      'The quizzes, grading and scoring are algorithmic and run on our servers: rule-based agents and one small sentence-embedding model. A generative model never writes a question or marks an answer.',
     ],
   },
   {

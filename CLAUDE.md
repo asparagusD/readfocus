@@ -1,8 +1,9 @@
 # ReadFocus 2.0 — project rules
 
-ReadFocus is a book comprehension app: upload a PDF or EPUB, read it in paced
-sessions, take a short test after each one, and the next session adapts to
-your score.
+ReadFocus is a book comprehension app: upload a PDF or EPUB, read it as
+published from where you left off, quiz yourself when you like (Quiz me, or
+focus mode's bookmark quiz), and see which ideas you hold (C26: no planned
+sessions).
 
 ## Product goal
 

@@ -47,13 +47,13 @@ check.
 
 ### The notice
 
-Notice version: `2026-11-14`. Google's terms for the free tier were read
+Notice version: `2026-11-17` (C26.6d: "the pages around where you are reading"; was `2026-11-14`). Google's terms for the free tier were read
 on 2026-11-14 at https://aistudio.google.com/docs/terms (effective
 2026-03-23; `ai.google.dev/gemini-api/terms` redirects there). The code
 copy is `backend/steve/consent.py`; a test keeps the two identical.
 
 Steve is a study assistant built on Google's Gemini. When you ask him something, ReadFocus
-sends Google your question and a limited part of this book: the pages of your current session,
+sends Google your question and a limited part of this book: the pages around where you are reading,
 the passage you selected, the table of contents and a few related passages. Never the whole
 book, and never your name or email.
 

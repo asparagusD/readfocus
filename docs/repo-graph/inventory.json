@@ -1073,10 +1073,10 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 178,
-      "size_bytes": 6988,
+      "lines": 180,
+      "size_bytes": 7141,
       "role": "test",
-      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1); project_columns (C25.G, off by default) returns only the selected columns, as PostgREST does."
+      "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1); project_columns (C25.G, on by default) returns only the selected columns, as PostgREST does."
     },
     {
       "path": "backend/tests/test_agent_nodes.py",
@@ -1185,8 +1185,8 @@
     {
       "path": "backend/tests/test_api_regions.py",
       "language": "python",
-      "lines": 102,
-      "size_bytes": 5641,
+      "lines": 101,
+      "size_bytes": 5606,
       "role": "test",
       "purpose": "Pytest for GET /books/{id}/regions: non-prose boxes and inline math boxes of the pages asked, in order; another reader's book not found; bad or too long ranges refused; C25.G: region ids come back when the database returns only the selected columns."
     },
@@ -2169,8 +2169,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5743,
-      "size_bytes": 1044468,
+      "lines": 5744,
+      "size_bytes": 1046062,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6146,7 +6146,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 777,
-      "size_bytes": 243451,
+      "size_bytes": 243450,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

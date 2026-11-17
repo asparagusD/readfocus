@@ -166,7 +166,9 @@ class MemoryDb:
     def __init__(self):
         self.tables, self.calls, self.broken, self.files = {}, [], set(), {}
         self.selects, self.delay = [], 0.0  # (table, columns, window or limit) per select; seconds per call
-        self.project_columns = False  # C25.3: True returns only the selected columns, as PostgREST does
+        # C25.G: only the selected columns come back, as PostgREST does, so a handler that reads a column its select
+        # leaves out fails in tests (the regions-id bug). A test may set it False to inspect whole rows.
+        self.project_columns = True
         self._ids = 0
         self.storage = SimpleNamespace(from_=lambda bucket: Bucket(self, bucket))
 

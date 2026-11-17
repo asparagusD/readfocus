@@ -199,12 +199,12 @@ export function Dashboard() {
           {nextBook(books) && (
             <section className="rf-dash__card rf-dash__tonight" aria-labelledby="rf-tonight-title">
               <ReadingLamp size={96} />
-              <h2 id="rf-tonight-title" className="eyebrow">For tonight</h2>
+              <h2 id="rf-tonight-title" className="eyebrow">Continue reading</h2>
               <p className="rf-dash__tonight-title">{nextBook(books).title}</p>
               <p className="rf-dash__muted">
                 {nextBook(books).sessions_completed > 0
-                  ? `${Math.round(nextBook(books).progress_pct)}% read. Today’s pages are planned when you open it.`
-                  : `By ${nextBook(books).author}. Your first session is ready when you are.`}
+                  ? `${Math.round(nextBook(books).progress_pct)}% read. It opens where you left off.`
+                  : `By ${nextBook(books).author}. It opens at the first page.`}
               </p>
               <Link to={`/read/${nextBook(books).book_id}`} className="rf-btn rf-btn--primary">Begin reading</Link>
             </section>

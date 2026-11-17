@@ -403,14 +403,18 @@ def _block_at(blocks: list[list[dict]], ends: list[int], pos: int):
     return chunk, blocks[chunk][-1]["id"] if blocks[chunk] else f"{chunk}.0"
 
 
-def pdf_contents(file_bytes: bytes, blocks: list[list[dict]], chunks: list[str]) -> list[dict]:
-    """The PDF outline as [{title, page, chunk_index, block_id}]; [] when there is none."""
+def pdf_contents(file_bytes: bytes, blocks: list[list[dict]], chunks: list[str],
+                 page_texts: list[str] | None = None) -> list[dict]:
+    """The PDF outline as [{title, page, chunk_index, block_id}]; [] when there is none.
+
+    C26.2: `page_texts`, every page's text as ingestion already read it (pdf_text.page_texts), spares
+    a second whole-book pass; without it the pages are read here."""
     from pypdf import PdfReader
 
     from backend.services import pdf_text
 
     starts, total = [], 0  # each page's first non-space character in the joined text
-    for text in pdf_text.page_texts(file_bytes):  # a few pages per reader (C18.G)
+    for text in pdf_text.page_texts(file_bytes) if page_texts is None else page_texts:  # a few pages per reader (C18.G)
         starts.append(total)
         total += len(skeleton(text.replace("\x00", "")))
     reader = PdfReader(io.BytesIO(file_bytes))  # the outline and its page numbers only: no page's text is read
@@ -487,8 +491,10 @@ def block_for_cfi(cfi: str, paths: list[list[dict]]):
     return c, p["block_id"]
 
 
-def build_with_paths(file_type: str, file_bytes: bytes, chunks: list[str]):
-    """(blocks per chunk, toc, block paths per chunk or None); (None, None, None) if anything goes wrong."""
+def build_with_paths(file_type: str, file_bytes: bytes, chunks: list[str], page_texts: list[str] | None = None):
+    """(blocks per chunk, toc, block paths per chunk or None); (None, None, None) if anything goes wrong.
+
+    `page_texts` (a PDF's every page, C26.2) is passed on to pdf_contents."""
     try:
         blocks, book = None, None
         if file_type.lower() == "epub":
@@ -511,7 +517,7 @@ def build_with_paths(file_type: str, file_bytes: bytes, chunks: list[str]):
         toc = []
         try:
             if file_type.lower() == "pdf":
-                toc = pdf_contents(file_bytes, blocks, chunks)
+                toc = pdf_contents(file_bytes, blocks, chunks, page_texts)
             elif book is not None and paths:
                 toc = epub_contents(book, paths)
         except Exception as e:  # noqa: BLE001 - the chapter contents stand in

@@ -220,7 +220,7 @@ export function Gallery() {
       </Section>
 
       <Section title="Tooltip">
-        <Tooltip content="4 pages left in today’s reading">
+        <Tooltip content="4 pages left in this chapter">
           <Button variant="secondary">Pages left</Button>
         </Tooltip>
       </Section>

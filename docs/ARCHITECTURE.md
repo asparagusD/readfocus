@@ -81,7 +81,8 @@ and `errors` are append-only.
 
 What each one decides:
 
-- **Planner.** The first section of the re-read queue, if any. Otherwise
+- **Planner** (dormant since C26: kept with its tests, but no route calls it; a book opens at the
+  reader's place instead). It took the first section of the re-read queue, if any. Otherwise
   every candidate is scored on weak concepts, being unread, difficulty fit
   and reviews due (weights `PLANNER_WEIGHTS`); a new-reading anchor is
   extended with the following sections while the words stay within the
@@ -145,10 +146,9 @@ graph TD;
 	__start__ -.-> test_generator;
 	evaluator -.-> __end__;
 	evaluator -.-> knowledge_state;
+	knowledge_state -.-> __end__;
 	knowledge_state -.-> optimizer;
-	knowledge_state -.-> planner;
-	optimizer -.-> __end__;
-	optimizer -.-> planner;
+	optimizer --> __end__;
 	planner --> __end__;
 	test_generator --> __end__;
 	classDef default fill:#f2f0ff,line-height:1.2
@@ -162,10 +162,9 @@ Routing (`backend/agents/graph.py`):
 |---|---|
 | `__start__` → first node | `state["event"]`: `start_session` → planner, `finish_reading` → test_generator, `submit_answers` → evaluator, `abandon` → optimizer; anything else → end |
 | evaluator → end | the evaluator recorded an error |
-| knowledge_state → planner | every grade of the test is low confidence: no adapting on unreliable evidence, the optimizer is skipped |
+| knowledge_state → end | every grade of the test is low confidence: no adapting on unreliable evidence, the optimizer is skipped |
 | knowledge_state → optimizer | otherwise |
-| optimizer → planner | the event is `submit_answers` (the next plan is ready when Results opens) |
-| optimizer → end | the event is `abandon` |
+| optimizer → end | always (C26: no next plan after a test) |
 
 ## Event flows
 
@@ -175,11 +174,12 @@ Routing (`backend/agents/graph.py`):
 | `POST /books/{id}/ocr` | one scanned PDF page's words from tesseract.js in the browser, cleaned (`services/ocr_pages.py`) into `page_ocr`; a fully read scanned book is ingested again from that text |
 | `POST /steve/ask` | consent, off switch, open test or quiz (409), cache, breaker, daily limit, then the context builder and one Gemini call, streamed; see [Steve](#steve) |
 | `POST /focus/start`, `/focus/{id}/event`, `/end`, `/quiz/answers` | see [Focus mode](#focus-mode); a passed quiz awards XP and badges ([XP](#xp-streaks-badges-and-leagues)) |
-| `POST /sessions/start` | ownership check (404 otherwise), `start_session` run (planner), then the chunks read and the session row created at once; after the response: decisions stored and the test assembled from the bank |
-| `PUT /sessions/{id}/position` | the reader's place `{chunk_index, block_id, char_offset}`, checked against the caller's session and the book's chunks, into `reading_progress.position` |
-| `POST /sessions/{id}/finish-reading` | the public test; runs `finish_reading` (test generator) inline if the background run has not stored it yet; the first stored test wins |
+| `GET /books/{id}/open` | the book (title, author, contents, format, storage mode), its status, the pages-only flag of a scanned book with no text yet, and the saved place; makes the reader's `reading_progress` row on a first open (C26.4). No session, no plan |
+| `PUT /books/{id}/position` | the reader's place, an anchor in the book's own format (its chunk when known), on every page turn, into `reading_progress.position`; asks for the Finished a book badge (C26.4) |
+| `POST /focus/quiz-me` | a quiz on this chapter or since the last quiz, kept on a `sessions` row and graded by submit-answers with no points (C23.7b) |
+| `POST /sessions/{id}/finish-reading` | (sessions made before C26) the public test; runs `finish_reading` (test generator) inline if the background run has not stored it yet; the first stored test wins |
 | `POST /sessions/{id}/evaluate-single` | grades one answer while the reader moves on, cached on the session |
-| `POST /sessions/{id}/submit-answers` | claims the session (graded once), then `submit_answers`: evaluator → knowledge state → optimizer → planner; returns score, per-question feedback and confidence, the pace and the next session's plan |
+| `POST /sessions/{id}/submit-answers` | claims the session (graded once), then `submit_answers`: evaluator → knowledge state → optimizer; returns score, per-question feedback and confidence, and the pace (C26: no next session) |
 | `POST /sessions/{id}/abandon` | marks the session; `abandon` (optimizer) after the response |
 | `GET /dashboard`, `GET /mastery` | the reader's sessions, results and concept mastery, weakest first |
 | `GET /lookup` | a word or phrase, see [Word lookup](#word-lookup) |
@@ -299,10 +299,11 @@ drawer, the toolbar, the device file store and the place saver).
   pages from 1024 px, one below.
 - **The file** comes from a short-lived signed URL (`GET /books/{id}/file`)
   or, for a book kept on this device, from IndexedDB (`reader/fileStore.js`).
-- **Today's reading** (`today.js`): the session's chunks are found in the
-  PDF or EPUB and marked; the reader can read on past them. The place
-  (`{kind: 'pdf', page}` or `{kind: 'epub', index, char}`) is saved with
-  `PUT /sessions/{id}/position` (`reader/usePlaceSaver.js`).
+- **The place** (C26.5): the book opens with `GET /books/{id}/open` at the
+  saved anchor (a new book at its first page), and every turn is saved with
+  `PUT /books/{id}/position` (`reader/usePlaceSaver.js`, one a second);
+  `originalview/place.js` compares places. The closing page is the end of
+  the book; today's reading and its range are gone.
 
 ## Word lookup
 
@@ -380,7 +381,7 @@ Ask Steve (panel question, a selection, Explain this equation / code / figure)
          consent at the current notice version? Steve on? no open test or quiz on the book (409)?
          └─► service.ask: cache (book, normalised question, context hash, model) ─► hit: no call
                └─► breaker (after a 429: paused for everyone on our key) ─► daily limit (steve_take_quota, 024)
-                     └─► context.build_context: book card, session text, highlight, 6 retrieved passages,
+                     └─► context.build_context: book card, reading text (around the place), highlight, 6 retrieved passages,
                          region or image; 12,000-token cap; every part inside its own delimited section
                            └─► prompts.build_prompt ─► provider.py ─► Gemini (our free-tier key, or the reader's own)
    ◄── streamed answer with [p. 44] / [sec. 4] citations ─► steve_threads / steve_messages (023)
@@ -446,8 +447,9 @@ everyone else's board.
 ## Security
 
 - The API runs with the Supabase service-role key, which bypasses RLS, so
-  every handler filters by the caller's `user_id`; `POST /sessions/start`
-  checks book ownership first (issue 17, fixed in C15.2).
+  every handler filters by the caller's `user_id`; `GET /books/{id}/open`
+  and `PUT /books/{id}/position` check book ownership first (issue 17 was
+  `/sessions/start`, fixed in C15.2 and removed in C26.6c).
 - RLS on every table keeps the browser's anon-key client to the reader's
   own rows; `agent_decisions` and `processing_jobs` are read-only to
   readers; `term_lookups` is read-only to signed-in readers.

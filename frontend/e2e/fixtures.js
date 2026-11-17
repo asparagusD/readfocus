@@ -7,7 +7,7 @@ import { test as base, expect } from '@playwright/test';
 
 export const BOOK = 'e2e-book';
 export const GOOD_KEY = 'AIzaSyReaderOwnKey-not-real-abcdefghij12'; // a made-up Gemini key (C20.3)
-export const STEVE_NOTICE = { version: '2026-11-14', terms_url: 'https://aistudio.google.com/docs/terms',
+export const STEVE_NOTICE = { version: '2026-11-17', terms_url: 'https://aistudio.google.com/docs/terms',
   text: "Steve is a study assistant built on Google's Gemini.\n\nYou can turn Steve off at any time in his settings." };
 
 /** A whole /steve/ask stream (C20.7b): start, the text in a few tokens, done with the checked text and citations. */
@@ -40,11 +40,13 @@ const pdfPage = (n) => [PDF_TITLES[n - 1], ...Array.from({ length: 14 }, (_, r) 
 const PARA = 'The lamp on the desk threw a small circle of light, and inside it the page was the only thing that mattered. '.repeat(6).trim();
 const epubChapter = (n) => `Chapter ${n}\n\n${PARA}\n\n${PARA}`;
 export const BOOKS = {
-  // Today: pages 1-5 (chunks 0-2); the next chunk starts on page 6.
+  // The chunks the server would have cut (`today` was the old session's range; unused since C26.6c).
   pdf: { file: 'sample.pdf', type: 'application/pdf', today: [0, 1, 2],
     chunks: [pdfPage(1) + pdfPage(2), pdfPage(3) + pdfPage(4), pdfPage(5), pdfPage(6)] },
   // Today: chapters 1 and 2 (after the cover); the next chunk is chapter 3.
-  epub: { file: 'reflow.epub', type: 'application/epub+zip', today: [0, 1], chunks: [epubChapter(1), epubChapter(2), epubChapter(3)] },
+  // C26.5: the reader comes back to their place at chapter 1 (a new book would open at the cover, its first page).
+  epub: { file: 'reflow.epub', type: 'application/epub+zip', today: [0, 1], chunks: [epubChapter(1), epubChapter(2), epubChapter(3)],
+    place: { anchor: { kind: 'epub', cfi: 'epubcfi(/6/4!/4/2/1:0)', text: '' } } },
 };
 const FILES = new URL('./fixtures/books/', import.meta.url);
 const chunk = (book, chunk_index) => ({ id: `chunk-${chunk_index}`, chunk_index, content: BOOKS[book].chunks[chunk_index], blocks: null });
@@ -53,7 +55,7 @@ const json = (route, body, status = 200) => route.fulfill({ status, headers: { .
 
 /** Routes for one page: the API remembers the saved position across reloads, like the server. */
 export async function mockBackend(page, api, book) {
-  const { file, type, today, chunks } = BOOKS[book];
+  const { file, type, chunks } = BOOKS[book];
   await page.route(/supabase\.co/, (route) => { api.unmocked.push(route.request().url()); return route.abort(); });
   await page.route(`${API}/**`, async (route) => {
     const request = route.request();
@@ -80,21 +82,13 @@ export async function mockBackend(page, api, book) {
       api.progressReads += 1;
       return api.progress ? json(route, api.progress) : json(route, { detail: 'down' }, 503);
     }
-    if (path === '/sessions/start') {
-      api.starts += 1;
-      if (BOOKS[book].pagesOnly) { // C19.4: a fully scanned book with no chunks opens pages-only
-        return json(route, { session_id: null, pages_only: true, chunk_indices: [], chunks: [], position: null,
-          focus_duration_minutes: 0, reason: '', chapter_before: null, scanned_pages: BOOKS[book].scanned,
-          book: { title: 'Scanned', author: 'A Scanner', toc: [], format: 'pdf', storage_mode: 'cloud' } });
-      }
-      return json(route, {
-        // C23.G: a test may shorten today's reading (api.today) to leave pages beyond it.
-        session_id: 'e2e-session', chunks: (api.today ?? today).map((i) => chunk(book, i)), chunk_indices: api.today ?? today, position: api.position,
-        focus_duration_minutes: 20, reason: 'A steady pace for this book.', chapter_before: '',
-        book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' },
-      });
+    if (path === `/books/${BOOK}/open`) { // C26.4: a test sets api.processing to open a book still being processed
+      api.opens += 1;
+      return json(route, { book_id: BOOK, status: api.processing ? 'processing' : 'ready', pages_only: Boolean(BOOKS[book].pagesOnly),
+        scanned_pages: BOOKS[book].scanned ?? [], position: api.position,
+        book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' } });
     }
-    if (path === '/sessions/e2e-session/position') {
+    if (path === `/books/${BOOK}/position` && request.method() === 'PUT') { // C26.5: the book's place, every turn
       api.position = JSON.parse(request.postData() || 'null');
       api.saves += 1;
       return json(route, { position: api.position });
@@ -127,7 +121,7 @@ export async function mockBackend(page, api, book) {
       const pages = first ? [...api.ocr].filter(([p]) => p >= first && p <= last).map(([p, words]) => ({ page: p, words })) : undefined;
       return json(route, { scanned_pages: scanned, done: [...api.ocr.keys()], ...(pages ? { pages } : {}) });
     }
-    if (path === `/books/${BOOK}/status`) return json(route, { status: 'processing', total_chunks: 0 });
+    if (path === `/books/${BOOK}/status`) return json(route, api.processing ?? { status: 'processing', total_chunks: 0 });
     if (path.startsWith('/focus/')) return focusRoute(route, request, api.focus, path); // C23.6
     if (path === '/sessions/focus-1/evaluate-single') return json(route, { status: 'graded' }); // C23.6b
     if (path === '/sessions/focus-1') { // C23.6b: a focus quiz is kept on a sessions row with the focus session's id
@@ -338,6 +332,10 @@ function focusRoute(route, request, focus, path) {
     Object.assign(s, { status: 'awaiting_quiz', state: 'awaiting_quiz', end_anchor: body.bookmark_anchor });
   }
   if (action === 'quiz' && !sub) {
+    if (focus.preparing > 0) { // C26.3: the book's questions are still being made; a test sets how many asks wait
+      focus.preparing -= 1;
+      return json(route, { detail: { code: 'preparing', message: 'Your questions are still being prepared. Try again in a few minutes.' } }, 409);
+    }
     return json(route, { questions: FOCUS_QUIZ, count: FOCUS_QUIZ.length, words_in_range: 1200 });
   }
   if (action === 'quiz' && sub === 'answers') {
@@ -381,7 +379,7 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
+    const api = { position: structuredClone(BOOKS[book].place ?? null), saves: 0, starts: 0, opens: 0, processing: null, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
@@ -403,7 +401,7 @@ export const test = base.extend({
 });
 export { expect };
 
-/** Open today's reading and wait until the book stands at its first place. */
+/** Open the book and wait until it stands at its place (C26.5: the saved place, or the first page). */
 export async function openReader(page) {
   await page.goto(`/read/${BOOK}`);
   await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 15_000 });
@@ -411,7 +409,7 @@ export async function openReader(page) {
   await page.waitForTimeout(300); // an EPUB lays out again once its fonts are in
 }
 
-/** The polite page announcement, e.g. "pp. ii–1 of 6" or "End of today's reading". */
+/** The polite page announcement, e.g. "pp. ii–1 of 6" or "End of the book". */
 export const spoken = (page) => page.locator('.rf-ov-live');
 
 /** The book on the page: focus it before keys. */

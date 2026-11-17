@@ -67,7 +67,7 @@ function around(range) {
   return wide;
 }
 
-/** A section's text squeezed (today.js), with each kept character's offset in the body's text. */
+/** A section's text squeezed (place.js), with each kept character's offset in the body's text. */
 function squeezedText(body) {
   const text = body?.textContent ?? '';
   const at = [];

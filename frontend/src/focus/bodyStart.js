@@ -1,4 +1,4 @@
-import { compare, placeEnd } from '../originalview/today.js';
+import { compare, placeEnd } from '../originalview/place.js';
 
 /**
  * The book's body start (C23.1, FOCUS_RULES F2) on the reader's side: books.body_start is

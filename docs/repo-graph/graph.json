@@ -93,6 +93,13 @@
       "handler": "get_ocr"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/open",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/open",
+      "handler": "open_book"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/pages",
       "type": "endpoint",
       "method": "GET",
@@ -233,11 +240,11 @@
       "handler": "update_note"
     },
     {
-      "id": "endpoint:POST /auth/profile/calibrate",
+      "id": "endpoint:POST /books/device",
       "type": "endpoint",
       "method": "POST",
-      "path": "/auth/profile/calibrate",
-      "handler": "calibrate_profile"
+      "path": "/books/device",
+      "handler": "create_device_book"
     },
     {
       "id": "endpoint:POST /books/upload",
@@ -273,6 +280,13 @@
       "method": "POST",
       "path": "/books/{book_id}/ocr",
       "handler": "post_ocr"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/pages",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/pages",
+      "handler": "post_pages"
     },
     {
       "id": "endpoint:POST /books/{book_id}/resume",
@@ -352,13 +366,6 @@
       "handler": "league_rollover"
     },
     {
-      "id": "endpoint:POST /sessions/start",
-      "type": "endpoint",
-      "method": "POST",
-      "path": "/sessions/start",
-      "handler": "start_session"
-    },
-    {
       "id": "endpoint:POST /sessions/{session_id}/abandon",
       "type": "endpoint",
       "method": "POST",
@@ -408,18 +415,18 @@
       "handler": "put_body_start"
     },
     {
+      "id": "endpoint:PUT /books/{book_id}/position",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/books/{book_id}/position",
+      "handler": "save_book_position"
+    },
+    {
       "id": "endpoint:PUT /me/progress",
       "type": "endpoint",
       "method": "PUT",
       "path": "/me/progress",
       "handler": "put_progress"
-    },
-    {
-      "id": "endpoint:PUT /sessions/{session_id}/position",
-      "type": "endpoint",
-      "method": "PUT",
-      "path": "/sessions/{session_id}/position",
-      "handler": "save_position"
     },
     {
       "id": "endpoint:PUT /steve/key",
@@ -1029,6 +1036,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/device_books.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/focus.py",
       "type": "file",
       "role": "router",
@@ -1066,6 +1079,12 @@
     },
     {
       "id": "file:backend/routers/progress.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/routers/reading.py",
       "type": "file",
       "role": "router",
       "language": "python"
@@ -1431,13 +1450,13 @@
       "language": "python"
     },
     {
-      "id": "file:backend/tests/test_api_position.py",
+      "id": "file:backend/tests/test_api_quiz_me.py",
       "type": "file",
       "role": "test",
       "language": "python"
     },
     {
-      "id": "file:backend/tests/test_api_quiz_me.py",
+      "id": "file:backend/tests/test_api_reading.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1450,12 +1469,6 @@
     },
     {
       "id": "file:backend/tests/test_api_sessions.py",
-      "type": "file",
-      "role": "test",
-      "language": "python"
-    },
-    {
-      "id": "file:backend/tests/test_api_start_reader.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1612,6 +1625,12 @@
     },
     {
       "id": "file:backend/tests/test_deploy_config.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_device_books.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2235,6 +2254,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/big-book.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/bigPdf.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/body-start.spec.js",
       "type": "file",
       "role": "config",
@@ -2452,6 +2483,12 @@
     },
     {
       "id": "file:frontend/e2e/privacy.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/processing.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2788,18 +2825,6 @@
     },
     {
       "id": "file:frontend/src/components/BookCover.jsx",
-      "type": "file",
-      "role": "component",
-      "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/components/CalibrationFlow.css",
-      "type": "file",
-      "role": "component",
-      "language": "css"
-    },
-    {
-      "id": "file:frontend/src/components/CalibrationFlow.jsx",
       "type": "file",
       "role": "component",
       "language": "jsx"
@@ -3933,13 +3958,13 @@
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/today.js",
+      "id": "file:frontend/src/originalview/place.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/today.test.js",
+      "id": "file:frontend/src/originalview/place.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4185,6 +4210,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/browserText.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/browserText.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/fileStore.js",
       "type": "file",
       "role": "asset",
@@ -4222,18 +4259,6 @@
     },
     {
       "id": "file:frontend/src/reader/lookup.test.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/readAhead.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/readAhead.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4786,6 +4811,12 @@
     },
     {
       "id": "file:scripts/dev/make_epub_fixture.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/dev/measure_c26.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -5505,11 +5536,6 @@
     },
     {
       "type": "calls_endpoint",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "endpoint:POST /auth/profile/calibrate"
-    },
-    {
-      "type": "calls_endpoint",
       "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
       "to": "endpoint:GET /mastery"
     },
@@ -5631,12 +5657,22 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:POST /books/device"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "endpoint:POST /books/upload"
     },
     {
       "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:POST /books/{book_id}/pages"
+    },
+    {
+      "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:GET /auth/profile"
+      "to": "endpoint:GET /books/{book_id}/open"
     },
     {
       "type": "calls_endpoint",
@@ -5650,11 +5686,6 @@
     },
     {
       "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:POST /sessions/start"
-    },
-    {
-      "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /books/{book_id}"
     },
@@ -5662,11 +5693,6 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/reader/usePlaceSaver.js",
-      "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
       "type": "calls_endpoint",
@@ -5973,11 +5999,6 @@
     },
     {
       "type": "defines_endpoint",
-      "from": "file:backend/routers/auth.py",
-      "to": "endpoint:POST /auth/profile/calibrate"
-    },
-    {
-      "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
       "to": "endpoint:DELETE /books/{book_id}"
     },
@@ -6045,6 +6066,16 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/dashboard.py",
       "to": "endpoint:GET /dashboard"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/device_books.py",
+      "to": "endpoint:POST /books/device"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/device_books.py",
+      "to": "endpoint:POST /books/{book_id}/pages"
     },
     {
       "type": "defines_endpoint",
@@ -6173,13 +6204,18 @@
     },
     {
       "type": "defines_endpoint",
-      "from": "file:backend/routers/sessions.py",
-      "to": "endpoint:GET /sessions/{session_id}"
+      "from": "file:backend/routers/reading.py",
+      "to": "endpoint:GET /books/{book_id}/open"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/reading.py",
+      "to": "endpoint:PUT /books/{book_id}/position"
     },
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
-      "to": "endpoint:POST /sessions/start"
+      "to": "endpoint:GET /sessions/{session_id}"
     },
     {
       "type": "defines_endpoint",
@@ -6200,11 +6236,6 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:POST /sessions/{session_id}/submit-answers"
-    },
-    {
-      "type": "defines_endpoint",
-      "from": "file:backend/routers/sessions.py",
-      "to": "endpoint:PUT /sessions/{session_id}/position"
     },
     {
       "type": "defines_endpoint",
@@ -6486,26 +6517,19 @@
     {
       "type": "graph_edge",
       "from": "graph_node:knowledge_state",
-      "to": "graph_node:optimizer",
-      "conditional": true
-    },
-    {
-      "type": "graph_edge",
-      "from": "graph_node:knowledge_state",
-      "to": "graph_node:planner",
-      "conditional": true
-    },
-    {
-      "type": "graph_edge",
-      "from": "graph_node:optimizer",
       "to": "graph_node:__end__",
       "conditional": true
     },
     {
       "type": "graph_edge",
-      "from": "graph_node:optimizer",
-      "to": "graph_node:planner",
+      "from": "graph_node:knowledge_state",
+      "to": "graph_node:optimizer",
       "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:optimizer",
+      "to": "graph_node:__end__"
     },
     {
       "type": "graph_edge",
@@ -7050,6 +7074,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/device_books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/focus.py"
     },
     {
@@ -7081,6 +7110,11 @@
       "type": "imports",
       "from": "file:backend/main.py",
       "to": "file:backend/routers/progress.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/routers/reading.py"
     },
     {
       "type": "imports",
@@ -7235,6 +7269,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/services/processing_jobs.py"
     },
     {
@@ -7250,6 +7289,36 @@
     {
       "type": "imports",
       "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7370,7 +7439,7 @@
     {
       "type": "imports",
       "from": "file:backend/routers/ocr.py",
-      "to": "file:backend/services/book_ingestor.py"
+      "to": "file:backend/services/ingestion_worker.py"
     },
     {
       "type": "imports",
@@ -7429,6 +7498,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/xp/badge_award.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/routers/sessions.py",
       "to": "file:backend/agents/evaluator_agent.py"
     },
@@ -7451,11 +7540,6 @@
       "type": "imports",
       "from": "file:backend/routers/sessions.py",
       "to": "file:backend/services/supabase_client.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/routers/sessions.py",
-      "to": "file:backend/xp/badge_award.py"
     },
     {
       "type": "imports",
@@ -8204,26 +8288,6 @@
     },
     {
       "type": "imports",
-      "from": "file:backend/tests/test_api_position.py",
-      "to": "file:backend/dependencies.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_api_position.py",
-      "to": "file:backend/main.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_api_position.py",
-      "to": "file:backend/tests/test_api_sessions.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_api_position.py",
-      "to": "file:backend/xp/badge_award.py"
-    },
-    {
-      "type": "imports",
       "from": "file:backend/tests/test_api_quiz_me.py",
       "to": "file:backend/focus/quiz_me.py"
     },
@@ -8236,6 +8300,31 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_quiz_me.py",
       "to": "file:backend/tests/test_api_focus_quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/routers/reading.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/xp/badge_award.py"
     },
     {
       "type": "imports",
@@ -8321,11 +8410,6 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_sessions.py",
       "to": "file:backend/services/question_bank.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/tests/test_api_start_reader.py",
-      "to": "file:backend/tests/test_api_sessions.py"
     },
     {
       "type": "imports",
@@ -8721,6 +8805,71 @@
       "type": "imports",
       "from": "file:backend/tests/test_deploy_config.py",
       "to": "file:tools/no_paid_ai.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/routers/device_books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/ocr_pages.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -9869,6 +10018,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/big-book.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/big-book.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/body-start.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10010,6 +10169,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/privacy.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/processing.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -10319,31 +10483,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/components/CalibrationFlow.css"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/components/ui/Button.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/components/ui/toastContext.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/lib/api.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/components/CalibrationFlow.jsx",
-      "to": "file:frontend/src/lib/useDocumentTitle.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/components/ErrorScreen.jsx",
       "to": "file:frontend/src/components/ErrorScreen.css"
     },
@@ -10630,7 +10769,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/focus/bodyStart.js",
-      "to": "file:frontend/src/originalview/today.js"
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -11375,7 +11514,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
-      "to": "file:frontend/src/originalview/today.js"
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -11545,7 +11684,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
-      "to": "file:frontend/src/originalview/today.js"
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -11624,8 +11763,8 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/originalview/today.test.js",
-      "to": "file:frontend/src/originalview/today.js"
+      "from": "file:frontend/src/originalview/place.test.js",
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -11890,6 +12029,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/browserText.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/reader/fileStore.js"
     },
     {
@@ -11956,11 +12100,6 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/annotations/useAnnotations.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/components/CalibrationFlow.jsx"
     },
     {
       "type": "imports",
@@ -12080,7 +12219,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/originalview/today.js"
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -12106,11 +12245,6 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/lookup.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/reader/readAhead.js"
     },
     {
       "type": "imports",
@@ -12339,6 +12473,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/browserText.test.js",
+      "to": "file:frontend/src/reader/browserText.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/fileStore.test.js",
       "to": "file:frontend/src/reader/fileStore.js"
     },
@@ -12356,11 +12495,6 @@
       "type": "imports",
       "from": "file:frontend/src/reader/lookup.test.js",
       "to": "file:frontend/src/reader/lookup.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/readAhead.test.js",
-      "to": "file:frontend/src/reader/readAhead.js"
     },
     {
       "type": "imports",
@@ -12994,6 +13128,56 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/dev/measure_embedder.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -13305,6 +13489,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/focus/quiz.py",
+      "to": "table:processing_jobs"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
       "to": "table:reading_progress"
     },
     {
@@ -13409,6 +13598,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/device_books.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/focus.py",
       "to": "table:books"
     },
@@ -13484,13 +13678,18 @@
     },
     {
       "type": "reads_table",
-      "from": "file:backend/routers/sessions.py",
+      "from": "file:backend/routers/reading.py",
       "to": "table:books"
     },
     {
       "type": "reads_table",
-      "from": "file:backend/routers/sessions.py",
+      "from": "file:backend/routers/reading.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/reading.py",
+      "to": "table:reading_progress"
     },
     {
       "type": "reads_table",
@@ -13611,11 +13810,6 @@
       "type": "reads_table",
       "from": "file:backend/steve/context.py",
       "to": "table:reading_progress"
-    },
-    {
-      "type": "reads_table",
-      "from": "file:backend/steve/context.py",
-      "to": "table:sessions"
     },
     {
       "type": "reads_table",
@@ -13974,13 +14168,18 @@
     },
     {
       "type": "writes_table",
-      "from": "file:backend/routers/auth.py",
-      "to": "table:profiles"
+      "from": "file:backend/routers/books.py",
+      "to": "table:books"
     },
     {
       "type": "writes_table",
-      "from": "file:backend/routers/books.py",
+      "from": "file:backend/routers/device_books.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/device_books.py",
+      "to": "table:page_ocr"
     },
     {
       "type": "writes_table",
@@ -14004,7 +14203,7 @@
     },
     {
       "type": "writes_table",
-      "from": "file:backend/routers/sessions.py",
+      "from": "file:backend/routers/reading.py",
       "to": "table:reading_progress"
     },
     {

@@ -98,7 +98,7 @@ export function ComprehensionTest({ focus = false, quizMe = false }) {
         const list = (focus ? data.questions : data.test_questions) ?? [];
         began.current = Date.now();
         if (!list.length) {
-          toast({ kind: 'warning', message: 'This session has no test yet. Finish today’s reading first.' });
+          toast({ kind: 'warning', message: 'This quiz has no questions yet. Try again in a few minutes.' });
           navigate('/');
           return;
         }

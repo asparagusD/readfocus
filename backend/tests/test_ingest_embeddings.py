@@ -276,6 +276,23 @@ def test_no_structure_never_fails_the_job(env, monkeypatch):
     assert env["db"].tables["books"][0].get("toc") is None and jobs.get(BOOK)["status"] == "done"
 
 
+def test_a_pdf_job_hands_its_page_texts_to_the_structure(env, monkeypatch):
+    """C26.2: the outline uses the pages ingestion read, not a second pass over the book."""
+    seen = []
+
+    def extract(data, ocr=None, scanned=None, every_page=None):
+        every_page.extend(["page one", ""])
+        return ["page one"]
+
+    def build(file_type, file_bytes, chunks, page_texts=None):
+        seen.append(page_texts)
+        return None, None, None
+    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", extract)
+    monkeypatch.setattr(book_ingestor.book_structure, "build_with_paths", build)
+    assert run(env["book"](3), b"%PDF")["status"] == "ready"
+    assert seen == [["page one", ""]]
+
+
 def test_a_resumed_job_stores_blocks_for_every_chunk(env):
     env["crash_on_embed"] = 3
     run(env["book"](40), b"%PDF")

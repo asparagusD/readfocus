@@ -1,9 +1,9 @@
 """The agent workflow: event-driven flows from __start__, routed on state["event"].
 
-    start_session   planner -> END
+    start_session   planner -> END            (dormant since C26.6: no route calls run_start)
     finish_reading  test_generator -> END
-    submit_answers  evaluator -> knowledge_state -> optimizer -> planner -> END
-                    (the next plan is ready when the results show)
+    submit_answers  evaluator -> knowledge_state -> optimizer -> END
+                    (C26.6: no next plan; the reader reads on from their place)
     abandon         optimizer -> END
 
 An evaluator error ends a submit run. When every grade of the test is
@@ -38,11 +38,7 @@ def after_evaluator(state: AgentState) -> str:
 
 def after_knowledge_state(state: AgentState) -> str:
     grades = state.get("grades") or []
-    return "planner" if grades and all(grade.get("confidence") == "low" for grade in grades) else "optimizer"
-
-
-def after_optimizer(state: AgentState) -> str:
-    return "planner" if state.get("event") == "submit_answers" else END
+    return END if grades and all(grade.get("confidence") == "low" for grade in grades) else "optimizer"
 
 
 graph_builder = StateGraph(AgentState)  # type: ignore # pyre-ignore[bad-specialization]
@@ -62,8 +58,8 @@ graph_builder.add_edge("planner", END)
 graph_builder.add_edge("test_generator", END)
 graph_builder.add_conditional_edges("evaluator", after_evaluator, {"knowledge_state": "knowledge_state", END: END})
 graph_builder.add_conditional_edges(
-    "knowledge_state", after_knowledge_state, {"optimizer": "optimizer", "planner": "planner"}
+    "knowledge_state", after_knowledge_state, {"optimizer": "optimizer", END: END}
 )
-graph_builder.add_conditional_edges("optimizer", after_optimizer, {"planner": "planner", END: END})
+graph_builder.add_edge("optimizer", END)
 
 workflow = graph_builder.compile()

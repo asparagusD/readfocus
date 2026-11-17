@@ -48,9 +48,9 @@ test('from the test: score, verdict, each question with its evidence, chips and 
   await expect(page.getByRole('list', { name: 'Strengthened concepts' })).toContainText('opportunity cost');
   await expect(page.getByRole('list', { name: 'Strengthened concepts' })).toContainText('simplicity');
   await expect(page.getByRole('list', { name: 'Concepts to revisit' })).toContainText('quiet desperation');
-  const nextCard = page.getByRole('region', { name: 'Suggested next' });
-  await expect(nextCard).toContainText('The next pages');
-  await expect(nextCard).toContainText('We’ll open with quiet desperation, missed once today.');
+  const nextCard = page.getByRole('region', { name: 'Read on' }); // C26.5b: no suggested reading
+  await expect(nextCard).toContainText('Your place is kept. Read on whenever you like.');
+  await expect(page.getByText('We’ll open with quiet desperation, missed once today.')).toHaveCount(0);
   if (shots) await page.screenshot({ path: `${shots}/results-1440.png`, fullPage: true });
   await nextCard.getByRole('button', { name: 'Back to the book' }).click();
   await expect(page).toHaveURL(/\/read\/e2e-book$/);
@@ -67,7 +67,7 @@ test('a low-confidence grade is labelled gently and explained once', async ({ pa
   await expect(page.getByText('1 correct · 1 not judged')).toBeVisible();
 });
 
-test('opened fresh: rebuilt from the stored results and the book\'s pace', async ({ page }) => {
+test('opened fresh: rebuilt from the stored results, with no suggested reading', async ({ page }) => {
   const calls = [];
   await page.route(/localhost:8000\/(sessions\/t1|books\/e2e-book)$/, (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -79,9 +79,9 @@ test('opened fresh: rebuilt from the stored results and the book\'s pace', async
   await page.goto('/results/t1');
   await expect(page.getByText('Score: 70%')).toBeVisible();
   await expect(page.getByText('You answered To live simply.')).toBeVisible();
-  const nextCard = page.getByRole('region', { name: 'Suggested next' });
-  await expect(nextCard).toContainText('A second look at today’s pages');
-  await expect(nextCard).toContainText('Revisiting difficult material is how mastery is built.');
+  const nextCard = page.getByRole('region', { name: 'Read on' });
+  await expect(nextCard.getByRole('button', { name: 'Back to the book' })).toBeVisible();
+  await expect(page.getByText('A second look at today’s pages')).toHaveCount(0);
   expect(calls).toEqual(['/sessions/t1', '/books/e2e-book']);
 });
 

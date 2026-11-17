@@ -361,3 +361,27 @@ def test_a_grading_failure_scores_nothing_and_can_be_retried(api, monkeypatch, f
     monkeypatch.setattr(quiz, "run_submit", real)
     retried = answer(api, sid, answers)
     assert retried.status_code == 200 and retried.json()["status"] == "scored" and retried.json()["passed"] is True
+
+
+# --- C26.3: a book still being processed --------------------------------------------------------------------------
+
+@pytest.mark.parametrize("book, job", [({"status": "processing"}, None), ({"status": "ready"}, "running"),
+                                       ({"status": "ready"}, "queued")])
+def test_while_the_book_is_processed_the_quiz_waits_and_the_session_is_kept(api, book, job):
+    sid = read_and_end(api)
+    api.db.tables["books"][0].update(book)
+    api.db.tables["processing_jobs"] = [{"book_id": BOOK, "kind": "ingest", "status": job}] if job else []
+    waiting = api.client.post(f"/focus/{sid}/quiz")
+    assert waiting.status_code == 409 and waiting.json()["detail"]["code"] == "preparing"
+    assert focus_row(api, sid)["status"] == "awaiting_quiz" and api.db.tables["sessions"] == []  # nothing kept
+    api.db.tables["books"][0]["status"] = "ready"
+    api.db.tables["processing_jobs"] = [{"book_id": BOOK, "kind": "ingest", "status": "done"}]
+    asked = api.client.post(f"/focus/{sid}/quiz")
+    assert asked.status_code == 200 and asked.json()["count"] >= 1
+
+
+def test_a_quiz_built_before_processing_started_again_is_still_asked(api):
+    sid = read_and_end(api)
+    first = api.client.post(f"/focus/{sid}/quiz").json()
+    api.db.tables["processing_jobs"] = [{"book_id": BOOK, "kind": "ingest", "status": "running"}]  # e.g. OCR re-read
+    assert api.client.post(f"/focus/{sid}/quiz").json() == first

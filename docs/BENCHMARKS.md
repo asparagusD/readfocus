@@ -68,6 +68,63 @@ prints them; one run each, so no percentiles.
 | Run time, including A's upload, session and cleanup | 30-31 s | 66 s |
 | Rows and PDF left afterwards | none | none |
 
+## C26.G: free reading, one ingestion at a time (2026-11-17)
+
+`scripts/dev/measure_c26.py` in the `readfocus-c25-measure` image, repo mounted read-only, `--network none`,
+`--memory=512m --memory-swap=512m`, the real pipeline on the in-memory database (nothing reaches Supabase). Each
+book's job is claimed and run as `POST /books/upload` hands it on (`ingestion_worker.run`, one job at a time).
+Since C26.3 a book opens as soon as its upload returns, so the wait below is only for its quizzes.
+
+Upload to first questions at `--cpus=0.1` (`--until ingest`):
+
+| Book | Before C26 (plan's measurement, to ready) | After (first questions) | Whole text questioned | Peak RSS | Container peak |
+|---|---|---|---|---|---|
+| Interactive Linear Algebra (PDF, 4.3 MB, 455 pages) | 193.6 s | **116.5 s** | 1,018.1 s (184 chunks, 1,655 questions) | 367.3 MiB | 313.4 MiB |
+| SICP (PDF, 7.1 MB, 883 pages) | 278.8 s | **157.4 s** | 842.5 s (269 chunks, 1,276 questions) | 395.5 MiB | 339.6 MiB |
+| Alice (EPUB, 17.5 MB) | 32.6 s | **34.6 s** | 326.6 s (46 chunks, 403 questions) | 375.9 MiB | 321.1 MiB |
+
+The "before" column is the plan's scratch `profile_ready.py` (same pipeline on MemoryDb, also 0.1 CPU and 512 MB,
+before C26.2), not this script, so the two columns are close but not identical harnesses. The PDF gain is C26.2
+(the second whole-book text pass gone); an EPUB never had it, so Alice is unchanged within noise.
+
+Two uploads back to back (ILA, then SICP), the whole pipeline with region maps and prose (`--until all`), 512 MB,
+no CPU cap:
+
+| | ILA: first questions / all done | SICP: first questions / all done | Peak RSS | Container peak (cgroup) | Killed |
+|---|---|---|---|---|---|
+| At once, as uploads ran before C26.1 (`--no-queue`) | 26.0 s / 365.7 s | 25.4 s / 343.9 s | 544.9 MiB | 492.3 MiB | no, 20 MiB under the cap |
+| One at a time (C26.1) | 11.2 s / 208.8 s | 224.6 s / 462.8 s | **463.4 MiB** | **410.9 MiB** | no |
+
+One at a time, the pair peaks about as one book does (SICP alone, C25.2: 448.7 MiB RSS with no cap; the in-memory
+database here also holds ILA's rows, which production keeps in Postgres), 81 MiB lower by the container's count.
+The cost: the second book's first questions wait for the first book's whole job, its region map included (225 s
+with no cap; at 0.1 CPU that is tens of minutes). The second book opens at once all the same (C26.3).
+
+Commands: `docker run --rm --network none --memory=512m --memory-swap=512m [--cpus=0.1] -v <repo>:/repo:ro
+-w /repo -e PYTHONPATH=/repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline
+-e EMBED_PRELOAD=0 -e INGEST_SWEEP=0 readfocus-c25-measure python scripts/dev/measure_c26.py --book <file>
+[--book <file>] --until ingest|all [--no-queue]`.
+
+Live runs (approved in chat, 2026-11-17): today's code in a local backend (`.env`: the shared project), test user A.
+
+- `npm run test:live` (`e2e/journey.spec.js`, rewritten in C26.6c): **passed** in 51.7 s. Steps (s): signed in 7.6,
+  uploaded 2.9, ingested 6.9, book open 7.8, pages turned and the place saved 4.1, word card 2.0, Quiz me answered
+  (3 questions) 5.1, results 2.3, dashboard (7 concepts tested) 2.6, reopened at the saved place 7.4, book removed
+  2.4. Hosts: localhost:5175, localhost:8000 and the project only.
+- `python scripts/bench.py` (after the fix in DEBUG_LOG 2026-11-17 C26.G), 3 flows on `sample.pdf`, local backend
+  on this machine (not Render):
+
+| Step | Runs | p50 | p95 |
+|---|---|---|---|
+| `POST /books/upload` | 3 | 1.61 s | 2.10 s |
+| upload -> questions ready (ingestion job done) | 3 | 6.62 s | 6.66 s |
+| `GET /books/{id}/open` | 3 | 496 ms | 801 ms |
+| `POST /focus/quiz-me` | 3 | 1.42 s | 1.43 s |
+| `POST /sessions/{id}/submit-answers` | 3 | 1.01 s | 1.54 s |
+| `GET /books` / `GET /dashboard` / `GET /health` (20 each) | 20 | 299 / 213 / 0.9 ms | 434 / 230 / 2 ms |
+
+Every book a run made was deleted by it; test user A's shelf afterwards: "Walden" (2026-11-11) only, as before.
+
 ## Phase 2 deployment check (C25.2, 2026-11-16 to 2026-11-17)
 
 The production image built from `ff0936c` (`docker build -t readfocus-c25 .`, the repo `Dockerfile`) with

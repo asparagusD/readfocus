@@ -6,14 +6,14 @@ with them (backend/tests/test_steve_settings.py checks the three agree); readers
 older version are asked again.
 """
 
-CONSENT_VERSION = "2026-11-14"
+CONSENT_VERSION = "2026-11-17"  # C26.6d: "the pages around where you are reading" (was "of your current session")
 
 # Google's terms for the free tier ("Unpaid Services"), read on 2026-11-14; effective 2026-03-23.
 TERMS_URL = "https://aistudio.google.com/docs/terms"
 
 CONSENT_TEXT = """\
 Steve is a study assistant built on Google's Gemini. When you ask him something, ReadFocus \
-sends Google your question and a limited part of this book: the pages of your current session, \
+sends Google your question and a limited part of this book: the pages around where you are reading, \
 the passage you selected, the table of contents and a few related passages. Never the whole \
 book, and never your name or email.
 

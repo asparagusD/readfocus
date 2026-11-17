@@ -52,10 +52,10 @@ test('a shelf of five: next book, covers, progress and states', async ({ page })
   const shelf = page.getByRole('list');
   await expect(shelf.getByRole('listitem')).toHaveCount(5);
   await expect(shelf.getByRole('link', { name: /Walden/ })).toHaveAttribute('href', '/read/walden');
-  await expect(shelf.getByRole('link', { name: /On the Origin/ })).toHaveCount(0); // not readable yet
+  await expect(shelf.getByRole('link', { name: /On the Origin/ })).toHaveAttribute('href', '/read/origin'); // C26.3: opens while processed
   await expect(shelf).toContainText('25% read');
   await expect(shelf).toContainText('New · not started');
-  await expect(shelf).toContainText('Reading the pages…');
+  await expect(shelf).toContainText('Preparing quizzes…');
   await expect(shelf).toContainText('We couldn’t read this file');
   await expect(page.getByRole('button', { name: 'Remove Middlemarch from your shelf' })).toBeVisible();
   // The stored cover is drawn over the typographic one.
@@ -154,8 +154,8 @@ test('adding a book: picker, inline errors, the same form fields, a toast and a 
   await dialog.getByLabel('Author').press('Enter');
   await expect(dialog).toBeHidden();
   expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: 'Edith Wharton', mode: 'cloud', file: 'the_age_of_innocence.pdf' }]);
-  await expect(page.getByText('The Age Of Innocence is on your shelf. We’re reading its pages now.')).toBeVisible();
-  await expect(page.locator('.rf-shelf__item').first()).toContainText('Reading the pages…');
+  await expect(page.getByText('The Age Of Innocence is on your shelf. Open it now; its quizzes follow in a few minutes.')).toBeVisible();
+  await expect(page.locator('.rf-shelf__item').first()).toContainText('Preparing quizzes…');
 });
 
 test('a notebook is converted on the server: no device choice, sent to keep, missing images listed (C19.2c)', async ({ page }) => {
@@ -248,7 +248,7 @@ test('a file dropped on the page: the drop target shows, then the dialog; other 
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('a processing book shows how far its pages are read, then says when it is ready', async ({ page }) => {
+test('a processing book shows how far its quizzes are, then says when the first are ready', async ({ page }) => {
   let polls = 0;
   const origin = SHELF.find((b) => b.id === 'origin');
   const calls = await mockWrites(page, () => {
@@ -257,9 +257,9 @@ test('a processing book shows how far its pages are read, then says when it is r
   });
   await page.goto('/');
   const tile = page.locator('.rf-shelf__item').filter({ hasText: 'On the Origin of Species' });
-  await expect(tile).toContainText('Reading the pages… 64%', { timeout: 6000 });
+  await expect(tile).toContainText('Preparing quizzes… 64%', { timeout: 6000 });
   expect(calls.statuses).toBeGreaterThan(0);
-  await expect(page.getByText('On the Origin of Species is ready on your shelf.')).toBeVisible({ timeout: 6000 });
+  await expect(page.getByText('On the Origin of Species: your first quizzes are ready.')).toBeVisible({ timeout: 6000 });
   await expect(tile).toContainText('New · not started');
 });
 
@@ -329,7 +329,7 @@ for (const reduced of [false, true]) {
         return [SHELF[0], polls < 2 ? origin : { ...origin, status: 'ready', total_chunks: 30 }];
       });
       await page.goto('/');
-      await expect(page.getByText('On the Origin of Species is ready on your shelf.')).toBeVisible({ timeout: 6000 });
+      await expect(page.getByText('On the Origin of Species: your first quizzes are ready.')).toBeVisible({ timeout: 6000 });
       await page.waitForTimeout(900);
       const tiles = await page.evaluate(() => window.__tiles);
       const after = tiles.filter((x) => x.t > 2500 && x.text.startsWith('On the Origin'));

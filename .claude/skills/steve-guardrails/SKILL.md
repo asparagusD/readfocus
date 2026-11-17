@@ -41,7 +41,7 @@ the agents, grading, question generation and every score never call Steve.
 
 A request carries at most:
 
-1. the current session's text (or the visible part of it),
+1. the text around the reader's place (the chunk there and the two before it, C26.6),
 2. the highlighted passage, if any,
 3. the book's table of contents,
 4. the top-k passages retrieved locally (the existing pgvector search),

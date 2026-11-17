@@ -13694,11 +13694,6 @@
     },
     {
       "type": "reads_table",
-      "from": "file:backend/steve/context.py",
-      "to": "table:sessions"
-    },
-    {
-      "type": "reads_table",
       "from": "file:backend/steve/keys.py",
       "to": "table:profiles"
     },

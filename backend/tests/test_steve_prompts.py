@@ -26,8 +26,8 @@ def make_context(passage_text="The ferryman counts the coins twice [Equation 4.1
     card = "Title: Tides and Lanterns\nAuthor: A. Keeper\nContents:\n- Chapter 4 (p. 40)"
     session = [Passage(43, "pp. 44-45", passage_text, {k: CITATIONS[k] for k in ("p. 44", "p. 45")})]
     retrieved = [Passage(111, "p. 112", "Lanterns were lit at dusk.", {"p. 112": CITATIONS["p. 112"]})]
-    body = (f"<book_card>\n{card}\n</book_card>\n<session_text>\n<book_passage label=\"pp. 44-45\">\n{passage_text}\n"
-            "</book_passage>\n</session_text>\n<retrieved>\n<book_passage label=\"p. 112\">\nLanterns were lit at dusk."
+    body = (f"<book_card>\n{card}\n</book_card>\n<reading_text>\n<book_passage label=\"pp. 44-45\">\n{passage_text}\n"
+            "</book_passage>\n</reading_text>\n<retrieved>\n<book_passage label=\"p. 112\">\nLanterns were lit at dusk."
             "\n</book_passage>\n</retrieved>")
     if highlight:
         body += f'\n<highlight label="p. 44" verified="yes">\n<selection>{highlight.text}</selection>\n</highlight>'

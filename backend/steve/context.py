@@ -4,16 +4,17 @@ build_context() returns the request's parts (delimited book text, an optional im
 citations map {label: anchor} for every page or section that was sent, so the panel can link "p. 112". In order:
 
 1. the book card: title, author and as much of the contents as fits;
-2. the current session's prose, verbatim (placeholders for equations, code and figures included), from the
-   session's first chunk to the reader's place; over budget, the most recent part plus the passage around the
-   anchor;
+2. the text around the reader's place (C26.6; before, the reading session's range), verbatim (placeholders for
+   equations, code and figures included): the chunk holding the saved place, or the highlighted passage when there
+   is no place, and the policy.AROUND_CHUNKS_BEFORE chunks before it; over budget, the most recent part plus the
+   passage around the anchor;
 3. the highlighted passage and its paragraph, if an anchor is given (shown even when it is not found in the book,
    marked unverified: it is the reader's own selection);
 4. the top-k passages from the whole book through the hybrid retriever, minus the chunks 2 and 3 already hold;
 5. an optional region (an equation's source, exact code, a figure's caption) and image.
 
 Everything is trimmed to policy.CONTEXT_MAX_TOKENS with a conservative token estimate; retrieved passages go
-first, then the session's older text; the question, the selection and the region are never cut. Never the whole
+first, then the reading text's older part; the question, the selection and the region are never cut. Never the whole
 book, never another reader's book, no user id or email. Book text cannot close the section it sits in.
 """
 
@@ -29,7 +30,7 @@ from backend.services.supabase_client import supabase
 from backend.steve import policy
 
 SECTION_TAGS = re.compile(
-    r"<(?=\s*/?\s*(?:book_card|session_text|book_passage|highlight|selection|surrounding|retrieved|region|question)\b)",
+    r"<(?=\s*/?\s*(?:book_card|reading_text|session_text|book_passage|highlight|selection|surrounding|retrieved|region|question)\b)",
     re.IGNORECASE)
 SPINE_STEP = re.compile(r"^epubcfi\(/6/(\d+)")
 
@@ -192,13 +193,9 @@ def _load(user_id: str, book_id: str, region_id: str | None) -> dict:
         if not rows:
             raise ContextError("region_not_found")
         region = rows[0]
-    sessions = supabase.table("sessions").select("chunk_start_index, chunk_end_index, status, started_at").eq(
-        "user_id", user_id).eq("book_id", book_id).eq("status", "reading").order("started_at", desc=True).limit(
-        1).execute().data or []
     progress = supabase.table("reading_progress").select("position").eq("user_id", user_id).eq(
         "book_id", book_id).execute().data or []
-    return {"book": book[0], "region": region, "session": sessions[0] if sessions else None,
-            "position": (progress[0].get("position") if progress else None) or {}}
+    return {"book": book[0], "region": region, "position": (progress[0].get("position") if progress else None) or {}}
 
 
 def _chunks(book_id: str, indices) -> list[dict]:
@@ -235,16 +232,22 @@ def _book_card(book: dict) -> str:
     return "\n".join(lines if toc else head)
 
 
+def _here(book_id: str, position: dict, anchor: dict | None) -> int | None:
+    """The chunk the reader is at: the saved place's chunk, else the chunk holding its anchor, else the highlight's."""
+    if position.get("chunk_index") is not None:
+        return position["chunk_index"]
+    for place in (position.get("anchor"), anchor):
+        if place:
+            found = _chunk_for_anchor(_chunks_near(book_id, place), place)
+            if found:
+                return found["chunk_index"]
+    return None
+
+
 def _session(loaded: dict, book_id: str, anchor: dict | None, budget: int) -> list[Passage]:
-    session, position = loaded["session"], loaded["position"]
-    here = position.get("chunk_index")
-    if session:
-        first, last = session["chunk_start_index"], session["chunk_end_index"]
-        if here is not None:
-            last = min(last, max(first, here))
-        indices = range(first, last + 1)
-    else:
-        indices = [here] if here is not None else []
+    """The text the reader is reading (C26.6): the chunks up to and at their place, trimmed to `budget`."""
+    here = _here(book_id, loaded["position"], anchor)
+    indices = range(max(0, here - policy.AROUND_CHUNKS_BEFORE), here + 1) if here is not None else []
     chunks = _chunks(book_id, indices)
     passages = []
     for chunk in chunks:
@@ -273,11 +276,6 @@ def _session(loaded: dict, book_id: str, anchor: dict | None, budget: int) -> li
     if anchored and not any(p.chunk_index == anchored.chunk_index and not p.note for p in keep):
         keep = sorted([anchored, *keep], key=lambda p: (p.chunk_index, p.note != anchored.note))
     return keep
-
-
-def _session_range(loaded: dict) -> set:
-    session = loaded["session"]
-    return set(range(session["chunk_start_index"], session["chunk_end_index"] + 1)) if session else set()
 
 
 def _highlight(book_id: str, anchor: dict) -> Highlight:
@@ -379,9 +377,9 @@ def _region(row: dict, book_id: str = "") -> Region:
 def _render(card: str, session: list, highlight, retrieved: list, region) -> str:
     out = [f"<book_card>\n{card}\n</book_card>"]
     if session:
-        out.append("<session_text>\n" + "\n".join(
+        out.append("<reading_text>\n" + "\n".join(
             f'<book_passage label="{p.label}"{f" note={chr(34)}{p.note}{chr(34)}" if p.note else ""}>\n{p.text}\n'
-            "</book_passage>" for p in session) + "\n</session_text>")
+            "</book_passage>" for p in session) + "\n</reading_text>")
     if highlight:
         out.append(f'<highlight label="{highlight.label}" verified="{"yes" if highlight.verified else "no"}">\n'
                    f"<selection>{highlight.text}</selection>\n"
@@ -426,7 +424,7 @@ async def build_context(*, user_id: str, book_id: str, question: str, anchor: di
              + image_tokens)
     session = await asyncio.to_thread(_session, loaded, book_id, anchor,
                                       min(policy.SESSION_MAX_TOKENS, policy.CONTEXT_MAX_TOKENS - fixed - 400))
-    skip = {p.chunk_index for p in session} | _session_range(loaded)  # what the reader just read, even if trimmed
+    skip = {p.chunk_index for p in session}  # what the reader is reading, even if trimmed
     if highlight and highlight.verified:
         near = _chunk_for_anchor(await asyncio.to_thread(_chunks_near, book_id, anchor), anchor)
         skip |= {near["chunk_index"]} if near else set()

@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17266,
+      "size_bytes": 17302,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -785,10 +785,10 @@
     {
       "path": "backend/services/ingestion_worker.py",
       "language": "python",
-      "lines": 95,
-      "size_bytes": 3988,
+      "lines": 176,
+      "size_bytes": 7042,
       "role": "service",
-      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job."
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job. C27.1: a priority slot instead of the lock: waiting ingest jobs before waiting regions jobs, each in arrival order, a cancelled waiter skipped; defer(job) queues a regions job from inside the worker (read from Storage on its turn), drain() waits for the deferred ones. C27.2: _held keeps the ids of the jobs this process holds (waiting or running, deferred ones from defer on); the sweep skips them, so a waiting job is never claimed twice or failed for waiting."
     },
     {
       "path": "backend/services/lookup.py",
@@ -849,10 +849,10 @@
     {
       "path": "backend/services/region_job.py",
       "language": "python",
-      "lines": 155,
-      "size_bytes": 7617,
+      "lines": 161,
+      "size_bytes": 7964,
       "role": "service",
-      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books; once done, hands the book to prose_job.after_regions (C18.6b) and returns its report as 'prose'."
+      "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books; once done, hands the book to prose_job.after_regions (C18.6b) and returns its report as 'prose'. C27.1: after_ingest asks `defer` (set by ingestion_worker) to queue the regions job behind waiting ingests; outside the worker it runs at once."
     },
     {
       "path": "backend/services/retriever.py",
@@ -1577,10 +1577,10 @@
     {
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
-      "lines": 187,
-      "size_bytes": 8417,
+      "lines": 303,
+      "size_bytes": 13535,
       "role": "test",
-      "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404)."
+      "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404). C27.1: a waiting ingest before an earlier regions job; an ingest on the worker queues its region map behind the next upload, read from Storage; outside the worker a region map runs at once; a cancelled waiter does not hold up the next. C27.2: a job waiting in the worker is not swept again (each runs once, attempts unchanged; a 5 s limit turns the old deadlock into a failure); a job no longer held is swept as before."
     },
     {
       "path": "backend/tests/test_ingestor.py",
@@ -2113,16 +2113,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1710,
-      "size_bytes": 98333,
+      "lines": 1715,
+      "size_bytes": 98754,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5082,
-      "size_bytes": 232657,
+      "lines": 5114,
+      "size_bytes": 234681,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2185,8 +2185,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5941,
-      "size_bytes": 1072482,
+      "lines": 5961,
+      "size_bytes": 1074273,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5673,10 +5673,10 @@
     {
       "path": "scripts/dev/measure_c26.py",
       "language": "python",
-      "lines": 119,
-      "size_bytes": 5396,
+      "lines": 128,
+      "size_bytes": 5865,
       "role": "script",
-      "purpose": "C26.G measuring script, offline in the production image: books queued as uploads hand them on (ingestion_worker.run, or all at once with --no-queue as before C26.1), on MemoryDb; per book the time to first questions, to the whole text questioned and to everything done (--until ingest|all), with peak RSS and the cgroup peak."
+      "purpose": "C26.G measuring script, offline in the production image: books queued as uploads hand them on (ingestion_worker.run, or all at once with --no-queue as before C26.1), on MemoryDb; per book the time to first questions, to the whole text questioned and to everything done (--until ingest|all), with peak RSS and the cgroup peak. C27.1: waits for the queued region maps (drain) and times each (regions_done_s)."
     },
     {
       "path": "scripts/dev/measure_embedder.py",
@@ -6178,7 +6178,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 781,
-      "size_bytes": 253490,
+      "size_bytes": 254598,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

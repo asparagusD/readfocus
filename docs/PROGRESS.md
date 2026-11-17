@@ -5939,3 +5939,23 @@ Reordered, 2026-11-17 (your choice at C26.3's start): C26.4 before C26.3. The re
 | [x] C26.7a the server takes a big book's text | `937d240` | `POST /books/device` (50-300 MB, PDF or EPUB, no file, `source_format` browser-text) and `POST /books/{id}/pages` (batches into `page_ocr`, the last queues ingestion); ingestion reads that text (no outline, no region map); resume works for these books; no migration (021 and 022 columns) | pytest 2022 (20 new); standard checks | 0.75 h | the browser side is C26.7b |
 | [x] C26.7b the browser reads a big book and sends its text | `45e8b45` | Library: over 50 MB (PDF or EPUB, at most 300 MB) the book is made on the server with no file, kept in IndexedDB, and its pages' text read with pdf.js or foliate-js and sent in batches; the reader says once that a text-only book has no equation, code or figure tools (`text_only` from `/open`) | unit 271 (9 new); e2e 324 (a generated 60 MB PDF end to end, refusals at 375); pytest 2023; screenshots 1440 and 375; standard checks | 1.5 h | EPUB is unit-tested with a fake reader, not e2e; a tab closed while the pages are being read leaves the book processing (remove and add it again) |
 | [x] C26.G gate: measured, not assumed | `aefe814` (containers), this commit (live) | container runs (docs/BENCHMARKS.md C26.G): first questions ILA 193.6 -> 116.5 s, SICP 278.8 -> 157.4 s, Alice 32.6 -> 34.6 s at 0.1 CPU; two uploads back to back peak 463.4 MiB RSS / 410.9 MiB container one at a time against 544.9 / 492.3 at once; nothing killed | `scripts/dev/measure_c26.py` in the image at 512 MB; standard checks | 1.0 h | the second of two uploads waits for the first's region map before its first questions; live (approved): the journey passed in 51.7 s; the bench's first run left a book (deleted, fixed: DEBUG_LOG C26.G), then 3 flows clean; test user A's shelf as before |
+
+
+## C27 — follow-ups after the C26 release
+
+From C26.G (2026-11-17) and your request on 2026-11-18 ("Fix the queued uploads waiting for region maps"),
+on `chunk/C27-region-queue` from `readfocus-2.0` at `1a60070`.
+
+- **C27.1 region maps queue behind waiting ingests.** The worker's first-come lock becomes a slot that serves
+  waiting ingest jobs before waiting regions jobs; a book's region map is queued as its own job when its ingest
+  ends on the worker, and reads its file from Storage on its turn. Outside the worker it runs at once, as before.
+- **C27.2 the sweep leaves the worker's own jobs alone** (found while doing C27.1): a job waiting in the worker
+  for more than the stale window (5 minutes; one ILA ingest is about 17 at 0.1 CPU) is claimed again by the
+  sweep and runs twice, and after MAX_ATTEMPTS claims a job that was only waiting is marked failed.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C27.1 region maps queue behind waiting ingests | `880f12e` | `ingestion_worker`: a priority slot (ingest 0, regions 1, then arrival), `defer` and `drain`; `region_job.after_ingest` defers on the worker; `measure_c26.py` waits for and times the region maps | pytest 2031 (4 new; 2 fail on the old code); container: SICP's first questions 224.6 -> 123.6 s, peak 452.2 MiB RSS / 398.6 MiB cgroup; standard checks | 0.75 h | C27.2 |
+| [x] C27.2 the sweep leaves the worker's own jobs alone | (this commit) | `ingestion_worker._held`: the ids of the jobs this process holds (waiting or running, deferred ones too); the sweep skips them; DEBUG_LOG 2026-11-18 C27 (both fixes) | pytest 2033 (2 new; the waiting-job test fails on the C27.1 worker); standard checks | 0.5 h | one process only (Render runs one instance) |

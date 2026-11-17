@@ -5080,3 +5080,35 @@ the fix 14 passed. The bench again: 3 flows, every book deleted, the shelf as be
 
 ### Commit
 `fix(bench): wait for a book's questions and never leave a book behind`
+
+
+## 2026-11-18 C27 — queued uploads: waits for region maps, and a sweep that claims waiting jobs
+
+**Status:** fixed (C27.1 `880f12e`, C27.2 this commit)
+
+### Symptom
+C26.G (docs/BENCHMARKS.md): with two uploads back to back, the second book's first questions came 224.6 s after
+the upload (no CPU cap) against 25.4 s when both ran at once: it waited for the first book's whole job, region map
+included. Reading the worker for that fix: a job waits in the worker with its row claimed and not updated, and the
+sweep takes any claimed job older than the stale window (5 minutes) for abandoned.
+
+### Repro and hypotheses
+1. C27.1: the region map ran inside the ingest job (`book_ingestor.run_job` awaited `region_job.after_ingest`), so
+   the worker's slot stayed taken until it ended. Confirmed by the code and by the container run.
+2. C27.2: `sweep()` claimed every stale queued or running job, including one waiting behind another in this
+   process; `claim()` succeeds because nothing updated the row. Reproduced in a test: on the C27.1 worker the
+   sweep claimed the running job again and then waited behind it for good (a deadlock in the test; on the server a
+   second run of the job after the first, and after MAX_ATTEMPTS claims a waiting job marked failed).
+
+### Fix
+C27.1: a priority slot (waiting ingest jobs before waiting regions jobs); a region map deferred as its own job when
+its ingest ends on the worker, its file read from Storage on its turn. C27.2: the worker keeps the ids of the jobs
+it holds, waiting or running (`_held`), and the sweep skips them.
+
+### Regression test
+`backend/tests/test_ingestion_worker.py`: C27.1's 4 tests (2 fail on the old worker); C27.2's 2 tests (the
+waiting-job test fails on the C27.1 worker with a timeout after 5 s; it hung before the time limit was added).
+Container, two uploads: SICP's first questions 224.6 -> 123.6 s, peak 452.2 MiB RSS.
+
+### Commit
+`fix(ingest): queue region maps behind waiting uploads` and `fix(ingest): the sweep leaves jobs the worker holds`

@@ -145,11 +145,17 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         return {"status": "failed", "error": str(error)}
 
 
+# Set by ingestion_worker (C27.1): queues a claimed regions job behind waiting ingests and returns True, or
+# returns False outside the worker. None (the worker not imported) runs the job at once.
+defer = None
+
+
 async def after_ingest(book: dict, file_bytes: bytes | None = None) -> None:
-    """Queue and run the book's regions job once its ingestion is done. Never raises."""
+    """Queue the book's regions job once its ingestion is done: on the worker, behind any waiting ingest (C27.1);
+    elsewhere (a script, a test) it runs at once. Never raises."""
     try:
         job = queue(book)
-        if job:
+        if job and not (defer is not None and defer(job)):
             await run_job(job, file_bytes)
     except Exception as error:  # noqa: BLE001 - the region map must never break ingestion
         print(f"Regions of book {book.get('id')} could not start: {error}")

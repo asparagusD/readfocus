@@ -185,3 +185,119 @@ def test_uploads_queue_their_job_on_the_worker(client, db, monkeypatch):
     add_book(db, "stuck")
     client.post("/books/stuck/resume")
     assert queued[-1] == ("stuck", None)
+
+
+# C27.1: region maps wait behind ingests that are waiting.
+
+def test_a_waiting_ingest_goes_before_a_regions_job_that_came_first(monkeypatch):
+    log = []
+    monkeypatch.setattr(book_ingestor, "run_job", recording_runner(log))
+    monkeypatch.setattr(region_job, "run_job", recording_runner(log))
+
+    async def arrive():
+        first = asyncio.create_task(ingestion_worker.run({"book_id": "a"}))
+        await asyncio.sleep(0)  # a holds the slot
+        regions = asyncio.create_task(ingestion_worker.run({"book_id": "r", "kind": jobs.REGIONS}))
+        await asyncio.sleep(0)
+        second = asyncio.create_task(ingestion_worker.run({"book_id": "b"}))
+        await asyncio.gather(first, regions, second)
+    asyncio.run(arrive())
+    assert [book for event, book in log if event == "start"] == ["a", "b", "r"]
+
+
+def test_an_ingest_on_the_worker_queues_its_region_map_behind_the_next_upload(monkeypatch):
+    log = []
+
+    async def ingest(job, file_bytes=None):
+        log.append(("ingest", job["book_id"], file_bytes))
+        await asyncio.sleep(0.01)
+        await region_job.after_ingest({"id": job["book_id"], "user_id": "u", "file_type": "pdf",
+                                       "storage_path": f"u/{job['book_id']}.pdf"}, file_bytes)
+        log.append(("ingested", job["book_id"]))
+        return {"status": "ready"}
+
+    async def regions(job, file_bytes=None):
+        log.append(("regions", job["book_id"], file_bytes))
+        return {"status": "done"}
+
+    monkeypatch.setattr(book_ingestor, "run_job", ingest)
+    monkeypatch.setattr(region_job, "run_job", regions)
+    monkeypatch.setattr(region_job, "queue", lambda book: {"book_id": book["id"], "kind": jobs.REGIONS})
+
+    async def two_uploads():
+        first = asyncio.create_task(ingestion_worker.run({"book_id": "a"}, b"A"))
+        await asyncio.sleep(0)
+        second = asyncio.create_task(ingestion_worker.run({"book_id": "b"}, b"B"))
+        await asyncio.gather(first, second)
+        await ingestion_worker.drain()
+    asyncio.run(two_uploads())
+    assert log == [("ingest", "a", b"A"), ("ingested", "a"), ("ingest", "b", b"B"), ("ingested", "b"),
+                   ("regions", "a", None), ("regions", "b", None)]  # read from Storage on their turn
+
+
+def test_outside_the_worker_a_region_map_runs_at_once(monkeypatch):
+    seen = []
+
+    async def regions(job, file_bytes=None):
+        seen.append((job["book_id"], file_bytes))
+        return {"status": "done"}
+
+    monkeypatch.setattr(region_job, "run_job", regions)
+    monkeypatch.setattr(region_job, "queue", lambda book: {"book_id": book["id"], "kind": jobs.REGIONS})
+    asyncio.run(region_job.after_ingest({"id": "a"}, b"A"))  # a script or a test calls run_job directly
+    assert seen == [("a", b"A")]
+
+
+def test_a_cancelled_waiter_does_not_hold_up_the_next_job(monkeypatch):
+    log = []
+    monkeypatch.setattr(book_ingestor, "run_job", recording_runner(log))
+
+    async def cancel_one():
+        first = asyncio.create_task(ingestion_worker.run({"book_id": "a"}))
+        await asyncio.sleep(0)
+        gone = asyncio.create_task(ingestion_worker.run({"book_id": "gone"}))
+        last = asyncio.create_task(ingestion_worker.run({"book_id": "c"}))
+        await asyncio.sleep(0)
+        gone.cancel()
+        await asyncio.gather(first, last)
+        return gone.cancelled()
+    assert asyncio.run(cancel_one()) is True
+    assert [book for event, book in log if event == "start"] == ["a", "c"]
+
+
+# C27.2: the sweep leaves the worker's own jobs alone.
+
+def test_a_job_waiting_in_the_worker_is_not_swept_again(db, monkeypatch):
+    add_book(db, "busy", job={"status": "running", "attempts": 1})
+    add_book(db, "waiting", job={"status": "running", "attempts": 1})  # claimed at upload, not updated since
+    runs = []
+    gate = asyncio.Event()
+
+    async def ingest(job, file_bytes=None):
+        runs.append(job["book_id"])
+        if job["book_id"] == "busy":
+            await gate.wait()
+        return {"status": "ready"}
+
+    monkeypatch.setattr(book_ingestor, "run_job", ingest)
+
+    async def upload_then_sweep():
+        busy = asyncio.create_task(ingestion_worker.run(jobs.get("busy")))
+        await asyncio.sleep(0)
+        waiting = asyncio.create_task(ingestion_worker.run(jobs.get("waiting")))
+        await asyncio.sleep(0)
+        # Both look stale: one runs, one waits behind it. Before C27.2 the sweep claimed the running one again and
+        # waited behind it for good, so a limit makes that a failure, not a hang.
+        report = await asyncio.wait_for(ingestion_worker.sweep(), 5)
+        gate.set()
+        await asyncio.gather(busy, waiting)
+        return report
+    report = asyncio.run(upload_then_sweep())
+    assert report == {"resumed": [], "gave_up": []}
+    assert runs == ["busy", "waiting"]  # each once
+    assert jobs.get("waiting")["attempts"] == 1 and jobs.get("waiting")["status"] == "running"
+
+
+def test_a_job_no_longer_held_is_swept_as_before(db):
+    add_book(db, "left", job={"status": "running", "attempts": 1})
+    assert asyncio.run(ingestion_worker.sweep())["resumed"] == ["left"]  # a stopped server's job

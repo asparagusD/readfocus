@@ -96,15 +96,8 @@
   color: var(--ink-2);
 }
 
-.rf-login__form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin-top: var(--space-5);
-}
-
 .rf-login__error {
-  margin: 0;
+  margin: var(--space-3) 0 0;
   color: var(--warn);
   font-size: var(--text-label);
   line-height: var(--text-label--line-height);
@@ -114,9 +107,19 @@
   display: none;
 }
 
+/* C28.1: the one way in, Google's mark before the words. */
 .rf-login__submit {
   width: 100%;
-  margin-top: var(--space-2);
+}
+
+.rf-login__submit > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rf-login__google {
+  flex: none;
 }
 
 .rf-login__note {
@@ -124,10 +127,6 @@
   font-size: var(--text-label);
   line-height: var(--text-label--line-height);
   color: var(--ink-2);
-}
-
-.rf-login__done .rf-btn {
-  margin-top: var(--space-2);
 }
 
 @media (max-width: 1023px) {

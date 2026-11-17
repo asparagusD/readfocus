@@ -5793,7 +5793,7 @@
       "type": "calls_external",
       "from": "file:frontend/e2e/phase2_journey.spec.js",
       "to": "external:supabase",
-      "line": 23
+      "line": 24
     },
     {
       "type": "calls_external",
@@ -12044,21 +12044,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Login.jsx",
-      "to": "file:frontend/src/components/ui/SegmentedTabs.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/Login.jsx",
-      "to": "file:frontend/src/components/ui/TextInput.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/Login.jsx",
-      "to": "file:frontend/src/components/ui/tabIds.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/Login.jsx",
       "to": "file:frontend/src/hooks/useAuth.jsx"
     },
     {
@@ -14382,5 +14367,16 @@
       "to": "table:books"
     }
   ],
-  "unresolved": []
+  "unresolved": [
+    {
+      "from": "file:frontend/e2e/journey.spec.js",
+      "type": "imports",
+      "target": "./liveSignIn.js"
+    },
+    {
+      "from": "file:frontend/e2e/phase2_journey.spec.js",
+      "type": "imports",
+      "target": "./liveSignIn.js"
+    }
+  ]
 }

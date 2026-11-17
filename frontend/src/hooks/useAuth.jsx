@@ -28,8 +28,11 @@ export function AuthProvider({ children }) {
     session,
     user,
     loading,
-    signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
-    signUp: (email, password) => supabase.auth.signUp({ email, password }),
+    // C28.1: Google is the only way in; Supabase sends the reader back to /login, which opens the shelf.
+    signInWithGoogle: () => supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/login` },
+    }),
     signOut: () => supabase.auth.signOut(),
   };
 

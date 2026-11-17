@@ -20,6 +20,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
+import { signInAs } from './liveSignIn.js';
 import { createClient } from '@supabase/supabase-js';
 import { settled, STEVE_NOTICE, steveStream } from './fixtures.js';
 
@@ -116,10 +117,8 @@ test('the phase-2 journey, signed in, on the real stack', async ({ page, baseURL
 
     // 1. Sign in, in Paper (the PDF canvas is compared with PDFium's white page).
     await page.addInitScript(() => localStorage.setItem('rf-theme', 'paper'));
-    await page.goto('/login');
-    await page.getByLabel('Email').fill(vars.TEST_USER_A_EMAIL);
-    await page.getByLabel('Password').fill(vars.TEST_USER_A_PASSWORD);
-    await page.getByLabel('Password').press('Enter');
+    await signInAs(page, vars.TEST_USER_A_EMAIL, vars.TEST_USER_A_PASSWORD);
+    await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: /^Your shelf/ })).toBeVisible({ timeout: 60_000 });
     token = await page.evaluate(() => {
       const key = Object.keys(localStorage).find((k) => /^sb-.*-auth-token$/.test(k));

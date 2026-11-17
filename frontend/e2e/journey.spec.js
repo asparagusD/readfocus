@@ -8,6 +8,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
+import { signInAs } from './liveSignIn.js';
 import { wordPoint } from './fixtures.js';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -66,10 +67,8 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
 
     // 1. Sign in.
     const { email, password } = credentials();
-    await page.goto('/login');
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill(password);
-    await page.getByLabel('Password').press('Enter');
+    await signInAs(page, email, password);
+    await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: /^Your shelf/ })).toBeVisible({ timeout: 60_000 });
     token = await page.evaluate(() => {
       const key = Object.keys(localStorage).find((k) => /^sb-.*-auth-token$/.test(k));

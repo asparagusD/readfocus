@@ -46,8 +46,8 @@ export function Privacy() {
         <section aria-labelledby="privacy-stored">
           <h2 id="privacy-stored">What we keep</h2>
           <ul>
-            <li><strong>Your account:</strong> the email you sign in with, the name your sign-in gives us if it gives one,
-              and the display name you choose for leagues.</li>
+            <li><strong>Your account:</strong> what your Google sign-in gives us (your email, your name and a link to your
+              profile picture) and the display name you choose for leagues. We never see your Google password.</li>
             <li><strong>Your books:</strong> the file you upload (unless you choose to keep it on your device), its text cut
               into passages, the questions built from them and a map of each page’s prose, equations, code and figures.
               For a scanned PDF, the words your browser read from its pages.</li>

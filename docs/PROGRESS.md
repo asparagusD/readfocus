@@ -5923,8 +5923,8 @@ don't start"): C26.1 waits for your go.
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
-| [x] C26.1 one ingestion at a time | (this commit) | `ingestion_worker.run`: one in-process FIFO (per-loop asyncio.Lock) for every job; upload, resume, OCR re-read and the sweep go through it; regions stay inside ingest | pytest 2018 (4 new: order, failed job, regions runner, upload/resume queue; order test fails with the lock removed); ruff 27, ESLint 3, build, graph 64, contrast, images, bundle, unit 267, e2e 320 | 0.5 h | container check (two uploads back to back, 512 MB / 0.1 CPU) moved to C26.G; a queued upload keeps its bytes (<= 50 MB) in memory while it waits |
-| [ ] C26.2 one text pass for PDFs | | | | | |
+| [x] C26.1 one ingestion at a time | `1ad78ba` | `ingestion_worker.run`: one in-process FIFO (per-loop asyncio.Lock) for every job; upload, resume, OCR re-read and the sweep go through it; regions stay inside ingest | pytest 2018 (4 new: order, failed job, regions runner, upload/resume queue; order test fails with the lock removed); ruff 27, ESLint 3, build, graph 64, contrast, images, bundle, unit 267, e2e 320 | 0.5 h | container check (two uploads back to back, 512 MB / 0.1 CPU) moved to C26.G; a queued upload keeps its bytes (<= 50 MB) in memory while it waits |
+| [x] C26.2 one text pass for PDFs | (this commit) | `extract_text_from_pdf` collects every page's text; `run_job` passes it to `build_with_paths`, whose `pdf_contents` no longer reads the book again | same blocks, contents and paths both ways on sample, scanned and code_sample (test) and on ILA and SICP (scratch `c262_compare.py`: ILA structure 10.1 s -> 0.5 s, SICP 16.0 s -> 1.0 s on this machine); pytest 2023; standard checks | 0.5 h | container upload -> ready before and after is measured in C26.G |
 | [ ] C26.3 open a book before it is processed | | | | | |
 | [ ] C26.4 a book-level place and open | | | | | |
 | [ ] C26.5 the reader without today's reading | | | | | |

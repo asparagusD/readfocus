@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 221,
-      "size_bytes": 16908,
+      "size_bytes": 16926,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -737,18 +737,18 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 288,
-      "size_bytes": 13761,
+      "lines": 295,
+      "size_bytes": 14175,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b)."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once."
     },
     {
       "path": "backend/services/book_structure.py",
       "language": "python",
-      "lines": 528,
-      "size_bytes": 24271,
+      "lines": 534,
+      "size_bytes": 24657,
       "role": "service",
-      "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure apart from parsing the file: EPUB documents (in ingestion's order) walked into chapter, heading, paragraph, quote and list_item blocks with em and strong marks, plain text only, the top repeated heading level as chapters, then cut at the chunk boundaries by counting non-space characters (a text mismatch falls back to text blocks); PDF and fallback text rebuilt into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, page and chunk breaks continued) with chapter headings guessed from short lines (\"Chapter N\", standard Roman numerals under 100, Latin ALL CAPS followed by prose), running heads found across the book dropped from the text (the first one naming an unseen chapter becomes it), each chapter listed once; blocks are {id, type, text, marks[, continued]}; the toc lists chapter blocks; build never raises. chunks.content is untouched. C17.6: build_with_paths also gives each EPUB block its spine index and element path (chunks.block_paths, blocks unchanged), block_for_cfi, and books.toc from the PDF outline (title, page) or the EPUB nav (title, href, spine_index), each with its chunk_index and block_id; the chapter blocks remain the contents without them."
+      "purpose": "Structured blocks and a table of contents for the book reader (C12.1), pure apart from parsing the file: EPUB documents (in ingestion's order) walked into chapter, heading, paragraph, quote and list_item blocks with em and strong marks, plain text only, the top repeated heading level as chapters, then cut at the chunk boundaries by counting non-space characters (a text mismatch falls back to text blocks); PDF and fallback text rebuilt into paragraphs (wrapped lines joined, hyphenation mended, page numbers dropped, page and chunk breaks continued) with chapter headings guessed from short lines (\"Chapter N\", standard Roman numerals under 100, Latin ALL CAPS followed by prose), running heads found across the book dropped from the text (the first one naming an unseen chapter becomes it), each chapter listed once; blocks are {id, type, text, marks[, continued]}; the toc lists chapter blocks; build never raises. chunks.content is untouched. C17.6: build_with_paths also gives each EPUB block its spine index and element path (chunks.block_paths, blocks unchanged), block_for_cfi, and books.toc from the PDF outline (title, page) or the EPUB nav (title, href, spine_index), each with its chunk_index and block_id; the chapter blocks remain the contents without them. C26.2: build_with_paths and pdf_contents take the page texts ingestion already read (page_texts), so a PDF is read once; without them pdf_contents reads the pages itself."
     },
     {
       "path": "backend/services/concept_store.py",
@@ -1553,8 +1553,8 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 295,
-      "size_bytes": 12522,
+      "lines": 312,
+      "size_bytes": 13225,
       "role": "test",
       "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume. C17.6: no structure leaves block_paths empty too."
     },
@@ -1681,8 +1681,8 @@
     {
       "path": "backend/tests/test_pdf_text.py",
       "language": "python",
-      "lines": 41,
-      "size_bytes": 1493,
+      "lines": 69,
+      "size_bytes": 2880,
       "role": "test",
       "purpose": "Pytest for backend/services/pdf_text.py: batched page text equals one reader's on sample.pdf, ingestion text unchanged, book_structure reads page starts through the batched reader, release_memory never raises."
     },
@@ -2170,7 +2170,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5933,
-      "size_bytes": 1065516,
+      "size_bytes": 1065974,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6146,7 +6146,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 777,
-      "size_bytes": 243713,
+      "size_bytes": 244040,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

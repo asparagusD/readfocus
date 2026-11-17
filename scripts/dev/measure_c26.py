@@ -11,7 +11,7 @@ Each book is uploaded as POST /books/upload hands it on: its job claimed, then i
 (C26.1: one job at a time, in order). Since C26.3 a book opens as soon as its row exists, so "openable" is the
 upload itself; this measures, from the moment its job is queued, when each book's first questions are stored
 (books.status ready), when its whole text is chunked, embedded and questioned (ingest), and when its region map and
-prose are done (all). --until stops after ingest (the region map is not run) or runs everything (all).
+prose are done (all; since C27.1 each region map is its own queued job, timed as regions_done). --until stops after ingest (the region map is not run) or runs everything (all).
 --no-queue starts every book's run_job at once, as uploads did before C26.1. psutil samples this process's RSS
 every 0.2 s; the cgroup's own peak (memory.peak, v2) is read at the end.
 """
@@ -65,6 +65,14 @@ async def measure(paths: list[Path], until: str, queued: bool, sampler) -> dict:
             await after_ingest(book, file_bytes)
 
     region_job.after_ingest = ingest_done
+    run_regions = region_job.run_job
+
+    async def regions_timed(job, file_bytes=None):  # C27.1: a region map is its own queued job
+        result = await run_regions(job, file_bytes)
+        times[job["book_id"]]["regions_done_s"] = elapsed()
+        return result
+
+    region_job.run_job = regions_timed
     runs = []
     for path in paths:
         book = {"id": path.stem, "user_id": "gate", "file_type": path.suffix.lstrip("."),
@@ -84,6 +92,7 @@ async def measure(paths: list[Path], until: str, queued: bool, sampler) -> dict:
         runs.append(one())
     sampler.reset()
     await asyncio.gather(*runs)
+    await ingestion_worker.drain()  # C27.1: the region maps queued behind the ingests
     return {"books": list(times.values()), "seconds": elapsed(),
             "chunks": len(db.tables.get("chunks", [])), "questions": len(db.tables.get("question_bank", [])),
             "regions": len(db.tables.get("page_regions", []))}

@@ -7,12 +7,17 @@ its cursor, one job at a time (each kind by its own runner), or marked
 failed once it has used MAX_ATTEMPTS. Losing this loop loses nothing, because the next start sweeps
 again. INGEST_SWEEP=0 turns it off (the test suite does).
 
-C26.1: every job in the process runs through `run`, one at a time in the order they arrive (uploads,
-resumes, OCR re-reads and the sweep alike), so two uploads never parse at once on Render's 512 MB. A
-book's regions job runs inside its ingest job, so ingest always comes before regions.
+C26.1: every job in the process runs through `run`, one at a time (uploads, resumes, OCR re-reads and the
+sweep alike), so two uploads never parse at once on Render's 512 MB. C27.1: waiting ingest jobs go before
+waiting regions jobs, each kind in arrival order; a book's region map is queued as its own job when its
+ingestion ends inside the worker (region_job.after_ingest asks `defer`), so a second upload's first questions
+no longer wait for the first book's region map. The queued regions job reads the file from Storage when its
+turn comes, so no file waits in memory.
 """
 
 import asyncio
+import contextvars
+import heapq
 import os
 import weakref
 from datetime import UTC, datetime
@@ -24,28 +29,88 @@ from backend.services.supabase_client import supabase
 MIN_SWEEP_SECONDS = 30
 
 
-# One lock per event loop: an asyncio.Lock is bound to the loop it first waits on, and the test
-# client runs each request on its own loop. asyncio.Lock wakes its waiters in arrival order.
-_locks: "weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, asyncio.Lock]" = weakref.WeakKeyDictionary()
+INGEST_FIRST, REGIONS_LATER = 0, 1  # C27.1: a waiting ingest job goes before a waiting regions job
 
 
-def _lock() -> asyncio.Lock:
+class _Slot:
+    """One job at a time; when it is free, the waiter with the lowest priority, then the earliest, goes next."""
+
+    def __init__(self):
+        self.busy, self.waiting, self.arrivals = False, [], 0
+
+    async def acquire(self, priority: int) -> None:
+        if not self.busy and not self.waiting:
+            self.busy = True
+            return
+        handed = asyncio.get_running_loop().create_future()
+        self.arrivals += 1
+        heapq.heappush(self.waiting, (priority, self.arrivals, handed))
+        try:
+            await handed
+        except asyncio.CancelledError:
+            if handed.done() and not handed.cancelled():  # the slot was handed over as the waiter was cancelled
+                self.release()
+            raise
+
+    def release(self) -> None:
+        while self.waiting:
+            _priority, _arrival, handed = heapq.heappop(self.waiting)
+            if not handed.done():  # a cancelled waiter is skipped
+                handed.set_result(None)
+                return
+        self.busy = False
+
+
+# One slot per event loop: the test client runs each request on its own loop.
+_slots: "weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, _Slot]" = weakref.WeakKeyDictionary()
+_in_worker = contextvars.ContextVar("in_ingestion_worker", default=False)
+_deferred: set[asyncio.Task] = set()
+
+
+def _slot() -> _Slot:
     loop = asyncio.get_running_loop()
-    lock = _locks.get(loop)
-    if lock is None:
-        lock = _locks[loop] = asyncio.Lock()
-    return lock
+    slot = _slots.get(loop)
+    if slot is None:
+        slot = _slots[loop] = _Slot()
+    return slot
 
 
 async def run(job: dict, file_bytes: bytes | None = None) -> dict:
-    """Run a claimed job after every job queued before it; a job that raises never stops the ones after."""
-    runner = region_job.run_job if job.get("kind") == jobs.REGIONS else book_ingestor.run_job
-    async with _lock():
-        try:
-            return await runner(job, file_bytes)
-        except Exception as error:  # noqa: BLE001 - the runners record their own failures; this is the backstop
-            print(f"Job for book {job.get('book_id')} stopped: {error}")
-            return {"status": "error", "error": str(error)}
+    """Run a claimed job when the slot is free: ingest jobs first, then regions jobs, each in arrival order.
+    A job that raises never stops the ones after."""
+    regions = job.get("kind") == jobs.REGIONS
+    runner = region_job.run_job if regions else book_ingestor.run_job
+    slot = _slot()
+    await slot.acquire(REGIONS_LATER if regions else INGEST_FIRST)
+    inside = _in_worker.set(True)
+    try:
+        return await runner(job, file_bytes)
+    except Exception as error:  # noqa: BLE001 - the runners record their own failures; this is the backstop
+        print(f"Job for book {job.get('book_id')} stopped: {error}")
+        return {"status": "error", "error": str(error)}
+    finally:
+        _in_worker.reset(inside)
+        slot.release()
+
+
+def defer(job: dict) -> bool:
+    """Queue a claimed regions job behind any waiting ingest (C27.1); False outside the worker, where the caller
+    runs it at once. It reads the book's file from Storage when its turn comes."""
+    if not _in_worker.get():
+        return False
+    task = asyncio.get_running_loop().create_task(run(job))
+    _deferred.add(task)
+    task.add_done_callback(_deferred.discard)
+    return True
+
+
+async def drain() -> None:
+    """Wait for every deferred regions job (and any it defers in turn); for scripts and tests."""
+    while _deferred:
+        await asyncio.gather(*list(_deferred), return_exceptions=True)
+
+
+region_job.defer = defer
 
 
 def sweep_enabled() -> bool:

@@ -5013,3 +5013,39 @@ click back to a fit.
 
 ### Commit
 `fix(notes): scroll to the page's notes after the jump pill has gone`
+
+## 2026-11-17 C25.5 — e2e on GitHub, third run: the PDF page-turn benchmark at 20.7 fps
+
+**Status:** fixed (the benchmark); one intermittent zoom failure seen once in the Linux container, open
+
+### Symptom
+CI run 44039982158 (`9d14b29`): 319 passed, 1 failed (log pasted by the user):
+
+    1) e2e/reader.spec.js:197:5 › pdf: pages and turns › page-turn frame rate (recorded in docs/BENCHMARKS.md)
+       Error: expect(received).toBeGreaterThan(expected)
+       Expected: > 30
+       Received:   20.7
+    {"book":"pdf","turn":{"frames":69,"seconds":3.28,"fps":20.7,"worstFrameMs":100.1,"over33ms":52}}
+
+### Repro and hypothesis
+The benchmark on GitHub, from each run's `reader-benchmarks-*.json`: run 1 (no tracing) PDF and EPUB 60 fps, 0
+frames over 33 ms; runs 2 and 3, after `6b31fa6` turned on `trace: 'retain-on-failure'` on CI, 50.5 / 48.9 and
+20.7 / 54.2 fps. Hypothesis: the trace's screencast takes frames from the page being measured. Test: the benchmark
+in the Linux container (`--cpus=2`) three times each way: trace on 54.1-58.8 fps with 1-10 frames over 33 ms; trace
+off 60 fps and 0 every time. Confirmed: the fault was this session's own CI change, not the reader.
+
+### Fix
+`frontend/playwright.config.js`: two projects: `e2e` (everything but the benchmark, CI tracing as before) and
+`frame-rate` (the two benchmark tests, `trace` and `screenshot` off). A `test.use` in the spec cannot do it:
+Playwright refuses recording options inside a describe group ("forces a new worker"). The 30 fps floor is unchanged.
+
+### Regression test
+The benchmark itself. Linux container, full suite with `CI=true`: PDF and EPUB 60 fps, 0 frames over 33 ms
+(before the fix the same setup gave PDF below 30 and failed). Local full suite: 320 passed, 73.7 and 75 fps.
+
+### Open
+The same container run failed `reader.spec.js:344` (zoom to 200% and back) once, with no error kept (my run
+filtered it); alone it passed 10 of 10, and it passed on GitHub's run 3 and in the previous container run.
+
+### Commit
+`fix(e2e): measure the page-turn frame rate without a trace recording`

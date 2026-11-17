@@ -2105,8 +2105,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5015,
-      "size_bytes": 228815,
+      "lines": 5051,
+      "size_bytes": 230892,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2673,8 +2673,8 @@
     {
       "path": "frontend/playwright.config.js",
       "language": "javascript",
-      "lines": 28,
-      "size_bytes": 1165,
+      "lines": 37,
+      "size_bytes": 1660,
       "role": "config",
       "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1); ignores phase2_journey.spec.js (live, C25.3)."
     },

@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 221,
-      "size_bytes": 17036,
+      "size_bytes": 17055,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -177,10 +177,10 @@
     {
       "path": "backend/agents/graph.py",
       "language": "python",
-      "lines": 69,
-      "size_bytes": 2692,
+      "lines": 65,
+      "size_bytes": 2555,
       "role": "agent",
-      "purpose": "Builds the LangGraph workflow: event-driven flows from __start__ routed on state['event']: start_session -> planner; finish_reading -> test_generator; submit_answers -> evaluator -> knowledge_state -> optimizer -> planner (the optimizer is skipped when every grade is low-confidence, and an evaluator error ends the run); abandon -> optimizer."
+      "purpose": "Builds the LangGraph workflow: event-driven flows from __start__ routed on state['event']: start_session -> planner; finish_reading -> test_generator; submit_answers -> evaluator -> knowledge_state -> optimizer -> planner (the optimizer is skipped when every grade is low-confidence, and an evaluator error ends the run); abandon -> optimizer. C26.6b: submit_answers is evaluator -> knowledge_state -> optimizer -> END (all low-confidence: knowledge_state -> END); the planner is dormant: start_session still routes to it but nothing calls run_start."
     },
     {
       "path": "backend/agents/knowledge_state/__init__.py",
@@ -322,7 +322,7 @@
       "path": "backend/agents/workflow.py",
       "language": "python",
       "lines": 95,
-      "size_bytes": 4415,
+      "size_bytes": 4414,
       "role": "agent",
       "purpose": "The only callers of the compiled graph: run_start, run_finish, run_submit and run_abandon invoke one event flow each with a recursion limit of 10 and return the final state; save_decisions stores a run's decisions entries in agent_decisions in one insert, numbered under one run id, logging any failure."
     },
@@ -697,10 +697,10 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 413,
-      "size_bytes": 21652,
+      "lines": 409,
+      "size_bytes": 21500,
       "role": "router",
-      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted. C23.7: start also returns the planner's mode for the reader's 'Suggested next' note. C24.2: a saved place with an anchor checks 'Finished a book' after the response."
+      "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted. C23.7: start also returns the planner's mode for the reader's 'Suggested next' note. C24.2: a saved place with an anchor checks 'Finished a book' after the response. C26.6b: submit-answers returns no next_session; its flow runs no planner."
     },
     {
       "path": "backend/routers/steve.py",
@@ -1210,7 +1210,7 @@
       "path": "backend/tests/test_api_sessions.py",
       "language": "python",
       "lines": 638,
-      "size_bytes": 30969,
+      "size_bytes": 30917,
       "role": "test",
       "purpose": "Pytest on an in-memory database through TestClient, with a bag-of-words fake embedder: tests come from the question bank in one round trip and leak nothing; answers are graded inline with confidence and feedback, pre-grades are cached and reused, a failing embedder or a question with no evidence gives low confidence, test_results keeps the shape the results page and dashboard read, stored questions carry concept_keys, and a submitted test moves the mastery of the concepts it names, once; each workflow run's decisions are stored in order under one run id, a failing decisions insert changes no response, the responses keep the keys the pages read, and abandon runs the optimizer; a resubmitted session returns the stored result and runs nothing again, a failed grading releases the session, and a completed session with no stored result is a conflict; start reads the chunks and creates the session at the same time."
     },
@@ -1537,10 +1537,10 @@
     {
       "path": "backend/tests/test_graph.py",
       "language": "python",
-      "lines": 254,
-      "size_bytes": 11374,
+      "lines": 249,
+      "size_bytes": 11123,
       "role": "test",
-      "purpose": "Pytest: each router function of the graph, the exact set of compiled edges, the recursion limit, and on the in-memory database the submit chain in order, the low-confidence skip of the optimizer, an evaluator error ending the run, the plan after submit as a preview that does not pop the re-read queue, and the start, finish-reading, abandon and unknown-event flows; the exact node visit order of every event from astream(stream_mode='updates'), including the low-confidence branch and an evaluator error; the same submit twice moving mastery once; and the recursion limit enforced, with the four-node submit flow needing five steps."
+      "purpose": "Pytest: each router function of the graph, the exact set of compiled edges, the recursion limit, and on the in-memory database the submit chain in order, the low-confidence skip of the optimizer, an evaluator error ending the run, the plan after submit as a preview that does not pop the re-read queue, and the start, finish-reading, abandon and unknown-event flows; the exact node visit order of every event from astream(stream_mode='updates'), including the low-confidence branch and an evaluator error; the same submit twice moving mastery once; and the recursion limit enforced, with the four-node submit flow needing five steps. C26.6b: the submit flow visits three agents and plans nothing; the compiled edges follow; the recursion limit fits three nodes."
     },
     {
       "path": "backend/tests/test_graph_doc.py",
@@ -2185,8 +2185,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5939,
-      "size_bytes": 1069469,
+      "lines": 5940,
+      "size_bytes": 1069826,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6154,7 +6154,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 778,
-      "size_bytes": 249269,
+      "size_bytes": 249678,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

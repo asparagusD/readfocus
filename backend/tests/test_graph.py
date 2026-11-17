@@ -70,15 +70,10 @@ def test_after_the_evaluator_an_error_ends_the_run():
 
 
 @pytest.mark.parametrize("confidences, node", [
-    (["low", "low"], "planner"), (["low", "medium"], "optimizer"), (["high"], "optimizer"), ([], "optimizer"),
+    (["low", "low"], END), (["low", "medium"], "optimizer"), (["high"], "optimizer"), ([], "optimizer"),
 ])
 def test_after_the_knowledge_state_only_all_low_skips_the_optimizer(confidences, node):
     assert graph.after_knowledge_state({"grades": [{"confidence": c} for c in confidences]}) == node
-
-
-def test_after_the_optimizer_submit_goes_on_to_plan_and_abandon_ends():
-    assert graph.after_optimizer({"event": "submit_answers"}) == "planner"
-    assert graph.after_optimizer({"event": "abandon"}) == END
 
 
 def test_the_compiled_graph_has_exactly_these_edges():
@@ -88,8 +83,8 @@ def test_the_compiled_graph_has_exactly_these_edges():
         ("__start__", "optimizer"), ("__start__", "__end__"),
         ("planner", "__end__"), ("test_generator", "__end__"),
         ("evaluator", "knowledge_state"), ("evaluator", "__end__"),
-        ("knowledge_state", "optimizer"), ("knowledge_state", "planner"),
-        ("optimizer", "planner"), ("optimizer", "__end__"),
+        ("knowledge_state", "optimizer"), ("knowledge_state", "__end__"),
+        ("optimizer", "__end__"),  # C26.6: no planner after a test
     }
 
 
@@ -100,21 +95,21 @@ def test_runs_use_a_recursion_limit_of_ten():
 # --- flows on the in-memory database ----------------------------------------------------------
 
 
-def test_submit_chains_evaluator_knowledge_state_optimizer_then_planner(db, monkeypatch):
+def test_submit_chains_evaluator_knowledge_state_optimizer_and_plans_nothing(db, monkeypatch):
     grades_with(monkeypatch, "high", "medium")
     final = submit()
-    assert agents(final) == ["evaluator", "knowledge_state", "optimizer", "planner"]
+    assert agents(final) == ["evaluator", "knowledge_state", "optimizer"]
     assert final["evaluation_result"]["percentage"] == 50
     assert {row["concept_key"] for row in db.tables["user_concept_mastery"]} == {"gravel", "arch"}
     assert final["pace_recommendation"]["band"] == "hold"
     assert db.tables["reading_progress"][0]["pace_recommendation"]["band"] == "hold"
-    assert final["plan"]["chunk_indices"] == [1, 2]  # the next plan starts after the section just tested
+    assert "plan" not in final  # C26.6: the planner is dormant
 
 
 def test_all_low_confidence_grades_skip_the_optimizer(db, monkeypatch):
     grades_with(monkeypatch, "low", "low")
     final = submit()
-    assert agents(final) == ["evaluator", "knowledge_state", "planner"]
+    assert agents(final) == ["evaluator", "knowledge_state"]
     assert "pace_recommendation" not in final
     assert db.tables["reading_progress"][0]["pace_recommendation"] is None  # nothing adapted
 
@@ -125,12 +120,12 @@ def test_an_evaluator_error_ends_the_submit_run(db, monkeypatch):
     assert "user_concept_mastery" not in db.tables
 
 
-def test_the_plan_after_submit_is_a_preview_and_start_takes_the_re_read(db, monkeypatch):
+def test_a_submit_leaves_the_re_read_queue_and_the_dormant_start_takes_it(db, monkeypatch):
     db.tables["reading_progress"][0].update(last_chunk_index=3, re_read_queue=[2])
     grades_with(monkeypatch, "low", "low")  # skip the optimizer, which would change the queue
     final = asyncio.run(workflow.run_submit("s1", USER, BOOK, [3], QUESTIONS, ["a", "b"], 120))
-    assert final["plan"]["mode"] == "re_read" and db.tables["reading_progress"][0]["re_read_queue"] == [2]
-    plan, _ = asyncio.run(workflow.run_start(USER, BOOK))
+    assert "plan" not in final and db.tables["reading_progress"][0]["re_read_queue"] == [2]
+    plan, _ = asyncio.run(workflow.run_start(USER, BOOK))  # the planner's code is kept, not called (C26.6)
     assert plan.chunk_indices == [2] and db.tables["reading_progress"][0]["re_read_queue"] == []
 
 
@@ -205,14 +200,14 @@ def test_finish_reading_visits_the_test_generator_only(db):
     assert visits(state) == ["test_generator"]
 
 
-def test_submit_answers_visits_the_four_agents_in_order(db, monkeypatch):
+def test_submit_answers_visits_the_three_agents_in_order(db, monkeypatch):
     grades_with(monkeypatch, "high", "low")
-    assert visits(submit_state()) == ["evaluator", "knowledge_state", "optimizer", "planner"]
+    assert visits(submit_state()) == ["evaluator", "knowledge_state", "optimizer"]
 
 
 def test_all_low_confidence_visits_skip_the_optimizer(db, monkeypatch):
     grades_with(monkeypatch, "low", "low")
-    assert visits(submit_state()) == ["evaluator", "knowledge_state", "planner"]
+    assert visits(submit_state()) == ["evaluator", "knowledge_state"]
 
 
 def test_an_evaluator_error_visits_the_evaluator_only(db):
@@ -247,8 +242,8 @@ def test_the_recursion_limit_is_enforced_and_fits_the_longest_flow(db, monkeypat
     from langgraph.errors import GraphRecursionError
 
     grades_with(monkeypatch, "high", "high")
-    # LangGraph counts the input step too: four nodes need a limit of five.
+    # LangGraph counts the input step too: three nodes need a limit of four.
     with pytest.raises(GraphRecursionError):
-        visits(submit_state(), config={"recursion_limit": 4})
-    assert len(visits(submit_state(), config={"recursion_limit": 5})) == 4
-    assert workflow.RUN_CONFIG["recursion_limit"] >= 5
+        visits(submit_state(), config={"recursion_limit": 3})
+    assert len(visits(submit_state(), config={"recursion_limit": 4})) == 3
+    assert workflow.RUN_CONFIG["recursion_limit"] >= 4

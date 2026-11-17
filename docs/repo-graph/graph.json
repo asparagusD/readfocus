@@ -6506,26 +6506,19 @@
     {
       "type": "graph_edge",
       "from": "graph_node:knowledge_state",
-      "to": "graph_node:optimizer",
-      "conditional": true
-    },
-    {
-      "type": "graph_edge",
-      "from": "graph_node:knowledge_state",
-      "to": "graph_node:planner",
-      "conditional": true
-    },
-    {
-      "type": "graph_edge",
-      "from": "graph_node:optimizer",
       "to": "graph_node:__end__",
       "conditional": true
     },
     {
       "type": "graph_edge",
-      "from": "graph_node:optimizer",
-      "to": "graph_node:planner",
+      "from": "graph_node:knowledge_state",
+      "to": "graph_node:optimizer",
       "conditional": true
+    },
+    {
+      "type": "graph_edge",
+      "from": "graph_node:optimizer",
+      "to": "graph_node:__end__"
     },
     {
       "type": "graph_edge",

@@ -36,10 +36,9 @@ graph TD;
 	__start__ -.-> test_generator;
 	evaluator -.-> __end__;
 	evaluator -.-> knowledge_state;
+	knowledge_state -.-> __end__;
 	knowledge_state -.-> optimizer;
-	knowledge_state -.-> planner;
-	optimizer -.-> __end__;
-	optimizer -.-> planner;
+	optimizer --> __end__;
 	planner --> __end__;
 	test_generator --> __end__;
 	classDef default fill:#f2f0ff,line-height:1.2

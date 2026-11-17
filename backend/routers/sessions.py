@@ -67,7 +67,6 @@ def stored_result(session_id: str, user_id: str, book_id: str) -> dict:
         "per_question": [{key: answer.get(key) for key in PUBLIC_GRADE_KEYS} for answer in answers],
         "low_confidence_count": sum(answer.get("confidence") == "low" for answer in answers),
         "pace_recommendation": cast(dict[str, Any], progress[0]).get("pace_recommendation") if progress else None,
-        "next_session": None,
     }
 
 
@@ -347,7 +346,7 @@ async def submit_answers(
         release()
         raise HTTPException(status_code=400, detail="No test questions found. Did you call finish-reading?")
 
-    # 3. Run the submit_answers flow: evaluator -> knowledge state -> optimizer -> planner
+    # 3. Run the submit_answers flow: evaluator -> knowledge state -> optimizer (C26.6: no planner)
     try:
         final = await run_submit(
             session_id, user_id, book_id, chunk_indices, test_questions, req.answers, req.time_taken_seconds
@@ -360,7 +359,6 @@ async def submit_answers(
         print(f"Evaluate Answers Error: {final.get('error')}")
         release()
         raise HTTPException(status_code=500, detail="Failed to evaluate answers.")
-    next_plan = final.get("plan") or {}
     background_tasks.add_task(save_decisions, final)
     
     return {
@@ -370,9 +368,7 @@ async def submit_answers(
         "per_question": eval_result.get("per_question"),
         "low_confidence_count": eval_result.get("low_confidence_count", 0),
         "pace_recommendation": final.get("pace_recommendation"),  # none when every grade was low-confidence
-        "next_session": {key: next_plan.get(key) for key in ("mode", "chunk_indices", "focus_duration_minutes", "reason")}
-        if next_plan else None,
-    }
+    }  # C26.6: no next_session; the reader reads on from their place
 
 @router.post("/{session_id}/abandon")
 async def abandon_session(session_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):

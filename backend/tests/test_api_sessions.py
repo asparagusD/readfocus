@@ -340,7 +340,7 @@ def test_submit_answers_grades_inline_and_returns_confidence_and_feedback(api):
     assert body["percentage"] == pytest.approx(body["total_score"] / 50 * 100)
     assert body["low_confidence_count"] == 0
     assert body["pace_recommendation"]["band"] == "hold"  # 30 of 50, from the optimizer node (C8.5)
-    assert body["next_session"]["chunk_indices"] == [1, 2]  # planned after the test, before the results show
+    assert "next_session" not in body  # C26.6: no plan after a test
     assert api.db.tables["sessions"][0]["status"] == "completed"
 
 
@@ -480,7 +480,7 @@ def test_each_run_stores_its_decisions_in_order_under_one_run_id(api):
     session_id, _ = start_and_finish(api)
     submit(api, session_id)
     for event, agents in (("start_session", ["planner"]), ("finish_reading", ["test_generator"]),
-                          ("submit_answers", ["evaluator", "knowledge_state", "optimizer", "planner"])):
+                          ("submit_answers", ["evaluator", "knowledge_state", "optimizer"])):
         rows = decisions(api, event)
         assert [row["agent"] for row in rows] == agents, event
         assert [row["step"] for row in rows] == list(range(1, len(agents) + 1))

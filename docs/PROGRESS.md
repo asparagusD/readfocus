@@ -5919,6 +5919,8 @@ Answers, 2026-11-17: (1) new consent text **and** a new consent version; (2) kee
 called, code and tests kept); (3) 300 MB cap for device-only books; (4) plan approved as written ("Approve,
 don't start"): C26.1 waits for your go.
 
+Reordered, 2026-11-17 (your choice at C26.3's start): C26.4 before C26.3. The reader opens through `/sessions/start`, whose planner has nothing to plan for a book with no chunks yet; built first, C26.3 would add a processing opening to that route only for C26.5 to replace it, and a processing book could not save its place (saving needs a session). With `/books/{id}/open` and `/books/{id}/position` first, C26.3 opens a processing book through them.
+
 ### Log
 
 | Step | Commit | Change | Verified by | Time | Open issues |
@@ -5926,7 +5928,7 @@ don't start"): C26.1 waits for your go.
 | [x] C26.1 one ingestion at a time | `1ad78ba` | `ingestion_worker.run`: one in-process FIFO (per-loop asyncio.Lock) for every job; upload, resume, OCR re-read and the sweep go through it; regions stay inside ingest | pytest 2018 (4 new: order, failed job, regions runner, upload/resume queue; order test fails with the lock removed); ruff 27, ESLint 3, build, graph 64, contrast, images, bundle, unit 267, e2e 320 | 0.5 h | container check (two uploads back to back, 512 MB / 0.1 CPU) moved to C26.G; a queued upload keeps its bytes (<= 50 MB) in memory while it waits |
 | [x] C26.2 one text pass for PDFs | (this commit) | `extract_text_from_pdf` collects every page's text; `run_job` passes it to `build_with_paths`, whose `pdf_contents` no longer reads the book again | same blocks, contents and paths both ways on sample, scanned and code_sample (test) and on ILA and SICP (scratch `c262_compare.py`: ILA structure 10.1 s -> 0.5 s, SICP 16.0 s -> 1.0 s on this machine); pytest 2023; standard checks | 0.5 h | container upload -> ready before and after is measured in C26.G |
 | [ ] C26.3 open a book before it is processed | | | | | |
-| [ ] C26.4 a book-level place and open | | | | | |
+| [x] C26.4 a book-level place and open (before C26.3) | (this commit) | new `backend/routers/reading.py`: `GET /books/{id}/open` (book, status, pages-only flag, saved place; makes the progress row with the planner's defaults) and `PUT /books/{id}/position` (an anchor in the book's format, chunk optional; the Finished a book badge after the response); works for a book still being processed; old session routes kept | pytest 2038 (15 new in test_api_reading.py); standard checks | 0.75 h | no client calls them yet (C26.3, C26.5) |
 | [ ] C26.5 the reader without today's reading | | | | | |
 | [ ] C26.6 backend and copy follow | | | | | |
 | [ ] C26.7 books over 50 MB, on the device | | | | | |

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 918,
-    "inventoried": 775,
+    "tracked": 920,
+    "inventoried": 777,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 221,
-      "size_bytes": 16926,
+      "size_bytes": 16944,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -465,8 +465,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 81,
-      "size_bytes": 2973,
+      "lines": 83,
+      "size_bytes": 3082,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP). C24.4: the internal router under /internal (scheduled jobs). C24.5: the progress router (/me/progress, /badges, /leagues/current)."
     },
@@ -685,6 +685,14 @@
       "size_bytes": 9615,
       "role": "router",
       "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to)."
+    },
+    {
+      "path": "backend/routers/reading.py",
+      "language": "python",
+      "lines": 98,
+      "size_bytes": 5044,
+      "role": "router",
+      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -1181,6 +1189,14 @@
       "size_bytes": 4246,
       "role": "test",
       "purpose": "API tests for POST /focus/quiz-me (C23.7b): this chapter from its contents entry, graded by submit-answers with mastery moved and no points; since the last focus bookmark, the body start, or after a test's chunks; nothing to ask refused with 409; another reader's book, a bad scope and extra keys refused."
+    },
+    {
+      "path": "backend/tests/test_api_reading.py",
+      "language": "python",
+      "lines": 116,
+      "size_bytes": 5557,
+      "role": "test",
+      "purpose": "Pytest on MemoryDb through TestClient (C26.4): a first open makes one progress row and has no place; a saved place comes back on the next open; every save asks for the Finished a book badge; a book still being processed opens and saves; a scanned book with no text opens pages-only; EPUB format and place; malformed places, a place in the other format and an unknown chunk are refused with nothing stored; another reader's book is 404 with nothing made; sign-in required."
     },
     {
       "path": "backend/tests/test_api_regions.py",
@@ -2169,8 +2185,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5933,
-      "size_bytes": 1065974,
+      "lines": 5935,
+      "size_bytes": 1066909,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6145,8 +6161,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 777,
-      "size_bytes": 244040,
+      "lines": 779,
+      "size_bytes": 245147,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

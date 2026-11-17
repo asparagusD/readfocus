@@ -93,6 +93,13 @@
       "handler": "get_ocr"
     },
     {
+      "id": "endpoint:GET /books/{book_id}/open",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/open",
+      "handler": "open_book"
+    },
+    {
       "id": "endpoint:GET /books/{book_id}/pages",
       "type": "endpoint",
       "method": "GET",
@@ -406,6 +413,13 @@
       "method": "PUT",
       "path": "/books/{book_id}/body-start",
       "handler": "put_body_start"
+    },
+    {
+      "id": "endpoint:PUT /books/{book_id}/position",
+      "type": "endpoint",
+      "method": "PUT",
+      "path": "/books/{book_id}/position",
+      "handler": "save_book_position"
     },
     {
       "id": "endpoint:PUT /me/progress",
@@ -1071,6 +1085,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/reading.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/sessions.py",
       "type": "file",
       "role": "router",
@@ -1438,6 +1458,12 @@
     },
     {
       "id": "file:backend/tests/test_api_quiz_me.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_api_reading.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -6173,6 +6199,16 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/reading.py",
+      "to": "endpoint:GET /books/{book_id}/open"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/reading.py",
+      "to": "endpoint:PUT /books/{book_id}/position"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/sessions.py",
       "to": "endpoint:GET /sessions/{session_id}"
     },
@@ -7085,6 +7121,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/reading.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/sessions.py"
     },
     {
@@ -7426,6 +7467,26 @@
       "type": "imports",
       "from": "file:backend/routers/progress.py",
       "to": "file:backend/xp/streaks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/xp/badge_award.py"
     },
     {
       "type": "imports",
@@ -8236,6 +8297,31 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_quiz_me.py",
       "to": "file:backend/tests/test_api_focus_quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/routers/reading.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_reading.py",
+      "to": "file:backend/xp/badge_award.py"
     },
     {
       "type": "imports",
@@ -13484,6 +13570,21 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/reading.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/reading.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/reading.py",
+      "to": "table:reading_progress"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/sessions.py",
       "to": "table:books"
     },
@@ -14001,6 +14102,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/progress.py",
       "to": "table:user_progress"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/reading.py",
+      "to": "table:reading_progress"
     },
     {
       "type": "writes_table",

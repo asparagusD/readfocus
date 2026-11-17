@@ -2105,8 +2105,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 4903,
-      "size_bytes": 221470,
+      "lines": 4966,
+      "size_bytes": 225315,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2217,8 +2217,8 @@
     {
       "path": "frontend/e2e/annotations-render.spec.js",
       "language": "javascript",
-      "lines": 127,
-      "size_bytes": 6656,
+      "lines": 133,
+      "size_bytes": 7095,
       "role": "config",
       "purpose": "E2E for drawn annotations (C21.3): a PDF highlight on its words at fit and after zooming and a reload, darken in Paper and lighten in Lamplight with the token colour, a 2 px underline, nothing off the shown pages; an EPUB highlight's range through a text-size change, a resize and a reload; the lookup mark above it."
     },
@@ -2473,8 +2473,8 @@
     {
       "path": "frontend/e2e/notes-blocks.spec.js",
       "language": "javascript",
-      "lines": 206,
-      "size_bytes": 11730,
+      "lines": 219,
+      "size_bytes": 12254,
       "role": "config",
       "purpose": "E2E for notes from the book (C22.6): PDF equation (crop to the bucket, LaTeX after), code (exact text, language, no Steve), figure (crop, caption), Steve off (no LaTeX call), dragging an equation, EPUB equation and listing on the device, a highlight's quote note, a Steve answer saved with citations."
     },
@@ -2673,8 +2673,8 @@
     {
       "path": "frontend/playwright.config.js",
       "language": "javascript",
-      "lines": 25,
-      "size_bytes": 960,
+      "lines": 28,
+      "size_bytes": 1165,
       "role": "config",
       "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1); ignores phase2_journey.spec.js (live, C25.3)."
     },

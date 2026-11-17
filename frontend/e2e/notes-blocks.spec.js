@@ -129,6 +129,19 @@ test.describe('epub regions', () => {
     throw new Error(`${selector} never came into view`);
   }
 
+  // Adding a note opens the notepad, which narrows the book (1440 to 1060 px wide) and re-lays its sections out;
+  // `settled` watches the page shown, not where a block sits, so wait for the block's own box to stop moving.
+  async function still(el) {
+    let last = null;
+    await expect.poll(async () => {
+      const now = JSON.stringify(await el.boundingBox());
+      const same = now === last;
+      last = now;
+      return same;
+    }, { intervals: [300], timeout: 10_000 }).toBe(true);
+    return JSON.parse(last);
+  }
+
   test('an EPUB equation goes with its own LaTeX and a listing with its text, on the device', async ({ page, api }) => {
     await openReader(page);
     const math = await find(page, 'math');
@@ -144,7 +157,7 @@ test.describe('epub regions', () => {
     expect(api.steve.latexAsks).toHaveLength(0);
 
     const pre = await find(page, 'pre');
-    const pbox = await pre.boundingBox();
+    const pbox = await still(pre);
     await page.mouse.move(pbox.x + pbox.width / 2, pbox.y + pbox.height / 2, { steps: 4 });
     await page.getByRole('toolbar', { name: 'Code, this page' }).getByRole('button', { name: 'Add to notes' }).click();
     await expect.poll(() => api.notePosts.length).toBe(2);

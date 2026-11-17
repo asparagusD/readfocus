@@ -4901,3 +4901,66 @@ The test itself in the clean checkout (no `.env`): failed before the fix (above)
 
 ### Commit
 `fix(api): make the reader-key encryption test independent of the local .env`
+
+## 2026-11-17 C25.5 — two e2e tests fail on GitHub's Linux runner only
+
+**Status:** fixed (test 1 reproduced and fixed; test 2 fixed on its confirmed cause, never reproduced)
+
+### Symptom
+CI run 44022135029 (release `8af00aa`), job `e2e` (Edge on ubuntu-latest, its first run on GitHub): 318 passed,
+2 failed. The log, pasted by the user:
+
+    1) e2e/annotations-render.spec.js:28:3 › pdf › a highlight is drawn on its words, stays on them at another
+       zoom, and comes back after a reload
+       Error: lamp
+       expect(received).toBe(expected) // Object.is equality
+       Expected: true
+       Received: false
+       > 32 | for (const word of ['lamp', 'small', 'circle']) expect(covers(await pdfBoxes(page), await wordPoint(page, word)), word).toBe(true);
+    2) e2e/notes-blocks.spec.js:132:3 › epub regions › an EPUB equation goes with its own LaTeX and a listing
+       with its text, on the device
+       Test timeout of 30000ms exceeded.
+       Error: locator.click: Test timeout of 30000ms exceeded.
+       - waiting for getByRole('toolbar', { name: 'Code, this page' }).getByRole('button', { name: 'Add to notes' })
+
+The uploaded artifact held only `error-context.md` page snapshots: `playwright.config.js` never turned traces or
+screenshots on, though the CI step is named "Keep the failures' traces and screenshots".
+
+### Repro
+Both pass on Windows (full suite 320 of 320, a clean checkout too). In Docker (`node:22`, Debian, Edge from
+`npx playwright install --with-deps msedge` as CI does, `--cpus=2`), test 1 fails now and then:
+
+    npx playwright test e2e/annotations-render.spec.js:28 --repeat-each 25
+
+1 of 3, then a scratch probe with the test's exact steps 2 of 15, 1 of 20, 1 of 25. Test 2: 0 failures in
+3 + 6 + 3 repeats in the container (1 and 2 CPUs).
+
+### Hypotheses
+1. Test 1: Linux fonts move the words. Ruled out: the probe's word points equal across runs (lamp at 621,256) and
+   the failing runs' screenshots show the highlight drawn on "lamp threw a small circle".
+2. Test 1: the box read is of an element not laid out. Evidence: the failing reads were all zeros
+   `[0,0,0,0]`. Probed in the same instant: the span had no parent and an empty computed style, so it was
+   detached: the optimistic `pending-N` annotation (`frontend/src/annotations/useAnnotations.js:25-26`) is drawn
+   at once and drawn again under its saved id when the POST returns; `toHaveCount(1)` matched the pending span
+   and the next read caught it being replaced. Confirmed.
+3. Test 2: the code block moves after it is measured. Evidence: the CI snapshot shows the notepad open ("Notes,
+   1" expanded) after the equation was added; a local probe: the book narrows from 1440 to 1060 px when it opens;
+   `find` waits for `settled`, which watches the page shown, not where a block sits. Not reproduced: on this
+   machine and in the container the re-layout ends before the read.
+
+### Root cause
+Both are test races, not app faults. Test 1 measured a PDF annotation before its save had replaced the pending
+element. Test 2 hovered a code block at a box read while the notepad's opening could still be re-laying the book.
+
+### Fix
+`frontend/e2e/annotations-render.spec.js`: a `saved` locator (page 1's `.rf-anno` whose id is not `pending-`);
+the three PDF tests that measure a new annotation wait for it first. `frontend/e2e/notes-blocks.spec.js`: `still`
+polls the code block's box until two reads 300 ms apart agree before hovering it. `frontend/playwright.config.js`:
+on CI only, `trace: 'retain-on-failure'` and `screenshot: 'only-on-failure'`.
+
+### Regression test
+The two tests themselves, in the container at 2 CPUs with `CI=true`, `--repeat-each 25`: 50 passed (test 1
+failed 5 of 63 runs before the fix in the same container).
+
+### Commit
+`fix(e2e): wait for saved highlights and settled blocks before measuring`

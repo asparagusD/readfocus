@@ -15,6 +15,9 @@ export default defineConfig({
     channel: 'msedge',
     headless: true,
     viewport: { width: 1440, height: 900 },
+    // On CI only: a failure keeps its trace and screenshot, which the e2e job uploads.
+    trace: process.env.CI ? 'retain-on-failure' : 'off',
+    screenshot: process.env.CI ? 'only-on-failure' : 'off',
   },
   webServer: {
     command: 'npm run build && npx vite preview --port 4174 --strictPort',

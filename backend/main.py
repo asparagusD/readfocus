@@ -14,6 +14,7 @@ from backend.routers import (
     auth,
     books,
     dashboard,
+    device_books,
     focus,
     internal,
     lookup,
@@ -59,7 +60,8 @@ add_cors(app)  # FRONTEND_URL only; localhost too when ENV=development (backend/
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])
 app.include_router(ocr.router, prefix="/books", tags=["Books"])
-app.include_router(reading.router, prefix="/books", tags=["Books"])  # C26.4: open at the place
+app.include_router(reading.router, prefix="/books", tags=["Books"])
+app.include_router(device_books.router, prefix="/books", tags=["Books"])  # C26.7: books over 50 MB  # C26.4: open at the place
 app.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
 app.include_router(agent.router, prefix="/agent", tags=["Agent"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])

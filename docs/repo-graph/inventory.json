@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 915,
-    "inventoried": 772,
+    "tracked": 917,
+    "inventoried": 774,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17160,
+      "size_bytes": 17179,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -257,10 +257,10 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 441,
-      "size_bytes": 20623,
+      "lines": 447,
+      "size_bytes": 21119,
       "role": "agent",
-      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime)."
+      "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime). C26.7: MAX_DEVICE_BOOK_FILE_BYTES (300 MB), BROWSER_TEXT_PAGES_PER_BATCH, BROWSER_TEXT_MAX_PAGE_CHARS, BROWSER_TEXT_MAX_PAGES."
     },
     {
       "path": "backend/agents/question_generation/__init__.py",
@@ -465,8 +465,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 83,
-      "size_bytes": 3082,
+      "lines": 85,
+      "size_bytes": 3200,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP). C24.4: the internal router under /internal (scheduled jobs). C24.5: the progress router (/me/progress, /badges, /leagues/current)."
     },
@@ -617,10 +617,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 430,
-      "size_bytes": 22303,
+      "lines": 433,
+      "size_bytes": 22493,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept)."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -629,6 +629,14 @@
       "size_bytes": 8425,
       "role": "router",
       "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found. C23.7c: focus_this_week {seconds, points, sessions}: counted seconds (active minus voided) of this week's focus sessions except discarded ones, and points of the scored ones, from focus_sessions."
+    },
+    {
+      "path": "backend/routers/device_books.py",
+      "language": "python",
+      "lines": 88,
+      "size_bytes": 4456,
+      "role": "router",
+      "purpose": "C26.7: books over 50 MB kept on the reader's device. POST /books/device makes a PDF or EPUB book (over MAX_BOOK_FILE_BYTES, at most MAX_DEVICE_BOOK_FILE_BYTES = 300 MB) with no file, storage_mode device and source_format browser-text; POST /books/{id}/pages takes the browser's page texts in batches (at most BROWSER_TEXT_PAGES_PER_BATCH) into page_ocr (engine browser), owner only, the book still processing, and the last batch queues ingestion on the one worker."
     },
     {
       "path": "backend/routers/focus.py",
@@ -745,10 +753,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 295,
-      "size_bytes": 14175,
+      "lines": 305,
+      "size_bytes": 14873,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only."
     },
     {
       "path": "backend/services/book_structure.py",
@@ -1413,6 +1421,14 @@
       "size_bytes": 3818,
       "role": "test",
       "purpose": "Pytest, C14.1: the Dockerfile is python:3.11-slim, bakes the model through the app's embedder before going offline, binds ${PORT:-8000} with one worker; .dockerignore is an allowlist; render.yaml is a free Docker service with /health, auto-deploy off, secrets unset and no AI key; /health exists."
+    },
+    {
+      "path": "backend/tests/test_device_books.py",
+      "language": "python",
+      "lines": 161,
+      "size_bytes": 7508,
+      "role": "test",
+      "purpose": "Pytest on MemoryDb (C26.7): a device book is made with no file; bad sizes, hashes, types and keys refused; text in batches and the last one ingests from it (chunks, ready, no region map); page order and empty pages; a resent batch replaces its pages; another reader's, a server-read or a ready book refused; bad batches refused; a failed browser-text book resumes from its stored text; a device book read on the server still cannot resume."
     },
     {
       "path": "backend/tests/test_embedder.py",
@@ -2169,8 +2185,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5940,
-      "size_bytes": 1070815,
+      "lines": 5941,
+      "size_bytes": 1071262,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6121,8 +6137,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 774,
-      "size_bytes": 249685,
+      "lines": 776,
+      "size_bytes": 251074,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

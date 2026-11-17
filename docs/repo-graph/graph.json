@@ -240,6 +240,13 @@
       "handler": "update_note"
     },
     {
+      "id": "endpoint:POST /books/device",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/device",
+      "handler": "create_device_book"
+    },
+    {
       "id": "endpoint:POST /books/upload",
       "type": "endpoint",
       "method": "POST",
@@ -273,6 +280,13 @@
       "method": "POST",
       "path": "/books/{book_id}/ocr",
       "handler": "post_ocr"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/pages",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/pages",
+      "handler": "post_pages"
     },
     {
       "id": "endpoint:POST /books/{book_id}/resume",
@@ -1022,6 +1036,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/device_books.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/focus.py",
       "type": "file",
       "role": "router",
@@ -1605,6 +1625,12 @@
     },
     {
       "id": "file:backend/tests/test_deploy_config.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_device_books.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -6003,6 +6029,16 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/device_books.py",
+      "to": "endpoint:POST /books/device"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/device_books.py",
+      "to": "endpoint:POST /books/{book_id}/pages"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/focus.py",
       "to": "endpoint:GET /focus/current"
     },
@@ -6998,6 +7034,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/device_books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/focus.py"
     },
     {
@@ -7183,6 +7224,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/services/ingestion_worker.py"
     },
     {
@@ -7203,6 +7249,36 @@
     {
       "type": "imports",
       "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -8689,6 +8765,71 @@
       "type": "imports",
       "from": "file:backend/tests/test_deploy_config.py",
       "to": "file:tools/no_paid_ai.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/routers/device_books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/ocr_pages.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -13347,6 +13488,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/device_books.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/focus.py",
       "to": "table:books"
     },
@@ -13914,6 +14060,16 @@
       "type": "writes_table",
       "from": "file:backend/routers/books.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/device_books.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/device_books.py",
+      "to": "table:page_ocr"
     },
     {
       "type": "writes_table",

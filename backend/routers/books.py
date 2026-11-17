@@ -13,6 +13,7 @@ from backend.agents import policy
 from backend.convert.epub_builder import build_epub
 from backend.convert.sources import FORMATS as CONVERTED, convert_upload
 from backend.services import body_start, ingestion_worker
+from backend.services.book_ingestor import BROWSER_TEXT
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 from backend.dependencies import get_current_user
@@ -360,10 +361,12 @@ async def get_book_status(book_id: str, user_id: str = Depends(get_current_user)
 @router.post("/{book_id}/resume")
 async def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     """Run a book's ingestion again from its cursor: after a failure, or for a book left processing with no job."""
-    rows = supabase.table("books").select("id, status, storage_path").eq("id", book_id).eq("user_id", user_id).execute().data
+    rows = supabase.table("books").select("id, status, storage_path, source_format").eq("id", book_id).eq(
+        "user_id", user_id).execute().data
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
-    if not rows[0].get("storage_path"):  # a device-only book: the server never kept its file
+    # A device-only book: the server never kept its file. C26.7: a browser-text book kept its text, so it resumes.
+    if not rows[0].get("storage_path") and rows[0].get("source_format") != BROWSER_TEXT:
         raise HTTPException(status_code=409, detail="This book's file is only on your device: add the file again.")
     job = jobs.get(book_id) or jobs.create(book_id, user_id)
     ok, reason = jobs.claimable(job, datetime.now(UTC), jobs.stale_minutes(), manual=True)

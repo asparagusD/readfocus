@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { easing, prefersReducedMotion, seconds } from '../motion/presets';
 import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
@@ -16,7 +16,7 @@ import { EpubBook } from './epub/EpubBook';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
 import { keyAction, SPREAD_MIN_WIDTH, timeAtProgress } from './frame';
-import { placeEnd, placeStart, reached, shows } from './today';
+import { placeEnd, placeStart } from './place';
 
 /** "5" for a PDF page, "2:340" for an EPUB section and character: the place's ends, for tests and tools. */
 const spot = (loc) => (loc.kind === 'pdf' ? String(loc.page) : `${loc.index}:${loc.char}`);
@@ -89,19 +89,17 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * { goTo(anchor), next(), prev(), visibleRange(), getSelection(), documents() }.
  * onRelocate(place) on every move; onBookmark(anchor) from the ribbon or B.
  *
- * A reading session (C17.5) passes `bounds` ({ start, end } locations, today.js): `note`
- * shows over the pages holding the start until hidden; past the end (Next, Space, End)
- * the `closing` page covers the book and Previous comes back; Next reads on past it (C23.G), and then it does
- * not come back until Home or a jump; Home goes to the start.
- * `opening` keeps the blank page up while the session finds and opens its place; `status`
- * joins the folio ("Beyond today's reading"). `ref` also gets find(snippets, from) and toc().
+ * Past the book's last page (Next, Space, End) the `closing` page covers the book and Previous
+ * comes back (C26.5: the end of the book; today's reading is gone); Home goes to the first page.
+ * `opening` keeps the blank page up while the reader opens its place; `status` joins the folio
+ * ("Focus mode starts at …"). `ref` also gets find(snippets, from) and toc().
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, bounds = null, note = null, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
+  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
   placing = null,
 }) {
@@ -119,8 +117,6 @@ export function Reader({
   const queued = useRef(0); // a turn asked for mid-turn runs when the leaf lands (C12)
   const moveRef = useRef(null);
   const [ending, setEnding] = useState(false); // the closing page is shown
-  const [readOn, setReadOn] = useState(false); // C23.G: the reader went on past it; it does not come back
-  const [noteHidden, setNoteHidden] = useState(false);
   const [pulse, setPulse] = useState(null); // C22.5: { id, rects, whole } a note's passage, pulsed after a jump
   // Lookup (C17.5): where the book is drawn. A PDF is drawn in this page (its text layers in the
   // book box); an EPUB in one iframe per section shown, added as each loads.
@@ -183,11 +179,11 @@ export function Reader({
       return true;
     }
     if (ending) {
+      if (dir > 0) return false; // the end of the book
       setEnding(false);
-      if (dir < 0) return true; // back to the last page of the reading, which lay under it
-      if (place?.atEnd) return false;
-      setReadOn(true); // C23.G: on into the book; the suggestion was only a suggestion
-    } else if (dir > 0 && closing && !readOn && (reached(place, bounds?.end) || place?.atEnd)) {
+      return true; // back to the last page, which lay under it
+    }
+    if (dir > 0 && closing && place?.atEnd) {
       setEnding(true);
       return true;
     }
@@ -196,7 +192,7 @@ export function Reader({
     busy.current = true;
     setTurn({ id: Date.now(), dir });
     return true;
-  }, [place, ending, closing, bounds, readOn]);
+  }, [place, ending, closing]);
   useEffect(() => { moveRef.current = move; });
 
   const act = useCallback((action) => {
@@ -206,16 +202,13 @@ export function Reader({
     else if (action === 'prev') move(-1);
     else if (action === 'first') {
       setEnding(false);
-      setReadOn(false);
-      if (bounds?.start) renderer.goTo(bounds.start);
-      else renderer.first();
-    } else if (action === 'last' && closing) {
-      if (bounds?.end) renderer.goTo(bounds.end);
-      else renderer.last();
-      setEnding(true);
-    } else if (action === 'last') renderer.last();
+      renderer.first();
+    } else if (action === 'last') {
+      renderer.last();
+      if (closing) setEnding(true);
+    }
     else if (action === 'ribbon' && onBookmark) onBookmark(renderer.anchor());
-  }, [move, onBookmark, bounds, closing]);
+  }, [move, onBookmark, closing]);
 
   const onKey = useCallback((event) => {
     if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
@@ -320,7 +313,7 @@ export function Reader({
   const shownPlaces = useCallback(async () => (await (book.current?.shownPlaces?.() ?? [])).map((p) => ({
     ...p, label: p.label ?? (folio ? folio.split(' of ')[0] : 'this page') })), [folio]);
   useImperativeHandle(ref, () => ({
-    goTo: (anchor) => { setEnding(false); setReadOn(false); return book.current?.goTo(anchor); },
+    goTo: (anchor) => { setEnding(false); return book.current?.goTo(anchor); },
     find: (snippets, from) => book.current?.find(snippets, from) ?? Promise.resolve(null),
     toc: () => book.current?.toc() ?? [],
     next: () => move(1),
@@ -372,15 +365,7 @@ export function Reader({
           <button type="button" className="rf-ov-edge" data-edge="back" tabIndex={-1} aria-hidden="true"
             onClick={() => move(-1)} disabled={place?.atStart} />
           <button type="button" className="rf-ov-edge" data-edge="forward" tabIndex={-1} aria-hidden="true"
-            onClick={() => move(1)} disabled={place?.atEnd && (ending || !closing || readOn)} />
-          {note && !noteHidden && !ending && !opening && shows(place, bounds?.start) && (
-            <aside className="rf-ov-note" aria-label="Today" data-no-lookup>
-              <div className="rf-note">{note}</div>
-              <button type="button" className="rf-tool" onClick={() => setNoteHidden(true)} aria-label="Hide this note">
-                <X size={16} strokeWidth={1.75} aria-hidden="true" />
-              </button>
-            </aside>
-          )}
+            onClick={() => move(1)} disabled={place?.atEnd && (ending || !closing)} />
           {ending && <div className="rf-ov-end" data-no-lookup><div className="rf-end">{closing}</div></div>}
           {pulse && !turn && (
             <div key={pulse.id} className="rf-passage-pulses" data-whole={pulse.whole || undefined} aria-hidden="true">
@@ -423,7 +408,7 @@ export function Reader({
         </button>
         <p className="rf-ov-folio">{ending ? 'End of the book'
           : place && !opening ? [place.folio, place.entry, status].filter(Boolean).join(' · ') : failure ? 'Not opened' : 'Opening the book…'}</p>
-        <button type="button" className="rf-ov-turn" onClick={() => move(1)} disabled={!place || (place.atEnd && (ending || !closing || readOn))}>
+        <button type="button" className="rf-ov-turn" onClick={() => move(1)} disabled={!place || (place.atEnd && (ending || !closing))}>
           <span>Next</span><ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </footer>

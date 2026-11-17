@@ -14,12 +14,6 @@ import { breakdown } from '../focus/breakdown';
 import './Results.css';
 
 const ICONS = { right: Check, partial: Minus, wrong: RotateCcw, unsure: HelpCircle };
-const NEXT_TITLE = {
-  new: 'The next pages',
-  re_read: 'A second look at today’s pages',
-  review: 'A review of what needs another look',
-  finished: 'You have reached the end of the book',
-};
 
 /** A stored multiple-choice question lists its options after the prompt; an answer is "(b) <option>". */
 const promptOf = (q) => (q?.options?.length ? q.question.split('\n')[0] : q?.question);
@@ -164,8 +158,6 @@ export function Results() {
   const pct = Math.round(resultsData.percentage ?? 0);
   const chips = conceptChips(grades);
   const unsure = grades.filter((g) => outcome(g) === 'unsure').length;
-  const next = resultsData.next_session;
-  const pace = resultsData.pace_recommendation;
   const bookId = sessionData?.book_id;
   const scored = location.state?.focus && resultsData.lines ? breakdown(resultsData) : null;
 
@@ -256,18 +248,11 @@ export function Results() {
 
         <section className="rf-results__card rf-results__next" aria-labelledby="rf-next">
           <OpenBook size={72} />
-          <h2 id="rf-next" className="eyebrow">Suggested next</h2>
-          <p className="rf-results__next-title">
-            {next ? NEXT_TITLE[next.mode] ?? NEXT_TITLE.new : pace?.re_read_mode ? NEXT_TITLE.re_read : NEXT_TITLE.new}
-          </p>
-          {/* C23.7: a gentle suggestion, no fixed reading time. */}
-          <p className="rf-results__next-line">
-            {next?.reason ? next.reason : pace?.re_read_mode ? 'Revisiting difficult material is how mastery is built.' : 'Read on whenever you like.'}
-          </p>
+          {/* C26.5b: no suggested reading; the book opens where the reader left it. */}
+          <h2 id="rf-next" className="eyebrow">Read on</h2>
+          <p className="rf-results__next-line">Your place is kept. Read on whenever you like.</p>
           <div className="rf-results__actions">
-            {bookId && (!next || next.mode !== 'finished') && (
-              <Button onClick={() => navigate(`/read/${bookId}`)}>Back to the book</Button>
-            )}
+            {bookId && <Button onClick={() => navigate(`/read/${bookId}`)}>Back to the book</Button>}
             <Link to="/dashboard" className="rf-btn rf-btn--ghost">See your dashboard</Link>
           </div>
         </section>

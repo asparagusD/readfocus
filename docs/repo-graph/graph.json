@@ -3965,13 +3965,13 @@
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/today.js",
+      "id": "file:frontend/src/originalview/place.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/today.test.js",
+      "id": "file:frontend/src/originalview/place.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4254,18 +4254,6 @@
     },
     {
       "id": "file:frontend/src/reader/lookup.test.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/readAhead.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/reader/readAhead.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -10717,7 +10705,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/focus/bodyStart.js",
-      "to": "file:frontend/src/originalview/today.js"
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -11462,7 +11450,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
-      "to": "file:frontend/src/originalview/today.js"
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -11632,7 +11620,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
-      "to": "file:frontend/src/originalview/today.js"
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -11711,8 +11699,8 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/originalview/today.test.js",
-      "to": "file:frontend/src/originalview/today.js"
+      "from": "file:frontend/src/originalview/place.test.js",
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -12162,7 +12150,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/originalview/today.js"
+      "to": "file:frontend/src/originalview/place.js"
     },
     {
       "type": "imports",
@@ -12188,11 +12176,6 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/lookup.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/reader/readAhead.js"
     },
     {
       "type": "imports",
@@ -12438,11 +12421,6 @@
       "type": "imports",
       "from": "file:frontend/src/reader/lookup.test.js",
       "to": "file:frontend/src/reader/lookup.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/reader/readAhead.test.js",
-      "to": "file:frontend/src/reader/readAhead.js"
     },
     {
       "type": "imports",

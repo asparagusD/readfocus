@@ -2,8 +2,8 @@
 // Edge, as a reader sees it), draws each packaged image its spine documents hold (and loads no
 // remote one), with its caption
 // (figcaption or alt), and gives every MathML element a box. The expected counts come from the
-// markup (scripts/dev/g5_epub_expect.py, file in G5_EXPECT). The session's chunk is text no book
-// holds, so the reader opens at the book's start with no end of today's reading but the book's.
+// markup (scripts/dev/g5_epub_expect.py, file in G5_EXPECT). The reader opens each book at its saved place
+// (C26.5; the fixture's chapter 1 for reflow.epub, the first page for the others) and ends at the book's end.
 import { readFileSync } from 'node:fs';
 import { test, expect, BOOKS, book, openReader } from './fixtures.js';
 

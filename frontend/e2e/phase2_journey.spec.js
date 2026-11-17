@@ -153,9 +153,9 @@ test('the phase-2 journey, signed in, on the real stack', async ({ page, baseURL
     step('both books ingested, region maps built');
 
     // 3. The math-heavy PDF: its equation pages, as the original view draws them, match PDFium's render.
-    const reading = page.waitForResponse(isApi(/^\/sessions\/start$/, 'POST'), { timeout: 120_000 });
+    const reading = page.waitForResponse(isApi(new RegExp(`^/books/${books.pdf}/open$`), 'GET'), { timeout: 120_000 });
     await page.goto(`/read/${books.pdf}`);
-    expect((await reading).status(), 'POST /sessions/start').toBe(200);
+    expect((await reading).status(), 'GET /books/{id}/open').toBe(200); // C26.5: no session
     await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 120_000 });
     await page.evaluate(() => document.fonts.ready);
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'paper');
@@ -199,8 +199,8 @@ test('the phase-2 journey, signed in, on the real stack', async ({ page, baseURL
     await page.goto(`/read/${books.epub}`);
     await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 120_000 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    // The reader opens at today's reading, which begins after the front matter: walk back to the book's first page
-    // first, so the cover and title pages' images are counted too (DEBUG_LOG 2026-11-17 C25.3).
+    // Walk back to the book's first page first, so the cover and title pages' images are counted too (DEBUG_LOG
+    // 2026-11-17 C25.3; since C26.5 a new book opens there, a book read before at its saved place).
     for (let still = 0, turn = 0; still < 3 && turn < 200; turn += 1) {
       const start = await page.locator('.rf-ov').getAttribute('data-start');
       await stage.focus();
@@ -228,8 +228,7 @@ test('the phase-2 journey, signed in, on the real stack', async ({ page, baseURL
         }).catch(() => null);
         if (found && found.key !== '||0') seen.set(found.key, found);
       }
-      // The closing page after today's reading is not the book's end: ArrowRight reads on past it (C23.G). Stop
-      // only when three presses in a row move nothing (the book's own end).
+      // Stop only when three presses in a row move nothing (the book's own end, under its closing page).
       const end = await page.locator('.rf-ov').getAttribute('data-end');
       const closing = await page.locator('.rf-end').count();
       await stage.focus();

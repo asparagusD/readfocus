@@ -90,7 +90,7 @@ export async function mockBackend(page, api, book) {
           book: { title: 'Scanned', author: 'A Scanner', toc: [], format: 'pdf', storage_mode: 'cloud' } });
       }
       return json(route, {
-        // C23.G: a test may shorten today's reading (api.today) to leave pages beyond it.
+        // Old clients only (C26.5: the reader opens with /books/{id}/open); kept until C26.6 removes the route.
         session_id: 'e2e-session', chunks: (api.today ?? today).map((i) => chunk(book, i)), chunk_indices: api.today ?? today, position: api.position,
         focus_duration_minutes: 20, reason: 'A steady pace for this book.', chapter_before: '',
         book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' },
@@ -420,7 +420,7 @@ export const test = base.extend({
 });
 export { expect };
 
-/** Open today's reading and wait until the book stands at its first place. */
+/** Open the book and wait until it stands at its place (C26.5: the saved place, or the first page). */
 export async function openReader(page) {
   await page.goto(`/read/${BOOK}`);
   await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 15_000 });
@@ -428,7 +428,7 @@ export async function openReader(page) {
   await page.waitForTimeout(300); // an EPUB lays out again once its fonts are in
 }
 
-/** The polite page announcement, e.g. "pp. ii–1 of 6" or "End of today's reading". */
+/** The polite page announcement, e.g. "pp. ii–1 of 6" or "End of the book". */
 export const spoken = (page) => page.locator('.rf-ov-live');
 
 /** The book on the page: focus it before keys. */

@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
-import { squeeze } from '../today';
+import { squeeze } from '../place';
 import { pdfAnchor, pdfPositions, quadsFromRects, rectsFromQuads } from '../../anchors';
 import { forPages } from '../../annotations/paint';
 import { pdfPagesLabel } from '../../annotations/list';

@@ -216,7 +216,7 @@ test('the reading page has one h1 naming the book', async ({ page }) => {
   await openReader(page);
   const h1 = page.getByRole('heading', { level: 1 });
   await expect(h1).toHaveCount(1);
-  await expect(h1).toHaveText("Walden: today's reading");
+  await expect(h1).toHaveText('Walden');
   expect(await h1.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
 });
 

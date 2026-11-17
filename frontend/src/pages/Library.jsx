@@ -314,7 +314,7 @@ export function Library() {
             </div>
           )}
         >
-          Add a book you mean to read properly. We’ll pace it into short evening sessions, ask a few questions after each, and keep track of the ideas that need another look.
+          Add a book you mean to read properly. Read it at your own pace, take a short quiz when you like, and we’ll keep track of the ideas that need another look.
         </EmptyState>
       )}
 
@@ -325,7 +325,7 @@ export function Library() {
             <p className="eyebrow">{next.progress ? 'Continue reading' : 'Start here'}</p>
             <h2 id="rf-today-title" className="rf-today__title">{next.title}</h2>
             <p className="rf-today__line">
-              {next.progress ? `${readPct(next)}% read so far. Today’s pages are planned when you open it.` : `By ${next.author}. Your first session is ready when you are.`}
+              {next.progress ? `${readPct(next)}% read so far. It opens where you left off.` : `By ${next.author}. It opens at the first page.`}
             </p>
           </div>
           <Link to={`/read/${next.id}`} className="rf-btn rf-btn--primary rf-today__go">

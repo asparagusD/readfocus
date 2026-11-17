@@ -2254,6 +2254,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/big-book.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/bigPdf.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/body-start.spec.js",
       "type": "file",
       "role": "config",
@@ -4198,6 +4210,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/browserText.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/browserText.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/fileStore.js",
       "type": "file",
       "role": "asset",
@@ -5627,7 +5651,17 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:POST /books/device"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "endpoint:POST /books/upload"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "endpoint:POST /books/{book_id}/pages"
     },
     {
       "type": "calls_endpoint",
@@ -9978,6 +10012,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/big-book.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/big-book.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/body-start.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11979,6 +12023,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/browserText.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/reader/fileStore.js"
     },
     {
@@ -12415,6 +12464,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/WordCard.jsx",
       "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/browserText.test.js",
+      "to": "file:frontend/src/reader/browserText.js"
     },
     {
       "type": "imports",

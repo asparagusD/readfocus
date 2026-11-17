@@ -22,7 +22,8 @@ from backend.xp import badge_award
 
 router = APIRouter()
 
-BOOK_FIELDS = "id, title, author, toc, file_format, file_type, storage_mode, status, scanned_pages, total_chunks"
+BOOK_FIELDS = ("id, title, author, toc, file_format, file_type, storage_mode, status, scanned_pages, total_chunks, "
+               "source_format")
 NEW_PROGRESS = {"last_chunk_index": -1, "chunks_completed": 0, "re_read_queue": []}  # as the planner makes it
 
 
@@ -65,6 +66,8 @@ def opening(user_id: str, book_id: str) -> dict:
         # C19.4: a fully scanned book with no text yet; the reader reads its pages by OCR in the browser
         "pages_only": bool(book.get("scanned_pages")) and not book.get("total_chunks"),
         "scanned_pages": book.get("scanned_pages") or [],
+        # C26.7: a book over 50 MB whose text this browser sent: no region map, so no equation, code or figure tools
+        "text_only": book.get("source_format") == "browser-text",
         "position": progress.get("position"),  # the last saved place, or None: the reader opens at page one
     }
 

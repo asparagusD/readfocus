@@ -15,6 +15,7 @@ import { BookCover } from '../components/BookCover';
 import { EmptyShelf, OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { forgetBookFile, saveBookFile } from '../reader/fileStore';
+import { DEVICE_MAX_BYTES, epubTexts, isBig, pdfTexts, sendTexts, sha256Hex } from '../reader/browserText';
 import './Library.css';
 
 // Files a reader can add (C19.2c): PDF and EPUB open as they are; Markdown (alone, or zipped with its
@@ -42,8 +43,10 @@ function nextBook(books) {
   return [...ready].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))[0] ?? null;
 }
 
-function caption(book, pct) {
+function caption(book, pct, sending) {
   if (book.status === 'error') return 'We couldn’t read this file';
+  // C26.7: a book over 50 MB has its pages read in this browser first, then its quizzes are made.
+  if (sending != null && book.status !== 'ready') return `Reading its pages on this device… ${sending}%`;
   // C26.3: a book opens while it is processed; only its quizzes wait.
   if (book.status !== 'ready') return pct == null ? 'Preparing quizzes…' : `Preparing quizzes… ${pct}%`;
   return book.progress ? `${readPct(book)}% read` : 'New · not started';
@@ -93,6 +96,8 @@ export function Library() {
   const [uploadErrors, setUploadErrors] = useState({});
   const [deviceOnly, setDeviceOnly] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [sending, setSending] = useState({}); // C26.7: book id -> percent of its pages this browser has sent
+  const big = selectedFile ? isBig(selectedFile) : false;
 
   const loadBooks = useCallback(async () => {
     try {
@@ -233,6 +238,10 @@ export function Library() {
       return;
     }
 
+    if (big) {
+      await addFromDevice();
+      return;
+    }
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -269,6 +278,48 @@ export function Library() {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // C26.7: over 50 MB the file stays here; this browser reads its pages' text and sends only that.
+  const addFromDevice = async () => {
+    const file = selectedFile;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'epub'].includes(ext)) {
+      toast({ kind: 'warning', message: 'Over 50 MB, only a PDF or EPUB can be added: it stays on this device and is read here.' });
+      return;
+    }
+    if (file.size > DEVICE_MAX_BYTES) {
+      toast({ kind: 'warning', message: `${file.name} is over 300 MB, the most a book kept on this device can be.` });
+      return;
+    }
+    setIsUploading(true);
+    let made;
+    try {
+      made = await fetchApi('/books/device', { method: 'POST', body: JSON.stringify({
+        title: uploadTitle.trim(), author: uploadAuthor.trim(), file_type: ext, file_bytes: file.size, sha256: await sha256Hex(file) }) });
+    } catch (err) {
+      toast({ kind: 'warning', message: `We couldn’t add that book: ${err.message || 'it was refused'}.` });
+      setIsUploading(false);
+      return;
+    }
+    const bookId = made.book_id;
+    if (!(await saveBookFile(bookId, file))) {
+      toast({ kind: 'warning', message: 'This browser couldn’t keep the file. Add it again before you read.' });
+    }
+    setBooks((prev) => [{ id: bookId, title: uploadTitle.trim(), author: uploadAuthor.trim(), status: 'processing',
+      file_type: ext, storage_mode: 'device' }, ...prev]);
+    setSending((prev) => ({ ...prev, [bookId]: 0 }));
+    setUploadModalOpen(false);
+    setIsUploading(false);
+    toast({ kind: 'success', message: `${uploadTitle.trim()} is on your shelf, kept on this device. Keep this tab open while its pages are read.` });
+    let total = null;
+    const texts = (ext === 'pdf' ? pdfTexts : epubTexts)(file, { pages: (n) => { total = n; } });
+    sendTexts(texts, {
+      post: (body) => fetchApi(`/books/${bookId}/pages`, { method: 'POST', body: JSON.stringify(body) }),
+      perBatch: made.pages_per_batch,
+      progress: (sent) => setSending((prev) => ({ ...prev, [bookId]: total ? Math.min(100, Math.round((sent / total) * 100)) : 0 })),
+    }).then(() => setSending((prev) => { const next = { ...prev }; delete next[bookId]; return next; }))
+      .catch((err) => toast({ kind: 'warning', message: `Not all of ${uploadTitle.trim()}’s pages were read: ${err.message}. Remove it and add it again.` }));
   };
 
   if (loading) return <ShelfSkeleton />;
@@ -366,7 +417,7 @@ export function Library() {
                   {openable ? <Link to={`/read/${book.id}`} className="rf-shelf__book">{face}</Link> : <div className="rf-shelf__book">{face}</div>}
                   <MasteryBar value={readPct(book)} className="rf-shelf__bar" />
                   <div className="rf-shelf__foot">
-                    <p className={`rf-shelf__caption${book.status === 'error' ? ' is-error' : ''}`} aria-live={book.status === 'processing' ? 'polite' : undefined}>{caption(book, ingest[book.id])}</p>
+                    <p className={`rf-shelf__caption${book.status === 'error' ? ' is-error' : ''}`} aria-live={book.status === 'processing' ? 'polite' : undefined}>{caption(book, ingest[book.id], sending[book.id])}</p>
                     <button type="button" className="rf-shelf__remove" onClick={() => setRemoving(book)} aria-label={`Remove ${book.title} from your shelf`}>
                       <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />
                     </button>
@@ -391,18 +442,23 @@ export function Library() {
             <p className="rf-library__convert">
               We’ll turn it into a book on our server, keeping its equations, code and images, and store that book for you.
             </p>
+          ) : big ? (
+            <p className="rf-library__convert">
+              Over 50 MB, so this book stays on this device: your browser reads its text and sends only that. Its
+              equations, code and figures have no Steve or note tools.
+            </p>
           ) : (
             <label className="rf-library__keep">
               <input type="checkbox" name="device_only" checked={deviceOnly} onChange={(e) => setDeviceOnly(e.target.checked)} />
               <span>
                 Keep the file on this device only
-                <small>We read it once to plan your sessions and don’t store it. You can open it only in this browser.</small>
+                <small>We read it once to make its quizzes and don’t store it. You can open it only in this browser.</small>
               </span>
             </label>
           )}
           <div className="rf-library__form-actions">
             <Button variant="secondary" onClick={() => setUploadModalOpen(false)} disabled={isUploading}>Cancel</Button>
-            <Button type="submit" loading={isUploading} loadingLabel={converting ? 'Converting…' : 'Uploading…'}>Add book</Button>
+            <Button type="submit" loading={isUploading} loadingLabel={converting ? 'Converting…' : big ? 'Adding…' : 'Uploading…'}>Add book</Button>
           </div>
         </form>
       </Modal>

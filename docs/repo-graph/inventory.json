@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 917,
-    "inventoried": 774,
+    "tracked": 921,
+    "inventoried": 778,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17179,
+      "size_bytes": 17234,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -697,10 +697,10 @@
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 98,
-      "size_bytes": 5044,
+      "lines": 101,
+      "size_bytes": 5262,
       "role": "router",
-      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only."
+      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -1193,10 +1193,10 @@
     {
       "path": "backend/tests/test_api_reading.py",
       "language": "python",
-      "lines": 116,
-      "size_bytes": 5557,
+      "lines": 121,
+      "size_bytes": 5802,
       "role": "test",
-      "purpose": "Pytest on MemoryDb through TestClient (C26.4): a first open makes one progress row and has no place; a saved place comes back on the next open; every save asks for the Finished a book badge; a book still being processed opens and saves; a scanned book with no text opens pages-only; EPUB format and place; malformed places, a place in the other format and an unknown chunk are refused with nothing stored; another reader's book is 404 with nothing made; sign-in required."
+      "purpose": "Pytest on MemoryDb through TestClient (C26.4): a first open makes one progress row and has no place; a saved place comes back on the next open; every save asks for the Finished a book badge; a book still being processed opens and saves; a scanned book with no text opens pages-only; EPUB format and place; malformed places, a place in the other format and an unknown chunk are refused with nothing stored; another reader's book is 404 with nothing made; sign-in required. C26.7: a book read on the device opens text-only."
     },
     {
       "path": "backend/tests/test_api_regions.py",
@@ -1425,8 +1425,8 @@
     {
       "path": "backend/tests/test_device_books.py",
       "language": "python",
-      "lines": 161,
-      "size_bytes": 7508,
+      "lines": 167,
+      "size_bytes": 7533,
       "role": "test",
       "purpose": "Pytest on MemoryDb (C26.7): a device book is made with no file; bad sizes, hashes, types and keys refused; text in batches and the last one ingests from it (chunks, ready, no region map); page order and empty pages; a resent batch replaces its pages; another reader's, a server-read or a ready book refused; bad batches refused; a failed browser-text book resumes from its stored text; a device book read on the server still cannot resume."
     },
@@ -2186,7 +2186,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 5941,
-      "size_bytes": 1071262,
+      "size_bytes": 1071852,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2253,6 +2253,22 @@
       "size_bytes": 8239,
       "role": "config",
       "purpose": "E2E for C21 end to end: PDF and EPUB highlights through zoom, a resize, a text-size change and a reload; the Annotations tab's order, snippets, pages, colour filter and jump; the chip's Ask Steve (mocked) with lookup off and the word card with it on; delete; the empty states."
+    },
+    {
+      "path": "frontend/e2e/big-book.spec.js",
+      "language": "javascript",
+      "lines": 107,
+      "size_bytes": 6544,
+      "role": "config",
+      "purpose": "Playwright, mocked API (C26.7): a generated 60 MB PDF added from the Library makes the book with POST /books/device (no upload), is kept in IndexedDB, and every page's text reaches POST /books/{id}/pages in batches of 5 with the last marked; over 300 MB or a Markdown file over 50 MB is refused before anything is sent, at 375 with no sideways scroll."
+    },
+    {
+      "path": "frontend/e2e/bigPdf.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 2103,
+      "role": "config",
+      "purpose": "e2e helper (C26.7): a real PDF of N one-line text pages plus one unused stream of padding (60 MB by default), with a correct cross-reference table, built in memory."
     },
     {
       "path": "frontend/e2e/body-start.spec.js",
@@ -4617,10 +4633,10 @@
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 419,
-      "size_bytes": 19094,
+      "lines": 475,
+      "size_bytes": 22346,
       "role": "page",
-      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions."
+      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice."
     },
     {
       "path": "frontend/src/pages/Login.css",
@@ -4673,10 +4689,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 576,
-      "size_bytes": 28718,
+      "lines": 580,
+      "size_bytes": 29052,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -4845,6 +4861,22 @@
       "size_bytes": 6125,
       "role": "asset",
       "purpose": "The in-place word card (C12.8, handoff components sheet): a non-modal dialog placed beside the word by @floating-ui/react (below, flipping above, shifted inside the viewport; fixed, in a portal); headword, phonetic, part of speech, two senses and an example with a Wiktionary line; or a Wikipedia title, description, two-sentence extract and a 'Wikipedia' link in a new tab; ambiguous, not found and unavailable states; a still skeleton while loading; takes focus only when opened from the keyboard; opened by touch it is the compact sheet (grab handle, one sense, 'Tap outside to close', swipe down to close). Placed through outerBox (C17.5), so a word in an EPUB section's iframe gets it beside the word in the page."
+    },
+    {
+      "path": "frontend/src/reader/browserText.js",
+      "language": "javascript",
+      "lines": 79,
+      "size_bytes": 3458,
+      "role": "asset",
+      "purpose": "C26.7: books over 50 MB read in this browser: isBig, the 50 and 300 MB limits, sha256Hex, itemsText (a PDF page's text from pdf.js items), pdfTexts and epubTexts (page or spine-document texts, pdf.js and foliate-js loaded lazily), and sendTexts (batches to POST /books/{id}/pages, the last marked, progress after each)."
+    },
+    {
+      "path": "frontend/src/reader/browserText.test.js",
+      "language": "javascript",
+      "lines": 77,
+      "size_bytes": 3446,
+      "role": "asset",
+      "purpose": "node --test (C26.7): the 50 MB line, batches with only the last marked, an exact last batch, an empty book, a page cut to the server limit, a failed post stops, a PDF page's text, PDF and EPUB texts from fake readers, the hash."
     },
     {
       "path": "frontend/src/reader/fileStore.js",
@@ -6137,8 +6169,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 776,
-      "size_bytes": 251074,
+      "lines": 780,
+      "size_bytes": 252812,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -43,7 +43,7 @@ def test_a_first_open_makes_the_progress_row_and_has_no_place(client, db):
     opened = client.get(f"/books/{BOOK}/open")
     assert opened.status_code == 200
     assert opened.json() == {
-        "book_id": BOOK, "status": "ready", "pages_only": False, "scanned_pages": [], "position": None,
+        "book_id": BOOK, "status": "ready", "pages_only": False, "scanned_pages": [], "position": None, "text_only": False,
         "book": {"title": "SICP", "author": "Abelson", "toc": [{"title": "1 Building", "page": 3}], "format": "pdf",
                  "storage_mode": "cloud"}}
     [row] = db.tables["reading_progress"]
@@ -74,6 +74,11 @@ def test_a_book_still_being_read_opens_and_saves_its_place(client, db, badges):
     assert opened["status"] == "processing" and opened["pages_only"] is False and opened["book"]["toc"] == []
     assert client.put(f"/books/{BOOK}/position", json={"anchor": PDF_PLACE}).status_code == 200
     assert db.tables["reading_progress"][0]["position"] == {"anchor": PDF_PLACE}
+
+
+def test_a_book_read_on_the_device_opens_text_only(client, db):
+    db.tables["books"][0].update(source_format="browser-text", storage_mode="device")
+    assert client.get(f"/books/{BOOK}/open").json()["text_only"] is True
 
 
 def test_a_scanned_book_with_no_text_opens_pages_only(client, db):

@@ -134,6 +134,10 @@ export function ReadingSession() {
     return () => clearInterval(timer);
   }, [preparingFirst, bookId]);
   const quizzesDone = Boolean(prepared?.done);
+  const textOnly = Boolean(sessionData?.text_only);
+  useEffect(() => { // C26.7: a book read on this device has no region map: say so once as it opens
+    if (textOnly) toast({ kind: 'neutral', message: 'This book was read on your device, so its equations, code and figures have no Steve or note tools.' });
+  }, [textOnly, toast]);
   useEffect(() => { // C26.3: how far the quizzes are, until the book's ingestion is done; the reader stays open
     if (!processing || quizzesDone) return undefined;
     let live = true;

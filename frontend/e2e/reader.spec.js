@@ -27,7 +27,8 @@ for (const kind of ['pdf', 'epub']) {
       expect(await settled(page, third)).toEqual(second);
       await page.locator('.rf-ov-edge[data-edge="forward"]').click({ force: true }); // a pointer-only target
       expect(await settled(page, second)).toEqual(third);
-      expect(api.starts).toBe(1);
+      expect(api.opens).toBe(1); // C26.5: GET /books/{id}/open, no session
+      expect(api.starts).toBe(0);
       expect(api.fileLoads).toBe(1);
     });
 
@@ -39,13 +40,15 @@ for (const kind of ['pdf', 'epub']) {
       await page.keyboard.press('ArrowRight');
       await page.waitForTimeout(700);
       const place = await shown(page);
-      await expect.poll(() => api.position?.anchor?.kind, { timeout: 4000 }).toBe(kind); // debounced 1 s
+      await expect.poll(() => api.saves, { timeout: 4000 }).toBeGreaterThan(0); // debounced 1 s
+      await page.waitForTimeout(1200); // the last turn's save too
+      expect(api.position?.anchor?.kind).toBe(kind);
       expect(api.position).toMatchObject(kind === 'pdf'
-        ? { chunk_index: expect.any(Number), anchor: { kind: 'pdf', page: Number(place.start), quads: [[0, 0, 0, 0]], text: '' } }
-        : { chunk_index: expect.any(Number), anchor: { kind: 'epub', cfi: expect.stringMatching(/^epubcfi\(.+\)$/), text: '' } });
+        ? { anchor: { kind: 'pdf', page: Number(place.start), quads: [[0, 0, 0, 0]], text: '' } }
+        : { anchor: { kind: 'epub', cfi: expect.stringMatching(/^epubcfi\(.+\)$/), text: '' } });
       await page.reload();
       await openReader(page);
-      expect(api.starts).toBe(2);
+      expect(api.opens).toBe(2);
       expect(holds(await shown(page), place.start)).toBe(true);
     });
 
@@ -95,44 +98,18 @@ for (const kind of ['pdf', 'epub']) {
       expect(during).toEqual({ leaf: 0, animations: 0 });
     });
 
-    test("turning past today's last page shows the closing page, and Previous comes back", async ({ page }) => {
+    test("turning past the book's last page shows the closing page, and Previous comes back", async ({ page }) => {
       await openReader(page);
       await book(page).focus();
       for (let i = 0; i < 12 && !(await page.locator('.rf-end').count()); i += 1) {
         await page.keyboard.press('ArrowRight');
         await page.waitForTimeout(700);
       }
-      await expect(spoken(page)).toHaveText("End of today's reading");
+      await expect(spoken(page)).toHaveText('End of the book');
       const last = await shown(page);
       await page.keyboard.press('ArrowLeft');
       await expect(page.locator('.rf-end')).toHaveCount(0);
       expect(await shown(page)).toEqual(last); // the closing page lay over the book; the book did not move
-    });
-
-    // C23.G (DEBUG_LOG): the suggested reading is a suggestion; the closing page is not a dead end.
-    test('the closing page lets the reader read on, and does not come back', async ({ page, api }) => {
-      api.today = kind === 'pdf' ? [0, 1] : [0]; // pages (or a chapter) left beyond today's reading
-      await openReader(page);
-      await book(page).focus();
-      for (let i = 0; i < 12 && !(await page.locator('.rf-end').count()); i += 1) {
-        await page.keyboard.press('ArrowRight');
-        await page.waitForTimeout(700);
-      }
-      await expect(spoken(page)).toHaveText("End of today's reading");
-      const last = await settled(page);
-      await expect(page.getByRole('button', { name: 'Next' }).first()).toBeEnabled();
-      await page.keyboard.press('ArrowRight');
-      await expect(page.locator('.rf-end')).toHaveCount(0);
-      // Places are read once the turn has landed (settled): mid-turn an EPUB page briefly reports the previous
-      // page's end as its start (2:1317) before its own (2:1207), and a read in between made this test flaky.
-      const beyondPlace = await settled(page, last);
-      await expect(page.locator('.rf-ov-folio')).toContainText("Beyond today's reading");
-      await page.keyboard.press('ArrowLeft'); // back inside, then on again: no closing page this time
-      await settled(page, beyondPlace);
-      await page.keyboard.press('ArrowRight');
-      const again = await settled(page);
-      await expect(page.locator('.rf-end')).toHaveCount(0); // checked after the turn has landed
-      expect(again).toEqual(beyondPlace);
     });
 
     test('a known word shows its card within 600 ms once cached, beside the word, and Esc closes it', async ({ page, api }) => {
@@ -239,15 +216,15 @@ test('the reading page has one h1 naming the book', async ({ page }) => {
   await openReader(page);
   const h1 = page.getByRole('heading', { level: 1 });
   await expect(h1).toHaveCount(1);
-  await expect(h1).toHaveText("Walden: today's reading");
+  await expect(h1).toHaveText('Walden');
   expect(await h1.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
 });
 
-test('the contents list the PDF outline with today labelled, and an entry opens its page', async ({ page }) => {
+test('the contents list the PDF outline, and an entry opens its page', async ({ page }) => {
   await openReader(page);
   await page.getByRole('button', { name: 'Contents' }).click();
   const items = page.getByRole('dialog', { name: 'Contents' }).locator('.rf-contents-item');
-  await expect(items).toHaveText([/^Chapter 1 Signals\s*today$/, /^Chapter 2 Noise\s*today$/]);
+  await expect(items).toHaveText(['Chapter 1 Signals', 'Chapter 2 Noise']); // C26.5: no "today" any more
   await items.nth(1).click();
   await expect.poll(() => shown(page)).toEqual({ start: '4', end: '5' }); // page 5 on the 4-5 spread
 });

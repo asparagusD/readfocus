@@ -1,18 +1,15 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
-import { CalibrationFlow } from '../components/CalibrationFlow';
 import { Reader } from '../originalview/Reader';
 import { ReaderControls } from '../originalview/ReaderControls';
 import { useLamplight } from '../originalview/useLamplight';
 import { createRegionSource } from '../originalview/pdf/regions';
 import { createOcrSource } from '../originalview/pdf/ocr';
-import { beyond, chunkAt, compare, folioShort, snippetsFor } from '../originalview/today';
+import { folioShort } from '../originalview/place';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
-import { createReadAhead } from '../reader/readAhead';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
 import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
@@ -39,8 +36,6 @@ import { FocusBar } from '../focus/FocusBar';
 import { ReadyModal } from '../focus/ReadyModal';
 import './ReadingSession.css';
 
-// One read-ahead cache for the app: the chunk after today's reading, whose text marks where today ends (C17.5).
-const readAhead = createReadAhead(fetchApi);
 // One lookup client for the app: its LRU of recent answers lasts the visit (C12.8).
 const lookupClient = createLookupClient(fetchApi);
 
@@ -58,28 +53,18 @@ function useStored(key, fallback) {
   return [value, set];
 }
 
-/** C23.7: the planner's next step in words; a re-read or review is "revisit §3.2". */
-function suggestion(mode, title) {
-  const where = title || 'these pages';
-  return `${mode === 're_read' || mode === 'review' ? 'revisit ' : ''}${where}.`;
-}
-
 /**
  * The reading page (C12.5a; the original view since C17.5): the whole book as
- * published, PDF or EPUB, opened at today's reading under a toolbar that fades
- * while reading. Today's chunks are found in the book by their text; the
- * planner's reason lies over the first page of them, and past their end the
- * closing page says "That's today's reading". The place is saved as an anchor
- * in the file while inside today's reading. C23.7: no fixed reading timer; the
- * planner's choice is a gentle "Suggested next" note, and reading time is
- * measured only in focus mode.
+ * published, PDF or EPUB, under a toolbar that fades while reading. C26.5: it
+ * opens at the reader's last place (GET /books/{id}/open; a new book at its
+ * first page), every turn is saved on the book as an anchor in the file, and
+ * the closing page is the end of the book. No plan, no suggested reading; reading
+ * time is measured only in focus mode (C23.7).
  */
 export function ReadingSession() {
   const { bookId } = useParams();
   const navigate = useNavigate();
 
-  const [profileChecked, setProfileChecked] = useState(false);
-  const [isCalibrated, setIsCalibrated] = useState(true);
   const [loading, setLoading] = useState(true);
   const [sessionData, setSessionData] = useState(null);
   useDocumentTitle(sessionData?.book?.title ? `${sessionData.book.title} · Reading` : 'Reading');
@@ -118,6 +103,10 @@ export function ReadingSession() {
   // C19.4: scanned pages get a text layer read by OCR in this browser. A fully scanned book with no chunks
   // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
   const pagesOnly = Boolean(sessionData?.pages_only);
+  // C26.3: a book opened before it is processed (GET /books/{id}/open): no session, its place saved on the book,
+  // and "Preparing quizzes… n%" until its questions are made.
+  const processing = Boolean(sessionData?.processing);
+  const [prepared, setPrepared] = useState(null); // null while processing, else { progress } or { done: true }
   const body = useBodyStart(bookId, Boolean(sessionData) && !pagesOnly); // C23.1: where focus mode starts
   const [focusWanted, setFocusWanted] = useState(false); // C23.6: the reader's Focus mode switch
   const [leavingFocus, setLeavingFocus] = useState(false);
@@ -144,68 +133,62 @@ export function ReadingSession() {
     }, 4000);
     return () => clearInterval(timer);
   }, [preparingFirst, bookId]);
+  const quizzesDone = Boolean(prepared?.done);
+  const textOnly = Boolean(sessionData?.text_only);
+  useEffect(() => { // C26.7: a book read on this device has no region map: say so once as it opens
+    if (textOnly) toast({ kind: 'neutral', message: 'This book was read on your device, so its equations, code and figures have no Steve or note tools.' });
+  }, [textOnly, toast]);
+  useEffect(() => { // C26.3: how far the quizzes are, until the book's ingestion is done; the reader stays open
+    if (!processing || quizzesDone) return undefined;
+    let live = true;
+    const check = () => fetchApi(`/books/${bookId}/status`).then((s) => {
+      if (!live) return;
+      const job = s?.ingestion;
+      if (job?.status === 'done' || (s?.status === 'ready' && !job)) setPrepared({ done: true });
+      else if (s?.status === 'error' || job?.status === 'failed') setPrepared({ done: true }); // nothing more to wait for
+      else setPrepared({ progress: typeof job?.progress === 'number' ? job.progress : null });
+    }).catch(() => {});
+    check();
+    const timer = setInterval(check, 5000);
+    return () => { live = false; clearInterval(timer); };
+  }, [processing, quizzesDone, bookId]);
   const scannedCount = ocrProgress?.scanned?.length ?? sessionData?.scanned_pages?.length ?? 0;
   const readCount = ocrProgress?.done?.length ?? 0;
 
-  // Today's reading in the book (C17.5): where its chunks start and where the next chunk begins.
-  const [bounds, setBounds] = useState(null); // { start, end, starts: [{ chunk_index, loc }] }
   const [place, setPlace] = useState(null);
-  const ready = useRef(null); // the bounds once the reader stands at its first place; moves before that are not saved
-  const todayAnchor = useRef(null); // the last place inside today's reading, to come back to
-  const { save, saveNow } = usePlaceSaver(sessionData?.session_id);
-  const todayChunks = useMemo(() => new Set(sessionData?.chunk_indices ?? []), [sessionData]);
-  const lastChunk = sessionData?.chunk_indices?.length ? Math.max(...sessionData.chunk_indices) : null;
+  const [standing, setStanding] = useState(false); // the book stands at its first place; moves before that are not saved
+  const ready = useRef(false);
+  const { save, saveNow } = usePlaceSaver(sessionData ? `/books/${bookId}/position` : null); // C26.5: every turn, on the book
 
-  // Once the book is open: find today's chunks and the next one, then stand at the saved place or today's start.
+  // Once the book is open: stand at the saved place (C26.5), or stay at the first page of a new book.
   const locate = useCallback(async () => {
     const book = reader.current;
     if (!book || !sessionData || ready.current) return;
     const saved = sessionData.position;
-    const resume = saved?.anchor?.kind === kind && todayChunks.has(saved.chunk_index) ? saved.anchor : null;
-    let from = resume?.page ?? 1;
-    const starts = [];
-    for (const chunk of [...(sessionData.chunks ?? [])].sort((a, b) => a.chunk_index - b.chunk_index)) {
-      const loc = await book.find(snippetsFor(chunk.content), from);
-      if (loc) starts.push({ chunk_index: chunk.chunk_index, loc });
-      if (loc?.page) from = loc.page;
-    }
-    const start = starts[0]?.loc ?? null;
-    const next = lastChunk === null ? null : await readAhead.load(bookId, lastChunk + 1);
-    let end = next ? await book.find(snippetsFor(next.content), from) : null;
-    if (end && start && compare(end, start) < 0) end = null; // the next chunk's text found earlier: no end
-    if (resume ?? start) await book.goTo(resume ?? start);
-    const found = { start, end, starts };
-    ready.current = found;
-    setBounds(found);
-  }, [sessionData, kind, todayChunks, lastChunk, bookId]);
+    if (saved?.anchor?.kind === kind) await book.goTo(saved.anchor);
+    ready.current = true;
+    setStanding(true);
+  }, [sessionData, kind]);
 
-  const outside = beyond(place, bounds ?? {});
   const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
   const inFocus = !pagesOnly && focus.enabled;
-  const placeFor = useCallback((at, anchor) => ({
-    chunk_index: chunkAt(at, ready.current?.starts) ?? sessionData.chunk_indices[0], anchor,
-  }), [sessionData]);
   const onRelocate = useCallback((next) => {
     setPlace(next);
     setChapter(next.entry || '');
-    if (!ready.current || beyond(next, ready.current)) return; // only today's reading is saved
+    if (!ready.current) return;
     const anchor = reader.current?.anchor();
-    if (!anchor) return;
-    todayAnchor.current = anchor;
-    save(placeFor(next, anchor));
-  }, [save, placeFor]);
+    if (anchor) save({ anchor });
+  }, [save]);
   const onBookmark = useCallback((anchor) => {
     if (!anchor) return;
-    saveNow(placeFor(place, anchor));
-    if (!beyond(place, ready.current ?? {})) todayAnchor.current = anchor;
+    saveNow({ anchor });
     toast({ kind: 'neutral', message: `Place saved at ${folioShort(place?.folio) || 'this page'}.` });
-  }, [saveNow, placeFor, toast, place]);
+  }, [saveNow, toast, place]);
 
-  // The contents (D4): the book's own outline or nav, today's entries labelled.
+  // The contents (D4): the book's own outline or nav.
   const closeContents = useCallback(() => setContentsOpen(false), []);
   const openContents = () => {
-    const today = (loc) => Boolean(bounds?.start && compare(loc, bounds.start) >= 0 && (!bounds.end || compare(loc, bounds.end) <= 0));
-    setEntries((reader.current?.toc() ?? []).map((entry, i) => ({ ...entry, key: `${i}-${entry.title}`, today: today(entry.loc) })));
+    setEntries((reader.current?.toc() ?? []).map((entry, i) => ({ ...entry, key: `${i}-${entry.title}` })));
     // C21.5: each annotation's page, read from the book as the drawer opens (the counted EPUB pages can change).
     setAnnotationPages(new Map(notes.annotations.map((a) => [a.id, reader.current?.pageLabel(a) ?? ''])));
     const anchor = body.bodyStart?.anchor; // C23.1: the start's printed page, as the folio names pages
@@ -292,7 +275,6 @@ export function ReadingSession() {
     setSide(null);
     setFocusWanted(true);
   };
-  const backToToday = () => reader.current?.goTo(todayAnchor.current ?? bounds?.start);
   const closeSide = useCallback(() => setSide(null), []);
   const toggleSide = (tab, button) => {
     if (!side) opener.current = button.current;
@@ -400,76 +382,38 @@ export function ReadingSession() {
     setSwitched({ userId: user?.id, on: !hoverLookup });
   };
 
-  // 1. Check profile calibration
+  // C26.5: the book opens at the reader's place (GET /books/{id}/open): no session, no plan, no pace check.
   useEffect(() => {
-    async function checkProfile() {
+    async function openBook() {
       try {
-        const profile = await fetchApi('/auth/profile');
-        if (!profile.is_calibrated) setIsCalibrated(false);
-        setProfileChecked(true);
-      } catch (err) {
-        console.error('Failed to check profile', err);
-        // Fallback to calibrated to prevent blocking the user on error
-        setIsCalibrated(true);
-        setProfileChecked(true);
-      }
-    }
-    checkProfile();
-  }, []);
-
-  // 2. Start the session (only after calibration is confirmed)
-  useEffect(() => {
-    if (!profileChecked || !isCalibrated) return;
-    async function startSession() {
-      try {
-        const data = await fetchApi('/sessions/start', { method: 'POST', body: JSON.stringify({ book_id: bookId }) });
-        setSessionData(data);
+        const opened = await fetchApi(`/books/${bookId}/open`);
+        setSessionData({ ...opened, processing: opened.status === 'processing' && !opened.pages_only,
+          session_id: null, chunk_indices: [], chunks: [] });
         setLoading(false);
       } catch (err) {
-        toast({ kind: 'warning', message: `Today's reading couldn't be prepared: ${err.message}` });
+        toast({ kind: 'warning', message: `This book couldn't be opened: ${err.message}` });
         navigate('/');
       }
     }
-    startSession();
-  }, [bookId, navigate, profileChecked, isCalibrated, toast]);
+    openBook();
+  }, [bookId, navigate, toast]);
 
-  // C23.7: the planner's choice as a gentle note over the first page of today's reading ("Suggested next:
-  // revisit §3.2"), named by the first contents entry inside it; no minutes, no clock.
-  const suggested = entries.find((e) => e.today)?.title || sessionData?.chapter_before || '';
-  const note = useMemo(() => sessionData && !pagesOnly && (
-    <>
-      <ReadingLamp className="rf-note-lamp" />
-      <p>
-        <strong>Suggested next: {suggestion(sessionData.mode, suggested)}</strong>
-        {sessionData.reason ? ` ${sessionData.reason}` : ''}
-      </p>
-    </>
-  ), [sessionData, pagesOnly, suggested]);
-  // The closing page mounts only when it is shown, so its lamp's one glow pulse (moment 3) lands then.
-  const closing = pagesOnly ? (
+  // The closing page at the end of the book; it mounts only when shown, so its lamp's one glow pulse lands then.
+  const closing = (
     <>
       <ReadingLamp className="rf-end-lamp" />
       <h2 className="rf-end-title">That's the end of the book.</h2>
-      <p className="rf-end-text">Your first session starts once every page has been read.</p>
-    </>
-  ) : (
-    <>
-      <ReadingLamp className="rf-end-lamp" />
-      <h2 className="rf-end-title">That's today's suggested reading.</h2>
-      <p className="rf-end-text">Read on as far as you like; your place is kept.</p>
+      <p className="rf-end-text">
+        {pagesOnly ? 'Its quizzes are made once every page has been read.' : 'Your place is kept.'}
+      </p>
     </>
   );
 
-  // One quiet loading state while the profile and then the session load (C13.8b: the profile check showed nothing).
   const preparing = (
     <div className="rf-reading-loading" role="status">
-      <span className="rf-reading-loading-text">Preparing your session…</span>
+      <span className="rf-reading-loading-text">Opening your book…</span>
     </div>
   );
-
-  if (!profileChecked) return preparing;
-
-  if (!isCalibrated) return <CalibrationFlow onComplete={() => setIsCalibrated(true)} />;
 
   if (loading) return preparing;
 
@@ -509,21 +453,22 @@ export function ReadingSession() {
           steveRef={steveButton}
           onFocusMode={pagesOnly ? undefined : turnFocusOn}
         >
-          {outside && (
-            <button type="button" className="rf-tool" onClick={backToToday}>
-              <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
-              <span>Today's reading</span>
-            </button>
-          )}
           {!pagesOnly && (
             <button type="button" className="rf-tool" onClick={() => setQuizMeOpen(true)}>
               <span>Quiz me</span>
             </button>
           )}
+          {processing && !quizzesDone ? (
+            <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Quizzes">
+              <span className="rf-session-time" role="status">
+                {prepared?.progress != null ? `Preparing quizzes… ${Math.round(prepared.progress * 100)}%` : 'Preparing quizzes…'}
+              </span>
+            </div>
+          ) : null}
           {pagesOnly ? (
             <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Pages read">
               <span className="rf-session-time" role="status">
-                {preparingFirst ? 'Preparing your first session…' : `Reading this scan: ${readCount} of ${scannedCount} pages`}
+                {preparingFirst ? 'Preparing quizzes…' : `Reading this scan: ${readCount} of ${scannedCount} pages`}
               </span>
             </div>
           ) : null}
@@ -536,7 +481,7 @@ export function ReadingSession() {
       <div className="rf-reading-body">
       <main className="rf-reading-area">
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
-        <h1 className="sr-only">{bookTitle}: today's reading</h1>
+        <h1 className="sr-only">{bookTitle}</h1>
         <Reader
           ref={reader}
           kind={kind}
@@ -548,13 +493,11 @@ export function ReadingSession() {
           onRelocate={onRelocate}
           onBookmark={onBookmark}
           onBack={() => navigate('/')}
-          bounds={bounds}
-          opening={!bounds}
-          note={inFocus ? null : note}
+          opening={!standing}
           placing={placingRibbon && inFocus ? { onSet: setRibbon, onCancel: () => setPlacingRibbon(false) } : null}
           closing={closing}
-          status={outside ? "Beyond today's reading" : beforeBody(place, body.bodyStart) ? `Focus mode starts at ${startLabel(body.bodyStart)}` : null}
-          label={outside ? `${bookTitle}: beyond today's reading, it does not count toward today's session` : `Today's reading from ${bookTitle}`}
+          status={beforeBody(place, body.bodyStart) ? `Focus mode starts at ${startLabel(body.bodyStart)}` : null}
+          label={bookTitle}
           lookupClient={lookupClient}
           hoverLookup={hoverLookup}
           regions={regions}

@@ -123,3 +123,65 @@ def test_resume_of_another_users_book_is_404(client, db):
     add_book(db, "theirs", user=OTHER, job={"status": "failed"})
     assert client.post("/books/theirs/resume").status_code == 404
     assert jobs.get("theirs")["status"] == "failed"
+
+
+# C26.1: one job at a time, in arrival order.
+
+def recording_runner(log, fail=()):
+    async def runner(job, file_bytes=None):
+        log.append(("start", job["book_id"]))
+        await asyncio.sleep(0.01)  # yield: a second job would start here if nothing held it back
+        if job["book_id"] in fail:
+            raise RuntimeError("boom")
+        log.append(("end", job["book_id"]))
+        return {"status": "ready"}
+    return runner
+
+
+def test_jobs_run_one_at_a_time_in_the_order_they_arrive(monkeypatch):
+    log = []
+    monkeypatch.setattr(book_ingestor, "run_job", recording_runner(log))
+    monkeypatch.setattr(region_job, "run_job", recording_runner(log))
+
+    async def three():
+        await asyncio.gather(ingestion_worker.run({"book_id": "a"}), ingestion_worker.run({"book_id": "b"}),
+                             ingestion_worker.run({"book_id": "r", "kind": jobs.REGIONS}))
+    asyncio.run(three())
+    assert log == [("start", "a"), ("end", "a"), ("start", "b"), ("end", "b"), ("start", "r"), ("end", "r")]
+
+
+def test_a_failed_job_does_not_stop_the_queue(monkeypatch):
+    log = []
+    monkeypatch.setattr(book_ingestor, "run_job", recording_runner(log, fail={"a"}))
+
+    async def two():
+        return await asyncio.gather(ingestion_worker.run({"book_id": "a"}), ingestion_worker.run({"book_id": "b"}))
+    first, second = asyncio.run(two())
+    assert first == {"status": "error", "error": "boom"} and second == {"status": "ready"}
+    assert log == [("start", "a"), ("start", "b"), ("end", "b")]
+
+
+def test_regions_jobs_go_to_the_regions_runner(monkeypatch):
+    seen = []
+
+    async def regions(job, file_bytes=None):
+        seen.append(file_bytes)
+        return {"status": "done"}
+    monkeypatch.setattr(region_job, "run_job", regions)
+    assert asyncio.run(ingestion_worker.run({"book_id": "r", "kind": jobs.REGIONS}, b"x")) == {"status": "done"}
+    assert seen == [b"x"]
+
+
+def test_uploads_queue_their_job_on_the_worker(client, db, monkeypatch):
+    queued = []
+
+    async def run(job, file_bytes=None):
+        queued.append((job["book_id"], file_bytes))
+        return {"status": "ready"}
+    monkeypatch.setattr(ingestion_worker, "run", run)
+    ids = [client.post("/books/upload", files={"file": (f"{n}.pdf", b"%PDF", "application/pdf")},
+                       data={"title": n, "author": "a"}).json()["book_id"] for n in ("one", "two")]
+    assert queued == [(ids[0], b"%PDF"), (ids[1], b"%PDF")]
+    add_book(db, "stuck")
+    client.post("/books/stuck/resume")
+    assert queued[-1] == ("stuck", None)

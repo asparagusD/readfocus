@@ -12,7 +12,7 @@ import './Privacy.css';
 
 /** Where account deletion requests go. Empty until the owner names an address (C25.1 open item, before release). */
 export const PRIVACY_CONTACT = '';
-export const PRIVACY_UPDATED = '16 November 2026';
+export const PRIVACY_UPDATED = '17 November 2026';
 const TITLE = 'Privacy — ReadFocus';
 
 function Contact() {
@@ -38,7 +38,7 @@ export function Privacy() {
         <p className="rf-privacy__eyebrow">Updated {PRIVACY_UPDATED}</p>
         <h1 className="rf-privacy__title">Privacy</h1>
         <p className="rf-privacy__lead">
-          ReadFocus’s quizzes, grading, planning and scoring are algorithmic and run on our servers. Steve, the optional
+          ReadFocus’s quizzes, grading and scoring are algorithmic and run on our servers. Steve, the optional
           study assistant, uses Google’s Gemini; when you ask Steve something, the relevant passages and your question
           are sent to Google and, on the free tier, may be used to improve Google’s products. You can turn Steve off.
         </p>
@@ -51,8 +51,8 @@ export function Privacy() {
             <li><strong>Your books:</strong> the file you upload (unless you choose to keep it on your device), its text cut
               into passages, the questions built from them and a map of each page’s prose, equations, code and figures.
               For a scanned PDF, the words your browser read from its pages.</li>
-            <li><strong>Your reading:</strong> your place in each book, your sessions, your answers and scores, how well
-              you hold each idea, and the reasons for each plan.</li>
+            <li><strong>Your reading:</strong> your place in each book, your quizzes, your answers and scores, how well
+              you hold each idea, and the reasons behind each change to your pace.</li>
             <li><strong>Your highlights and notes,</strong> including drawings and the pictures you add to notes.</li>
             <li><strong>Steve:</strong> whether he is on, when you agreed to his notice, your conversations with him for
               each book, and how many questions you asked today. If you add your own Gemini key it is encrypted, never
@@ -70,7 +70,7 @@ export function Privacy() {
           <h2 id="privacy-google">What goes to Google, and when</h2>
           <p>
             Nothing, until you turn Steve on and agree to his notice. After that, only when you ask him something, our
-            server sends Google your question and a limited part of the book: the pages of your current session, the
+            server sends Google your question and a limited part of the book: the pages around where you are reading, the
             passage you selected, the table of contents and a few related passages, or the picture of an equation, code
             or figure you asked about. Never the whole book, never your name or email, and your notes only when you ask
             about them. “Copy as LaTeX” on a drawn PDF equation sends a picture of that equation, under the same
@@ -109,7 +109,7 @@ export function Privacy() {
         <section aria-labelledby="privacy-delete">
           <h2 id="privacy-delete">Deleting</h2>
           <ul>
-            <li><strong>A book:</strong> remove it from your shelf, and its file, its text and questions, your sessions,
+            <li><strong>A book:</strong> remove it from your shelf, and its file, its text and questions, your quizzes,
               highlights, notes and the pictures in them, Steve conversations and focus sessions for it are
               deleted.</li>
             <li><strong>A highlight</strong> is deleted at once. <strong>A note</strong> disappears at once and is erased

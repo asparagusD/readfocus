@@ -8,7 +8,7 @@ const QUESTIONS = [
   ['What’s sent to Google?', (
     <>
       Only what Steve needs, and only when you ask him something: your question and a limited part of the book (the
-      pages of your session, the passage you selected, the table of contents and a few related passages, or the
+      pages around where you are reading, the passage you selected, the table of contents and a few related passages, or the
       picture of an equation or figure you asked about). Never the whole book, never your name or email, and your
       notes only when you ask about them. On the free tier Google may use prompts and answers to improve its products.
       The quizzes, grading, planning and points never use Google. More on the <Link to="/privacy">privacy page</Link>.

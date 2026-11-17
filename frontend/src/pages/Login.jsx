@@ -115,7 +115,7 @@ export function Login() {
         </m.div>
         <div className="rf-login__words">
           <p className="rf-login__tagline">Read slowly.<br />Keep what you read.</p>
-          <p className="rf-login__sub">Focused sessions, a short test, and a reading plan that remembers where you struggled.</p>
+          <p className="rf-login__sub">Read the book as published, quiz yourself when you like, and see which ideas slip.</p>
         </div>
       </aside>
 

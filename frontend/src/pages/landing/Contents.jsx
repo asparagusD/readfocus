@@ -3,9 +3,9 @@ import { fadeIn, rise, stagger } from '../../motion/presets';
 
 const STEPS = [
   { title: 'Upload a book', note: 'your shelf', body: 'Add a PDF, EPUB, Markdown file or notebook you own. ReadFocus splits it into short passages and keeps it on your account only.' },
-  { title: 'Read in focused sessions', note: 'a few passages', body: 'Each session marks a handful of pages in the book as published. Read on when you like, or turn on focus mode to earn points.' },
-  { title: 'Answer a few questions', note: 'a short test', body: 'A short test follows each session, written from sentences in the passages you just read.' },
-  { title: 'Your next session adapts', note: 'your plan', body: 'Missed something? It comes back for a re-read or a review, and the next session grows or shrinks with your scores.' },
+  { title: 'Read where you left off', note: 'the book as published', body: 'Each book opens at your last page, with its images, figures, math and code. Read as far as you like, or turn on focus mode to earn points.' },
+  { title: 'Answer a few questions', note: 'when you like', body: 'Quiz me asks a few questions written from sentences in the pages you read; focus mode asks them when you set your bookmark.' },
+  { title: 'See what slips', note: 'your concepts', body: 'Each question is tied to an idea in the book, so your dashboard shows which ones you hold and which need another look.' },
 ];
 
 const NUMERALS = ['I', 'II', 'III', 'IV'];

@@ -159,12 +159,12 @@ test('a failed mastery load says so in its panel and can try again', async ({ pa
   await expect(panel).toContainText('No concepts yet for this book.');
 });
 
-test('for tonight: the started book with the most read, and its way in', async ({ page }) => {
+test('continue reading: the started book with the most read, and its way in', async ({ page }) => {
   await mockDashboard(page);
   await page.goto('/dashboard');
-  const card = page.getByRole('region', { name: 'For tonight' });
+  const card = page.getByRole('region', { name: 'Continue reading' });
   await expect(card).toContainText('Walden');
-  await expect(card).toContainText('60% read.');
+  await expect(card).toContainText('60% read. It opens where you left off.');
   await expect(card.getByRole('link', { name: 'Begin reading' })).toHaveAttribute('href', '/read/walden');
 });
 

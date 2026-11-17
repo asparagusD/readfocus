@@ -90,3 +90,10 @@ def test_another_readers_book_a_bad_scope_and_extra_keys_are_refused(qm):
     extra = qm.client.post("/focus/quiz-me", json={"book_id": BOOK, "scope": "chapter", "anchor": end_of(4),
                                                     "points": 500})
     assert extra.status_code == 422
+
+
+def test_quiz_me_waits_while_the_book_is_processed_and_makes_nothing(qm):
+    qm.db.tables["books"][0].update(status="processing", toc=[{"title": "One", "page": 1}])
+    response = ask(qm, "chapter", end_of(4))
+    assert response.status_code == 409 and response.json()["detail"]["code"] == "preparing"
+    assert "being prepared" in response.json()["detail"]["message"] and qm.db.tables["sessions"] == []

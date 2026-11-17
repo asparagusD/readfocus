@@ -183,12 +183,6 @@ def api(monkeypatch):
 
     plan = SimpleNamespace(chunk_indices=[0], assigned_words=600, focus_duration_minutes=20, reason="test")
 
-    async def fake_plan(user_id, book_id):  # the planner node itself is tested in test_graph.py
-        planned = {"agent": "planner", "inputs_summary": {}, "output_summary": {"chunk_indices": plan.chunk_indices},
-                   "reason": plan.reason, "duration_ms": 1.0}
-        return plan, {"event": "start_session", "user_id": user_id, "book_id": book_id, "decisions": [planned]}
-
-    monkeypatch.setattr(sessions, "run_start", fake_plan)
     generated = []
     monkeypatch.setattr(question_bank.question_agent, "run", lambda book_id, ids: generated.append(list(ids)))
     app.dependency_overrides[get_current_user] = lambda: USER
@@ -197,8 +191,20 @@ def api(monkeypatch):
     app.dependency_overrides.clear()
 
 
+def begin(api):
+    """A reading session as /sessions/start made it until C26.6c removed the route: the row, then its test."""
+    session_id = f"session-{len(api.db.tables.get('sessions', [])) + 1}"
+    indices = api.plan.chunk_indices
+    api.db.tables.setdefault("sessions", []).append({
+        "id": session_id, "user_id": USER, "book_id": BOOK, "chunk_start_index": indices[0],
+        "chunk_end_index": indices[-1], "assigned_words": api.plan.assigned_words,
+        "focus_duration_minutes": api.plan.focus_duration_minutes, "status": "reading", "started_at": "2026-11-17T09:00:00"})
+    sessions.assemble_test_background(session_id, USER, BOOK, indices)
+    return session_id
+
+
 def start_and_finish(api):
-    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    session_id = begin(api)
     finished = api.client.post(f"/sessions/{session_id}/finish-reading", json={"actual_duration_minutes": 3})
     assert finished.status_code == 200
     return session_id, finished
@@ -267,7 +273,7 @@ def test_times_used_goes_up_and_the_next_test_prefers_unused_questions(api):
 
 
 def test_the_test_is_ready_before_finish_reading_and_not_assembled_twice(api):
-    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    session_id = begin(api)
     assert len(api.db.tables["sessions"][0]["test_questions"]) == 5  # built in the background at start
     api.db.calls.clear()
     api.client.post(f"/sessions/{session_id}/finish-reading", json={"actual_duration_minutes": 3})
@@ -340,7 +346,7 @@ def test_submit_answers_grades_inline_and_returns_confidence_and_feedback(api):
     assert body["percentage"] == pytest.approx(body["total_score"] / 50 * 100)
     assert body["low_confidence_count"] == 0
     assert body["pace_recommendation"]["band"] == "hold"  # 30 of 50, from the optimizer node (C8.5)
-    assert body["next_session"]["chunk_indices"] == [1, 2]  # planned after the test, before the results show
+    assert "next_session" not in body  # C26.6: no plan after a test
     assert api.db.tables["sessions"][0]["status"] == "completed"
 
 
@@ -479,15 +485,15 @@ def decisions(api, event=None):
 def test_each_run_stores_its_decisions_in_order_under_one_run_id(api):
     session_id, _ = start_and_finish(api)
     submit(api, session_id)
-    for event, agents in (("start_session", ["planner"]), ("finish_reading", ["test_generator"]),
-                          ("submit_answers", ["evaluator", "knowledge_state", "optimizer", "planner"])):
+    for event, agents in (("finish_reading", ["test_generator"]),  # C26.6c: no start_session run
+                          ("submit_answers", ["evaluator", "knowledge_state", "optimizer"])):
         rows = decisions(api, event)
         assert [row["agent"] for row in rows] == agents, event
         assert [row["step"] for row in rows] == list(range(1, len(agents) + 1))
         assert len({row["run_id"] for row in rows}) == 1
         assert all((row["user_id"], row["book_id"], row["session_id"]) == (USER, BOOK, session_id) for row in rows)
         assert all(row["reason"] and row["duration_ms"] is not None for row in rows)
-    assert len({row["run_id"] for row in decisions(api)}) == 3
+    assert len({row["run_id"] for row in decisions(api)}) == 2
 
 
 def test_a_failing_decisions_insert_changes_no_response(api):
@@ -498,18 +504,16 @@ def test_a_failing_decisions_insert_changes_no_response(api):
 
 
 def test_the_responses_keep_the_keys_the_pages_read(api):
-    start = api.client.post("/sessions/start", json={"book_id": BOOK}).json()
-    assert set(start) == {"session_id", "chunk_indices", "focus_duration_minutes", "reason", "chunks", "position", "book",
-                          "chapter_before", "mode"}
-    finished = api.client.post(f"/sessions/{start['session_id']}/finish-reading", json={"actual_duration_minutes": 3})
+    session_id = begin(api)
+    finished = api.client.post(f"/sessions/{session_id}/finish-reading", json={"actual_duration_minutes": 3})
     assert set(finished.json()) == {"test_id", "questions"}
-    body = submit(api, start["session_id"]).json()
+    body = submit(api, session_id).json()
     assert {"total_score", "max_score", "percentage", "per_question", "low_confidence_count",
             "pace_recommendation"} <= set(body)
 
 
 def test_abandon_runs_the_optimizer_and_keeps_its_response(api):
-    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    session_id = begin(api)
     response = api.client.post(f"/sessions/{session_id}/abandon")
     assert response.status_code == 200 and response.json() == {"status": "abandoned"}
     (row,) = decisions(api, "abandon")
@@ -559,7 +563,7 @@ def test_a_completed_session_with_no_stored_result_is_a_conflict(api):
 # --- a session's test is assembled once (issue 34) ------------------------------------------------
 
 def test_a_second_assembly_returns_the_stored_test_and_counts_nothing(api):
-    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    session_id = begin(api)
     stored = api.db.tables["sessions"][0]["test_questions"]  # the background run at start
     uses = {row["id"]: row["times_used"] for row in api.db.tables["question_bank"]}
     again = question_bank.assemble_session_test(session_id, USER, BOOK, [0], [(["cloze"], 5)])  # a different mix
@@ -568,71 +572,8 @@ def test_a_second_assembly_returns_the_stored_test_and_counts_nothing(api):
 
 
 def test_finish_reading_shows_the_test_that_is_graded(api):
-    session_id = api.client.post("/sessions/start", json={"book_id": BOOK}).json()["session_id"]
+    session_id = begin(api)
     api.db.tables["sessions"][0]["test_questions"] = None  # as if the background run had not stored yet
     shown = api.client.post(f"/sessions/{session_id}/finish-reading", json={"actual_duration_minutes": 3}).json()
     stored = api.db.tables["sessions"][0]["test_questions"]
     assert [q["question"] for q in shown["questions"]] == [q["question"] for q in stored]
-
-
-def test_start_reads_the_chunks_and_creates_the_session_at_once(api, monkeypatch):
-    """The chunk read and the session insert do not depend on each other, so they overlap (C9.4)."""
-    import threading
-    import time
-
-    real_execute = Query.execute
-    spans, lock = {}, threading.Lock()
-
-    def timed(self):
-        key = (self.name, self.action[0])
-        if key not in {("chunks", "select"), ("sessions", "insert")} or key in spans:
-            return real_execute(self)
-        began = time.perf_counter()
-        time.sleep(0.2)
-        try:
-            return real_execute(self)
-        finally:
-            with lock:
-                spans[key] = (began, time.perf_counter())
-
-    monkeypatch.setattr(Query, "execute", timed)
-    resp = api.client.post("/sessions/start", json={"book_id": BOOK})
-    assert resp.status_code == 200 and [c["chunk_index"] for c in resp.json()["chunks"]] == [0]
-    (read_start, read_end), (insert_start, insert_end) = spans[("chunks", "select")], spans[("sessions", "insert")]
-    assert read_start < insert_end and insert_start < read_end  # the two calls overlap in time
-
-
-def test_start_says_the_planners_mode_for_the_suggested_next_note(api):
-    """C23.7: the reader words the plan as "Suggested next: ..."; a re-read or review says "revisit"."""
-    resp = api.client.post("/sessions/start", json={"book_id": BOOK})
-    assert resp.status_code == 200 and resp.json()["mode"] in {"new", "re_read", "review"}
-
-
-# Issue 17 (C15.2): /sessions/start served any book whose id the caller knew.
-OTHER_BOOK = "book-of-user-2"
-
-
-def other_users_book(api):
-    api.db.tables["books"].append({"id": OTHER_BOOK, "user_id": "user-2"})
-    api.db.tables["chunks"] += [{"id": f"secret-{i}", "book_id": OTHER_BOOK, "user_id": "user-2", "chunk_index": i,
-                                 "content": f"user 2's private text {i}", "word_count": 4} for i in range(3)]
-
-
-def test_start_refuses_a_book_that_is_not_the_callers(api):
-    other_users_book(api)
-    response = api.client.post("/sessions/start", json={"book_id": OTHER_BOOK})
-    assert response.status_code == 404
-    assert "private text" not in response.text
-    assert api.db.tables.get("sessions", []) == []  # no session row on someone else's book
-    assert ("chunks", "select") not in api.db.calls
-
-
-def test_start_refuses_a_book_that_does_not_exist(api):
-    assert api.client.post("/sessions/start", json={"book_id": "no-such-book"}).status_code == 404
-
-
-def test_start_fails_closed_when_ownership_cannot_be_checked(api):
-    api.db.broken.add("books")
-    response = api.client.post("/sessions/start", json={"book_id": BOOK})
-    assert response.status_code == 503
-    assert api.db.tables.get("sessions", []) == []

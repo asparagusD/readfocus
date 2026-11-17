@@ -3,7 +3,7 @@
 import { test, expect } from './fixtures.js';
 
 const API = 'http://localhost:8000';
-const LEAD = /quizzes, grading, planning and scoring are algorithmic and run on our servers\. Steve, the optional study assistant, uses Google’s Gemini; when you ask Steve something, the relevant passages and your question are sent to Google and, on the free tier, may be used to improve Google’s products\. You can turn Steve off\./;
+const LEAD = /quizzes, grading and scoring are algorithmic and run on our servers\. Steve, the optional study assistant, uses Google’s Gemini; when you ask Steve something, the relevant passages and your question are sent to Google and, on the free tier, may be used to improve Google’s products\. You can turn Steve off\./;
 
 test.describe('signed out', () => {
   test.use({ signedIn: false });

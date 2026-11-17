@@ -58,7 +58,7 @@ class EndRequest(BaseModel):
 
 
 def _book(book_id: str, user_id: str) -> dict:
-    rows = supabase.table("books").select("id, file_type, page_count, toc, body_start").eq("id", book_id).eq(
+    rows = supabase.table("books").select("id, file_type, page_count, toc, body_start, status").eq("id", book_id).eq(
         "user_id", user_id).execute().data
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -197,10 +197,18 @@ def _awaiting(user_id: str, session_id: str) -> tuple[dict, list[dict]]:
     return session, events
 
 
+PREPARING = {"code": "preparing", "message": "Your questions are still being prepared. Try again in a few minutes."}
+
+
 def _quiz(user_id: str, session_id: str) -> dict:
-    """F10: the questions on the text from the session's start to its bookmark; no answers leave the server."""
+    """F10: the questions on the text from the session's start to its bookmark; no answers leave the server.
+
+    C26.3: 409 "preparing" while the book is processed; the session keeps waiting for its quiz."""
     session, _events = _awaiting(user_id, session_id)
-    built = quiz.build(session)
+    try:
+        built = quiz.build(session)
+    except quiz.Preparing:
+        raise HTTPException(status_code=409, detail=PREPARING) from None
     return {"questions": [public_question(q) for q in built["questions"]], "count": built["count"],
             "words_in_range": built["words_in_range"]}
 
@@ -250,6 +258,8 @@ def _quiz_me(user_id: str, req: QuizMeRequest) -> dict:
     _check_place(book, place)
     try:
         built = quiz_me.build(user_id, book, req.scope, place)
+    except quiz.Preparing:
+        raise HTTPException(status_code=409, detail=PREPARING) from None
     except quiz_me.NothingToAsk:
         raise HTTPException(status_code=409, detail="There is nothing to ask about yet. Read a little further first.") from None
     return {"session_id": built["session_id"], "questions": [public_question(q) for q in built["questions"]],

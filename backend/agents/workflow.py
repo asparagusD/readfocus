@@ -51,7 +51,7 @@ async def run_submit(
     session_id: str, user_id: str, book_id: str, chunk_indices: list[int], test_questions: list[dict],
     answers: list[str], time_taken_seconds: int,
 ) -> dict:
-    """submit_answers: grade, move mastery, adapt the pace, plan the next session. Returns the final state."""
+    """submit_answers: grade, move mastery, adapt the pace (C26.6: no next plan). Returns the final state."""
     result = await workflow.ainvoke(cast(AgentState, {
         "event": "submit_answers", "session_id": session_id, "user_id": user_id, "book_id": book_id,
         "chunk_indices": chunk_indices, "test_questions": test_questions, "answers": answers,

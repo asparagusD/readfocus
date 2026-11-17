@@ -308,6 +308,12 @@ ROLLING_AVERAGE_TESTS = 10
 MAX_SHELF_BYTES_PER_USER = 300 * 1024 * 1024
 # One upload is read into memory on Render Free, so it stops here.
 MAX_BOOK_FILE_BYTES = 50 * 1024 * 1024
+# C26.7: a book over MAX_BOOK_FILE_BYTES stays on the reader's device and its browser sends only the text
+# (POST /books/device, then POST /books/{id}/pages). The cap is browser memory on phones (decided 2026-11-17).
+MAX_DEVICE_BOOK_FILE_BYTES = 300 * 1024 * 1024
+BROWSER_TEXT_PAGES_PER_BATCH = 50      # pages (an EPUB's spine documents) in one POST /books/{id}/pages
+BROWSER_TEXT_MAX_PAGE_CHARS = 60_000   # one page's text; a page of dense prose is about 3,000
+BROWSER_TEXT_MAX_PAGES = 10_000
 # Lifetime of the signed URL GET /books/{id}/file returns.
 BOOK_FILE_URL_SECONDS = 300
 

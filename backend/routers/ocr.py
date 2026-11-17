@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 from backend.agents import policy
 from backend.dependencies import get_current_user
-from backend.services import book_ingestor, ocr_pages
+from backend.services import ingestion_worker, ocr_pages
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 
@@ -69,7 +69,7 @@ async def post_ocr(book_id: str, body: OcrPage, background_tasks: BackgroundTask
         supabase.table("books").update({"status": "processing"}).eq("id", book_id).execute()
         job = jobs.claim(jobs.requeue(book_id, user_id) or {}, manual=True)
         if job:
-            background_tasks.add_task(book_ingestor.run_job, job)
+            background_tasks.add_task(ingestion_worker.run, job)
     return {"page": body.page, "words": len(cleaned["words"]), "dropped": cleaned["dropped"],
             "done": len(done), "scanned": len(scanned), "reingest": reingest}
 

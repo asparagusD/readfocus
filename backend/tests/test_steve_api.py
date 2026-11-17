@@ -342,3 +342,13 @@ def test_a_badge_failure_never_fails_the_answer(env, monkeypatch, caplog):
 def test_an_answer_that_failed_mid_stream_asks_for_no_badge(env, badge_calls):
     env.gemini.fail_after = 1
     assert events(ask(env))[-1][0] == "error" and badge_calls == []
+
+
+def test_steve_waits_while_the_book_is_processed(env):
+    """C26.3: a book opened before it is processed has no text for Steve; nothing is sent."""
+    env.db.tables["books"][0]["status"] = "processing"
+    response = ask(env)
+    assert response.status_code == 409 and response.json()["detail"]["code"] == "preparing"
+    assert "in a moment" in response.json()["detail"]["message"] and env.gemini.calls == []
+    env.db.tables["books"][0]["status"] = "ready"
+    assert ask(env).status_code == 200

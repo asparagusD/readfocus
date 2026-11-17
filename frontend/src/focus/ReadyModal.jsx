@@ -8,6 +8,7 @@ const WORDS = ['no', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eig
 const MINUTES_PER_QUESTION = 1.25;
 const PASS = 0.4; // FOCUS_RULES F12
 const PER_CORRECT = 20; // F11
+const RETRY_MS = 15_000; // C26.3: while the book's questions are prepared, ask again this often
 
 /**
  * "Ready for your questions?" (C23.6b, handoff screen 22): over the book once the ribbon is set. It builds the
@@ -17,13 +18,22 @@ const PER_CORRECT = 20; // F11
 export function ReadyModal({ open, sessionId, label, points, onLater, onStart }) {
   const [count, setCount] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [waiting, setWaiting] = useState(false); // C26.3: the book is still being processed; the session is kept
   useEffect(() => {
     if (!open || !sessionId) return undefined;
     let live = true;
-    fetchApi(`/focus/${sessionId}/quiz`, { method: 'POST' })
-      .then((data) => { if (live) setCount(data.count); })
-      .catch(() => { if (live) setFailed(true); });
-    return () => { live = false; };
+    let timer = null;
+    const ask = () => fetchApi(`/focus/${sessionId}/quiz`, { method: 'POST' })
+      .then((data) => { if (live) { setWaiting(false); setCount(data.count); } })
+      .catch((err) => {
+        if (!live) return;
+        if (err.status === 409 && err.detail?.code === 'preparing') {
+          setWaiting(true);
+          timer = setTimeout(ask, RETRY_MS);
+        } else setFailed(true);
+      });
+    ask();
+    return () => { live = false; clearTimeout(timer); };
   }, [open, sessionId]);
   const keep = count ? Math.ceil(count * PASS) : null;
   return (
@@ -32,7 +42,8 @@ export function ReadyModal({ open, sessionId, label, points, onLater, onStart })
         {label ? `The ribbon is on ${label}. ` : ''}
         {count
           ? `${WORDS[count] ?? count} short questions on what you read, about ${Math.max(1, Math.round(count * MINUTES_PER_QUESTION))} minutes.`
-          : failed ? 'Your questions couldn’t be gathered just now. Try again in a moment.' : 'Gathering your questions…'}
+          : waiting ? 'Your questions are still being prepared from this book. Your session is kept, and they appear here in a few minutes.'
+            : failed ? 'Your questions couldn’t be gathered just now. Try again in a moment.' : 'Gathering your questions…'}
       </p>
       {count > 0 && (
         <p className="rf-leave-text">

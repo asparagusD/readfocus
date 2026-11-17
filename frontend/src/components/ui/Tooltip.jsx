@@ -5,7 +5,7 @@ import './Tooltip.css';
 
 /**
  * Dark tooltip with a pointer, above its trigger ("4 pages left in
- * today's reading"). Opens on hover (after 200 ms) and on keyboard focus,
+ * this chapter"). Opens on hover (after 200 ms) and on keyboard focus,
  * closes on Esc, blur or leaving; it stays open while the pointer is over
  * it (WCAG 1.4.13). The trigger is described by a persistent hidden copy
  * of the text (aria-describedby); the visible bubble is aria-hidden. The

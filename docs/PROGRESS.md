@@ -5741,4 +5741,94 @@ Questions:
 | [x] C25.G fix: GET /books/{id}/regions returned id null for every region | this commit (`fix(api): return region ids from GET /books/{id}/regions`); C25.3 `66da417` | Your go-ahead, 2026-11-17 ("Yes, fix it here"). Found writing the phase-2 isolation check. `backend/routers/books.py` get_regions selects `id` as well (it returned `row.get("id")` from a select without it, so on PostgREST every id was null and `frontend/src/originalview/pdf/regions.js` `regionsOf`/`regionAt`, which keep only regions with an id, found none for the PDF block actions). `backend/tests/memory_db.py`: `project_columns` (off by default) returns only the selected columns, as PostgREST does; the offline test had passed because the fake returned whole rows. DEBUG_LOG 2026-11-17 (fixed). | `test_api_regions.py::test_region_ids_come_back_from_the_columns_the_database_returns`: failed with the old select, passes with the fix. Standard checks: see the commit. | 2026-11-17 | Not checked against the real database here (no book with regions was left after C25.3's cleanup); C25.3's live journey on production after the release will exercise it. Other handlers were not audited for the same pattern (a field read that the select leaves out). |
 | [x] C25.G audit: other handlers reading a column their select leaves out | this commit (`test(api): project selected columns in the in-memory database by default`); C25.G fix `18e241e` | Your go-ahead, 2026-11-17 ("Yes, audit here"). Dynamic: the whole backend suite run with `MemoryDb.project_columns` forced on (31 test files use MemoryDb): 2014 passed, so no handler those tests reach reads a column it did not select. Static: an AST scan of every function under `backend/` (tests excluded) with a named-column `.select(...)`, listing the `["key"]` and `.get("key")` reads not in its selects: 44 functions flagged, each read by hand; all were keys of request bodies, JSON columns (`meta`, `answers`, `anchors`, `pace_recommendation`), rows from `select("*")` (`focus.store.load_session`, `badge_award._book`) or rows passed in by a caller that selects them (`focus._book` for `quiz_me` and `body_start.for_book`, `book_ingestor.run_job` for `region_job`, `ocr.BOOK_FIELDS` for `ocr_pages`). No other bug found. `backend/tests/memory_db.py`: `project_columns` is now on by default, so a future select that leaves out a column its handler reads fails offline; `test_api_regions.py` no longer sets it. | `pytest backend/tests -q` with projection on by default: 2014 passed. Standard checks: see the commit. | 2026-11-17 | Not covered: handlers tested only with MagicMock fakes and never through MemoryDb rely on the static scan, which follows rows within a function and into the callers checked by hand above, not every call chain; `scripts/` was not audited (local tools, not the server). |
 | [x] C25.4 🚦 Gate G8: production migrations 013+ — **G8: PASS (approved 2026-11-17, backup confirmed)** | this commit (`docs(progress): record gate G8 phase-2 production migration approval`); C25.3 fixes `18e241e`, `ce97009` | No file changes but this row: G8 was a record and history fix, since 013-033 were already live on the one shared project (`lvfhuszvuiowyeizstru`). 1. Read-only: `supabase migration list --linked` showed remote 001-015 only (016-033 applied by hand), so a plain `db push` would have re-run them (018's `CREATE POLICY` and 019's `ADD CONSTRAINT` are not idempotent). Drift check (catalog selects through `supabase db query --linked`, scratch script `g8_drift.py`, not committed): 174 columns (type, nullability, default), 59 constraints, 15 indexes, RLS on 17 tables, 15 policies (incl. storage "Readers access their own note files"), 3 triggers, 5 functions (body md5 equal to the files, `search_path=''`, quota functions executable by `service_role` only), the `notes` bucket (private, 262144 bytes, webp/png): **656 of 656 match, 0 drift**. 2. Your approval and your confirmation of a fresh dump (2026-11-17, "Approved, dump done"). 3. `npx supabase migration repair --status applied 016 … 033 --linked` (writes `supabase_migrations.schema_migrations` only). 4. Backfills, dry run then write on your "Yes, run all three": `backfill_book_files.py` 2 books (`6b09b234`, `f450cf54` "Sample PDF Test", no stored file) got `file_format=pdf` only, every other book already hashed; `backfill_body_start.py` dry run 7 of 8 found (outline 3, heading 1, prose 3), all 7 already stored by readers' first requests and equal to the dry run, the write handled the one pending book (`f450cf54`), nothing found, stays null; `backfill_prose.py` all 7 server-kept books already had region maps (no regions job run), 0 chunks changed on the 6 PDFs, Walden (EPUB) 3 of 3 chunks' prose stored and embedded again, 0 re-questioned. | `migration list --linked`: 001-033 local and remote. `db push --linked --dry-run`: "Remote database is up to date". Production `GET /health` 200 (32.5 s cold start). A `books` select after the writes: the values above. `backfill_prose.py --dry-run --book-id e607231c…` after the write: would store 0 of 3 (idempotent). Standard checks: see the commit. | 2026-11-17 | Your steps, not verified here: the six Render variables (`GEMINI_API_KEY`, `GEMINI_MODEL_CHAT`, `GEMINI_MODEL_VISION`, `STEVE_DAILY_LIMIT_PER_USER`, `KEY_ENCRYPTION_SECRET`, `CRON_SECRET`) and the GitHub secrets `BACKEND_URL` and `CRON_SECRET` for `league-rollover.yml`; the rollover's first manual run waits for the release (C25.5), since production still serves the old code. Not run: `backfill_block_paths.py` (the C23.G EPUB path fix; not in the G8 list, its dry run was refused by the permission check). Found: book `6b09b234` "Sample PDF Test" has status `processing` with no stored file, a stale row from before this gate (left as is). |
-| [ ] C25.5 final acceptance checklist, report, release on "release" | | | | | |
+| [x] C25.5 phase-2 acceptance checklist (release waits for your "release") | this commit (`docs(progress): record phase-2 acceptance checklist`); G8 `fc465df` | The checklist below: 8 areas, 44 items, each Pass, Partial or Not verified with its evidence (the gate rows, live runs and test files already recorded above, read again for this table; nothing in it is new code). Totals: 35 Pass, 8 Partial, 1 Not verified, 0 Fail. | Standard checks re-run for this commit (see the commit); every evidence line names the run it comes from. Spot-checked in the code: `Privacy.jsx:14` `PRIVACY_CONTACT = ''`; `retriever.py` ranks and returns `chunks.content`; no payment code (`stripe|paypal|billing|payment` in backend/ and frontend/src: 0 files). | 2026-11-17 | Before the release: the privacy contact (empty, your choice at C25.1). Production still serves pre-phase-2 code, so no item here was checked on the deployed site; the smoke checks after the release are the first. |
+
+### C25.5 phase-2 acceptance checklist (2026-11-17)
+
+"Live" means a local backend against the shared Supabase project (production data, pre-release code);
+"mocked" means the offline suites (pytest offline, e2e with every API call mocked). Gate names are the
+repo's: G5 = C18.G, G6 = C19.G, G7 = C20.G (Steve) and C23.G (focus), G8 = C25.4.
+
+**1. Original view**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| PDF and EPUB as published, book view retired | Pass (sampled) | G5 PASS (`30b4bc8`): 10 pages equal to PDFium, 5 EPUBs walked; C25.3 live: ILA pp. 9-10 equal to PDFium, Alice 45 of 45 images; C17.5d retired the book reader | Sampled books, not every book |
+| Converted Markdown and notebooks keep images and plots | Pass | G6 PASS (`155b896`): epubcheck 0/0/0, `gate-g6.spec.js` Markdown 2/2 images, notebook 3/3 with plots | LaTeX sources skipped (C19.3); pandas HTML tables as text |
+| Zero garbled text in quizzes and grading | Pass | G5: 0 flagged across 5 books in prose and every question's prompt, answer, evidence and options | SICP loses about 1 sentence in 5 to `[Unreadable text]` (no ligature repair map) |
+| Zero garbled text in search | Not verified | Not part of G5; `backend/services/retriever.py` ranks on `chunks.content`, which keeps the originals' artefacts; Steve's passages use `prose` | Search on `prose` is deferred work |
+| Code copies with correct indentation | Pass (mocked) | C18.4 rebuilds SICP pp. 50, 76, 121 exactly; C20.8b e2e "code exact" | Proportional-font code not detected; a block split by a page break is two blocks |
+| Equations explain and copy as LaTeX | Partial | C20.8b and C20.8c e2e (Steve mocked); EPUB copy is local; migration 025 live | PDF copy goes through Gemini and was never run live |
+| Figures explain | Partial | C20.8b e2e (mocked) | Not run live; inline-SVG EPUB figures have no Explain |
+| Scanned pages become selectable | Pass (desktop) | G6 `ocr.spec.js` with real tesseract.js: 185 words, a text layer, a word card; 1.2 s first page, 0.8 s after | Not tried on a phone; the tab must stay open until every page is read |
+
+**2. Steve**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| Consent before first use | Pass | G7 (C20.G): 0 DNS lookups and 0 Google requests before consent; `test_steve_api.py` consent test, `steve-panel.spec.js` | — |
+| Can be turned off | Pass | G7: off gives 403 `disabled` with 0 lookups, composer disabled; C21.4 hides Explain while off | Entry points show until the panel loads settings (the server refuses); no per-book switch |
+| Whole-book awareness: session text + retrieval | Partial | C20.4 context builder; C20.9 live 15/15 | The live retrieval items used a focus phrase in place of the real retriever |
+| Valid citations | Pass | C20.9 live (`gemini-3.5-flash-lite`): 15/15 valid, expected page 12/12 | A citation inside `$$…$$` is not linked |
+| Honest "not covered" | Pass | C20.9 live 3/3 (bar 2/3) | Three items |
+| Quota resting state | Pass (mocked 429) | G7: one SDK call for two asks; "resting until 01:17 PM" and "until tomorrow" with the book still turning; `test_steve_service.py` | Breaker and cache are in process memory; no global daily budget |
+| Own-key option | Pass (mocked) | C20.3, `steve-key.spec.js`, `test_steve_keys.py` | No own-key live call |
+| Keys never exposed | Pass | G7: key in no response, log line or stored row; secrets in 0 of 121 bundle files; `tools/check_gemini_sdk.py` (C25.2): only `provider.py` imports the SDK | — |
+
+**3. Annotations**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| 5 colours + underline in PDFs and EPUBs | Pass | C21.2 `annotations-toolbar.spec.js` 9 (mocked); migration 026's honey, sage, sky, rose, lilac; C25.3 live highlight | Real touch selection not tested |
+| Survive resize, zoom and font size | Pass (mocked) | C21.3 `annotations-render` 5, C21.5 `annotations` 4: zoom, resize, Larger text, reload | No orphan re-find (ANCHORS A5); `annotations-render` PDF Lamplight flaky (DEBUG_LOG) |
+| Ask Steve on hover with lookup off | Pass | C21.4 `annotations-hover.spec.js` 10; C25.3 live Ask Steve from a highlight (Steve mocked) | — |
+
+**4. Notes**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| Text + drawings | Pass | C22.2b `notes-editor` 8, C22.3 `notes-drawing`; C25.3 live drawing note saved, picture uploaded | — |
+| Every note anchored | Pass | C22.4 `notes-anchor` 8 | Steve's "Save to notes" anchors at the reader's place, not the passage |
+| Two-way sync | Pass | C22.5 `notes-sync` 6 (mocked); C25.3 live "the notepad followed" | Swipe page turns not driven |
+| Offline edits sync | Partial | `notes-editor` and `notes.spec` offline e2e, `autosave.test.js` 8 | Mocked only (Playwright offline + IndexedDB); phone notes-editor e2e flaky (DEBUG_LOG) |
+
+**5. Focus mode**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| Locked before chapter 1 | Pass | C23.1 body start, `focus.spec.js` "locked on the preface"; body starts on all 7 production books with one found (G8) | Digital Design detected one page late |
+| Server-scored | Pass | G7 (C23.G) PASS after one FAIL (`cd97676`): 27 scenarios, 103 backend + 25 e2e; live walk, stored row equal to the engine re-score (165) | — |
+| Hidden-tab pause | Pass | Scenario "hidden 20 min"; e2e nothing sent while hidden | — |
+| 30-minute page rule | Pass | Scenarios: 29-min page 290 points, 45-min stall 900 s voided | — |
+| 3-hour cap | Pass | Scenarios 3 h and 3 h 20: 1800 | Capped quiz range trusts the client's position (C23 close b) |
+| Bookmark quiz with scaled count | Pass | clamp(round(words/400), 3, 15); C25.3 live: 3 questions for 503 words | "One short questions" copy bug from the G7 walk, still open |
+| Under 40% gives 0 points | Pass | Scenario 39/100 → 0; e2e 1 of 5 gives none | — |
+| Quiz me outside focus mode | Pass | C23.7b, `quiz-me` spec | No rate limit (C23 close a) |
+| Fixed timer gone | Pass | C23.7a retired the timer and its tests | — |
+
+**6. Gamification**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| XP once per session | Pass | `test_gamification_journey.py`: a retried grade writes one ledger row; `UNIQUE (source, source_id)` live (G8 drift check) | — |
+| Daily goal | Pass | Journey test, `gamification.spec.js`; C25.3 live: goal met | — |
+| Streaks with earned freezes | Pass | Journey: 7 days with a freeze, then 8; C25.3 live streak 1 | `Etc/*` zones can gain a day (C24 close b) |
+| Badges once | Partial | Primary key (user, badge) live; each badge awarded once | "Finished a book" (+200 XP) reachable by one position PUT (C24 close a) |
+| Weekly leagues roll over idempotently | Partial | Journey: a second rollover does nothing; C24.4 dry run on postgres:16 | The scheduled Action has never run in production (after the release) |
+| Leaderboard privacy and opt-out | Pass | Opt-out (G14); live isolation 35/35 (C24.7) and 98/98 (C25.3) | A display name can imitate "Reader 3f9c" |
+| No dark patterns | Pass | C24 close review; `claims.test.js` bans loss and guilt words; freezes, no guilt notifications, no fake users | — |
+
+**7. Honesty and privacy**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| Public copy matches reality | Pass | C25.1 grep and rewrite; `claims.test.js` 3, `privacy.spec.js` 7 | Goes live only with the release |
+| Privacy page live | Partial | `/privacy` built and tested (C25.1) | Not live until the release; `PRIVACY_CONTACT` empty; no self-service account deletion |
+
+**8. Deployment**
+
+| Item | Verdict | Evidence | Caveat |
+|---|---|---|---|
+| No payment method anywhere | Pass | 0 files match `stripe|paypal|billing|payment` in backend/ and frontend/src; Steve on the free tier (constraint 1) | Google project billing state is the user's to confirm |
+| Memory within budget | Partial | C25.2: SICP 451.6 MiB RSS, container 395.1 MiB at 512 MB / 0.1 CPU, accepted 2026-11-17; `sample.pdf` 372.6 | 1.6 MiB over the plan's 450 line; Render under real traffic not measured |
+| G8 PASS | Pass | C25.4 `fc465df`: drift 656/656, history 001-033, dry run empty | — |

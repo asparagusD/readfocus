@@ -25,8 +25,8 @@ for (const kind of ['pdf', 'epub']) {
       await page.keyboard.press('ArrowRight');
       const after = await settled(page, before);
       await page.waitForTimeout(1500); // the saver sends at most one place a second
-      await expect.poll(() => api.bookPosition?.anchor?.kind).toBe(kind);
-      expect(api.bookPosition.chunk_index).toBeUndefined();
+      await expect.poll(() => api.position?.anchor?.kind).toBe(kind);
+      expect(api.position.chunk_index).toBeUndefined();
       await page.reload();
       await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 15_000 });
       await expect.poll(async () => (await shown(page)).start).toBe(after.start);

@@ -5668,11 +5668,6 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:GET /auth/profile"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:GET /books/{book_id}/open"
     },
     {
@@ -5684,11 +5679,6 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "endpoint:POST /focus/quiz-me"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "endpoint:POST /sessions/start"
     },
     {
       "type": "calls_endpoint",
@@ -12053,11 +12043,6 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/annotations/useAnnotations.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/components/CalibrationFlow.jsx"
     },
     {
       "type": "imports",

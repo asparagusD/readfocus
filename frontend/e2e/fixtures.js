@@ -44,7 +44,9 @@ export const BOOKS = {
   pdf: { file: 'sample.pdf', type: 'application/pdf', today: [0, 1, 2],
     chunks: [pdfPage(1) + pdfPage(2), pdfPage(3) + pdfPage(4), pdfPage(5), pdfPage(6)] },
   // Today: chapters 1 and 2 (after the cover); the next chunk is chapter 3.
-  epub: { file: 'reflow.epub', type: 'application/epub+zip', today: [0, 1], chunks: [epubChapter(1), epubChapter(2), epubChapter(3)] },
+  // C26.5: the reader comes back to their place at chapter 1 (a new book would open at the cover, its first page).
+  epub: { file: 'reflow.epub', type: 'application/epub+zip', today: [0, 1], chunks: [epubChapter(1), epubChapter(2), epubChapter(3)],
+    place: { anchor: { kind: 'epub', cfi: 'epubcfi(/6/4!/4/2/1:0)', text: '' } } },
 };
 const FILES = new URL('./fixtures/books/', import.meta.url);
 const chunk = (book, chunk_index) => ({ id: `chunk-${chunk_index}`, chunk_index, content: BOOKS[book].chunks[chunk_index], blocks: null });
@@ -97,13 +99,13 @@ export async function mockBackend(page, api, book) {
     if (path === `/books/${BOOK}/open`) { // C26.4: a test sets api.processing to open a book still being processed
       api.opens += 1;
       return json(route, { book_id: BOOK, status: api.processing ? 'processing' : 'ready', pages_only: Boolean(BOOKS[book].pagesOnly),
-        scanned_pages: BOOKS[book].scanned ?? [], position: api.bookPosition,
+        scanned_pages: BOOKS[book].scanned ?? [], position: api.position,
         book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' } });
     }
-    if (path === `/books/${BOOK}/position` && request.method() === 'PUT') { // C26.4: the book's place, no session
-      api.bookPosition = JSON.parse(request.postData() || 'null');
+    if (path === `/books/${BOOK}/position` && request.method() === 'PUT') { // C26.5: the book's place, every turn
+      api.position = JSON.parse(request.postData() || 'null');
       api.saves += 1;
-      return json(route, { position: api.bookPosition });
+      return json(route, { position: api.position });
     }
     if (path === '/sessions/e2e-session/position') {
       api.position = JSON.parse(request.postData() || 'null');
@@ -396,7 +398,7 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: null, saves: 0, starts: 0, opens: 0, processing: null, bookPosition: null, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
+    const api = { position: structuredClone(BOOKS[book].place ?? null), saves: 0, starts: 0, opens: 0, processing: null, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],

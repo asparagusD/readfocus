@@ -421,7 +421,7 @@ export function Reader({
         <button type="button" className="rf-ov-turn" onClick={() => move(-1)} disabled={!place || (place.atStart && !ending)}>
           <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" /><span>Previous</span>
         </button>
-        <p className="rf-ov-folio">{ending ? "End of today's reading"
+        <p className="rf-ov-folio">{ending ? 'End of the book'
           : place && !opening ? [place.folio, place.entry, status].filter(Boolean).join(' · ') : failure ? 'Not opened' : 'Opening the book…'}</p>
         <button type="button" className="rf-ov-turn" onClick={() => move(1)} disabled={!place || (place.atEnd && (ending || !closing || readOn))}>
           <span>Next</span><ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
@@ -451,7 +451,7 @@ export function Reader({
           placeOf={(doc, el, text) => book.current?.elementPlace?.(doc, el, text) ?? null}
           paused={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
       )}
-      <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{ending ? "End of today's reading" : opening ? '' : place?.folio ?? ''}</p>
+      <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{ending ? 'End of the book' : opening ? '' : place?.folio ?? ''}</p>
     </section>
   );
 }

@@ -4,7 +4,6 @@ import { ArrowLeft } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
-import { CalibrationFlow } from '../components/CalibrationFlow';
 import { Reader } from '../originalview/Reader';
 import { ReaderControls } from '../originalview/ReaderControls';
 import { useLamplight } from '../originalview/useLamplight';
@@ -58,12 +57,6 @@ function useStored(key, fallback) {
   return [value, set];
 }
 
-/** C23.7: the planner's next step in words; a re-read or review is "revisit §3.2". */
-function suggestion(mode, title) {
-  const where = title || 'these pages';
-  return `${mode === 're_read' || mode === 'review' ? 'revisit ' : ''}${where}.`;
-}
-
 /**
  * The reading page (C12.5a; the original view since C17.5): the whole book as
  * published, PDF or EPUB, opened at today's reading under a toolbar that fades
@@ -78,8 +71,6 @@ export function ReadingSession() {
   const { bookId } = useParams();
   const navigate = useNavigate();
 
-  const [profileChecked, setProfileChecked] = useState(false);
-  const [isCalibrated, setIsCalibrated] = useState(true);
   const [loading, setLoading] = useState(true);
   const [sessionData, setSessionData] = useState(null);
   useDocumentTitle(sessionData?.book?.title ? `${sessionData.book.title} · Reading` : 'Reading');
@@ -171,9 +162,7 @@ export function ReadingSession() {
   const [place, setPlace] = useState(null);
   const ready = useRef(null); // the bounds once the reader stands at its first place; moves before that are not saved
   const todayAnchor = useRef(null); // the last place inside today's reading, to come back to
-  const { save, saveNow } = usePlaceSaver(sessionData?.session_id ? `/sessions/${sessionData.session_id}/position`
-    : processing ? `/books/${bookId}/position` : null);
-  const todayChunks = useMemo(() => new Set(sessionData?.chunk_indices ?? []), [sessionData]);
+  const { save, saveNow } = usePlaceSaver(sessionData ? `/books/${bookId}/position` : null); // C26.5: every turn, on the book
   const lastChunk = sessionData?.chunk_indices?.length ? Math.max(...sessionData.chunk_indices) : null;
 
   // Once the book is open: find today's chunks and the next one, then stand at the saved place or today's start.
@@ -181,7 +170,7 @@ export function ReadingSession() {
     const book = reader.current;
     if (!book || !sessionData || ready.current) return;
     const saved = sessionData.position;
-    const resume = saved?.anchor?.kind === kind && (processing || todayChunks.has(saved.chunk_index)) ? saved.anchor : null;
+    const resume = saved?.anchor?.kind === kind ? saved.anchor : null; // C26.5: the last place; a new book's first page
     let from = resume?.page ?? 1;
     const starts = [];
     for (const chunk of [...(sessionData.chunks ?? [])].sort((a, b) => a.chunk_index - b.chunk_index)) {
@@ -197,7 +186,7 @@ export function ReadingSession() {
     const found = { start, end, starts };
     ready.current = found;
     setBounds(found);
-  }, [sessionData, kind, todayChunks, lastChunk, bookId, processing]);
+  }, [sessionData, kind, lastChunk, bookId]);
 
   const outside = beyond(place, bounds ?? {});
   const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
@@ -420,89 +409,39 @@ export function ReadingSession() {
     setSwitched({ userId: user?.id, on: !hoverLookup });
   };
 
-  // 1. Check profile calibration
+  // C26.5: the book opens at the reader's place (GET /books/{id}/open): no session, no plan, no pace check.
   useEffect(() => {
-    async function checkProfile() {
+    async function openBook() {
       try {
-        const profile = await fetchApi('/auth/profile');
-        if (!profile.is_calibrated) setIsCalibrated(false);
-        setProfileChecked(true);
-      } catch (err) {
-        console.error('Failed to check profile', err);
-        // Fallback to calibrated to prevent blocking the user on error
-        setIsCalibrated(true);
-        setProfileChecked(true);
-      }
-    }
-    checkProfile();
-  }, []);
-
-  // 2. Start the session (only after calibration is confirmed)
-  useEffect(() => {
-    if (!profileChecked || !isCalibrated) return;
-    async function startSession() {
-      try {
-        // C26.3: a book still being processed opens at once, with no session (a failed look falls back to a session).
-        const early = await fetchApi(`/books/${bookId}/open`).catch(() => null);
-        if (early?.status === 'processing' && !early.pages_only) {
-          setSessionData({ ...early, processing: true, session_id: null, chunk_indices: [], chunks: [], reason: '' });
-          setLoading(false);
-          return;
-        }
-        const data = await fetchApi('/sessions/start', { method: 'POST', body: JSON.stringify({ book_id: bookId }) });
-        setSessionData(data);
+        const opened = await fetchApi(`/books/${bookId}/open`);
+        setSessionData({ ...opened, processing: opened.status === 'processing' && !opened.pages_only,
+          session_id: null, chunk_indices: [], chunks: [] });
         setLoading(false);
       } catch (err) {
-        toast({ kind: 'warning', message: `Today's reading couldn't be prepared: ${err.message}` });
+        toast({ kind: 'warning', message: `This book couldn't be opened: ${err.message}` });
         navigate('/');
       }
     }
-    startSession();
-  }, [bookId, navigate, profileChecked, isCalibrated, toast]);
+    openBook();
+  }, [bookId, navigate, toast]);
 
-  // C23.7: the planner's choice as a gentle note over the first page of today's reading ("Suggested next:
-  // revisit §3.2"), named by the first contents entry inside it; no minutes, no clock.
-  const suggested = entries.find((e) => e.today)?.title || sessionData?.chapter_before || '';
-  const note = useMemo(() => sessionData && !pagesOnly && !processing && (
+  const note = null; // C26.5: no suggested reading (its code goes in C26.5b)
+  // The closing page at the end of the book; it mounts only when shown, so its lamp's one glow pulse lands then.
+  const closing = (
     <>
-      <ReadingLamp className="rf-note-lamp" />
-      <p>
-        <strong>Suggested next: {suggestion(sessionData.mode, suggested)}</strong>
-        {sessionData.reason ? ` ${sessionData.reason}` : ''}
+      <ReadingLamp className="rf-end-lamp" />
+      <h2 className="rf-end-title">That's the end of the book.</h2>
+      <p className="rf-end-text">
+        {pagesOnly ? 'Its quizzes are made once every page has been read.' : 'Your place is kept.'}
       </p>
     </>
-  ), [sessionData, pagesOnly, processing, suggested]);
-  // The closing page mounts only when it is shown, so its lamp's one glow pulse (moment 3) lands then.
-  const closing = pagesOnly ? (
-    <>
-      <ReadingLamp className="rf-end-lamp" />
-      <h2 className="rf-end-title">That's the end of the book.</h2>
-      <p className="rf-end-text">Your first session starts once every page has been read.</p>
-    </>
-  ) : processing ? (
-    <>
-      <ReadingLamp className="rf-end-lamp" />
-      <h2 className="rf-end-title">That's the end of the book.</h2>
-      <p className="rf-end-text">Your place is kept.</p>
-    </>
-  ) : (
-    <>
-      <ReadingLamp className="rf-end-lamp" />
-      <h2 className="rf-end-title">That's today's suggested reading.</h2>
-      <p className="rf-end-text">Read on as far as you like; your place is kept.</p>
-    </>
   );
 
-  // One quiet loading state while the profile and then the session load (C13.8b: the profile check showed nothing).
   const preparing = (
     <div className="rf-reading-loading" role="status">
-      <span className="rf-reading-loading-text">Preparing your session…</span>
+      <span className="rf-reading-loading-text">Opening your book…</span>
     </div>
   );
-
-  if (!profileChecked) return preparing;
-
-  if (!isCalibrated) return <CalibrationFlow onComplete={() => setIsCalibrated(true)} />;
 
   if (loading) return preparing;
 
@@ -563,7 +502,7 @@ export function ReadingSession() {
           {pagesOnly ? (
             <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Pages read">
               <span className="rf-session-time" role="status">
-                {preparingFirst ? 'Preparing your first session…' : `Reading this scan: ${readCount} of ${scannedCount} pages`}
+                {preparingFirst ? 'Preparing quizzes…' : `Reading this scan: ${readCount} of ${scannedCount} pages`}
               </span>
             </div>
           ) : null}

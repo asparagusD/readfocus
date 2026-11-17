@@ -1,6 +1,7 @@
-// The reading page's polish (C13.4; on the original view since C17.5), on the real /read page with the
-// API mocked: the first-page "Suggested next" note, the closing page with its lamp, no fixed timer (C23.7),
-// and the lamp under reduced motion. The note and the closing page run on a PDF and an EPUB.
+// The reading page's polish (C13.4; on the original view since C17.5; C26.5: the book opens at the reader's
+// place with no suggested reading), on the real /read page with the API mocked: no note over the first page,
+// the closing page at the end of the book with its lamp, no fixed timer (C23.7), and the lamp under reduced
+// motion. The closing page runs on a PDF and an EPUB.
 import { test, expect, book, openReader, shown, spoken } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
@@ -9,27 +10,21 @@ for (const kind of ['pdf', 'epub']) {
   test.describe(kind, () => {
     test.use({ book: kind });
 
-    test("the first page of today's reading carries the note with a small lamp, never inside the book", async ({ page }) => {
+    test('the book opens with no suggested-reading note', async ({ page }) => {
       await openReader(page);
-      const note = page.locator('.rf-ov-note .rf-note');
-      await expect(note).toContainText('Suggested next: these pages. A steady pace for this book.');
-      await expect(note).not.toContainText('minutes');
-      await expect(note.locator('.rf-illustration')).toHaveAttribute('aria-hidden', 'true');
-      const box = await note.locator('.rf-illustration').boundingBox();
-      expect(Math.round(box.width)).toBe(40);
+      await expect(page.locator('.rf-ov-note .rf-note')).toHaveCount(0);
+      await expect(page.getByText(/Suggested next/)).toHaveCount(0);
       if (shots) await page.screenshot({ path: `${shots}/reading-first-${kind}-1440.png` });
-      await page.getByRole('button', { name: 'Hide this note' }).click();
-      await expect(note).toHaveCount(0);
     });
 
     test('the last page: the lamp pulses once, and there is no test to start (C23.7)', async ({ page }) => {
       await openReader(page);
       await book(page).focus();
       await page.keyboard.press('End');
-      await expect(spoken(page)).toHaveText("End of today's reading");
+      await expect(spoken(page)).toHaveText('End of the book');
       const end = page.locator('.rf-end');
-      await expect(end.getByRole('heading', { name: "That's today's suggested reading." })).toBeVisible();
-      await expect(end).toContainText('Read on as far as you like; your place is kept.');
+      await expect(end.getByRole('heading', { name: "That's the end of the book." })).toBeVisible();
+      await expect(end).toContainText('Your place is kept.');
       const glow = end.locator('[data-part="glow"]');
       await expect.poll(() => glow.evaluate((el) => {
         const s = getComputedStyle(el);
@@ -41,20 +36,20 @@ for (const kind of ['pdf', 'epub']) {
 
     test('a theme change or resize on the closing page keeps the closing page, and Home leaves it', async ({ page }) => {
       await openReader(page);
-      const first = await shown(page);
       await book(page).focus();
       await page.keyboard.press('End');
-      await expect(spoken(page)).toHaveText("End of today's reading");
+      await expect(spoken(page)).toHaveText('End of the book');
+      const last = await shown(page);
       await page.evaluate(() => { document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; });
       await page.waitForTimeout(500);
-      await expect(spoken(page)).toHaveText("End of today's reading");
+      await expect(spoken(page)).toHaveText('End of the book');
       await page.setViewportSize({ width: 1300, height: 860 });
       await page.waitForTimeout(500);
-      await expect(page.locator('.rf-end').getByRole('heading', { name: "That's today's suggested reading." })).toBeVisible();
+      await expect(page.locator('.rf-end').getByRole('heading', { name: "That's the end of the book." })).toBeVisible();
       await book(page).focus();
       await page.keyboard.press('Home');
       await expect(page.locator('.rf-end')).toHaveCount(0);
-      await expect.poll(async () => (await shown(page)).start).toBe(first.start); // back at today's start
+      await expect.poll(async () => (await shown(page)).start).not.toBe(last.start); // back towards the start
     });
   });
 }

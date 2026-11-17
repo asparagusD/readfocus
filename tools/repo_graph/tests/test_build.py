@@ -226,7 +226,7 @@ def test_real_graph_covers_routers_and_pages():
     assert expected and all(f"file:{p}" in ids for p in expected)
     assert (
         "file:frontend/src/pages/ReadingSession.jsx",
-        "endpoint:POST /sessions/start",
+        "endpoint:GET /books/{book_id}/open",  # C26.5a: the book opens at the reader's place, no session
     ) in edges(graph, "calls_endpoint")
     assert not [u for u in graph["unresolved"] if u["type"] == "calls_endpoint"]
 

@@ -54,6 +54,7 @@ MESSAGES = {
     "needs_image": "Steve needs the equation's picture to read it.",
     "book_not_found": "That book was not found.",
     "region_not_found": "That part of the page was not found.",
+    "preparing": "Steve can read this book in a moment: its pages are still being prepared.",
 }
 
 
@@ -89,6 +90,10 @@ def _check_reader(user_id: str, book_id: str) -> None:
         "status", "testing").limit(1).execute().data
     if testing:
         raise fail(409, "in_test")
+    # C26.3: a book opened before it is processed has no text for Steve yet
+    book = supabase.table("books").select("status").eq("id", book_id).eq("user_id", user_id).execute().data
+    if book and book[0].get("status") == "processing":
+        raise fail(409, "preparing")
 
 
 def _image(encoded: str | None) -> dict | None:

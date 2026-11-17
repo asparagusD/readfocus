@@ -121,14 +121,34 @@ def _keep(session_id: str, user_id: str, book_id: str, questions: list[dict], wo
             "id", c.question.id).execute()
 
 
+class Preparing(Exception):
+    """C26.3: the book's questions are still being made; no quiz is built or kept, so it can be asked later."""
+
+
+INGESTING = ("queued", "running")
+
+
+def preparing(book: dict) -> bool:
+    """True while the book is processed: its text, and so its questions, may not reach the range yet."""
+    if book.get("status") == "processing":
+        return True
+    jobs = supabase.table("processing_jobs").select("status").eq("book_id", book["id"]).eq(
+        "kind", "ingest").execute().data or []
+    return bool(jobs) and jobs[0].get("status") in INGESTING
+
+
 def build(session: dict) -> dict:
-    """The session's quiz {questions (stored form), words_in_range, count}; built once and kept."""
+    """The session's quiz {questions (stored form), words_in_range, count}; built once and kept.
+
+    C26.3: Preparing while the book is processed; the focus session keeps waiting for its quiz."""
     kept = supabase.table("sessions").select("test_questions").eq("id", session["id"]).eq(
         "user_id", session["user_id"]).execute().data
     if kept and kept[0].get("test_questions"):
         return {"questions": kept[0]["test_questions"], "words_in_range": session.get("words_in_range") or 0,
                 "count": session.get("quiz_total") or len(kept[0]["test_questions"])}
-    book = supabase.table("books").select("id, file_type, toc").eq("id", session["book_id"]).execute().data[0]
+    book = supabase.table("books").select("id, file_type, toc, status").eq("id", session["book_id"]).execute().data[0]
+    if preparing(book):
+        raise Preparing
     questions, words, indices, picked = _assemble(session["user_id"], book, session["start_anchor"],
                                                   _end_anchor(session))
     _keep(session["id"], session["user_id"], book["id"], questions, words, indices, picked, session.get("started_at"))

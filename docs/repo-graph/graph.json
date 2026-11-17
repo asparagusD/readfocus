@@ -13391,6 +13391,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/focus/quiz.py",
+      "to": "table:processing_jobs"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/focus/quiz.py",
       "to": "table:reading_progress"
     },
     {

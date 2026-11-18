@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17692,
+      "size_bytes": 17710,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -697,10 +697,10 @@
     {
       "path": "backend/routers/progress.py",
       "language": "python",
-      "lines": 191,
-      "size_bytes": 10090,
+      "lines": 213,
+      "size_bytes": 11120,
       "role": "router",
-      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to). C32.4: current_streak(user_id), the streak days the header shows (stored streak viewed on the reader's own day), shared with /dashboard."
+      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to). C32.4: current_streak(user_id), the streak days the header shows (stored streak viewed on the reader's own day), shared with /dashboard. C34.6 (issue 14): GET and PUT /me/progress read in rounds on a small thread pool (the row, badges and week; then today's XP with this week's group or the carried tier; the carried tier last only for a reader in no group this week) instead of about five queries one after another."
     },
     {
       "path": "backend/routers/reading.py",
@@ -1753,8 +1753,8 @@
     {
       "path": "backend/tests/test_progress_api.py",
       "language": "python",
-      "lines": 324,
-      "size_bytes": 16752,
+      "lines": 343,
+      "size_bytes": 17550,
       "role": "test",
       "purpose": "Pytest on the in-memory database: progress defaults (nothing written), today's XP in the reader's zone, streak and frozen days, carried tier; settings saved, partial, cleared, 26 refused bodies, ordinary names passing; the badge catalogue with mine only; league ranks, zones, pseudonyms (shown, per week), opted-out hiding both ways, no group, a due rollover on read, none when not due; sign-in required; no emails, user ids or sign-in names in any response (C24.5). C24.6c: last_week set, and null before a week closes."
     },
@@ -2241,8 +2241,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6125,
-      "size_bytes": 1099047,
+      "lines": 6126,
+      "size_bytes": 1099758,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6298,7 +6298,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 796,
-      "size_bytes": 264998,
+      "size_bytes": 265278,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

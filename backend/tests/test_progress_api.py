@@ -113,6 +113,25 @@ def test_a_missed_day_shows_frozen_and_the_tier_comes_from_this_weeks_group(clie
     assert body["tier"] == "Folio"
 
 
+def test_progress_reads_in_two_rounds_not_one_query_after_another(client, db, monkeypatch):
+    """C34.6 (issue 14): the row, badges and week at once, then today's XP with the group: two rounds, not five."""
+    import time
+
+    from backend.tests import test_league_store
+
+    slow = 0.2
+    progress_row(db)
+    wid = week_row(db, WEEK)
+    member(db, wid, ME, tier="Folio")
+    execute = test_league_store.Query.execute
+    monkeypatch.setattr(test_league_store.Query, "execute", lambda self: (time.sleep(slow), execute(self))[1])
+    started = time.perf_counter()
+    body = client.get("/me/progress").json()
+    elapsed = time.perf_counter() - started
+    assert body["tier"] == "Folio"
+    assert elapsed < 3 * slow, f"{elapsed:.2f} s: about {elapsed / slow:.0f} queries one after another"
+
+
 def test_without_a_group_this_week_the_tier_is_carried_from_the_last_closed_week(client, db):
     wid = week_row(db, LAST, status="closed")
     member(db, wid, ME, tier="Paperback")

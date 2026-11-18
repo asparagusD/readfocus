@@ -7601,6 +7601,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/reading.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
       "to": "file:backend/dependencies.py"
     },
     {
@@ -12477,6 +12482,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/bookFile.js"
     },
     {
       "type": "imports",

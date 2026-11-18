@@ -2,20 +2,17 @@
 // sends no Accept-Ranges, so PDF.js given the URL used to download the whole file before the first page. Here the
 // book's file is a generated 5 MB PDF (bigPdf.js: a few pages behind 5 MB of padding) served the way Storage does:
 // 206 for a range, no Accept-Ranges. The page shows after a small part of the file. Mocked API.
-import { test, expect, BOOK, openReader } from './fixtures.js';
+import { test, expect, openReader } from './fixtures.js';
 import { bigPdf, bigPdfLine } from './bigPdf.js';
 
 // On the mocked API's host: the app's CSP allows only it and the Supabase project.
 const STORE = 'http://localhost:8000/e2e-storage/big.pdf';
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
 
-test('a stored PDF opens after reading only a few of its bytes', async ({ page }) => {
+test('a stored PDF opens after reading only a few of its bytes', async ({ page, api }) => {
   const file = bigPdf({ pages: 6, padBytes: 5 * 1024 * 1024 });
   const served = { bytes: 0, ranges: [], whole: 0 };
-  await page.route(`http://localhost:8000/books/${BOOK}/file`, (route) => route.fulfill({
-    status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: `${STORE}?token=t`, expires_in: 300 }),
-  }));
+  api.fileUrl = `${STORE}?token=t`; // the signed URL /open (and /file) give
   await page.route(`${STORE}**`, (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });

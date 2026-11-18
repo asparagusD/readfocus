@@ -4,6 +4,7 @@ import { fetchApi } from '../lib/api';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Reader } from '../originalview/Reader';
+import { fromOpenedBook } from '../originalview/bookFile';
 import { ReaderControls } from '../originalview/ReaderControls';
 import { useLamplight } from '../originalview/useLamplight';
 import { createRegionSource } from '../originalview/pdf/regions';
@@ -401,6 +402,9 @@ export function ReadingSession() {
     openBook();
   }, [bookId, navigate, toast]);
 
+  // C34.3: the file's first read uses the signed URL /open already gave; renewals and retries ask /file.
+  const loadFile = useMemo(() => fromOpenedBook(sessionData?.file), [sessionData?.file]);
+
   // The closing page at the end of the book; it mounts only when shown, so its lamp's one glow pulse lands then.
   const closing = (
     <>
@@ -492,6 +496,7 @@ export function ReadingSession() {
           ref={reader}
           kind={kind}
           bookId={bookId}
+          load={loadFile}
           title={bookTitle}
           zoom={zoom}
           settings={settings}

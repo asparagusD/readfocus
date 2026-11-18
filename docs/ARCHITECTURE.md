@@ -174,7 +174,7 @@ Routing (`backend/agents/graph.py`):
 | `POST /books/{id}/ocr` | one scanned PDF page's words from tesseract.js in the browser, cleaned (`services/ocr_pages.py`) into `page_ocr`; a fully read scanned book is ingested again from that text |
 | `POST /steve/ask` | consent, off switch, open test or quiz (409), cache, breaker, daily limit, then the context builder and one Gemini call, streamed; see [Steve](#steve) |
 | `POST /focus/start`, `/focus/{id}/event`, `/end`, `/quiz/answers` | see [Focus mode](#focus-mode); a passed quiz awards XP and badges ([XP](#xp-streaks-badges-and-leagues)) |
-| `GET /books/{id}/open` | the book (title, author, contents, format, storage mode), its status, the pages-only flag of a scanned book with no text yet, and the saved place; makes the reader's `reading_progress` row on a first open (C26.4). No session, no plan |
+| `GET /books/{id}/open` | the book (title, author, contents, format, storage mode), its status, the pages-only flag of a scanned book with no text yet, the saved place, and (C34.3) the original file's signed URL, or null for a device-only book; makes the reader's `reading_progress` row on a first open (C26.4). No session, no plan |
 | `PUT /books/{id}/position` | the reader's place, an anchor in the book's own format (its chunk when known), on every page turn, into `reading_progress.position`; asks for the Finished a book badge (C26.4) |
 | `POST /focus/quiz-me` | a quiz on this chapter or since the last quiz, kept on a `sessions` row and graded by submit-answers with no points (C23.7b) |
 | `POST /sessions/{id}/finish-reading` | (sessions made before C26) the public test; runs `finish_reading` (test generator) inline if the background run has not stored it yet; the first stored test wins |

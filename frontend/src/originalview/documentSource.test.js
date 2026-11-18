@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bookSource } from './documentSource.js';
+import { bookSource, openedFirst } from './documentSource.js';
 
 const file = new Blob(['%PDF-1.7 device copy']);
 
@@ -31,3 +31,22 @@ test('a device-only book with no copy here says so', async () => {
     /only on the device/,
   );
 });
+
+test('the URL /open gave is used for the first read; a renewal asks the server (C34.3)', async () => {
+  const asked = [];
+  const fetchFile = openedFirst({ url: 'https://storage.test/sign/b1?from=open', expires_in: 300 },
+    async (id) => { asked.push(id); return { url: `https://storage.test/sign/${id}?from=file` }; });
+  const source = await bookSource('b1', { loadDeviceFile: async () => null, fetchFile });
+  assert.equal(source.url, 'https://storage.test/sign/b1?from=open');
+  assert.deepEqual(asked, []);
+  assert.equal(await source.renew(), 'https://storage.test/sign/b1?from=file');
+  assert.deepEqual(asked, ['b1']);
+});
+
+test('with no URL from /open (an older server, a device-only book) the server is asked at once', async () => {
+  const asked = [];
+  const fetchFile = openedFirst(null, async (id) => { asked.push(id); return { url: 'https://storage.test/sign/b1' }; });
+  assert.deepEqual(await fetchFile('b1'), { url: 'https://storage.test/sign/b1' });
+  assert.deepEqual(asked, ['b1']);
+});
+

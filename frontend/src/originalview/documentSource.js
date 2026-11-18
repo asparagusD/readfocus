@@ -11,3 +11,16 @@ export async function bookSource(bookId, { loadDeviceFile, fetchFile }) {
   const { url } = await fetchFile(bookId);
   return { url, renew: () => fetchFile(bookId).then((fresh) => fresh.url) };
 }
+
+/**
+ * C34.3: a fetchFile that gives `opened` (the { url } GET /books/{id}/open already signed) the first
+ * time and asks `fetchFile` after that: for a renewal, a retry or a book that came with none.
+ */
+export function openedFirst(opened, fetchFile) {
+  let given = opened?.url ? opened : null;
+  return (bookId) => {
+    const first = given;
+    given = null;
+    return first ? Promise.resolve(first) : fetchFile(bookId);
+  };
+}

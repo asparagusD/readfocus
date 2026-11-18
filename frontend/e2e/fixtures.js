@@ -86,6 +86,8 @@ export async function mockBackend(page, api, book) {
       api.opens += 1;
       return json(route, { book_id: BOOK, status: api.processing ? 'processing' : 'ready', pages_only: Boolean(BOOKS[book].pagesOnly),
         scanned_pages: BOOKS[book].scanned ?? [], position: api.position,
+        // C34.3: the signed file URL, as the server gives it; api.openFile = false acts as an older server without it
+        file: api.openFile === false ? null : { url: api.fileUrl ?? `${API}/e2e-files/${file}`, expires_in: 300, sha256: null },
         book: { title: 'Walden', author: 'Henry David Thoreau', toc: api.toc ?? [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' } });
     }
     if (path === `/books/${BOOK}/position` && request.method() === 'PUT') { // C26.5: the book's place, every turn
@@ -98,7 +100,10 @@ export async function mockBackend(page, api, book) {
       const start = Number(url.searchParams.get('start'));
       return json(route, { chunks: start < chunks.length ? [chunk(book, start)] : [] });
     }
-    if (path === `/books/${BOOK}/file`) return json(route, { url: `${API}/e2e-files/${file}` });
+    if (path === `/books/${BOOK}/file`) { // a renewal, or a server whose /open gives no URL (C34.3)
+      api.fileAsks += 1;
+      return json(route, { url: api.fileUrl ?? `${API}/e2e-files/${file}` });
+    }
     if (path === `/e2e-files/${file}`) {
       if (route.request().method() === 'GET') api.fileLoads += 1; // C34.1: the reader's HEAD for the length is not a load
       return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': type }, body: readFileSync(BOOKS[book].source ?? new URL(file, FILES)) });
@@ -379,7 +384,7 @@ export const test = base.extend({
   book: ['pdf', { option: true }],
   // auto: every test gets the mocks and the session, whether or not it reads `api`.
   api: [async ({ page, signedIn, book }, use, info) => {
-    const api = { position: structuredClone(BOOKS[book].place ?? null), saves: 0, starts: 0, opens: 0, processing: null, lookups: [], unmocked: [], fileLoads: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
+    const api = { position: structuredClone(BOOKS[book].place ?? null), saves: 0, starts: 0, opens: 0, processing: null, lookups: [], unmocked: [], fileLoads: 0, fileAsks: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
       regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],

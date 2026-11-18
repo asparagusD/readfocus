@@ -1,6 +1,7 @@
 // C34.2 (issue 12): a PDF opens without wasted reads. Its contents come from the stored outline (GET
 // /books/{id}/open's book.toc) instead of resolving every outline entry in the browser, and the first page
-// rendered is the saved place, not page 1 followed by a jump. sample.pdf, mocked API.
+// rendered is the saved place, not page 1 followed by a jump. C34.3 (issue 13): the file's signed URL comes with
+// /open, so the reader does not ask /file for it. sample.pdf, mocked API.
 import { test, expect, openReader, shown } from './fixtures.js';
 
 test('the contents come from the stored outline when it has pages', async ({ page, api }) => {
@@ -27,4 +28,17 @@ test('a book opens at its saved page without drawing page 1 first', async ({ pag
   await expect.poll(() => shown(page)).toEqual({ start: '4', end: '5' });
   const drawn = await page.evaluate(() => [...window.__drawnPages]);
   expect(drawn).not.toContain('1');
+});
+
+test('the reader starts on the file with the URL /open gave, without asking /file', async ({ page, api }) => {
+  await openReader(page);
+  expect(api.fileLoads).toBe(1);
+  expect(api.fileAsks).toBe(0);
+});
+
+test('from a server whose /open gives no URL, the reader asks /file once', async ({ page, api }) => {
+  api.openFile = false;
+  await openReader(page);
+  expect(api.fileLoads).toBe(1);
+  expect(api.fileAsks).toBe(1);
 });

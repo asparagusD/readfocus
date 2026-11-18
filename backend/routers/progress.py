@@ -9,6 +9,7 @@ else's board; ranks keep their true numbers. GET /leagues/current first runs any
 schedule catches up on the next read (C24.4)."""
 
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from zoneinfo import available_timezones
@@ -67,17 +68,38 @@ def _tier(user_id: str, start: datetime, mine: dict | None) -> str:
     return mine["tier"] if mine else league_store.tiers([user_id], start)[user_id]
 
 
-def _view(user_id: str) -> dict:
-    prog, now = _progress(user_id), _now()
-    day = streaks.local_day(now, prog["timezone"])
-    events = supabase.table("xp_events").select("amount").eq("user_id", user_id).eq("local_day", day.isoformat()).eq(
+# C34.6 (issue 14): /me/progress's queries in three rounds instead of one after another (1.1 s on Render).
+_POOL = ThreadPoolExecutor(max_workers=3, thread_name_prefix="progress")
+
+
+def _together(*calls):
+    """Each call's result, in order, the calls run at once (the Supabase client's pool is thread-safe)."""
+    return [future.result() for future in [_POOL.submit(call) for call in calls]]
+
+
+def _focus_xp(user_id: str, day) -> list[dict]:
+    return supabase.table("xp_events").select("amount").eq("user_id", user_id).eq("local_day", day.isoformat()).eq(
         "source", "focus").execute().data
+
+
+def _badges_held(user_id: str) -> list[dict]:
+    return supabase.table("user_badges").select("badge_id, awarded_at").eq("user_id", user_id).execute().data
+
+
+def _view(user_id: str) -> dict:
+    now = _now()
+    start = leagues.week_start(now)
+    # Round 1: the row, the badges and this week. Round 2: today's XP (the row gives the reader's day) with this
+    # week's group, or the carried tier when there is no week. Round 3, rarely: the carried tier for a reader in no
+    # group this week.
+    prog, held, week = _together(lambda: _progress(user_id), lambda: _badges_held(user_id), lambda: _week(start))
+    day = streaks.local_day(now, prog["timezone"])
+    events, mine = _together(lambda: _focus_xp(user_id, day),
+                             lambda: _membership(week, user_id) if week else {"tier": _tier(user_id, start, None)})
     today_xp = sum(int(e["amount"]) for e in events)
     last = prog["last_goal_day"]
     current = streaks.view(streaks.Streak(int(prog["streak_days"]), int(prog["streak_freezes"]),
                                           datetime.fromisoformat(last).date() if last else None), day)
-    start = leagues.week_start(now)
-    held = supabase.table("user_badges").select("badge_id, awarded_at").eq("user_id", user_id).execute().data
     known = {b.id for b in CATALOGUE}
     return {
         "total_xp": int(prog["total_xp"]), "daily_goal": int(prog["daily_goal"]), "timezone": prog["timezone"],
@@ -86,7 +108,7 @@ def _view(user_id: str) -> dict:
                   "met": streaks.goal_met(today_xp, int(prog["daily_goal"]))},
         "streak": {"days": current.days, "freezes": current.freezes,
                    "frozen_days": [d.isoformat() for d in current.frozen_days]},
-        "tier": _tier(user_id, start, _membership(_week(start), user_id)),
+        "tier": _tier(user_id, start, mine),
         "badges": [{"id": b["badge_id"], "name": by_id(b["badge_id"]).name, "awarded_at": b["awarded_at"]}
                    for b in sorted(held, key=lambda b: (b["awarded_at"], b["badge_id"])) if b["badge_id"] in known],
     }

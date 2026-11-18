@@ -18,7 +18,7 @@ env:
   # Lint baselines from CLAUDE.md ("Standard checks"). Existing code still has
   # errors, so CI fails only when a count goes UP. Lower these numbers in the
   # same commit that lowers the CLAUDE.md table.
-  RUFF_BASELINE: 25
+  RUFF_BASELINE: 24
   ESLINT_ERROR_BASELINE: 3
   ESLINT_WARNING_BASELINE: 0
 

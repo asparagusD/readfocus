@@ -14,6 +14,9 @@ python-dotenv==1.2.4
 
 # Data
 supabase==2.34.1
+# Access tokens checked locally (C34.4): already installed with supabase (supabase-auth
+# needs it), pinned here at that version; ES256 uses cryptography, pinned below.
+PyJWT==2.15.1
 
 # Book parsing
 pypdf==7.0.0

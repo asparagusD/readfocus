@@ -71,3 +71,32 @@ def test_empty_user_response_gives_401(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         call(VALID_JWT)
     assert exc.value.status_code == 401
+
+
+# C34.4b (issue 13): a token is checked here first; Supabase Auth only when it cannot be checked here.
+
+@pytest.fixture
+def local_keys(monkeypatch):
+    from backend import auth_tokens
+    from backend.tests import test_auth_tokens as signed
+
+    monkeypatch.setenv("SUPABASE_URL", signed.BASE)
+    monkeypatch.setattr(auth_tokens, "KEYS", auth_tokens.KeySet(fetch=lambda: {"key-1": signed.PUBLIC}))
+    return signed
+
+
+def test_a_token_checked_here_gives_its_user_without_asking_supabase(fake_auth, local_keys):
+    assert call(local_keys.token()) == local_keys.USER
+    assert fake_auth.seen == []
+
+
+def test_a_token_that_fails_the_check_here_is_401_without_asking_supabase(fake_auth, local_keys):
+    with pytest.raises(HTTPException) as exc:
+        call(local_keys.token(exp=1))
+    assert exc.value.status_code == 401
+    assert fake_auth.seen == []
+
+
+def test_a_token_that_cannot_be_checked_here_is_asked_of_supabase(fake_auth, local_keys):
+    assert call(VALID_JWT) == USER_ID  # not a JWT: Supabase decides
+    assert fake_auth.seen == [VALID_JWT]

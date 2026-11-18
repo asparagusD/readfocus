@@ -64,6 +64,10 @@ export function Privacy() {
             It is kept in our database and file storage at Supabase, on servers in Mumbai, and handled by our backend on
             Render. There are no ads, no analytics or tracking scripts, and we do not sell or share your data.
           </p>
+          <p>
+            When you open an EPUB, a copy of its file is also kept in this browser, so it opens again without
+            downloading. Removing the book or signing out deletes that copy.
+          </p>
         </section>
 
         <section aria-labelledby="privacy-google">

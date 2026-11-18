@@ -44,6 +44,7 @@ def test_a_first_open_makes_the_progress_row_and_has_no_place(client, db):
     assert opened.status_code == 200
     assert opened.json() == {
         "book_id": BOOK, "status": "ready", "pages_only": False, "scanned_pages": [], "position": None, "text_only": False,
+        "file": None,  # no stored file in this fixture (C34.3)
         "book": {"title": "SICP", "author": "Abelson", "toc": [{"title": "1 Building", "page": 3}], "format": "pdf",
                  "storage_mode": "cloud"}}
     [row] = db.tables["reading_progress"]
@@ -119,3 +120,32 @@ def test_both_routes_need_a_signed_in_reader(db):
     plain = TestClient(app)
     assert plain.get(f"/books/{BOOK}/open").status_code in (401, 403)
     assert plain.put(f"/books/{BOOK}/position", json={"anchor": PDF_PLACE}).status_code in (401, 403)
+
+
+def test_open_gives_the_files_signed_url_so_the_reader_need_not_ask_for_it(client, db):
+    """C34.3 (issue 13): one round trip less before the reader starts on the file."""
+    db.tables["books"][0].update(storage_path="user-1/book-1.pdf", file_sha256="ab12")
+    opened = client.get(f"/books/{BOOK}/open").json()
+    assert opened["file"] == {"url": "https://storage.test/sign/books/user-1/book-1.pdf?expires=300", "expires_in": 300,
+                              "sha256": "ab12"}
+    assert ("storage", "sign", "user-1/book-1.pdf", 300) in db.calls
+
+
+def test_a_device_only_book_opens_with_no_file_url(client, db):
+    db.tables["books"][0].update(storage_mode="device", storage_path=None)
+    opened = client.get(f"/books/{BOOK}/open")
+    assert opened.status_code == 200 and opened.json()["file"] is None
+    assert not [call for call in db.calls if call[:2] == ("storage", "sign")]
+
+
+def test_a_failed_signing_still_opens_the_book_without_a_url(client, db, monkeypatch):
+    db.tables["books"][0].update(storage_path="user-1/book-1.pdf")
+
+    def refuse(*args, **kwargs):
+        raise RuntimeError("storage is down")
+
+    monkeypatch.setattr(type(db.storage.from_("books")), "create_signed_url", refuse)
+    opened = client.get(f"/books/{BOOK}/open")
+    assert opened.status_code == 200
+    assert opened.json()["file"] is None and opened.json()["book"]["title"] == "SICP"
+

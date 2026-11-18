@@ -7,7 +7,7 @@ from backend.services.supabase_client import supabase
 router = APIRouter()
 
 @router.get("/profile")
-async def get_profile(user_id: str = Depends(get_current_user)):
+def get_profile(user_id: str = Depends(get_current_user)):
     try:
         resp = supabase.table("profiles").select("*").eq("user_id", user_id).execute()
         if not resp.data:

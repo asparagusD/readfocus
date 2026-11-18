@@ -808,6 +808,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/auth_tokens.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/convert/__init__.py",
       "type": "file",
       "role": "lib",
@@ -1486,6 +1492,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_auth_tokens.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_backfill.py",
       "type": "file",
       "role": "test",
@@ -1936,6 +1948,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_routes_off_loop.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_startup.py",
       "type": "file",
       "role": "test",
@@ -2320,6 +2338,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/epub-kept.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/errors.spec.js",
       "type": "file",
       "role": "config",
@@ -2501,6 +2525,18 @@
     },
     {
       "id": "file:frontend/e2e/ocr.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/pdf-open.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/pdf-ranges.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -3922,6 +3958,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/contents.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/contents.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/ocr.js",
       "type": "file",
       "role": "asset",
@@ -3953,6 +4001,18 @@
     },
     {
       "id": "file:frontend/src/originalview/pdf/pdfjs.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/rangeSource.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/rangeSource.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4247,6 +4307,18 @@
     },
     {
       "id": "file:frontend/src/reader/browserText.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/fileCache.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/fileCache.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -6960,6 +7032,11 @@
     {
       "type": "imports",
       "from": "file:backend/dependencies.py",
+      "to": "file:backend/auth_tokens.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/dependencies.py",
       "to": "file:backend/nlp/embedder.py"
     },
     {
@@ -7561,6 +7638,11 @@
       "type": "imports",
       "from": "file:backend/routers/progress.py",
       "to": "file:backend/xp/streaks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",
@@ -8515,7 +8597,22 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_auth.py",
+      "to": "file:backend/auth_tokens.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_auth.py",
       "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_auth.py",
+      "to": "file:backend/tests/test_auth_tokens.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_auth_tokens.py",
+      "to": "file:backend/auth_tokens.py"
     },
     {
       "type": "imports",
@@ -9799,6 +9896,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_routes_off_loop.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_routes_off_loop.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_routes_off_loop.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_routes_off_loop.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_startup.py",
       "to": "file:backend/main.py"
     },
@@ -10254,6 +10371,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/epub-kept.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/errors.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10365,6 +10487,21 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/ocr.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/pdf-open.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/pdf-ranges.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/pdf-ranges.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11309,6 +11446,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/hooks/useAuth.jsx",
+      "to": "file:frontend/src/reader/fileCache.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/illustrations/BookStack.jsx",
       "to": "file:frontend/src/illustrations/Illustration.jsx"
     },
@@ -11720,6 +11862,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/pdf/contents.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/pdf/regions.js"
     },
     {
@@ -11804,6 +11951,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubView.jsx",
+      "to": "file:frontend/src/reader/fileCache.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/epub/engine.js",
       "to": "file:frontend/src/originalview/epub/sanitize.js"
     },
@@ -11885,6 +12037,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/pdf/contents.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/pdf/pdfjs.js"
     },
     {
@@ -11929,6 +12086,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/contents.test.js",
+      "to": "file:frontend/src/originalview/pdf/contents.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/pdf/ocr.test.js",
       "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
@@ -11940,7 +12102,17 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/pdfjs.js",
+      "to": "file:frontend/src/originalview/pdf/rangeSource.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/pdfjs.js",
       "to": "file:frontend/src/originalview/pdf/recolour.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/rangeSource.test.js",
+      "to": "file:frontend/src/originalview/pdf/rangeSource.js"
     },
     {
       "type": "imports",
@@ -12245,6 +12417,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/fileCache.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/reader/fileStore.js"
     },
     {
@@ -12401,6 +12578,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/ReaderControls.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/bookFile.js"
     },
     {
       "type": "imports",
@@ -12671,6 +12853,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/browserText.test.js",
       "to": "file:frontend/src/reader/browserText.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/fileCache.test.js",
+      "to": "file:frontend/src/reader/fileCache.js"
     },
     {
       "type": "imports",
@@ -14161,6 +14348,11 @@
       "type": "reads_table",
       "from": "file:scripts/dev/check_retriever.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/auth_tokens.py",
+      "to": "env:SUPABASE_URL"
     },
     {
       "type": "uses_env",

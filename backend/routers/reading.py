@@ -7,14 +7,20 @@ the place, saved on every page turn; a place with an anchor asks for the "Finish
 /sessions/{id}/position does. Neither needs the book to be processed: a book still being read has no
 chunks, and its place is its anchor. /sessions/start and /sessions/{id}/position stay for old clients
 until C26.6.
+
+C34.3 (issue 13): /open also gives the original file's signed URL (`file`, as GET /books/{id}/file gives it),
+signed while the place is read, so the reader starts on the file one round trip sooner. None for a device-only
+book or when signing fails: the reader then asks /file, as it still does when the URL expires.
 """
 
+import asyncio
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field
 
+from backend.agents import policy
 from backend.dependencies import get_current_user
 from backend.routers.sessions import EpubAnchor, PdfAnchor
 from backend.services import reading_place
@@ -24,7 +30,7 @@ from backend.xp import badge_award
 router = APIRouter()
 
 BOOK_FIELDS = ("id, title, author, toc, file_format, file_type, storage_mode, status, scanned_pages, total_chunks, "
-               "source_format, page_count")
+               "source_format, page_count, storage_path, file_sha256")
 NEW_PROGRESS = {"last_chunk_index": -1, "chunks_completed": 0, "re_read_queue": []}  # as the planner makes it
 
 
@@ -56,9 +62,20 @@ def progress_row(user_id: str, book_id: str) -> dict:
     return cast(dict[str, Any], rows[0]) if rows else {"position": None}
 
 
-def opening(user_id: str, book_id: str) -> dict:
-    book = own_book(user_id, book_id)
-    progress = progress_row(user_id, book_id)
+def signed_file(book: dict) -> dict | None:
+    """The original file's short-lived signed URL, as GET /books/{id}/file gives it; None when there is none."""
+    if book.get("storage_mode") == "device" or not book.get("storage_path"):
+        return None
+    try:
+        signed = supabase.storage.from_("books").create_signed_url(book["storage_path"], policy.BOOK_FILE_URL_SECONDS)
+    except Exception:  # noqa: BLE001 - the reader falls back to GET /books/{id}/file
+        return None
+    url = signed.get("signedURL") or signed.get("signedUrl")
+    return {"url": url, "expires_in": policy.BOOK_FILE_URL_SECONDS, "sha256": book.get("file_sha256")} if url else None
+
+
+def opening(book: dict, progress: dict, file: dict | None) -> dict:
+    book_id = book["id"]
     kind = (book.get("file_format") or book.get("file_type") or "").lower()
     return {
         "book_id": book_id,
@@ -71,12 +88,16 @@ def opening(user_id: str, book_id: str) -> dict:
         # C26.7: a book over 50 MB whose text this browser sent: no region map, so no equation, code or figure tools
         "text_only": book.get("source_format") == "browser-text",
         "position": progress.get("position"),  # the last saved place, or None: the reader opens at page one
+        "file": file,  # C34.3: the signed URL, or None (the reader asks /file)
     }
 
 
 @router.get("/{book_id}/open")
 async def open_book(book_id: str, user_id: str = Depends(get_current_user)):
-    return await run_in_threadpool(opening, user_id, book_id)
+    book = await run_in_threadpool(own_book, user_id, book_id)
+    progress, file = await asyncio.gather(run_in_threadpool(progress_row, user_id, book_id),
+                                          run_in_threadpool(signed_file, book))  # two round trips at once
+    return opening(book, progress, file)
 
 
 def save(user_id: str, book_id: str, req: BookPosition) -> dict:

@@ -1,8 +1,11 @@
 import os
 
+import jwt
 from fastapi import Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from backend import auth_tokens
 from backend.nlp import embedder
 from backend.services.supabase_client import supabase
 
@@ -14,8 +17,18 @@ security = HTTPBearer()
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
     """
     Extracts the user_id from the Supabase JWT Bearer token.
+
+    C34.4: checked here against the project's signing keys (backend/auth_tokens.py); only a token
+    that cannot be checked here (not ES256, an unknown key, the keys out of reach) asks Supabase Auth.
     """
     token = credentials.credentials
+
+    try:
+        return auth_tokens.user_id(token)
+    except auth_tokens.Unverifiable:
+        pass  # Supabase decides, as before C34.4
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(status_code=401, detail=f"Authentication error: {e}") from None
 
     try:
         user_resp = supabase.auth.get_user(token)

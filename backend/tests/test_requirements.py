@@ -10,7 +10,7 @@ REQUIREMENTS = ROOT / "requirements.txt"
 
 # Import name -> distribution name, where they differ.
 DISTRIBUTION = {"bs4": "beautifulsoup4", "dotenv": "python-dotenv", "markdown_it": "markdown-it-py",
-                "google.genai": "google-genai"}  # a namespace package: the dotted name says which (C20.2)
+                "google.genai": "google-genai", "jwt": "PyJWT"}  # a namespace package: the dotted name says which (C20.2)
 
 
 def normalise(name):

@@ -55,6 +55,16 @@ def save(book: dict, body: OcrPage) -> dict:
     return cleaned
 
 
+def _reingest_job(book_id: str, user_id: str) -> dict | None:
+    supabase.table("books").update({"status": "processing"}).eq("id", book_id).execute()
+    return jobs.claim(jobs.requeue(book_id, user_id) or {}, manual=True)
+
+
+def _ocr_rows(book_id: str, first: int, last: int) -> list[dict]:
+    return (supabase.table(ocr_pages.TABLE).select("page, words").eq("book_id", book_id)
+            .gte("page", first).lte("page", last).execute().data or [])
+
+
 @router.post("/{book_id}/ocr")
 async def post_ocr(book_id: str, body: OcrPage, background_tasks: BackgroundTasks,
                    user_id: str = Depends(get_current_user)):
@@ -66,8 +76,7 @@ async def post_ocr(book_id: str, body: OcrPage, background_tasks: BackgroundTask
     done = await run_in_threadpool(ocr_pages.done_pages, book_id)
     reingest = ocr_pages.ready_to_reingest(book, done)
     if reingest:  # every scanned page of a book with no chunks has text: read the book again (C19.4)
-        supabase.table("books").update({"status": "processing"}).eq("id", book_id).execute()
-        job = jobs.claim(jobs.requeue(book_id, user_id) or {}, manual=True)
+        job = await run_in_threadpool(_reingest_job, book_id, user_id)
         if job:
             background_tasks.add_task(ingestion_worker.run, job)
     return {"page": body.page, "words": len(cleaned["words"]), "dropped": cleaned["dropped"],
@@ -82,7 +91,6 @@ async def get_ocr(book_id: str, first: int | None = Query(default=None, ge=1), l
     if first is not None and last is not None:
         if last < first or last - first + 1 > MAX_PAGES:
             raise HTTPException(status_code=422, detail=f"Ask for 1 to {MAX_PAGES} pages, first to last.")
-        rows = (supabase.table(ocr_pages.TABLE).select("page, words").eq("book_id", book_id)
-                .gte("page", first).lte("page", last).execute().data or [])
+        rows = await run_in_threadpool(_ocr_rows, book_id, first, last)
         out["pages"] = sorted(({"page": r["page"], "words": r.get("words") or []} for r in rows), key=lambda r: r["page"])
     return out

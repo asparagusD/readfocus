@@ -4,6 +4,7 @@
 // under /pdfjs/ (vite.config.js, pdfjsAssets), so every image and glyph renders
 // without a third-party request.
 
+import { rangeSource } from './rangeSource';
 import { recolourCanvas } from './recolour';
 
 const ASSETS = '/pdfjs/';
@@ -21,11 +22,17 @@ export function loadPdfjs() {
   return loading;
 }
 
-/** Open `source` ({ url } or { data }) and resolve the PDFDocumentProxy. */
+/**
+ * Open `source` ({ url, renew? } or { data }) and resolve the PDFDocumentProxy. A URL is read
+ * in byte ranges (C34.1, rangeSource.js); `renew` gives a fresh URL when the signed one expires.
+ */
 export async function openPdf(source) {
   const pdfjs = await loadPdfjs();
+  const input = source.url
+    ? await rangeSource(source.url, { Transport: pdfjs.PDFDataRangeTransport, renew: source.renew })
+    : source;
   return pdfjs.getDocument({
-    ...source,
+    ...input,
     standardFontDataUrl: `${ASSETS}standard_fonts/`,
     wasmUrl: `${ASSETS}wasm/`,
     iccUrl: `${ASSETS}iccs/`,

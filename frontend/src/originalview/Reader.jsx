@@ -13,6 +13,7 @@ import { EpubBlockActions } from '../steve/EpubBlockActions';
 import { MarginMarkers } from '../notes/MarginMarkers';
 import { RibbonPlacer } from '../focus/RibbonPlacer';
 import { EpubBook } from './epub/EpubBook';
+import { startPage } from './pdf/contents';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
 import { keyAction, SPREAD_MIN_WIDTH, timeAtProgress } from './frame';
@@ -93,6 +94,8 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * comes back (C26.5: the end of the book; today's reading is gone); Home goes to the first page.
  * `opening` keeps the blank page up while the reader opens its place; `status` joins the folio
  * ("Focus mode starts at …"). `ref` also gets find(snippets, from) and toc().
+ * C34.2: a PDF opens at `start` (the saved place's anchor) and takes its outline from
+ * `contents` (the stored books.toc) when that has pages.
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
@@ -101,7 +104,7 @@ export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
-  placing = null,
+  placing = null, contents = null, start = null,
 }) {
   const wide = useWide();
   const { colours, theme, original } = useLamplight(bookId);
@@ -348,7 +351,7 @@ export function Reader({
         onPointerCancel={() => { swipe.current = null; }}>
         <div className="rf-ov-book" data-spread={wide} ref={setBookBox}>
           {kind === 'pdf'
-            ? <PdfBook key={attempt} {...shared} zoom={zoom} onSheet={setSheet} ocr={ocr} />
+            ? <PdfBook key={attempt} {...shared} zoom={zoom} onSheet={setSheet} ocr={ocr} contents={contents} startPage={startPage(start)} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} />}
           {turn && (
             <TurnLeaf key={turn.id} turn={turn} wide={wide}

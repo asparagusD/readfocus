@@ -15,6 +15,7 @@ import { BookCover } from '../components/BookCover';
 import { EmptyShelf, OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { forgetBookFile, saveBookFile } from '../reader/fileStore';
+import { forgetCachedBookFile } from '../reader/fileCache';
 import { DEVICE_MAX_BYTES, epubTexts, isBig, pdfTexts, sendTexts, sha256Hex } from '../reader/browserText';
 import './Library.css';
 
@@ -127,6 +128,7 @@ export function Library() {
     try {
       await fetchApi(`/books/${book.id}`, { method: 'DELETE' });
       forgetBookFile(book.id);
+      forgetCachedBookFile(book.id); // C34.7: its kept copy too
       setBooks(prev => prev.filter(b => b.id !== book.id));
       setRemoving(null);
       toast({ kind: 'neutral', message: `${book.title} is off your shelf.` });

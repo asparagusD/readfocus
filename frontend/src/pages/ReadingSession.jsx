@@ -222,6 +222,9 @@ export function ReadingSession() {
   // C23.6: focus mode. Start at the page shown (after the body start), pause and resume, end at this page
   // (C23.6b adds the ribbon), and leaving with a session open asks: end now with the quiz, or discard it.
   const focusLocked = !focus.session && beforeBody(place, body.bodyStart);
+  // C31.1: Steve beside the book in focus mode too, but never while a session waits for its quiz (FOCUS_RULES).
+  const steveHere = !pagesOnly && !(inFocus && focus.session?.status === 'awaiting_quiz');
+  const shownSide = side === 'steve' && !steveHere ? null : side; // a Steve panel open when the quiz came closes
   const focusDo = async (work, failed) => {
     setFocusBusy(true);
     try {
@@ -427,7 +430,10 @@ export function ReadingSession() {
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
             onStart={startFocus} onPause={() => focusDo(focus.pause, '')} onResume={() => focusDo(focus.resume, '')}
             onEnd={endFocus} onLeave={focus.readOnly ? () => navigate('/') : leaveFocus} onAnswerIdle={focus.answerIdle}
-            placing={placingRibbon} readOnly={focus.readOnly} />
+            placing={placingRibbon} readOnly={focus.readOnly}
+            onNotes={() => toggleSide('notes', notesButton)} notesOpen={side === 'notes'} notesRef={notesButton}
+            notesCount={notepad.notes.length} onSteve={steveHere ? () => toggleSide('steve', steveButton) : undefined}
+            steveOpen={steveOpen} steveRef={steveButton} />
         ) : (
         <ReaderToolbar
           bookTitle={bookTitle}
@@ -476,7 +482,7 @@ export function ReadingSession() {
         )}
       </div>
 
-      <SteveContext.Provider value={pagesOnly ? null : steveActions}>
+      <SteveContext.Provider value={steveHere ? steveActions : null}>
       <NotesContext.Provider value={notesActions}>
       <div className="rf-reading-body">
       <main className="rf-reading-area">
@@ -512,19 +518,19 @@ export function ReadingSession() {
           onAnnotationNote={noteOnHighlight}
         />
       </main>
-      {side && !inFocus && (
+      {shownSide && (
         <SidePanel
           tabs={[
             { id: 'notes', label: 'Notes', count: notepad.notes.length },
-            ...(pagesOnly ? [] : [{ id: 'steve', label: 'Steve', mark: <span className="rf-steve-av rf-steve-av--sm" aria-hidden="true">S</span> }]),
+            ...(!steveHere ? [] : [{ id: 'steve', label: 'Steve', mark: <span className="rf-steve-av rf-steve-av--sm" aria-hidden="true">S</span> }]),
           ]}
-          current={side}
+          current={shownSide}
           onTab={setSide}
           onClose={closeSide}
           returnTo={opener}
           wide={side === 'notes' && drawingOpen}
         >
-          {side === 'steve' ? (
+          {shownSide === 'steve' ? (
             <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer} />
           ) : (
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}

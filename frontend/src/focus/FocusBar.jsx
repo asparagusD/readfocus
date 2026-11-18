@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Hourglass, Lock, LogOut, Pause, Play } from 'lucide-react';
+import { Hourglass, Lock, LogOut, MessageSquareText, NotebookPen, Pause, Play } from 'lucide-react';
 import { CAP_S, noticeDue, shownSeconds, spokenTime, stopwatch } from './clock';
 import './FocusBar.css';
 
@@ -10,10 +10,12 @@ import './FocusBar.css';
  * a breathing dot, still under reduced motion). Right, Pause focus / Resume, End session and Exit focus.
  * Under it, "Still with the book?" after ten quiet minutes and the 2 h 45 notice; neither blocks reading.
  * C23.8: `readOnly` (another tab writes the session): the time only, no Pause, Resume or End, no idle prompt.
+ * C31.1 (issue 3): Notes and Steve, as on the toolbar, open the side panel beside the book; the clock runs on
+ * while it is open. Without `onSteve` (a scan read page by page, or a session waiting for its quiz) Steve is left out.
  */
 export function FocusBar({
   session, readAt, locked, startLabel, idle, idleLapsed, busy, onStart, onPause, onResume, onEnd, onLeave, onAnswerIdle,
-  placing = false, readOnly = false,
+  placing = false, readOnly = false, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef,
 }) {
   const [now, setNow] = useState(() => Date.now());
   const [why, setWhy] = useState(false);
@@ -69,9 +71,21 @@ export function FocusBar({
           )}
           <p className="rf-focus-caption">{readOnly
             ? 'Focus is running in another tab · this one only shows its time'
-            : 'Focus · notes, Steve and badges are tucked away'}</p>
+            : 'Focus · badges are tucked away'}</p>
         </div>
         <div className="rf-focus-actions">
+          {onNotes && (
+            <button type="button" className="rf-focus-button" ref={notesRef} onClick={onNotes} aria-expanded={notesOpen}
+              aria-controls={notesOpen ? 'rf-side-panel' : undefined} aria-label={notesCount ? `Notes, ${notesCount}` : 'Notes'}>
+              <NotebookPen size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Notes</span>
+            </button>
+          )}
+          {onSteve && (
+            <button type="button" className="rf-focus-button" ref={steveRef} onClick={onSteve} aria-expanded={steveOpen}
+              aria-controls={steveOpen ? 'rf-side-panel' : undefined} aria-label="Ask Steve">
+              <MessageSquareText size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Steve</span>
+            </button>
+          )}
           {!session && !locked && (
             <button type="button" className="rf-focus-button rf-focus-button--primary" onClick={onStart} disabled={busy}>
               <Play size={16} strokeWidth={1.75} aria-hidden="true" /> Start
@@ -79,12 +93,12 @@ export function FocusBar({
           )}
           {status === 'active' && !readOnly && (
             <button type="button" className="rf-focus-button" onClick={onPause} disabled={busy}>
-              <Pause size={16} strokeWidth={1.75} aria-hidden="true" /> Pause focus
+              <Pause size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Pause focus</span>
             </button>
           )}
           {status === 'paused' && !readOnly && (
             <button type="button" className="rf-focus-button" onClick={onResume} disabled={busy}>
-              <Play size={16} strokeWidth={1.75} aria-hidden="true" /> Resume
+              <Play size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Resume</span>
             </button>
           )}
           {(status === 'active' || status === 'paused' || status === 'awaiting_quiz') && !readOnly && (

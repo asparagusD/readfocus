@@ -1,0 +1,106 @@
+"""C29.1 (issue 1): a book's ingestion never blocks the event loop.
+
+On Render's 0.1 CPU, parsing a book, classifying its pages and every Supabase call took tens of seconds; run on
+the event loop they kept the server from answering /health, and Render restarted it (DEBUG_LOG 2026-11-18 C29.1).
+Here every database call and every parse is made slow, and a heartbeat beside the job must never be held up.
+"""
+
+import asyncio
+import time
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from backend.nlp import embedder
+from backend.services import (
+    book_ingestor,
+    ingestion_worker,
+    ocr_pages,
+    prose_job,
+    region_job,
+)
+from backend.services import processing_jobs as jobs
+from backend.tests import memory_db
+from backend.tests.memory_db import MemoryDb
+
+USER, BOOK = "user-1", "book-1"
+SLOW = 0.3   # seconds each slow call blocks the thread it runs on
+LATE = 0.15  # the most the heartbeat may be held up
+EPUB = Path(__file__).resolve().parent / "fixtures" / "regions_sample.epub"
+
+
+def blocking(result=None):
+    def slow(*args, **kwargs):
+        time.sleep(SLOW)
+        return result() if callable(result) else result
+    return slow
+
+
+@pytest.fixture
+def db(monkeypatch):
+    fake = MemoryDb()
+    for module in (book_ingestor, region_job, prose_job, jobs, ingestion_worker, ocr_pages):
+        monkeypatch.setattr(module, "supabase", fake)
+    execute = memory_db.Query.execute
+    monkeypatch.setattr(memory_db.Query, "execute", lambda self: (time.sleep(SLOW), execute(self))[1])
+    monkeypatch.setattr(embedder, "embed", lambda texts: np.zeros((len(texts), embedder.EMBEDDING_DIM), dtype=np.float32))
+    monkeypatch.setattr(book_ingestor.question_agent, "run", lambda book_id, chunk_ids: None)
+    monkeypatch.setattr(book_ingestor, "look_up_cover", lambda book, data: None)
+
+    async def no_prose(book, file_bytes):
+        return None
+
+    monkeypatch.setattr(prose_job, "after_regions", no_prose)
+    return fake
+
+
+def add_book(db, file_type, data):
+    path = f"{USER}/{BOOK}.{file_type}"
+    db.tables.setdefault("books", []).append({"id": BOOK, "user_id": USER, "file_type": file_type,
+                                              "storage_path": path, "status": "processing"})
+    db.files[path] = data
+
+
+def worst_wait(make_work) -> float:
+    """How late a 10 ms heartbeat woke, at worst, while the work ran on the same loop."""
+    async def main():
+        worst, done = 0.0, False
+
+        async def beat():
+            nonlocal worst
+            while not done:
+                started = time.perf_counter()
+                await asyncio.sleep(0.01)
+                worst = max(worst, time.perf_counter() - started - 0.01)
+
+        heart = asyncio.create_task(beat())
+        await asyncio.sleep(0.05)
+        try:
+            await make_work()
+        finally:
+            done = True
+            await heart
+        return worst
+    return asyncio.run(main())
+
+
+def test_ingesting_a_pdf_never_blocks_the_loop(db, monkeypatch):
+    add_book(db, "pdf", b"%PDF")
+    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", blocking(["word " * 700] * 3))
+    monkeypatch.setattr(region_job, "after_ingest", lambda book, data=None: asyncio.sleep(0))
+    job = jobs.claim(jobs.create(BOOK, USER))
+    result = {}
+
+    async def work():
+        result.update(await book_ingestor.run_job(job))
+    assert worst_wait(work) < LATE
+    assert result["status"] == "ready" and result["total_chunks"] >= 3
+
+
+def test_ingesting_an_epub_never_blocks_the_loop(db, monkeypatch):
+    add_book(db, "epub", EPUB.read_bytes())
+    monkeypatch.setattr(book_ingestor, "extract", blocking(["word " * 700] * 2))
+    monkeypatch.setattr(region_job, "after_ingest", lambda book, data=None: asyncio.sleep(0))
+    job = jobs.claim(jobs.create(BOOK, USER))
+    assert worst_wait(lambda: book_ingestor.run_job(job)) < LATE

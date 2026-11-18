@@ -1762,6 +1762,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_jobs_off_loop.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_league_store.py",
       "type": "file",
       "role": "test",
@@ -9232,6 +9238,46 @@
       "type": "imports",
       "from": "file:backend/tests/test_internal_api.py",
       "to": "file:backend/xp/league_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/ocr_pages.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/prose_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",

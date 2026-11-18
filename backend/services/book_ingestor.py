@@ -223,6 +223,55 @@ def download(storage_path: str) -> bytes:
     return supabase.storage.from_("books").download(storage_path)
 
 
+def _load_book(book_id: str) -> dict:
+    return supabase.table("books").select(
+        "id, file_type, storage_path, status, title, author, cover_source, source_format").eq(
+        "id", book_id).execute().data[0]
+
+
+def read_pages(book: dict, file_bytes: bytes, browser: bool) -> tuple[list[str], dict[int, str], list[str] | None]:
+    """The book's page (or chapter) texts, the OCR texts it was read from ({} unless fully scanned) and, for a PDF,
+    every page's text for the outline (C26.2). Blocking: run_job calls it in a thread (C29.1)."""
+    book_id, ocr = book["id"], {}
+    if browser:  # the pages in order; an empty page is left out, as pypdf's are
+        texts = ocr_pages.load_texts(book_id)
+        return [texts[n] for n in sorted(texts)], ocr, None
+    if book["file_type"].lower() != "pdf":
+        return extract(book["file_type"], file_bytes), ocr, None
+    scanned: list[int] = []  # C19.4: scanned pages flagged; a fully scanned book read from OCR
+
+    def load_ocr() -> dict[int, str]:
+        ocr.update(ocr_pages.load_texts(book_id))
+        return ocr
+    every_page: list[str] = []
+    pages = extract_text_from_pdf(file_bytes, load_ocr, scanned, every_page)
+    if scanned:
+        ocr_pages.record_scanned(book_id, scanned)
+    return pages, ocr, every_page
+
+
+def store_batch(book_id: str, user_id: str, start: int, batch: list[str], vectors, blocks, paths) -> list[dict]:
+    """Upsert one batch of chunks with their vectors, blocks and paths; the stored rows."""
+    return supabase.table("chunks").upsert([
+        {"book_id": book_id, "user_id": user_id, "chunk_index": start + offset,
+         "word_count": len(chunk.split()), "content": chunk,
+         "blocks": blocks[start + offset] if blocks else None,
+         "block_paths": paths[start + offset] if paths else None,
+         "embedding_local": [float(value) for value in vectors[offset]]}
+        for offset, chunk in enumerate(batch)
+    ], on_conflict="book_id,chunk_index").execute().data
+
+
+def _save_toc(book_id: str, toc: list) -> None:
+    supabase.table("books").update({"toc": toc}).eq("id", book_id).execute()
+
+
+def _record_failure(job_id: str, book_id: str, error: str, ready: bool) -> None:
+    processing_jobs.fail(job_id, error)
+    if not ready:  # a book with readable chunks stays readable
+        supabase.table("books").update({"status": "error"}).eq("id", book_id).execute()
+
+
 async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
     """Ingest a claimed job's book from its cursor, saving the cursor after every batch.
 
@@ -233,35 +282,18 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
     so the chunk at an index is the same on every run.
     """
     book_id, user_id = job["book_id"], job["user_id"]
-    book = supabase.table("books").select(
-        "id, file_type, storage_path, status, title, author, cover_source, source_format").eq(
-        "id", book_id).execute().data[0]
+    # C29.1: every parse, chunking and database call below runs in a thread. On the event loop it kept the server
+    # from answering anything, /health included, for tens of seconds at Render's 0.1 CPU, and Render restarted it.
+    book = await asyncio.to_thread(_load_book, book_id)
     ready = book.get("status") == "ready"
     browser = book.get("source_format") == BROWSER_TEXT  # C26.7: the reader's browser sent the text; no file here
     try:
-        texts: dict[int, str] = {}
         if browser:
-            texts = ocr_pages.load_texts(book_id)
             file_bytes = b""
         elif file_bytes is None:
             file_bytes = await asyncio.to_thread(download, book["storage_path"])
-        ocr: dict[int, str] = {}
-        every_page: list[str] | None = None  # a PDF's page texts, read once (C26.2)
-        if browser:  # the pages in order; an empty page is left out, as pypdf's are
-            pages = [texts[n] for n in sorted(texts)]
-        elif book["file_type"].lower() == "pdf":  # C19.4: scanned pages flagged; a fully scanned book read from OCR
-            scanned: list[int] = []
-
-            def load_ocr() -> dict[int, str]:
-                ocr.update(ocr_pages.load_texts(book_id))
-                return ocr
-            every_page = []
-            pages = extract_text_from_pdf(file_bytes, load_ocr, scanned, every_page)
-            if scanned:
-                ocr_pages.record_scanned(book_id, scanned)
-        else:
-            pages = extract(book["file_type"], file_bytes)
-        chunks = chunk_text(pages, TARGET_WORDS)
+        pages, ocr, every_page = await asyncio.to_thread(read_pages, book, file_bytes, browser)
+        chunks = await asyncio.to_thread(chunk_text, pages, TARGET_WORDS)
         total, words = len(chunks), sum(len(c.split()) for c in chunks)
         # Reader structure beside the unchanged content (C12.1); (None, None) if it cannot be built.
         # C17.6: each EPUB block's spine index and element path, and the book's own contents.
@@ -271,25 +303,18 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         for start, end in batches(total, job["cursor"]):
             batch = chunks[start:end]
             vectors = await asyncio.to_thread(embedder.embed, batch)
-            stored = supabase.table("chunks").upsert([
-                {"book_id": book_id, "user_id": user_id, "chunk_index": start + offset,
-                 "word_count": len(chunk.split()), "content": chunk,
-                 "blocks": blocks[start + offset] if blocks else None,
-                 "block_paths": paths[start + offset] if paths else None,
-                 "embedding_local": [float(value) for value in vectors[offset]]}
-                for offset, chunk in enumerate(batch)
-            ], on_conflict="book_id,chunk_index").execute()
-            await generate_questions(book_id, stored.data)  # questions and concepts of the batch
+            stored = await asyncio.to_thread(store_batch, book_id, user_id, start, batch, vectors, blocks, paths)
+            await generate_questions(book_id, stored)  # questions and concepts of the batch
             if not ready:  # the first batch is stored with its questions: the first session can start
-                mark_ready(book_id, total, words, toc)
+                await asyncio.to_thread(mark_ready, book_id, total, words, toc)
                 ready = True
-            processing_jobs.advance(job["id"], end, total)
-            pdf_text.release_memory()
+            await asyncio.to_thread(processing_jobs.advance, job["id"], end, total)
+            await asyncio.to_thread(pdf_text.release_memory)
         if not ready:  # a book with no text at all is still ready, as before
-            mark_ready(book_id, total, words, toc)
+            await asyncio.to_thread(mark_ready, book_id, total, words, toc)
         elif toc is not None and book.get("status") == "ready":  # resumed after the book was ready
-            supabase.table("books").update({"toc": toc}).eq("id", book_id).execute()
-        processing_jobs.finish(job["id"], total)
+            await asyncio.to_thread(_save_toc, book_id, toc)
+        await asyncio.to_thread(processing_jobs.finish, job["id"], total)
         # The book is readable and its job done; the cover (at most two 3 s requests) comes last.
         await asyncio.to_thread(look_up_cover, book, file_bytes)
         # Then the page-region map (C18.2b), its own job: the book is already readable. A book read from OCR
@@ -299,7 +324,5 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         return {"total_chunks": total, "total_words": words, "status": "ready"}
     except Exception as e:  # noqa: BLE001 - recorded on the job, which can be resumed
         print(f"Ingestion of book {book_id} stopped: {e}")
-        processing_jobs.fail(job["id"], str(e))
-        if not ready:  # a book with readable chunks stays readable
-            supabase.table("books").update({"status": "error"}).eq("id", book_id).execute()
+        await asyncio.to_thread(_record_failure, job["id"], book_id, str(e), ready)
         return {"status": "error", "error": str(e)}

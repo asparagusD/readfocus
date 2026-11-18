@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 936,
-    "inventoried": 793,
+    "tracked": 937,
+    "inventoried": 794,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17674,
+      "size_bytes": 17692,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -618,7 +618,7 @@
       "path": "backend/routers/auth.py",
       "language": "python",
       "lines": 23,
-      "size_bytes": 952,
+      "size_bytes": 946,
       "role": "router",
       "purpose": "GET /auth/profile and POST /auth/profile/calibrate: read the profile and save the calibrated reading speed. C26.6c: POST /auth/profile/calibrate removed (the pace check is gone)."
     },
@@ -626,7 +626,7 @@
       "path": "backend/routers/books.py",
       "language": "python",
       "lines": 451,
-      "size_bytes": 23648,
+      "size_bytes": 23588,
       "role": "router",
       "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop. C30.1: the upload's author is optional; a blank one is read from the file's own metadata (file_author: PDF info Author, EPUB dc:creator, whitespace tidied, at most AUTHOR_MAX), else stored as null, and the response returns the author used."
     },
@@ -674,7 +674,7 @@
       "path": "backend/routers/mastery.py",
       "language": "python",
       "lines": 49,
-      "size_bytes": 2316,
+      "size_bytes": 2310,
       "role": "router",
       "purpose": "GET /mastery?book_id=&limit=&offset=: the caller's concept mastery rows with their labels, weakest first, one page per call with the total; a page past the last row is empty."
     },
@@ -689,8 +689,8 @@
     {
       "path": "backend/routers/ocr.py",
       "language": "python",
-      "lines": 88,
-      "size_bytes": 4726,
+      "lines": 96,
+      "size_bytes": 4986,
       "role": "router",
       "purpose": "OCR endpoints (C19.4): POST /books/{id}/ocr stores one scanned page's tesseract.js words (owner only, flagged pages only, cleaned by ocr_pages) and, when that completes a fully scanned book with no chunks, requeues and runs ingestion from the OCR text; GET /books/{id}/ocr gives scanned_pages, done, and with first..last (at most 20) each page's words for the text layer."
     },
@@ -713,8 +713,8 @@
     {
       "path": "backend/routers/sessions.py",
       "language": "python",
-      "lines": 241,
-      "size_bytes": 12149,
+      "lines": 246,
+      "size_bytes": 12499,
       "role": "router",
       "purpose": "Session lifecycle endpoints (evaluate-single and submit-answers wait for the embedding model through require_model), through backend/agents/workflow.py: start (only on the caller's own book: 404 otherwise, 503 when ownership cannot be read (C15.2, issue 17); the start_session flow plans; it also sends each chunk's reader blocks, the book's title, author, toc, file format and storage mode (C17.5) and the chapter in effect before the first chunk, read alongside; the session row is created here and the finish_reading flow assembles the test in the background, warming the grading model), finish-reading (returns the public part of the test, running finish_reading inline if it is not ready), evaluate-single (grades one answer inline and caches it; tells the client nothing), submit-answers (claims the session first, so it is graded once; a resubmit gets the stored result rebuilt from test_results; one submit_answers run: grades, mastery, pace and the next plan; returns score, feedback, confidence, the pace recommendation and the next session), position (PUT: the reader's place, {chunk_index} with C12's {block_id, char_offset} or (C17.5) an original-view anchor {kind: 'pdf', page, quads, text} or {kind: 'epub', cfi, text} (ANCHORS A1, A3), validated against the caller's session and the book's chunks, stored in reading_progress.position only, never creating the row; start returns it, a failed read giving none), abandon (marks the session, then runs the abandon flow after the response), get; every run's decisions are stored after the response; no answer or evidence is sent to the client before the test is submitted. C23.7: start also returns the planner's mode for the reader's 'Suggested next' note. C24.2: a saved place with an anchor checks 'Finished a book' after the response. C26.6b: submit-answers returns no next_session; its flow runs no planner. C26.6c: POST /sessions/start and PUT /sessions/{id}/position removed (with read_book, read_position, owns_book, scanned_book and their models); the book opens and saves its place through routers/reading.py."
     },
@@ -722,7 +722,7 @@
       "path": "backend/routers/steve.py",
       "language": "python",
       "lines": 118,
-      "size_bytes": 4780,
+      "size_bytes": 4756,
       "role": "router",
       "purpose": "GET and PUT /steve/settings (C20.1): auth required; Steve's off switch and the reader's consent with the notice version stored (only the current version counts; another version 409; withdrawing clears both); never reads the key cipher."
     },
@@ -1847,6 +1847,14 @@
       "purpose": "Pytest on a mocked database: reciprocal rank fusion, the OR text query, both searches called and fused, one search or the embedder failing, and the unchanged get_similar_chunks signature."
     },
     {
+      "path": "backend/tests/test_routes_off_loop.py",
+      "language": "python",
+      "lines": 116,
+      "size_bytes": 4520,
+      "role": "test",
+      "purpose": "C34.5 (issue 13): no endpoint holds the event loop on Supabase: every async endpoint in backend/routers/ awaits something and makes no supabase....execute() call on the loop (an AST check of every router), and a 10 ms heartbeat beside GET /books/{id}/file with a slow book lookup is never held up 150 ms."
+    },
+    {
       "path": "backend/tests/test_startup.py",
       "language": "python",
       "lines": 33,
@@ -2233,8 +2241,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6124,
-      "size_bytes": 1097981,
+      "lines": 6125,
+      "size_bytes": 1099047,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6289,8 +6297,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 795,
-      "size_bytes": 264647,
+      "lines": 796,
+      "size_bytes": 264998,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

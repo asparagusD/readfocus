@@ -175,7 +175,7 @@ PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")
 
 
 @router.get("")
-async def get_books(user_id: str = Depends(get_current_user)):
+def get_books(user_id: str = Depends(get_current_user)):
     """The caller's books for the shelf, each with its cover and reading progress (null before a first session)."""
     books = supabase.table("books").select(BOOK_LIST_FIELDS).eq("user_id", user_id).execute().data or []
     rows = supabase.table("reading_progress").select(
@@ -184,7 +184,7 @@ async def get_books(user_id: str = Depends(get_current_user)):
     return [{**book, "progress": progress.get(book["id"])} for book in cast(list[dict[str, Any]], books)]
 
 @router.get("/{book_id}/file")
-async def get_book_file(book_id: str, user_id: str = Depends(get_current_user)):
+def get_book_file(book_id: str, user_id: str = Depends(get_current_user)):
     """A short-lived signed URL for the owner's original file; 404 for other readers and device-only books."""
     rows = supabase.table("books").select("storage_path, storage_mode, file_sha256").eq(
         "id", book_id).eq("user_id", user_id).execute().data
@@ -199,7 +199,7 @@ async def get_book_file(book_id: str, user_id: str = Depends(get_current_user)):
 
 
 @router.get("/{book_id}")
-async def get_book_details(book_id: str, user_id: str = Depends(get_current_user)):
+def get_book_details(book_id: str, user_id: str = Depends(get_current_user)):
     book_resp = supabase.table("books").select("*").eq("id", book_id).eq("user_id", user_id).execute()
     if not book_resp.data:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -217,7 +217,7 @@ PAGE_FIELDS = ("chunk_index", "content", "word_count", "blocks")
 
 
 @router.get("/{book_id}/pages")
-async def get_pages(book_id: str, start: int = Query(ge=0), end: int | None = Query(default=None, ge=0),
+def get_pages(book_id: str, start: int = Query(ge=0), end: int | None = Query(default=None, ge=0),
                     user_id: str = Depends(get_current_user)):
     """Chunks start..end (inclusive, at most four) of the caller's book, for reading ahead (C12.4, C12.5b).
 
@@ -240,7 +240,7 @@ SKIPPED_KINDS = ("math", "code", "figure", "table")
 
 
 @router.get("/{book_id}/regions")
-async def get_regions(book_id: str, first: int = Query(ge=1), last: int = Query(ge=1),
+def get_regions(book_id: str, first: int = Query(ge=1), last: int = Query(ge=1),
                       user_id: str = Depends(get_current_user)):
     """Boxes on PDF pages first..last that word lookup skips (C18.6d): math, code, figures, tables and
     inline math, as {page, kind, bbox} in points from the page's top-left (ANCHORS A1). Read-only."""
@@ -285,7 +285,7 @@ def _owned(book_id: str, user_id: str) -> None:
 
 
 @router.get("/{book_id}/regions/{region_id}")
-async def get_region(book_id: str, region_id: str, user_id: str = Depends(get_current_user)):
+def get_region(book_id: str, region_id: str, user_id: str = Depends(get_current_user)):
     """One region of the caller's book, for Copy code, Explain and Copy as LaTeX (C20.8). Read-only."""
     _owned(book_id, user_id)
     rows = supabase.table("page_regions").select(REGION_FIELDS).eq("id", region_id).eq("book_id", book_id).execute()
@@ -295,7 +295,7 @@ async def get_region(book_id: str, region_id: str, user_id: str = Depends(get_cu
 
 
 @router.get("/{book_id}/region-at")
-async def get_region_at(book_id: str, spine_index: int = Query(ge=0, le=100_000), path: str = Query(max_length=200),
+def get_region_at(book_id: str, spine_index: int = Query(ge=0, le=100_000), path: str = Query(max_length=200),
                         user_id: str = Depends(get_current_user)):
     """The EPUB region whose element is at `path` (CFI steps from the document root, as page_regions.anchor and
     chunks.block_paths count them) in spine item `spine_index` (C20.8). Read-only."""
@@ -368,7 +368,7 @@ def public_job(job: dict | None) -> dict | None:
 
 
 @router.get("/{book_id}/status")
-async def get_book_status(book_id: str, user_id: str = Depends(get_current_user)):
+def get_book_status(book_id: str, user_id: str = Depends(get_current_user)):
     resp = supabase.table("books").select("status, total_chunks").eq("id", book_id).eq("user_id", user_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -377,7 +377,7 @@ async def get_book_status(book_id: str, user_id: str = Depends(get_current_user)
 
 
 @router.post("/{book_id}/resume")
-async def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     """Run a book's ingestion again from its cursor: after a failure, or for a book left processing with no job."""
     rows = supabase.table("books").select("id, status, storage_path, source_format").eq("id", book_id).eq(
         "user_id", user_id).execute().data
@@ -419,7 +419,7 @@ def _remove_note_files(user_id: str, book_id: str) -> int:
 
 
 @router.delete("/{book_id}")
-async def delete_book(book_id: str, user_id: str = Depends(get_current_user)):
+def delete_book(book_id: str, user_id: str = Depends(get_current_user)):
     # 1. Fetch book to get storage path and verify ownership
     resp = supabase.table("books").select("storage_path").eq("id", book_id).eq("user_id", user_id).execute()
     if not resp.data:

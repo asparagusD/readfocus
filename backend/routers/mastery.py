@@ -15,7 +15,7 @@ RANGE_NOT_SATISFIABLE = "PGRST103"  # postgrest's error code for an offset at or
 
 
 @router.get("")
-async def get_mastery(
+def get_mastery(
     book_id: str | None = None,
     limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
     offset: int = Query(0, ge=0),

@@ -100,12 +100,13 @@ async def finish_reading(
 ):
     # 1. Mark the session as testing; the update returns the row, so this is the only round trip. C23.G: only a
     #    session still being read or tested: a graded one (a focus quiz's included) is never reopened for a retake.
-    sess_resp = supabase.table("sessions").update({
+    sess_resp = await run_in_threadpool(supabase.table("sessions").update({
         "status": "testing",
         "actual_duration_minutes": req.actual_duration_minutes
-    }).eq("id", session_id).eq("user_id", user_id).in_("status", ["reading", "testing"]).execute()
+    }).eq("id", session_id).eq("user_id", user_id).in_("status", ["reading", "testing"]).execute)  # C34.5: off the loop
     if not sess_resp.data:
-        found = supabase.table("sessions").select("id").eq("id", session_id).eq("user_id", user_id).execute().data
+        found = (await run_in_threadpool(
+            supabase.table("sessions").select("id").eq("id", session_id).eq("user_id", user_id).execute)).data
         if found:
             raise HTTPException(status_code=409, detail="This test has been answered already.")
         raise HTTPException(status_code=404, detail="Session not found.")
@@ -132,7 +133,8 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
 
     The grade stays on the server: its feedback quotes the passage, and the test is not over.
     """
-    sess_resp = supabase.table("sessions").select("book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute()
+    sess_resp = await run_in_threadpool(supabase.table("sessions").select(
+        "book_id, chunk_start_index, chunk_end_index, test_questions").eq("id", session_id).eq("user_id", user_id).execute)
     if not sess_resp.data:
         raise HTTPException(status_code=404, detail="Session not found.")
     sess = cast(dict[str, Any], sess_resp.data[0])
@@ -143,9 +145,11 @@ async def evaluate_single(session_id: str, req: EvaluateSingleRequest, user_id: 
     question = test_questions[req.index]
     passage = ""
     if not question.get("evidence"):
-        passage = load_passage(sess["book_id"], list(range(sess["chunk_start_index"], sess["chunk_end_index"] + 1)))
+        passage = await run_in_threadpool(
+            load_passage, sess["book_id"], list(range(sess["chunk_start_index"], sess["chunk_end_index"] + 1)))
     test_questions[req.index]["cached_eval"] = await evaluate_single_answer(question, req.answer, passage)
-    supabase.table("sessions").update({"test_questions": test_questions}).eq("id", session_id).eq("user_id", user_id).execute()
+    await run_in_threadpool(supabase.table("sessions").update({"test_questions": test_questions}).eq(
+        "id", session_id).eq("user_id", user_id).execute)
     return {"status": "graded"}
 
 @router.post("/{session_id}/submit-answers", dependencies=[Depends(require_model)])
@@ -155,15 +159,16 @@ async def submit_answers(
     await run_in_threadpool(refuse_focus_quiz, session_id, user_id)
     # 1. Claim the session: two submits at once cannot both grade it (issue 33), and the update returns
     #    the session row, so on the happy path this is the only round trip before grading (issue 28).
-    claimed = supabase.table("sessions").update({
+    claimed = await run_in_threadpool(supabase.table("sessions").update({
         "status": "completed", "completed_at": datetime.utcnow().isoformat()
-    }).eq("id", session_id).eq("user_id", user_id).neq("status", "completed").execute()
+    }).eq("id", session_id).eq("user_id", user_id).neq("status", "completed").execute)  # C34.5: off the loop
     if not claimed.data:
-        found = supabase.table("sessions").select("book_id").eq("id", session_id).eq("user_id", user_id).execute()
+        found = await run_in_threadpool(
+            supabase.table("sessions").select("book_id").eq("id", session_id).eq("user_id", user_id).execute)
         if not found.data:
             raise HTTPException(status_code=404, detail="Session not found.")
         # graded already, or being graded by a concurrent submit: the stored result, nothing re-run
-        return stored_result(session_id, user_id, cast(dict[str, Any], found.data[0])["book_id"])
+        return await run_in_threadpool(stored_result, session_id, user_id, cast(dict[str, Any], found.data[0])["book_id"])
 
     sess = cast(dict[str, Any], claimed.data[0])
     book_id = sess["book_id"]
@@ -175,7 +180,7 @@ async def submit_answers(
             "id", session_id).eq("user_id", user_id).execute()
 
     if not test_questions:
-        release()
+        await run_in_threadpool(release)
         raise HTTPException(status_code=400, detail="No test questions found. Did you call finish-reading?")
 
     # 3. Run the submit_answers flow: evaluator -> knowledge state -> optimizer (C26.6: no planner)
@@ -184,12 +189,12 @@ async def submit_answers(
             session_id, user_id, book_id, chunk_indices, test_questions, req.answers, req.time_taken_seconds
         )
     except Exception:
-        release()
+        await run_in_threadpool(release)
         raise
     eval_result = final.get("evaluation_result")
     if final.get("error") or not eval_result:
         print(f"Evaluate Answers Error: {final.get('error')}")
-        release()
+        await run_in_threadpool(release)
         raise HTTPException(status_code=500, detail="Failed to evaluate answers.")
     background_tasks.add_task(save_decisions, final)
     
@@ -203,7 +208,7 @@ async def submit_answers(
     }  # C26.6: no next_session; the reader reads on from their place
 
 @router.post("/{session_id}/abandon")
-async def abandon_session(session_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+def abandon_session(session_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     resp = supabase.table("sessions").update({
         "status": "abandoned",
         "completed_at": datetime.utcnow().isoformat()
@@ -217,7 +222,7 @@ async def abandon_session(session_id: str, background_tasks: BackgroundTasks, us
     return {"status": "abandoned"}
 
 @router.get("/{session_id}")
-async def get_session(session_id: str, user_id: str = Depends(get_current_user)):
+def get_session(session_id: str, user_id: str = Depends(get_current_user)):
     sess_resp = supabase.table("sessions").select("*").eq("id", session_id).eq("user_id", user_id).execute()
     if not sess_resp.data:
         raise HTTPException(status_code=404, detail="Session not found.")

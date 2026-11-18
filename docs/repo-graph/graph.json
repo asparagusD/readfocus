@@ -1948,6 +1948,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_routes_off_loop.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_startup.py",
       "type": "file",
       "role": "test",
@@ -9869,6 +9875,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_retriever.py",
       "to": "file:backend/services/retriever.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_routes_off_loop.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_routes_off_loop.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_routes_off_loop.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_routes_off_loop.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",

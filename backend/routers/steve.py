@@ -56,12 +56,12 @@ def _settings(row: dict[str, Any]) -> dict[str, Any]:
 
 
 @router.get("/settings")
-async def get_settings(user_id: str = Depends(get_current_user)):
+def get_settings(user_id: str = Depends(get_current_user)):
     return _settings(_profile(user_id))
 
 
 @router.put("/settings")
-async def put_settings(req: SettingsUpdate, user_id: str = Depends(get_current_user)):
+def put_settings(req: SettingsUpdate, user_id: str = Depends(get_current_user)):
     _profile(user_id)
     changes: dict[str, Any] = {}
     if req.enabled is not None:
@@ -85,7 +85,7 @@ KEYS_OFF = "Own keys are not available on this server yet."
 
 
 @router.get("/key")
-async def get_key(user_id: str = Depends(get_current_user)):
+def get_key(user_id: str = Depends(get_current_user)):
     return keys.status(user_id)
 
 
@@ -113,6 +113,6 @@ async def put_key(request: Request, user_id: str = Depends(get_current_user)):
 
 
 @router.delete("/key")
-async def delete_key(user_id: str = Depends(get_current_user)):
+def delete_key(user_id: str = Depends(get_current_user)):
     keys.remove(user_id)
     return keys.status(user_id)

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 924,
-    "inventoried": 781,
+    "tracked": 925,
+    "inventoried": 782,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17340,
+      "size_bytes": 17375,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -617,10 +617,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 437,
-      "size_bytes": 22905,
+      "lines": 451,
+      "size_bytes": 23648,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop. C30.1: the upload's author is optional; a blank one is read from the file's own metadata (file_author: PDF info Author, EPUB dc:creator, whitespace tidied, at most AUTHOR_MAX), else stored as null, and the response returns the author used."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -1578,7 +1578,7 @@
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
       "lines": 303,
-      "size_bytes": 13535,
+      "size_bytes": 13533,
       "role": "test",
       "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404). C27.1: a waiting ingest before an earlier regions job; an ingest on the worker queues its region map behind the next upload, read from Storage; outside the worker a region map runs at once; a cancelled waiter does not hold up the next. C27.2: a job waiting in the worker is not swept again (each runs once, attempts unchanged; a 5 s limit turns the old deadlock into a failure); a job no longer held is swept as before."
     },
@@ -1911,6 +1911,14 @@
       "purpose": "Pytest, table-driven: sentence splitting (abbreviations, quotes, lists, hyphenated line breaks), normalisation, tokens, stopwords, and informativeness rankings."
     },
     {
+      "path": "backend/tests/test_upload_author.py",
+      "language": "python",
+      "lines": 91,
+      "size_bytes": 3606,
+      "role": "test",
+      "purpose": "Pytest (C30.1, issue 2): a typed author is kept and tidied; with none typed, a PDF's info Author or an EPUB's dc:creator is stored and returned; a file naming no author (or unreadable) is stored with author null; a name from the file is tidied and capped at AUTHOR_MAX."
+    },
+    {
       "path": "backend/tests/test_upload_converted.py",
       "language": "python",
       "lines": 124,
@@ -2193,8 +2201,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5995,
-      "size_bytes": 1078868,
+      "lines": 6014,
+      "size_bytes": 1080956,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2481,10 +2489,10 @@
     {
       "path": "frontend/e2e/library.spec.js",
       "language": "javascript",
-      "lines": 341,
-      "size_bytes": 19704,
+      "lines": 350,
+      "size_bytes": 20409,
       "role": "config",
-      "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs."
+      "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs. C30.2: the author is optional (the title alone is checked; a blank author is sent and the returned one shown) and an authorless book shows \"Unknown author\"."
     },
     {
       "path": "frontend/e2e/liveSignIn.js",
@@ -4602,9 +4610,9 @@
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
       "lines": 252,
-      "size_bytes": 10423,
+      "size_bytes": 10478,
       "role": "page",
-      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns. C26.5b: \"For tonight\" is \"Continue reading\" (opens where you left off)."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns. C26.5b: \"For tonight\" is \"Continue reading\" (opens where you left off). C30.2: a book with no author says \"Unknown author\", and Continue reading leaves out \"By ...\"."
     },
     {
       "path": "frontend/src/pages/Landing.css",
@@ -4649,10 +4657,10 @@
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 475,
-      "size_bytes": 22346,
+      "lines": 476,
+      "size_bytes": 22508,
       "role": "page",
-      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice."
+      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\"."
     },
     {
       "path": "frontend/src/pages/Login.css",
@@ -6193,8 +6201,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 783,
-      "size_bytes": 255582,
+      "lines": 784,
+      "size_bytes": 256574,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

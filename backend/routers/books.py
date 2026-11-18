@@ -13,7 +13,7 @@ from backend.agents import policy
 from backend.convert.epub_builder import build_epub
 from backend.convert.sources import FORMATS as CONVERTED, convert_upload
 from backend.services import body_start, ingestion_worker
-from backend.services.book_ingestor import BROWSER_TEXT
+from backend.services.book_ingestor import BROWSER_TEXT, extract_metadata
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 from backend.dependencies import get_current_user
@@ -51,6 +51,15 @@ def pdf_page_count(ext: str, file_bytes: bytes) -> int | None:
         return None  # the count is optional
 
 
+AUTHOR_MAX = 300  # as /books/device (C26.7)
+
+
+def file_author(ext: str, file_bytes: bytes) -> str | None:
+    """The author the file names (PDF info Author, EPUB dc:creator), whitespace tidied; None if it names none (C30.1)."""
+    author = " ".join((extract_metadata(ext, file_bytes)[1] or "").split())[:AUTHOR_MAX]
+    return author or None
+
+
 def record_source_format(book_id: str, source_format: str) -> None:
     """books.source_format (migration 021); a project without the column keeps the book, untagged."""
     try:
@@ -74,7 +83,7 @@ async def upload_book(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     title: str = Form(...),
-    author: str = Form(...),
+    author: str = Form(""),  # C30.1: optional; left blank, the file's own author is used
     storage_mode: Literal["cloud", "device"] = Form("cloud"),
     user_id: str = Depends(get_current_user)
 ):
@@ -100,6 +109,10 @@ async def upload_book(
         if len(file_bytes) > policy.MAX_BOOK_FILE_BYTES:
             raise HTTPException(status_code=413, detail=f"Converted, this book is over {megabytes(policy.MAX_BOOK_FILE_BYTES)}.")
         sha256, ext, mime_type = hashlib.sha256(file_bytes).hexdigest(), "epub", "application/epub+zip"
+    # C30.1: nobody should have to type an author: a blank one comes from the file itself, else stays empty.
+    author = " ".join(author.split())[:AUTHOR_MAX] or None
+    if author is None and source_format is None:
+        author = await run_in_threadpool(file_author, ext, file_bytes)
     if storage_mode == "cloud":
         used = await run_in_threadpool(shelf_bytes, user_id)
         if used + len(file_bytes) > policy.MAX_SHELF_BYTES_PER_USER:
@@ -154,7 +167,8 @@ async def upload_book(
         background_tasks.add_task(ingestion_worker.run, job, file_bytes)
     
     # 6. Return immediately
-    return {"book_id": book_id, "status": "processing", "source_format": source_format, "notes": notes}
+    return {"book_id": book_id, "status": "processing", "source_format": source_format, "notes": notes,
+            "author": author}
 
 BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url, storage_mode"
 PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")

@@ -38,6 +38,7 @@ export function SegmentedTabs({ idBase, label, options, value, onChange, variant
             aria-controls={panelId(idBase)}
             tabIndex={selected ? 0 : -1}
             className="rf-segmented__tab"
+            title={variant === 'underline' && typeof option.label === 'string' ? option.label : undefined}
             onClick={() => onChange(option.value)}
           >
             {option.label}

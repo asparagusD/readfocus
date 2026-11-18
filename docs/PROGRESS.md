@@ -6064,7 +6064,7 @@ its two-agent critique). Issues 8 to 10, on `chunk/C33-dashboard-ui` from `readf
 
 From your request on 2026-11-18 ("investigate why 'opening the book' takes so much time every time ... do
 performance engineering for this app to be really fast on Render free tier"; question preparation left for later).
-On `chunk/C34-open-speed` from `readfocus-2.0` at `3c26260`.
+Issues 11 to 15, on `chunk/C34-open-speed` from `readfocus-2.0` at `3c26260`.
 
 ### Findings (measured 2026-11-18, before any code)
 
@@ -6095,13 +6095,13 @@ at 13:59:44 agrees: every API answer was back by 13:59:45, the first region requ
 
 | Step | What | Hours | Done when |
 |---|---|---|---|
-| C34.1 | PDF byte ranges: `PDFDataRangeTransport` over `Range` requests for a URL source; the length from `/file` (new `size`, read from Storage) or a HEAD; a server that answers 200 instead of 206 gives the whole body (e2e's mocks) | 1.5 | page 400 of the 29.4 MB book in under 3 s in the browser (25.9 s now); e2e and unit green |
-| C34.2 | The stored contents instead of `pdfOutline`, and the first render at the saved page | 1.0 | no outline walk when `toc` has pages; the saved page is the first rendered; contents, chapter name and folio unchanged |
-| C34.3 | `/open` returns the file's signed URL and size: one round trip less before PDF.js starts | 0.75 | the reader makes no `/file` call on open; `/file` stays for old clients |
-| C34.4 | Tokens checked locally against the project's JWKS (ES256, `aud` authenticated, expiry), keys cached; `get_user` only when a key is unknown | 1.0 | no Auth round trip per request; expired, wrong-audience and unsigned tokens refused (tests) |
-| C34.5 | The 16 `async def` endpoints that call Supabase directly no longer block the loop (plain `def`, as the rest) | 1.0 | a test that fails while one of them holds the loop; parallel opens no longer queue |
-| C34.6 | `/me/progress`'s independent queries in parallel (`fetch_all`) | 0.75 | same response (pinned test); time measured before and after |
-| C34.7 | A book's file kept in this browser after its first open (Cache Storage, keyed by id and `sha256`), for EPUBs and PDFs | 1.5 | the second open of an EPUB downloads nothing; a changed file (new sha256) is fetched again |
+| C34.1 | PDF byte ranges (issue 11): `PDFDataRangeTransport` over `Range` requests for a URL source; the length from `/file` (new `size`, read from Storage) or a HEAD; a server that answers 200 instead of 206 gives the whole body (e2e's mocks) | 1.5 | page 400 of the 29.4 MB book in under 3 s in the browser (25.9 s now); e2e and unit green |
+| C34.2 | The stored contents (issue 12) instead of `pdfOutline`, and the first render at the saved page | 1.0 | no outline walk when `toc` has pages; the saved page is the first rendered; contents, chapter name and folio unchanged |
+| C34.3 | (issue 13) `/open` returns the file's signed URL and size: one round trip less before PDF.js starts | 0.75 | the reader makes no `/file` call on open; `/file` stays for old clients |
+| C34.4 | (issue 13) Tokens checked locally against the project's JWKS (ES256, `aud` authenticated, expiry), keys cached; `get_user` only when a key is unknown | 1.0 | no Auth round trip per request; expired, wrong-audience and unsigned tokens refused (tests) |
+| C34.5 | (issue 13) The 16 `async def` endpoints that call Supabase directly no longer block the loop (plain `def`, as the rest) | 1.0 | a test that fails while one of them holds the loop; parallel opens no longer queue |
+| C34.6 | (issue 14) `/me/progress`'s independent queries in parallel (`fetch_all`) | 0.75 | same response (pinned test); time measured before and after |
+| C34.7 | (issue 15) A book's file kept in this browser after its first open (Cache Storage, keyed by id and `sha256`), for EPUBs and PDFs | 1.5 | the second open of an EPUB downloads nothing; a changed file (new sha256) is fetched again |
 | C34.8 | Measure on production and release (Render first: C34.3 adds a field the frontend reads) | 0.5 | open times before and after in `docs/BENCHMARKS.md` |
 | | **Total** | **8.0** | |
 

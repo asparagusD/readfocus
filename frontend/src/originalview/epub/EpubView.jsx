@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { fromBook } from '../bookFile';
+import { keptSource } from '../../reader/fileCache';
 import './epub.css';
 
 /**
@@ -24,7 +25,8 @@ export function EpubView({
   useEffect(() => {
     let opened = null;
     let gone = false;
-    Promise.all([load(bookId), import('./engine')])
+    // C34.7: an EPUB is read whole, so it is kept in this browser and read from there next time.
+    Promise.all([load(bookId).then((source) => keptSource(bookId, source)), import('./engine')])
       .then(([source, { openEpub }]) => openEpub(source, box.current, {
         onRelocate: (location) => handlers.current.onRelocate?.(location),
         onLoad: (detail) => handlers.current.onLoad?.(detail),

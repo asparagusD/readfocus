@@ -8,8 +8,8 @@
 export async function bookSource(bookId, { loadDeviceFile, fetchFile }) {
   const file = await loadDeviceFile(bookId);
   if (file) return { data: new Uint8Array(await file.arrayBuffer()) };
-  const { url } = await fetchFile(bookId);
-  return { url, renew: () => fetchFile(bookId).then((fresh) => fresh.url) };
+  const { url, sha256 = null } = await fetchFile(bookId); // C34.7: sha256 names the version kept in the browser
+  return { url, sha256, renew: () => fetchFile(bookId).then((fresh) => fresh.url) };
 }
 
 /**

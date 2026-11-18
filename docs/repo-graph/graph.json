@@ -2338,6 +2338,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/epub-kept.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/errors.spec.js",
       "type": "file",
       "role": "config",
@@ -10365,6 +10371,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/epub-kept.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/errors.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11435,6 +11446,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/hooks/useAuth.jsx",
+      "to": "file:frontend/src/reader/fileCache.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/illustrations/BookStack.jsx",
       "to": "file:frontend/src/illustrations/Illustration.jsx"
     },
@@ -11935,6 +11951,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubView.jsx",
+      "to": "file:frontend/src/reader/fileCache.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/epub/engine.js",
       "to": "file:frontend/src/originalview/epub/sanitize.js"
     },
@@ -12392,6 +12413,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/reader/browserText.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/fileCache.js"
     },
     {
       "type": "imports",

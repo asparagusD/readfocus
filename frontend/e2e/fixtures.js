@@ -87,7 +87,7 @@ export async function mockBackend(page, api, book) {
       return json(route, { book_id: BOOK, status: api.processing ? 'processing' : 'ready', pages_only: Boolean(BOOKS[book].pagesOnly),
         scanned_pages: BOOKS[book].scanned ?? [], position: api.position,
         // C34.3: the signed file URL, as the server gives it; api.openFile = false acts as an older server without it
-        file: api.openFile === false ? null : { url: api.fileUrl ?? `${API}/e2e-files/${file}`, expires_in: 300, sha256: null },
+        file: api.openFile === false ? null : { url: api.fileUrl ?? `${API}/e2e-files/${file}`, expires_in: 300, sha256: api.fileSha ?? null },
         book: { title: 'Walden', author: 'Henry David Thoreau', toc: api.toc ?? [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' } });
     }
     if (path === `/books/${BOOK}/position` && request.method() === 'PUT') { // C26.5: the book's place, every turn

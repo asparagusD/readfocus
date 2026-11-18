@@ -808,6 +808,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/auth_tokens.py",
+      "type": "file",
+      "role": "lib",
+      "language": "python"
+    },
+    {
       "id": "file:backend/convert/__init__.py",
       "type": "file",
       "role": "lib",
@@ -1481,6 +1487,12 @@
     },
     {
       "id": "file:backend/tests/test_auth.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_auth_tokens.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -8560,6 +8572,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_auth_tokens.py",
+      "to": "file:backend/auth_tokens.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_backfill.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -14247,6 +14264,11 @@
       "type": "reads_table",
       "from": "file:scripts/dev/check_retriever.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:backend/auth_tokens.py",
+      "to": "env:SUPABASE_URL"
     },
     {
       "type": "uses_env",

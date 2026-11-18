@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 934,
-    "inventoried": 791,
+    "tracked": 936,
+    "inventoried": 793,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17619,
+      "size_bytes": 17638,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -325,6 +325,14 @@
       "size_bytes": 4414,
       "role": "agent",
       "purpose": "The only callers of the compiled graph: run_start, run_finish, run_submit and run_abandon invoke one event flow each with a recursion limit of 10 and return the final state; save_decisions stores a run's decisions entries in agent_decisions in one insert, numbered under one run id, logging any failure."
+    },
+    {
+      "path": "backend/auth_tokens.py",
+      "language": "python",
+      "lines": 102,
+      "size_bytes": 4083,
+      "role": "lib",
+      "purpose": "C34.4a (issue 13): Supabase access tokens checked locally: ES256 signature against the project's JWKS key named by kid (read once, again after 10 minutes or, for an unknown kid, at most once a minute), audience authenticated, the project's issuer, expiry (30 s leeway), a sub. user_id raises jwt.InvalidTokenError for a failed check and Unverifiable when it cannot decide (not a JWT, another algorithm, an unknown key, the keys out of reach). Used by get_current_user from C34.4b."
     },
     {
       "path": "backend/convert/__init__.py",
@@ -1231,6 +1239,14 @@
       "purpose": "Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked)."
     },
     {
+      "path": "backend/tests/test_auth_tokens.py",
+      "language": "python",
+      "lines": 136,
+      "size_bytes": 4863,
+      "role": "test",
+      "purpose": "C34.4a: tokens signed with throwaway ES256 keys against a fake key set: a valid one gives its user with the keys read once; expired, wrong audience, issuer or subject, and a forged signature are invalid; non-JWT and HS256 tokens, an unknown kid and unreachable keys are unverifiable; a rotated key read again at most once a minute; the JWKS URL and ES256-only filter."
+    },
+    {
       "path": "backend/tests/test_backfill.py",
       "language": "python",
       "lines": 74,
@@ -1818,7 +1834,7 @@
       "path": "backend/tests/test_requirements.py",
       "language": "python",
       "lines": 88,
-      "size_bytes": 3863,
+      "size_bytes": 3879,
       "role": "test",
       "purpose": "Pytest: every third-party package imported under backend/ is in requirements.txt, every line is pinned, and backend/ has no second requirements file."
     },
@@ -2217,8 +2233,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6122,
-      "size_bytes": 1096363,
+      "lines": 6123,
+      "size_bytes": 1097196,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5585,8 +5601,8 @@
     {
       "path": "requirements.txt",
       "language": "text",
-      "lines": 65,
-      "size_bytes": 2293,
+      "lines": 68,
+      "size_bytes": 2476,
       "role": "config",
       "purpose": "The only backend dependency list, used by the Dockerfile and CI: every package backend/ imports, pinned, including fastembed, numpy, yake and rapidfuzz for backend/nlp/, langgraph with its langchain-core, and no LLM or embedding API package (since C8.8)."
     },
@@ -6273,8 +6289,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 793,
-      "size_bytes": 263399,
+      "lines": 795,
+      "size_bytes": 264321,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

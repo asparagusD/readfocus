@@ -138,24 +138,33 @@ async function mockWrites(page, shelf, { progress = 0.64, failUpload = false, up
 
 const PDF = { name: 'the_age_of_innocence.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 e2e') };
 
-test('adding a book: picker, inline errors, the same form fields, a toast and a processing tile', async ({ page }) => {
-  const calls = await mockWrites(page, () => SHELF.slice(0, 3));
+test('adding a book: picker, an inline error for the title, the author optional, a toast and a processing tile', async ({ page }) => {
+  const calls = await mockWrites(page, () => SHELF.slice(0, 3), { uploaded: { author: 'Edith Wharton' } });
   await page.goto('/');
   await page.getByRole('list').waitFor();
   await page.locator('input[type=file]').setInputFiles(PDF);
   const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
   await expect(dialog).toContainText('the_age_of_innocence.pdf');
   await expect(dialog.getByLabel('Title')).toHaveValue('The Age Of Innocence');
+  await expect(dialog.getByLabel('Author (optional)')).toHaveAccessibleDescription('Leave it blank and we’ll use the name in the file, if it has one.');
+  await dialog.getByLabel('Title').fill('');
   await dialog.getByRole('button', { name: 'Add book' }).click();
-  await expect(dialog.getByLabel('Author')).toHaveAccessibleDescription('Enter the author’s name.');
-  await expect(dialog.getByLabel('Author')).toBeFocused();
+  await expect(dialog.getByLabel('Title')).toHaveAccessibleDescription('Enter the book’s title.');
+  await expect(dialog.getByLabel('Title')).toBeFocused();
   expect(calls.uploads).toEqual([]);
-  await dialog.getByLabel('Author').fill('Edith Wharton');
-  await dialog.getByLabel('Author').press('Enter');
+  await dialog.getByLabel('Title').fill('The Age Of Innocence');
+  await dialog.getByLabel('Title').press('Enter'); // C30.2: no author typed; the server reads it from the file
   await expect(dialog).toBeHidden();
-  expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: 'Edith Wharton', mode: 'cloud', file: 'the_age_of_innocence.pdf' }]);
+  expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: '', mode: 'cloud', file: 'the_age_of_innocence.pdf' }]);
   await expect(page.getByText('The Age Of Innocence is on your shelf. Open it now; its quizzes follow in a few minutes.')).toBeVisible();
   await expect(page.locator('.rf-shelf__item').first()).toContainText('Preparing quizzes…');
+  await expect(page.locator('.rf-shelf__item').first()).toContainText('Edith Wharton');
+});
+
+test('a book with no author shows “Unknown author” on the shelf (C30.2)', async ({ page }) => {
+  await mockWrites(page, () => [{ ...SHELF[0], author: null }]);
+  await page.goto('/');
+  await expect(page.locator('.rf-shelf__item').first().locator('.rf-shelf__author')).toHaveText('Unknown author');
 });
 
 test('a notebook is converted on the server: no device choice, sent to keep, missing images listed (C19.2c)', async ({ page }) => {

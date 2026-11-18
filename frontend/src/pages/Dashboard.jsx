@@ -204,7 +204,7 @@ export function Dashboard() {
               <p className="rf-dash__muted">
                 {nextBook(books).sessions_completed > 0
                   ? `${Math.round(nextBook(books).progress_pct)}% read. It opens where you left off.`
-                  : `By ${nextBook(books).author}. It opens at the first page.`}
+                  : `${nextBook(books).author ? `By ${nextBook(books).author}. ` : ''}It opens at the first page.`}
               </p>
               <Link to={`/read/${nextBook(books).book_id}`} className="rf-btn rf-btn--primary">Begin reading</Link>
             </section>
@@ -216,7 +216,7 @@ export function Dashboard() {
                 {books.map((b) => (
                   <li key={b.book_id}>
                     <p className="rf-dash__book-title">{b.title}</p>
-                    <p className="rf-dash__muted">{b.author}</p>
+                    <p className="rf-dash__muted">{b.author || 'Unknown author'}</p>
                     <MasteryBar value={b.progress_pct} className="rf-dash__book-bar" />
                     <p className="rf-dash__muted">
                       {Math.round(b.progress_pct)}% read · {b.sessions_completed} {b.sessions_completed === 1 ? 'session' : 'sessions'}

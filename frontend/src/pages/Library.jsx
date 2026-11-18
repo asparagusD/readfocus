@@ -231,10 +231,9 @@ export function Library() {
     event.preventDefault();
     const errors = {};
     if (!uploadTitle.trim()) errors.title = 'Enter the book’s title.';
-    if (!uploadAuthor.trim()) errors.author = 'Enter the author’s name.';
-    setUploadErrors(errors);
-    if (errors.title || errors.author) {
-      event.currentTarget.querySelector(errors.title ? '[name="title"]' : '[name="author"]')?.focus();
+    setUploadErrors(errors); // C30.2: the author is optional; the server takes a blank one from the file
+    if (errors.title) {
+      event.currentTarget.querySelector('[name="title"]')?.focus();
       return;
     }
 
@@ -260,7 +259,7 @@ export function Library() {
       const optimbook = {
         id: resp.book_id,
         title: uploadTitle.trim(),
-        author: uploadAuthor.trim(),
+        author: resp.author ?? (uploadAuthor.trim() || null),
         status: 'processing',
         file_type: converting ? 'epub' : selectedFile.name.split('.').pop().toLowerCase(),
         storage_mode: keepHere ? 'device' : 'cloud',
@@ -376,7 +375,7 @@ export function Library() {
             <p className="eyebrow">{next.progress ? 'Continue reading' : 'Start here'}</p>
             <h2 id="rf-today-title" className="rf-today__title">{next.title}</h2>
             <p className="rf-today__line">
-              {next.progress ? `${readPct(next)}% read so far. It opens where you left off.` : `By ${next.author}. It opens at the first page.`}
+              {next.progress ? `${readPct(next)}% read so far. It opens where you left off.` : `${next.author ? `By ${next.author}. ` : ''}It opens at the first page.`}
             </p>
           </div>
           <Link to={`/read/${next.id}`} className="rf-btn rf-btn--primary rf-today__go">
@@ -403,7 +402,7 @@ export function Library() {
                 <>
                   <BookCover title={book.title} author={book.author} coverUrl={book.cover_url} processing={book.status === 'processing'} progress={ingest[book.id]} decorative priority={i < 5} />
                   <span className="rf-shelf__title">{book.title}</span>
-                  <span className="rf-shelf__author">{book.author}</span>
+                  <span className="rf-shelf__author">{book.author || 'Unknown author'}</span>
                 </>
               );
               return (
@@ -437,7 +436,9 @@ export function Library() {
         <form className="rf-library__form" onSubmit={submitUpload} noValidate>
           <p className="rf-library__file">{selectedFile?.name}</p>
           <TextInput label="Title" name="title" value={uploadTitle} error={uploadErrors.title} onChange={(e) => setUploadTitle(e.target.value)} />
-          <TextInput label="Author" name="author" value={uploadAuthor} error={uploadErrors.author} onChange={(e) => setUploadAuthor(e.target.value)} />
+          <TextInput label="Author (optional)" name="author" value={uploadAuthor} error={uploadErrors.author}
+            hint={converting || big ? undefined : 'Leave it blank and we’ll use the name in the file, if it has one.'}
+            onChange={(e) => setUploadAuthor(e.target.value)} />
           {converting ? (
             <p className="rf-library__convert">
               We’ll turn it into a book on our server, keeping its equations, code and images, and store that book for you.

@@ -6115,3 +6115,5 @@ fallback. C34.1 relies on Supabase keeping `Range` support; the 200 fallback cov
 
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
+
+| [x] C34.1a the byte-range source (issue 11) | (this commit) | `pdf/rangeSource.js` (new, not used until C34.1b): HEAD for the length and the first 64 KB at once, then a `PDFDataRangeTransport` fetching only the ranges PDF.js asks for (auto-fetch and streaming off), an expired URL renewed once, a dropped connection retried, `{ data }` for a 200 answer, `{ url }` with no length; `rangeSource.test.js` (7) | unit 280 (7 new); the module wired as in C34.1b drew page 400 of the 29.4 MB book in the browser (see C34.1b); pytest 2069; ruff 25; lint 3; build; contrast 304/0; images; bundle 180.4 KB; e2e 329 | 1.0 h | a range that fails after retries leaves its page blank until the book is reopened (PDF.js has no error path for a range) |

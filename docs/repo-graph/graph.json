@@ -3958,6 +3958,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/pdf/rangeSource.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/rangeSource.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/pdf/recolour.js",
       "type": "file",
       "role": "asset",
@@ -11941,6 +11953,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/pdfjs.js",
       "to": "file:frontend/src/originalview/pdf/recolour.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/rangeSource.test.js",
+      "to": "file:frontend/src/originalview/pdf/rangeSource.js"
     },
     {
       "type": "imports",

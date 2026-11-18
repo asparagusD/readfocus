@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 928,
-    "inventoried": 785,
+    "tracked": 930,
+    "inventoried": 787,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17498,
+      "size_bytes": 17515,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2217,8 +2217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6117,
-      "size_bytes": 1092713,
+      "lines": 6119,
+      "size_bytes": 1093453,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -4527,6 +4527,22 @@
       "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed). C17.4: renderPage recolours for lamplight (an alpha context, recorded image positions) and pdfOutline flattens the outline to pages."
     },
     {
+      "path": "frontend/src/originalview/pdf/rangeSource.js",
+      "language": "javascript",
+      "lines": 68,
+      "size_bytes": 3556,
+      "role": "asset",
+      "purpose": "C34.1 (issue 11): PDF.js input over HTTP byte ranges. Supabase Storage answers Range with 206 but sends no Accept-Ranges, so PDF.js given a URL downloaded the whole file; rangeSource reads the length (HEAD) and first 64 KB, then hands PDF.js a PDFDataRangeTransport that fetches only the ranges asked for (auto-fetch and streaming off), renews an expired signed URL once, retries a dropped connection, and falls back to { data } for a 200 answer or { url } with no length. Not used until C34.1b."
+    },
+    {
+      "path": "frontend/src/originalview/pdf/rangeSource.test.js",
+      "language": "javascript",
+      "lines": 105,
+      "size_bytes": 5192,
+      "role": "asset",
+      "purpose": "Node test (npm run test:unit, C34.1): the range source against a fake storage server: ranges with the length and first bytes, a 200 server's whole file, a small file, no length, a refused file, an expired URL renewed once, a dropped connection retried."
+    },
+    {
       "path": "frontend/src/originalview/pdf/recolour.js",
       "language": "javascript",
       "lines": 60,
@@ -6225,8 +6241,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 787,
-      "size_bytes": 260610,
+      "lines": 789,
+      "size_bytes": 261470,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

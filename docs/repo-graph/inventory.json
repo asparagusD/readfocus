@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17428,
+      "size_bytes": 17445,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2217,8 +2217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6045,
-      "size_bytes": 1084441,
+      "lines": 6046,
+      "size_bytes": 1085023,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2337,8 +2337,8 @@
     {
       "path": "frontend/e2e/dashboard.spec.js",
       "language": "javascript",
-      "lines": 192,
-      "size_bytes": 11452,
+      "lines": 193,
+      "size_bytes": 11519,
       "role": "config",
       "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here and GET /mastery (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375; concept mastery (tabs by keyboard, weakest first, Show more, the weak rule, the exact /mastery requests) and a failed mastery load; For tonight; the candle, bar and trend motion with and without reduced motion."
     },
@@ -3913,16 +3913,16 @@
     {
       "path": "frontend/src/lib/dashboard.js",
       "language": "javascript",
-      "lines": 82,
-      "size_bytes": 3404,
+      "lines": 91,
+      "size_bytes": 3897,
       "role": "lib",
-      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday, needsRevisiting (tested and under the planner's 0.5), nextBook (started and unfinished with the most read, else the first not started). C23.7c: focusedTime ('1 h 10 min') and focusWeek (the focus card's time, points and line)."
+      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday, needsRevisiting (tested and under the planner's 0.5), nextBook (started and unfinished with the most read, else the first not started). C23.7c: focusedTime ('1 h 10 min') and focusWeek (the focus card's time, points and line). C32.3: bookLine(book) and nextBook by reading (chunks_completed), not quizzes."
     },
     {
       "path": "frontend/src/lib/dashboard.test.js",
       "language": "javascript",
-      "lines": 56,
-      "size_bytes": 2923,
+      "lines": 74,
+      "size_bytes": 4018,
       "role": "lib",
       "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday, needs revisiting."
     },
@@ -4625,10 +4625,10 @@
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 252,
-      "size_bytes": 10478,
+      "lines": 249,
+      "size_bytes": 10219,
       "role": "page",
-      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns. C26.5b: \"For tonight\" is \"Continue reading\" (opens where you left off). C30.2: a book with no author says \"Unknown author\", and Continue reading leaves out \"By ...\"."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns. C26.5b: \"For tonight\" is \"Continue reading\" (opens where you left off). C30.2: a book with no author says \"Unknown author\", and Continue reading leaves out \"By ...\". C32.3 (issue 5): each book's line is bookLine (\"42% read · 3 quizzes\", no sessions, no estimate); Continue reading says \"% read\" once the book is read into; the empty state asks to open a book and read."
     },
     {
       "path": "frontend/src/pages/Landing.css",
@@ -6226,7 +6226,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 787,
-      "size_bytes": 259301,
+      "size_bytes": 259588,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -6257,8 +6257,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 290,
-      "size_bytes": 12404,
+      "lines": 291,
+      "size_bytes": 12453,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

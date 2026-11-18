@@ -83,15 +83,16 @@ test('greeting, streak, four figures, the trend with its table, books and feedba
   await expect(page.locator('.rf-trend .rf-trend__dot')).toHaveCount(8);
   await expect(page.locator('.rf-trend .rf-trend__dot--last')).toHaveCount(1);
   const books = page.getByRole('region', { name: 'Your books' });
-  await expect(books).toContainText('60% read · 6 sessions · about 3 to finish');
-  await expect(books).toContainText('0% read · 0 sessions');
+  await expect(books).toContainText('60% read · 6 quizzes'); // C32.3: no sessions, no estimate to finish
+  await expect(books).not.toContainText('to finish');
+  await expect(books).not.toContainText('session');
   await expect(page.getByRole('region', { name: 'Recent feedback' }).locator('blockquote')).toHaveText('“The mass of men lead lives of quiet desperation.”');
   if (shots) await page.screenshot({ path: `${shots}/dashboard-1440.png`, fullPage: true });
 });
 
 test('a new reader sees a way to start, not empty charts', async ({ page }) => {
   await page.goto('/dashboard'); // the fixtures' empty dashboard
-  await expect(page.getByRole('heading', { name: 'Your progress starts with a first session' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your progress starts with your first page' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Go to your shelf' })).toHaveAttribute('href', '/');
   await expect(page.locator('.rf-trend')).toHaveCount(0);
 });

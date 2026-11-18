@@ -5993,3 +5993,21 @@ or large book", on `chunk/C29-upload-health` from `readfocus-2.0` at `7776708`.
 | [x] C29.0 the repo graph builds again | `ebc8658` | `purposes.json`: a purpose for `frontend/e2e/liveSignIn.js`; `docs/repo-graph/` regenerated | `pytest tools/repo_graph/tests -q` 5 failed / 59 passed before, 64 passed after; inventory 780 files, graph 917 nodes, 0 unresolved | 0.1 h | none |
 | [x] C29.1a ingestion off the event loop | (this commit) | `book_ingestor.run_job`: the parse (`read_pages`, new), chunking and every Supabase call (`store_batch`, `_load_book`, `_save_toc`, `_record_failure`, `mark_ready`, the job's cursor) run in a thread; `test_jobs_off_loop.py` (2 tests) | pytest 2035 (2 new; both fail on the old ingestor, heartbeat 0.9 s and 2.1 s late); ruff 25 (baseline); container at `--cpus=0.1 --memory=512m`, Interactive Linear Algebra: worst event-loop stall 98.4 s before, 1.2 s after (C29.1a and b together) | 1.5 h | region maps and the upload route in C29.1b; memory headroom for a 50 MiB book is thin (cgroup peak 512.0 MB on Calculus Volume 1, not a cause of Render's restarts so far) |
 | [x] C29.1b region maps and uploads off the event loop | (this commit) | `region_job`: the book select, `_store`, `_store_epub` (new), `release_memory`, the job's bookkeeping and `after_ingest`'s `queue` run in a thread; `POST /books/upload`: the shelf total, Storage upload, page count, book row, source format and job through `run_in_threadpool`; `test_jobs_off_loop.py` +4 tests; DEBUG_LOG 2026-11-18 C29.1 | pytest 2039 (4 new; all 4 fail on the old code, heartbeat 0.9 to 2.1 s late); ruff 25; standard checks all at baseline; container probe as in C29.1a (Alice EPUB: worst stall 1.5 s before, under 1 s after; its region map was not reached in 300 s) | 0.8 h | not deployed; issue 1 stays open until Render runs it; the memory headroom note in C29.1a |
+
+## C30 — the author is optional at upload
+
+From your request on 2026-11-18 ("fix issue #2 next"): GitHub issue 2, "Don't require the author's name when
+uploading a book", on `chunk/C30-optional-author` from `readfocus-2.0` at `116023f`.
+
+- **C30.1 the server reads a blank author from the file.** `POST /books/upload` takes no author or a blank one; the
+  file's own author (PDF info, EPUB `dc:creator`) is stored, else none, and the response says which.
+- **C30.2 the dialog stops asking for it.** The Author field is optional with a hint; the shelf and dashboard say
+  "Unknown author" for a book with none.
+- Left out: prefilling the dialog from the file's metadata in the browser (the title still comes from the file
+  name); a reader can't yet edit a book's author after upload.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C30.1 a blank author comes from the file | (this commit) | `books.py`: `author` defaults to blank, whitespace tidied and capped at 300; blank on a PDF or EPUB upload reads `file_author` (`book_ingestor.extract_metadata`, in a thread), else null; the response returns `author`; `test_upload_author.py` (7 tests); `test_ingestion_worker.py` expects the new key | pytest 2046 (7 new; all 7 fail before the change); ruff 25; graph 64 | 0.5 h | none |

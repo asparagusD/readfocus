@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 924,
-    "inventoried": 781,
+    "tracked": 925,
+    "inventoried": 782,
     "excluded": 143
   },
   "files": [
@@ -617,10 +617,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 437,
-      "size_bytes": 22905,
+      "lines": 451,
+      "size_bytes": 23648,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop. C30.1: the upload's author is optional; a blank one is read from the file's own metadata (file_author: PDF info Author, EPUB dc:creator, whitespace tidied, at most AUTHOR_MAX), else stored as null, and the response returns the author used."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -1578,7 +1578,7 @@
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
       "lines": 303,
-      "size_bytes": 13535,
+      "size_bytes": 13533,
       "role": "test",
       "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404). C27.1: a waiting ingest before an earlier regions job; an ingest on the worker queues its region map behind the next upload, read from Storage; outside the worker a region map runs at once; a cancelled waiter does not hold up the next. C27.2: a job waiting in the worker is not swept again (each runs once, attempts unchanged; a 5 s limit turns the old deadlock into a failure); a job no longer held is swept as before."
     },
@@ -1909,6 +1909,14 @@
       "size_bytes": 5336,
       "role": "test",
       "purpose": "Pytest, table-driven: sentence splitting (abbreviations, quotes, lists, hyphenated line breaks), normalisation, tokens, stopwords, and informativeness rankings."
+    },
+    {
+      "path": "backend/tests/test_upload_author.py",
+      "language": "python",
+      "lines": 91,
+      "size_bytes": 3606,
+      "role": "test",
+      "purpose": "Pytest (C30.1, issue 2): a typed author is kept and tidied; with none typed, a PDF's info Author or an EPUB's dc:creator is stored and returned; a file naming no author (or unreadable) is stored with author null; a name from the file is tidied and capped at AUTHOR_MAX."
     },
     {
       "path": "backend/tests/test_upload_converted.py",
@@ -6193,8 +6201,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 783,
-      "size_bytes": 255582,
+      "lines": 784,
+      "size_bytes": 256136,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

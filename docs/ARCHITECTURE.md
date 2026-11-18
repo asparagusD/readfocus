@@ -54,7 +54,7 @@ API anywhere. File paths are given so each claim can be checked.
 | Layer | Where | Notes |
 |---|---|---|
 | Frontend | `frontend/src/` | React, React Router, Recharts, motion, @floating-ui/react; plain JavaScript; `originalview/`, `annotations/`, `notes/`, `steve/`, `gamification/` |
-| API | `backend/routers/` | Every route but `/health` needs a Supabase JWT (`backend/dependencies.py`) |
+| API | `backend/routers/` | Every route but `/health` needs a Supabase JWT (`backend/dependencies.py`), checked against the project's published ES256 keys (`backend/auth_tokens.py`, C34.4), Supabase Auth only when it cannot be checked there |
 | Agents | `backend/agents/` | LangGraph `StateGraph` in `graph.py`, run through `workflow.py` |
 | Constants | `backend/agents/policy.py` | Every threshold, weight and bound the agents use |
 | Local NLP | `backend/nlp/` | `embedder.py` (fastembed), `concepts.py` (YAKE + rapidfuzz), `text.py` |

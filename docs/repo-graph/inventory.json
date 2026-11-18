@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17638,
+      "size_bytes": 17674,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -332,7 +332,7 @@
       "lines": 102,
       "size_bytes": 4083,
       "role": "lib",
-      "purpose": "C34.4a (issue 13): Supabase access tokens checked locally: ES256 signature against the project's JWKS key named by kid (read once, again after 10 minutes or, for an unknown kid, at most once a minute), audience authenticated, the project's issuer, expiry (30 s leeway), a sub. user_id raises jwt.InvalidTokenError for a failed check and Unverifiable when it cannot decide (not a JWT, another algorithm, an unknown key, the keys out of reach). Used by get_current_user from C34.4b."
+      "purpose": "C34.4a (issue 13): Supabase access tokens checked locally: ES256 signature against the project's JWKS key named by kid (read once, again after 10 minutes or, for an unknown kid, at most once a minute), audience authenticated, the project's issuer, expiry (30 s leeway), a sub. user_id raises jwt.InvalidTokenError for a failed check and Unverifiable when it cannot decide (not a JWT, another algorithm, an unknown key, the keys out of reach). Used by get_current_user since C34.4b."
     },
     {
       "path": "backend/convert/__init__.py",
@@ -409,10 +409,10 @@
     {
       "path": "backend/dependencies.py",
       "language": "python",
-      "lines": 45,
-      "size_bytes": 1620,
+      "lines": 58,
+      "size_bytes": 2136,
       "role": "lib",
-      "purpose": "FastAPI dependencies: get_current_user resolves a Supabase JWT to a user id through supabase.auth.get_user (anything else is a 401); require_model waits up to EMBED_WAIT_SECONDS for the embedding model, starting a load if none is running, and answers 503 with Retry-After before the endpoint runs."
+      "purpose": "FastAPI dependencies: get_current_user resolves a Supabase JWT to a user id through supabase.auth.get_user (anything else is a 401); require_model waits up to EMBED_WAIT_SECONDS for the embedding model, starting a load if none is running, and answers 503 with Retry-After before the endpoint runs. C34.4b: the token is checked first by backend/auth_tokens.py; Supabase Auth's get_user only when it cannot be checked there; a failed check is 401 without Supabase."
     },
     {
       "path": "backend/focus/__init__.py",
@@ -1233,10 +1233,10 @@
     {
       "path": "backend/tests/test_auth.py",
       "language": "python",
-      "lines": 73,
-      "size_bytes": 2199,
+      "lines": 102,
+      "size_bytes": 3259,
       "role": "test",
-      "purpose": "Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked)."
+      "purpose": "Pytest: get_current_user rejects a raw UUID token with 401 and returns the user id for a token Supabase accepts (supabase.auth mocked). C34.4b: a token checked locally gives its user and a failed one is 401, neither asking Supabase; a token that cannot be checked locally still goes to Supabase."
     },
     {
       "path": "backend/tests/test_auth_tokens.py",
@@ -2146,7 +2146,7 @@
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
       "lines": 466,
-      "size_bytes": 30438,
+      "size_bytes": 30576,
       "role": "doc",
       "purpose": "Architecture (C15.4, phase 2 in C25.1): the system with Gemini for Steve only, the five agents' pure decide() contracts, the LangGraph diagram, event flows per endpoint, ingestion, conversions to EPUB, the region map, the data model through migration 033, the original view (PDF.js, foliate-js, OCR; the book view retired), word lookup, annotations, notes, Steve, focus mode, XP and leagues, and the security layers."
     },
@@ -2233,8 +2233,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6123,
-      "size_bytes": 1097196,
+      "lines": 6124,
+      "size_bytes": 1097981,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6290,7 +6290,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 795,
-      "size_bytes": 264321,
+      "size_bytes": 264647,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

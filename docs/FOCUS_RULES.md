@@ -115,6 +115,13 @@ the client never sends a number it computed. Each session's points are
 written once (idempotent per session, as mastery is per event since
 C7.4).
 
+**F15. Notes and Steve in focus mode** (C31.1, GitHub issue 3; your decision on 2026-11-18). The focus
+bar offers Notes and Steve, and they open in the same side panel as in normal reading. The clock runs on while
+the panel is open: notes and questions about the book count as studying it, and F6 still stops the clock after
+quiet minutes. Steve keeps his consent notice, off switch and daily limit, and is not offered while a session
+waits for its bookmark quiz (F10). This departs from the phase-2 handoff, which hid the study panel in focus
+mode ("notes, Steve and badges are tucked away"); badges stay tucked away.
+
 ## Open questions
 
 1. ~~F7: the whole page's time earns 0, or only the minutes beyond the

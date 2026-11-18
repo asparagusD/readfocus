@@ -196,7 +196,7 @@ test('two tabs on one session: the second only shows the time, and takes over on
     expect(kinds(api).length).toBe(before); // its lease is still fresh: the second tab still only watches
     await second.clock.runFor(60_000); // 90 s since the writer's last heartbeat: the lease (75 s) has lapsed
     await expect.poll(() => kinds(api).length).toBeGreaterThan(before); // the second tab writes now
-    await expect(bar(second)).toContainText('Focus · notes, Steve and badges are tucked away');
+    await expect(bar(second)).toContainText('Focus · badges are tucked away');
     await expect(bar(second).getByRole('button', { name: 'Pause focus' })).toBeVisible();
     await second.close();
   });

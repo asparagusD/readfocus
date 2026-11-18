@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17445,
+      "size_bytes": 17463,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -625,10 +625,10 @@
     {
       "path": "backend/routers/dashboard.py",
       "language": "python",
-      "lines": 198,
-      "size_bytes": 9126,
+      "lines": 184,
+      "size_bytes": 8681,
       "role": "router",
-      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found. C23.7c: focus_this_week {seconds, points, sessions}: counted seconds (active minus voided) of this week's focus sessions except discarded ones, and points of the scored ones, from focus_sessions. C32.2 (issue 4): words_this_week is the sum of reading_days since the reader's own Monday (0 without the table), and book_progress lists only books opened at least once (a reading_progress row)."
+      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found. C23.7c: focus_this_week {seconds, points, sessions}: counted seconds (active minus voided) of this week's focus sessions except discarded ones, and points of the scored ones, from focus_sessions. C32.2 (issue 4): words_this_week is the sum of reading_days since the reader's own Monday (0 without the table), and book_progress lists only books opened at least once (a reading_progress row). C32.4 (issue 7): reading_streak is progress.current_streak, the header's streak, no longer days with a completed quiz."
     },
     {
       "path": "backend/routers/device_books.py",
@@ -689,10 +689,10 @@
     {
       "path": "backend/routers/progress.py",
       "language": "python",
-      "lines": 182,
-      "size_bytes": 9615,
+      "lines": 191,
+      "size_bytes": 10090,
       "role": "router",
-      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to)."
+      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to). C32.4: current_streak(user_id), the streak days the header shows (stored streak viewed on the reader's own day), shared with /dashboard."
     },
     {
       "path": "backend/routers/reading.py",
@@ -1153,8 +1153,8 @@
     {
       "path": "backend/tests/test_api_dashboard.py",
       "language": "python",
-      "lines": 182,
-      "size_bytes": 8626,
+      "lines": 196,
+      "size_bytes": 9571,
       "role": "test",
       "purpose": "Pytest on the in-memory database with a frozen clock: GET /dashboard returns the response recorded from the pre-C9.4 endpoint, reads answers only for a page of the newest results, pages on until it has three feedback quotes, and issues its reads at once."
     },
@@ -2153,8 +2153,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5182,
-      "size_bytes": 239611,
+      "lines": 5211,
+      "size_bytes": 241280,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2217,8 +2217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6046,
-      "size_bytes": 1085023,
+      "lines": 6047,
+      "size_bytes": 1085444,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6226,7 +6226,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 787,
-      "size_bytes": 259588,
+      "size_bytes": 259844,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

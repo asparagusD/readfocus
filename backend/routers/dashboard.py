@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from fastapi.concurrency import run_in_threadpool
 
 from backend.dependencies import get_current_user
+from backend.routers import progress
 from backend.services import reading_place
 from backend.services.supabase_client import supabase
 
@@ -65,7 +66,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
     week_start = today - timedelta(days=today.weekday())  # Monday
     local_today = await run_in_threadpool(reading_place.reader_day, user_id)  # C32.2: the reader's own week
     local_monday = local_today - timedelta(days=local_today.weekday())
-    books, progress_data, sessions, results, feedback_rows, focus_rows, words_this_week = await asyncio.gather(
+    books, progress_data, sessions, results, feedback_rows, focus_rows, words_this_week, streak = await asyncio.gather(
         run_in_threadpool(_rows, supabase.table("books").select(
             "id, title, author, total_chunks, total_words, status"
         ).eq("user_id", user_id).eq("status", "ready")),
@@ -85,6 +86,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
             "status, active_seconds, voided_seconds, points_total"
         ).eq("user_id", user_id).gte("started_at", str(week_start))),
         run_in_threadpool(words_since, user_id, local_monday.isoformat()),
+        run_in_threadpool(progress.current_streak, user_id),  # C32.4 (issue 7): the header's streak, not a second one
     )
     progress_by_book = {p["book_id"]: p for p in progress_data}
     session_by_id = {s["id"]: s for s in sessions}
@@ -148,23 +150,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
             "book_title": book_title,
         })
 
-    # ── 6. Reading streak ─────────────────────────────────────────────────────
-    completed_dates = set()
-    for s in sessions:
-        if s.get("completed_at"):
-            completed_dates.add(s["completed_at"][:10])
-
-    streak = 0
-    check_date = today
-    while str(check_date) in completed_dates:
-        streak += 1
-        check_date -= timedelta(days=1)
-    # Also accept if yesterday was last session (streak not broken yet today)
-    if streak == 0 and str(today - timedelta(days=1)) in completed_dates:
-        check_date = today - timedelta(days=1)
-        while str(check_date) in completed_dates:
-            streak += 1
-            check_date -= timedelta(days=1)
+    # ── 6. Reading streak: the gamification streak, read above (C32.4) ────────────────────────────────────
 
     # ── 7. Words read this week: read above from reading_days (C32.2), no longer the quizzes' ranges ──────
 

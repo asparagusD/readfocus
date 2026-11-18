@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from backend.dependencies import get_current_user
 from backend.main import app
-from backend.routers import dashboard
+from backend.routers import dashboard, progress
 from backend.services import reading_place
 from backend.tests.memory_db import MemoryDb
 
@@ -67,6 +67,9 @@ def data():
             result("s3", 20, "2026-11-11", []),
         ],
         "focus_sessions": [],
+        # C32.4: the streak is the gamification streak (G7): 3 goal days, the last one today
+        "user_progress": [{"user_id": USER, "timezone": "UTC", "streak_days": 3, "streak_freezes": 0,
+                           "last_goal_day": "2026-11-11"}],
         # C32.2: words read come from reading_days in the reader's week (Monday 2026-11-09 on), not the quizzes
         "reading_days": [
             {"user_id": USER, "book_id": "b1", "day": "2026-11-09", "words": 1000},
@@ -86,6 +89,8 @@ def db(monkeypatch):
     monkeypatch.setattr(dashboard, "datetime", FrozenDatetime)
     monkeypatch.setattr(reading_place, "supabase", fake)
     monkeypatch.setattr(reading_place, "datetime", FrozenDatetime)
+    monkeypatch.setattr(progress, "supabase", fake)
+    monkeypatch.setattr(progress, "_now", FrozenDatetime.now)
     app.dependency_overrides[get_current_user] = lambda: USER
     yield fake
     app.dependency_overrides.clear()
@@ -179,4 +184,13 @@ def test_words_read_this_week_is_0_when_the_table_is_not_there_yet(db, monkeypat
     monkeypatch.setattr(db, "table", lambda name: (_ for _ in ()).throw(RuntimeError("no reading_days"))
                         if name == "reading_days" else table(name))
     assert get(db)["words_this_week"] == 0
+
+
+def test_the_streak_is_the_headers_not_one_of_its_own(db):
+    """C32.4 (issue 7): quizzes on three days in a row no longer make a streak; the daily goal does (G7)."""
+    db.tables["user_progress"] = []
+    assert get(db)["reading_streak"] == 0  # sessions s1-s3 completed 9-11 Nov, but no goal day
+    db.tables["user_progress"] = [{"user_id": USER, "timezone": "UTC", "streak_days": 5, "streak_freezes": 1,
+                                   "last_goal_day": "2026-11-09"}]  # 10 Nov missed and frozen, 11 Nov not over
+    assert get(db)["reading_streak"] == 5
 

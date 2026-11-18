@@ -5180,3 +5180,32 @@ all 6 pass.
 ### Commit
 `1ce3a2e` fix(ingest): parse and store a book off the event loop (C29.1a) and
 fix(ingest): build region maps and take uploads off the event loop (C29.1b, this commit)
+
+
+## 2026-11-18 C32 — the Dashboard measured quizzes, not reading (issues 4 to 7)
+
+**Status:** fixed (C32.1 `05ab0d2`, C32.2 `fe6ce5d`, C32.3 `76a57ba`, C32.4 this commit)
+
+### Symptom
+A review of the Dashboard on your request. Your account (read-only queries, 2026-11-18): 7 books, every saved place
+`{anchor}` only, `chunks_completed` 0 on all, so 0% read everywhere and 0 words this week, books read that day
+included; every ready book "in progress"; "0% read · 0 sessions · about 402 to finish". The page's streak (days with
+a graded quiz, UTC) is not the header's (daily XP goal, freezes, the reader's zone).
+
+### Root cause
+C26 retired planned sessions, but `/dashboard` still built its reading figures from completed `sessions` rows and
+`chunks_completed`, which only a graded quiz moved, and moved by adding its range's size (issue 6). The saved place
+held no chunk, and nothing recorded words read per day.
+
+### Fix
+Your decisions: progress from the place (`reading_place.chunk_at` on every save, the furthest chunk; quizzes raise
+it to their range's end, never add); words read per day in `reading_days` (migration 034, applied only with your
+approval); in progress = opened; "N% read · N quizzes"; the header's streak on the page (`progress.current_streak`).
+
+### Regression test
+`test_reading_place.py` (16), `test_api_focus_quiz.py::test_a_range_quizzed_twice_moves_progress_to_its_end_once`,
+`test_api_dashboard.py` (+3), `dashboard.test.js` (+2), `dashboard.spec.js`; each behaviour test fails on the code
+before its step (see the commits).
+
+### Commit
+`05ab0d2`, `fe6ce5d`, `76a57ba` and fix(api): show the header's streak on the Dashboard (C32.4)

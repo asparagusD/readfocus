@@ -7340,6 +7340,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/routers/progress.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/dashboard.py",
       "to": "file:backend/services/reading_place.py"
     },
     {
@@ -8186,6 +8191,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_dashboard.py",
       "to": "file:backend/routers/dashboard.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/routers/progress.py"
     },
     {
       "type": "imports",

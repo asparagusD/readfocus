@@ -6012,3 +6012,15 @@ uploading a book", on `chunk/C30-optional-author` from `readfocus-2.0` at `11602
 |---|---|---|---|---|---|
 | [x] C30.1 a blank author comes from the file | (this commit) | `books.py`: `author` defaults to blank, whitespace tidied and capped at 300; blank on a PDF or EPUB upload reads `file_author` (`book_ingestor.extract_metadata`, in a thread), else null; the response returns `author`; `test_upload_author.py` (7 tests); `test_ingestion_worker.py` expects the new key | pytest 2046 (7 new; all 7 fail before the change); ruff 25; graph 64 | 0.5 h | none |
 | [x] C30.2 the dialog stops asking for the author | (this commit) | `Library.jsx`: "Author (optional)" with a hint (not for a converted or over-50 MB book, whose file the server doesn't read for it), no author error, the new tile takes the author the upload returns, "Unknown author" on a tile with none, no "By ." on Continue reading; `Dashboard.jsx`: the same fallbacks; `library.spec.js`: the upload test rewritten for an optional author, a test for "Unknown author" | e2e 325 (1 new); unit 271; lint 3 (baseline); build; bundle 180.4 KB; screenshots of the dialog and an authorless shelf at 375 and 1440 px (throwaway spec, deleted): hint under the label, focus ring on Author after Tab from Title, no horizontal scroll | 0.6 h | not deployed |
+
+## C31 — Notes and Steve in focus mode
+
+From your request on 2026-11-18 ("fix issue #3 next"): GitHub issue 3, "Focus mode has no Notes or Steve", on
+`chunk/C31-focus-study` from `readfocus-2.0` at `2b52725`. The phase-2 handoff hid the study panel in focus mode;
+asked first, you chose Notes and Steve both, with the clock running on while the panel is open (FOCUS_RULES F15).
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C31.1 Notes and Steve on the focus bar | (this commit) | `FocusBar.jsx`: Notes and Steve buttons as on the toolbar, icon-only under 760 px with Pause and Resume so the actions keep one row, caption "Focus · badges are tucked away"; `ReadingSession.jsx`: the side panel in focus mode, Steve withheld while a session awaits its quiz; `FOCUS_RULES.md` F15; `focus-mode.spec.js` +2 tests, `focus.spec.js` caption | e2e 327 (2 new); lint 3 (baseline); unit 271; build; contrast 304/0; bundle 180.4 KB; pytest 2046; screenshots at 375 and 1440 px (throwaway spec, deleted): one row of actions at both widths, no horizontal scroll, Steve's consent notice shown in focus mode | 1.0 h | not deployed; the time spent in the panel counts as focus time by your choice |

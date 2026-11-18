@@ -27,7 +27,7 @@ def db(monkeypatch):
     fake.tables["books"] = [{"id": BOOK, "user_id": USER, "title": "T", "author": None, "file_type": "pdf",
                              "file_format": "pdf", "storage_mode": "cloud", "status": "ready", "total_chunks": 3,
                              "page_count": 9, "toc": [], "scanned_pages": None}]
-    fake.tables["chunks"] = [{"id": f"c{i}", "book_id": BOOK, "chunk_index": i,
+    fake.tables["chunks"] = [{"id": f"c{i}", "book_id": BOOK, "chunk_index": i, "word_count": 100 * (i + 1),
                               "anchors": {"kind": "pdf", "pages": [3 * i + 1, 3 * i + 3]}} for i in range(3)]
     monkeypatch.setattr(reading, "supabase", fake)
     monkeypatch.setattr(reading_place, "supabase", fake)
@@ -105,3 +105,40 @@ def test_a_book_still_being_read_saves_its_place_without_progress(client, db):
     book(db)["total_chunks"] = None
     assert client.put(f"/books/{BOOK}/position", json={"anchor": pdf(5)}).status_code == 200
     assert db.tables["reading_progress"][0]["chunks_completed"] == 0
+
+
+# --- C32.2: words read per day ---------------------------------------------------------------------------------
+
+def test_moving_forward_records_the_words_reached_on_the_readers_own_day(client, db, monkeypatch):
+    class Late(reading_place.datetime):
+        @classmethod
+        def now(cls, tz=None):  # 20:30 UTC is 02:30 the next day in Dhaka (UTC+6)
+            return reading_place.datetime(2026, 11, 18, 20, 30, tzinfo=reading_place.UTC)
+    monkeypatch.setattr(reading_place, "datetime", Late)
+    db.tables["user_progress"] = [{"user_id": USER, "timezone": "Asia/Dhaka"}]
+    client.put(f"/books/{BOOK}/position", json={"anchor": pdf(1)})  # chunk 0 reached: 100 words
+    client.put(f"/books/{BOOK}/position", json={"anchor": pdf(4)})  # chunk 1: 200 more
+    client.put(f"/books/{BOOK}/position", json={"anchor": pdf(2)})  # back: nothing new
+    assert [(r["day"], r["words"]) for r in db.tables["reading_days"]] == [("2026-11-19", 300)]
+
+
+def test_a_jump_moves_the_place_but_counts_no_words(client, db):
+    book(db)["total_chunks"] = 6
+    db.tables["chunks"] += [{"id": f"c{i}", "book_id": BOOK, "chunk_index": i, "word_count": 100,
+                             "anchors": {"kind": "pdf", "pages": [3 * i + 1, 3 * i + 3]}} for i in range(3, 6)]
+    client.put(f"/books/{BOOK}/position", json={"anchor": pdf(16)})  # chunk 5 straight away: the contents
+    assert db.tables["reading_progress"][0]["chunks_completed"] == 6
+    assert not db.tables.get("reading_days")
+
+
+def test_a_failing_words_table_never_fails_the_save(client, db, monkeypatch):
+    table = db.table
+
+    def no_reading_days(name):
+        if name == "reading_days":
+            raise RuntimeError("relation reading_days does not exist")
+        return table(name)
+    monkeypatch.setattr(db, "table", no_reading_days)
+    assert client.put(f"/books/{BOOK}/position", json={"anchor": pdf(4)}).status_code == 200
+    assert db.tables["reading_progress"][0]["chunks_completed"] == 2
+

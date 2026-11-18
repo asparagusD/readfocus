@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from fastapi.concurrency import run_in_threadpool
 
 from backend.dependencies import get_current_user
+from backend.services import reading_place
 from backend.services.supabase_client import supabase
 
 Row = dict[str, Any]
@@ -43,6 +44,16 @@ def latest_feedback(user_id: str) -> list[tuple[Row, Row]]:
     return found
 
 
+def words_since(user_id: str, first_day: str) -> int:
+    """C32.2: words read from `first_day` on (reading_days, migration 034); 0 when the table is not there yet."""
+    try:
+        return sum(int(r.get("words") or 0) for r in _rows(supabase.table("reading_days").select("words").eq(
+            "user_id", user_id).gte("day", first_day)))
+    except Exception as error:  # noqa: BLE001 - one figure, never the whole dashboard
+        print(f"Words read this week not read: {error}")
+        return 0
+
+
 @router.get("")
 async def get_dashboard(user_id: str = Depends(get_current_user)):
     """
@@ -52,7 +63,9 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
     # ── 1-3. The reads do not depend on each other, so they run at once ──────
     today = datetime.now(UTC).date()
     week_start = today - timedelta(days=today.weekday())  # Monday
-    books, progress_data, sessions, results, feedback_rows, focus_rows = await asyncio.gather(
+    local_today = await run_in_threadpool(reading_place.reader_day, user_id)  # C32.2: the reader's own week
+    local_monday = local_today - timedelta(days=local_today.weekday())
+    books, progress_data, sessions, results, feedback_rows, focus_rows, words_this_week = await asyncio.gather(
         run_in_threadpool(_rows, supabase.table("books").select(
             "id, title, author, total_chunks, total_words, status"
         ).eq("user_id", user_id).eq("status", "ready")),
@@ -71,6 +84,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
         run_in_threadpool(_rows, supabase.table("focus_sessions").select(
             "status, active_seconds, voided_seconds, points_total"
         ).eq("user_id", user_id).gte("started_at", str(week_start))),
+        run_in_threadpool(words_since, user_id, local_monday.isoformat()),
     )
     progress_by_book = {p["book_id"]: p for p in progress_data}
     session_by_id = {s["id"]: s for s in sessions}
@@ -83,7 +97,9 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
     book_progress_list = []
     for book in books:
         bid = book["id"]
-        prog = progress_by_book.get(bid, {})
+        if bid not in progress_by_book:  # C32.2 (issue 4): in progress means opened at least once
+            continue
+        prog = progress_by_book[bid]
         chunks_completed = prog.get("chunks_completed", 0)
         total_chunks = book.get("total_chunks") or 1
         avg_score = prog.get("average_score", 0) or 0
@@ -150,12 +166,7 @@ async def get_dashboard(user_id: str = Depends(get_current_user)):
             streak += 1
             check_date -= timedelta(days=1)
 
-    # ── 7. Words read this week ───────────────────────────────────────────────
-    words_this_week = sum(
-        s.get("assigned_words", 0) or 0
-        for s in sessions
-        if s.get("completed_at") and s["completed_at"][:10] >= str(week_start)
-    )
+    # ── 7. Words read this week: read above from reading_days (C32.2), no longer the quizzes' ranges ──────
 
     # ── 8. Recent evaluator feedback quotes ──────────────────────────────────
     recent_feedback = []

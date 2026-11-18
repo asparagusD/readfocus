@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 927,
-    "inventoried": 784,
+    "tracked": 928,
+    "inventoried": 785,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17410,
+      "size_bytes": 17428,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -625,10 +625,10 @@
     {
       "path": "backend/routers/dashboard.py",
       "language": "python",
-      "lines": 187,
-      "size_bytes": 8425,
+      "lines": 198,
+      "size_bytes": 9126,
       "role": "router",
-      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found. C23.7c: focus_this_week {seconds, points, sessions}: counted seconds (active minus voided) of this week's focus sessions except discarded ones, and points of the scored ones, from focus_sessions."
+      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found. C23.7c: focus_this_week {seconds, points, sessions}: counted seconds (active minus voided) of this week's focus sessions except discarded ones, and points of the scored ones, from focus_sessions. C32.2 (issue 4): words_this_week is the sum of reading_days since the reader's own Monday (0 without the table), and book_progress lists only books opened at least once (a reading_progress row)."
     },
     {
       "path": "backend/routers/device_books.py",
@@ -697,10 +697,10 @@
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 107,
-      "size_bytes": 5724,
+      "lines": 110,
+      "size_bytes": 5907,
       "role": "router",
-      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading."
+      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -849,10 +849,10 @@
     {
       "path": "backend/services/reading_place.py",
       "language": "python",
-      "lines": 97,
-      "size_bytes": 4318,
+      "lines": 137,
+      "size_bytes": 6600,
       "role": "service",
-      "purpose": "C32.1 (issues 4, 6): chunk_at(book, anchor), the chunk a saved place is in: a PDF page by the chunks' anchored page ranges, an EPUB CFI by their block paths (book_structure.block_for_cfi, ANCHORS A6), else the contents' chapter starts, else the page's share of page_count; None when nothing places it. Each book's map is cached in the process (64 books, least recently used out) only when it found something."
+      "purpose": "C32.1 (issues 4, 6): chunk_at(book, anchor), the chunk a saved place is in: a PDF page by the chunks' anchored page ranges, an EPUB CFI by their block paths (book_structure.block_for_cfi, ANCHORS A6), else the contents' chapter starts, else the page's share of page_count; None when nothing places it. Each book's map is cached in the process (64 books, least recently used out) only when it found something. C32.2: words_reached (the word counts of the chunks first reached, none for a jump of more than MAX_READ_STEP_CHUNKS), reader_day (today in user_progress.timezone) and add_words (adds them to reading_days; never raises)."
     },
     {
       "path": "backend/services/region_job.py",
@@ -1153,8 +1153,8 @@
     {
       "path": "backend/tests/test_api_dashboard.py",
       "language": "python",
-      "lines": 157,
-      "size_bytes": 7212,
+      "lines": 182,
+      "size_bytes": 8626,
       "role": "test",
       "purpose": "Pytest on the in-memory database with a frozen clock: GET /dashboard returns the response recorded from the pre-C9.4 endpoint, reads answers only for a page of the newest results, pages on until it has three feedback quotes, and issues its reads at once."
     },
@@ -1801,8 +1801,8 @@
     {
       "path": "backend/tests/test_reading_place.py",
       "language": "python",
-      "lines": 107,
-      "size_bytes": 4592,
+      "lines": 144,
+      "size_bytes": 6590,
       "role": "test",
       "purpose": "Pytest (C32.1): chunk_at for PDF pages and EPUB CFIs, its fallbacks (contents, page share, none), an empty map read again once anchors exist; PUT /books/{id}/position raises chunks_completed to the place's chunk (or the chunk_index sent) and never lowers it; a book still being read saves its place with no progress."
     },
@@ -2217,8 +2217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6044,
-      "size_bytes": 1083681,
+      "lines": 6045,
+      "size_bytes": 1084441,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6135,6 +6135,14 @@
       "purpose": "Creates league_weeks (Monday-UTC weeks, grouped_at, open/closed), league_groups (a week's group of one tier) and league_members (tier, join time, weekly XP, when reached, final rank, outcome); RLS on all three, readers read only their own memberships (C24.3)."
     },
     {
+      "path": "supabase/migrations/034_reading_days.sql",
+      "language": "sql",
+      "lines": 27,
+      "size_bytes": 1452,
+      "role": "migration",
+      "purpose": "C32.2 (issue 4): reading_days, words read per reader, book and calendar day in the reader's time zone, written by PUT /books/{id}/position as the place moves forward; readers read their own rows, only the backend writes; additive."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -6217,8 +6225,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 786,
-      "size_bytes": 258515,
+      "lines": 787,
+      "size_bytes": 259301,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

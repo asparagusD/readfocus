@@ -11,10 +11,12 @@ place is saved about once a second while pages turn, and the chunks' anchors are
 
 from bisect import bisect_right
 from collections import OrderedDict
+from datetime import UTC, datetime
 
 from backend.focus.store import unit_of
 from backend.services.book_structure import block_for_cfi
 from backend.services.supabase_client import supabase
+from backend.xp.streaks import local_day
 
 CACHED_BOOKS = 64
 
@@ -95,3 +97,41 @@ def chunk_at(book: dict, anchor: dict) -> int | None:
     spine = unit_of(anchor)
     found = _from_toc(book.get("toc"), "spine_index", spine) if spine is not None else None
     return min(total - 1, found) if found is not None else None
+
+
+# C32.2: words read. A step forward of at most this many chunks is reading; a longer jump (the contents, a link,
+# a first save far into a book read before C32) moves the place but counts no words.
+MAX_READ_STEP_CHUNKS = 2
+
+
+def words_reached(book_id: str, before: int, after: int) -> int:
+    """Words of the chunks first reached when the furthest point moves from `before` to `after` chunks."""
+    if after <= before or after - before > MAX_READ_STEP_CHUNKS:
+        return 0
+    rows = (supabase.table("chunks").select("chunk_index, word_count").eq("book_id", book_id)
+            .gte("chunk_index", before).lte("chunk_index", after - 1).execute().data or [])
+    return sum(int(r.get("word_count") or 0) for r in rows)
+
+
+def reader_day(user_id: str):
+    """Today in the reader's own time zone (user_progress.timezone, GAMIFICATION G6), UTC without one."""
+    rows = supabase.table("user_progress").select("timezone").eq("user_id", user_id).execute().data or []
+    return local_day(datetime.now(UTC), rows[0].get("timezone") if rows else None)
+
+
+def add_words(user_id: str, book_id: str, before: int, after: int) -> None:
+    """Add the words first reached (before -> after chunks) to the reader's row for this book and day (migration
+    034). Never raises: a missing table or a failed read or write loses only the count, never the place."""
+    try:
+        words = words_reached(book_id, before, after)
+        if words <= 0:
+            return
+        day = reader_day(user_id).isoformat()
+        rows = (supabase.table("reading_days").select("words").eq("user_id", user_id).eq("book_id", book_id)
+                .eq("day", day).execute().data or [])
+        total = int(rows[0].get("words") or 0) + words if rows else words
+        supabase.table("reading_days").upsert({"user_id": user_id, "book_id": book_id, "day": day, "words": total,
+                                               "updated_at": datetime.now(UTC).isoformat()},
+                                              on_conflict="user_id,book_id,day").execute()
+    except Exception as error:  # noqa: BLE001 - the count is extra; the place is already saved
+        print(f"Words read not recorded for book {book_id}: {error}")

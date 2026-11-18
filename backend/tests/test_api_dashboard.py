@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from backend.dependencies import get_current_user
 from backend.main import app
 from backend.routers import dashboard
+from backend.services import reading_place
 from backend.tests.memory_db import MemoryDb
 
 USER = "user-1"
@@ -66,6 +67,14 @@ def data():
             result("s3", 20, "2026-11-11", []),
         ],
         "focus_sessions": [],
+        # C32.2: words read come from reading_days in the reader's week (Monday 2026-11-09 on), not the quizzes
+        "reading_days": [
+            {"user_id": USER, "book_id": "b1", "day": "2026-11-09", "words": 1000},
+            {"user_id": USER, "book_id": "b1", "day": "2026-11-10", "words": 500},
+            {"user_id": USER, "book_id": "b2", "day": "2026-11-11", "words": 600},
+            {"user_id": USER, "book_id": "b1", "day": "2026-11-08", "words": 999},  # last week
+            {"user_id": "user-2", "book_id": "bx", "day": "2026-11-10", "words": 777},  # another reader's
+        ],
     }
 
 
@@ -75,6 +84,8 @@ def db(monkeypatch):
     fake.tables = data()
     monkeypatch.setattr(dashboard, "supabase", fake)
     monkeypatch.setattr(dashboard, "datetime", FrozenDatetime)
+    monkeypatch.setattr(reading_place, "supabase", fake)
+    monkeypatch.setattr(reading_place, "datetime", FrozenDatetime)
     app.dependency_overrides[get_current_user] = lambda: USER
     yield fake
     app.dependency_overrides.clear()
@@ -155,3 +166,17 @@ def test_focus_this_week_counts_focused_time_and_scored_points(db):
         {**focus("scored", 3600, 0, 700, "2026-11-10"), "user_id": "user-2"},  # another reader
     ]
     assert get(db)["focus_this_week"] == {"seconds": 4200, "points": 540, "sessions": 2}
+
+
+def test_only_books_opened_are_in_progress(db):
+    """C32.2 (issue 4): a ready book with no reading_progress row (never opened) is left out."""
+    db.tables["reading_progress"] = [r for r in db.tables["reading_progress"] if r["book_id"] == "b1"]
+    assert [b["book_id"] for b in get(db)["book_progress"]] == ["b1"]
+
+
+def test_words_read_this_week_is_0_when_the_table_is_not_there_yet(db, monkeypatch):
+    table = db.table
+    monkeypatch.setattr(db, "table", lambda name: (_ for _ in ()).throw(RuntimeError("no reading_days"))
+                        if name == "reading_days" else table(name))
+    assert get(db)["words_this_week"] == 0
+

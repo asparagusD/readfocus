@@ -92,9 +92,12 @@ def save(user_id: str, book_id: str, req: BookPosition) -> dict:
     values: dict[str, Any] = {"position": position}
     # C32.1 (issue 4): progress follows reading: chunks_completed is the furthest chunk reached, never lowered.
     at = req.chunk_index if req.chunk_index is not None else reading_place.chunk_at(book, position["anchor"])
-    if at is not None and at + 1 > (progress.get("chunks_completed") or 0):
+    before = progress.get("chunks_completed") or 0
+    if at is not None and at + 1 > before:
         values["chunks_completed"] = at + 1
     supabase.table("reading_progress").update(values).eq("user_id", user_id).eq("book_id", book_id).execute()
+    if "chunks_completed" in values:  # C32.2: the words first reached, for "words read this week"
+        reading_place.add_words(user_id, book_id, before, at + 1)
     return position
 
 

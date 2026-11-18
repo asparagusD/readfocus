@@ -5112,3 +5112,71 @@ Container, two uploads: SICP's first questions 224.6 -> 123.6 s, peak 452.2 MiB 
 
 ### Commit
 `fix(ingest): queue region maps behind waiting uploads` and `fix(ingest): the sweep leaves jobs the worker holds`
+
+
+## 2026-11-18 C29.1 — the server restarts while a book is ingested (issue 1)
+
+**Status:** fixed
+
+### Symptom
+GitHub issue 1: after uploading a medium or large book the server "crashes". Render's logs for `readfocus-api`
+(`render logs -r srv-dbqhijmc6qcc73fc1a10 --start ... --end ...`) show the instance restarting with no Python error
+first: five times between 2026-11-17 18:06 and 18:23 UTC while "Hands On Graph Neural Networks Using Python"
+(PDF, 35.4 MiB, 354 pages) ingested (its job was claimed 3 times), and twice on 2026-11-18 (05:20 and 05:33 UTC)
+while an EPUB's region map ran. Before each restart the `/health` checks (every 5 s) stop being logged for 45 to
+70 s. Render's Events page gives one reason for all seven failures since 2026-11-17, never "out of memory":
+
+    Instance failed: 64qdt
+    HTTP health check failed (timed out after 5 seconds) while running your code.
+
+Expected: the server keeps answering while a book is processed in the background.
+
+### Repro
+`loop_lag.py` (scratch probe, not committed; the same set-up as `scripts/dev/measure_c26.py`): the real
+`ingestion_worker.run` on `MemoryDb` in the production image at Render Free's limits, with a heartbeat coroutine
+that sleeps 0.1 s and records how late it wakes (a late heartbeat is a `/health` that cannot be answered):
+
+    docker run --rm --network none --memory=512m --memory-swap=512m --cpus=0.1 -v <repo>:/repo:ro -v <probe>:/probe:ro -w /repo -e PYTHONPATH=/repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e EMBED_PRELOAD=0 -e INGEST_SWEEP=0 readfocus-c25-measure python /probe/loop_lag.py <book> 300
+
+### Hypotheses
+1. Blocking work runs on the event loop thread inside the async jobs, so nothing else (`/health` included) is
+   served until it ends; at 0.1 CPU that is tens of seconds. Evidence: `book_ingestor.run_job` calls
+   `extract_text_from_pdf` (pypdf over every page), `extract` (EPUB), `chunk_text`, `ocr_pages.record_scanned` and
+   every Supabase write directly; `region_job` calls `_store` (classifies a batch of 20 pages) and the EPUB rows
+   and writes directly; the upload route sends the whole file to Storage and counts PDF pages on the loop. Ruled
+   out if the heartbeat is never late by more than a second or two. Result: confirmed. Interactive Linear
+   Algebra (PDF, 4.3 MB, 455 pages): one stall of 98.4 s as its text was parsed, then 1.0 s; Alice (EPUB): 1.5 s
+   at worst in the first 300 s (its region map was not reached).
+2. The process runs out of memory and the stall is the kernel reclaiming. Evidence: Calculus Volume 1 reached the
+   container's 512.0 MB (491.1 MB RSS) in `measure_c26.py --until all`. Ruled out if Render names a health check,
+   not memory. Result: ruled out for these restarts by Render's events (all seven are health check timeouts); the
+   memory headroom is still thin and noted below.
+
+### Root cause
+The async job runners did blocking work on the event loop thread: `book_ingestor.run_job` parsed the file
+(`extract_text_from_pdf` / `extract`), chunked it and made every Supabase call inline; `region_job.run_job`
+classified each batch of pages (`_store`) and garble-scored EPUB regions inline; `region_job.after_ingest` created
+and claimed the job inline; `POST /books/upload` uploaded the file to Storage and counted PDF pages inline. While any
+of them ran, uvicorn answered nothing, and at Render's 0.1 CPU that lasted far past the 5 s health check.
+
+### Fix
+Each blocking step runs in a thread (`asyncio.to_thread` in the jobs, `run_in_threadpool` in the route): the
+parse (`book_ingestor.read_pages`, new), chunking, every database call (`store_batch`, `_record_failure`,
+`_store_epub`, the job bookkeeping), page classification and the upload. No behaviour changes otherwise: the same
+calls in the same order. Same probe after the fix, same books and limits: Interactive Linear Algebra 1.2 s at worst
+(6 stalls of 1.0-1.2 s in 300 s, never 5), Alice 0 stalls over 1 s. The remaining ~1 s stalls are the GIL and the
+0.1 CPU quota shared with the parsing thread.
+
+Not changed: memory. Calculus Volume 1 (49.7 MiB, the largest shelf book under the 50 MiB limit) still finishes
+in the 512 MB container with the cgroup at its 512.0 MB cap (491.1 MiB RSS; idle is now 301.8 MiB against 211 at
+C18.G), so the headroom for a bigger book is thin; Render's events name no memory failure so far.
+
+### Regression test
+`backend/tests/test_jobs_off_loop.py` (6 tests): every database call, upload and parse is made to block 0.3 s, and
+a 10 ms heartbeat on the same loop must never be more than 0.15 s late: PDF and EPUB ingestion, PDF and EPUB region
+maps, `after_ingest` and `POST /books/upload`. Without the fix all 6 fail (heartbeat 0.9 to 2.1 s late); with it
+all 6 pass.
+
+### Commit
+`1ce3a2e` fix(ingest): parse and store a book off the event loop (C29.1a) and
+fix(ingest): build region maps and take uploads off the event loop (C29.1b, this commit)

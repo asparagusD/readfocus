@@ -101,7 +101,7 @@ async def upload_book(
             raise HTTPException(status_code=413, detail=f"Converted, this book is over {megabytes(policy.MAX_BOOK_FILE_BYTES)}.")
         sha256, ext, mime_type = hashlib.sha256(file_bytes).hexdigest(), "epub", "application/epub+zip"
     if storage_mode == "cloud":
-        used = shelf_bytes(user_id)
+        used = await run_in_threadpool(shelf_bytes, user_id)
         if used + len(file_bytes) > policy.MAX_SHELF_BYTES_PER_USER:
             raise HTTPException(status_code=413, detail=(
                 f"Your shelf is full: {megabytes(used)} of {megabytes(policy.MAX_SHELF_BYTES_PER_USER)} kept on our "
@@ -112,9 +112,12 @@ async def upload_book(
 
     # 3. Upload to Supabase Storage, unless the original stays on the reader's device
     storage_path = f"{user_id}/{book_id}.{ext}" if storage_mode == "cloud" else None
+    # C29.1: the upload, the row (with its page count) and the job are written in a thread, not on the event loop:
+    # sending a 50 MB file there kept the server from answering /health at Render's 0.1 CPU.
     if storage_path:
         try:
-            supabase.storage.from_("books").upload(
+            await run_in_threadpool(
+                supabase.storage.from_("books").upload,
                 file=file_bytes,
                 path=storage_path,
                 file_options={"content-type": mime_type or "application/octet-stream"}
@@ -124,7 +127,8 @@ async def upload_book(
 
     # 4. Insert row into books table
     try:
-        supabase.table("books").insert({
+        page_count = await run_in_threadpool(pdf_page_count, ext, file_bytes)
+        await run_in_threadpool(supabase.table("books").insert({
             "id": book_id,
             "user_id": user_id,
             "title": title,
@@ -136,16 +140,16 @@ async def upload_book(
             "file_bytes": len(file_bytes),
             "file_format": ext,
             "storage_mode": storage_mode,
-            "page_count": pdf_page_count(ext, file_bytes),
-        }).execute()
+            "page_count": page_count,
+        }).execute)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database insert failed: {str(e)}")
     if source_format:
-        record_source_format(book_id, source_format)
+        await run_in_threadpool(record_source_format, book_id, source_format)
         
     # 5. Record a durable job, then ingest after the response. If the process
     # stops, the job row keeps the cursor and the sweep or /resume picks it up.
-    job = jobs.claim(jobs.create(book_id, user_id))
+    job = await run_in_threadpool(lambda: jobs.claim(jobs.create(book_id, user_id)))
     if job:
         background_tasks.add_task(ingestion_worker.run, job, file_bytes)
     

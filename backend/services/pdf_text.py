@@ -10,6 +10,12 @@ memory (docs/DEBUG_LOG.md, C18.G).
 release_memory: on Linux glibc keeps freed memory in the process, so each
 phase of a job started from the last one's peak; a garbage collection and
 malloc_trim(0) after a heavy phase return it. Elsewhere it only collects.
+
+freeze_startup_heap: a full collection holds the GIL for as long as it walks the
+heap, so release_memory stalled the event loop although it runs in a thread
+(about 40 ms per call here over the 200k objects the app loads, ten times that on
+Render's 0.1 CPU). Freezing the heap once the app has loaded leaves a collection
+only the objects made since (docs/DEBUG_LOG.md, C33.G).
 """
 
 import ctypes
@@ -31,6 +37,12 @@ def page_texts(file_bytes: bytes, per_reader: int = PAGES_PER_READER) -> list[st
         texts += [(reader.pages[n].extract_text() or "") for n in range(first, min(first + per_reader, total))]
         del reader
     return texts
+
+
+def freeze_startup_heap() -> None:
+    """Collect the start-up garbage, then keep every object still alive out of later collections."""
+    gc.collect()
+    gc.freeze()
 
 
 def release_memory() -> None:

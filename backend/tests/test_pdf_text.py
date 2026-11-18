@@ -1,5 +1,6 @@
 """PDF text read a few pages per reader, and memory handed back (C18.G memory fix). No network."""
 
+import gc
 import io
 from pathlib import Path
 
@@ -67,3 +68,14 @@ def test_every_page_keeps_the_empty_pages_the_chunks_leave_out():
 
 def test_release_memory_never_raises():
     pdf_text.release_memory()
+
+
+def test_freeze_startup_heap_keeps_the_loaded_heap_out_of_collections():
+    gc.unfreeze()
+    heap = [[n] for n in range(100_000)]
+    try:
+        pdf_text.freeze_startup_heap()
+        assert gc.get_freeze_count() >= len(heap)
+        assert not any(o is heap for o in gc.get_objects())  # a full collection no longer walks it
+    finally:
+        gc.unfreeze()

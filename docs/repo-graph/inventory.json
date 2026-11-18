@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17480,
+      "size_bytes": 17498,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -465,8 +465,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 85,
-      "size_bytes": 3200,
+      "lines": 88,
+      "size_bytes": 3404,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP). C24.4: the internal router under /internal (scheduled jobs). C24.5: the progress router (/me/progress, /badges, /leagues/current)."
     },
@@ -817,10 +817,10 @@
     {
       "path": "backend/services/pdf_text.py",
       "language": "python",
-      "lines": 45,
-      "size_bytes": 1794,
+      "lines": 57,
+      "size_bytes": 2342,
       "role": "service",
-      "purpose": "PDF page text with bounded memory (C18.G): page_texts reads every page's pypdf text 50 pages per fresh reader (the same text as one reader, about a quarter of the memory); release_memory runs gc and glibc malloc_trim(0) so a phase's freed memory goes back on Linux. Used by ingestion, book_structure's page starts and the prose rebuild."
+      "purpose": "PDF page text with bounded memory (C18.G): page_texts reads every page's pypdf text 50 pages per fresh reader (the same text as one reader, about a quarter of the memory); release_memory runs gc and glibc malloc_trim(0) so a phase's freed memory goes back on Linux; freeze_startup_heap (C33.G, called in backend/main.py's lifespan) keeps the loaded modules out of later collections so that gc never holds the event loop for a walk of the whole heap. Used by ingestion, book_structure's page starts and the prose rebuild."
     },
     {
       "path": "backend/services/processing_jobs.py",
@@ -1609,8 +1609,8 @@
     {
       "path": "backend/tests/test_jobs_off_loop.py",
       "language": "python",
-      "lines": 153,
-      "size_bytes": 5737,
+      "lines": 159,
+      "size_bytes": 6074,
       "role": "test",
       "purpose": "Pytest (C29.1, issue 1): with every in-memory database call, upload and parse made to block 0.3 s, a 10 ms heartbeat on the same event loop is never more than 0.15 s late while a PDF or EPUB ingests (C29.1a), while a PDF or EPUB region map runs or is queued, or during POST /books/upload (C29.1b)."
     },
@@ -1713,8 +1713,8 @@
     {
       "path": "backend/tests/test_pdf_text.py",
       "language": "python",
-      "lines": 69,
-      "size_bytes": 2880,
+      "lines": 81,
+      "size_bytes": 3257,
       "role": "test",
       "purpose": "Pytest for backend/services/pdf_text.py: batched page text equals one reader's on sample.pdf, ingestion text unchanged, book_structure reads page starts through the batched reader, release_memory never raises."
     },
@@ -1833,8 +1833,8 @@
     {
       "path": "backend/tests/test_startup.py",
       "language": "python",
-      "lines": 22,
-      "size_bytes": 643,
+      "lines": 33,
+      "size_bytes": 938,
       "role": "test",
       "purpose": "Pytest: starting and stopping the app through TestClient spawns no subprocess."
     },
@@ -2153,8 +2153,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5240,
-      "size_bytes": 242433,
+      "lines": 5306,
+      "size_bytes": 246578,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2217,8 +2217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6060,
-      "size_bytes": 1087099,
+      "lines": 6061,
+      "size_bytes": 1087752,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6226,7 +6226,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 787,
-      "size_bytes": 260426,
+      "size_bytes": 260610,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

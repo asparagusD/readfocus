@@ -27,13 +27,16 @@ from backend.routers import (
     steve,
     steve_ask,
 )
-from backend.services import ingestion_worker
+from backend.services import ingestion_worker, pdf_text
 
 load_dotenv()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # C33.G: the loaded modules stay out of later collections, so release_memory's
+    # gc.collect() never holds the event loop for a walk of the whole heap.
+    pdf_text.freeze_startup_heap()
     # Load the embedding model on a background thread: /health answers at once
     # and reports model_ready; grading endpoints wait for it (require_model).
     if embedder.preload_enabled():

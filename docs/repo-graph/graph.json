@@ -1198,6 +1198,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/reading_place.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/region_job.py",
       "type": "file",
       "role": "service",
@@ -1901,6 +1907,12 @@
     },
     {
       "id": "file:backend/tests/test_range_quiz.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_reading_place.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -7533,6 +7545,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/reading_place.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7828,6 +7845,21 @@
     {
       "type": "imports",
       "from": "file:backend/services/question_bank.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/reading_place.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/reading_place.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/reading_place.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -9639,6 +9671,36 @@
       "type": "imports",
       "from": "file:backend/tests/test_range_quiz.py",
       "to": "file:backend/focus/range_quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/routers/reading.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/services/reading_place.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/xp/badge_award.py"
     },
     {
       "type": "imports",
@@ -13869,6 +13931,11 @@
       "type": "reads_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/reading_place.py",
+      "to": "table:chunks"
     },
     {
       "type": "reads_table",

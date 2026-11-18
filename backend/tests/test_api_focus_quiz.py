@@ -191,6 +191,15 @@ def test_all_correct_scores_the_session_moves_mastery_and_keeps_the_test(api):
     assert [t["session_id"] for t in api.db.tables["test_results"]] == [sid]
 
 
+def test_a_range_quizzed_twice_moves_progress_to_its_end_once(api):
+    """C32.1 (issue 6): chunks_completed is the furthest chunk reached, not a sum of the ranges quizzed."""
+    for _ in range(2):
+        sid = read_and_end(api)  # pages 3-6: chunks 1 and 2
+        api.client.post(f"/focus/{sid}/quiz")
+        assert answer(api, sid, [q["answer"] for q in stored_questions(api, sid)]).status_code == 200
+        assert api.db.tables["reading_progress"][0]["chunks_completed"] == 3
+
+
 def test_under_40_percent_the_whole_session_earns_nothing(api):
     sid = read_and_end(api)
     api.client.post(f"/focus/{sid}/quiz")

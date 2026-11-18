@@ -17,13 +17,14 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from backend.dependencies import get_current_user
 from backend.routers.sessions import EpubAnchor, PdfAnchor
+from backend.services import reading_place
 from backend.services.supabase_client import supabase
 from backend.xp import badge_award
 
 router = APIRouter()
 
 BOOK_FIELDS = ("id, title, author, toc, file_format, file_type, storage_mode, status, scanned_pages, total_chunks, "
-               "source_format")
+               "source_format, page_count")
 NEW_PROGRESS = {"last_chunk_index": -1, "chunks_completed": 0, "re_read_queue": []}  # as the planner makes it
 
 
@@ -44,7 +45,8 @@ def own_book(user_id: str, book_id: str) -> dict:
 
 def progress_row(user_id: str, book_id: str) -> dict:
     """The reader's progress row for the book, made on a first open (two opens at once make one row)."""
-    query = supabase.table("reading_progress").select("position").eq("user_id", user_id).eq("book_id", book_id)
+    query = supabase.table("reading_progress").select("position, chunks_completed").eq("user_id", user_id).eq(
+        "book_id", book_id)
     rows = query.execute().data
     if rows:
         return cast(dict[str, Any], rows[0])
@@ -86,9 +88,13 @@ def save(user_id: str, book_id: str, req: BookPosition) -> dict:
             "chunk_index", req.chunk_index).limit(1).execute().data:
         raise HTTPException(status_code=422, detail="No such chunk in this book.")
     position = req.model_dump(exclude_none=True)
-    progress_row(user_id, book_id)  # a place saved before any open still has its row
-    supabase.table("reading_progress").update({"position": position}).eq("user_id", user_id).eq(
-        "book_id", book_id).execute()
+    progress = progress_row(user_id, book_id)  # a place saved before any open still has its row
+    values: dict[str, Any] = {"position": position}
+    # C32.1 (issue 4): progress follows reading: chunks_completed is the furthest chunk reached, never lowered.
+    at = req.chunk_index if req.chunk_index is not None else reading_place.chunk_at(book, position["anchor"])
+    if at is not None and at + 1 > (progress.get("chunks_completed") or 0):
+        values["chunks_completed"] = at + 1
+    supabase.table("reading_progress").update(values).eq("user_id", user_id).eq("book_id", book_id).execute()
     return position
 
 

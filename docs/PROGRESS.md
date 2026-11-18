@@ -6024,3 +6024,21 @@ asked first, you chose Notes and Steve both, with the clock running on while the
 | Step | Commit | Change | Verified by | Time | Open issues |
 |---|---|---|---|---|---|
 | [x] C31.1 Notes and Steve on the focus bar | (this commit) | `FocusBar.jsx`: Notes and Steve buttons as on the toolbar, icon-only under 760 px with Pause and Resume so the actions keep one row, caption "Focus · badges are tucked away"; `ReadingSession.jsx`: the side panel in focus mode, Steve withheld while a session awaits its quiz; `FOCUS_RULES.md` F15; `focus-mode.spec.js` +2 tests, `focus.spec.js` caption | e2e 327 (2 new); lint 3 (baseline); unit 271; build; contrast 304/0; bundle 180.4 KB; pytest 2046; screenshots at 375 and 1440 px (throwaway spec, deleted): one row of actions at both widths, no horizontal scroll, Steve's consent notice shown in focus mode | 1.0 h | not deployed; the time spent in the panel counts as focus time by your choice |
+
+## C32 — the Dashboard follows reading
+
+From your review request on 2026-11-18 ("Take a look at the Dashboard page ... open an issue first. Then ask for my
+decision"): issues 4 to 7, on `chunk/C32-dashboard-reading` from `readfocus-2.0` at `dc65df3`. Your decisions:
+progress from the reading place (issue 4, fixing 6), a reading_days table for words read (migration, asked
+separately before the dump and the apply), "N% read · N quizzes" with no estimate (issue 5), one streak (issue 7).
+
+- **C32.1** progress from the reading place, and no double counting (issues 4, 6).
+- **C32.2** reading_days and words read this week; in progress = opened (issue 4).
+- **C32.3** the book line and the empty state (issue 5).
+- **C32.4** one streak (issue 7).
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C32.1 progress from the reading place | (this commit) | `reading_place.py` (new): `chunk_at`; `PUT /books/{id}/position` raises `chunks_completed` to the place's chunk, never lower; the evaluator raises it to a graded range's end instead of adding; `test_reading_place.py` (13 tests), `test_api_focus_quiz.py` +1 | pytest 2060 (14 new; the 3 behaviour tests fail on the old route and evaluator); ruff 25; lint 3, build, unit 271 (no frontend change; e2e not run for this step) | 1.2 h | existing `chunks_completed` values made by the old sum stay until the reader's next save moves them; words read and in-progress in C32.2 |

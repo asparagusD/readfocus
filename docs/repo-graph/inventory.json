@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 925,
-    "inventoried": 782,
+    "tracked": 927,
+    "inventoried": 784,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17392,
+      "size_bytes": 17410,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -169,10 +169,10 @@
     {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
-      "lines": 180,
-      "size_bytes": 9528,
+      "lines": 181,
+      "size_bytes": 9677,
       "role": "agent",
-      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence; the passage is each chunk's prose when it has one, and sentences with a placeholder or garbled text are never reference evidence (C18.6b)."
+      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence; the passage is each chunk's prose when it has one, and sentences with a placeholder or garbled text are never reference evidence (C18.6b). C32.1 (issue 6): a graded test raises chunks_completed to the end of its range, never adding, so a range quizzed twice counts once."
     },
     {
       "path": "backend/agents/graph.py",
@@ -697,10 +697,10 @@
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 101,
-      "size_bytes": 5262,
+      "lines": 107,
+      "size_bytes": 5724,
       "role": "router",
-      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book."
+      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -845,6 +845,14 @@
       "size_bytes": 4483,
       "role": "service",
       "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session only if it has none yet (otherwise returns the stored test; issue 34) and increments times_used for the run that stored."
+    },
+    {
+      "path": "backend/services/reading_place.py",
+      "language": "python",
+      "lines": 97,
+      "size_bytes": 4318,
+      "role": "service",
+      "purpose": "C32.1 (issues 4, 6): chunk_at(book, anchor), the chunk a saved place is in: a PDF page by the chunks' anchored page ranges, an EPUB CFI by their block paths (book_structure.block_for_cfi, ANCHORS A6), else the contents' chapter starts, else the page's share of page_count; None when nothing places it. Each book's map is cached in the process (64 books, least recently used out) only when it found something."
     },
     {
       "path": "backend/services/region_job.py",
@@ -1161,8 +1169,8 @@
     {
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
-      "lines": 387,
-      "size_bytes": 20551,
+      "lines": 396,
+      "size_bytes": 21038,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only. C26.3: while the book is processed the quiz is 409 preparing with nothing kept and the session awaiting, then asked once it is done; a quiz already built is still asked."
     },
@@ -1791,6 +1799,14 @@
       "purpose": "Pytest for the pure range quiz: the count formula, placeholders, PDF/EPUB/contents slices, positions in the range, stratified selection with mix, unused, difficulty and dedupe, confidence-weighted correct answers."
     },
     {
+      "path": "backend/tests/test_reading_place.py",
+      "language": "python",
+      "lines": 107,
+      "size_bytes": 4592,
+      "role": "test",
+      "purpose": "Pytest (C32.1): chunk_at for PDF pages and EPUB CFIs, its fallbacks (contents, page share, none), an empty map read again once anchors exist; PUT /books/{id}/position raises chunks_completed to the place's chunk (or the chunk_index sent) and never lowers it; a book still being read saves its place with no progress."
+    },
+    {
       "path": "backend/tests/test_region_job.py",
       "language": "python",
       "lines": 212,
@@ -2201,8 +2217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6026,
-      "size_bytes": 1082200,
+      "lines": 6044,
+      "size_bytes": 1083681,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6201,8 +6217,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 784,
-      "size_bytes": 257372,
+      "lines": 786,
+      "size_bytes": 258515,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

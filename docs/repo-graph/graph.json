@@ -2506,6 +2506,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/pdf-open.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/pdf-ranges.spec.js",
       "type": "file",
       "role": "config",
@@ -3923,6 +3929,18 @@
     },
     {
       "id": "file:frontend/src/originalview/pdf/close.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/contents.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/contents.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -10387,6 +10405,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/pdf-open.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/pdf-ranges.spec.js",
       "to": "file:frontend/e2e/bigPdf.js"
     },
@@ -11748,6 +11771,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/pdf/contents.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/pdf/regions.js"
     },
     {
@@ -11913,6 +11941,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/pdf/contents.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/pdf/pdfjs.js"
     },
     {
@@ -11954,6 +11987,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/close.test.js",
       "to": "file:frontend/src/originalview/pdf/close.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/contents.test.js",
+      "to": "file:frontend/src/originalview/pdf/contents.js"
     },
     {
       "type": "imports",

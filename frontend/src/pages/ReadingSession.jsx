@@ -516,6 +516,8 @@ export function ReadingSession() {
           onNewNote={newNote}
           onOpenNotes={onOpenNotes}
           onAnnotationNote={noteOnHighlight}
+          contents={sessionData.book?.toc}
+          start={sessionData.position?.anchor}
         />
       </main>
       {shownSide && (

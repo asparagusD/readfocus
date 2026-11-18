@@ -86,7 +86,7 @@ export async function mockBackend(page, api, book) {
       api.opens += 1;
       return json(route, { book_id: BOOK, status: api.processing ? 'processing' : 'ready', pages_only: Boolean(BOOKS[book].pagesOnly),
         scanned_pages: BOOKS[book].scanned ?? [], position: api.position,
-        book: { title: 'Walden', author: 'Henry David Thoreau', toc: [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' } });
+        book: { title: 'Walden', author: 'Henry David Thoreau', toc: api.toc ?? [], format: BOOKS[book].format ?? book, storage_mode: 'cloud' } });
     }
     if (path === `/books/${BOOK}/position` && request.method() === 'PUT') { // C26.5: the book's place, every turn
       api.position = JSON.parse(request.postData() || 'null');

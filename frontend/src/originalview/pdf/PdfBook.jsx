@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale, spreadPages, stepSpread } from '../frame';
 import { squeeze } from '../place';
 import { pdfAnchor, pdfPositions, quadsFromRects, rectsFromQuads } from '../../anchors';
@@ -30,6 +30,7 @@ function selectionAnchors(range, box, widths = []) {
   return out;
 }
 import { useBoxSize } from '../useBoxSize';
+import { storedOutline } from './contents';
 import { PdfPage } from './PdfPage';
 import { pdfOutline } from './pdfjs';
 import { usePageCache, usePdfDocument } from './usePdfDocument';
@@ -41,14 +42,15 @@ const SHEET_INSET = 16; // px kept clear around the pages inside the frame
  * ('fit-page', 'fit-width' or 1.25-2), recoloured with `colours` in lamplight.
  * Larger than the frame, it scrolls and a mouse drag pans it. `ref` gets the
  * renderer interface the frame uses (Reader.jsx); onRelocate(place) fires on
- * every move with { pages, folio, entry, atStart, atEnd }.
+ * every move with { pages, folio, entry, atStart, atEnd }. C34.2: `startPage` is the
+ * first page rendered (the saved place); `contents` (books.toc) stands in for the outline.
  */
-export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null, onRelocate, onError, onSheet, ocr = null, annotations = null, ref }) {
+export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null, onRelocate, onError, onSheet, ocr = null, annotations = null, contents = null, startPage = 1, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
   useEffect(() => { if (ocr && doc) ocr.attach(doc); }, [ocr, doc]); // C19.4: scanned pages read with the open PDF
   const box = useRef(null);
   const frame = useBoxSize(box);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(startPage);
   const [meta, setMeta] = useState({ labels: null, outline: [] });
   const [size, setSize] = useState(null); // the current page's size in points
   const pan = useRef(null);
@@ -58,11 +60,17 @@ export function PdfBook({ bookId, load, wide, zoom = 'fit-page', colours = null,
   useEffect(() => {
     if (status === 'error') onError?.(error);
   }, [status, error, onError]);
+  // C34.2: the stored outline when it has pages; else the PDF's own, read once the first page is
+  // measured, so its page-tree reads never hold up the page the reader is waiting for.
+  const stored = useMemo(() => storedOutline(contents), [contents]);
+  const measured = Boolean(size);
   useEffect(() => {
-    if (!doc) return;
-    Promise.all([doc.getPageLabels().catch(() => null), pdfOutline(doc).catch(() => [])])
-      .then(([labels, outline]) => setMeta({ labels, outline }));
-  }, [doc]);
+    if (!doc || (!stored && !measured)) return;
+    let gone = false;
+    Promise.all([doc.getPageLabels().catch(() => null), stored ?? pdfOutline(doc).catch(() => [])])
+      .then(([labels, outline]) => { if (!gone) setMeta({ labels, outline }); });
+    return () => { gone = true; };
+  }, [doc, stored, measured]);
   const pages = doc ? spreadPages(Math.min(page, numPages), numPages, wide) : [];
   useEffect(() => {
     if (!doc) return;

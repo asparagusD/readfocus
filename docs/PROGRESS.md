@@ -6059,3 +6059,59 @@ its two-agent critique). Issues 8 to 10, on `chunk/C33-dashboard-ui` from `readf
 | [x] C33.1 long titles never break the Dashboard | (this commit) | `SegmentedTabs.css`: underline tabs shrink, at most 26ch with an ellipsis; `SegmentedTabs.jsx`: the full label as tooltip; `Dashboard.jsx`: the hidden score table inside a div; titles with tooltips; `Dashboard.css`: titles clamped to two lines; `dashboard.spec.js` +2 | e2e 329 (2 new; on the old code the page is 1338 px wide at 375 and 1474 at 1440, as on production); unit 273; lint 3; build; contrast 304/0; bundle 180.4 KB; pytest 2067; screenshots at 375 and 1440 px; impeccable detect: no findings | 0.8 h | the titles themselves come from file names; editing a book's title is out of scope |
 | [x] C33.G repo graph in sync with PROGRESS.md | (this commit) | `docs/repo-graph/inventory.json`: `docs/PROGRESS.md` size regenerated (C33.1 regenerated the graph before its last PROGRESS edit, so CI's `graph` job failed on `main` and `deploy-render` was skipped); this row | `make graph` reproduced CI's diff exactly; regenerated after this row; `git diff --exit-code docs/repo-graph/` clean; graph tests 64; `import backend.main` | 0.1 h | regenerate the graph after the last `docs/PROGRESS.md` edit |
 | [x] C33.G a gc.collect never holds the event loop | (this commit) | `pdf_text.freeze_startup_heap` (collect, then `gc.freeze()`), called first in `main.py`'s lifespan; `test_jobs_off_loop.py`'s fixture freezes as the server does; `test_startup.py` +1, `test_pdf_text.py` +1; DEBUG_LOG C33.G | pytest 2069; the two new tests fail without the fix; off-loop worst wait in the full suite 0.014-0.028 s (was up to 0.074 locally, 0.158 on CI); full collection with the app loaded 31-48 ms -> <0.1 ms, RSS 266.5 MB unchanged; ruff 25; lint 3; build; contrast 304/0; images; bundle; unit 273; e2e 329 | 0.6 h | the model's 19k objects load after the freeze |
+
+## C34 — a book opens fast on Render Free
+
+From your request on 2026-11-18 ("investigate why 'opening the book' takes so much time every time ... do
+performance engineering for this app to be really fast on Render free tier"; question preparation left for later).
+On `chunk/C34-open-speed` from `readfocus-2.0` at `3c26260`.
+
+### Findings (measured 2026-11-18, before any code)
+
+Your 29.4 MB, 771-page PDF (`b9c53e25`): **25.9 s** to show page 400 in the browser. Render's log of your open
+at 13:59:44 agrees: every API answer was back by 13:59:45, the first region request (sent once a page shows) came at
+13:59:55.
+
+1. **The whole file is downloaded on every open.** Supabase Storage answers `Range` (206) but sends no
+   `Accept-Ranges: bytes`, so PDF.js turns ranges off and streams all 29.4 MB (24.9 s to open; `curl` takes 20.9 s
+   for the file). The signed URL is new on every open, so the browser cache never helps. In Node (no CORS, where
+   PDF.js sees the 206) the same page is ready after 1.2-3.7 MB in about 1 s. A `PDFDataRangeTransport` with
+   `Range` requests, tried in the browser: open 0.44 s, **page 400 drawn at 1.66 s after 621 KB in 10 requests**.
+2. **The outline is resolved on every open** (`PdfBook.jsx:63`, `pdfOutline`): the 427 entries' named
+   destinations and page indexes pull 42 MB in 217 requests (Node, 17.5 s) or, with ranges working, 20 MB in about
+   300 requests (browser, 18.9 s), competing with page turns. `/open` already returns the same 427 entries with
+   their pages (`books.toc`, made at ingestion).
+3. **The reader opens at page 1, then jumps** to the saved place (`ReadingSession.jsx:168`): pages 1-3 are
+   fetched and drawn for nothing.
+4. **Serial round trips.** `/open` (350 ms from here, 80 ms of it network) must answer before the reader asks
+   `/file` (380 ms) for the URL. Every authenticated request first calls `supabase.auth.get_user` (a Supabase
+   round trip); tokens are ES256 with a public JWKS, so they can be checked locally. 16 `async def` endpoints call
+   the synchronous Supabase client on the event loop (`/books`, `/file`, `/regions` among them), so the browser's
+   parallel requests run one at a time. `/me/progress` (the header, on every page) makes about 8 queries in a row:
+   1.1 s.
+5. **An EPUB is fetched whole on every open** (`epub/engine.js:122`) and kept nowhere.
+
+### Plan (written at chunk start, 2026-11-18, before any code)
+
+| Step | What | Hours | Done when |
+|---|---|---|---|
+| C34.1 | PDF byte ranges: `PDFDataRangeTransport` over `Range` requests for a URL source; the length from `/file` (new `size`, read from Storage) or a HEAD; a server that answers 200 instead of 206 gives the whole body (e2e's mocks) | 1.5 | page 400 of the 29.4 MB book in under 3 s in the browser (25.9 s now); e2e and unit green |
+| C34.2 | The stored contents instead of `pdfOutline`, and the first render at the saved page | 1.0 | no outline walk when `toc` has pages; the saved page is the first rendered; contents, chapter name and folio unchanged |
+| C34.3 | `/open` returns the file's signed URL and size: one round trip less before PDF.js starts | 0.75 | the reader makes no `/file` call on open; `/file` stays for old clients |
+| C34.4 | Tokens checked locally against the project's JWKS (ES256, `aud` authenticated, expiry), keys cached; `get_user` only when a key is unknown | 1.0 | no Auth round trip per request; expired, wrong-audience and unsigned tokens refused (tests) |
+| C34.5 | The 16 `async def` endpoints that call Supabase directly no longer block the loop (plain `def`, as the rest) | 1.0 | a test that fails while one of them holds the loop; parallel opens no longer queue |
+| C34.6 | `/me/progress`'s independent queries in parallel (`fetch_all`) | 0.75 | same response (pinned test); time measured before and after |
+| C34.7 | A book's file kept in this browser after its first open (Cache Storage, keyed by id and `sha256`), for EPUBs and PDFs | 1.5 | the second open of an EPUB downloads nothing; a changed file (new sha256) is fetched again |
+| C34.8 | Measure on production and release (Render first: C34.3 adds a field the frontend reads) | 0.5 | open times before and after in `docs/BENCHMARKS.md` |
+| | **Total** | **8.0** | |
+
+Order: C34.1-C34.3 first (most of the gain, mostly frontend), then C34.4-C34.6 (backend), C34.7 last.
+Safe to cut: C34.7 (EPUBs and repeat opens), then C34.6 (not on the open path). Not in scope: question
+preparation, cold starts (the server stayed warm all of 2026-11-18: an outside /health ping every 10 minutes).
+Caveats: C34.4 accepts a signed-out token until it expires (Supabase's default 1 hour); `get_user` stays the
+fallback. C34.1 relies on Supabase keeping `Range` support; the 200 fallback covers a host that drops it.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|

@@ -100,7 +100,7 @@ export async function mockBackend(page, api, book) {
     }
     if (path === `/books/${BOOK}/file`) return json(route, { url: `${API}/e2e-files/${file}` });
     if (path === `/e2e-files/${file}`) {
-      api.fileLoads += 1;
+      if (route.request().method() === 'GET') api.fileLoads += 1; // C34.1: the reader's HEAD for the length is not a load
       return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': type }, body: readFileSync(BOOKS[book].source ?? new URL(file, FILES)) });
     }
     if (path === `/books/${BOOK}/regions`) { // C18.6d: boxes word lookup skips; none unless a test sets them

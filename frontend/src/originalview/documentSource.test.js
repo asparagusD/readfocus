@@ -15,12 +15,14 @@ test('a copy on this device is used first, without asking the server', async () 
   assert.equal(new TextDecoder().decode(source.data), '%PDF-1.7 device copy');
 });
 
-test('otherwise the signed URL from the server', async () => {
+test('otherwise the signed URL from the server, and a way to renew it when it expires (C34.1)', async () => {
+  let signed = 0;
   const source = await bookSource('b1', {
     loadDeviceFile: async () => null,
-    fetchFile: async (id) => ({ url: `https://storage.test/sign/${id}`, expires_in: 300 }),
+    fetchFile: async (id) => { signed += 1; return { url: `https://storage.test/sign/${id}?n=${signed}`, expires_in: 300 }; },
   });
-  assert.deepEqual(source, { url: 'https://storage.test/sign/b1' });
+  assert.equal(source.url, 'https://storage.test/sign/b1?n=1');
+  assert.equal(await source.renew(), 'https://storage.test/sign/b1?n=2');
 });
 
 test('a device-only book with no copy here says so', async () => {

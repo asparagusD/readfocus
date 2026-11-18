@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 930,
-    "inventoried": 787,
+    "tracked": 931,
+    "inventoried": 788,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17515,
+      "size_bytes": 17533,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2217,8 +2217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6119,
-      "size_bytes": 1093453,
+      "lines": 6120,
+      "size_bytes": 1094262,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2354,7 +2354,7 @@
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
       "lines": 510,
-      "size_bytes": 32987,
+      "size_bytes": 33084,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed."
     },
@@ -2589,6 +2589,14 @@
       "size_bytes": 3797,
       "role": "config",
       "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page. C26.5a: the scanned book opens through /open and then says \"Preparing quizzes…\"."
+    },
+    {
+      "path": "frontend/e2e/pdf-ranges.spec.js",
+      "language": "javascript",
+      "lines": 42,
+      "size_bytes": 2579,
+      "role": "config",
+      "purpose": "Playwright, mocked API (C34.1b, issue 11): a generated 5 MB PDF served like Supabase Storage (206 for a range, no Accept-Ranges) opens at its first page after under a tenth of its bytes, with no whole-file download."
     },
     {
       "path": "frontend/e2e/phase2_journey.spec.js",
@@ -4337,16 +4345,16 @@
     {
       "path": "frontend/src/originalview/documentSource.js",
       "language": "javascript",
-      "lines": 12,
-      "size_bytes": 646,
+      "lines": 13,
+      "size_bytes": 796,
       "role": "asset",
-      "purpose": "Where a book's original file comes from (C17.2, shared with EPUB in C17.3): bookSource gives this device's copy as { data }, else the signed URL as { url } (byte ranges for PDF.js)."
+      "purpose": "Where a book's original file comes from (C17.2, shared with EPUB in C17.3): bookSource gives this device's copy as { data }, else the signed URL as { url } (byte ranges for PDF.js). C34.1b: the { url } source also carries renew(), a fresh signed URL from /file when the old one expires."
     },
     {
       "path": "frontend/src/originalview/documentSource.test.js",
       "language": "javascript",
-      "lines": 31,
-      "size_bytes": 1200,
+      "lines": 33,
+      "size_bytes": 1369,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): the device copy first without asking the server, the signed URL otherwise, the server's message for a device-only book with no copy here."
     },
@@ -4521,10 +4529,10 @@
     {
       "path": "frontend/src/originalview/pdf/pdfjs.js",
       "language": "javascript",
-      "lines": 83,
-      "size_bytes": 3648,
+      "lines": 90,
+      "size_bytes": 3958,
       "role": "asset",
-      "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed). C17.4: renderPage recolours for lamplight (an alpha context, recorded image positions) and pdfOutline flattens the outline to pages."
+      "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed). C17.4: renderPage recolours for lamplight (an alpha context, recorded image positions) and pdfOutline flattens the outline to pages. C34.1b: openPdf reads a { url } source in byte ranges through rangeSource.js."
     },
     {
       "path": "frontend/src/originalview/pdf/rangeSource.js",
@@ -4532,7 +4540,7 @@
       "lines": 68,
       "size_bytes": 3556,
       "role": "asset",
-      "purpose": "C34.1 (issue 11): PDF.js input over HTTP byte ranges. Supabase Storage answers Range with 206 but sends no Accept-Ranges, so PDF.js given a URL downloaded the whole file; rangeSource reads the length (HEAD) and first 64 KB, then hands PDF.js a PDFDataRangeTransport that fetches only the ranges asked for (auto-fetch and streaming off), renews an expired signed URL once, retries a dropped connection, and falls back to { data } for a 200 answer or { url } with no length. Not used until C34.1b."
+      "purpose": "C34.1 (issue 11): PDF.js input over HTTP byte ranges. Supabase Storage answers Range with 206 but sends no Accept-Ranges, so PDF.js given a URL downloaded the whole file; rangeSource reads the length (HEAD) and first 64 KB, then hands PDF.js a PDFDataRangeTransport that fetches only the ranges asked for (auto-fetch and streaming off), renews an expired signed URL once, retries a dropped connection, and falls back to { data } for a 200 answer or { url } with no length. Used by openPdf since C34.1b."
     },
     {
       "path": "frontend/src/originalview/pdf/rangeSource.test.js",
@@ -6241,8 +6249,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 789,
-      "size_bytes": 261470,
+      "lines": 790,
+      "size_bytes": 261916,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

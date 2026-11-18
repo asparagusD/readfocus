@@ -4306,6 +4306,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/fileCache.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/fileCache.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/fileStore.js",
       "type": "file",
       "role": "asset",
@@ -12815,6 +12827,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/browserText.test.js",
       "to": "file:frontend/src/reader/browserText.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/fileCache.test.js",
+      "to": "file:frontend/src/reader/fileCache.js"
     },
     {
       "type": "imports",

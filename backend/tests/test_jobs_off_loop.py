@@ -1,4 +1,4 @@
-"""C29.1 (issue 1): a book's ingestion never blocks the event loop.
+"""C29.1 (issue 1): a book's jobs and its upload never block the event loop.
 
 On Render's 0.1 CPU, parsing a book, classifying its pages and every Supabase call took tens of seconds; run on
 the event loop they kept the server from answering /health, and Render restarted it (DEBUG_LOG 2026-11-18 C29.1).
@@ -6,13 +6,16 @@ Here every database call and every parse is made slow, and a heartbeat beside th
 """
 
 import asyncio
+import io
 import time
 from pathlib import Path
 
 import numpy as np
 import pytest
+from fastapi import BackgroundTasks, UploadFile
 
 from backend.nlp import embedder
+from backend.routers import books
 from backend.services import (
     book_ingestor,
     ingestion_worker,
@@ -40,10 +43,11 @@ def blocking(result=None):
 @pytest.fixture
 def db(monkeypatch):
     fake = MemoryDb()
-    for module in (book_ingestor, region_job, prose_job, jobs, ingestion_worker, ocr_pages):
+    for module in (book_ingestor, region_job, prose_job, jobs, ingestion_worker, ocr_pages, books):
         monkeypatch.setattr(module, "supabase", fake)
-    execute = memory_db.Query.execute
+    execute, upload = memory_db.Query.execute, memory_db.Bucket.upload
     monkeypatch.setattr(memory_db.Query, "execute", lambda self: (time.sleep(SLOW), execute(self))[1])
+    monkeypatch.setattr(memory_db.Bucket, "upload", lambda self, *a, **k: (time.sleep(SLOW), upload(self, *a, **k))[1])
     monkeypatch.setattr(embedder, "embed", lambda texts: np.zeros((len(texts), embedder.EMBEDDING_DIM), dtype=np.float32))
     monkeypatch.setattr(book_ingestor.question_agent, "run", lambda book_id, chunk_ids: None)
     monkeypatch.setattr(book_ingestor, "look_up_cover", lambda book, data: None)
@@ -104,3 +108,46 @@ def test_ingesting_an_epub_never_blocks_the_loop(db, monkeypatch):
     monkeypatch.setattr(region_job, "after_ingest", lambda book, data=None: asyncio.sleep(0))
     job = jobs.claim(jobs.create(BOOK, USER))
     assert worst_wait(lambda: book_ingestor.run_job(job)) < LATE
+
+
+def test_a_pdf_region_map_never_blocks_the_loop(db, monkeypatch):
+    add_book(db, "pdf", b"%PDF")
+    monkeypatch.setattr(region_job, "_count", lambda data: 3)
+    monkeypatch.setattr(region_job, "_read", lambda data, first, last: [])
+    monkeypatch.setattr(region_job, "block_rows", blocking([]))
+    job = region_job.queue(db.tables["books"][0])
+    result = {}
+
+    async def work():
+        result.update(await region_job.run_job(job))
+    assert worst_wait(work) < LATE
+    assert result["status"] == "done"
+
+
+def test_an_epub_region_map_never_blocks_the_loop(db, monkeypatch):
+    add_book(db, "epub", EPUB.read_bytes())
+    monkeypatch.setattr(region_job, "epub_rows", blocking([]))
+    job = region_job.queue(db.tables["books"][0])
+    assert worst_wait(lambda: region_job.run_job(job)) < LATE
+
+
+def test_after_ingest_queues_the_region_map_off_the_loop(db, monkeypatch):
+    add_book(db, "pdf", b"%PDF")
+
+    async def regions(job, file_bytes=None):
+        return {"status": "done"}
+
+    monkeypatch.setattr(region_job, "run_job", regions)
+    assert worst_wait(lambda: region_job.after_ingest(db.tables["books"][0])) < LATE
+
+
+def test_an_upload_never_blocks_the_loop(db, monkeypatch):
+    monkeypatch.setattr(books, "pdf_page_count", blocking(3))
+    upload = UploadFile(file=io.BytesIO(b"%PDF-1.4 a small book"), filename="book.pdf")
+    tasks = BackgroundTasks()
+    result = {}
+
+    async def work():
+        result.update(await books.upload_book(tasks, upload, "A Book", "An Author", "cloud", USER))
+    assert worst_wait(work) < LATE
+    assert result["status"] == "processing" and len(tasks.tasks) == 1

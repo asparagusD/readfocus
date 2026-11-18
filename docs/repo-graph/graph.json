@@ -9247,6 +9247,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
       "to": "file:backend/services/book_ingestor.py"
     },
     {

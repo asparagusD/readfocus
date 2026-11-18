@@ -5209,3 +5209,32 @@ before its step (see the commits).
 
 ### Commit
 `05ab0d2`, `fe6ce5d`, `76a57ba` and fix(api): show the header's streak on the Dashboard (C32.4)
+
+
+## 2026-11-18 C33.1 — the Dashboard scrolls sideways with long book titles (issues 8, 9)
+
+**Status:** fixed
+
+### Symptom
+Your live Dashboard (7 books, titles from file names): `scrollWidth` 1338 px at 375 and 952 px windows; at 1440 px
+a 1314 px Concept mastery tab ran under the side column.
+
+### Repro
+`frontend/e2e/dashboard.spec.js` "long book titles never widen the page ..." at 375 and 1440 px: 1338 and 1474 px
+before the fix.
+
+### Root cause
+Two: underline tabs were `flex: 0 0 auto` with no maximum, so a tab was as wide as its title
+(`SegmentedTabs.css`); and the screen-reader score table carried `width: 1px`, which a table takes as a minimum, so
+it computed to 667 px and widened the page (`Dashboard.jsx`). Found by constraining each in the live page: 1338 ->
+691 -> 375 px.
+
+### Fix
+Tabs shrink to at most 26ch with an ellipsis and the full title as tooltip; the hidden class moves to a div around
+the table. Titles also clamp to two lines (issue 10).
+
+### Regression test
+The two e2e tests above; they fail without the fix (1338, 1474) and pass with it.
+
+### Commit
+fix(ui): keep long book titles from widening the Dashboard (C33.1)

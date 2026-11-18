@@ -6045,3 +6045,15 @@ separately before the dump and the apply), "N% read · N quizzes" with no estima
 | [x] C32.2 words read per day and in progress = opened | (this commit) | `034_reading_days.sql` (new, **not applied**); `reading_place`: `words_reached` (none for a jump of more than 2 chunks), `reader_day` (the reader's time zone), `add_words` (never raises); the position save records the words first reached; `/dashboard`: words this week from `reading_days` since the reader's Monday (0 without the table), only opened books in `book_progress`; tests +6, the pinned dashboard response seeded with `reading_days` | pytest 2066 (6 new; against C32.1 the words test fails and the dashboard tests error); ruff 25; graph 64 | 0.9 h | migration 034 waits for your approval, a fresh `supabase db dump` you confirm, then the apply; until then words read stay 0 |
 | [x] C32.3 the book line and the empty state | (this commit) | `lib/dashboard.js`: `bookLine` ("42% read · 3 quizzes", capped at 100), `nextBook` by reading; `Dashboard.jsx`: the line, Continue reading by reading, the empty state "Your progress starts with your first page"; unit +2, `dashboard.spec.js` updated | unit 273 (2 new); e2e 327; lint 3; build; contrast 304/0; bundle 180.4 KB; screenshots at 375 and 1440 px and the empty state (throwaway spec, deleted) | 0.5 h | the backend still names the count `sessions_completed` and sends `est_sessions_to_finish`, unused now |
 | [x] C32.4 one streak | (this commit) | `progress.current_streak` (the header's streak, G7); `/dashboard`'s `reading_streak` is that, its own quiz-day streak gone; `test_api_dashboard.py` +1 and the pinned response seeded with `user_progress`; DEBUG_LOG 2026-11-18 C32 | pytest 2067 (1 new; fails on the old dashboard: 3 quiz days gave 3, the goal streak is 0); e2e 327; ruff 25 | 0.3 h | migration 034 still to apply |
+
+## C33 — Dashboard layout with long titles
+
+From your request on 2026-11-18 ("We have new UI issues ... check the dashboard ... open new issues and fix them"):
+a look at the live Dashboard signed in as you, with impeccable's audit checks and detector (run in one pass, not as
+its two-agent critique). Issues 8 to 10, on `chunk/C33-dashboard-ui` from `readfocus-2.0` at `f8d9107`.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C33.1 long titles never break the Dashboard | (this commit) | `SegmentedTabs.css`: underline tabs shrink, at most 26ch with an ellipsis; `SegmentedTabs.jsx`: the full label as tooltip; `Dashboard.jsx`: the hidden score table inside a div; titles with tooltips; `Dashboard.css`: titles clamped to two lines; `dashboard.spec.js` +2 | e2e 329 (2 new; on the old code the page is 1338 px wide at 375 and 1474 at 1440, as on production); unit 273; lint 3; build; contrast 304/0; bundle 180.4 KB; pytest 2067; screenshots at 375 and 1440 px; impeccable detect: no findings | 0.8 h | the titles themselves come from file names; editing a book's title is out of scope |

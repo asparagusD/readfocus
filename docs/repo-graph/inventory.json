@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 922,
-    "inventoried": 779,
+    "tracked": 923,
+    "inventoried": 780,
     "excluded": 143
   },
   "files": [
@@ -121,8 +121,8 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 266,
-      "size_bytes": 12925,
+      "lines": 297,
+      "size_bytes": 14901,
       "role": "doc",
       "purpose": "Product overview (C15.4, phase 2 in C25.1): the honest positioning (algorithmic quizzes, grading, planning and scoring on our servers; Steve alone uses Google's Gemini, opt-in, free tier or the reader's key), live URL, how it works in nine steps (upload and conversion, plan, the original view, focus, Steve, test, grade, adapt, progress), the architecture in brief, local setup, the standard and live checks, and limitations."
     },
@@ -2185,8 +2185,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 5961,
-      "size_bytes": 1074273,
+      "lines": 5975,
+      "size_bytes": 1076108,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2477,6 +2477,14 @@
       "size_bytes": 19704,
       "role": "config",
       "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs."
+    },
+    {
+      "path": "frontend/e2e/liveSignIn.js",
+      "language": "javascript",
+      "lines": 17,
+      "size_bytes": 1067,
+      "role": "config",
+      "purpose": "Live journeys' sign-in helper (C28.1b), not in test:e2e: signInAs signs a password test user in with Supabase Auth (the publishable key the bundle ships) and stores the session in the page's localStorage before load, since the app itself signs in with Google only; never prints the credentials."
     },
     {
       "path": "frontend/e2e/login.spec.js",
@@ -6177,8 +6185,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 781,
-      "size_bytes": 254355,
+      "lines": 782,
+      "size_bytes": 254685,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

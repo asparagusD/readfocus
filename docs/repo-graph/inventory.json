@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 925,
-    "inventoried": 782,
+    "tracked": 928,
+    "inventoried": 785,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17392,
+      "size_bytes": 17463,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -169,10 +169,10 @@
     {
       "path": "backend/agents/evaluator_agent.py",
       "language": "python",
-      "lines": 180,
-      "size_bytes": 9528,
+      "lines": 181,
+      "size_bytes": 9677,
       "role": "agent",
-      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence; the passage is each chunk's prose when it has one, and sentences with a placeholder or garbled text are never reference evidence (C18.6b)."
+      "purpose": "Evaluator node, no LLM: turns stored session questions into grader inputs, grades a test with the local grader in one embedding call on a worker thread (reusing a pre-graded answer whose text is unchanged), writes feedback from templates, inserts test_results with score 0-10, feedback and confidence per answer, updates the rolling average in reading_progress and returns grades and one decisions entry; the first node of the submit flow; a question with no evidence is graded against the passage at low confidence; the passage is each chunk's prose when it has one, and sentences with a placeholder or garbled text are never reference evidence (C18.6b). C32.1 (issue 6): a graded test raises chunks_completed to the end of its range, never adding, so a range quizzed twice counts once."
     },
     {
       "path": "backend/agents/graph.py",
@@ -625,10 +625,10 @@
     {
       "path": "backend/routers/dashboard.py",
       "language": "python",
-      "lines": 187,
-      "size_bytes": 8425,
+      "lines": 184,
+      "size_bytes": 8681,
       "role": "router",
-      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found. C23.7c: focus_this_week {seconds, points, sessions}: counted seconds (active minus voided) of this week's focus sessions except discarded ones, and points of the scored ones, from focus_sessions."
+      "purpose": "GET /dashboard: aggregates book progress, scores over time, reading streak, words this week and recent feedback; its five reads run at once, only the needed columns are selected, and test answers are read a page of the newest results at a time until three feedback quotes are found. C23.7c: focus_this_week {seconds, points, sessions}: counted seconds (active minus voided) of this week's focus sessions except discarded ones, and points of the scored ones, from focus_sessions. C32.2 (issue 4): words_this_week is the sum of reading_days since the reader's own Monday (0 without the table), and book_progress lists only books opened at least once (a reading_progress row). C32.4 (issue 7): reading_streak is progress.current_streak, the header's streak, no longer days with a completed quiz."
     },
     {
       "path": "backend/routers/device_books.py",
@@ -689,18 +689,18 @@
     {
       "path": "backend/routers/progress.py",
       "language": "python",
-      "lines": 182,
-      "size_bytes": 9615,
+      "lines": 191,
+      "size_bytes": 10090,
       "role": "router",
-      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to)."
+      "purpose": "Gamification APIs (C24.5): GET /me/progress (total XP, today's focus XP vs goal in the reader's zone, streak today, tier, badges), PUT /me/progress (goal 20-200, display name check, opt-out, IANA zone; extra keys refused), GET /badges (catalogue with mine), GET /leagues/current (runs a due rollover, the reader's group ranked from the ledger with zones, per-week pseudonyms, opted-out readers hidden from others); no emails or others' user ids ever returned. C24.6c: /leagues/current also returns last_week (latest closed week: tier, rank of size, XP, outcome, the tier it led to). C32.4: current_streak(user_id), the streak days the header shows (stored streak viewed on the reader's own day), shared with /dashboard."
     },
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 101,
-      "size_bytes": 5262,
+      "lines": 110,
+      "size_bytes": 5907,
       "role": "router",
-      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book."
+      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -845,6 +845,14 @@
       "size_bytes": 4483,
       "role": "service",
       "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session only if it has none yet (otherwise returns the stored test; issue 34) and increments times_used for the run that stored."
+    },
+    {
+      "path": "backend/services/reading_place.py",
+      "language": "python",
+      "lines": 137,
+      "size_bytes": 6600,
+      "role": "service",
+      "purpose": "C32.1 (issues 4, 6): chunk_at(book, anchor), the chunk a saved place is in: a PDF page by the chunks' anchored page ranges, an EPUB CFI by their block paths (book_structure.block_for_cfi, ANCHORS A6), else the contents' chapter starts, else the page's share of page_count; None when nothing places it. Each book's map is cached in the process (64 books, least recently used out) only when it found something. C32.2: words_reached (the word counts of the chunks first reached, none for a jump of more than MAX_READ_STEP_CHUNKS), reader_day (today in user_progress.timezone) and add_words (adds them to reading_days; never raises)."
     },
     {
       "path": "backend/services/region_job.py",
@@ -1145,8 +1153,8 @@
     {
       "path": "backend/tests/test_api_dashboard.py",
       "language": "python",
-      "lines": 157,
-      "size_bytes": 7212,
+      "lines": 196,
+      "size_bytes": 9571,
       "role": "test",
       "purpose": "Pytest on the in-memory database with a frozen clock: GET /dashboard returns the response recorded from the pre-C9.4 endpoint, reads answers only for a page of the newest results, pages on until it has three feedback quotes, and issues its reads at once."
     },
@@ -1161,8 +1169,8 @@
     {
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
-      "lines": 387,
-      "size_bytes": 20551,
+      "lines": 396,
+      "size_bytes": 21038,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only. C26.3: while the book is processed the quiz is 409 preparing with nothing kept and the session awaiting, then asked once it is done; a quiz already built is still asked."
     },
@@ -1791,6 +1799,14 @@
       "purpose": "Pytest for the pure range quiz: the count formula, placeholders, PDF/EPUB/contents slices, positions in the range, stratified selection with mix, unused, difficulty and dedupe, confidence-weighted correct answers."
     },
     {
+      "path": "backend/tests/test_reading_place.py",
+      "language": "python",
+      "lines": 144,
+      "size_bytes": 6590,
+      "role": "test",
+      "purpose": "Pytest (C32.1): chunk_at for PDF pages and EPUB CFIs, its fallbacks (contents, page share, none), an empty map read again once anchors exist; PUT /books/{id}/position raises chunks_completed to the place's chunk (or the chunk_index sent) and never lowers it; a book still being read saves its place with no progress."
+    },
+    {
       "path": "backend/tests/test_region_job.py",
       "language": "python",
       "lines": 212,
@@ -2137,8 +2153,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5182,
-      "size_bytes": 239611,
+      "lines": 5211,
+      "size_bytes": 241280,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2201,8 +2217,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6026,
-      "size_bytes": 1082200,
+      "lines": 6047,
+      "size_bytes": 1085444,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2321,8 +2337,8 @@
     {
       "path": "frontend/e2e/dashboard.spec.js",
       "language": "javascript",
-      "lines": 192,
-      "size_bytes": 11452,
+      "lines": 193,
+      "size_bytes": 11519,
       "role": "config",
       "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here and GET /mastery (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375; concept mastery (tabs by keyboard, weakest first, Show more, the weak rule, the exact /mastery requests) and a failed mastery load; For tonight; the candle, bar and trend motion with and without reduced motion."
     },
@@ -3897,16 +3913,16 @@
     {
       "path": "frontend/src/lib/dashboard.js",
       "language": "javascript",
-      "lines": 82,
-      "size_bytes": 3404,
+      "lines": 91,
+      "size_bytes": 3897,
       "role": "lib",
-      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday, needsRevisiting (tested and under the planner's 0.5), nextBook (started and unfinished with the most read, else the first not started). C23.7c: focusedTime ('1 h 10 min') and focusWeek (the focus card's time, points and line)."
+      "purpose": "Dashboard helpers, pure: part of the day and the greeting, the streak in words, the last eight scores numbered oldest first, the latest score, tests since Monday, needsRevisiting (tested and under the planner's 0.5), nextBook (started and unfinished with the most read, else the first not started). C23.7c: focusedTime ('1 h 10 min') and focusWeek (the focus card's time, points and line). C32.3: bookLine(book) and nextBook by reading (chunks_completed), not quizzes."
     },
     {
       "path": "frontend/src/lib/dashboard.test.js",
       "language": "javascript",
-      "lines": 56,
-      "size_bytes": 2923,
+      "lines": 74,
+      "size_bytes": 4018,
       "role": "lib",
       "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday, needs revisiting."
     },
@@ -4609,10 +4625,10 @@
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 252,
-      "size_bytes": 10478,
+      "lines": 249,
+      "size_bytes": 10219,
       "role": "page",
-      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns. C26.5b: \"For tonight\" is \"Continue reading\" (opens where you left off). C30.2: a book with no author says \"Unknown author\", and Continue reading leaves out \"By ...\"."
+      "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns. C26.5b: \"For tonight\" is \"Continue reading\" (opens where you left off). C30.2: a book with no author says \"Unknown author\", and Continue reading leaves out \"By ...\". C32.3 (issue 5): each book's line is bookLine (\"42% read · 3 quizzes\", no sessions, no estimate); Continue reading says \"% read\" once the book is read into; the empty state asks to open a book and read."
     },
     {
       "path": "frontend/src/pages/Landing.css",
@@ -6119,6 +6135,14 @@
       "purpose": "Creates league_weeks (Monday-UTC weeks, grouped_at, open/closed), league_groups (a week's group of one tier) and league_members (tier, join time, weekly XP, when reached, final rank, outcome); RLS on all three, readers read only their own memberships (C24.3)."
     },
     {
+      "path": "supabase/migrations/034_reading_days.sql",
+      "language": "sql",
+      "lines": 27,
+      "size_bytes": 1452,
+      "role": "migration",
+      "purpose": "C32.2 (issue 4): reading_days, words read per reader, book and calendar day in the reader's time zone, written by PUT /books/{id}/position as the place moves forward; readers read their own rows, only the backend writes; additive."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -6201,8 +6225,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 784,
-      "size_bytes": 257372,
+      "lines": 787,
+      "size_bytes": 259844,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -6233,8 +6257,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 290,
-      "size_bytes": 12404,
+      "lines": 291,
+      "size_bytes": 12453,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

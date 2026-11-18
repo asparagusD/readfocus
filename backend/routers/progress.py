@@ -42,6 +42,15 @@ def _progress(user_id: str) -> dict:
     return {**DEFAULTS, **(rows[0] if rows else {})}
 
 
+def current_streak(user_id: str) -> int:
+    """The streak in days the header shows (G7, freezes, the reader's own day); the Dashboard shows the same (C32.4)."""
+    prog = _progress(user_id)
+    last = prog["last_goal_day"]
+    stored = streaks.Streak(int(prog["streak_days"]), int(prog["streak_freezes"]),
+                            datetime.fromisoformat(last).date() if last else None)
+    return streaks.view(stored, streaks.local_day(_now(), prog["timezone"])).days
+
+
 def _week(start: datetime) -> dict | None:
     rows = supabase.table("league_weeks").select("*").eq("starts_at", start.isoformat()).execute().data
     return rows[0] if rows else None

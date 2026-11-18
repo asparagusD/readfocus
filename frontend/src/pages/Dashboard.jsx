@@ -9,7 +9,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { MasteryBar } from '../components/ui/MasteryBar';
 import { BookStack, Candle, ReadingLamp } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
-import { focusWeek, greeting, lastScore, lastScores, nextBook, streakLine, testsThisWeek } from '../lib/dashboard';
+import { bookLine, focusWeek, greeting, lastScore, lastScores, nextBook, streakLine, testsThisWeek } from '../lib/dashboard';
 import { seconds } from '../motion/presets';
 import { splitFeedback } from '../lib/results';
 import { MasteryList } from '../components/dashboard/MasteryList';
@@ -135,10 +135,10 @@ export function Dashboard() {
         <EmptyState
           className="rf-dash__empty"
           illustration={<BookStack size={180} />}
-          title="Your progress starts with a first session"
+          title="Your progress starts with your first page"
           action={<Link to="/" className="rf-btn rf-btn--primary">Go to your shelf</Link>}
         >
-          Read a session and take its short test. Your scores, streak and the ideas you are mastering will gather here.
+          Open a book and read. How far you’ve read, your quiz scores and the ideas you are mastering will gather here.
         </EmptyState>
       </div>
     );
@@ -202,7 +202,7 @@ export function Dashboard() {
               <h2 id="rf-tonight-title" className="eyebrow">Continue reading</h2>
               <p className="rf-dash__tonight-title">{nextBook(books).title}</p>
               <p className="rf-dash__muted">
-                {nextBook(books).sessions_completed > 0
+                {nextBook(books).chunks_completed > 0 // C32.3: started means read, not quizzed
                   ? `${Math.round(nextBook(books).progress_pct)}% read. It opens where you left off.`
                   : `${nextBook(books).author ? `By ${nextBook(books).author}. ` : ''}It opens at the first page.`}
               </p>
@@ -218,10 +218,7 @@ export function Dashboard() {
                     <p className="rf-dash__book-title">{b.title}</p>
                     <p className="rf-dash__muted">{b.author || 'Unknown author'}</p>
                     <MasteryBar value={b.progress_pct} className="rf-dash__book-bar" />
-                    <p className="rf-dash__muted">
-                      {Math.round(b.progress_pct)}% read · {b.sessions_completed} {b.sessions_completed === 1 ? 'session' : 'sessions'}
-                      {b.est_sessions_to_finish > 0 ? ` · about ${b.est_sessions_to_finish} to finish` : b.chunks_completed >= b.total_chunks ? ' · finished' : ''}
-                    </p>
+                    <p className="rf-dash__muted">{bookLine(b)}</p>
                   </li>
                 ))}
               </ul>

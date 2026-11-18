@@ -1198,6 +1198,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/reading_place.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/region_job.py",
       "type": "file",
       "role": "service",
@@ -1901,6 +1907,12 @@
     },
     {
       "id": "file:backend/tests/test_range_quiz.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_reading_place.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -5152,6 +5164,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/034_reading_days.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -5399,6 +5417,10 @@
     },
     {
       "id": "table:question_bank",
+      "type": "table"
+    },
+    {
+      "id": "table:reading_days",
       "type": "table"
     },
     {
@@ -6497,6 +6519,11 @@
       "to": "table:league_weeks"
     },
     {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/034_reading_days.sql",
+      "to": "table:reading_days"
+    },
+    {
       "type": "graph_edge",
       "from": "graph_node:__start__",
       "to": "graph_node:__end__",
@@ -7313,6 +7340,16 @@
     {
       "type": "imports",
       "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/routers/progress.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/dashboard.py",
+      "to": "file:backend/services/reading_place.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/dashboard.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7529,6 +7566,11 @@
       "type": "imports",
       "from": "file:backend/routers/reading.py",
       "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/reading_place.py"
     },
     {
       "type": "imports",
@@ -7832,6 +7874,26 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/reading_place.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/reading_place.py",
+      "to": "file:backend/services/book_structure.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/reading_place.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/reading_place.py",
+      "to": "file:backend/xp/streaks.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/region_job.py",
       "to": "file:backend/regions/classify.py"
     },
@@ -8129,6 +8191,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_dashboard.py",
       "to": "file:backend/routers/dashboard.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/routers/progress.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_dashboard.py",
+      "to": "file:backend/services/reading_place.py"
     },
     {
       "type": "imports",
@@ -9639,6 +9711,36 @@
       "type": "imports",
       "from": "file:backend/tests/test_range_quiz.py",
       "to": "file:backend/focus/range_quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/routers/reading.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/services/reading_place.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reading_place.py",
+      "to": "file:backend/xp/badge_award.py"
     },
     {
       "type": "imports",
@@ -13668,6 +13770,11 @@
     {
       "type": "reads_table",
       "from": "file:backend/routers/dashboard.py",
+      "to": "table:reading_days"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/dashboard.py",
       "to": "table:reading_progress"
     },
     {
@@ -13869,6 +13976,21 @@
       "type": "reads_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/reading_place.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/reading_place.py",
+      "to": "table:reading_days"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/services/reading_place.py",
+      "to": "table:user_progress"
     },
     {
       "type": "reads_table",
@@ -14364,6 +14486,11 @@
       "type": "writes_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:sessions"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/reading_place.py",
+      "to": "table:reading_days"
     },
     {
       "type": "writes_table",

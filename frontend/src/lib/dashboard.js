@@ -50,11 +50,20 @@ export function testsThisWeek(scores, today) {
   return scores.filter((s) => s.date >= from).length;
 }
 
-/** The book to suggest for tonight: started and unfinished with the most read, else the first not started. */
+/** The book to suggest for tonight: started (read into, C32.3) and unfinished with the most read, else the first
+ * not started. */
 export function nextBook(books) {
   const open = books.filter((b) => b.chunks_completed < b.total_chunks);
-  const started = open.filter((b) => b.sessions_completed > 0).sort((a, b) => b.progress_pct - a.progress_pct);
+  const started = open.filter((b) => b.chunks_completed > 0).sort((a, b) => b.progress_pct - a.progress_pct);
   return started[0] ?? open[0] ?? null;
+}
+
+/** C32.3 (issue 5): a book's line, "42% read · 3 quizzes": how far it is read and the quizzes taken on it
+ * (GET /dashboard's sessions_completed counts graded quizzes); no planned sessions, no estimate to finish. */
+export function bookLine(book) {
+  const quizzes = book.sessions_completed ?? 0;
+  const read = `${Math.min(100, Math.round(book.progress_pct ?? 0))}% read`;
+  return quizzes > 0 ? `${read} · ${quizzes} ${quizzes === 1 ? 'quiz' : 'quizzes'}` : read;
 }
 
 const WEAK_BELOW = 0.5; // backend/agents/policy.py PLANNER_WEAK_BELOW

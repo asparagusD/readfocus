@@ -155,7 +155,8 @@ async def evaluator_node(state: AgentState) -> dict:
             supabase.table("reading_progress").update({
                 "average_score": sum(r["total_score"] for r in recent) / max_sum * 100 if max_sum else 0,
                 "last_chunk_index": chunk_indices[-1] if chunk_indices else -1,
-                "chunks_completed": rows[0]["chunks_completed"] + len(chunk_indices),
+                # C32.1 (issue 6): the furthest chunk reached, never a sum, so a range quizzed twice counts once
+                "chunks_completed": max(rows[0]["chunks_completed"] or 0, chunk_indices[-1] + 1 if chunk_indices else 0),
             }).eq("id", rows[0]["id"]).execute()
     except Exception as e:  # noqa: BLE001
         print(f"Failed to update reading_progress: {e}")

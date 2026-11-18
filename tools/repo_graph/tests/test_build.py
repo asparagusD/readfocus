@@ -245,6 +245,7 @@ def test_real_graph_has_the_schema_and_the_agents():
         "xp_events", "user_progress",  # migration 031 (C24.1)
         "user_badges",  # migration 032 (C24.2)
         "league_weeks", "league_groups", "league_members",  # migration 033 (C24.3)
+        "reading_days",  # migration 034 (C32.2)
     }
     assert {to for _, to in edges(graph, "defines_table")} == {f"table:{t}" for t in tables}
     # The tooling and its fixtures must not leak into the graph.

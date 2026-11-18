@@ -5238,3 +5238,69 @@ The two e2e tests above; they fail without the fix (1338, 1474) and pass with it
 
 ### Commit
 fix(ui): keep long book titles from widening the Dashboard (C33.1)
+
+
+## 2026-11-18 C33.G — CI's off-loop tests fail: a full gc.collect holds the loop ~150 ms
+
+**Status:** fixed
+
+### Symptom
+CI on `main` (run 44301703965, push of 20a9a23, and its re-run), job `backend`, step `Pytest (offline)`:
+
+    pytest backend/tests -q
+    >       assert worst_wait(work) < LATE
+    E       assert 0.1582834650000018 < 0.15
+    backend/tests/test_jobs_off_loop.py:101: AssertionError
+    >       assert worst_wait(lambda: book_ingestor.run_job(job)) < LATE
+    E       assert 0.15768448000001967 < 0.15
+    backend/tests/test_jobs_off_loop.py:110: AssertionError
+    >       assert worst_wait(work) < LATE
+    E       assert 0.15075430200001505 < 0.15
+    FAILED backend/tests/test_jobs_off_loop.py::test_ingesting_a_pdf_never_blocks_the_loop
+    FAILED backend/tests/test_jobs_off_loop.py::test_ingesting_an_epub_never_blocks_the_loop
+    FAILED backend/tests/test_jobs_off_loop.py::test_a_pdf_region_map_never_blocks_the_loop
+    3 failed, 2053 passed, 11 skipped in 58.18s
+
+The first run failed the first two (0.1528, 0.1535). The same backend code passed on 8d326b4 (C32); C33 changed
+no backend code. `deploy-render` was skipped, which costs nothing here: Render already runs this backend.
+
+### Repro
+Not reproducible as a failure on the dev machine (Windows); the margin is measured instead. Worst heartbeat delay:
+file alone 0.016-0.045 s; inside `pytest backend/tests -q` 0.069-0.074 s for the three failing tests and
+0.020-0.026 s for the three passing ones. CI's runner is about twice as slow, hence 0.150-0.158 s.
+
+### Hypotheses
+1. `pdf_text.release_memory()` runs a full `gc.collect()`, which holds the GIL for its whole run, so
+   `asyncio.to_thread` does not keep it off the loop; its cost grows with the heap, which the full suite makes
+   large. Evidence: the three failing tests are exactly the three whose code calls `release_memory`; a thread
+   sampler caught `pdf_text.py:42 release_memory` during every stall over 25 ms; `gc.collect()` alone takes
+   0.037-0.048 s with 170k objects (file alone) and 0.086-0.094 s with 308k objects (full suite).
+   Ruled out if: stubbing out `gc.collect` leaves the stall. Result: **confirmed**: with it stubbed, the full
+   suite's six off-loop tests measure 0.020-0.030 s.
+2. A slow C extension (pdfplumber, numpy) loaded lazily in a worker holds the GIL. Ruled out by 1: no stall left
+   without `gc.collect`.
+
+### Root cause
+`backend/services/pdf_text.py:38`: `release_memory()` calls `gc.collect()`, a full collection that holds the GIL
+for a time proportional to the heap, so every caller (`book_ingestor.py:312`, `region_job.py:145`,
+`prose_job.py:96`) stalls the event loop although it runs in a thread. The tests exposed it on a slow runner; on
+Render's 0.1 CPU the same stall is longer.
+
+### Fix
+`pdf_text.freeze_startup_heap()` (a collection, then `gc.freeze()`), called first in `backend/main.py`'s
+lifespan: the loaded modules go to the permanent generation, so `release_memory`'s full collection walks only what
+was made since, and the C18.G memory return is kept. Chosen over collecting only the young generations, which
+might leave pdfplumber's cycles in place. Measured on the dev machine with the app imported and the model loaded
+(203k objects): a full collection took 31-48 ms before, under 0.1 ms after; RSS 266.5 MB both ways. The
+model's load adds 19k objects after the freeze (90% of the heap is frozen). `test_jobs_off_loop.py`'s fixture
+freezes the heap as the server does; inside the full suite its six tests now measure 0.014-0.028 s (were
+0.069-0.074 s for the three that call `release_memory`). Not raised: `LATE` stays 0.15. One attempt.
+
+### Regression test
+`test_startup.py::test_startup_freezes_the_loaded_heap` and
+`test_pdf_text.py::test_freeze_startup_heap_keeps_the_loaded_heap_out_of_collections`: both fail with
+`backend/main.py` and `pdf_text.py` stashed (2 failed, 9 passed) and pass with them. The stall itself cannot be
+made to fail reliably on a fast machine without a heap of about a gigabyte, so the tests check the mechanism.
+
+### Commit
+fix(ingest): keep the startup heap out of the job threads' collections (C33.G)

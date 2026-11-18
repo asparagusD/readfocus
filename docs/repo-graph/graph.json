@@ -7189,6 +7189,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/main.py",
+      "to": "file:backend/services/pdf_text.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/nlp/concepts.py",
       "to": "file:backend/nlp/embedder.py"
     },
@@ -9341,6 +9346,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_jobs_off_loop.py",
       "to": "file:backend/services/ocr_pages.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/pdf_text.py"
     },
     {
       "type": "imports",

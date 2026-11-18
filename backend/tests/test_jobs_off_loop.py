@@ -3,9 +3,12 @@
 On Render's 0.1 CPU, parsing a book, classifying its pages and every Supabase call took tens of seconds; run on
 the event loop they kept the server from answering /health, and Render restarted it (DEBUG_LOG 2026-11-18 C29.1).
 Here every database call and every parse is made slow, and a heartbeat beside the job must never be held up.
+C33.G: the heap is frozen first, as the server does at startup; unfrozen, release_memory's full collection walked
+the whole test run's heap with the GIL held and held the heartbeat up for about 150 ms on CI's runners.
 """
 
 import asyncio
+import gc
 import io
 import time
 from pathlib import Path
@@ -20,6 +23,7 @@ from backend.services import (
     book_ingestor,
     ingestion_worker,
     ocr_pages,
+    pdf_text,
     prose_job,
     region_job,
 )
@@ -56,7 +60,9 @@ def db(monkeypatch):
         return None
 
     monkeypatch.setattr(prose_job, "after_regions", no_prose)
-    return fake
+    pdf_text.freeze_startup_heap()  # as backend.main's lifespan does (C33.G)
+    yield fake
+    gc.unfreeze()
 
 
 def add_book(db, file_type, data):

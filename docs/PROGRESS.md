@@ -6127,3 +6127,48 @@ fallback. C34.1 relies on Supabase keeping `Range` support; the 200 fallback cov
 | [x] C34.7a a browser cache for book files (issue 15) | (this commit) | `reader/fileCache.js` (new, not used until C34.7b): Cache Storage keyed by book id and sha256 (a new version replaces the old), `keptSource`, forget one, forget all, never throws; `fileCache.test.js` (7) | unit 292 (7 new); pytest 2094; ruff 24; lint 3; build; contrast 304/0; images; e2e 337 and bundle 181.1 KB on the whole of C34.7 | 0.7 h | |
 | [x] C34.7b an EPUB opens from this browser after its first open (issue 15) | (this commit) | `EpubView.jsx` loads through `keptSource`; `documentSource.js` passes the file's sha256; `Library.jsx` forgets the copy on removal; `useAuth.jsx` forgets all on SIGNED_OUT; Privacy page: one paragraph saying so; e2e `/open` mock takes `api.fileSha`; `epub-kept.spec.js` (3) | the three e2e fail without `EpubView.jsx` and `useAuth.jsx`'s change and pass with it; the Privacy paragraph in a browser: the previous paragraph's computed style (Lora 18 px, 648 px measure), no horizontal scroll at 375 px (327 px wide), about 72 characters a line at 1440 px; e2e 337; unit 292; pytest 2094; ruff 24; lint 3; build; contrast 304/0; images; bundle 181.1 KB (was 180.4: useAuth imports the cache) | 0.5 h | PDFs are not kept: they open from byte ranges, and keeping one means downloading all of it |
 | [x] C34.8 measured on production and released (issues 11 to 15) | (this commit) | merged `chunk/C34-open-speed` into `readfocus-2.0` (d0a908b) and `main` (019c55e); Render deployed d0a908b first with the CLI, then main pushed (Vercel); `docs/BENCHMARKS.md` C34 section | production as test user A, median of 7: `/me/progress` 1307 -> 638 ms, each book request about 100 ms faster, the open burst 831 -> 551 ms; smoke after Render: /health ok with the model ready, `/open` has a signed URL that answers a Range with 206, a tampered or missing token 401; Vercel deployment completed, the live chunks hold the range transport, the browser file cache and the Privacy paragraph; CI on main (run 44360780689): graph, frontend, backend, e2e (15m52s) and deploy-render all passed | 0.6 h | the live reader not timed signed in on production; a reader's own connection and device not measured |
+
+## C35 — upload, open, delete and navigation at speed; the Dashboard layout
+
+From your request on 2026-11-19 ("the uploading and then opening process of a book is still pretty slow. Also,
+deleting a book also takes some time ... Dashboard page UI does not look right again ... navigation between pages
+also needs to be smoother ... open new issues and then ask for my decision"). Measured on production with you
+signed in and from Render's log; issues 16 to 21. On `chunk/C35-speed` from `readfocus-2.0` at `59a8259`.
+
+### Your decisions (2026-11-19)
+
+- **#16 upload:** straight to Storage through a signed upload URL, with a progress bar, then one small register
+  request; the size and type are checked after the upload (an oversize file is deleted); the hash, page count and
+  author move to the background job; the file just uploaded is kept in the browser for its first open.
+- **#17 ingestion:** it yields to requests (a pause between batches and while requests are being served), and the
+  reader polls `/status` with back-off (5 s up to 60 s). Not a separate process.
+- **#18 delete:** the book is marked `deleting` and the request answers at once; the file, note pictures and rows
+  are purged in the background; every listing skips `deleting`; the Library removes the book at once.
+- **#21 Dashboard:** the Badge shelf moves into the main column under Concept mastery; the mastery tabs become one
+  scrolling row.
+- **#19 open path** and **#20 navigation:** no decision needed (one clear fix each).
+
+### Plan (written at chunk start, 2026-11-19, before any code)
+
+| Step | What | Hours | Done when |
+|---|---|---|---|
+| C35.1 | Dashboard layout (#21): Badge shelf under Concept mastery; mastery tabs one scrolling row | 1.0 | no empty column at 1440 px (column ends within 200 px of each other), tabs on one row; 375 and 967 px unchanged; design-review |
+| C35.2 | Delete (#18): `status = 'deleting'` and 202 at once; a purge in the background (file, note pictures, rows) that the existing sweep finishes after a restart; one shared filter so no listing or open shows a `deleting` book; the Library removes it at once and puts it back on failure | 2.0 | `DELETE` answers without touching Storage or the cascade (test); a deleting book is in no response (tests over every book listing); the purge removes everything the old delete did |
+| C35.3a | Upload, server (#16): `POST /books/upload-url` (shelf space checked first, a signed upload URL for the reader's own path) and `POST /books/register` (the object exists, at most 50 MB, a PDF or EPUB by its first bytes, else deleted; the row and the job); hash, page count and author computed by the job | 2.0 | tests for each refusal and for an oversize or wrong file being deleted; Markdown, notebooks and device-only books keep today's paths |
+| C35.3b | Upload, browser (#16): XHR to the signed URL with a progress bar, then register; the file kept in this browser (Cache Storage, C34.7) so the first open downloads nothing | 1.5 | e2e: progress shown, the first open makes no Storage request; the upload of a 29 MB PDF timed on production before and after |
+| C35.4 | Open path (#19): `/open` and PDF.js (library and worker) start together on click, and on hover in the Library; a 256 KB first read and larger ranges; one PDF.js worker | 1.5 | the first page of the 15.9 MB book under 1.5 s in the browser (2.8 s now); one worker download |
+| C35.5a | Navigation, data (#20): each page's last data kept and shown at once on return, refreshed behind it; League's requests in parallel | 1.5 | e2e: a return to a page shows its data before any request answers; League asks both at once |
+| C35.5b | Navigation, transitions (#20): the old page stays until the new one has its data or a skeleton; page code and data prefetched on hover or focus of a link | 1.0 | no blank main area between pages (e2e checks for an empty main); measured on production before and after |
+| C35.6 | Ingestion yields (#17): a pause between batches and while requests are in flight; `/status` polled with back-off | 1.0 | the off-loop heartbeat test extended to requests during ingestion; `/open` timed during processing |
+| C35.7 | Measure on production and release (Render first) | 0.75 | before and after in `docs/BENCHMARKS.md` |
+| | **Total** | **12.25** | |
+
+Order: C35.1 (small, visible), C35.2, C35.3a-b, C35.4, C35.5a-b, C35.6, C35.7. Safe to cut, in this order: the
+hover prefetch in C35.4 and C35.5b, then C35.6's back-off (the yield stays). Needs your approval when reached:
+setting the `books` bucket's own limits (50 MB, PDF and EPUB) in the shared Supabase project, a write to its
+configuration (constraint 2); without it the register check is the only guard. No migration is expected.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|

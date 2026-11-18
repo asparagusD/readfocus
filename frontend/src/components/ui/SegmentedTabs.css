@@ -50,7 +50,14 @@
 }
 
 .rf-segmented--underline .rf-segmented__tab {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  /* C33.1 (issue 8): a long book title is cut with an ellipsis, never wider than the row (the full title is the
+     tab's name and its tooltip). */
+  min-width: 0;
+  max-width: min(100%, 26ch);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   margin-bottom: -1px;
   padding: 0 var(--space-3);
   border: 0;

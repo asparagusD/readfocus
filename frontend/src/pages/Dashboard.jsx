@@ -54,13 +54,16 @@ function ScoreTrend({ scores }) {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <table className="rf-dash__sr">
+      {/* C33.1 (issue 9): hidden on a div; a table treats width: 1px as a minimum and widened the page. */}
+      <div className="rf-dash__sr">
+      <table>
         <caption>Test scores, oldest first</caption>
         <thead><tr><th scope="col">Date</th><th scope="col">Book</th><th scope="col">Score</th></tr></thead>
         <tbody>
           {points.map((p) => <tr key={p.n}><td>{p.date}</td><td>{p.book_title}</td><td>{p.score}%</td></tr>)}
         </tbody>
       </table>
+      </div>
     </>
   );
 }
@@ -200,7 +203,7 @@ export function Dashboard() {
             <section className="rf-dash__card rf-dash__tonight" aria-labelledby="rf-tonight-title">
               <ReadingLamp size={96} />
               <h2 id="rf-tonight-title" className="eyebrow">Continue reading</h2>
-              <p className="rf-dash__tonight-title">{nextBook(books).title}</p>
+              <p className="rf-dash__tonight-title" title={nextBook(books).title}>{nextBook(books).title}</p>
               <p className="rf-dash__muted">
                 {nextBook(books).chunks_completed > 0 // C32.3: started means read, not quizzed
                   ? `${Math.round(nextBook(books).progress_pct)}% read. It opens where you left off.`
@@ -215,7 +218,7 @@ export function Dashboard() {
               <ul className="rf-dash__books">
                 {books.map((b) => (
                   <li key={b.book_id}>
-                    <p className="rf-dash__book-title">{b.title}</p>
+                    <p className="rf-dash__book-title" title={b.title}>{b.title}</p>
                     <p className="rf-dash__muted">{b.author || 'Unknown author'}</p>
                     <MasteryBar value={b.progress_pct} className="rf-dash__book-bar" />
                     <p className="rf-dash__muted">{bookLine(b)}</p>

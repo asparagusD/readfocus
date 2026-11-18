@@ -149,6 +149,36 @@ test('concept mastery: a tab per book, weakest first, ten at a time, words for t
   if (shots) await page.screenshot({ path: `${shots}/dashboard-mastery-1440.png`, fullPage: true });
 });
 
+// C33 (issues 8-10): titles taken from file names, as on a real shelf.
+const LONG = [
+  'Hands On Graph Neural Networks Using Python Practical Maxime Labonne 1, 2023 Packt Publishing Pvt Ltd Isbn13 9781804610701 79b8dc49d8162f3e6d22a51777fe0aa5 Anna’S Archive',
+  'Accelerated Computing With HIP Yifan Sun, Trinayan Baruah, David R Kaeli La Vergne, 2022 Sun, Baruah And Kaeli 9798218107444 4',
+  'Methodology', 'AWPL Naufel', 'Machine Learning With PyTorch And Scikit Learn',
+  'Cracking The Coding Interview 6th Edition 189 Programming Questions And Solutions',
+  'David Harris Sarah Harris Digital Design And Computer Architecture EN',
+];
+const LONG_SHELF = { ...DASHBOARD, book_progress: LONG.map((title, i) => ({ ...DASHBOARD.book_progress[1], book_id: `long-${i}`, title })) };
+
+for (const width of [375, 1440]) {
+  test(`long book titles never widen the page or run under the side column at ${width} px (C33)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await mockDashboard(page, LONG_SHELF);
+    await page.goto('/dashboard');
+    const tabs = page.getByRole('tablist', { name: 'Books' });
+    await expect(tabs.getByRole('tab')).toHaveCount(LONG.length);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    const main = await page.locator('.rf-dash__main').boundingBox();
+    for (const box of await Promise.all((await tabs.getByRole('tab').all()).map((t) => t.boundingBox()))) {
+      expect(box.x + box.width).toBeLessThanOrEqual(main.x + main.width + 1); // inside the main column
+    }
+    await expect(tabs.getByRole('tab', { name: LONG[0] })).toHaveAttribute('title', LONG[0]); // the full title
+    const title = await page.locator('.rf-dash__book-title').first().evaluate((el) =>
+      ({ height: el.getBoundingClientRect().height, font: parseFloat(getComputedStyle(el).fontSize) }));
+    expect(title.height).toBeLessThanOrEqual(title.font * 1.6 * 2 + 1); // two lines at most
+    if (shots) await page.screenshot({ path: `${shots}/dashboard-long-titles-${width}.png`, fullPage: true });
+  });
+}
+
 test('a failed mastery load says so in its panel and can try again', async ({ page }) => {
   await mockDashboard(page, DASHBOARD, { mastery: 503 });
   await page.goto('/dashboard');

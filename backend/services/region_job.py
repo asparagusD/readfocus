@@ -107,41 +107,49 @@ async def _run_epub(job: dict, book: dict, file_bytes: bytes) -> int:
     found = await asyncio.to_thread(epub.epub_regions, file_bytes)
     total = await asyncio.to_thread(epub.spine_count, file_bytes)
     for first, last in batches(total, job["cursor"], PAGES_PER_BATCH):
-        low, high = first - 1, last - 1
-        (supabase.table(TABLE).delete().eq("book_id", book["id"]).gte("spine_index", low).lte("spine_index", high)
-         .execute())
-        rows = epub_rows(book, [r for r in found if low <= r["spine_index"] <= high])
-        if rows:
-            supabase.table(TABLE).insert(rows).execute()
-        jobs.advance(job["id"], last, total)
+        await asyncio.to_thread(_store_epub, book, found, first - 1, last - 1)
+        await asyncio.to_thread(jobs.advance, job["id"], last, total)
     return total
+
+
+def _store_epub(book: dict, found: list[dict], low: int, high: int) -> None:
+    """Rewrite the rows of spine documents low..high (0-based); garble scoring makes it CPU work (C29.1)."""
+    (supabase.table(TABLE).delete().eq("book_id", book["id"]).gte("spine_index", low).lte("spine_index", high)
+     .execute())
+    rows = epub_rows(book, [r for r in found if low <= r["spine_index"] <= high])
+    if rows:
+        supabase.table(TABLE).insert(rows).execute()
+
+
+def _load_book(book_id: str) -> dict:
+    return supabase.table("books").select("id, user_id, file_type, storage_path").eq("id", book_id).execute().data[0]
 
 
 async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
     """Read the claimed job's pages (PDF) or spine documents (EPUB) from its cursor, saved after each batch."""
-    book = supabase.table("books").select("id, user_id, file_type, storage_path").eq(
-        "id", job["book_id"]).execute().data[0]
+    # C29.1: classifying pages and every database call run in a thread, so the server keeps answering meanwhile.
+    book = await asyncio.to_thread(_load_book, job["book_id"])
     try:
         if file_bytes is None:
             file_bytes = await asyncio.to_thread(supabase.storage.from_("books").download, book["storage_path"])
         if book["file_type"] == "epub":
             total = await _run_epub(job, book, file_bytes)
-            jobs.finish(job["id"], total)
+            await asyncio.to_thread(jobs.finish, job["id"], total)
             prose = await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions
             return {"status": "done", "pages": total, "prose": prose}
         total = await asyncio.to_thread(_count, file_bytes)
         for first, last in batches(total, job["cursor"], PAGES_PER_BATCH):
             pages = await asyncio.to_thread(_read, file_bytes, first, last)
-            _store(book, first, last, pages)
+            await asyncio.to_thread(_store, book, first, last, pages)
             del pages
-            pdf_text.release_memory()  # this batch's pdfplumber pages go back (C18.G)
-            jobs.advance(job["id"], last, total)
-        jobs.finish(job["id"], total)
+            await asyncio.to_thread(pdf_text.release_memory)  # this batch's pdfplumber pages go back (C18.G)
+            await asyncio.to_thread(jobs.advance, job["id"], last, total)
+        await asyncio.to_thread(jobs.finish, job["id"], total)
         prose = await prose_job.after_regions(book, file_bytes)  # C18.6b: the agents' prose from the regions
         return {"status": "done", "pages": total, "prose": prose}
     except Exception as error:  # noqa: BLE001 - recorded on the job; the book stays as it is
         print(f"Regions of book {job['book_id']} stopped: {error}")
-        jobs.fail(job["id"], str(error))
+        await asyncio.to_thread(jobs.fail, job["id"], str(error))
         return {"status": "failed", "error": str(error)}
 
 
@@ -154,7 +162,7 @@ async def after_ingest(book: dict, file_bytes: bytes | None = None) -> None:
     """Queue the book's regions job once its ingestion is done: on the worker, behind any waiting ingest (C27.1);
     elsewhere (a script, a test) it runs at once. Never raises."""
     try:
-        job = queue(book)
+        job = await asyncio.to_thread(queue, book)
         if job and not (defer is not None and defer(job)):
             await run_job(job, file_bytes)
     except Exception as error:  # noqa: BLE001 - the region map must never break ingestion

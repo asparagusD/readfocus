@@ -82,10 +82,10 @@ test('the full reading journey, signed in, on the real stack', async ({ page, ba
     const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
     await dialog.getByLabel('Title').fill(title);
     await dialog.getByLabel('Author').fill('ReadFocus journey test');
-    const uploaded = page.waitForResponse(isApi(/^\/books\/upload$/, 'POST'), { timeout: 120_000 });
+    const uploaded = page.waitForResponse(isApi(/^\/books\/register$/, 'POST'), { timeout: 120_000 });
     await dialog.getByRole('button', { name: 'Add book' }).click();
     const upload = await uploaded;
-    expect(upload.status(), 'POST /books/upload').toBe(200);
+    expect(upload.status(), 'POST /books/register (C35.3e)').toBe(200);
     bookId = (await upload.json()).book_id;
     expect(bookId).toBeTruthy();
     await expect(dialog).toBeHidden();

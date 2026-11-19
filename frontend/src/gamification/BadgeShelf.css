@@ -1,9 +1,11 @@
-/* The badge shelf (C24.6b, handoff screen 26): seals and bookplates on a shelf edge. */
-.rf-shelf {
-  margin-top: var(--space-7);
+/* The badge shelf (C24.6b, handoff screen 26): seals and bookplates on a shelf edge. C35.1 (issue 21): in the
+   Dashboard's main column, whose gap spaces it; named rf-badge-shelf, since the Library's .rf-shelf grid of
+   160 px covers took it over once the Library had been visited. */
+.rf-badge-shelf {
+  margin: 0;
 }
 
-.rf-shelf__list {
+.rf-badge-shelf__list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: var(--space-6) var(--space-4);
@@ -137,7 +139,7 @@
 }
 
 @media (max-width: 639px) {
-  .rf-shelf__list {
+  .rf-badge-shelf__list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-5) var(--space-3);
   }

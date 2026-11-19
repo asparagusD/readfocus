@@ -55,6 +55,40 @@ test('C23.7c: focused time and points this week, from the server', async ({ page
   if (shots) await page.screenshot({ path: `${shots}/dashboard-focus-1440.png`, fullPage: true });
 });
 
+// C35.1 (issue 21): the Badge shelf sits in the main column under Concept mastery, so the main column never ends
+// long before the side one at 1440 px (it was 1,111 px of empty column); the shelf keeps its own layout after the
+// Library's styles have loaded in the same visit.
+test('at 1440 px the badge shelf is under concept mastery and the main column does not end early', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await mockDashboard(page);
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Dashboard' }).click(); // in the app, so the Library's styles stay loaded
+  const shelf = page.getByRole('region', { name: 'Badge shelf' });
+  await expect(shelf.getByRole('listitem')).toHaveCount(14);
+  await expect(page.locator('.rf-dash__main').getByRole('region', { name: 'Badge shelf' })).toHaveCount(1);
+  const mastery = await page.getByRole('region', { name: 'Concept mastery' }).boundingBox();
+  const shelfBox = await shelf.boundingBox();
+  expect(shelfBox.y).toBeGreaterThan(mastery.y + mastery.height - 1);
+  expect(await shelf.evaluate((el) => getComputedStyle(el).display)).toBe('block');
+  if (shots) await page.screenshot({ path: `${shots}/dashboard-layout-1440.png`, fullPage: true });
+  const main = await page.locator('.rf-dash__main').boundingBox();
+  const side = await page.locator('.rf-dash__side').boundingBox();
+  expect(main.y + main.height).toBeGreaterThanOrEqual(side.y + side.height - 200);
+});
+
+for (const width of [375, 967]) {
+  test(`at ${width} px the badge shelf stays last, after the side cards (C35.1)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await mockDashboard(page);
+    await page.goto('/dashboard');
+    const shelf = page.getByRole('region', { name: 'Badge shelf' });
+    await expect(shelf.getByRole('listitem')).toHaveCount(14);
+    const feedback = await page.getByRole('region', { name: 'Recent feedback' }).boundingBox();
+    expect((await shelf.boundingBox()).y).toBeGreaterThan(feedback.y + feedback.height);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  });
+}
+
 test('C23.7c: with no focus yet the card says how to start, at 375 too', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await mockDashboard(page, { ...DASHBOARD, focus_this_week: { seconds: 0, points: 0, sessions: 0 } });
@@ -167,10 +201,19 @@ for (const width of [375, 1440]) {
     const tabs = page.getByRole('tablist', { name: 'Books' });
     await expect(tabs.getByRole('tab')).toHaveCount(LONG.length);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    const main = await page.locator('.rf-dash__main').boundingBox();
-    for (const box of await Promise.all((await tabs.getByRole('tab').all()).map((t) => t.boundingBox()))) {
-      expect(box.x + box.width).toBeLessThanOrEqual(main.x + main.width + 1); // inside the main column
-    }
+    // Under 1024 px the main column is display: contents (C35.1), so measure against its Concept mastery section.
+    const main = await page.getByRole('region', { name: 'Concept mastery' }).boundingBox();
+    const list = await tabs.boundingBox();
+    expect(list.x + list.width).toBeLessThanOrEqual(main.x + main.width + 1); // the row stays inside the main column
+    // C35.1 (issue 21): one row that scrolls sideways, never wrapping onto a second line.
+    const tops = await tabs.getByRole('tab').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(new Set(tops).size).toBe(1);
+    const last = tabs.getByRole('tab').last();
+    await tabs.getByRole('tab').first().focus();
+    await page.keyboard.press('End'); // keyboard focus, so the ring shows
+    await expect(last).toBeFocused();
+    await expect(last).toBeInViewport(); // a tab past the edge scrolls into view when it takes focus
+    if (shots) await tabs.screenshot({ path: `${shots}/dashboard-tabs-focus-${width}.png` });
     await expect(tabs.getByRole('tab', { name: LONG[0] })).toHaveAttribute('title', LONG[0]); // the full title
     const title = await page.locator('.rf-dash__book-title').first().evaluate((el) =>
       ({ height: el.getBoundingClientRect().height, font: parseFloat(getComputedStyle(el).fontSize) }));

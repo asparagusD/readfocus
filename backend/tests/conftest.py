@@ -93,3 +93,12 @@ def model_ready():
     if hasattr(embedder, "_ready"):
         embedder._ready.set()
     yield
+
+
+@pytest.fixture(autouse=True)
+def no_batch_pause(monkeypatch):
+    """C35.6: ingestion's pause between batches (make_way.BATCH_PAUSE) is 0 in tests, which would otherwise spend
+    0.2 s per batch; test_make_way.py sets it back to test it."""
+    from backend.services import make_way
+
+    monkeypatch.setattr(make_way, "BATCH_PAUSE", 0.0)

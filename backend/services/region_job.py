@@ -23,7 +23,7 @@ from statistics import median
 
 from backend.regions.classify import classify_page
 from backend.regions.garble import garble_score
-from backend.services import pdf_text, prose_job
+from backend.services import make_way, pdf_text, prose_job
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 
@@ -139,6 +139,7 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
             return {"status": "done", "pages": total, "prose": prose}
         total = await asyncio.to_thread(_count, file_bytes)
         for first, last in batches(total, job["cursor"], PAGES_PER_BATCH):
+            await make_way.between_batches()  # C35.6: the region map makes way for requests
             pages = await asyncio.to_thread(_read, file_bytes, first, last)
             await asyncio.to_thread(_store, book, first, last, pages)
             del pages

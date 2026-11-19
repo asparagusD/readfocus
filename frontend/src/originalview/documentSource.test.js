@@ -50,3 +50,24 @@ test('with no URL from /open (an older server, a device-only book) the server is
   assert.deepEqual(asked, ['b1']);
 });
 
+
+test('C35.3c: a copy kept in this browser opens before the signed URL is ever read', async () => {
+  const asked = [];
+  const source = await bookSource('b1', {
+    loadDeviceFile: async () => null,
+    fetchFile: async () => ({ url: 'https://storage.test/b1.pdf', sha256: null }),
+    cachedFile: async (bookId, sha256) => { asked.push([bookId, sha256]); return new Uint8Array([37, 80, 68, 70]); },
+  });
+  assert.deepEqual(source, { data: new Uint8Array([37, 80, 68, 70]) });
+  assert.deepEqual(asked, [['b1', null]]);
+});
+
+test('C35.3c: without a kept copy the signed URL is used as before', async () => {
+  const source = await bookSource('b1', {
+    loadDeviceFile: async () => null,
+    fetchFile: async () => ({ url: 'https://storage.test/b1.pdf', sha256: 'abc' }),
+    cachedFile: async () => null,
+  });
+  assert.equal(source.url, 'https://storage.test/b1.pdf');
+  assert.equal(source.sha256, 'abc');
+});

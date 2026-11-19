@@ -23,6 +23,8 @@ import ctypes.util
 import gc
 import io
 
+from backend.services import make_way
+
 PAGES_PER_READER = 50
 
 
@@ -34,7 +36,9 @@ def page_texts(file_bytes: bytes, per_reader: int = PAGES_PER_READER) -> list[st
     texts: list[str] = []
     for first in range(0, total, per_reader):
         reader = PdfReader(io.BytesIO(file_bytes))
-        texts += [(reader.pages[n].extract_text() or "") for n in range(first, min(first + per_reader, total))]
+        for n in range(first, min(first + per_reader, total)):
+            make_way.in_thread()  # C35.6: a request being served goes first
+            texts.append(reader.pages[n].extract_text() or "")
         del reader
     return texts
 

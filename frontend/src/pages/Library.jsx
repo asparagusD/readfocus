@@ -15,7 +15,11 @@ import { BookCover } from '../components/BookCover';
 import { EmptyShelf, OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { forgetBookFile, saveBookFile } from '../reader/fileStore';
-import { forgetCachedBookFile } from '../reader/fileCache';
+import { forgetCachedBookFile, keepBookFile } from '../reader/fileCache';
+import { DIRECT, uploadBook } from '../lib/directUpload';
+import { openAheadProps } from '../reader/openAhead';
+import { cached, load, remember } from '../lib/pageData';
+import { pollWithBackoff } from '../lib/backoff';
 import { DEVICE_MAX_BYTES, epubTexts, isBig, pdfTexts, sendTexts, sha256Hex } from '../reader/browserText';
 import './Library.css';
 
@@ -74,8 +78,9 @@ function ShelfSkeleton() {
 
 export function Library() {
   useDocumentTitle('Your shelf');
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // C35.5b (issue 20): the shelf as last seen at once on a return, refreshed behind it.
+  const [books, setBooks] = useState(() => cached('/books') ?? []);
+  const [loading, setLoading] = useState(() => cached('/books') === undefined);
   const [error, setError] = useState(null);
 
   const { toast } = useToast();
@@ -83,7 +88,6 @@ export function Library() {
   const [ingest, setIngest] = useState({}); // book id -> percent of its pages the ingestion job has read
   const [dragging, setDragging] = useState(false);
   const [removing, setRemoving] = useState(null); // the book whose removal is being confirmed
-  const [isRemoving, setIsRemoving] = useState(false);
   const [arrived, setArrived] = useState(() => new Set()); // books that turned ready while the shelf was open
   const reduced = useReducedMotion();
 
@@ -97,16 +101,17 @@ export function Library() {
   const [uploadErrors, setUploadErrors] = useState({});
   const [deviceOnly, setDeviceOnly] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [sent, setSent] = useState(null); // C35.3e: how much of the file has reached Storage, 0-100
   const [sending, setSending] = useState({}); // C26.7: book id -> percent of its pages this browser has sent
   const big = selectedFile ? isBig(selectedFile) : false;
 
   const loadBooks = useCallback(async () => {
     try {
-      const data = await fetchApi('/books');
+      const data = await load('/books');
       setBooks(data);
       setError(null);
     } catch (err) {
-      setError('We couldn’t open your shelf just now.');
+      if (cached('/books') === undefined) setError('We couldn’t open your shelf just now.'); // else the last shelf stays
       console.error(err);
     } finally {
       setLoading(false);
@@ -117,38 +122,52 @@ export function Library() {
     loadBooks();
   }, [loadBooks]);
 
+  // The kept shelf follows what this page changes itself: an upload, a removal, a status poll.
+  useEffect(() => {
+    if (!loading && !error) remember('/books', books);
+  }, [books, loading, error]);
+
   const retry = () => {
     setLoading(true);
     loadBooks();
   };
 
+  // C35.2 (issue 18): the book leaves the shelf at once; the server marks it and purges it behind the answer.
+  // If the request fails, the book goes back where it was and the reader is told.
   const confirmRemove = async () => {
     const book = removing;
-    setIsRemoving(true);
+    const at = books.findIndex(b => b.id === book.id);
+    setBooks(prev => prev.filter(b => b.id !== book.id));
+    setRemoving(null);
+    toast({ kind: 'neutral', message: `${book.title} is off your shelf.` });
     try {
       await fetchApi(`/books/${book.id}`, { method: 'DELETE' });
       forgetBookFile(book.id);
       forgetCachedBookFile(book.id); // C34.7: its kept copy too
-      setBooks(prev => prev.filter(b => b.id !== book.id));
-      setRemoving(null);
-      toast({ kind: 'neutral', message: `${book.title} is off your shelf.` });
     } catch (err) {
-      toast({ kind: 'warning', message: `We couldn’t remove ${book.title}: ${err.message}` });
-    } finally {
-      setIsRemoving(false);
+      setBooks(prev => {
+        if (prev.some(b => b.id === book.id)) return prev;
+        const next = [...prev];
+        next.splice(at < 0 ? next.length : Math.min(at, next.length), 0, book);
+        return next;
+      });
+      toast({ kind: 'warning', message: `We couldn’t remove ${book.title}, so it is back on your shelf: ${err.message}` });
     }
   };
 
-  // Polling logic for processing books
+  // Polling for processing books. C35.6 (issue 17): with back-off (5 s, 10, 20, 40, then every 60 s) for as long as
+  // any book is processing, on one timer; the list it compares with is the latest (a ref), so a poll that changes
+  // the list does not start the waits again.
+  const hasProcessing = books.some(b => b.status === 'processing');
+  const latest = useRef(books);
+  useEffect(() => { latest.current = books; }, [books]);
   useEffect(() => {
-    const hasProcessing = books.some(b => b.status === 'processing');
-    if (!hasProcessing) return;
-
-    const interval = setInterval(async () => {
+    if (!hasProcessing) return undefined;
+    return pollWithBackoff(async () => {
       // Reload the list for statuses, and ask each processing book how far its pages are read.
       try {
         const data = await fetchApi('/books');
-        const was = new Map(books.map((b) => [b.id, b.status]));
+        const was = new Map(latest.current.map((b) => [b.id, b.status]));
         for (const book of data) {
           if (was.get(book.id) === 'processing' && book.status === 'ready') {
             setArrived((prev) => new Set(prev).add(book.id));
@@ -169,10 +188,8 @@ export function Library() {
       } catch {
         // ignore polling errors
       }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [books, toast, navigate]);
+    });
+  }, [hasProcessing, toast, navigate]);
 
   // A file dropped anywhere in the window is offered for upload; while one is dragged over, the page says so.
   const selectFile = useRef(null);
@@ -244,41 +261,56 @@ export function Library() {
       return;
     }
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('title', uploadTitle.trim());
-    formData.append('author', uploadAuthor.trim());
     const keepHere = deviceOnly && !converting; // a converted book is kept on the server (C19.2c)
-    formData.append('storage_mode', keepHere ? 'device' : 'cloud');
-
+    const ext = selectedFile.name.split('.').pop().toLowerCase();
     try {
-      const resp = await fetchApi('/books/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      // Optimistically add to state
-      const optimbook = {
-        id: resp.book_id,
-        title: uploadTitle.trim(),
-        author: resp.author ?? (uploadAuthor.trim() || null),
-        status: 'processing',
-        file_type: converting ? 'epub' : selectedFile.name.split('.').pop().toLowerCase(),
-        storage_mode: keepHere ? 'device' : 'cloud',
-      };
-      // A device-only book's original exists nowhere else, so it is kept in this browser (C17.1).
-      if (keepHere && !(await saveBookFile(resp.book_id, selectedFile))) {
-        toast({ kind: 'warning', message: 'This browser couldn’t keep the file. Add it again before you read.' });
+      let resp;
+      if (!keepHere && DIRECT.includes(ext)) {
+        // C35.3e (issue 16): straight to Storage with its progress, then registered; kept here for its first open.
+        setSent(0);
+        resp = await uploadBook(selectedFile, { title: uploadTitle.trim(), author: uploadAuthor.trim() }, {
+          api: fetchApi, onProgress: setSent, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          hash: async (bytes) => sha256Hex(new Blob([bytes])), keep: (bookId, bytes, sha) => keepBookFile(bookId, sha, bytes),
+        });
+      } else {
+        resp = await sendThroughServer(keepHere);
       }
-      setBooks(prev => [optimbook, ...prev]);
-      setUploadModalOpen(false);
-      toast({ kind: 'success', message: `${optimbook.title} is on your shelf. Open it now; its quizzes follow in a few minutes.` });
-      if (resp.notes?.length) toast({ kind: 'warning', message: missingImages(resp.notes) });
+      await addedToShelf(resp, keepHere, ext);
     } catch (err) {
       toast({ kind: 'warning', message: `We couldn’t add that book: ${err.message || 'the upload failed'}.` });
     } finally {
       setIsUploading(false);
+      setSent(null);
     }
+  };
+
+  // Markdown, a .zip, a notebook (converted there) and a book kept on this device go through our server.
+  const sendThroughServer = (keepHere) => {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('title', uploadTitle.trim());
+    formData.append('author', uploadAuthor.trim());
+    formData.append('storage_mode', keepHere ? 'device' : 'cloud');
+    return fetchApi('/books/upload', { method: 'POST', body: formData });
+  };
+
+  const addedToShelf = async (resp, keepHere, ext) => {
+    const optimbook = {
+      id: resp.book_id,
+      title: uploadTitle.trim(),
+      author: resp.author ?? (uploadAuthor.trim() || null),
+      status: 'processing',
+      file_type: converting ? 'epub' : ext,
+      storage_mode: keepHere ? 'device' : 'cloud',
+    };
+    // A device-only book's original exists nowhere else, so it is kept in this browser (C17.1).
+    if (keepHere && !(await saveBookFile(resp.book_id, selectedFile))) {
+      toast({ kind: 'warning', message: 'This browser couldn’t keep the file. Add it again before you read.' });
+    }
+    setBooks(prev => [optimbook, ...prev]);
+    setUploadModalOpen(false);
+    toast({ kind: 'success', message: `${optimbook.title} is on your shelf. Open it now; its quizzes follow in a few minutes.` });
+    if (resp.notes?.length) toast({ kind: 'warning', message: missingImages(resp.notes) });
   };
 
   // C26.7: over 50 MB the file stays here; this browser reads its pages' text and sends only that.
@@ -380,7 +412,7 @@ export function Library() {
               {next.progress ? `${readPct(next)}% read so far. It opens where you left off.` : `${next.author ? `By ${next.author}. ` : ''}It opens at the first page.`}
             </p>
           </div>
-          <Link to={`/read/${next.id}`} className="rf-btn rf-btn--primary rf-today__go">
+          <Link to={`/read/${next.id}`} className="rf-btn rf-btn--primary rf-today__go" {...openAheadProps(next.id, next.file_type)}>
             <span>Begin reading</span>
             <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
           </Link>
@@ -415,7 +447,7 @@ export function Library() {
                   initial={arrived.has(book.id) ? 'hidden' : undefined}
                   animate={arrived.has(book.id) ? 'visible' : undefined}
                 >
-                  {openable ? <Link to={`/read/${book.id}`} className="rf-shelf__book">{face}</Link> : <div className="rf-shelf__book">{face}</div>}
+                  {openable ? <Link to={`/read/${book.id}`} className="rf-shelf__book" {...openAheadProps(book.id, book.file_type)}>{face}</Link> : <div className="rf-shelf__book">{face}</div>}
                   <MasteryBar value={readPct(book)} className="rf-shelf__bar" />
                   <div className="rf-shelf__foot">
                     <p className={`rf-shelf__caption${book.status === 'error' ? ' is-error' : ''}`} aria-live={book.status === 'processing' ? 'polite' : undefined}>{caption(book, ingest[book.id], sending[book.id])}</p>
@@ -459,6 +491,13 @@ export function Library() {
               </span>
             </label>
           )}
+          {sent != null && (
+            <div className="rf-library__sent" role="progressbar" aria-label="Sending the file" aria-valuemin={0}
+              aria-valuemax={100} aria-valuenow={sent}>
+              <MasteryBar value={sent} />
+              <p className="rf-library__sent-line">{sent < 100 ? `Sending the file: ${sent}%` : 'Sent. Putting it on your shelf…'}</p>
+            </div>
+          )}
           <div className="rf-library__form-actions">
             <Button variant="secondary" onClick={() => setUploadModalOpen(false)} disabled={isUploading}>Cancel</Button>
             <Button type="submit" loading={isUploading} loadingLabel={converting ? 'Converting…' : big ? 'Adding…' : 'Uploading…'}>Add book</Button>
@@ -466,11 +505,11 @@ export function Library() {
         </form>
       </Modal>
 
-      <Modal isOpen={removing !== null} onClose={() => !isRemoving && setRemoving(null)} title={removing ? `Remove ${removing.title}?` : ''}>
+      <Modal isOpen={removing !== null} onClose={() => setRemoving(null)} title={removing ? `Remove ${removing.title}?` : ''}>
         <p className="rf-library__confirm">Its sessions, test results and reading progress go with it. This can’t be undone.</p>
         <div className="rf-library__form-actions">
-          <Button variant="secondary" onClick={() => setRemoving(null)} disabled={isRemoving}>Keep it</Button>
-          <Button variant="danger" onClick={confirmRemove} loading={isRemoving} loadingLabel="Removing…">Remove</Button>
+          <Button variant="secondary" onClick={() => setRemoving(null)}>Keep it</Button>
+          <Button variant="danger" onClick={confirmRemove}>Remove</Button>
         </div>
       </Modal>
     </div>

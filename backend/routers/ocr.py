@@ -15,6 +15,7 @@ from backend.agents import policy
 from backend.dependencies import get_current_user
 from backend.services import ingestion_worker, ocr_pages
 from backend.services import processing_jobs as jobs
+from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 
 router = APIRouter()
@@ -40,7 +41,7 @@ class OcrPage(BaseModel):
 
 
 def own_book(book_id: str, user_id: str) -> dict:
-    rows = supabase.table("books").select(BOOK_FIELDS).eq("id", book_id).eq("user_id", user_id).execute().data
+    rows = live(supabase.table("books").select(BOOK_FIELDS).eq("id", book_id).eq("user_id", user_id).execute().data)
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
     return rows[0]

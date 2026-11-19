@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from backend.agents import policy
 from backend.dependencies import get_current_user
 from backend.services.anchor_checks import MAX_POSITION, Anchor, check_anchors
+from backend.services.book_purge import live
 from backend.services.note_content import check_content, owned_path
 from backend.services.supabase_client import supabase
 from backend.xp import badge_award
@@ -87,7 +88,7 @@ def _refuse(detail) -> HTTPException:
 
 
 def _owned(book_id: str, user_id: str) -> None:
-    if not supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute().data:
+    if not live(supabase.table("books").select("id, status").eq("id", book_id).eq("user_id", user_id).execute().data):
         raise HTTPException(status_code=404, detail="Book not found")
 
 

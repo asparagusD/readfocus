@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchApi } from '../../lib/api';
+import { cached, load } from '../../lib/pageData';
 import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
 import { MasteryBar } from '../ui/MasteryBar';
@@ -16,20 +17,39 @@ const PAGE = 10;
  * ten at a time with "Show more". Each row: the concept, its bar and
  * percentage, and "Needs revisiting" in words when it is weak.
  */
+const pagePath = (bookId, offset) => `/mastery?book_id=${encodeURIComponent(bookId)}&limit=${PAGE}&offset=${offset}`;
+
+/** C35.5b (issue 20): each book's first page as last seen, so a return shows it at once. */
+function keptFirstPages(books) {
+  return Object.fromEntries(books.map((b) => [b.book_id, cached(pagePath(b.book_id, 0))]).filter(([, page]) => page)
+    .map(([id, page]) => [id, { items: page.items, total: page.total, kept: true }]));
+}
+
 export function MasteryList({ books }) {
   const [bookId, setBookId] = useState(books[0]?.book_id ?? null);
-  const [pages, setPages] = useState({}); // book id -> { items, total } | { error: true }
+  const [pages, setPages] = useState(() => keptFirstPages(books)); // book id -> { items, total, kept? } | { error: true }
   const [offset, setOffset] = useState({}); // book id -> how many rows were asked for
 
   const shown = pages[bookId];
   const asked = offset[bookId] ?? PAGE;
+
+  // A kept first page is shown, then asked again; the fresh one replaces it unless more rows were asked for since.
+  const keptNow = Boolean(shown?.kept);
+  useEffect(() => {
+    if (!bookId || !keptNow) return undefined;
+    let live = true;
+    load(pagePath(bookId, 0)).then((page) => {
+      if (live) setPages((all) => (all[bookId]?.kept ? { ...all, [bookId]: { items: page.items, total: page.total } } : all));
+    }).catch(() => {});
+    return () => { live = false; };
+  }, [bookId, keptNow]);
 
   useEffect(() => {
     if (!bookId) return undefined;
     const have = pages[bookId]?.items?.length ?? 0;
     if (pages[bookId] && (pages[bookId].error || have >= asked || have >= pages[bookId].total)) return undefined;
     let live = true;
-    fetchApi(`/mastery?book_id=${encodeURIComponent(bookId)}&limit=${PAGE}&offset=${have}`)
+    (have === 0 ? load(pagePath(bookId, 0)) : fetchApi(pagePath(bookId, have)))
       .then((page) => {
         if (!live) return;
         setPages((all) => ({ ...all, [bookId]: { items: [...(all[bookId]?.items ?? []), ...page.items], total: page.total } }));

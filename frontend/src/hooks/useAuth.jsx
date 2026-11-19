@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { forgetCachedBookFiles } from '../reader/fileCache';
+import { forgetPageData } from '../lib/pageData';
 
 const AuthContext = createContext({});
 
@@ -17,7 +18,7 @@ export function AuthProvider({ children }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') forgetCachedBookFiles(); // C34.7: no reader's books stay in this browser
+      if (event === 'SIGNED_OUT') { forgetCachedBookFiles(); forgetPageData(); } // C34.7, C35.5a: nothing of a reader stays
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);

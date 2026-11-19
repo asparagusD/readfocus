@@ -4,11 +4,17 @@
 // ranges (C34.1), so the first page shows before the whole file has arrived; the URL
 // expires after five minutes, so `renew` asks the server for a fresh one.
 
-/** { data } for a device copy, { url, renew } for the stored file. */
-export async function bookSource(bookId, { loadDeviceFile, fetchFile }) {
+/**
+ * { data } for a device copy or a copy kept in this browser, { url, renew } for the stored file. C35.3c:
+ * `cachedFile` finds the file this browser uploaded (also before the server has hashed it, sha256 null),
+ * so a book's first open after its upload reads nothing from the network, PDF or EPUB.
+ */
+export async function bookSource(bookId, { loadDeviceFile, fetchFile, cachedFile = async () => null }) {
   const file = await loadDeviceFile(bookId);
   if (file) return { data: new Uint8Array(await file.arrayBuffer()) };
   const { url, sha256 = null } = await fetchFile(bookId); // C34.7: sha256 names the version kept in the browser
+  const kept = await cachedFile(bookId, sha256);
+  if (kept) return { data: kept };
   return { url, sha256, renew: () => fetchFile(bookId).then((fresh) => fresh.url) };
 }
 

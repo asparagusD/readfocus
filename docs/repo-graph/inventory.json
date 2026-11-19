@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 940,
-    "inventoried": 797,
+    "tracked": 962,
+    "inventoried": 819,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17769,
+      "size_bytes": 18134,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -473,8 +473,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 88,
-      "size_bytes": 3404,
+      "lines": 89,
+      "size_bytes": 3514,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP). C24.4: the internal router under /internal (scheduled jobs). C24.5: the progress router (/me/progress, /badges, /leagues/current)."
     },
@@ -553,8 +553,8 @@
     {
       "path": "backend/regions/extract.py",
       "language": "python",
-      "lines": 247,
-      "size_bytes": 9376,
+      "lines": 249,
+      "size_bytes": 9491,
       "role": "lib",
       "purpose": "PDF page characters (and, since C18.5a, its graphics and, on ruled pages only, pdfplumber's table candidates) with font name, size, box and uprightness via pdfplumber, grouped by the pure build_page into lines (each character's offset in the line text, sub- and superscripts joined with their baseline offset, split at column gutters, word gaps from positions) and blocks, in points from the crop box's top-left; page_chars, iter_pages (file opened once per range, pages closed) and page_count."
     },
@@ -609,8 +609,8 @@
     {
       "path": "backend/routers/annotations.py",
       "language": "python",
-      "lines": 103,
-      "size_bytes": 5046,
+      "lines": 104,
+      "size_bytes": 5105,
       "role": "router",
       "purpose": "Highlights and underlines (C21.1, docs/ANCHORS.md): GET /books/{id}/annotations (reading order, from/to overlap filter), POST (anchors checked against A1/A2, positions against A4, text snapshot), PATCH /annotations/{id} (style, color), DELETE; owner only, 404 otherwise."
     },
@@ -625,8 +625,8 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 451,
-      "size_bytes": 23588,
+      "lines": 479,
+      "size_bytes": 25508,
       "role": "router",
       "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop. C30.1: the upload's author is optional; a blank one is read from the file's own metadata (file_author: PDF info Author, EPUB dc:creator, whitespace tidied, at most AUTHOR_MAX), else stored as null, and the response returns the author used."
     },
@@ -641,16 +641,16 @@
     {
       "path": "backend/routers/device_books.py",
       "language": "python",
-      "lines": 88,
-      "size_bytes": 4456,
+      "lines": 89,
+      "size_bytes": 4507,
       "role": "router",
       "purpose": "C26.7: books over 50 MB kept on the reader's device. POST /books/device makes a PDF or EPUB book (over MAX_BOOK_FILE_BYTES, at most MAX_DEVICE_BOOK_FILE_BYTES = 300 MB) with no file, storage_mode device and source_format browser-text; POST /books/{id}/pages takes the browser's page texts in batches (at most BROWSER_TEXT_PAGES_PER_BATCH) into page_ocr (engine browser), owner only, the book still processing, and the last batch queues ingestion on the one worker."
     },
     {
       "path": "backend/routers/focus.py",
       "language": "python",
-      "lines": 312,
-      "size_bytes": 15507,
+      "lines": 313,
+      "size_bytes": 15558,
       "role": "router",
       "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet. C26.3: the focus quiz and Quiz me answer 409 {code: preparing} while the book is processed; the focus session stays awaiting its quiz."
     },
@@ -681,16 +681,16 @@
     {
       "path": "backend/routers/notes.py",
       "language": "python",
-      "lines": 237,
-      "size_bytes": 11316,
+      "lines": 238,
+      "size_bytes": 11375,
       "role": "router",
       "purpose": "Note blocks (C22.1): GET /books/{id}/notes (live blocks in reading order, from/to overlap, signed file URLs), POST (anchors and positions checked, content allow-listed, version 1), PATCH /notes/{id} with If-Match (409 when stale, 428 without), soft DELETE, POST /books/{id}/note-files (WebP/PNG into the private notes bucket); owner only, 404 otherwise. C24.2: a created note checks the note badges."
     },
     {
       "path": "backend/routers/ocr.py",
       "language": "python",
-      "lines": 96,
-      "size_bytes": 4986,
+      "lines": 97,
+      "size_bytes": 5037,
       "role": "router",
       "purpose": "OCR endpoints (C19.4): POST /books/{id}/ocr stores one scanned page's tesseract.js words (owner only, flagged pages only, cleaned by ocr_pages) and, when that completes a fully scanned book with no chunks, requeues and runs ingestion from the OCR text; GET /books/{id}/ocr gives scanned_pages, done, and with first..last (at most 20) each page's words for the text layer."
     },
@@ -705,8 +705,8 @@
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 131,
-      "size_bytes": 7253,
+      "lines": 132,
+      "size_bytes": 7304,
       "role": "router",
       "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days. C34.3 (issue 13): GET /books/{id}/open also returns `file`, the original's signed URL as /file gives it (None for a device-only book or a failed signing), signed in parallel with the progress read."
     },
@@ -729,8 +729,8 @@
     {
       "path": "backend/routers/steve_ask.py",
       "language": "python",
-      "lines": 281,
-      "size_bytes": 14615,
+      "lines": 282,
+      "size_bytes": 14674,
       "role": "router",
       "purpose": "POST /steve/ask (C20.6): consent, off switch, open test, image (PNG, 500 KB), thread and book checked first with typed errors; then context, prompt and service.ask streamed as Server-Sent Events (start, token, done with checked citations and usage, or error); GET /steve/threads?book_id and GET /steve/threads/{id}, the reader's own only. C20.8: POST /steve/latex, a PDF equation as LaTeX, cached per file, page and box in equation_latex (one Gemini call per equation ever). C24.2: after the done event, checks the First Ask Steve badge. C26.3: 409 {code: preparing} (\"Steve can read this book in a moment\") for a book still being processed; nothing is sent."
     },
@@ -761,10 +761,18 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 328,
-      "size_bytes": 16129,
+      "lines": 360,
+      "size_bytes": 17877,
       "role": "service",
       "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests."
+    },
+    {
+      "path": "backend/services/book_purge.py",
+      "language": "python",
+      "lines": 79,
+      "size_bytes": 3979,
+      "role": "service",
+      "purpose": "C35.2 (issue 18): a book being deleted. mark() sets books.status to 'deleting' (DELETE /books/{id} answers 202 at once); purge() removes the original from the books bucket, the note pictures under notes/<user>/<book>/ (a page at a time) and the row, whose cascade takes the rest, as a background task; purge_left() finishes purges a restart or failure left, from the ingestion sweep loop; live() drops deleting rows from an owner's book reads."
     },
     {
       "path": "backend/services/book_structure.py",
@@ -791,10 +799,18 @@
       "purpose": "Book covers from Open Library (C11.2), backend only: title search (first author, no edition notes) for a cover ID, the image by ID through archive.org redirects (https, Open Library and archive.org hosts only), copied unchanged (at most 150 KB, the C11.5 image budget) into the public covers bucket once per cover ID; the outcome (cover_url, cover_source openlibrary/none/error) saved on the book; 3 s timeout, one attempt, descriptive User-Agent; never raises."
     },
     {
+      "path": "backend/services/direct_upload.py",
+      "language": "python",
+      "lines": 77,
+      "size_bytes": 3475,
+      "role": "service",
+      "purpose": "C35.3a (issue 16): a PDF or EPUB sent straight to Storage. object_path (the reader's own <user>/<book>.<ext> in the books bucket), signed_upload (a signed upload URL), stored_size (from a Storage listing), first_bytes (one Range request through a short signed URL), kind_of (pdf or epub by the first bytes), check (exists, at most MAX_BOOK_FILE_BYTES, its type; a refused object is removed)."
+    },
+    {
       "path": "backend/services/ingestion_worker.py",
       "language": "python",
-      "lines": 176,
-      "size_bytes": 7042,
+      "lines": 188,
+      "size_bytes": 7544,
       "role": "service",
       "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job. C27.1: a priority slot instead of the lock: waiting ingest jobs before waiting regions jobs, each in arrival order, a cancelled waiter skipped; defer(job) queues a regions job from inside the worker (read from Storage on its turn), drain() waits for the deferred ones. C27.2: _held keeps the ids of the jobs this process holds (waiting or running, deferred ones from defer on); the sweep skips them, so a waiting job is never claimed twice or failed for waiting."
     },
@@ -805,6 +821,14 @@
       "size_bytes": 10909,
       "role": "service",
       "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract and Wikipedia's short description; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
+    },
+    {
+      "path": "backend/services/make_way.py",
+      "language": "python",
+      "lines": 97,
+      "size_bytes": 3494,
+      "role": "service",
+      "purpose": "C35.6 (issue 17): ingestion makes way for API requests on the shared 0.1 CPU. RequestCounter (ASGI middleware, added in backend/main.py) counts the requests being served, not /health, /steve/ask or a preflight; between_batches (a job's batch loop: a 0.2 s pause, then a wait while requests are in flight, at most 2 s) and in_thread (a parse's per-page loop: a wait of at most 0.25 s, time.sleep letting go of the GIL)."
     },
     {
       "path": "backend/services/note_content.py",
@@ -825,8 +849,8 @@
     {
       "path": "backend/services/pdf_text.py",
       "language": "python",
-      "lines": 57,
-      "size_bytes": 2342,
+      "lines": 61,
+      "size_bytes": 2472,
       "role": "service",
       "purpose": "PDF page text with bounded memory (C18.G): page_texts reads every page's pypdf text 50 pages per fresh reader (the same text as one reader, about a quarter of the memory); release_memory runs gc and glibc malloc_trim(0) so a phase's freed memory goes back on Linux; freeze_startup_heap (C33.G, called in backend/main.py's lifespan) keeps the loaded modules out of later collections so that gc never holds the event loop for a walk of the whole heap. Used by ingestion, book_structure's page starts and the prose rebuild."
     },
@@ -865,8 +889,8 @@
     {
       "path": "backend/services/region_job.py",
       "language": "python",
-      "lines": 169,
-      "size_bytes": 8569,
+      "lines": 170,
+      "size_bytes": 8672,
       "role": "service",
       "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books; once done, hands the book to prose_job.after_regions (C18.6b) and returns its report as 'prose'. C27.1: after_ingest asks `defer` (set by ingestion_worker) to queue the regions job behind waiting ingests; outside the worker it runs at once. C29.1b: the book select, each batch's classification and writes (_store, _store_epub), the job's bookkeeping and after_ingest's queue run in a thread, so the server keeps answering /health during a region map."
     },
@@ -921,8 +945,8 @@
     {
       "path": "backend/steve/context.py",
       "language": "python",
-      "lines": 450,
-      "size_bytes": 21304,
+      "lines": 451,
+      "size_bytes": 21363,
       "role": "lib",
       "purpose": "Steve's context builder (C20.4): build_context() returns delimited parts (book card, session prose to the reader's place, highlight with its paragraph, top-k retrieved passages minus the session and highlight, region source or code, image) and a {label: anchor} citations map, under a conservative 12k-token cap; never the whole book. C26.6a: the reading text is the chunk at the reader's saved place (its chunk, else the chunk holding its anchor; with no place, the highlight's) and the AROUND_CHUNKS_BEFORE chunks before it, in <reading_text> (was <session_text>, still escaped in book text); the sessions table is no longer read."
     },
@@ -1001,8 +1025,8 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 95,
-      "size_bytes": 2761,
+      "lines": 104,
+      "size_bytes": 3103,
       "role": "test",
       "purpose": "Offline test setup: dummy environment (ingestion sweep and model preload off), a fake Supabase client, a guard that blocks non-loopback connections, and an autouse fixture that marks the embedding model ready."
     },
@@ -1105,8 +1129,8 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 180,
-      "size_bytes": 7141,
+      "lines": 192,
+      "size_bytes": 7844,
       "role": "test",
       "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1); project_columns (C25.G, on by default) returns only the selected columns, as PostgREST does."
     },
@@ -1153,8 +1177,8 @@
     {
       "path": "backend/tests/test_api_books_list.py",
       "language": "python",
-      "lines": 68,
-      "size_bytes": 3215,
+      "lines": 70,
+      "size_bytes": 3371,
       "role": "test",
       "purpose": "GET /books (C13.3a) on the in-memory database: only the caller's books, the old fields plus cover_url and progress, progress the caller's own and null before a first session, the selected columns, an empty shelf."
     },
@@ -1329,8 +1353,8 @@
     {
       "path": "backend/tests/test_bench.py",
       "language": "python",
-      "lines": 153,
-      "size_bytes": 6342,
+      "lines": 158,
+      "size_bytes": 6558,
       "role": "test",
       "purpose": "Pytest: percentile, duration formatting, table rows including 'not measurable', and the Baseline section update in scripts/bench.py. C26.G: waits for the questions, a failed job stops the wait, the delete is resent after a dropped connection, an undeletable book stops the run."
     },
@@ -1353,10 +1377,18 @@
     {
       "path": "backend/tests/test_book_delete.py",
       "language": "python",
-      "lines": 84,
-      "size_bytes": 3625,
+      "lines": 127,
+      "size_bytes": 5784,
       "role": "test",
       "purpose": "DELETE /books/{id} (C25.1 fix): the book's original and every file in notes/<user>/<book>/ go with it, page by page; another book's and another reader's files stay; another reader's book is 404; a storage failure, or a remove that removes nothing, is logged once and the book is still deleted."
+    },
+    {
+      "path": "backend/tests/test_book_deleting_hidden.py",
+      "language": "python",
+      "lines": 84,
+      "size_bytes": 3424,
+      "role": "test",
+      "purpose": "C35.2b (issue 18): a book marked deleting is off the shelf and out of the shelf space, 404 at every endpoint that takes its id (details, file, pages, regions, status, resume, body start, open, OCR, highlights, notes), closed to focus, Steve and device pages, and never marked ready or failed by ingestion."
     },
     {
       "path": "backend/tests/test_book_files.py",
@@ -1453,6 +1485,14 @@
       "size_bytes": 7533,
       "role": "test",
       "purpose": "Pytest on MemoryDb (C26.7): a device book is made with no file; bad sizes, hashes, types and keys refused; text in batches and the last one ingests from it (chunks, ready, no region map); page order and empty pages; a resent batch replaces its pages; another reader's, a server-read or a ready book refused; bad batches refused; a failed browser-text book resumes from its stored text; a device book read on the server still cannot resume."
+    },
+    {
+      "path": "backend/tests/test_direct_upload.py",
+      "language": "python",
+      "lines": 194,
+      "size_bytes": 9086,
+      "role": "test",
+      "purpose": "C35.3a (issue 16): POST /books/upload-url signs only the reader's own path and refuses other types, oversize files and a full shelf; POST /books/register writes the row and the job for a file that arrived, and removes a missing-type, oversize or shelf-overfilling one; another reader's object is never read; the job adds the hash, page count and author before it parses."
     },
     {
       "path": "backend/tests/test_embedder.py",
@@ -1625,8 +1665,8 @@
     {
       "path": "backend/tests/test_jobs_off_loop.py",
       "language": "python",
-      "lines": 159,
-      "size_bytes": 6074,
+      "lines": 198,
+      "size_bytes": 7766,
       "role": "test",
       "purpose": "Pytest (C29.1, issue 1): with every in-memory database call, upload and parse made to block 0.3 s, a 10 ms heartbeat on the same event loop is never more than 0.15 s late while a PDF or EPUB ingests (C29.1a), while a PDF or EPUB region map runs or is queued, or during POST /books/upload (C29.1b)."
     },
@@ -1655,6 +1695,14 @@
       "purpose": "Pytest with httpx.MockTransport and the in-memory database through TestClient: normalisation and base forms, dictionary hit payload and User-Agent, base-form retry, dictionary miss to Wikipedia, proper noun and phrase to Wikipedia, disambiguation, timeout answered gracefully and not cached, cache hit with no request, 90-day and 7-day expiry, a broken cache table, the per-user 429, 422 for non-terms, 401 without a user."
     },
     {
+      "path": "backend/tests/test_make_way.py",
+      "language": "python",
+      "lines": 130,
+      "size_bytes": 3826,
+      "role": "test",
+      "purpose": "C35.6 (issue 17): requests are counted while served (not /health, Steve's stream or a preflight, and a failing one counted out); between_batches pauses then waits for requests; every wait is capped; a parse thread waits while a request is served."
+    },
+    {
       "path": "backend/tests/test_mastery.py",
       "language": "python",
       "lines": 151,
@@ -1665,8 +1713,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 978,
-      "size_bytes": 46498,
+      "lines": 992,
+      "size_bytes": 47226,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -2177,8 +2225,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5306,
-      "size_bytes": 246578,
+      "lines": 5340,
+      "size_bytes": 248043,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2241,8 +2289,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6129,
-      "size_bytes": 1101952,
+      "lines": 6191,
+      "size_bytes": 1127335,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2361,8 +2409,8 @@
     {
       "path": "frontend/e2e/dashboard.spec.js",
       "language": "javascript",
-      "lines": 223,
-      "size_bytes": 13631,
+      "lines": 266,
+      "size_bytes": 16528,
       "role": "config",
       "purpose": "Playwright e2e for the dashboard (C13.7) with GET /dashboard answered here and GET /mastery (DASHBOARD, mockDashboard): greeting, streak, figures, the trend's dots and its table, books, feedback quote; a new reader's empty state; a failed load with Try again; 2 x 2 figures at 375; concept mastery (tabs by keyboard, weakest first, Show more, the weak rule, the exact /mastery requests) and a failed mastery load; For tonight; the candle, bar and trend motion with and without reduced motion. C33.1: long file-name titles at 375 and 1440 px: no sideways scroll, tabs inside the main column with the full title as tooltip, titles at most two lines."
     },
@@ -2386,7 +2434,7 @@
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
       "lines": 515,
-      "size_bytes": 33484,
+      "size_bytes": 33534,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed."
     },
@@ -2506,7 +2554,7 @@
       "path": "frontend/e2e/journey.spec.js",
       "language": "javascript",
       "lines": 217,
-      "size_bytes": 12781,
+      "size_bytes": 12794,
       "role": "config",
       "purpose": "Live Playwright journey (C15.1), not in test:e2e: waits for /health model_ready, signs in as test user A from .env.test, uploads sample.pdf, waits for ready, turns pages (position PUT), opens a word card (real /lookup), takes the test with wrong answers, checks Results, the Dashboard's mastery for the book and that the next session's reason reacts to the test, then removes the book (API delete in finally if not); fails on any host outside the site, the API and the Supabase project. C26.6c: rewritten without sessions: open at the first page, turns saved on the book, Quiz me graded, Read on, reopened at the saved place (not run: live only)."
     },
@@ -2537,8 +2585,8 @@
     {
       "path": "frontend/e2e/library.spec.js",
       "language": "javascript",
-      "lines": 350,
-      "size_bytes": 20409,
+      "lines": 466,
+      "size_bytes": 27827,
       "role": "config",
       "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs. C30.2: the author is optional (the title alone is checked; a blank author is sent and the returned one shown) and an authorless book shows \"Unknown author\"."
     },
@@ -2557,6 +2605,14 @@
       "size_bytes": 4487,
       "role": "config",
       "purpose": "Playwright e2e for sign in (C13.1b), signed out with Supabase Auth answered in the spec: empty fields explained inline with nothing sent, a wrong password with the loading label and the error on the field, a correct one opening the library, and create account by keyboard (tab, short password, inbox message, back). Under reduced motion neither the form nor the drawings have a transform in any frame."
+    },
+    {
+      "path": "frontend/e2e/no-blank.spec.js",
+      "language": "javascript",
+      "lines": 48,
+      "size_bytes": 2624,
+      "role": "config",
+      "purpose": "C35.5d (issue 20): a page whose code is slow shows a skeleton and the main area is never blank between pages; pointing at a nav link loads that page's code and data."
     },
     {
       "path": "frontend/e2e/notepad.spec.js",
@@ -2623,6 +2679,22 @@
       "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page. C26.5a: the scanned book opens through /open and then says \"Preparing quizzes…\"."
     },
     {
+      "path": "frontend/e2e/open-ahead.spec.js",
+      "language": "javascript",
+      "lines": 33,
+      "size_bytes": 1892,
+      "role": "config",
+      "purpose": "C35.4 (issue 19): hovering a PDF on the shelf fetches the PDF.js worker and asks the server nothing; the click's /open is the reader's only one; the worker script is fetched once."
+    },
+    {
+      "path": "frontend/e2e/page-data.spec.js",
+      "language": "javascript",
+      "lines": 73,
+      "size_bytes": 4378,
+      "role": "config",
+      "purpose": "C35.5b-c (issue 20): back on the Library or the Dashboard the last data shows before its request answers and is asked again; League's settings use the header's /me/progress, asking nothing more."
+    },
+    {
       "path": "frontend/e2e/pdf-open.spec.js",
       "language": "javascript",
       "lines": 44,
@@ -2642,7 +2714,7 @@
       "path": "frontend/e2e/phase2_journey.spec.js",
       "language": "javascript",
       "lines": 445,
-      "size_bytes": 29978,
+      "size_bytes": 29982,
       "role": "config",
       "purpose": "Live phase-2 journey (C25.3), npm run test:live:phase2 (playwright.phase2.config.js), opt-in and approved per run: test user A uploads Interactive Linear Algebra and the illustrated Alice EPUB, waits for ingestion and the region map; two equation pages as the original view draws them match PDFium (scripts/dev/g5_page_diff.py); every EPUB image drawn (g5_epub_expect.py), walked from the first page past today's closing page; highlight, lookup off, Ask Steve (mocked in the browser unless STEVE_LIVE=1) with the highlight's page as anchor, the citation moves the book back; save to notes, a drawing note, the notepad follows the pages; focus mode from chapter 1, page turns, the ribbon, a quiz of clamp(round(words/400),3,15) answered from the stored questions (service key, this machine), the points breakdown, XP, today's goal (set to 20 for the run), streak and league; deletes both books and restores the goal; only the site, the API and Supabase contacted."
     },
@@ -2757,6 +2829,14 @@
       "size_bytes": 3418,
       "role": "config",
       "purpose": "Playwright (C24.G, GAMIFICATION G6): the device's zone adopted once while UTC is stored, never changed silently after, the settings' zone line and switch, a refused switch, nothing on a UTC device."
+    },
+    {
+      "path": "frontend/e2e/upload-first-open.spec.js",
+      "language": "javascript",
+      "lines": 29,
+      "size_bytes": 1478,
+      "role": "config",
+      "purpose": "C35.3c (issue 16): a PDF or EPUB kept in this browser by its upload opens with no file request, whether the server has hashed it yet or not."
     },
     {
       "path": "frontend/e2e/warmup.spec.js",
@@ -2921,8 +3001,8 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 145,
-      "size_bytes": 6929,
+      "lines": 147,
+      "size_bytes": 7091,
       "role": "entry",
       "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4). C23.6b: /focus/:sessionId/quiz (FocusQuiz). C23.7b: /quiz/:sessionId (QuizMe). C24.6c: /league (lazy, signed in)."
     },
@@ -3137,8 +3217,8 @@
     {
       "path": "frontend/src/components/Layout.jsx",
       "language": "jsx",
-      "lines": 49,
-      "size_bytes": 2096,
+      "lines": 52,
+      "size_bytes": 2401,
       "role": "component",
       "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target. C24.6a: the reader's progress (candle, goal ring, level) before the theme toggle, fetched only when signed in. C24.6c: a League link; under 640 px 8 px gaps so three links fit at 375. C24.G: the header adopts the device's time zone."
     },
@@ -3193,8 +3273,8 @@
     {
       "path": "frontend/src/components/dashboard/MasteryList.jsx",
       "language": "jsx",
-      "lines": 90,
-      "size_bytes": 4181,
+      "lines": 110,
+      "size_bytes": 5208,
       "role": "component",
       "purpose": "MasteryList (handoff screen 09): underline SegmentedTabs per book in progress, that book's concepts weakest first from GET /mastery?book_id=&limit=10&offset=, kept per book, Show more, 'Needs revisiting' by the planner's rule, empty and failed (Try again) states."
     },
@@ -3327,6 +3407,14 @@
       "purpose": "Modal dialog: role dialog, aria-modal, named by title, label or its first heading; focus moves in and Tab is trapped, Esc and the scrim close, page scroll locked, focus returns on close; pop animation, opacity only under reduced motion."
     },
     {
+      "path": "frontend/src/components/ui/PageSkeleton.jsx",
+      "language": "jsx",
+      "lines": 15,
+      "size_bytes": 570,
+      "role": "component",
+      "purpose": "C35.5d (issue 20): the Suspense fallback of every lazy page: a heading's width, a line and a block on --paper-2, aria-busy, in place of an empty main area."
+    },
+    {
       "path": "frontend/src/components/ui/ProgressRing.css",
       "language": "css",
       "lines": 35,
@@ -3361,8 +3449,8 @@
     {
       "path": "frontend/src/components/ui/SegmentedTabs.css",
       "language": "css",
-      "lines": 71,
-      "size_bytes": 2018,
+      "lines": 80,
+      "size_bytes": 2490,
       "role": "component",
       "purpose": "Segmented tabs styles: a paper-2 pill track, the selected tab a raised surface pill with a field border, 44 px tabs; the underline variant: text tabs on a hairline, the selected one over a 2 px accent rule. C33.1 (issue 8): underline tabs shrink, at most 26ch, cut with an ellipsis, so a long book title never widens the row."
     },
@@ -3705,16 +3793,16 @@
     {
       "path": "frontend/src/gamification/BadgeShelf.css",
       "language": "css",
-      "lines": 144,
-      "size_bytes": 2932,
+      "lines": 146,
+      "size_bytes": 3132,
       "role": "asset",
       "purpose": "Styles for the badge shelf (C24.6b): the grid on a shelf edge, seal rims and bookplates, earned and locked looks, two columns on phones."
     },
     {
       "path": "frontend/src/gamification/BadgeShelf.jsx",
       "language": "jsx",
-      "lines": 104,
-      "size_bytes": 4632,
+      "lines": 103,
+      "size_bytes": 4804,
       "role": "asset",
       "purpose": "Badge shelf (C24.6b): GET /badges; habits as wax seals and books as 'Ex libris' bookplates, earned inked with their date, locked faint with how to earn them in full-contrast words; a newly earned badge stamps in once per device (none under reduced motion); loading and error states."
     },
@@ -3745,8 +3833,8 @@
     {
       "path": "frontend/src/gamification/LeagueSettings.jsx",
       "language": "jsx",
-      "lines": 105,
-      "size_bytes": 4831,
+      "lines": 108,
+      "size_bytes": 5043,
       "role": "asset",
       "purpose": "League settings card (C24.6d): display name, daily goal (20-200) and leaderboard opt-out; one PUT /me/progress with only what changed; the server's reason for a refused name on the field; a toast and a league reload after saving. C24.G: the zone the days follow, and a switch to this device's."
     },
@@ -3801,16 +3889,16 @@
     {
       "path": "frontend/src/gamification/useProgress.js",
       "language": "javascript",
-      "lines": 31,
-      "size_bytes": 1467,
+      "lines": 36,
+      "size_bytes": 1925,
       "role": "asset",
       "purpose": "Hook (C24.6a): GET /me/progress once for a signed-in reader; null until it arrives or if it fails. C24.G: with adoptZone, saves the device's zone once while UTC is stored."
     },
     {
       "path": "frontend/src/hooks/useAuth.jsx",
       "language": "jsx",
-      "lines": 48,
-      "size_bytes": 1490,
+      "lines": 49,
+      "size_bytes": 1557,
       "role": "hook",
       "purpose": "AuthProvider and useAuth: Supabase session state plus signInWithGoogle (OAuth, back to /login; C28.1) and signOut. C34.7b: a SIGNED_OUT event forgets every book file kept in the browser."
     },
@@ -3951,6 +4039,22 @@
       "purpose": "Node test (npm run test:unit): warm start, warm-up then ready, down after 90 s with its error line, reachable but loading after 90 s, Try again starts warm."
     },
     {
+      "path": "frontend/src/lib/backoff.js",
+      "language": "javascript",
+      "lines": 26,
+      "size_bytes": 1062,
+      "role": "lib",
+      "purpose": "C35.6 (issue 17): pollWithBackoff runs a check after 5 s, then twice the last wait up to 60 s, never overlapping, until stopped; the Library's and the reader's /status polls use it."
+    },
+    {
+      "path": "frontend/src/lib/backoff.test.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 1300,
+      "role": "lib",
+      "purpose": "Unit tests for pollWithBackoff: 5, 10, 20, 40, then 60 s; a failed check waited out; stop during a check."
+    },
+    {
       "path": "frontend/src/lib/coverColor.js",
       "language": "javascript",
       "lines": 20,
@@ -3975,6 +4079,22 @@
       "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday, needs revisiting."
     },
     {
+      "path": "frontend/src/lib/directUpload.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2966,
+      "role": "lib",
+      "purpose": "C35.3d (issue 16): a PDF or EPUB straight to Storage: POST /books/upload-url, an XHR PUT to the signed URL with progress (putFile), POST /books/register, then the file kept in Cache Storage under its sha256 for its first open (uploadBook). Used by the Library from C35.3e."
+    },
+    {
+      "path": "frontend/src/lib/directUpload.test.js",
+      "language": "javascript",
+      "lines": 82,
+      "size_bytes": 4038,
+      "role": "lib",
+      "purpose": "Unit tests for directUpload: the PUT's headers and progress, Storage's refusal and a dropped connection, the order upload-url, PUT, register, and a copy that cannot be kept never failing the upload."
+    },
+    {
       "path": "frontend/src/lib/initials.js",
       "language": "javascript",
       "lines": 20,
@@ -3989,6 +4109,38 @@
       "size_bytes": 1111,
       "role": "lib",
       "purpose": "Node test (npm run test:unit): initials from a display name, from email local parts with separators and accents, and the fallbacks."
+    },
+    {
+      "path": "frontend/src/lib/pageData.js",
+      "language": "javascript",
+      "lines": 77,
+      "size_bytes": 3182,
+      "role": "lib",
+      "purpose": "C35.5a-c (issue 20): each page's last data per request path, in memory for this tab: cached, remember, load (one request at a time per path; `fresh` ms uses a young answer as it is), forgetPageData (signing out), usePageData (the kept data at once, then the fresh answer; an error only when there is nothing to show). Used by the Library, Dashboard, Badge shelf, Concept mastery, League and useProgress."
+    },
+    {
+      "path": "frontend/src/lib/pageData.test.js",
+      "language": "javascript",
+      "lines": 58,
+      "size_bytes": 2363,
+      "role": "lib",
+      "purpose": "Unit tests for pageData: an answer kept per path, a request under way shared, a failure keeping the last data, the freshness window, signing out forgetting all."
+    },
+    {
+      "path": "frontend/src/lib/prefetchPage.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1570,
+      "role": "lib",
+      "purpose": "C35.5d (issue 20): a tab page's code and data before the reader gets there: prefetchPage and prefetchProps (hover or focus of a nav link: the chunk and its read-only GETs through pageData), prefetchCodeWhenIdle (the three tab pages' code once the browser is idle)."
+    },
+    {
+      "path": "frontend/src/lib/prefetchPage.test.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 1610,
+      "role": "lib",
+      "purpose": "Unit tests for prefetchPage: code and data on pointing, nothing thrown on failures, only code when idle."
     },
     {
       "path": "frontend/src/lib/results.js",
@@ -4377,24 +4529,24 @@
     {
       "path": "frontend/src/originalview/bookFile.js",
       "language": "javascript",
-      "lines": 14,
-      "size_bytes": 714,
+      "lines": 15,
+      "size_bytes": 824,
       "role": "asset",
       "purpose": "fromBook(bookId) for both renderers (C17.3): the book's original file from this device's copy (IndexedDB) or the signed URL from GET /books/{id}/file. C34.3: fromOpenedBook(opened) uses the signed URL GET /books/{id}/open gave for the first read; renewals ask /file."
     },
     {
       "path": "frontend/src/originalview/documentSource.js",
       "language": "javascript",
-      "lines": 26,
-      "size_bytes": 1308,
+      "lines": 32,
+      "size_bytes": 1660,
       "role": "asset",
       "purpose": "Where a book's original file comes from (C17.2, shared with EPUB in C17.3): bookSource gives this device's copy as { data }, else the signed URL as { url } (byte ranges for PDF.js). C34.1b: the { url } source also carries renew(), a fresh signed URL from /file when the old one expires. C34.3: openedFirst(opened, fetchFile) gives /open's URL once, then asks fetchFile. C34.7b: the { url } source also carries the file's sha256."
     },
     {
       "path": "frontend/src/originalview/documentSource.test.js",
       "language": "javascript",
-      "lines": 52,
-      "size_bytes": 2395,
+      "lines": 73,
+      "size_bytes": 3310,
       "role": "asset",
       "purpose": "Node test (npm run test:unit): the device copy first without asking the server, the signed URL otherwise, the server's message for a device-only book with no copy here."
     },
@@ -4585,8 +4737,8 @@
     {
       "path": "frontend/src/originalview/pdf/pdfjs.js",
       "language": "javascript",
-      "lines": 90,
-      "size_bytes": 3958,
+      "lines": 99,
+      "size_bytes": 4420,
       "role": "asset",
       "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed). C17.4: renderPage recolours for lamplight (an alpha context, recorded image positions) and pdfOutline flattens the outline to pages. C34.1b: openPdf reads a { url } source in byte ranges through rangeSource.js."
     },
@@ -4594,7 +4746,7 @@
       "path": "frontend/src/originalview/pdf/rangeSource.js",
       "language": "javascript",
       "lines": 68,
-      "size_bytes": 3556,
+      "size_bytes": 3563,
       "role": "asset",
       "purpose": "C34.1 (issue 11): PDF.js input over HTTP byte ranges. Supabase Storage answers Range with 206 but sends no Accept-Ranges, so PDF.js given a URL downloaded the whole file; rangeSource reads the length (HEAD) and first 64 KB, then hands PDF.js a PDFDataRangeTransport that fetches only the ranges asked for (auto-fetch and streaming off), renews an expired signed URL once, retries a dropped connection, and falls back to { data } for a 200 answer or { url } with no length. Used by openPdf since C34.1b."
     },
@@ -4697,16 +4849,16 @@
     {
       "path": "frontend/src/pages/Dashboard.css",
       "language": "css",
-      "lines": 314,
-      "size_bytes": 6497,
+      "lines": 330,
+      "size_bytes": 6943,
       "role": "page",
       "purpose": "Dashboard styles: header with the streak pill, the four-figure row with hairlines (2 x 2 under 640 px), two columns (one under 1024 px), the trend's token colours for Recharts' grid, axis, area, line and dots, cards, book rows, the feedback quote on paper-2, the hidden table, skeleton shapes, the For tonight card, the candle's flicker (2 x 2.4 s). C33.1 (issue 10): Continue reading's and Your books' titles are clamped to two lines."
     },
     {
       "path": "frontend/src/pages/Dashboard.jsx",
       "language": "jsx",
-      "lines": 252,
-      "size_bytes": 10399,
+      "lines": 233,
+      "size_bytes": 10215,
       "role": "page",
       "purpose": "Dashboard (handoff screen 09) from one GET /dashboard: greeting by the reader's clock, the streak with the Candle, four figures (words this week, last test score, tests this week, books in progress), the last eight test scores as a Recharts area on token colours with a table alternative, a 'For tonight' card (ReadingLamp, the started book with the most read, Begin reading), the books in progress with read progress, recent feedback with its quoted passage; the MasteryList under the trend; skeleton, a new reader's empty state and a failed load with Try again. Motion (moment 6): the trend draws in over --dur-6 (off under reduced motion), the streak candle flickers twice and rests. C23.7c: a 'Focus this week' card atop the side column: focused time and points from GET /dashboard's focus_this_week (lib/dashboard focusWeek), or how to start when there is none; XP is C24. C24.6b: the badge shelf under the columns. C26.5b: \"For tonight\" is \"Continue reading\" (opens where you left off). C30.2: a book with no author says \"Unknown author\", and Continue reading leaves out \"By ...\". C32.3 (issue 5): each book's line is bookLine (\"42% read · 3 quizzes\", no sessions, no estimate); Continue reading says \"% read\" once the book is read into; the empty state asks to open a book and read. C33.1 (issues 9, 10): the score table is hidden inside a div (a table took width: 1px as a minimum and widened the page); book titles carry a tooltip."
     },
@@ -4737,24 +4889,24 @@
     {
       "path": "frontend/src/pages/League.jsx",
       "language": "jsx",
-      "lines": 128,
-      "size_bytes": 5769,
+      "lines": 126,
+      "size_bytes": 5822,
       "role": "page",
       "purpose": "Weekly league page (C24.6c): time left to Monday 00:00 UTC, tier crest and chips, the reader's group ranked with soft promotion and demotion lines and gaps for hidden readers, last week's outcome, how leagues work; no-group, opted-out, loading and error states. C24.6d: the settings card, and a reload after a save."
     },
     {
       "path": "frontend/src/pages/Library.css",
       "language": "css",
-      "lines": 340,
-      "size_bytes": 6356,
+      "lines": 355,
+      "size_bytes": 6716,
       "role": "page",
       "purpose": "Library styles: header, the next-book card, 160 px cover grid (three across under 640 px with the remove button under the caption), captions, skeleton shapes, the error banner on warn-soft, the empty-state action row, the page-wide drop target, the upload and remove dialogs."
     },
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 478,
-      "size_bytes": 22633,
+      "lines": 517,
+      "size_bytes": 25277,
       "role": "page",
       "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\"."
     },
@@ -4809,8 +4961,8 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 593,
-      "size_bytes": 30035,
+      "lines": 595,
+      "size_bytes": 30225,
       "role": "page",
       "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown."
     },
@@ -5001,16 +5153,16 @@
     {
       "path": "frontend/src/reader/fileCache.js",
       "language": "javascript",
-      "lines": 79,
-      "size_bytes": 3528,
+      "lines": 85,
+      "size_bytes": 3985,
       "role": "asset",
       "purpose": "C34.7a (issue 15): a stored EPUB's file kept in Cache Storage, keyed by book id and sha256 (another version replaces it); keptSource(bookId, source) gives the kept copy or downloads and keeps it; forgetCachedBookFile for a removed book, forgetCachedBookFiles for sign-out. Never throws: no Cache Storage or a full one means downloading as before. PDFs are not kept (they open from byte ranges, C34.1). Used by EpubView, Library and useAuth since C34.7b."
     },
     {
       "path": "frontend/src/reader/fileCache.test.js",
       "language": "javascript",
-      "lines": 105,
-      "size_bytes": 4688,
+      "lines": 115,
+      "size_bytes": 5344,
       "role": "asset",
       "purpose": "Node test (npm run test:unit, C34.7a): kept after the first open and read from the browser next time; a new sha256 downloads again and replaces the old copy; data passed through; no or broken Cache Storage still opens the book; a refused download keeps nothing; forget one book, forget all."
     },
@@ -5069,6 +5221,22 @@
       "size_bytes": 7383,
       "role": "asset",
       "purpose": "node --test: one request per term, names and words cached apart, stale requests aborted, shared in-flight requests, failures not cached, LRU eviction, the per-user hover setting, and cardContent for every state."
+    },
+    {
+      "path": "frontend/src/reader/openAhead.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2929,
+      "role": "asset",
+      "purpose": "C35.4 (issue 19): a book starts opening before the reader's page loads. warmReader (hover or focus: the reader's chunk, and PDF.js with its one worker for a PDF; never the server, since /open marks a book begun), openAhead (on click: also GET /books/{id}/open, kept 30 s), takeOpened (the reader uses that request once), openAheadProps (for Library and Dashboard links)."
+    },
+    {
+      "path": "frontend/src/reader/openAhead.test.js",
+      "language": "javascript",
+      "lines": 55,
+      "size_bytes": 2279,
+      "role": "asset",
+      "purpose": "Unit tests for openAhead: each part warmed once, PDF.js only for a PDF, a failed load tried again; /open asked once per click and taken once by the reader; a stale or failed /open not used."
     },
     {
       "path": "frontend/src/reader/textSize.js",
@@ -5714,7 +5882,7 @@
       "path": "scripts/bench.py",
       "language": "python",
       "lines": 390,
-      "size_bytes": 17462,
+      "size_bytes": 17504,
       "role": "script",
       "purpose": "Signs in as dev test user A and times /health, /books, the upload-to-ready and session flow, and /dashboard against a local backend; prints p50/p95 and can write the Baseline section of docs/BENCHMARKS.md. C26.6c: the flow is upload, ready, GET /books/{id}/open, POST /focus/quiz-me, submit-answers. C26.G: waits for the questions (status ready and the ingestion job done) before Quiz me, and deletes each book again on a dropped connection, stopping loudly if it cannot."
     },
@@ -6239,6 +6407,14 @@
       "purpose": "C32.2 (issue 4): reading_days, words read per reader, book and calendar day in the reader's time zone, written by PUT /books/{id}/position as the place moves forward; readers read their own rows, only the backend writes; additive."
     },
     {
+      "path": "supabase/migrations/035_book_deleting.sql",
+      "language": "sql",
+      "lines": 12,
+      "size_bytes": 768,
+      "role": "migration",
+      "purpose": "C35.2 (issue 18): books_status_check replaced in one statement by processing, ready, error and deleting, so DELETE /books/{id} can mark a book and purge it in the background. Applied 2026-11-19 after a dump."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -6321,8 +6497,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 799,
-      "size_bytes": 266581,
+      "lines": 821,
+      "size_bytes": 272997,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

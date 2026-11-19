@@ -8,15 +8,22 @@ import { rangeSource } from './rangeSource';
 import { recolourCanvas } from './recolour';
 
 const ASSETS = '/pdfjs/';
+export const RANGE_BYTES = 256 * 1024; // C35.4: each range PDF.js asks for (its own default is 64 KB)
 let loading = null;
+let worker = null;
 
-/** The pdfjs-dist module with its worker set; the same promise for every caller. */
+/**
+ * The pdfjs-dist module with its worker set; the same promise for every caller. C35.4 (issue 19): the one
+ * PDF.js worker starts here, so its 1.3 MB script downloads while /open and the file's first bytes are on
+ * their way, not after them, and every document (the reader's, a device book's text) shares it.
+ */
 export function loadPdfjs() {
   loading ??= Promise.all([
     import('pdfjs-dist'),
     import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
-  ]).then(([pdfjs, worker]) => {
-    pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+  ]).then(([pdfjs, script]) => {
+    pdfjs.GlobalWorkerOptions.workerSrc = script.default;
+    worker = new pdfjs.PDFWorker({ name: 'readfocus-pdf' });
     return pdfjs;
   });
   return loading;
@@ -33,6 +40,8 @@ export async function openPdf(source) {
     : source;
   return pdfjs.getDocument({
     ...input,
+    worker,
+    rangeChunkSize: RANGE_BYTES,
     standardFontDataUrl: `${ASSETS}standard_fonts/`,
     wasmUrl: `${ASSETS}wasm/`,
     iccUrl: `${ASSETS}iccs/`,

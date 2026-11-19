@@ -9,7 +9,7 @@
 // signed URL lives five minutes and pages are now read while the reader reads, so a
 // refused range asks `renew` for a fresh URL once and tries again.
 
-export const FIRST_BYTES = 64 * 1024; // PDF.js's own chunk size; a linearized file's first page is near the start
+export const FIRST_BYTES = 256 * 1024; // C35.4: one read for a linearized file's first page (was 64 KB, then more trips)
 const NETWORK_TRIES = 3;
 const PAUSE_MS = 500;
 

@@ -10,6 +10,7 @@ owner's read of a book passes its rows through `live` (C35.2b).
 import logging
 from typing import Any
 
+from backend.services import file_url
 from backend.services.supabase_client import supabase
 
 DELETING = "deleting"
@@ -57,6 +58,7 @@ def purge(book_id: str, user_id: str) -> bool:
         return False
     storage_path = rows[0].get("storage_path")
     if storage_path:
+        file_url.forget(storage_path)  # C35.8a: its kept signed URL is not handed out again
         try:
             supabase.storage.from_("books").remove([storage_path])
         except Exception:  # the row still goes

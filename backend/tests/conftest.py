@@ -96,6 +96,15 @@ def model_ready():
 
 
 @pytest.fixture(autouse=True)
+def no_kept_file_urls():
+    """C35.8a: each test starts with no signed book URL kept from another test's fake Storage."""
+    from backend.services import file_url
+
+    file_url.forget_all()
+    yield
+
+
+@pytest.fixture(autouse=True)
 def no_batch_pause(monkeypatch):
     """C35.6: ingestion's pause between batches (make_way.BATCH_PAUSE) is 0 in tests, which would otherwise spend
     0.2 s per batch; test_make_way.py sets it back to test it."""

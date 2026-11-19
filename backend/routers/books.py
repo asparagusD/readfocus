@@ -11,7 +11,7 @@ from pypdf import PdfReader
 from backend.agents import policy
 from backend.convert.epub_builder import build_epub
 from backend.convert.sources import FORMATS as CONVERTED, convert_upload
-from backend.services import body_start, book_purge, direct_upload, ingestion_worker
+from backend.services import body_start, book_purge, direct_upload, file_url, ingestion_worker
 from backend.services.book_purge import live
 from backend.services.book_ingestor import BROWSER_TEXT, extract_metadata
 from backend.services import processing_jobs as jobs
@@ -262,9 +262,8 @@ def get_book_file(book_id: str, user_id: str = Depends(get_current_user)):
     book = cast(dict[str, Any], rows[0])
     if book.get("storage_mode") == "device" or not book.get("storage_path"):
         raise HTTPException(status_code=404, detail="This book is only on the device it was added from.")
-    signed = supabase.storage.from_("books").create_signed_url(book["storage_path"], policy.BOOK_FILE_URL_SECONDS)
-    return {"url": signed.get("signedURL") or signed.get("signedUrl"), "expires_in": policy.BOOK_FILE_URL_SECONDS,
-            "sha256": book.get("file_sha256")}
+    url, expires_in = file_url.signed_url(supabase.storage.from_("books"), book["storage_path"])  # C35.8a: reused
+    return {"url": url, "expires_in": expires_in, "sha256": book.get("file_sha256")}
 
 
 @router.get("/{book_id}")

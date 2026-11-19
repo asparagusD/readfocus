@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 from backend.dependencies import get_current_user
 from backend.main import app
 from backend.routers import books
-from backend.services import book_purge, ingestion_worker
+from backend.services import book_purge, file_url, ingestion_worker
 from backend.tests.memory_db import MemoryDb
 
 USER, OTHER, BOOK, KEPT = "user-1", "user-2", "book-1", "book-2"
@@ -68,6 +68,13 @@ def test_deleting_a_book_removes_its_note_pictures_and_keeps_everyone_elses(clie
     assert ids(db) == [KEPT, "theirs"]
     removed = [c for c in db.calls if c[:3] == ("storage", "remove", "notes")]
     assert removed and all(p.startswith(f"{USER}/{BOOK}/") for c in removed for p in c[3])
+
+
+def test_a_deleted_books_kept_signed_url_is_not_handed_out_again(client, db):
+    """C35.8a: the purge forgets the book's reused signed URL."""
+    file_url.signed_url(db.storage.from_("books"), f"{USER}/{BOOK}.pdf")
+    assert client.delete(f"/books/{BOOK}").status_code == 202
+    assert f"{USER}/{BOOK}.pdf" not in file_url._kept
 
 
 def test_a_folder_longer_than_one_page_is_removed_whole(client, db, monkeypatch):

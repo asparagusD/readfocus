@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { FIRST_BYTES, rangeSource } from './rangeSource.js';
 
 const FILE = Uint8Array.from({ length: 300_000 }, (_, i) => i % 251); // a 300 KB "file"
+const TAIL = `bytes=${FIRST_BYTES}-${FILE.length - 1}`; // its last 256 KB range, read beside the first (C35.8b)
 
 class FakeTransport {
   constructor(length, initialData) { this.length = length; this.initialData = initialData; this.got = []; }
@@ -10,17 +11,18 @@ class FakeTransport {
 }
 
 /** A storage server: HEAD gives the length; GET honours `Range` with 206 unless `ranges` is false. */
-function server({ ranges = true, head = true, expiredUrls = new Set(), failTimes = 0, file = FILE } = {}) {
+function server({ ranges = true, head = true, expiredUrls = new Set(), failTimes = 0, failRange = null, file = FILE } = {}) {
   const calls = [];
   let failures = failTimes;
   const fetch = async (url, init = {}) => {
     const method = init.method ?? 'GET';
-    calls.push({ url, method, range: init.headers?.Range ?? null });
+    calls.push({ url, method, range: init.headers?.Range ?? null, signal: init.signal });
     if (method === 'HEAD') {
       if (!head) throw new TypeError('Failed to fetch');
       return new Response(null, { status: 200, headers: { 'Content-Length': String(file.length) } });
     }
-    if (failures > 0 && init.headers?.Range && init.headers.Range !== `bytes=0-${FIRST_BYTES - 1}`) {
+    if (failures > 0 && init.headers?.Range && (failRange ? init.headers.Range === failRange
+      : init.headers.Range !== `bytes=0-${FIRST_BYTES - 1}`)) {
       failures -= 1;
       throw new TypeError('Failed to fetch');
     }
@@ -45,7 +47,7 @@ test('a server that answers ranges: the first bytes and the length, then only th
   assert.equal(source.disableAutoFetch, true);
   assert.equal(source.disableStream, true);
   assert.deepEqual(source.range.initialData, FILE.slice(0, FIRST_BYTES));
-  assert.deepEqual(calls.map((c) => [c.method, c.range]), [['HEAD', null], ['GET', `bytes=0-${FIRST_BYTES - 1}`]]);
+  assert.deepEqual(calls.map((c) => [c.method, c.range]), [['HEAD', null], ['GET', `bytes=0-${FIRST_BYTES - 1}`], ['GET', TAIL]]);
 
   source.range.requestDataRange(200_000, 210_000); // PDF.js's end is exclusive
   await until(() => source.range.got.length === 1);
@@ -97,9 +99,67 @@ test('an expired signed URL is renewed once and the range read from the new one'
 });
 
 test('a dropped connection is tried again', async () => {
-  const { fetch } = server({ failTimes: 2 });
+  const { fetch } = server({ failTimes: 2, failRange: 'bytes=70000-70499' });
   const source = await rangeSource('https://s/f.pdf', { Transport: FakeTransport, fetch, pauseMs: 1 });
   source.range.requestDataRange(70_000, 70_500);
   await until(() => source.range.got.length > 0);
   assert.deepEqual(source.range.got, [[70_000, FILE.slice(70_000, 70_500)]]);
+});
+
+test('the last range is read beside the first, and PDF.js asking for it makes no second request (C35.8b)', async () => {
+  const { fetch, calls } = server();
+  const source = await rangeSource('https://s/f.pdf', { Transport: FakeTransport, fetch });
+  source.range.requestDataRange(FIRST_BYTES, FILE.length); // where a non-linearized PDF keeps its xref
+  source.range.requestDataRange(290_000, 300_000); // a part of it
+  await until(() => source.range.got.length === 2);
+  assert.equal(calls.filter((c) => c.range === TAIL).length, 1);
+  assert.equal(calls.length, 3);
+  assert.deepEqual(source.range.got, [[FIRST_BYTES, FILE.slice(FIRST_BYTES)], [290_000, FILE.slice(290_000)]]);
+});
+
+test('a range that starts before the last one reads only the part before it', async () => {
+  const big = Uint8Array.from({ length: 700_000 }, (_, i) => i % 13);
+  const { fetch, calls } = server({ file: big });
+  const source = await rangeSource('https://s/f.pdf', { Transport: FakeTransport, fetch, chunk: 128 * 1024 });
+  const tailBegin = 5 * 128 * 1024; // 655360, the last 128 KB chunk
+  assert.equal(calls[2].range, `bytes=${tailBegin}-${big.length - 1}`);
+  source.range.requestDataRange(600_000, big.length);
+  await until(() => source.range.got.length === 1);
+  assert.equal(calls.at(-1).range, `bytes=600000-${tailBegin - 1}`);
+  assert.deepEqual(source.range.got, [[600_000, big.slice(600_000)]]);
+});
+
+test('a failed read of the last range leaves PDF.js to read it itself', async () => {
+  const { fetch, calls } = server({ failTimes: 3, failRange: TAIL });
+  const source = await rangeSource('https://s/f.pdf', { Transport: FakeTransport, fetch, pauseMs: 1 });
+  source.range.requestDataRange(FIRST_BYTES, FILE.length);
+  await until(() => source.range.got.length === 1);
+  assert.equal(calls.filter((c) => c.range === TAIL).length, 4); // three tries beside the first, then PDF.js's own
+  assert.deepEqual(source.range.got, [[FIRST_BYTES, FILE.slice(FIRST_BYTES)]]);
+});
+
+test('no last-range read when the length is unknown; a server that sends whole files has it stopped', async () => {
+  const unknown = server({ head: false });
+  await rangeSource('https://s/f.pdf', { Transport: FakeTransport, fetch: unknown.fetch });
+  assert.equal(unknown.calls.filter((c) => c.method === 'GET').length, 1);
+
+  const whole = server({ ranges: false });
+  await rangeSource('https://s/f.pdf', { Transport: FakeTransport, fetch: whole.fetch });
+  const tail = whole.calls.find((c) => c.range === TAIL);
+  assert.equal(tail.signal.aborted, true);
+});
+
+test('a failed first read stops the last-range read', async () => {
+  const calls = [];
+  const fetch = async (url, init = {}) => {
+    calls.push(init);
+    if (init.method === 'HEAD') return new Response(null, { status: 200, headers: { 'Content-Length': '300000' } });
+    if (init.headers.Range === `bytes=0-${FIRST_BYTES - 1}`) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      throw new TypeError('Failed to fetch');
+    }
+    return new Promise(() => {}); // the tail, never answered
+  };
+  await assert.rejects(rangeSource('https://s/f.pdf', { Transport: FakeTransport, fetch }), /Failed to fetch/);
+  assert.equal(calls.find((c) => c.headers?.Range === TAIL).signal.aborted, true);
 });

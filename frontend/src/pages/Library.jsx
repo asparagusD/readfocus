@@ -18,6 +18,7 @@ import { forgetBookFile, saveBookFile } from '../reader/fileStore';
 import { forgetCachedBookFile, keepBookFile } from '../reader/fileCache';
 import { DIRECT, uploadBook } from '../lib/directUpload';
 import { openAheadProps } from '../reader/openAhead';
+import { warmBookFile } from '../reader/warmFile';
 import { cached, load, remember } from '../lib/pageData';
 import { pollWithBackoff } from '../lib/backoff';
 import { DEVICE_MAX_BYTES, epubTexts, isBig, pdfTexts, sendTexts, sha256Hex } from '../reader/browserText';
@@ -121,6 +122,13 @@ export function Library() {
   useEffect(() => {
     loadBooks();
   }, [loadBooks]);
+
+  // C35.8c (issue 19): the next book's stored PDF goes into the CDN's cache while the reader looks at the shelf.
+  const upNext = nextBook(books);
+  const [upId, upType, upMode] = [upNext?.id, upNext?.file_type, upNext?.storage_mode];
+  useEffect(() => {
+    if (!loading && upId) warmBookFile({ id: upId, file_type: upType, storage_mode: upMode });
+  }, [loading, upId, upType, upMode]);
 
   // The kept shelf follows what this page changes itself: an upload, a removal, a status poll.
   useEffect(() => {

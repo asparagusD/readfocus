@@ -1203,6 +1203,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/file_url.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/ingestion_worker.py",
       "type": "file",
       "role": "service",
@@ -1756,6 +1762,12 @@
     },
     {
       "id": "file:backend/tests/test_figures.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_file_url.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -4563,6 +4575,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/warmFile.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/warmFile.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/wordAt.js",
       "type": "file",
       "role": "asset",
@@ -5947,6 +5971,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/reader/warmFile.js",
+      "to": "endpoint:GET /books/{book_id}/file"
     },
     {
       "type": "calls_endpoint",
@@ -7604,6 +7633,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/file_url.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/services/ingestion_worker.py"
     },
     {
@@ -7864,11 +7898,6 @@
     {
       "type": "imports",
       "from": "file:backend/routers/reading.py",
-      "to": "file:backend/agents/policy.py"
-    },
-    {
-      "type": "imports",
-      "from": "file:backend/routers/reading.py",
       "to": "file:backend/dependencies.py"
     },
     {
@@ -7880,6 +7909,11 @@
       "type": "imports",
       "from": "file:backend/routers/reading.py",
       "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/file_url.py"
     },
     {
       "type": "imports",
@@ -8084,6 +8118,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_purge.py",
+      "to": "file:backend/services/file_url.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_purge.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -8115,6 +8154,11 @@
       "type": "imports",
       "from": "file:backend/services/direct_upload.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/file_url.py",
+      "to": "file:backend/agents/policy.py"
     },
     {
       "type": "imports",
@@ -8430,6 +8474,11 @@
       "type": "imports",
       "from": "file:backend/tests/conftest.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/conftest.py",
+      "to": "file:backend/services/file_url.py"
     },
     {
       "type": "imports",
@@ -9114,6 +9163,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/services/file_url.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
       "to": "file:backend/services/ingestion_worker.py"
     },
     {
@@ -9560,6 +9614,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_figures.py",
       "to": "file:backend/regions/extract.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_file_url.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_file_url.py",
+      "to": "file:backend/services/file_url.py"
     },
     {
       "type": "imports",
@@ -12968,6 +13032,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/warmFile.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/Login.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -13465,6 +13534,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/useWordCard.js",
       "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/warmFile.test.js",
+      "to": "file:frontend/src/reader/warmFile.js"
     },
     {
       "type": "imports",

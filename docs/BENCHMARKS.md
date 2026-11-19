@@ -84,6 +84,24 @@ varied. Issue 19's 2.8 s was most likely taken with the object already warm. C35
 round trips are real but small beside the cold tail read; a follow-up (read the tail at once beside the head,
 and find why Storage is slow there) is proposed.
 
+**Why Storage is slow there (C35.8, measured 2026-11-19, read-only).** Range GETs from this machine on fresh
+signed URLs, reading Cloudflare's `cf-cache-status`:
+
+| Object, what was read | First read | After it |
+|---|---|---|
+| Thesis 16.6 MB, its last range first | MISS, 19.5 s | every range HIT, about 50 ms (also ones never read) |
+| 5.1 MB, head, then middle, then last range | MISS 1.9 s, then 1.2 s, then 0.4 s | the range before the last HIT, 43 ms |
+| The same 5.1 MB a minute later, a new token | MISS, 9.0 s | |
+| 10.8 MB through `/object/authenticated/` | MISS, 10.3 s | |
+| 5.1 MB with `Cache-Control: no-cache` | MISS, 17.1 s | |
+| 3.5 MB, `Range: bytes=0-0` | MISS, 0.8 s | the last range HIT, 220 ms |
+
+On a miss the CDN downloads the whole file from Storage (0.3 to 2 MB/s here) and answers a range only once that
+download has reached it; its cache key includes the signed URL's token, and `/open` signed a new one on every
+open, so every open of a stored PDF was a cold whole-file download. C35.8 reuses one URL per book for up to an
+hour, reads the last range beside the first bytes, and warms the shelf's next PDF (`docs/DEBUG_LOG.md`, C35.8).
+Not measured yet: the opens after C35.8 on production.
+
 Not measured: the upload of a 29 MB PDF and a delete (the user chose reads only); `/open` during processing (no
 book was processing).
 

@@ -314,8 +314,10 @@ MAX_DEVICE_BOOK_FILE_BYTES = 300 * 1024 * 1024
 BROWSER_TEXT_PAGES_PER_BATCH = 50      # pages (an EPUB's spine documents) in one POST /books/{id}/pages
 BROWSER_TEXT_MAX_PAGE_CHARS = 60_000   # one page's text; a page of dense prose is about 3,000
 BROWSER_TEXT_MAX_PAGES = 10_000
-# Lifetime of the signed URL GET /books/{id}/file returns.
-BOOK_FILE_URL_SECONDS = 300
+# Lifetime of the signed URL GET /books/{id}/file and /open return. C35.8a (issue 19): one URL per book is handed
+# out again (services/file_url.py) so the CDN's cached copy is reused; it is replaced once less than MIN_LEFT is left.
+BOOK_FILE_URL_SECONDS = 3600
+BOOK_FILE_URL_MIN_LEFT = 900
 
 # --- Converted sources (backend/convert/sources.py, C19.2c) ------------------
 

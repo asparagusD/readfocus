@@ -2520,6 +2520,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/no-blank.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/notepad.spec.js",
       "type": "file",
       "role": "config",
@@ -3114,6 +3120,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/components/ui/PageSkeleton.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/components/ui/ProgressRing.css",
       "type": "file",
       "role": "component",
@@ -3631,6 +3643,18 @@
     },
     {
       "id": "file:frontend/src/lib/pageData.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/prefetchPage.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/prefetchPage.test.js",
       "type": "file",
       "role": "lib",
       "language": "javascript"
@@ -10744,6 +10768,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/no-blank.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/notepad.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10926,6 +10955,11 @@
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/components/RouteErrorBoundary.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/ui/PageSkeleton.jsx"
     },
     {
       "type": "imports",
@@ -11184,6 +11218,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/lib/prefetchPage.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/RouteErrorBoundary.jsx",
       "to": "file:frontend/src/components/ErrorScreen.jsx"
     },
@@ -11311,6 +11350,11 @@
       "type": "imports",
       "from": "file:frontend/src/components/ui/Modal.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/PageSkeleton.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
     },
     {
       "type": "imports",
@@ -11851,6 +11895,16 @@
       "type": "imports",
       "from": "file:frontend/src/lib/pageData.test.js",
       "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/prefetchPage.js",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/prefetchPage.test.js",
+      "to": "file:frontend/src/lib/prefetchPage.js"
     },
     {
       "type": "imports",

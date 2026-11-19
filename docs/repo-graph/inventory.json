@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 954,
-    "inventoried": 811,
+    "tracked": 958,
+    "inventoried": 815,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18039,
+      "size_bytes": 18057,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2273,8 +2273,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6188,
-      "size_bytes": 1123807,
+      "lines": 6189,
+      "size_bytes": 1124745,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2589,6 +2589,14 @@
       "size_bytes": 4487,
       "role": "config",
       "purpose": "Playwright e2e for sign in (C13.1b), signed out with Supabase Auth answered in the spec: empty fields explained inline with nothing sent, a wrong password with the loading label and the error on the field, a correct one opening the library, and create account by keyboard (tab, short password, inbox message, back). Under reduced motion neither the form nor the drawings have a transform in any frame."
+    },
+    {
+      "path": "frontend/e2e/no-blank.spec.js",
+      "language": "javascript",
+      "lines": 48,
+      "size_bytes": 2624,
+      "role": "config",
+      "purpose": "C35.5d (issue 20): a page whose code is slow shows a skeleton and the main area is never blank between pages; pointing at a nav link loads that page's code and data."
     },
     {
       "path": "frontend/e2e/notepad.spec.js",
@@ -2977,8 +2985,8 @@
     {
       "path": "frontend/src/App.jsx",
       "language": "jsx",
-      "lines": 145,
-      "size_bytes": 6929,
+      "lines": 147,
+      "size_bytes": 7091,
       "role": "entry",
       "purpose": "Route table and AuthGuard: /login, /read/:bookId, /test/:sessionId, and Library, Dashboard and Results inside Layout; ThemeProvider, MotionRoot and ToastProvider around the router; AnimatedRoutes for fade-and-rise route transitions (screen level, and page level inside Layout so the nav stays put); the dev-only /__illustrations route (import.meta.env.DEV, lazy) for the illustration gallery (the /__reader gallery was retired with the block reader in C17.5); BackendGate around the routes (C13.8a); RouteErrorBoundary inside it and a catch-all NotFound route inside Layout. Since C13.10: PublicHome renders Landing for signed-out visitors at / outside BackendGate; every other page is React.lazy with its own Suspense (fallback null); the dev-only /__pdf gallery (C17.2); the dev-only /__epub gallery (C17.3); the dev-only /__book gallery (C17.4). C23.6b: /focus/:sessionId/quiz (FocusQuiz). C23.7b: /quiz/:sessionId (QuizMe). C24.6c: /league (lazy, signed in)."
     },
@@ -3193,8 +3201,8 @@
     {
       "path": "frontend/src/components/Layout.jsx",
       "language": "jsx",
-      "lines": 49,
-      "size_bytes": 2096,
+      "lines": 52,
+      "size_bytes": 2401,
       "role": "component",
       "purpose": "The quiet top bar (handoff screens 03 and 09) around every page but sign in, reading and the test: a skip link, the mark, Library and Dashboard (current one marked by aria-current and an accent rule), the theme toggle from 640 px, and the account button; main is the skip target. C24.6a: the reader's progress (candle, goal ring, level) before the theme toggle, fetched only when signed in. C24.6c: a League link; under 640 px 8 px gaps so three links fit at 375. C24.G: the header adopts the device's time zone."
     },
@@ -3381,6 +3389,14 @@
       "size_bytes": 3430,
       "role": "component",
       "purpose": "Modal dialog: role dialog, aria-modal, named by title, label or its first heading; focus moves in and Tab is trapped, Esc and the scrim close, page scroll locked, focus returns on close; pop animation, opacity only under reduced motion."
+    },
+    {
+      "path": "frontend/src/components/ui/PageSkeleton.jsx",
+      "language": "jsx",
+      "lines": 15,
+      "size_bytes": 570,
+      "role": "component",
+      "purpose": "C35.5d (issue 20): the Suspense fallback of every lazy page: a heading's width, a line and a block on --paper-2, aria-busy, in place of an empty main area."
     },
     {
       "path": "frontend/src/components/ui/ProgressRing.css",
@@ -4077,6 +4093,22 @@
       "size_bytes": 2363,
       "role": "lib",
       "purpose": "Unit tests for pageData: an answer kept per path, a request under way shared, a failure keeping the last data, the freshness window, signing out forgetting all."
+    },
+    {
+      "path": "frontend/src/lib/prefetchPage.js",
+      "language": "javascript",
+      "lines": 31,
+      "size_bytes": 1570,
+      "role": "lib",
+      "purpose": "C35.5d (issue 20): a tab page's code and data before the reader gets there: prefetchPage and prefetchProps (hover or focus of a nav link: the chunk and its read-only GETs through pageData), prefetchCodeWhenIdle (the three tab pages' code once the browser is idle)."
+    },
+    {
+      "path": "frontend/src/lib/prefetchPage.test.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 1610,
+      "role": "lib",
+      "purpose": "Unit tests for prefetchPage: code and data on pointing, nothing thrown on failures, only code when idle."
     },
     {
       "path": "frontend/src/lib/results.js",
@@ -6433,8 +6465,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 813,
-      "size_bytes": 271021,
+      "lines": 817,
+      "size_bytes": 271890,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

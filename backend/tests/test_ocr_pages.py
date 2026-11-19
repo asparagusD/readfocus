@@ -204,3 +204,29 @@ def test_a_book_with_its_own_text_never_takes_ocr_text_into_chunks(monkeypatch):
     assert db.tables["books"][0]["scanned_pages"] == [2]
     assert contents(db) == ["Some text on the first page."]
     assert regions == ["b1"]  # its region map is built as for any PDF
+
+
+@pytest.fixture
+def capped(monkeypatch):
+    """An in-memory database that, like PostgREST, returns at most 1000 rows per select."""
+    from types import SimpleNamespace
+
+    from backend.tests import memory_db as mdb
+
+    db = mdb.MemoryDb()
+    monkeypatch.setattr(ocr_pages, "supabase", db)
+    execute = mdb.Query.execute
+
+    def at_most_1000(self):
+        result = execute(self)
+        return SimpleNamespace(data=result.data[:1000]) if self.action[0] == "select" else result
+    monkeypatch.setattr(mdb.Query, "execute", at_most_1000)
+    db.tables["page_ocr"] = [{"book_id": "big", "page": n, "text": f"page {n}", "words": []} for n in range(1200, 0, -1)]
+    return db
+
+
+def test_a_book_over_a_thousand_pages_has_every_pages_text_read(capped):
+    """DEBUG_LOG 2026-11-19 C36.G: PostgREST's 1000-row cap cut the page texts of a book read on the device."""
+    texts = ocr_pages.load_texts("big")
+    assert sorted(texts) == list(range(1, 1201)) and texts[1200] == "page 1200"
+    assert ocr_pages.done_pages("big") == list(range(1, 1201))

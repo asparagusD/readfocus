@@ -24,6 +24,7 @@ from backend.regions.garble import is_garbled
 from backend.services.supabase_client import supabase
 
 TABLE = "page_ocr"
+PAGE = 1000  # rows per select: PostgREST returns at most 1000 at a time (DEBUG_LOG 2026-11-19 C36.G)
 SKIPPED_KINDS = {"math", "code", "table", "figure"}
 TEXT_KINDS = ("block", "prose", "unreadable")
 
@@ -88,10 +89,22 @@ def region_rows(book: dict, page: int, paragraphs: list[dict], first_order: int)
             for i, p in enumerate(paragraphs)]
 
 
+def _rows(book_id: str, columns: str) -> list[dict]:
+    """Every page row of the book, PAGE at a time in page order (a book read on the device has up to 10,000)."""
+    rows, start = [], 0
+    while True:
+        batch = (supabase.table(TABLE).select(columns).eq("book_id", book_id).order("page")
+                 .range(start, start + PAGE - 1).execute().data or [])
+        rows += batch
+        if len(batch) < PAGE:
+            return rows
+        start += PAGE
+
+
 def load_texts(book_id: str) -> dict[int, str]:
     """{page: OCR text} for the book; {} when there is none or migration 022 is not applied."""
     try:
-        rows = supabase.table(TABLE).select("page, text").eq("book_id", book_id).execute().data or []
+        rows = _rows(book_id, "page, text")
     except Exception as e:  # noqa: BLE001 - ingestion goes on with pypdf's text alone
         print(f"OCR text not read for book {book_id}: {e}")
         return {}
@@ -125,7 +138,7 @@ def store_page(book: dict, page: int, cleaned: dict, engine: str) -> None:
 
 
 def done_pages(book_id: str) -> list[int]:
-    rows = supabase.table(TABLE).select("page").eq("book_id", book_id).execute().data or []
+    rows = _rows(book_id, "page")
     return sorted({int(row["page"]) for row in rows})
 
 

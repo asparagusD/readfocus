@@ -175,10 +175,6 @@ def ingest(monkeypatch, texts: list[str], ocr: dict[int, str]):
     monkeypatch.setattr(book_ingestor, "chunk_text", lambda pages, target_words=600: [p for p in pages if p.strip()])
     monkeypatch.setattr(book_ingestor.book_structure, "build_with_paths", lambda *a: (None, None, None))
     monkeypatch.setattr(book_ingestor.embedder, "embed", lambda texts: [[0.0] * 3 for _ in texts])
-
-    async def no_questions(book_id, rows):
-        return None
-    monkeypatch.setattr(book_ingestor, "generate_questions", no_questions)
     monkeypatch.setattr(book_ingestor, "look_up_cover", lambda book, data: None)
     regions = []
 

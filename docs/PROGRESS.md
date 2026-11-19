@@ -6196,3 +6196,38 @@ configuration (constraint 2); without it the register check is the only guard. N
 | [x] C35.8c the Library puts the next stored PDF in the CDN's cache; the cause written up (issue 19 follow-up) | (this commit) | `reader/warmFile.js` (new): `warmBookFile(book)` asks `/books/{id}/file` (never `/open`) and fetches `bytes=0-0` from the reused URL, a stored PDF only, at most once per book in ten minutes, never rejects; `Library.jsx` warms its next book once the shelf has loaded; `docs/DEBUG_LOG.md` 2026-11-19 C35.8 and the C35 section of `docs/BENCHMARKS.md` (why Storage is slow: the CDN's whole-file fill per token) | `node --test` warmFile: 4 passed; e2e `open-ahead.spec.js`: the shelf warms the next PDF once, with no `/open`, and not again on a return; full standard checks on the C35.8a-c tree: pytest 2150, unit 325, e2e 357 (13.8 min), ruff 21, ESLint 3, build, bundle 182.3 KB, contrast, images, graph tests 64, import | 0.7 h | not measured on production yet (needs a release); the Dashboard's Begin reading does not warm (its book has no file type); each warm costs the CDN one whole download of the file from Storage |
 | [x] C35.8 released and measured (your go-ahead, 2026-11-19: "Release C35.8") | (this commit) | `readfocus-2.0` 3acb791 pushed; Render deployed it first (dep-dbvcmd6c6qcc73atjrtg); `main` ca2d819 pushed (the same tree), Vercel "Deployment has completed"; before that, the C35.7 graph fix alone went to `main` as 96d9a8e (CI 44499198673 all green, deploy-render included); `docs/BENCHMARKS.md` C35.8 table | smoke: `/health` ok; two `/open` and one `/file` give the same signed URL, `expires_in` 3600 and 3599; 401 without a token. The thesis (15.9 MB): first open on a new URL 4.7 s (was 14.0-19.6 s), reopens 1.37 s and 1.30 s (C35.4's 1.5 s target met on a reopen) | 0.4 h | the reopen figures include the browser's own HTTP cache (file requests of 1-60 ms); a signed link now lives an hour, so a copied link stays valid that long; the shelf's warm-up makes the CDN pull a whole file on a miss (Storage bandwidth). CI on main for ca2d819 was still running when this row was written |
 | [x] C35 closed (your go-ahead, 2026-11-19: "Close C35") | (this commit) | GitHub issues 16 to 21 closed, each with a comment naming its commits, the release (main 69d99e7, ca2d819) and its production numbers or that it was not timed there; `docs/BENCHMARKS.md`: the stale "not measured yet" line on the C35.8 opens removed (the table below it has them) | `gh issue list --state open`: 0 open; main 6a5cbd4 CI run 44507125696 all jobs passed; `make graph` twice, no diff | 0.2 h | not timed on production: a 29 MB upload, a delete, `/open` while a book is processing; issue 19's 1.5 s is met on a reopen (1.3 s), not on a cold open (4.7 s) |
+
+## C36 — questions follow the reader (issue 27)
+
+From your request on 2026-11-19 ("Why are you preparing quizzes for the entire book in one go? ... prepare quizzes
+from pages the reader starts reading from and start accumulating as the reader reads continuously"). Issue 27.
+On `chunk/C36-reader-questions` from `readfocus-2.0` at `8047bc4`.
+
+### Your decisions (2026-11-19)
+
+- **Unread pages:** questions only for what is read (no idle fill of the rest of the book).
+- **Lookahead:** the chunk on screen plus one.
+- **Books already uploaded:** left alone (they keep their questions); only the quiz gate changes for them.
+
+### Plan (written at chunk start, 2026-11-19, before any code)
+
+| Step | What | Hours | Done when |
+|---|---|---|---|
+| C36.1 | Ingest without questions: embed and store only; a PDF's chunks get their page anchors (`pages`, `spans`) at ingest from the page texts ingest already reads (`prose.pdf_prose` with no regions), so a page maps to its chunk before the region map | 1.5 | tests: no question agent call during ingest; a PDF chunk stored with pages and spans that `pdf_slices` and `chunk_at` read; the prose job later replaces them |
+| C36.2 | Questions follow the reader: `services/reader_questions.py` keeps each book's wanted place (chunk on screen + 1), runs the agent for its stored chunks without questions through the worker slot ahead of any waiting job, and between an ingest's batches while one runs; queued from `PUT /books/{id}/position` and focus `page_turn` | 2.5 | tests: a saved place questions those two chunks only, once; during an ingest they are made at the next batch boundary; never two jobs at once |
+| C36.3 | The quiz gate per range: Quiz me and the bookmark quiz wait only while the range's end is beyond the chunks stored so far (else today's whole-job gate for books with no page map); missing questions in range topped up as today | 1.5 | tests: a quiz over stored pages is built while the ingest still runs; a range past the stored chunks is 409 preparing |
+| C36.4 | The reader shows it: "Preparing quizzes… n%" becomes the ingest's own status while it runs and nothing after; Library the same | 1.0 | e2e: Quiz me works mid-ingest; the notice text |
+| C36.5 | The prose rebuild questions again only chunks that already have questions (the rest get prose and vectors only) | 0.75 | test: a changed chunk with no questions is not questioned |
+| C36.6 | Measure (local container at 0.1 CPU: upload → a quiz on a page deep in the book) and merge | 1.0 | numbers in `docs/BENCHMARKS.md` |
+| | **Total** | **8.25** | |
+
+Safe to cut, in this order: C36.5 (costs CPU only), then the focus `page_turn` trigger in C36.2 (the place save
+fires on every page turn anyway). Device books over 50 MB keep their ingest after the last page batch: their
+reader waits for that, as today (a follow-up if wanted). No migration: the new job lives in memory (a restart
+loses only wants that the next page turn sends again), so `processing_jobs.kind`'s CHECK is untouched.
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C36.1 ingest without questions; a PDF's chunk pages at ingest (issue 27) | (this commit) | `book_ingestor.py`: no question agent (`generate_questions` and its agent removed), `page_anchors` gives a PDF's chunks `anchors` (`pages`, `spans`, no placeholders) from the page texts ingest already reads, stored by `store_batch` (none for an EPUB, a browser-text or OCR-read book); `regions/prose.py`: `pdf_page_anchors` and `_page_pieces`, shared with `pdf_prose`, so the prose job's later anchors are the same pages and spans; tests: ready after the first batch with no questions, a PDF chunk's anchors equal `pdf_prose`'s with no regions, an EPUB gets none; the agent fakes dropped from five test files | pytest 2150 (3 removed: questions at ingest; 3 added); ruff 21; lint 3; build; import; graph 64; contrast 304/0; images; bundle 239 chunks 0 failing; unit 325; e2e 357 | 0.6 h | until C36.2, a quiz makes the questions of its whole range when asked (`quiz._assemble`'s top-up) |

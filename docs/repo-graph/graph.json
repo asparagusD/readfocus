@@ -8063,12 +8063,12 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
-      "to": "file:backend/agents/question_generation/agent.py"
+      "to": "file:backend/nlp/embedder.py"
     },
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
-      "to": "file:backend/nlp/embedder.py"
+      "to": "file:backend/regions/prose.py"
     },
     {
       "type": "imports",
@@ -9783,7 +9783,17 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_ingest_embeddings.py",
+      "to": "file:backend/regions/prose.py"
     },
     {
       "type": "imports",
@@ -15354,11 +15364,6 @@
       "type": "writes_table",
       "from": "file:backend/steve/threads.py",
       "to": "table:steve_threads"
-    },
-    {
-      "type": "writes_table",
-      "from": "file:backend/tests/test_ingest_embeddings.py",
-      "to": "table:question_bank"
     },
     {
       "type": "writes_table",

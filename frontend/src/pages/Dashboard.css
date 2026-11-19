@@ -229,8 +229,24 @@
 }
 
 @media (max-width: 1023px) {
+  /* C35.1 (issue 21): in one column the badge shelf stays last, after the side cards, as before; the main
+     column's sections join the grid so the shelf can move, with the same spacing as before. */
   .rf-dash__columns {
     grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-6);
+  }
+
+  .rf-dash__main {
+    display: contents;
+  }
+
+  .rf-dash__side {
+    margin-top: calc(var(--space-7) - var(--space-6));
+  }
+
+  .rf-dash__main > .rf-badge-shelf {
+    order: 1;
+    margin-top: var(--space-7);
   }
 }
 

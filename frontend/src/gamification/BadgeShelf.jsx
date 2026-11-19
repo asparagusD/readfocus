@@ -62,24 +62,24 @@ export function BadgeShelf() {
   }, []);
 
   if (state.status === 'loading') {
-    return <section className="rf-shelf" aria-busy="true" aria-label="Badge shelf"><Skeleton height={140} /></section>;
+    return <section className="rf-badge-shelf" aria-busy="true" aria-label="Badge shelf"><Skeleton height={140} /></section>;
   }
   if (state.status === 'error') {
     return (
-      <section className="rf-shelf" aria-labelledby="rf-shelf-title">
-        <h2 id="rf-shelf-title" className="rf-dash__h2">Badge shelf</h2>
+      <section className="rf-badge-shelf" aria-labelledby="rf-badge-shelf-title">
+        <h2 id="rf-badge-shelf-title" className="rf-dash__h2">Badge shelf</h2>
         <p className="rf-dash__muted">Your badges didn’t load. They are safe; try again in a moment.</p>
       </section>
     );
   }
   const still = prefersReducedMotion();
   return (
-    <section className="rf-shelf" aria-labelledby="rf-shelf-title">
+    <section className="rf-badge-shelf" aria-labelledby="rf-badge-shelf-title">
       <div className="rf-dash__section-head">
-        <h2 id="rf-shelf-title" className="rf-dash__h2">Badge shelf</h2>
+        <h2 id="rf-badge-shelf-title" className="rf-dash__h2">Badge shelf</h2>
         <p className="rf-dash__muted">{shelfLine(state.earned, state.total)}</p>
       </div>
-      <ul className="rf-shelf__list">
+      <ul className="rf-badge-shelf__list">
         {state.badges.map((badge) => {
           const stamp = state.fresh.has(badge.id) && !still;
           return (

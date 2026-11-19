@@ -187,6 +187,8 @@ export function Dashboard() {
             <ScoreTrend scores={scores} />
           </section>
           <MasteryList books={books} />
+          {/* C35.1 (issue 21): under Concept mastery, so the main column is about as long as the side one. */}
+          <BadgeShelf />
         </div>
 
         <aside className="rf-dash__side">
@@ -246,7 +248,6 @@ export function Dashboard() {
           )}
         </aside>
       </div>
-      <BadgeShelf />
     </div>
   );
 }

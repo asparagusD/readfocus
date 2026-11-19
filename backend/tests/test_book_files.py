@@ -87,13 +87,13 @@ def test_a_file_over_the_per_file_limit_is_refused_before_storage(client, db, mo
     assert resp.status_code == 413 and db.tables["books"] == [] and db.files == {}
 
 
-def test_the_owner_gets_a_short_lived_signed_url(client, db):
+def test_the_owner_gets_a_signed_url_that_lives_at_most_an_hour(client, db):
     add_book(db, "b1")
     resp = client.get("/books/b1/file")
     assert resp.status_code == 200
     body = resp.json()
     assert body["url"].startswith("https://storage.test/sign/books/user-1/b1.pdf")
-    assert body["expires_in"] == policy.BOOK_FILE_URL_SECONDS <= 600
+    assert body["expires_in"] == policy.BOOK_FILE_URL_SECONDS <= 3600  # C35.8a: reused, so longer than 300 s
     assert body["sha256"] is None or isinstance(body["sha256"], str)
 
 

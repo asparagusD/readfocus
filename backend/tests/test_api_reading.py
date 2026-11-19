@@ -126,9 +126,18 @@ def test_open_gives_the_files_signed_url_so_the_reader_need_not_ask_for_it(clien
     """C34.3 (issue 13): one round trip less before the reader starts on the file."""
     db.tables["books"][0].update(storage_path="user-1/book-1.pdf", file_sha256="ab12")
     opened = client.get(f"/books/{BOOK}/open").json()
-    assert opened["file"] == {"url": "https://storage.test/sign/books/user-1/book-1.pdf?expires=300", "expires_in": 300,
-                              "sha256": "ab12"}
-    assert ("storage", "sign", "user-1/book-1.pdf", 300) in db.calls
+    assert opened["file"] == {"url": "https://storage.test/sign/books/user-1/book-1.pdf?expires=3600",
+                              "expires_in": 3600, "sha256": "ab12"}
+    assert ("storage", "sign", "user-1/book-1.pdf", 3600) in db.calls
+
+
+def test_a_second_open_gets_the_same_url_so_the_cdn_copy_is_reused(client, db):
+    """C35.8a (issue 19): a new token is a CDN miss that fetches the whole file before its last bytes."""
+    db.tables["books"][0].update(storage_path="user-1/book-1.pdf")
+    first = client.get(f"/books/{BOOK}/open").json()["file"]
+    second = client.get(f"/books/{BOOK}/open").json()["file"]
+    assert second["url"] == first["url"]
+    assert [call for call in db.calls if call[:2] == ("storage", "sign")] == [("storage", "sign", "user-1/book-1.pdf", 3600)]
 
 
 def test_a_device_only_book_opens_with_no_file_url(client, db):

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 962,
-    "inventoried": 819,
+    "tracked": 964,
+    "inventoried": 821,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18152,
+      "size_bytes": 18171,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -257,8 +257,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 447,
-      "size_bytes": 21119,
+      "lines": 449,
+      "size_bytes": 21323,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime). C26.7: MAX_DEVICE_BOOK_FILE_BYTES (300 MB), BROWSER_TEXT_PAGES_PER_BATCH, BROWSER_TEXT_MAX_PAGE_CHARS, BROWSER_TEXT_MAX_PAGES."
     },
@@ -625,10 +625,10 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 479,
-      "size_bytes": 25508,
+      "lines": 478,
+      "size_bytes": 25441,
       "role": "router",
-      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop. C30.1: the upload's author is optional; a blank one is read from the file's own metadata (file_author: PDF info Author, EPUB dc:creator, whitespace tidied, at most AUTHOR_MAX), else stored as null, and the response returns the author used."
+      "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop. C30.1: the upload's author is optional; a blank one is read from the file's own metadata (file_author: PDF info Author, EPUB dc:creator, whitespace tidied, at most AUTHOR_MAX), else stored as null, and the response returns the author used. C35.8a: GET /books/{id}/file gives the book's reused signed URL (file_url.signed_url) and the seconds it still lives."
     },
     {
       "path": "backend/routers/dashboard.py",
@@ -705,10 +705,10 @@
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 132,
-      "size_bytes": 7304,
+      "lines": 130,
+      "size_bytes": 7184,
       "role": "router",
-      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days. C34.3 (issue 13): GET /books/{id}/open also returns `file`, the original's signed URL as /file gives it (None for a device-only book or a failed signing), signed in parallel with the progress read."
+      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days. C34.3 (issue 13): GET /books/{id}/open also returns `file`, the original's signed URL as /file gives it (None for a device-only book or a failed signing), signed in parallel with the progress read. C35.8a: /open's file URL comes from file_url.signed_url, the same URL for a book for up to an hour, with the seconds it still lives."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -769,10 +769,10 @@
     {
       "path": "backend/services/book_purge.py",
       "language": "python",
-      "lines": 79,
-      "size_bytes": 3979,
+      "lines": 81,
+      "size_bytes": 4110,
       "role": "service",
-      "purpose": "C35.2 (issue 18): a book being deleted. mark() sets books.status to 'deleting' (DELETE /books/{id} answers 202 at once); purge() removes the original from the books bucket, the note pictures under notes/<user>/<book>/ (a page at a time) and the row, whose cascade takes the rest, as a background task; purge_left() finishes purges a restart or failure left, from the ingestion sweep loop; live() drops deleting rows from an owner's book reads."
+      "purpose": "C35.2 (issue 18): a book being deleted. mark() sets books.status to 'deleting' (DELETE /books/{id} answers 202 at once); purge() removes the original from the books bucket, the note pictures under notes/<user>/<book>/ (a page at a time) and the row, whose cascade takes the rest, as a background task; purge_left() finishes purges a restart or failure left, from the ingestion sweep loop; live() drops deleting rows from an owner's book reads. C35.8a: purge forgets the book's kept signed URL (file_url.forget)."
     },
     {
       "path": "backend/services/book_structure.py",
@@ -805,6 +805,14 @@
       "size_bytes": 3475,
       "role": "service",
       "purpose": "C35.3a (issue 16): a PDF or EPUB sent straight to Storage. object_path (the reader's own <user>/<book>.<ext> in the books bucket), signed_upload (a signed upload URL), stored_size (from a Storage listing), first_bytes (one Range request through a short signed URL), kind_of (pdf or epub by the first bytes), check (exists, at most MAX_BOOK_FILE_BYTES, its type; a refused object is removed)."
+    },
+    {
+      "path": "backend/services/file_url.py",
+      "language": "python",
+      "lines": 53,
+      "size_bytes": 2390,
+      "role": "service",
+      "purpose": "C35.8a (issue 19): one signed URL per book file, handed out again while at least BOOK_FILE_URL_MIN_LEFT (900 s) of its BOOK_FILE_URL_SECONDS (3600) is left, kept in this process. The CDN's cache key includes the token and a miss downloads the whole file first, so a new URL on every open made every PDF open cold. signed_url(bucket, path) -> (url, seconds left), forget(path) (a deleted book), forget_all (tests)."
     },
     {
       "path": "backend/services/ingestion_worker.py",
@@ -1025,8 +1033,8 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 104,
-      "size_bytes": 3103,
+      "lines": 113,
+      "size_bytes": 3337,
       "role": "test",
       "purpose": "Offline test setup: dummy environment (ingestion sweep and model preload off), a fake Supabase client, a guard that blocks non-loopback connections, and an autouse fixture that marks the embedding model ready."
     },
@@ -1233,8 +1241,8 @@
     {
       "path": "backend/tests/test_api_reading.py",
       "language": "python",
-      "lines": 151,
-      "size_bytes": 7252,
+      "lines": 160,
+      "size_bytes": 7800,
       "role": "test",
       "purpose": "Pytest on MemoryDb through TestClient (C26.4): a first open makes one progress row and has no place; a saved place comes back on the next open; every save asks for the Finished a book badge; a book still being processed opens and saves; a scanned book with no text opens pages-only; EPUB format and place; malformed places, a place in the other format and an unknown chunk are refused with nothing stored; another reader's book is 404 with nothing made; sign-in required. C26.7: a book read on the device opens text-only."
     },
@@ -1377,8 +1385,8 @@
     {
       "path": "backend/tests/test_book_delete.py",
       "language": "python",
-      "lines": 127,
-      "size_bytes": 5784,
+      "lines": 134,
+      "size_bytes": 6129,
       "role": "test",
       "purpose": "DELETE /books/{id} (C25.1 fix): the book's original and every file in notes/<user>/<book>/ go with it, page by page; another book's and another reader's files stay; another reader's book is 404; a storage failure, or a remove that removes nothing, is logged once and the book is still deleted."
     },
@@ -1394,7 +1402,7 @@
       "path": "backend/tests/test_book_files.py",
       "language": "python",
       "lines": 115,
-      "size_bytes": 4661,
+      "size_bytes": 4717,
       "role": "test",
       "purpose": "Pytest for C17.1 original files: sha256, size, format and mode stored on upload; the per-reader cap (only the caller's cloud books count, 413 before any storage write); the per-file limit; device-only uploads never stored; signed URL only for the owner, none for device-only books; device-only books cannot be resumed."
     },
@@ -1549,6 +1557,14 @@
       "size_bytes": 8225,
       "role": "test",
       "purpose": "Pytest for backend/regions/figures.py through classify: vector and image figures with captions above or below and labels, icons, rules and single bars ignored, drawn display and inline math, tables with captions, one-cell boxes, graphics inside tables, two-column reading order, crop-box coordinates; and on the shelf Calculus tables, Figure 2.11 and drawn math, and the Circuits schematic taking its labels."
+    },
+    {
+      "path": "backend/tests/test_file_url.py",
+      "language": "python",
+      "lines": 72,
+      "size_bytes": 2509,
+      "role": "test",
+      "purpose": "C35.8a (issue 19): the kept signed URL is reused while it lives long enough and replaced after; each file has its own; a forgotten file is signed afresh; old URLs are dropped; a signing with no URL raises and keeps nothing."
     },
     {
       "path": "backend/tests/test_focus_anticheat.py",
@@ -2289,8 +2305,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6193,
-      "size_bytes": 1129687,
+      "lines": 6194,
+      "size_bytes": 1130697,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6497,8 +6513,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 821,
-      "size_bytes": 272997,
+      "lines": 823,
+      "size_bytes": 274030,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

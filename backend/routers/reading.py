@@ -20,10 +20,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field
 
-from backend.agents import policy
 from backend.dependencies import get_current_user
 from backend.routers.sessions import EpubAnchor, PdfAnchor
-from backend.services import reading_place
+from backend.services import file_url, reading_place
 from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 from backend.xp import badge_award
@@ -68,11 +67,10 @@ def signed_file(book: dict) -> dict | None:
     if book.get("storage_mode") == "device" or not book.get("storage_path"):
         return None
     try:
-        signed = supabase.storage.from_("books").create_signed_url(book["storage_path"], policy.BOOK_FILE_URL_SECONDS)
+        url, expires_in = file_url.signed_url(supabase.storage.from_("books"), book["storage_path"])  # C35.8a: reused
     except Exception:  # noqa: BLE001 - the reader falls back to GET /books/{id}/file
         return None
-    url = signed.get("signedURL") or signed.get("signedUrl")
-    return {"url": url, "expires_in": policy.BOOK_FILE_URL_SECONDS, "sha256": book.get("file_sha256")} if url else None
+    return {"url": url, "expires_in": expires_in, "sha256": book.get("file_sha256")}
 
 
 def opening(book: dict, progress: dict, file: dict | None) -> dict:

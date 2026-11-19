@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { openingPage, pageHere, pageKey, pagesOf, pageStatus } from './notebookPages.js';
+import { openingPage, pageFor, pageHere, pageKey, pagesOf, pageStatus } from './notebookPages.js';
 
 const P = 1e6;
 const page = (id, start, end = start, extra = {}) => ({ id, kind: 'drawing', position_start: start, position_end: end, ...extra });
@@ -45,4 +45,16 @@ test("the page's save line", () => {
   assert.match(pageStatus('offline'), /^Offline/);
   assert.equal(pageStatus('conflict'), 'This page is not saved');
   assert.equal(pageStatus('saved', true), '');
+});
+
+test('a thing from the book goes onto the page started last in its chapter, else a new page', () => {
+  const toc = [{ title: 'One', loc: { kind: 'pdf', page: 10 } }, { title: 'Two', loc: { kind: 'pdf', page: 40 } }];
+  const made = [page('a', 12 * P, 12 * P, { created_at: '2026-11-20T10:00:00Z' }), page('b', 30 * P, 30 * P, { created_at: '2026-11-20T09:00:00Z' }),
+    page('c', 41 * P, 41 * P, { created_at: '2026-11-20T11:00:00Z' })];
+  assert.equal(pageFor(made, 35 * P, toc), 'a'); // chapter One: a was started after b
+  assert.equal(pageFor(made, 45 * P + 120, toc), 'c');
+  assert.equal(pageFor(made, 5 * P, toc), null); // before chapter One: no page yet
+  assert.equal(pageFor([], 35 * P, toc), null);
+  assert.equal(pageFor(made, 12 * P + 500, []), 'a'); // no contents: the same PDF page
+  assert.equal(pageFor(made, 13 * P, []), null);
 });

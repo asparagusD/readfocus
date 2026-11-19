@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, exportToBlob, hashElementsVersion, MainMenu } from '@excalidraw/excalidraw';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, exportToBlob, FONT_FAMILY, hashElementsVersion, MainMenu } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
 import { drawingScene, passageLines } from './drawing';
 
@@ -8,6 +8,19 @@ const UI = {
   tools: { image: false }, // no pictures: a scene holds only what the server keeps (note_content.py)
 };
 const THUMB_SIDES = [480, 360, 240];
+const FACES = { hand: FONT_FAMILY.Excalifont, code: FONT_FAMILY['Comic Shanns'] ?? FONT_FAMILY.Cascadia };
+const MUTED = '#868e96'; // Excalidraw's own grey, which its dark theme inverts with the rest
+const GAP = 12; // between the lines of one thing
+const BREAK = 32; // between what the page held and what is added
+const FACE_NAMES = { hand: 'Excalifont', code: 'Comic Shanns' };
+const TOP_LEFT = { x: 64, y: 112 }; // on an empty page: below Excalidraw's menu, toolbar and hint
+
+/** The faces the lines use, loaded before Excalidraw measures them (a box measured in a fallback face clips). */
+async function facesFor(lines) {
+  const wanted = [...new Set(lines.map((l) => `${l.size}px "${FACE_NAMES[l.font] ?? FACE_NAMES.hand}"`))];
+  const loading = Promise.all(wanted.map((font) => document.fonts?.load(font)));
+  await Promise.race([loading, new Promise((resolve) => { setTimeout(resolve, 3000); })]).catch(() => {});
+}
 const THUMB_MAX = 250_000; // under the bucket's 256 KB
 
 async function thumbnail(elements) {
@@ -27,21 +40,24 @@ async function thumbnail(elements) {
  * passage" adds the note's passage as a text element. `register` hands the parent `finish()` (a PNG thumbnail of the
  * scene, or null), `paste()`, and C37.2 `idle()`: true when Escape has nothing left to do in Excalidraw (no text
  * being typed, no shape being drawn, the selection tool, no menu or dialog open), so the notebook may close on it.
- * `focus` false leaves the focus where it is (a page turned by the notebook's arrows or tabs).
+ * `focus` false leaves the focus where it is (a page turned by the notebook's arrows or tabs). C37.3: `add(lines)`
+ * puts notebookItems.js lines on the page as text elements, below what it holds (or at the top of the view on an
+ * empty page), scrolls to them and saves the scene at once.
  */
 export default function DrawingEditor({ content, dark, passage, register, onChange, focus = true }) {
   const api = useRef(null);
+  const [ready] = useState(() => { let open; const promise = new Promise((resolve) => { open = resolve; }); return { promise, open }; });
   const seen = useRef(null);
   const changed = useRef(onChange);
   useEffect(() => { changed.current = onChange; }, [onChange]);
 
   const onScene = useCallback((elements) => {
     const version = hashElementsVersion(elements);
-    if (seen.current === null) { seen.current = version; return; } // the scene as it opened
+    if (seen.current === null) { seen.current = version; ready.open(api.current); return; } // the scene as it opened: add() may go now
     if (version === seen.current) return;
     seen.current = version;
     changed.current(drawingScene(elements));
-  }, []);
+  }, [ready]);
 
   // The panel widens once the drawing is open (and a window can resize): Excalidraw keeps its canvas offsets
   // until told, so a stroke right after would land in the wrong place.
@@ -61,6 +77,28 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
       return !state.editingTextElement && !state.newElement && !state.multiElement && !state.openDialog
         && !state.openMenu && !state.openPopup && !state.openSidebar && !state.contextMenu && state.activeTool?.type === 'selection';
     },
+    add: async (lines) => {
+      const editor = await ready.promise;
+      await facesFor(lines);
+      const before = editor.getSceneElements();
+      const { scrollX, scrollY, zoom } = editor.getAppState();
+      const x = before.length ? Math.min(...before.map((e) => e.x)) : -scrollX + TOP_LEFT.x / zoom.value;
+      let y = before.length ? Math.max(...before.map((e) => e.y + e.height)) + BREAK : -scrollY + TOP_LEFT.y / zoom.value;
+      const made = [];
+      for (const piece of lines) {
+        if (!piece.text) continue;
+        const [text] = convertToExcalidrawElements([{ type: 'text', text: piece.text, x, y, fontSize: piece.size,
+          fontFamily: FACES[piece.font] ?? FACES.hand, ...(piece.muted ? { strokeColor: MUTED } : {}) }]);
+        made.push(text);
+        y = text.y + text.height + GAP;
+      }
+      if (!made.length) return;
+      editor.updateScene({ elements: [...before, ...made], captureUpdate: CaptureUpdateAction.IMMEDIATELY });
+      if (before.length) editor.scrollToContent(made, { fitToViewport: false }); // an empty page: already in view
+      const all = editor.getSceneElements();
+      seen.current = hashElementsVersion(all);
+      changed.current(drawingScene(all));
+    },
     finish: () => thumbnail(drawingScene(api.current?.getSceneElements() ?? []).elements),
     paste: () => {
       const editor = api.current;
@@ -71,7 +109,7 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
         x: -scrollX + 40 / zoom.value, y: -scrollY + 40 / zoom.value }]);
       editor.updateScene({ elements: [...editor.getSceneElements(), text], captureUpdate: CaptureUpdateAction.IMMEDIATELY });
     },
-  }), [register, passage]);
+  }), [register, passage, ready]);
 
   return (
     <div className="rf-drawing-canvas" data-own-escape="true" ref={box}>

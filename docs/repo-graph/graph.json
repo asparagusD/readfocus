@@ -3970,6 +3970,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/notes/notebookItems.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookItems.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/notes/notebookPages.js",
       "type": "file",
       "role": "asset",
@@ -12535,6 +12547,21 @@
       "type": "imports",
       "from": "file:frontend/src/notes/mathRules.test.js",
       "to": "file:frontend/src/notes/mathRules.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookItems.js",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookItems.js",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookItems.test.js",
+      "to": "file:frontend/src/notes/notebookItems.js"
     },
     {
       "type": "imports",

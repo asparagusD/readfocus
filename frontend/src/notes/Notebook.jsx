@@ -47,26 +47,33 @@ function PageTabs({ pages, current, onPick }) {
  * tucks the notebook away; it reopens on the page it was left on. Pages turn by the arrows or the page tabs;
  * "Go to this place" turns to the page made at the place the book shows; "New page" starts one there. A page saves as
  * it changes; leaving it (a turn or closing) makes its thumbnail when it changed. Full screen below 760 px.
+ * C37.3: `incoming` ({ key, lines, n }) is something from the book for the page `key`: the notebook turns there and
+ * the editor adds the lines (notebookItems.js), once, then `onIncoming(n)`. "All notes" opens the notepad's list.
  */
 export function Notebook({ title, pages, state, statuses, range, describe, current, onPage, onNew, onChange, onThumbnail,
-  onRemove, onGoTo, onRetry, onKeepMine, onTakeTheirs, onReload, onClose, returnTo, beside = false, others = 0, onOthers }) {
+  onRemove, onGoTo, onRetry, onKeepMine, onTakeTheirs, onReload, onClose, returnTo, beside = false, total = 0, onAll,
+  incoming = null, onIncoming }) {
   const tools = useRef(null);
-  const dirty = useRef(false);
+  const dirty = useRef(null); // the key of the page changed since it was opened
   const layer = useRef(null);
   const [epoch, setEpoch] = useState(0); // a page taken back from the server opens afresh
   const [busy, setBusy] = useState(false);
-  const [grab, setGrab] = useState(true); // the page opened with the notebook, or a new one, takes the focus; a turned page does not
+  const [grab, setGrab] = useState(true);
+  const [toolsFor, setToolsFor] = useState(null); // the editor whose tools are in hand
+  const delivered = useRef(null); // the page opened with the notebook, or a new one, takes the focus; a turned page does not
   const index = pages.findIndex((p) => pageKey(p) === current || p.id === current);
   const page = index >= 0 ? pages[index] : null;
   const here = pageHere(pages, range);
   const where = page ? describe(page) : null;
   const ref = where ? reference(where.page, where.chapter) : '';
   const passage = page ? passageOf(page) : '';
+  const editorKey = page ? `${pageKey(page)}:${epoch}` : null;
+  const register = useCallback((made) => { tools.current = made; setToolsFor(editorKey); }, [editorKey]);
 
   /** Leaving the open page: its thumbnail when it changed, and its last change sent now. */
   const leave = useCallback(() => {
-    if (!page || !dirty.current) return;
-    dirty.current = false;
+    if (!page || dirty.current !== pageKey(page)) return;
+    dirty.current = null;
     const made = tools.current?.finish();
     if (!page.pending) onRetry(page.id);
     made?.then((blob) => onThumbnail(page, blob)).catch(() => {});
@@ -99,6 +106,14 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
     return () => window.removeEventListener('keydown', onKey, true);
   }, [close]);
 
+  useEffect(() => { // C37.3: something from the book, once its page is open and its editor ready
+    if (!incoming || delivered.current === incoming.n || !page || toolsFor !== editorKey) return;
+    if (pageKey(page) !== incoming.key && page.id !== incoming.key) return;
+    delivered.current = incoming.n;
+    tools.current?.add(incoming.lines).then(() => { dirty.current = pageKey(page); }).catch(() => {});
+    onIncoming?.(incoming.n);
+  }, [incoming, page, toolsFor, editorKey, onIncoming]);
+
   const add = async () => {
     setBusy(true);
     const key = await onNew();
@@ -108,7 +123,7 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
   const remove = () => {
     if (!page || page.pending) return;
     const next = pages[index + 1] ?? pages[index - 1] ?? null;
-    dirty.current = false;
+    dirty.current = null;
     onRemove(page.id);
     onPage(next ? pageKey(next) : null);
   };
@@ -121,7 +136,7 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
   return (
     <div className="rf-notebook-layer" ref={layer} data-beside={beside || undefined}>
       <div className="rf-notebook-scrim" aria-hidden="true" onClick={close} />
-      <section className="rf-notebook" role="dialog" aria-modal={!beside} aria-labelledby="rf-notebook-title" tabIndex={-1}>
+      <section id="rf-notebook" className="rf-notebook" role="dialog" aria-modal={!beside} aria-labelledby="rf-notebook-title" tabIndex={-1}>
         <header className="rf-notebook-head">
           <div className="rf-notebook-name">
             <h2 id="rf-notebook-title" className="rf-notebook-title">Notebook</h2>
@@ -184,8 +199,8 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
             <Suspense fallback={<p className="rf-notebook-note" role="status">Opening the page…</p>}>
               <DrawingEditor key={`${pageKey(page)}:${epoch}`} content={page.content} passage={passage}
                 dark={document.documentElement.dataset.theme === 'lamplight'}
-                focus={grab} onChange={(content) => { dirty.current = true; onChange(page.id, { content }); }}
-                register={(made) => { tools.current = made; }} />
+                focus={grab} onChange={(content) => { dirty.current = pageKey(page); onChange(page.id, { content }); }}
+                register={register} />
             </Suspense>
           )}
         </div>
@@ -207,9 +222,10 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
           <p className="rf-notebook-status" role="status" aria-live="polite">
             {page ? pageStatus(status, page.pending) : ''}
           </p>
-          {others > 0 && (
-            <button type="button" className="rf-notebook-others" onClick={() => { close(); onOthers(); }}>
-              {others === 1 ? 'See 1 other note' : `See ${others} other notes`}
+          {onAll && (
+            <button type="button" className="rf-notebook-others" onClick={() => { close(); onAll(); }}
+              aria-label={`All notes, ${total}`}>
+              All notes
             </button>
           )}
         </footer>

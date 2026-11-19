@@ -582,7 +582,7 @@ export function ReadingSession() {
           onChange={notepad.edit} onThumbnail={notepad.attachThumbnail} onRemove={notepad.remove} onGoTo={goToNote}
           onRetry={notepad.flush} onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onReload={notepad.reload}
           onClose={closeNotebook} returnTo={notebookOpener} beside={Boolean(shownSide)}
-          others={notepad.notes.length - pages.length} onOthers={openNotes} />
+          total={notepad.notes.length} onAll={openNotes} />
       )}
       </NotesContext.Provider>
       </SteveContext.Provider>

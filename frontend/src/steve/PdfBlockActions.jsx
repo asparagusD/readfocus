@@ -11,7 +11,6 @@ import { postSteve } from './sse';
 import { useSteveActions } from './SteveContext';
 import { useNotesActions } from '../notes/NotesContext';
 import { noteLanguage, regionPlace } from '../notes/fromBook';
-import { NoteGrip } from './NoteGrip';
 import './BlockActions.css';
 
 const HIDE_MS = 350;
@@ -43,7 +42,6 @@ export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
   const steve = useSteveActions();
   const notes = useNotesActions(); // C22.6: Add to notes
   const { toast } = useToast();
-  const dragging = useRef(false); // the bar stays up while its grip is dragged
   const [, setVersion] = useState(0);
   const [active, setActive] = useState(null); // { page, region }
   const [latex, setLatex] = useState(null);
@@ -61,7 +59,6 @@ export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
 
   const later = useCallback(() => {
     clearTimeout(hide.current);
-    if (dragging.current) return;
     hide.current = setTimeout(() => setActive(null), HIDE_MS);
   }, []);
   const stay = useCallback(() => clearTimeout(hide.current), []);
@@ -116,13 +113,17 @@ export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
       await notes.add({ kind: 'figure', place, regionId: region.id, imageB64, content: { caption: (detail.caption ?? '').slice(0, 1000), image_path: null } });
       return;
     }
-    const { key, content } = await notes.add({ kind: 'equation', place, regionId: region.id, imageB64, content: { latex: detail.latex ?? '', image_path: null } });
-    if (content.latex || !steve) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    const found = await postSteve({ url: `${API_BASE_URL}/steve/latex`, token: session?.access_token,
-      body: { book_id: bookId, region_id: region.id, image_png_b64: cropPdfRegion(pageEl, region.bbox), utc_offset_minutes: -new Date().getTimezoneOffset() } })
-      .catch(() => null); // no LaTeX: the field stays empty to fill in
-    if (found?.latex) notes.edit(key, { content: { ...content, latex: found.latex } });
+    // C37.3: the LaTeX first (the region map's, else /steve/latex while Steve is on), so the equation goes onto the
+    // notebook page as text; with none it stays a block note with its crop and an empty field to fill in.
+    let latex = detail.latex ?? '';
+    if (!latex && steve) {
+      const { data: { session } } = await supabase.auth.getSession();
+      const found = await postSteve({ url: `${API_BASE_URL}/steve/latex`, token: session?.access_token,
+        body: { book_id: bookId, region_id: region.id, image_png_b64: cropPdfRegion(pageEl, region.bbox), utc_offset_minutes: -new Date().getTimezoneOffset() } })
+        .catch(() => null);
+      latex = found?.latex ?? '';
+    }
+    await notes.add({ kind: 'equation', place, regionId: region.id, imageB64: latex ? null : imageB64, content: { latex, image_path: null } });
   };
 
   const run = async (action, { page, region }) => {
@@ -192,10 +193,6 @@ export function PdfBlockActions({ box, regions, bookId, pages, paused }) {
                   {ACTION_LABEL[action]}
                 </button>
               ))}
-              {region.kind !== 'figure' && (
-                <NoteGrip onAdd={() => run('add_note', { page, region })}
-                  onDragging={(on) => { dragging.current = on; if (on) stay(); else later(); }} />
-              )}
             </div>
           )}
         </div>,

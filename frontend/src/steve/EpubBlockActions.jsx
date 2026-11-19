@@ -9,7 +9,6 @@ import { LatexDialog } from './LatexDialog';
 import { useSteveActions } from './SteveContext';
 import { useNotesActions } from '../notes/NotesContext';
 import { noteLanguage } from '../notes/fromBook';
-import { NoteGrip } from './NoteGrip';
 import './BlockActions.css';
 
 const HIDE_MS = 350;
@@ -37,7 +36,6 @@ export function EpubBlockActions({ sections, spineOf, placeOf, bookId, paused })
   const steve = useSteveActions();
   const notes = useNotesActions(); // C22.6: Add to notes
   const { toast } = useToast();
-  const dragging = useRef(false); // the bar stays up while its grip is dragged
   const [active, setActive] = useState(null); // { doc, el, kind }
   const [latex, setLatex] = useState(null);
   const hide = useRef(0);
@@ -46,7 +44,6 @@ export function EpubBlockActions({ sections, spineOf, placeOf, bookId, paused })
 
   const later = useCallback(() => {
     clearTimeout(hide.current);
-    if (dragging.current) return;
     hide.current = setTimeout(() => setActive(null), HIDE_MS);
   }, []);
   const stay = useCallback(() => clearTimeout(hide.current), []);
@@ -181,10 +178,6 @@ export function EpubBlockActions({ sections, spineOf, placeOf, bookId, paused })
                 {ACTION_LABEL[action]}
               </button>
             ))}
-            {notes && placeOf && shown.kind !== 'figure' && (
-              <NoteGrip onAdd={() => run('add_note', shown)}
-                onDragging={(on) => { dragging.current = on; if (on) stay(); else later(); }} />
-            )}
           </div>
         </div>,
         document.body,

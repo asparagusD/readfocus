@@ -414,6 +414,16 @@ export async function openReader(page) {
   await page.waitForTimeout(300); // an EPUB lays out again once its fonts are in
 }
 
+/**
+ * C37.3: the notepad's list of every note. The toolbar's Notes opens the notebook; its "All notes" opens the list
+ * beside the book.
+ */
+export async function openNotepad(page) {
+  await page.getByRole('button', { name: /^Notes/ }).click();
+  await page.getByRole('dialog', { name: 'Notebook' }).getByRole('button', { name: /^All notes/ }).click();
+  await expect(page.getByRole('complementary', { name: 'Notes' })).toBeVisible();
+}
+
 /** The polite page announcement, e.g. "pp. ii–1 of 6" or "End of the book". */
 export const spoken = (page) => page.locator('.rf-ov-live');
 

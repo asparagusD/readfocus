@@ -1,10 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Bookmark, Code2, Image, Link2, NotebookPen, PenLine, Plus, Sigma, Trash2, Type } from 'lucide-react';
+import { Bookmark, Code2, Image, Link2, NotebookPen, PenLine, Sigma, Trash2, Type } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NoteDoc } from './NoteDoc';
 import { DrawingThumb } from './DrawingNote';
 import { BlockNote } from './BlockNote';
-import { NOTE_DRAG, useNotesActions } from './NotesContext';
 import { reference } from './place';
 import { overallStatus } from './status';
 import { followAction, notesFor, overlapping } from './sync';
@@ -83,7 +82,7 @@ function NotesFilter({ value, onChange }) {
     </div>
   );
 }
-export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd, onOpenPage, onNotebook, onRelink, request = null, range = null, contents = () => [] }) {
+export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onOpenPage, onNotebook, onRelink, request = null, range = null, contents = () => [] }) {
   const [editing, setEditing] = useState(null); // a note's key (or id)
   const [focused, setFocused] = useState(null); // { ids } opened from a margin marker
   const [seen, setSeen] = useState(null); // the last request taken, so each is taken once, when the list is ready
@@ -140,37 +139,16 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
     });
     return () => cancelAnimationFrame(frame);
   }, [rangeKey, state, scrollTo]);
-  // C22.6: an equation or listing dragged from the book is added where it is dropped.
-  const notesActions = useNotesActions();
-  const [dropping, setDropping] = useState(false);
-  const canDrop = (event) => Boolean(notesActions) && [...(event.dataTransfer?.types ?? [])].includes(NOTE_DRAG);
-  const onDragOver = (event) => {
-    if (!canDrop(event)) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'copy';
-    setDropping(true);
-  };
-  const onDrop = (event) => {
-    if (!canDrop(event)) return;
-    event.preventDefault();
-    setDropping(false);
-    notesActions.drop();
-  };
   const byHand = useCallback(() => { handAt.current = Date.now(); }, []);
   const goTo = useCallback((note) => { jumpAt.current = Date.now(); setPill(null); onGoTo(note); }, [onGoTo]);
   const status = overallStatus(statuses, notes.filter((n) => !n.pending).map((n) => n.id));
-  const add = async (kind) => {
-    const key = await onAdd(kind);
-    if (key) setEditing(key);
-  };
   const stop = (note) => {
     setEditing(null);
     if (!note.pending) onRetry(note.id); // save now rather than in 800 ms
     requestAnimationFrame(() => document.querySelector(`.rf-note[data-key="${note.key ?? note.id}"] .rf-note-read`)?.focus());
   };
   return (
-    <div className="rf-notes" ref={root} onWheel={byHand} onTouchMove={byHand} data-drop={dropping || undefined}
-      onDragOver={onDragOver} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropping(false); }} onDrop={onDrop}
+    <div className="rf-notes" ref={root} onWheel={byHand} onTouchMove={byHand}
       onKeyDown={(event) => { if (['PageUp', 'PageDown', 'ArrowUp', 'ArrowDown'].includes(event.key) && !event.target.closest('[contenteditable="true"]')) byHand(); }}>
       <div className="rf-notes-head">
         <p className="rf-notes-count">{shown.length === 1 ? '1 note' : `${shown.length} notes`}</p>
@@ -194,7 +172,7 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
       {state === 'ready' && !notes.length && (
         <div className="rf-notes-empty">
           <p className="rf-notes-empty-title">No notes in this book yet</p>
-          <p className="rf-note-small">A note sits beside the passage it is about: select a sentence first, or write about the pages you are on.</p>
+          <p className="rf-note-small">Your notes go into the notebook, each page beside the place in the book where you started it.</p>
         </div>
       )}
       {state === 'ready' && notes.length > 0 && !shown.length && (
@@ -263,13 +241,10 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
       )}
       {state === 'ready' && (
         <div className="rf-notes-add">
-          <button type="button" className="rf-notes-pill" onClick={() => add('text')}>
-            <Plus size={15} strokeWidth={1.75} aria-hidden="true" />Text
-          </button>
           <button type="button" className="rf-notes-pill" onClick={onNotebook}>
             <NotebookPen size={15} strokeWidth={1.75} aria-hidden="true" />Notebook
           </button>
-          <p className="rf-note-small">At your selection, or the pages you are on</p>
+          <p className="rf-note-small">New notes go into the notebook</p>
         </div>
       )}
     </div>

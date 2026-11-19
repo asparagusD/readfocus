@@ -354,11 +354,3 @@
   outline: var(--focus-ring-width) solid var(--accent);
   outline-offset: var(--focus-ring-offset);
 }
-
-.rf-notes[data-drop] { outline: 2px dashed var(--accent); outline-offset: -6px; background-color: color-mix(in srgb, var(--accent-soft) 40%, transparent); }
-
-.rf-block-grip { display: inline-grid; place-items: center; min-width: 32px; padding: 0 var(--space-1); cursor: grab; }
-
-@media (max-width: 759px), (pointer: coarse) {
-  .rf-block-grip { display: none; } /* dragging is for a desktop; Add to notes is there on every screen */
-}

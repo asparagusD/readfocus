@@ -296,35 +296,32 @@ test('the phase-2 journey, signed in, on the real stack', async ({ page, baseURL
     await expect(page.locator(`.rf-pdf-page[data-page="${citePage}"] .textLayer`)).toContainText(passage.slice(0, 20));
     step('citation moved the book to the cited page');
 
-    // 7. Save the answer to notes, then a drawing note (a notebook page since C37.2).
+    // 7. Save the answer to notes: since C37.3 it is written on a notebook page, Steve beside it; then draw on it.
     const noteSaved = page.waitForResponse(isApi(/\/notes$/, 'POST'), { timeout: 30_000 });
     await steve.getByRole('button', { name: 'Save to notes' }).click();
-    expect((await noteSaved).status(), 'POST /books/:id/notes (Steve)').toBe(201);
+    expect((await noteSaved).status(), 'POST /books/:id/notes (Steve, a notebook page)').toBe(201);
     await expect(steve.getByRole('button', { name: 'Saved to notes' })).toBeDisabled();
-    await page.getByRole('tab', { name: /^Notes/ }).click();
-    const notes = page.getByRole('complementary', { name: 'Notes' });
-    await expect(notes.locator('.rf-note').first()).toContainText(`p. ${citePage}`);
-    const drawingMade = page.waitForResponse(isApi(/\/notes$/, 'POST'), { timeout: 30_000 });
-    await notes.getByRole('button', { name: 'Notebook', exact: true }).click();
     const notebook = page.getByRole('dialog', { name: 'Notebook' });
-    await notebook.getByRole('button', { name: 'New page' }).first().click();
-    expect((await drawingMade).status(), 'POST /books/:id/notes (drawing)').toBe(201);
+    await expect(notebook).toBeVisible();
     const drawingCanvas = notebook.locator('canvas.interactive');
     await expect(drawingCanvas).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    const written = page.waitForResponse(isApi(/\/notes\/[^/]+$/, 'PATCH'), { timeout: 30_000 });
+    expect((await written).status(), 'PATCH /notes/:id (the answer written on the page)').toBe(200);
     await notebook.getByTitle(/^Rectangle —/).click();
     const area = await drawingCanvas.boundingBox();
-    await page.mouse.move(area.x + 40, area.y + 140);
+    await page.mouse.move(area.x + 340, area.y + 440);
     await page.mouse.down();
-    for (let i = 1; i <= 6; i += 1) await page.mouse.move(area.x + 40 + (120 * i) / 6, area.y + 140 + (80 * i) / 6);
+    for (let i = 1; i <= 6; i += 1) await page.mouse.move(area.x + 340 + (120 * i) / 6, area.y + 440 + (80 * i) / 6);
     await page.mouse.up();
     const picture = page.waitForResponse(isApi(/\/note-files$/, 'POST'), { timeout: 30_000 });
     await page.waitForTimeout(1000); // the rectangle's save
     await notebook.getByRole('button', { name: 'Close notebook' }).click();
-    expect((await picture).status(), 'POST /books/:id/note-files (drawing thumbnail)').toBe(201);
-    await page.getByRole('button', { name: /^Notes/ }).click();
+    expect((await picture).status(), 'POST /books/:id/note-files (the page thumbnail)').toBe(201);
+    await page.getByRole('tab', { name: /^Notes/ }).click();
+    const notes = page.getByRole('complementary', { name: 'Notes' });
+    await expect(notes.locator('.rf-note').first()).toContainText(`p. ${citePage}`);
     await expect(notes.getByRole('img', { name: /^Notebook page at / })).toBeVisible({ timeout: 30_000 });
-    step('answer saved to notes, drawing note added');
+    step('answer saved to the notebook, drawn on');
 
     // 8. The notepad follows the book: notes on the cited page are marked there, not two views on.
     const here = notes.locator('.rf-note[data-here]');

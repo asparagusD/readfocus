@@ -1,46 +1,51 @@
-// Writing notes (C22.2b): "Text" adds a note at the selection or the pages shown and opens TipTap, loaded only
-// then; bold, italic, lists, checklists, $…$ and $$…$$ math; autosave 800 ms after the last key; an offline save
-// waits in IndexedDB and goes when the browser is back online. PDF and EPUB; keyboard; phone. Mocked API.
-import { test, expect, openReader } from './fixtures.js';
+// Typed notes a reader already has (C22.2b; since C37.3 none are made, and C37.4 moves them into the notebook):
+// one opens from the notepad's list in TipTap, loaded only then; bold, italic, lists, checklists, $…$ and $$…$$
+// math; autosave 800 ms after the last key; an offline save waits in IndexedDB and goes when the browser is back
+// online. PDF and EPUB; keyboard; phone. Mocked API.
+import { test, expect, openReader, openNotepad } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const editor = (page) => panel(page).getByRole('textbox', { name: /^Note at / });
+const EMPTY = { type: 'doc', content: [{ type: 'paragraph' }] };
 
-async function addNote(page) {
-  await page.getByRole('button', { name: /^Notes/ }).click();
-  await panel(page).getByRole('button', { name: 'Text' }).click();
+/** A typed note from before C37.3 on page 1 (or an EPUB's second section), empty, at version 1. */
+function typed(kind = 'pdf') {
+  const anchors = kind === 'pdf' ? [{ kind: 'pdf', page: 1, quads: [[0, 0, 612, 792]], text: '' }]
+    : [{ kind: 'epub', cfi: 'epubcfi(/6/4!/4/2,/1:0,/1:5)', text: '' }];
+  const start = 1e6; // p. 1, or the EPUB's spine item 1
+  return { id: 'note-1', kind: 'text', scope: 'view', version: 1, orphaned: false, deleted_at: null, urls: {}, anchors,
+    position_start: start, position_end: start + 79_299, content: EMPTY, created_at: '2026-11-14T10:00:00Z' };
+}
+
+async function openTyped(page, api, kind = 'pdf') {
+  api.notes = [typed(kind)];
+  await openReader(page);
+  await openNotepad(page);
+  await panel(page).getByRole('button', { name: /^Edit note at / }).click();
   await expect(editor(page)).toBeFocused();
 }
 
 /** Every node of a TipTap document, depth first. */
 const nodes = (doc) => [doc, ...(doc.content ?? []).flatMap(nodes)];
 
-test('Text adds a note at the pages shown and opens the editor, loaded only then', async ({ page, api }) => {
+test('a typed note opens in the editor from the list, loaded only then', async ({ page, api }) => {
+  api.notes = [typed()];
   const scripts = [];
   page.on('request', (r) => { if (r.resourceType() === 'script') scripts.push(r.url()); });
   await openReader(page);
-  await page.getByRole('button', { name: /^Notes/ }).click();
+  await openNotepad(page);
   expect(scripts.some((u) => u.includes('TextEditor'))).toBe(false);
-  await panel(page).getByRole('button', { name: 'Text' }).click();
+  await expect(panel(page).getByRole('button', { name: 'Text' })).toHaveCount(0); // C37.3: no new typed notes
+  await panel(page).getByRole('button', { name: /^Edit note at / }).click();
   await expect(editor(page)).toBeFocused();
   expect(scripts.some((u) => u.includes('TextEditor'))).toBe(true);
-  await expect.poll(() => api.notePosts.length).toBe(1);
-  const [post] = api.notePosts;
-  expect(post).toMatchObject({ kind: 'text', scope: 'view', content: { type: 'doc', content: [{ type: 'paragraph' }] } });
-  expect(post.anchors.length).toBeGreaterThanOrEqual(1);
-  for (const anchor of post.anchors) {
-    expect(anchor).toMatchObject({ kind: 'pdf', text: '' });
-    expect(anchor.quads[0].slice(0, 2)).toEqual([0, 0]);
-  }
-  expect(Math.floor(post.position_start / 1e6)).toBe(post.anchors[0].page);
   await expect(panel(page).locator('.rf-note[data-editing]')).toHaveCount(1);
+  expect(api.notePosts).toEqual([]);
 });
 
 test('rich text and math autosave 800 ms after the last key, then show as written', async ({ page, api }) => {
-  await openReader(page);
-  await addNote(page);
-  await expect.poll(() => api.notes.length).toBe(1);
+  await openTyped(page, api);
   await page.keyboard.type('The ');
   await page.keyboard.press('Control+b');
   await page.keyboard.type('coefficients');
@@ -76,14 +81,12 @@ test('rich text and math autosave 800 ms after the last key, then show as writte
   await expect(drawn.locator('.rf-note-task')).toHaveText('work through eq. 4.4');
   await page.reload();
   await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor();
-  await page.getByRole('button', { name: 'Notes, 1' }).click();
+  await openNotepad(page);
   await expect(panel(page).locator('.rf-note-read strong')).toHaveText('coefficients');
 });
 
 test('an equation opens its LaTeX on click and keeps the change', async ({ page, api }) => {
-  await openReader(page);
-  await addNote(page);
-  await expect.poll(() => api.notes.length).toBe(1);
+  await openTyped(page, api);
   await page.keyboard.type('Area $x^2$ ');
   await editor(page).locator('.rf-math-node').click();
   const field = panel(page).getByRole('textbox', { name: 'Equation in LaTeX' });
@@ -99,18 +102,6 @@ test('an equation opens its LaTeX on click and keeps the change', async ({ page,
   await expect(editor(page)).toBeVisible(); // Escape in the field does not close the editor
 });
 
-test('a selection anchors the new note to the selected words', async ({ page, api }) => {
-  await openReader(page);
-  await page.getByRole('button', { name: /^Notes/ }).click();
-  await page.locator('.textLayer span', { hasText: 'Line 3 of page 1' }).first().dblclick();
-  await panel(page).getByRole('button', { name: 'Text' }).click();
-  await expect.poll(() => api.notePosts.length).toBe(1);
-  const [post] = api.notePosts;
-  expect(post.scope).toBe('selection');
-  expect(post.anchors[0].text.length).toBeGreaterThan(0);
-  expect(post.anchors[0].quads[0][1]).toBeGreaterThan(0);
-});
-
 /** The notepad's IndexedDB queue. */
 const queued = (page) => page.evaluate(() => new Promise((resolve) => {
   const open = indexedDB.open('rf-notes', 1);
@@ -119,9 +110,7 @@ const queued = (page) => page.evaluate(() => new Promise((resolve) => {
 }));
 
 test('offline: the edit waits in IndexedDB and is saved when the browser is back online', async ({ page, api }) => {
-  await openReader(page);
-  await addNote(page);
-  await expect.poll(() => api.notes.length).toBe(1);
+  await openTyped(page, api);
   api.noteFail = 'abort';
   await page.keyboard.type('Written offline.');
   await expect(panel(page).getByRole('status').filter({ hasText: /^Offline/ })).toBeAttached({ timeout: 4000 });
@@ -134,13 +123,13 @@ test('offline: the edit waits in IndexedDB and is saved when the browser is back
   await expect.poll(() => queued(page)).toEqual([]);
 });
 
-test('keyboard: Text, the format bar as one tab stop, Escape back to the note', async ({ page, api }) => {
+test('keyboard: Enter opens the note, the format bar is one tab stop, Escape goes back to the note', async ({ page, api }) => {
+  api.notes = [typed()];
   await openReader(page);
-  await page.getByRole('button', { name: /^Notes/ }).click();
-  await panel(page).getByRole('button', { name: 'Text' }).focus();
+  await openNotepad(page);
+  await panel(page).getByRole('button', { name: /^Edit note at / }).focus();
   await page.keyboard.press('Enter');
   await expect(editor(page)).toBeFocused();
-  await expect.poll(() => api.notes.length).toBe(1);
   await page.keyboard.type('Keys only.');
   await page.keyboard.press('Shift+Tab'); // back to the format bar's one stop
   await expect(panel(page).getByRole('button', { name: 'Bold (Ctrl+B)' })).toBeFocused();
@@ -157,26 +146,18 @@ test('keyboard: Text, the format bar as one tab stop, Escape back to the note', 
 
 test.describe('epub', () => {
   test.use({ book: 'epub' });
-  test('a note at the EPUB page shown, written and saved', async ({ page, api }) => {
-    await openReader(page);
-    await addNote(page);
-    await expect.poll(() => api.notePosts.length).toBe(1);
-    const [post] = api.notePosts;
-    expect(post).toMatchObject({ kind: 'text', scope: 'view' });
-    expect(post.anchors[0]).toMatchObject({ kind: 'epub', text: '' });
-    expect(post.anchors[0].cfi).toMatch(/^epubcfi\(.*,.*,.*\)$/);
-    expect(Math.floor(post.position_start / 1e6)).toBe(Math.floor(post.position_end / 1e6));
+  test('a note at an EPUB page, written and saved', async ({ page, api }) => {
+    await openTyped(page, api, 'epub');
     await page.keyboard.type('Thoreau, *on the lamp*.');
     await expect.poll(() => api.notePatches.length, { timeout: 3000 }).toBe(1);
+    expect(api.notePatches[0].id).toBe('note-1');
   });
 });
 
 test.describe('phone', () => {
   test.use({ viewport: { width: 375, height: 812 }, colorScheme: 'dark' });
   test('the editor in the sheet: 44 px tools, nothing sideways', async ({ page, api }) => {
-    await openReader(page);
-    await addNote(page);
-    await expect.poll(() => api.notes.length).toBe(1);
+    await openTyped(page, api);
     await page.keyboard.type('Small screen, $e^{i\\pi}$ ');
     // C35.8 (DEBUG_LOG 2026-11-19): all the tools in one frame, so a sheet still sliding up moves them alike.
     const boxes = await panel(page).getByRole('toolbar', { name: 'Format' }).evaluate((bar) =>

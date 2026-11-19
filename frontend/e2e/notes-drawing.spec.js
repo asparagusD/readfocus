@@ -19,9 +19,9 @@ function outside(page) {
   return urls;
 }
 
+/** C37.3: the toolbar's Notes opens the notebook. */
 async function openNotebook(page) {
   await page.getByRole('button', { name: /^Notes/ }).click();
-  await panel(page).getByRole('button', { name: 'Notebook', exact: true }).click();
   await expect(notebook(page)).toBeVisible();
 }
 
@@ -69,13 +69,13 @@ async function still(locator) {
 
 const lastScene = (api, id) => api.notePatches.filter((p) => p.content && (!id || p.id === id)).at(-1)?.content;
 
-test('the notebook takes 70 % with the book blurred and inert; a new page loads Excalidraw from our own origin and saves', async ({ page, api }) => {
+test('Notes opens the notebook over 70 % with the book blurred and inert; a new page loads Excalidraw from our own origin and saves', async ({ page, api }) => {
   const scripts = [];
   page.on('request', (r) => { if (r.resourceType() === 'script') scripts.push(r.url()); });
   const far = outside(page);
   await openReader(page);
   await openNotebook(page);
-  await expect(panel(page)).toHaveCount(0); // the notepad gives way to the notebook
+  await expect(page.getByRole('button', { name: /^Notes/ })).toHaveAttribute('aria-expanded', 'true');
   await expect(notebook(page).getByText('No pages yet')).toBeVisible();
   expect(scripts.some((u) => u.includes('DrawingEditor'))).toBe(false);
   const view = page.viewportSize();
@@ -118,6 +118,7 @@ test('the notebook takes 70 % with the book blurred and inert; a new page loads 
 });
 
 test('leaving a page exports its thumbnail; the list shows it and opens the notebook at that page', async ({ page, api }) => {
+  api.steve.consented = true;
   await openReader(page);
   await openNotebook(page);
   await newPage(page);
@@ -139,7 +140,9 @@ test('leaving a page exports its thumbnail; the list shows it and opens the note
   page.on('request', (r) => { if (r.resourceType() === 'script') scripts.push(r.url()); });
   await page.reload();
   await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor();
-  await page.getByRole('button', { name: 'Notes, 1' }).click();
+  // The list straight from Steve's panel, so no page is opened on the way: the thumbnail needs no Excalidraw.
+  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await page.getByRole('tab', { name: /^Notes/ }).click();
   const thumb = panel(page).getByRole('img', { name: /^Notebook page at / });
   await expect(thumb).toBeVisible();
   expect(await thumb.evaluate((img) => img.naturalWidth > 0)).toBe(true);
@@ -199,17 +202,19 @@ test('a page can be deleted, with Undo', async ({ page, api }) => {
   await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
 });
 
-test('Paste passage puts the selected words in as a text element', async ({ page, api }) => {
+test('Paste passage puts the selected words in again as a text element', async ({ page, api }) => {
   await openReader(page);
-  await page.getByRole('button', { name: /^Notes/ }).click();
   await page.locator('.textLayer span', { hasText: 'Line 3 of page 1' }).first().dblclick();
-  await panel(page).getByRole('button', { name: 'Notebook', exact: true }).click();
-  await newPage(page);
+  // C37.3: Add note starts the page at the selection, the passage already written on it.
+  await page.getByRole('toolbar', { name: 'Highlight the selection' }).getByRole('button', { name: 'Add note' }).click();
+  await expect(canvas(page)).toBeVisible({ timeout: 15_000 });
   await expect.poll(() => api.notePosts.length).toBe(1);
   const words = api.notePosts[0].anchors.map((a) => a.text).join(' ');
   expect(api.notePosts[0].scope).toBe('selection');
+  const copies = () => (lastScene(api)?.elements ?? []).filter((e) => e.type === 'text' && e.text.replace(/\s+/g, ' ') === words).length;
+  await expect.poll(copies, { timeout: 8000 }).toBe(1);
   await notebook(page).getByRole('button', { name: 'Paste passage' }).click();
-  await expect.poll(() => lastScene(api)?.elements.find((e) => e.type === 'text')?.text.replace(/\s+/g, ' '), { timeout: 5000 }).toBe(words);
+  await expect.poll(copies, { timeout: 5000 }).toBe(2);
 });
 
 test('Mermaid to Excalidraw still converts, math included, on the overridden nanoid and katex', async ({ page, api }) => {

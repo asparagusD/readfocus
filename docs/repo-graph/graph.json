@@ -4684,12 +4684,6 @@
       "language": "jsx"
     },
     {
-      "id": "file:frontend/src/steve/NoteGrip.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
       "id": "file:frontend/src/steve/OwnKeyForm.css",
       "type": "file",
       "role": "asset",
@@ -12456,11 +12450,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
-      "to": "file:frontend/src/notes/NotesContext.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/notes/place.js"
     },
     {
@@ -13471,7 +13460,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/notes/fromBook.js"
+      "to": "file:frontend/src/notes/notebookItems.js"
     },
     {
       "type": "imports",
@@ -13886,11 +13875,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/steve/EpubBlockActions.jsx",
-      "to": "file:frontend/src/steve/NoteGrip.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
     },
     {
@@ -13927,11 +13911,6 @@
       "type": "imports",
       "from": "file:frontend/src/steve/LatexDialog.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/NoteGrip.jsx",
-      "to": "file:frontend/src/notes/NotesContext.js"
     },
     {
       "type": "imports",
@@ -13997,11 +13976,6 @@
       "type": "imports",
       "from": "file:frontend/src/steve/PdfBlockActions.jsx",
       "to": "file:frontend/src/steve/LatexDialog.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
-      "to": "file:frontend/src/steve/NoteGrip.jsx"
     },
     {
       "type": "imports",

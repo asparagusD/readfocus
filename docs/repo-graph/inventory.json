@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18479,
+      "size_bytes": 18498,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -257,8 +257,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 452,
-      "size_bytes": 21578,
+      "lines": 453,
+      "size_bytes": 21697,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime). C26.7: MAX_DEVICE_BOOK_FILE_BYTES (300 MB), BROWSER_TEXT_PAGES_PER_BATCH, BROWSER_TEXT_MAX_PAGE_CHARS, BROWSER_TEXT_MAX_PAGES."
     },
@@ -433,10 +433,10 @@
     {
       "path": "backend/focus/quiz.py",
       "language": "python",
-      "lines": 229,
-      "size_bytes": 13795,
+      "lines": 239,
+      "size_bytes": 14364,
       "role": "lib",
-      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz. C36.3 (issue 27): preparing(book, end) is per range: while the ingest runs it waits only when the range ends on or after the last page (or section) the stored chunks reach (stored_reach), or when the book has no page map; a range already stored is quizzed at once. C36.G: the inline top-up makes at most QUIZ_TOPUP_MAX_CHUNKS of the range's missing chunks, spread across it (range_quiz.spread)."
+      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz. C36.3 (issue 27): preparing(book, end) is per range: while the ingest runs it waits only when the range ends on or after the last page (or section) the stored chunks reach (stored_reach), or when the book has no page map; a range already stored is quizzed at once. C36.G: the inline top-up makes at most QUIZ_TOPUP_MAX_CHUNKS of the range's missing chunks, spread across it (range_quiz.spread). C36.7: the quiz is built from the range's questions at once; it waits only with fewer than QUIZ_MIN_QUESTIONS (the chunks nearest the place, one by one); the other gaps go to reader_questions.fill; picked questions counted in one update per count."
     },
     {
       "path": "backend/focus/quiz_me.py",
@@ -649,10 +649,10 @@
     {
       "path": "backend/routers/focus.py",
       "language": "python",
-      "lines": 313,
-      "size_bytes": 15559,
+      "lines": 318,
+      "size_bytes": 15942,
       "role": "router",
-      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet. C26.3: the focus quiz and Quiz me answer 409 {code: preparing} while the book is processed; the focus session stays awaiting its quiz."
+      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet. C26.3: the focus quiz and Quiz me answer 409 {code: preparing} while the book is processed; the focus session stays awaiting its quiz. C36.7: the focus quiz and Quiz me run ingestion_worker.run_questions after the response (the range's gaps)."
     },
     {
       "path": "backend/routers/internal.py",
@@ -889,10 +889,10 @@
     {
       "path": "backend/services/reader_questions.py",
       "language": "python",
-      "lines": 93,
-      "size_bytes": 4220,
+      "lines": 115,
+      "size_bytes": 5300,
       "role": "service",
-      "purpose": "Questions follow the reader (C36.2, issue 27): want(book, chunk, total) records the chunk on screen and the next one (latest place per book, in memory); serve() makes, through the question generation agent, the questions of those that are stored and have none, keeping not-yet-stored ones only for the book being ingested; idempotent through the bank's unique key; never raises."
+      "purpose": "Questions follow the reader (C36.2, issue 27): want(book, chunk, total) records the chunk on screen and the next one (latest place per book, in memory); serve() makes, through the question generation agent, the questions of those that are stored and have none, keeping not-yet-stored ones only for the book being ingested; idempotent through the bank's unique key; never raises. C36.7: fill(book, chunks) keeps a quiz range's gaps (merged), served after the reader's own place."
     },
     {
       "path": "backend/services/reading_place.py",
@@ -1217,8 +1217,8 @@
     {
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
-      "lines": 439,
-      "size_bytes": 23333,
+      "lines": 461,
+      "size_bytes": 24608,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only. C26.3: while the book is processed the quiz is 409 preparing with nothing kept and the session awaiting, then asked once it is done; a quiz already built is still asked."
     },
@@ -1897,8 +1897,8 @@
     {
       "path": "backend/tests/test_reader_questions.py",
       "language": "python",
-      "lines": 161,
-      "size_bytes": 7303,
+      "lines": 171,
+      "size_bytes": 7764,
       "role": "test",
       "purpose": "Tests for reader_questions: the wanted chunks, only stored chunks without questions get them once, the latest place wins, a failing agent, not-yet-stored chunks kept only while ingesting; the slot order (before a waiting job, one waiter), an ingest serving them between batches, a saved place triggering them."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6246,
-      "size_bytes": 1147591,
+      "lines": 6260,
+      "size_bytes": 1149437,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6570,7 +6570,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 830,
-      "size_bytes": 279367,
+      "size_bytes": 279822,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

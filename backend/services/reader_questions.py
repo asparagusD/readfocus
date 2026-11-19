@@ -22,6 +22,7 @@ LOOKAHEAD = 1  # chunks after the one on screen
 
 question_agent = QuestionGenerationAgent()
 _wanted: dict[str, list[int]] = {}  # book id -> chunk indices wanted, in order
+_filling: dict[str, list[int]] = {}  # C36.7: book id -> chunks a quiz range lacked, made after the reader's own
 
 
 def wanted_indices(at: int, total: int) -> list[int]:
@@ -38,8 +39,17 @@ def want(book_id: str, at: int | None, total: int) -> bool:
     return True
 
 
+def fill(book_id: str, indices: list[int]) -> bool:
+    """C36.7: chunks of a quiz range that have no questions, made in the background (added to any already
+    waiting), so the next quiz on that range has them; True when there is something to make."""
+    merged = sorted(set(_filling.get(book_id, [])) | {int(i) for i in indices})
+    if merged:
+        _filling[book_id] = merged
+    return bool(merged)
+
+
 def pending() -> bool:
-    return bool(_wanted)
+    return bool(_wanted or _filling)
 
 
 def _stored(book_id: str, indices: list[int]) -> dict[int, str]:
@@ -82,6 +92,16 @@ async def serve(ingesting: str | None = None) -> int:
         if later and book_id == ingesting and book_id not in _wanted:  # a newer place wins over these
             _wanted[book_id] = later
         served += 1
+    for book_id in list(_filling):  # C36.7: a quiz range's gaps, after every reader's own place
+        indices = _filling.pop(book_id, None)
+        if not indices:
+            continue
+        try:
+            await asyncio.to_thread(make, book_id, indices)
+        except Exception as error:  # noqa: BLE001 - the next quiz on the range makes what it needs
+            print(f"Questions for book {book_id}'s quiz range not made: {error}")
+            continue
+        served += 1
     return served
 
 
@@ -89,5 +109,7 @@ def forget(book_id: str | None = None) -> None:
     """Drop the wants of a book (or every book); for a deleted book and for tests."""
     if book_id is None:
         _wanted.clear()
+        _filling.clear()
     else:
         _wanted.pop(book_id, None)
+        _filling.pop(book_id, None)

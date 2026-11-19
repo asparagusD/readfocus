@@ -138,23 +138,36 @@ def test_a_longer_range_asks_more(api):
     assert sorted({q["chunk_index"] for q in stored_questions(api, sid)}) == [0, 1, 2, 3]
 
 
-def test_a_range_chunk_without_questions_is_generated_on_the_fly(api):
+@pytest.fixture
+def background(api, monkeypatch):
+    """C36.7: the range's gaps are made after the response (reader_questions), by the same fake agent."""
+    from backend.services import reader_questions
+    monkeypatch.setattr(reader_questions, "supabase", api.db)
+    later = []
+
+    def generate(book_id, ids):
+        later.append(sorted(ids))
+        for chunk_id in ids:
+            api.db.tables["question_bank"].extend(bank(int(chunk_id.split("-")[1])))
+    monkeypatch.setattr(reader_questions.question_agent, "run", generate)
+    return later
+
+
+def test_a_range_chunk_without_questions_is_made_after_the_quiz_not_before_it(api, background):
+    """C36.7: the range has enough questions without chunk 2, so the quiz is built at once from them; chunk 2's are
+    made after the response, for the next quiz."""
     api.db.tables["question_bank"] = [q for q in api.db.tables["question_bank"] if q["chunk_index"] != 2]
-
-    def generate(book_id, ids):  # the question generation agent persisting the chunk's rows
-        api.generated.append(list(ids))
-        api.db.tables["question_bank"].extend(bank(2))
-
-    question_bank.question_agent.run = generate
+    question_bank.question_agent.run = lambda book_id, ids: api.generated.append(list(ids))
     sid = read_and_end(api)
     body = api.client.post(f"/focus/{sid}/quiz").json()
-    assert api.generated == [["chunk-2"]]
-    assert len(body["questions"]) == 3 and 2 in {q["chunk_index"] for q in stored_questions(api, sid)}
+    assert api.generated == [] and len(body["questions"]) == 3  # nothing made while the reader waited
+    assert 2 not in {q["chunk_index"] for q in stored_questions(api, sid)}
+    assert background == [["chunk-2"]] and any(q["chunk_index"] == 2 for q in api.db.tables["question_bank"])
 
 
-def test_a_long_range_with_no_questions_tops_up_only_a_few_chunks_spread_across_it(api, monkeypatch):
-    """DEBUG_LOG 2026-11-19 C36.G: a quiz over a stretch read without questions makes those of at most
-    QUIZ_TOPUP_MAX_CHUNKS chunks, first to last, so it answers in seconds, not minutes, at 0.1 CPU."""
+def test_a_range_with_no_questions_waits_only_for_the_chunk_nearest_the_place(api, background, monkeypatch):
+    """C36.7: with fewer than QUIZ_MIN_QUESTIONS in the range, the reader waits for the chunk nearest the bookmark
+    alone (it has enough); the rest of the range (at most QUIZ_TOPUP_MAX_CHUNKS, spread) is made afterwards."""
     monkeypatch.setattr(agent_policy, "QUIZ_TOPUP_MAX_CHUNKS", 2)
     api.db.tables["question_bank"] = []
 
@@ -166,8 +179,17 @@ def test_a_long_range_with_no_questions_tops_up_only_a_few_chunks_spread_across_
     question_bank.question_agent.run = generate
     sid = read_and_end(api, start=1, end=8)
     body = api.client.post(f"/focus/{sid}/quiz").json()
-    assert api.generated == [["chunk-0", "chunk-3"]]
-    assert body["count"] >= 3
+    assert api.generated == [["chunk-3"]] and body["count"] >= 3
+    assert background == [["chunk-0", "chunk-2"]]  # chunks 0, 1 and 2 lacked questions: two of them, spread
+
+
+def test_the_picked_questions_are_counted_in_one_write_per_count(api):
+    sid = read_and_end(api)
+    calls = len(api.db.calls)
+    api.client.post(f"/focus/{sid}/quiz")
+    updates = [c for c in api.db.calls[calls:] if c == ("question_bank", "update")]
+    assert len(updates) == 1  # every picked question had been used 0 times
+    assert sum(q["times_used"] for q in api.db.tables["question_bank"]) == 3
 
 
 def test_a_capped_session_without_a_bookmark_anchor_uses_its_last_place(api):

@@ -7323,6 +7323,11 @@
     {
       "type": "imports",
       "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/services/reader_questions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7779,6 +7784,11 @@
       "type": "imports",
       "from": "file:backend/routers/focus.py",
       "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/services/ingestion_worker.py"
     },
     {
       "type": "imports",
@@ -8799,6 +8809,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_focus_quiz.py",
       "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/services/reader_questions.py"
     },
     {
       "type": "imports",

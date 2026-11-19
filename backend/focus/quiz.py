@@ -12,7 +12,7 @@ from backend.agents.workflow import run_submit
 from backend.focus import range_quiz as rq
 from backend.focus import store
 from backend.focus.scoring import Event, Quiz, ScoringInput, decide
-from backend.services import question_bank
+from backend.services import question_bank, reader_questions
 from backend.services.supabase_client import supabase
 from backend.xp import award, badge_award
 
@@ -95,14 +95,22 @@ def _assemble(user_id: str, book: dict, start: dict, end: dict | None) -> tuple[
     words = sum(s.words for s in slices)
     n = rq.question_count(words)
     candidates = _candidates(user_id, book["id"], slices, texts)
-    # Top up: range chunks with no bank questions (too few in all, or a stretch of the range left uncovered)
-    # get them now from their prose, with the C5 strategies, and persisted. C36.G: at most QUIZ_TOPUP_MAX_CHUNKS of
-    # them, spread across the range, so a quiz over a long stretch read without questions answers in seconds.
+    # C36.7 (fast Quiz me): the quiz is built from the questions the range already has. Only with fewer than
+    # QUIZ_MIN_QUESTIONS does the reader wait, for the chunks nearest the place, one at a time until there are
+    # enough; the range's other chunks without questions (at most QUIZ_TOPUP_MAX_CHUNKS, spread) are made in the
+    # background (reader_questions.fill), so the next quiz on it covers them.
     asked = {c.question.chunk_index for c in candidates}
-    missing = rq.spread([s.chunk_index for s in slices if s.chunk_index not in asked],
-                        agent_policy.QUIZ_TOPUP_MAX_CHUNKS)
-    if missing and question_bank._generate_missing(book["id"], missing):
-        candidates = _candidates(user_id, book["id"], slices, texts)
+    missing = [s.chunk_index for s in slices if s.chunk_index not in asked]
+    made: list[int] = []
+    for index in reversed(missing):
+        if len(candidates) >= agent_policy.QUIZ_MIN_QUESTIONS or len(made) >= agent_policy.QUIZ_TOPUP_MAX_CHUNKS:
+            break
+        made.append(index)
+        if question_bank._generate_missing(book["id"], [index]):
+            candidates = _candidates(user_id, book["id"], slices, texts)
+    later = rq.spread([i for i in missing if i not in made], agent_policy.QUIZ_TOPUP_MAX_CHUNKS)
+    if later:
+        reader_questions.fill(book["id"], later)
     mix, target = _preferences(user_id, book["id"])
     picked = rq.select(candidates, n, words, mix, target)
     questions = [assembler.session_question(c.question) for c in picked] or [assembler.fallback_question()]
@@ -118,9 +126,11 @@ def _keep(session_id: str, user_id: str, book_id: str, questions: list[dict], wo
         "id": session_id, "user_id": user_id, "book_id": book_id, "chunk_start_index": min(indices),
         "chunk_end_index": max(indices), "assigned_words": round(words), "status": "testing",
         "started_at": started_at, "test_questions": questions}).execute()
+    by_use: dict[int, list[str]] = {}  # C36.7: one write per distinct count, not one per question
     for c in picked:
-        supabase.table("question_bank").update({"times_used": (c.question.times_used or 0) + 1}).eq(
-            "id", c.question.id).execute()
+        by_use.setdefault(c.question.times_used or 0, []).append(c.question.id)
+    for used, ids in by_use.items():
+        supabase.table("question_bank").update({"times_used": used + 1}).in_("id", ids).execute()
 
 
 class Preparing(Exception):

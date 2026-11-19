@@ -5,7 +5,7 @@ session to its quiz on any event or GET; an open session with no event for two h
 from datetime import datetime
 from typing import Annotated, Any, Literal, cast
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -13,7 +13,7 @@ from backend.agents.question_generation.assembler import public_question
 from backend.dependencies import get_current_user, require_model
 from backend.focus import policy, quiz, quiz_me, store
 from backend.routers.sessions import EpubAnchor, PdfAnchor
-from backend.services import body_start
+from backend.services import body_start, ingestion_worker
 from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 
@@ -215,8 +215,10 @@ def _quiz(user_id: str, session_id: str) -> dict:
 
 
 @router.post("/{session_id}/quiz")
-async def focus_quiz(session_id: str, user_id: str = Depends(get_current_user)):
-    return await run_in_threadpool(_quiz, user_id, session_id)
+async def focus_quiz(session_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+    built = await run_in_threadpool(_quiz, user_id, session_id)
+    background_tasks.add_task(ingestion_worker.run_questions)  # C36.7: the range's gaps, after the response
+    return built
 
 
 @router.post("/{session_id}/quiz/answers", dependencies=[Depends(require_model)])
@@ -268,9 +270,12 @@ def _quiz_me(user_id: str, req: QuizMeRequest) -> dict:
 
 
 @router.post("/quiz-me")
-async def quiz_me_start(req: QuizMeRequest, user_id: str = Depends(get_current_user)):
+async def quiz_me_start(req: QuizMeRequest, background_tasks: BackgroundTasks,
+                        user_id: str = Depends(get_current_user)):
     """C23.7b (F13): a quiz from the chapter's start, or since the last quiz, to the reader's place; no points."""
-    return await run_in_threadpool(_quiz_me, user_id, req)
+    built = await run_in_threadpool(_quiz_me, user_id, req)
+    background_tasks.add_task(ingestion_worker.run_questions)  # C36.7: the range's gaps, after the response
+    return built
 
 
 @router.get("/current")

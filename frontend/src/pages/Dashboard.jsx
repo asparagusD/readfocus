@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, Dot, ResponsiveContainer, XAxis, YAxis } from 'recharts';
-import { fetchApi } from '../lib/api';
+import { usePageData } from '../lib/pageData';
 import { openAheadProps } from '../reader/openAhead';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -87,28 +86,8 @@ function DashboardSkeleton() {
  */
 export function Dashboard() {
   useDocumentTitle('Dashboard');
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    fetchApi('/dashboard')
-      .then((d) => {
-        setData(d);
-        setError(null);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [attempt]);
-
-  const retry = () => {
-    setLoading(true);
-    setAttempt((n) => n + 1);
-  };
+  // C35.5b (issue 20): the last data at once on a return, refreshed behind it.
+  const { data, loading, error, reload: retry } = usePageData('/dashboard');
 
   if (loading) return <DashboardSkeleton />;
 

@@ -18,6 +18,7 @@ import { forgetBookFile, saveBookFile } from '../reader/fileStore';
 import { forgetCachedBookFile, keepBookFile } from '../reader/fileCache';
 import { DIRECT, uploadBook } from '../lib/directUpload';
 import { openAheadProps } from '../reader/openAhead';
+import { cached, load, remember } from '../lib/pageData';
 import { DEVICE_MAX_BYTES, epubTexts, isBig, pdfTexts, sendTexts, sha256Hex } from '../reader/browserText';
 import './Library.css';
 
@@ -76,8 +77,9 @@ function ShelfSkeleton() {
 
 export function Library() {
   useDocumentTitle('Your shelf');
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // C35.5b (issue 20): the shelf as last seen at once on a return, refreshed behind it.
+  const [books, setBooks] = useState(() => cached('/books') ?? []);
+  const [loading, setLoading] = useState(() => cached('/books') === undefined);
   const [error, setError] = useState(null);
 
   const { toast } = useToast();
@@ -104,11 +106,11 @@ export function Library() {
 
   const loadBooks = useCallback(async () => {
     try {
-      const data = await fetchApi('/books');
+      const data = await load('/books');
       setBooks(data);
       setError(null);
     } catch (err) {
-      setError('We couldn’t open your shelf just now.');
+      if (cached('/books') === undefined) setError('We couldn’t open your shelf just now.'); // else the last shelf stays
       console.error(err);
     } finally {
       setLoading(false);
@@ -118,6 +120,11 @@ export function Library() {
   useEffect(() => {
     loadBooks();
   }, [loadBooks]);
+
+  // The kept shelf follows what this page changes itself: an upload, a removal, a status poll.
+  useEffect(() => {
+    if (!loading && !error) remember('/books', books);
+  }, [books, loading, error]);
 
   const retry = () => {
     setLoading(true);

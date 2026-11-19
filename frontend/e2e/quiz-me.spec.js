@@ -91,3 +91,36 @@ test('Quiz me is not offered in focus mode', async ({ page }) => {
   await page.getByRole('switch', { name: 'Focus mode' }).click();
   await expect(page.getByRole('button', { name: 'Quiz me' })).toHaveCount(0);
 });
+
+test('opening Quiz me asks the server to start the questions at the place shown', async ({ page }) => {
+  await mockQuizMe(page);
+  const prepared = [];
+  await page.route('http://localhost:8000/focus/quiz-me/prepare', (route) => {
+    if (route.request().method() === 'POST') prepared.push(route.request().postDataJSON());
+    return route.request().method() === 'OPTIONS'
+      ? route.fulfill({ status: 204, headers: CORS })
+      : route.fulfill({ status: 202, headers: { ...CORS, 'Content-Type': 'application/json' }, body: '{"queued": 2}' });
+  });
+  await openReader(page);
+  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await expect(page.getByRole('dialog', { name: 'Quiz me' })).toBeVisible();
+  await expect.poll(() => prepared.length).toBe(1);
+  expect(prepared[0].book_id).toBe('e2e-book');
+  expect(prepared[0].anchor.kind).toBeTruthy();
+});
+
+test('the quiz shows the questions Quiz me handed it; opened by its address it reads them from the server', async ({ page }) => {
+  await mockQuizMe(page);
+  const reads = [];
+  page.on('request', (r) => { if (r.method() === 'GET' && r.url().endsWith('/sessions/qm-1')) reads.push(r.url()); });
+  await openReader(page);
+  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await page.getByRole('dialog', { name: 'Quiz me' }).getByRole('button', { name: 'This chapter' }).click();
+  await expect(page).toHaveURL(/\/quiz\/qm-1$/);
+  await expect(page.getByText('What did the lamp throw?')).toBeVisible();
+  expect(reads).toHaveLength(0); // C36.7c: no second trip for the questions just built
+  await page.evaluate(() => window.history.replaceState(null, '')); // as a visit by address: nothing handed over
+  await page.reload();
+  await expect(page.getByText('What did the lamp throw?')).toBeVisible();
+  expect(reads).toHaveLength(1);
+});

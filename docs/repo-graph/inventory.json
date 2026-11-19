@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18440,
+      "size_bytes": 18479,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -849,10 +849,10 @@
     {
       "path": "backend/services/ocr_pages.py",
       "language": "python",
-      "lines": 136,
-      "size_bytes": 7202,
+      "lines": 149,
+      "size_bytes": 7657,
       "role": "service",
-      "purpose": "OCR text for scanned PDF pages (C19.4): skip_boxes (math, code, table and figure regions, not the full-page scan), clean_page (drops unsure, over-long, off-page and skipped words, then garbled lines; text in paragraphs, region boxes, compact words), region_rows, load_texts and record_scanned (best-effort before migration 022), store_page (page_ocr upsert, text regions replaced), done_pages, ready_to_reingest (a fully scanned cloud book with no chunks whose every scanned page has text)."
+      "purpose": "OCR text for scanned PDF pages (C19.4): skip_boxes (math, code, table and figure regions, not the full-page scan), clean_page (drops unsure, over-long, off-page and skipped words, then garbled lines; text in paragraphs, region boxes, compact words), region_rows, load_texts and record_scanned (best-effort before migration 022), store_page (page_ocr upsert, text regions replaced), done_pages, ready_to_reingest (a fully scanned cloud book with no chunks whose every scanned page has text). C36.G: load_texts and done_pages read page_ocr 1000 rows at a time in page order (_rows), past PostgREST's cap."
     },
     {
       "path": "backend/services/pdf_text.py",
@@ -1785,8 +1785,8 @@
     {
       "path": "backend/tests/test_ocr_pages.py",
       "language": "python",
-      "lines": 206,
-      "size_bytes": 10561,
+      "lines": 232,
+      "size_bytes": 11614,
       "role": "test",
       "purpose": "Pytest for C19.4: clean_page (paragraphs, unsure/long/off-page/skipped words, garbled lines), skip_boxes ignoring the full-page scan, ready_to_reingest cases, scanned pages flagged and OCR text standing in at extraction, the POST/GET endpoints (store, replace, read back, refusals, owner only), re-ingest on the last page, a book with chunks kept, the pages-only session start, and ingestion recording scanned pages and skipping the region job after OCR. C26.6c: the pages-only start test removed (GET /books/{id}/open covers it)."
     },
@@ -2265,8 +2265,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5557,
-      "size_bytes": 261378,
+      "lines": 5599,
+      "size_bytes": 263563,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6244,
-      "size_bytes": 1146678,
+      "lines": 6245,
+      "size_bytes": 1147205,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6570,7 +6570,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 830,
-      "size_bytes": 279255,
+      "size_bytes": 279367,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

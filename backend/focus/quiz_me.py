@@ -75,8 +75,8 @@ def since_last_start(user_id: str, book: dict) -> dict:
 def build(user_id: str, book: dict, scope: Scope, place: dict) -> dict:
     """A new Quiz me quiz {session_id, questions (stored form), count, words_in_range}.
 
-    C26.3: quiz.Preparing while the book is processed (nothing is made)."""
-    if quiz.preparing(book):
+    C26.3: quiz.Preparing while the range up to the place is not stored yet (C36.3; nothing is made)."""
+    if quiz.preparing(book, place):
         raise quiz.Preparing
     start = chapter_start(book, place) if scope == "chapter" else since_last_start(user_id, book)
     if start["kind"] != place["kind"] or store.order_key(start) >= store.order_key(place):

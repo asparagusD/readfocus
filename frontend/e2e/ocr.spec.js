@@ -54,7 +54,7 @@ test.describe('a fully scanned book', () => {
     await expect(page.getByRole('button', { name: 'Done reading' })).toHaveCount(0);
     await expect(page.getByText(/^Reading this scan: [0-2] of 2 pages$/)).toBeVisible();
     if (shots) await page.screenshot({ path: `${shots}/ocr-pages-only-${page.viewportSize().width}.png` });
-    await expect(page.getByText('Preparing quizzes…')).toBeVisible({ timeout: 140_000 });
+    await expect(page.getByText('Preparing the book…')).toBeVisible({ timeout: 140_000 });
     expect(api.ocrPosts.map((p) => p.page).sort()).toEqual([1, 2]);
     const [one, two] = api.ocrPosts;
     console.log(`OCR timing: first page ${((one.at - engineAsked) / 1000).toFixed(1)} s with the engine and model loading, `

@@ -1836,3 +1836,31 @@ calls, and about 21 failed Groq calls. All free tier, $0.
 
 Not measured: the frontend, cold start, Render, concurrent users, and
 `evaluate-single`.
+
+## C36: questions follow the reader (2026-11-19, issue 27)
+
+`scripts/dev/measure_c36.py` in the `readfocus-c25-measure` image, repo mounted read-only, `--network none`,
+`--memory=512m --memory-swap=512m --cpus=0.1`, the real pipeline on the in-memory database (nothing reaches
+Supabase). The book's job runs as an upload hands it on (`ingestion_worker.run`); a reader opens it at once on the
+given page and saves the place once a second, as the reader does (want the chunk and the next one, then
+`ingestion_worker.run_questions` as a task). Region map not run. Interactive Linear Algebra (PDF, 4.3 MB, 455 pages,
+184 chunks):
+
+| Reader on | Book ready (first batch) | Page's chunk stored | **Quiz on that page possible** (its chunk and the next questioned) | Ingest done (no questions) | Peak RSS | Container peak |
+|---|---|---|---|---|---|---|
+| p. 1 | 107.4 s | 107.4 s | **123.0 s** | 224.7 s | 388.3 MiB | 336.0 MiB |
+| p. 200 | 106.6 s | 155.2 s | **164.4 s** | 225.8 s | 356.5 MiB | 305.1 MiB |
+
+Before (C26.G, same image and limits): a quiz on any page waited for the whole ingest, **1,018.1 s**, which made
+1,655 questions for all 184 chunks; here 10 and 19 questions are made, for the chunks read. The ingest itself takes
+225 s instead of 1,018 s. Questions for a page come at the next batch boundary of a running ingest (batches of 16
+chunks, about 11 s each here). Peak RSS is within the C26.G range (367-396 MiB); not killed.
+
+A first run of the harness had the simulated reader await the slot, so it saw the questions only when the ingest
+ended (229.4 and 228.0 s); fixed in the script (the endpoint runs it as a task after the response) before the runs
+above.
+
+Command: `docker run --rm --network none --memory=512m --memory-swap=512m --cpus=0.1 -v <repo>:/repo:ro -w /repo
+-e PYTHONPATH=/repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e EMBED_PRELOAD=0
+-e INGEST_SWEEP=0 readfocus-c25-measure python scripts/dev/measure_c36.py --book
+samples/technical/interactive-linear-algebra.pdf --page 1|200`.

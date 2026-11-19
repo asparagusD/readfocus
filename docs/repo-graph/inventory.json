@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 966,
-    "inventoried": 823,
+    "tracked": 969,
+    "inventoried": 826,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18243,
+      "size_bytes": 18334,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -121,8 +121,8 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 297,
-      "size_bytes": 14901,
+      "lines": 301,
+      "size_bytes": 15172,
       "role": "doc",
       "purpose": "Product overview (C15.4, phase 2 in C25.1): the honest positioning (algorithmic quizzes, grading, planning and scoring on our servers; Steve alone uses Google's Gemini, opt-in, free tier or the reader's key), live URL, how it works in nine steps (upload and conversion, plan, the original view, focus, Steve, test, grade, adapt, progress), the architecture in brief, local setup, the standard and live checks, and limitations."
     },
@@ -433,18 +433,18 @@
     {
       "path": "backend/focus/quiz.py",
       "language": "python",
-      "lines": 207,
-      "size_bytes": 12420,
+      "lines": 227,
+      "size_bytes": 13574,
       "role": "lib",
-      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz."
+      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz. C36.3 (issue 27): preparing(book, end) is per range: while the ingest runs it waits only when the range ends on or after the last page (or section) the stored chunks reach (stored_reach), or when the book has no page map; a range already stored is quizzed at once."
     },
     {
       "path": "backend/focus/quiz_me.py",
       "language": "python",
       "lines": 89,
-      "size_bytes": 4327,
+      "size_bytes": 4363,
       "role": "lib",
-      "purpose": "Quiz me (C23.7b, FOCUS_RULES F13): the range for a quiz outside focus mode, ending at the reader's place and starting at the contents entry holding it ('chapter') or where the last quiz on the book ended ('since_last': a focus session's bookmark, else the PDF page or contents entry of the chunk after the last test's chunks, else the body start); refuses an empty range (NothingToAsk); builds the questions with focus/quiz.py and keeps them on a new sessions row for submit-answers. Never scored for points. C26.3: raises quiz.Preparing while the book is processed; nothing is made."
+      "purpose": "Quiz me (C23.7b, FOCUS_RULES F13): the range for a quiz outside focus mode, ending at the reader's place and starting at the contents entry holding it ('chapter') or where the last quiz on the book ended ('since_last': a focus session's bookmark, else the PDF page or contents entry of the chunk after the last test's chunks, else the body start); refuses an empty range (NothingToAsk); builds the questions with focus/quiz.py and keeps them on a new sessions row for submit-answers. Never scored for points. C26.3: raises quiz.Preparing while the book is processed; nothing is made. C36.3: it waits (quiz.Preparing) only while the range up to the place is not stored yet."
     },
     {
       "path": "backend/focus/range_quiz.py",
@@ -585,10 +585,10 @@
     {
       "path": "backend/regions/prose.py",
       "language": "python",
-      "lines": 364,
-      "size_bytes": 17632,
+      "lines": 384,
+      "size_bytes": 18586,
       "role": "lib",
-      "purpose": "Prose-only agent text (C18.6): placeholder() writes '[Equation 3.2, p. 45]', '[Code listing, p. 46]', '[Figure 3.4: caption, p. 47]' ('sec. N' for EPUB); page_spans finds a PDF page's non-prose pypdf lines and inline math by text; pdf_prose and epub_prose (by element path) give each chunk {prose, anchors} (PDF pages and per-page character spans, EPUB start and end CFIs with A4 locations, the placeholders it holds); apply replaces spans once per region; sentence_counts counts garbled and placeholder sentences. Pure."
+      "purpose": "Prose-only agent text (C18.6): placeholder() writes '[Equation 3.2, p. 45]', '[Code listing, p. 46]', '[Figure 3.4: caption, p. 47]' ('sec. N' for EPUB); page_spans finds a PDF page's non-prose pypdf lines and inline math by text; pdf_prose and epub_prose (by element path) give each chunk {prose, anchors} (PDF pages and per-page character spans, EPUB start and end CFIs with A4 locations, the placeholders it holds); apply replaces spans once per region; sentence_counts counts garbled and placeholder sentences. C36.1: pdf_page_anchors gives a PDF's chunks the same pages and spans with no regions, for ingest. Pure."
     },
     {
       "path": "backend/routers/__init__.py",
@@ -650,7 +650,7 @@
       "path": "backend/routers/focus.py",
       "language": "python",
       "lines": 313,
-      "size_bytes": 15558,
+      "size_bytes": 15559,
       "role": "router",
       "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet. C26.3: the focus quiz and Quiz me answer 409 {code: preparing} while the book is processed; the focus session stays awaiting its quiz."
     },
@@ -705,10 +705,10 @@
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 130,
-      "size_bytes": 7184,
+      "lines": 138,
+      "size_bytes": 7733,
       "role": "router",
-      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days. C34.3 (issue 13): GET /books/{id}/open also returns `file`, the original's signed URL as /file gives it (None for a device-only book or a failed signing), signed in parallel with the progress read. C35.8a: /open's file URL comes from file_url.signed_url, the same URL for a book for up to an hour, with the seconds it still lives."
+      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days. C34.3 (issue 13): GET /books/{id}/open also returns `file`, the original's signed URL as /file gives it (None for a device-only book or a failed signing), signed in parallel with the progress read. C35.8a: /open's file URL comes from file_url.signed_url, the same URL for a book for up to an hour, with the seconds it still lives. C36.2b: every saved place (PUT /position) wants the questions of its chunk and the next one after the response (follow_reader -> reader_questions, ingestion_worker.run_questions)."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -761,10 +761,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 360,
-      "size_bytes": 17877,
+      "lines": 358,
+      "size_bytes": 18252,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests. C36.1 (issue 27): ingestion makes no questions (they follow the reader) and gives a PDF's chunks their page anchors (pages, spans) from the page texts it read (prose.pdf_page_anchors), so a page maps to its chunk before the region map. C36.2b: between batches it serves the reader's wanted questions (reader_questions.serve), so a reader of a book being processed gets them at the next batch."
     },
     {
       "path": "backend/services/book_purge.py",
@@ -817,10 +817,10 @@
     {
       "path": "backend/services/ingestion_worker.py",
       "language": "python",
-      "lines": 188,
-      "size_bytes": 7544,
+      "lines": 212,
+      "size_bytes": 8635,
       "role": "service",
-      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job. C27.1: a priority slot instead of the lock: waiting ingest jobs before waiting regions jobs, each in arrival order, a cancelled waiter skipped; defer(job) queues a regions job from inside the worker (read from Storage on its turn), drain() waits for the deferred ones. C27.2: _held keeps the ids of the jobs this process holds (waiting or running, deferred ones from defer on); the sweep skips them, so a waiting job is never claimed twice or failed for waiting."
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job. C27.1: a priority slot instead of the lock: waiting ingest jobs before waiting regions jobs, each in arrival order, a cancelled waiter skipped; defer(job) queues a regions job from inside the worker (read from Storage on its turn), drain() waits for the deferred ones. C27.2: _held keeps the ids of the jobs this process holds (waiting or running, deferred ones from defer on); the sweep skips them, so a waiting job is never claimed twice or failed for waiting. C36.2b: run_questions serves the reader's wanted questions (reader_questions) in the slot ahead of any waiting job (QUESTIONS_FIRST), with at most one waiter per loop."
     },
     {
       "path": "backend/services/lookup.py",
@@ -873,10 +873,10 @@
     {
       "path": "backend/services/prose_job.py",
       "language": "python",
-      "lines": 121,
-      "size_bytes": 6227,
+      "lines": 133,
+      "size_bytes": 6918,
       "role": "service",
-      "purpose": "Prose-only text per chunk after the regions job (C18.6b): load() reads the book's page_regions and chunks (paged by 1000), plan() builds prose and anchors without writing, rebuild(book, file_bytes) applies it: through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises."
+      "purpose": "Prose-only text per chunk after the regions job (C18.6b): load() reads the book's page_regions and chunks (paged by 1000), plan() builds prose and anchors without writing, rebuild(book, file_bytes) applies it: through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises. C36.5 (issue 27): a changed chunk is questioned again only when it already has questions (questions follow the reader); others get prose and vectors only."
     },
     {
       "path": "backend/services/question_bank.py",
@@ -885,6 +885,14 @@
       "size_bytes": 4483,
       "role": "service",
       "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session only if it has none yet (otherwise returns the stored test; issue 34) and increments times_used for the run that stored."
+    },
+    {
+      "path": "backend/services/reader_questions.py",
+      "language": "python",
+      "lines": 93,
+      "size_bytes": 4220,
+      "role": "service",
+      "purpose": "Questions follow the reader (C36.2, issue 27): want(book, chunk, total) records the chunk on screen and the next one (latest place per book, in memory); serve() makes, through the question generation agent, the questions of those that are stored and have none, keeping not-yet-stored ones only for the book being ingested; idempotent through the bank's unique key; never raises."
     },
     {
       "path": "backend/services/reading_place.py",
@@ -1033,8 +1041,8 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 113,
-      "size_bytes": 3337,
+      "lines": 123,
+      "size_bytes": 3616,
       "role": "test",
       "purpose": "Offline test setup: dummy environment (ingestion sweep and model preload off), a fake Supabase client, a guard that blocks non-loopback connections, and an autouse fixture that marks the embedding model ready."
     },
@@ -1209,8 +1217,8 @@
     {
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
-      "lines": 396,
-      "size_bytes": 21038,
+      "lines": 420,
+      "size_bytes": 22448,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only. C26.3: while the book is processed the quiz is 409 preparing with nothing kept and the session awaiting, then asked once it is done; a quiz already built is still asked."
     },
@@ -1233,8 +1241,8 @@
     {
       "path": "backend/tests/test_api_quiz_me.py",
       "language": "python",
-      "lines": 99,
-      "size_bytes": 4654,
+      "lines": 108,
+      "size_bytes": 5230,
       "role": "test",
       "purpose": "API tests for POST /focus/quiz-me (C23.7b): this chapter from its contents entry, graded by submit-answers with mastery moved and no points; since the last focus bookmark, the body start, or after a test's chunks; nothing to ask refused with 409; another reader's book, a bad scope and extra keys refused. C26.3: Quiz me is 409 preparing while the book is processed."
     },
@@ -1329,8 +1337,8 @@
     {
       "path": "backend/tests/test_backfill_prose.py",
       "language": "python",
-      "lines": 113,
-      "size_bytes": 5181,
+      "lines": 116,
+      "size_bytes": 5447,
       "role": "test",
       "purpose": "Pytest for scripts/backfill_prose.py on the in-memory database: pending books, a dry run that only reads, a book without regions getting its regions job and prose, a second run changing nothing, a regions job running elsewhere left alone, one failing book not stopping the run, the environment guard."
     },
@@ -1489,8 +1497,8 @@
     {
       "path": "backend/tests/test_device_books.py",
       "language": "python",
-      "lines": 167,
-      "size_bytes": 7533,
+      "lines": 166,
+      "size_bytes": 7439,
       "role": "test",
       "purpose": "Pytest on MemoryDb (C26.7): a device book is made with no file; bad sizes, hashes, types and keys refused; text in batches and the last one ingests from it (chunks, ready, no region map); page order and empty pages; a resent batch replaces its pages; another reader's, a server-read or a ready book refused; bad batches refused; a failed browser-text book resumes from its stored text; a device book read on the server still cannot resume."
     },
@@ -1649,16 +1657,16 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 312,
-      "size_bytes": 13225,
+      "lines": 315,
+      "size_bytes": 13599,
       "role": "test",
       "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume. C17.6: no structure leaves block_paths empty too."
     },
     {
       "path": "backend/tests/test_ingestion_worker.py",
       "language": "python",
-      "lines": 303,
-      "size_bytes": 13533,
+      "lines": 302,
+      "size_bytes": 13439,
       "role": "test",
       "purpose": "Pytest on the in-memory database: the sweep resumes an abandoned job, leaves a live one and gives up at the attempt cap; a failing sweep does not raise; INGEST_SWEEP; upload creates and runs a job and /status reports it, including a running job's cursor and progress; /resume finishes a failed job, starts a job for a stuck book, refuses a done or live job (409) and another user's book (404). C27.1: a waiting ingest before an earlier regions job; an ingest on the worker queues its region map behind the next upload, read from Storage; outside the worker a region map runs at once; a cancelled waiter does not hold up the next. C27.2: a job waiting in the worker is not swept again (each runs once, attempts unchanged; a 5 s limit turns the old deadlock into a failure); a job no longer held is swept as before."
     },
@@ -1681,8 +1689,8 @@
     {
       "path": "backend/tests/test_jobs_off_loop.py",
       "language": "python",
-      "lines": 198,
-      "size_bytes": 7766,
+      "lines": 197,
+      "size_bytes": 7672,
       "role": "test",
       "purpose": "Pytest (C29.1, issue 1): with every in-memory database call, upload and parse made to block 0.3 s, a 10 ms heartbeat on the same event loop is never more than 0.15 s late while a PDF or EPUB ingests (C29.1a), while a PDF or EPUB region map runs or is queued, or during POST /books/upload (C29.1b)."
     },
@@ -1769,8 +1777,8 @@
     {
       "path": "backend/tests/test_ocr_pages.py",
       "language": "python",
-      "lines": 210,
-      "size_bytes": 10700,
+      "lines": 206,
+      "size_bytes": 10561,
       "role": "test",
       "purpose": "Pytest for C19.4: clean_page (paragraphs, unsure/long/off-page/skipped words, garbled lines), skip_boxes ignoring the full-page scan, ready_to_reingest cases, scanned pages flagged and OCR text standing in at extraction, the POST/GET endpoints (store, replace, read back, refusals, owner only), re-ingest on the last page, a book with chunks kept, the pages-only session start, and ingestion recording scanned pages and skipping the region job after OCR. C26.6c: the pages-only start test removed (GET /books/{id}/open covers it)."
     },
@@ -1833,8 +1841,8 @@
     {
       "path": "backend/tests/test_prose_job.py",
       "language": "python",
-      "lines": 143,
-      "size_bytes": 6384,
+      "lines": 151,
+      "size_bytes": 6878,
       "role": "test",
       "purpose": "Pytest for backend/services/prose_job.py and the evaluator's passage: prose, anchors and garbled counts stored, only changed chunks embedded again and re-questioned (unused questions deleted, used kept), idempotent second run, a book without regions left alone, after_regions never raising, load_passage reading prose, reference sentences without placeholders or garbled text."
     },
@@ -1877,6 +1885,14 @@
       "size_bytes": 7001,
       "role": "test",
       "purpose": "Pytest for the pure range quiz: the count formula, placeholders, PDF/EPUB/contents slices, positions in the range, stratified selection with mix, unused, difficulty and dedupe, confidence-weighted correct answers."
+    },
+    {
+      "path": "backend/tests/test_reader_questions.py",
+      "language": "python",
+      "lines": 161,
+      "size_bytes": 7303,
+      "role": "test",
+      "purpose": "Tests for reader_questions: the wanted chunks, only stored chunks without questions get them once, the latest place wins, a failing agent, not-yet-stored chunks kept only while ingesting; the slot order (before a waiting job, one waiter), an ingest serving them between batches, a saved place triggering them."
     },
     {
       "path": "backend/tests/test_reading_place.py",
@@ -2217,8 +2233,8 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
-      "lines": 466,
-      "size_bytes": 30576,
+      "lines": 476,
+      "size_bytes": 31303,
       "role": "doc",
       "purpose": "Architecture (C15.4, phase 2 in C25.1): the system with Gemini for Steve only, the five agents' pure decide() contracts, the LangGraph diagram, event flows per endpoint, ingestion, conversions to EPUB, the region map, the data model through migration 033, the original view (PDF.js, foliate-js, OCR; the book view retired), word lookup, annotations, notes, Steve, focus mode, XP and leagues, and the security layers."
     },
@@ -2233,8 +2249,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1838,
-      "size_bytes": 105964,
+      "lines": 1866,
+      "size_bytes": 108005,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
@@ -2305,8 +2321,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6198,
-      "size_bytes": 1134290,
+      "lines": 6239,
+      "size_bytes": 1143324,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2450,7 +2466,7 @@
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
       "lines": 515,
-      "size_bytes": 33534,
+      "size_bytes": 33535,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed."
     },
@@ -2602,7 +2618,7 @@
       "path": "frontend/e2e/library.spec.js",
       "language": "javascript",
       "lines": 466,
-      "size_bytes": 27827,
+      "size_bytes": 27840,
       "role": "config",
       "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs. C30.2: the author is optional (the title alone is checked; a blank author is sent and the returned one shown) and an authorless book shows \"Unknown author\"."
     },
@@ -2690,9 +2706,9 @@
       "path": "frontend/e2e/ocr.spec.js",
       "language": "javascript",
       "lines": 65,
-      "size_bytes": 3797,
+      "size_bytes": 3798,
       "role": "config",
-      "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page. C26.5a: the scanned book opens through /open and then says \"Preparing quizzes…\"."
+      "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page. C26.5a: the scanned book opens through /open and then says \"Preparing quizzes (C36.4: “Preparing the book”)…\"."
     },
     {
       "path": "frontend/e2e/open-ahead.spec.js",
@@ -2745,10 +2761,10 @@
     {
       "path": "frontend/e2e/processing.spec.js",
       "language": "javascript",
-      "lines": 87,
-      "size_bytes": 5293,
+      "lines": 106,
+      "size_bytes": 6538,
       "role": "config",
-      "purpose": "Playwright, mocked API (C26.3): a book still being processed opens at once with no session start (PDF and EPUB), shows \"Preparing quizzes… 40%\" and no Suggested next, saves its place on the book and resumes there after a reload; the notice goes once processing is done; Quiz me says the questions are being prepared and the book stays open; a focus session ended while they are prepared is kept and its questions appear when ready; at 375 the notice fits with no sideways scroll."
+      "purpose": "Playwright, mocked API (C26.3): a book still being processed opens at once with no session start (PDF and EPUB), shows \"Preparing quizzes (C36.4: “Preparing the book”)… 40%\" and no Suggested next, saves its place on the book and resumes there after a reload; the notice goes once processing is done; Quiz me says the questions are being prepared and the book stays open; a focus session ended while they are prepared is kept and its questions appear when ready; at 375 the notice fits with no sideways scroll. C36.4: Quiz me on the pages read opens its quiz while the book is still prepared."
     },
     {
       "path": "frontend/e2e/quiz-me.spec.js",
@@ -3202,9 +3218,9 @@
       "path": "frontend/src/components/BookCover.jsx",
       "language": "jsx",
       "lines": 74,
-      "size_bytes": 3140,
+      "size_bytes": 3151,
       "role": "component",
-      "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative. C26.3: a processing cover is named \"quizzes being prepared\"."
+      "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative. C26.3: a processing cover is named \"quizzes being prepared\" (C36.4: \"being prepared\")."
     },
     {
       "path": "frontend/src/components/ErrorScreen.css",
@@ -3626,7 +3642,7 @@
       "path": "frontend/src/focus/ReadyModal.jsx",
       "language": "jsx",
       "lines": 60,
-      "size_bytes": 2922,
+      "size_bytes": 2937,
       "role": "asset",
       "purpose": "\"Ready for your questions?\" (C23.6b): builds the focus quiz once to say how many questions and about how long, the points so far and how many right answers keep them; Not now, keep my place / Start questions. C26.3: a 409 preparing says the questions are still being prepared and the session is kept, and asks again every 15 s until they come."
     },
@@ -4922,9 +4938,9 @@
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
       "lines": 525,
-      "size_bytes": 25719,
+      "size_bytes": 25767,
       "role": "page",
-      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\". C35.8c: once the shelf has loaded, the next book's stored PDF is warmed in the CDN's cache (warmBookFile)."
+      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes (C36.4: “Preparing the book”)… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\". C35.8c: once the shelf has loaded, the next book's stored PDF is warmed in the CDN's cache (warmBookFile)."
     },
     {
       "path": "frontend/src/pages/Login.css",
@@ -4978,9 +4994,9 @@
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
       "lines": 595,
-      "size_bytes": 30225,
+      "size_bytes": 30285,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -6015,6 +6031,14 @@
       "purpose": "C26.G measuring script, offline in the production image: books queued as uploads hand them on (ingestion_worker.run, or all at once with --no-queue as before C26.1), on MemoryDb; per book the time to first questions, to the whole text questioned and to everything done (--until ingest|all), with peak RSS and the cgroup peak. C27.1: waits for the queued region maps (drain) and times each (regions_done_s)."
     },
     {
+      "path": "scripts/dev/measure_c36.py",
+      "language": "python",
+      "lines": 131,
+      "size_bytes": 5647,
+      "role": "script",
+      "purpose": "C36.6 (issue 27): offline measurement in the production image of upload to a quiz on the reader's page: the real pipeline on MemoryDb, a reader saving the place once a second (reader_questions.want, ingestion_worker.run_questions as a task); times the book ready, the page's chunk stored, its questions made, the ingest done, and peak memory."
+    },
+    {
       "path": "scripts/dev/measure_embedder.py",
       "language": "python",
       "lines": 86,
@@ -6529,8 +6553,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 825,
-      "size_bytes": 275507,
+      "lines": 828,
+      "size_bytes": 278261,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

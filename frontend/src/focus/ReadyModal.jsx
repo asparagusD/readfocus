@@ -8,7 +8,7 @@ const WORDS = ['no', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eig
 const MINUTES_PER_QUESTION = 1.25;
 const PASS = 0.4; // FOCUS_RULES F12
 const PER_CORRECT = 20; // F11
-const RETRY_MS = 15_000; // C26.3: while the book's questions are prepared, ask again this often
+const RETRY_MS = 5_000; // C26.3: while the range is prepared, ask again this often (C36.3: it waits for one batch)
 
 /**
  * "Ready for your questions?" (C23.6b, handoff screen 22): over the book once the ribbon is set. It builds the
@@ -18,7 +18,7 @@ const RETRY_MS = 15_000; // C26.3: while the book's questions are prepared, ask 
 export function ReadyModal({ open, sessionId, label, points, onLater, onStart }) {
   const [count, setCount] = useState(null);
   const [failed, setFailed] = useState(false);
-  const [waiting, setWaiting] = useState(false); // C26.3: the book is still being processed; the session is kept
+  const [waiting, setWaiting] = useState(false); // C26.3: the range is not stored yet (C36.3); the session is kept
   useEffect(() => {
     if (!open || !sessionId) return undefined;
     let live = true;
@@ -42,7 +42,7 @@ export function ReadyModal({ open, sessionId, label, points, onLater, onStart })
         {label ? `The ribbon is on ${label}. ` : ''}
         {count
           ? `${WORDS[count] ?? count} short questions on what you read, about ${Math.max(1, Math.round(count * MINUTES_PER_QUESTION))} minutes.`
-          : waiting ? 'Your questions are still being prepared from this book. Your session is kept, and they appear here in a few minutes.'
+          : waiting ? 'The pages you read are still being prepared. Your session is kept, and your questions appear here in a moment.'
             : failed ? 'Your questions couldn’t be gathered just now. Try again in a moment.' : 'Gathering your questions…'}
       </p>
       {count > 0 && (

@@ -107,7 +107,7 @@ export function ReadingSession() {
   // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
   const pagesOnly = Boolean(sessionData?.pages_only);
   // C26.3: a book opened before it is processed (GET /books/{id}/open): no session, its place saved on the book,
-  // and "Preparing quizzes… n%" until its questions are made.
+  // and "Preparing the book… n%" until its ingest is done; C36 (issue 27): what is read is quizzed meanwhile.
   const processing = Boolean(sessionData?.processing);
   const [prepared, setPrepared] = useState(null); // null while processing, else { progress } or { done: true }
   const body = useBodyStart(bookId, Boolean(sessionData) && !pagesOnly); // C23.1: where focus mode starts
@@ -471,16 +471,16 @@ export function ReadingSession() {
             </button>
           )}
           {processing && !quizzesDone ? (
-            <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Quizzes">
+            <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Book preparation">
               <span className="rf-session-time" role="status">
-                {prepared?.progress != null ? `Preparing quizzes… ${Math.round(prepared.progress * 100)}%` : 'Preparing quizzes…'}
+                {prepared?.progress != null ? `Preparing the book… ${Math.round(prepared.progress * 100)}%` : 'Preparing the book…'}
               </span>
             </div>
           ) : null}
           {pagesOnly ? (
             <div className="rf-toolbar-group rf-toolbar-session" role="group" aria-label="Pages read">
               <span className="rf-session-time" role="status">
-                {preparingFirst ? 'Preparing quizzes…' : `Reading this scan: ${readCount} of ${scannedCount} pages`}
+                {preparingFirst ? 'Preparing the book…' : `Reading this scan: ${readCount} of ${scannedCount} pages`}
               </span>
             </div>
           ) : null}

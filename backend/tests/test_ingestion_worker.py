@@ -25,7 +25,6 @@ def db(monkeypatch):
     for module in (book_ingestor, jobs, ingestion_worker, books, ocr_pages):
         monkeypatch.setattr(module, "supabase", fake)
     monkeypatch.setattr(embedder, "embed", lambda texts: np.zeros((len(texts), embedder.EMBEDDING_DIM), dtype=np.float32))
-    monkeypatch.setattr(book_ingestor.question_agent, "run", lambda book_id, chunk_ids: None)
 
     async def no_regions(book, file_bytes=None):  # covered in test_region_job.py
         return None

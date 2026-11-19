@@ -52,6 +52,9 @@ def db(monkeypatch):
     fake.files["u/b1.pdf"] = fake.files["u/b2.pdf"] = b"%PDF"
     fake.tables["chunks"] = [{"id": f"{b}-0", "book_id": b, "user_id": USER, "chunk_index": 0, "content": PAGE}
                              for b in ("b1", "b2")]
+    # books ingested before C36 have every chunk questioned (C36.5 questions again only such chunks)
+    fake.tables["question_bank"] = [{"id": f"q-{b}", "chunk_id": f"{b}-0", "book_id": b, "times_used": 0}
+                                    for b in ("b1", "b2")]
     return fake
 
 

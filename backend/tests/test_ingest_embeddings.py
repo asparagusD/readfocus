@@ -1,7 +1,8 @@
 """Ingestion on an in-memory database: local embeddings, bounded batches, a cursor saved after each
-batch, and a job that resumes after a crash without duplicating chunks or questions.
+batch, and a job that resumes after a crash without duplicating chunks. Since C36.1 (issue 27) it makes no
+questions (they follow the reader) and stores a PDF's chunk pages.
 
-The embedder and the question agent are fakes, so no model and no network are needed.
+The embedder is a fake, so no model and no network are needed.
 """
 
 import asyncio
@@ -10,7 +11,9 @@ import inspect
 import numpy as np
 import pytest
 
+from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
+from backend.regions import prose
 from backend.services import (
     book_ingestor,
     covers,
@@ -30,7 +33,7 @@ class Crash(RuntimeError):
 
 @pytest.fixture
 def env(monkeypatch):
-    """A book of `count` chunks in Storage, a fake embedder and a question agent that upserts one row per chunk."""
+    """A book of `count` chunks in Storage, a fake embedder and a question agent that must never run."""
     db = MemoryDb()
     for module in (book_ingestor, jobs, ingestion_worker, ocr_pages):
         monkeypatch.setattr(module, "supabase", db)
@@ -42,15 +45,11 @@ def env(monkeypatch):
             raise Crash("server stopped")
         return np.full((len(texts), embedder.EMBEDDING_DIM), 0.05, dtype=np.float32)
 
-    def fake_questions(book_id, chunk_ids):
-        rows = [c for c in db.tables["chunks"] if c["id"] in chunk_ids]
-        state["events"].append(("questions", sorted(r["chunk_index"] for r in rows)))
-        db.table("question_bank").upsert(
-            [{"chunk_id": r["id"], "chunk_index": r["chunk_index"], "strategy": "cloze", "prompt_hash": "h"} for r in rows],
-            on_conflict="chunk_id,strategy,prompt_hash", ignore_duplicates=True).execute()
+    def fake_questions(self, book_id, chunk_ids):
+        state["events"].append(("questions", list(chunk_ids)))
 
     monkeypatch.setattr(embedder, "embed", fake_embed)
-    monkeypatch.setattr(book_ingestor.question_agent, "run", fake_questions)
+    monkeypatch.setattr(QuestionGenerationAgent, "run", fake_questions)
     monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data, *a, **k: ["unused"])
     state["covers"] = []  # (book_id, title, author) per cover lookup; no network in these tests
     monkeypatch.setattr(covers, "ensure_cover", lambda *args: state["covers"].append(args))
@@ -107,7 +106,8 @@ def test_every_chunk_is_stored_once_with_a_local_embedding_and_the_job_is_done(e
     assert (book["status"], book["total_chunks"], result["status"]) == ("ready", 40, "ready")
 
 
-def test_the_book_is_ready_once_the_first_batch_and_its_questions_are_stored(env, monkeypatch):
+def test_the_book_is_ready_once_the_first_batch_is_stored_and_no_questions_are_made(env, monkeypatch):
+    """C36.1 (issue 27): ingestion makes no questions; they follow the reader (reader_questions)."""
     db, events = env["db"], env["events"]
     original = book_ingestor.mark_ready
     seen = {}
@@ -115,28 +115,41 @@ def test_the_book_is_ready_once_the_first_batch_and_its_questions_are_stored(env
     def spy(book_id, total, words, toc=None):
         events.append("ready")
         seen["chunks"] = chunk_indices(db)
-        seen["questions"] = sorted(q["chunk_index"] for q in db.tables.get("question_bank", []))
         original(book_id, total, words, toc)
 
     monkeypatch.setattr(book_ingestor, "mark_ready", spy)
     run(env["book"](7), b"%PDF")
-    assert events == [("questions", [0, 1, 2, 3, 4]), "ready", ("questions", [5, 6])]
-    assert seen == {"chunks": [0, 1, 2, 3, 4], "questions": [0, 1, 2, 3, 4]}  # the first session has a bank test
-    assert len(db.tables["question_bank"]) == 7
+    assert events == ["ready"] and seen == {"chunks": [0, 1, 2, 3, 4]}
+    assert not db.tables.get("question_bank") and jobs.get(BOOK)["status"] == "done"
 
 
-def test_a_failing_first_batch_of_questions_still_makes_the_book_ready(env, monkeypatch):
-    calls = []
+def test_a_pdf_chunk_is_stored_with_its_pages_and_spans(env, monkeypatch):
+    """C36.1: the pages ingestion read give each chunk its anchors, as the prose job would without regions."""
+    pages = ["alpha beta", "", "gamma delta", "epsilon"]
 
-    def first_fails(book_id, chunk_ids):
-        calls.append(len(chunk_ids))
-        if len(calls) == 1:
-            raise RuntimeError("question bank unavailable")
+    def extract(data, ocr=None, scanned=None, every_page=None):
+        every_page.extend(pages)
+        return [p for p in pages if p]
+    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", extract)
+    job = env["book"](0)
+    chunks = ["alpha beta\n\ngamma", "delta\n\nepsilon"]
+    monkeypatch.setattr(book_ingestor, "chunk_text", lambda texts, target_words=600: chunks)
+    run(job, b"%PDF")
+    stored = sorted(env["db"].tables["chunks"], key=lambda c: c["chunk_index"])
+    assert [c["anchors"]["pages"] for c in stored] == [[1, 3], [3, 4]]
+    assert stored[1]["anchors"]["spans"] == [{"page": 3, "char_start": 5, "char_end": 10},
+                                             {"page": 4, "char_start": 0, "char_end": 7}]
+    built = prose.pdf_prose([c["content"] for c in stored], pages, [])
+    assert [c["anchors"] for c in stored] == [b["anchors"] for b in built]  # the prose job's, with no regions
 
-    monkeypatch.setattr(book_ingestor.question_agent, "run", first_fails)
-    run(env["book"](7), b"%PDF")
-    assert env["db"].tables["books"][0]["status"] == "ready"  # finish-reading generates on demand
-    assert calls == [5, 2] and jobs.get(BOOK)["status"] == "done"
+
+def test_an_epub_chunk_gets_no_page_anchors(env, monkeypatch):
+    monkeypatch.setattr(book_ingestor, "extract_text_from_epub", lambda data: ["chapter"])
+    job = env["book"](3)
+    env["db"].tables["books"][0]["file_type"] = "epub"
+    assert run(job, b"PK")["status"] == "ready"
+    assert chunk_indices(env["db"]) == [0, 1, 2]
+    assert all("anchors" not in c for c in env["db"].tables["chunks"])
 
 
 def test_a_crash_keeps_the_cursor_and_a_resume_finishes_without_duplicates(env):
@@ -157,7 +170,7 @@ def test_a_crash_keeps_the_cursor_and_a_resume_finishes_without_duplicates(env):
     assert env["embed_calls"][-2:] == [16, 3]  # only the batches after the cursor
     assert chunk_indices(db) == list(range(40))
     assert {i: c["id"] for c in db.tables["chunks"] for i in [c["chunk_index"]] if i < 21} == ids_before
-    assert sorted(q["chunk_index"] for q in db.tables["question_bank"]) == list(range(40))
+    assert not db.tables.get("question_bank")  # C36.1: questions follow the reader
     assert jobs.get(BOOK)["status"] == "done" and jobs.get(BOOK)["attempts"] == 2
 
 
@@ -179,7 +192,7 @@ def test_a_batch_stored_but_not_recorded_is_safe_to_run_again(env, monkeypatch):
     monkeypatch.setattr(jobs, "advance", real_advance)
     run(jobs.claim(jobs.get(BOOK), manual=True))
     assert chunk_indices(db) == list(range(21))  # the batch 5..21 was upserted again, not duplicated
-    assert len(db.tables["question_bank"]) == 21
+    assert not db.tables.get("question_bank")
     assert jobs.get(BOOK)["status"] == "done"
 
 
@@ -194,16 +207,6 @@ def test_an_empty_book_is_ready_with_no_chunks(env):
     run(env["book"](0), b"%PDF")
     book = env["db"].tables["books"][0]
     assert (book["status"], book["total_chunks"], book["total_words"]) == ("ready", 0, 0)
-    assert jobs.get(BOOK)["status"] == "done"
-
-
-def test_a_failing_question_agent_does_not_fail_the_job(env, monkeypatch):
-    def broken(book_id, chunk_ids):
-        raise RuntimeError("question bank unavailable")
-
-    monkeypatch.setattr(book_ingestor.question_agent, "run", broken)
-    run(env["book"](7), b"%PDF")
-    assert chunk_indices(env["db"]) == list(range(7))
     assert jobs.get(BOOK)["status"] == "done"
 
 

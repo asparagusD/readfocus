@@ -5545,3 +5545,13 @@ scanned book with more than 1000 text pages would be ingested without the rest (
 
 ### Commit
 fix(ingest): give a book read from OCR or the browser its page map
+
+### After the fix (2026-11-19)
+With your approval and a dump you confirmed (`I:eadfocus-backups6-11-19-before-c36g`), the backfill gave
+page maps to 3 books (both "Hands On Machine Learning" copies: 394 chunks and 21 contents entries each; one 1-chunk
+book). Read back with the quiz's own code (no session made): page 68 maps to chunk 24; "This chapter" runs from
+page 31, 15 chunks, 11,115 words, not preparing. None of those 15 chunks had questions (the place never mapped
+while you read), and the quiz made every missing chunk's questions in the request: 45-105 s at 0.1 CPU. So
+`quiz._assemble` now tops up at most `QUIZ_TOPUP_MAX_CHUNKS` (4) chunks spread across the range
+(`range_quiz.spread`); test `test_api_focus_quiz.py::test_a_long_range_with_no_questions_tops_up_only_a_few_chunks_spread_across_it`
+failed with the old `quiz.py` and passes.

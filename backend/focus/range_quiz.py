@@ -105,6 +105,17 @@ def toc_slices(chunks: list[dict], toc: list[dict], kind: str, first_unit: int, 
             for c in sorted(chunks, key=lambda c: c["chunk_index"]) if begin <= c["chunk_index"] <= max(begin, stop)]
 
 
+def spread(items: list, k: int) -> list:
+    """At most k of the items, evenly spaced from the first to the last, in order (C36.G)."""
+    if k <= 0:
+        return []
+    if len(items) <= k:
+        return list(items)
+    if k == 1:
+        return [items[0]]
+    return [items[round(i * (len(items) - 1) / (k - 1))] for i in range(k)]
+
+
 def evidence_fraction(text: str, evidence: str | None) -> float | None:
     """Where a question's evidence starts in its chunk's text, as a fraction of it; None when not found."""
     if not text or not evidence:

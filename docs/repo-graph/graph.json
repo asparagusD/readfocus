@@ -247,6 +247,13 @@
       "handler": "create_device_book"
     },
     {
+      "id": "endpoint:POST /books/register",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/register",
+      "handler": "register_upload"
+    },
+    {
       "id": "endpoint:POST /books/upload",
       "type": "endpoint",
       "method": "POST",
@@ -6205,6 +6212,11 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:POST /books/register"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:POST /books/upload"
     },
     {
@@ -9300,6 +9312,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_direct_upload.py",
       "to": "file:backend/services/direct_upload.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/ingestion_worker.py"
     },
     {
       "type": "imports",

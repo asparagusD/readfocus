@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import io
 import os
 import re
@@ -227,8 +228,33 @@ def download(storage_path: str) -> bytes:
 
 def _load_book(book_id: str) -> dict:
     return supabase.table("books").select(
-        "id, file_type, storage_path, status, title, author, cover_source, source_format").eq(
+        "id, file_type, storage_path, status, title, author, cover_source, source_format, file_sha256").eq(
         "id", book_id).execute().data[0]
+
+
+AUTHOR_MAX = 300  # as POST /books/upload (C30.1)
+
+
+def file_facts(book: dict, file_bytes: bytes) -> dict:
+    """C35.3a (issue 16): a book sent straight to Storage arrives with no hash, page count or author; they are
+    worked out here, off the request. The author only when the reader typed none (C30.1)."""
+    facts: dict = {"file_sha256": hashlib.sha256(file_bytes).hexdigest()}
+    if book.get("file_type") == "pdf":
+        try:
+            facts["page_count"] = len(PdfReader(io.BytesIO(file_bytes)).pages)
+        except Exception as error:  # noqa: BLE001 - optional; the parse below reports an unreadable file
+            print(f"Page count of book {book.get('id')} not read: {error}")
+    if not book.get("author"):
+        author = " ".join((extract_metadata(book.get("file_type") or "", file_bytes)[1] or "").split())[:AUTHOR_MAX]
+        if author:
+            facts["author"] = author
+    return facts
+
+
+def record_file_facts(book: dict, file_bytes: bytes) -> dict:
+    facts = file_facts(book, file_bytes)
+    supabase.table("books").update(facts).eq("id", book["id"]).neq("status", DELETING).execute()
+    return {**book, **facts}
 
 
 def read_pages(book: dict, file_bytes: bytes, browser: bool) -> tuple[list[str], dict[int, str], list[str] | None]:
@@ -294,6 +320,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
             file_bytes = b""
         elif file_bytes is None:
             file_bytes = await asyncio.to_thread(download, book["storage_path"])
+        if not browser and file_bytes and "file_sha256" in book and book["file_sha256"] is None:  # C35.3a
+            book = await asyncio.to_thread(record_file_facts, book, file_bytes)
         pages, ocr, every_page = await asyncio.to_thread(read_pages, book, file_bytes, browser)
         chunks = await asyncio.to_thread(chunk_text, pages, TARGET_WORDS)
         total, words = len(chunks), sum(len(c.split()) for c in chunks)

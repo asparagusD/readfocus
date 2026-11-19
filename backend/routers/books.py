@@ -202,6 +202,43 @@ def create_upload_url(req: UploadUrlRequest, user_id: str = Depends(get_current_
             "max_bytes": policy.MAX_BOOK_FILE_BYTES}
 
 
+class RegisterRequest(BaseModel):
+    """The book whose file has reached Storage through /upload-url."""
+    model_config = ConfigDict(extra="forbid")
+    book_id: uuid.UUID
+    file_type: Literal["pdf", "epub"]
+    title: str = Field(min_length=1, max_length=1024)
+    author: str = Field(default="", max_length=1024)
+
+
+@router.post("/register")
+def register_upload(req: RegisterRequest, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
+    """Check what arrived at the reader's own path (it exists, its size, its first bytes, the shelf; a refused
+    file is removed), then the row and the ingestion job, which reads the file from Storage and works out its
+    hash, page count and, when none was typed, its author (C35.3a)."""
+    book_id = str(req.book_id)
+    path = direct_upload.object_path(user_id, book_id, req.file_type)
+    if supabase.table("books").select("id").eq("id", book_id).execute().data:
+        raise HTTPException(status_code=409, detail="This book is already on a shelf.")
+    size, refused = direct_upload.check(path, req.file_type)
+    if refused:
+        raise HTTPException(status_code=refused[0], detail=refused[1])
+    used = shelf_bytes(user_id)
+    if used + size > policy.MAX_SHELF_BYTES_PER_USER:
+        direct_upload.remove(path)
+        raise shelf_full(used)
+    author = " ".join(req.author.split())[:AUTHOR_MAX] or None
+    supabase.table("books").insert({
+        "id": book_id, "user_id": user_id, "title": req.title, "author": author, "file_type": req.file_type,
+        "storage_path": path, "status": "processing", "file_sha256": None, "file_bytes": size,
+        "file_format": req.file_type, "storage_mode": "cloud", "page_count": None,
+    }).execute()
+    job = jobs.claim(jobs.create(book_id, user_id))
+    if job:
+        background_tasks.add_task(ingestion_worker.run, job)
+    return {"book_id": book_id, "status": "processing", "source_format": None, "notes": [], "author": author}
+
+
 BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url, storage_mode"
 PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")
 

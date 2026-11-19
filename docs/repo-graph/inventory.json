@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18021,
+      "size_bytes": 18039,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2273,8 +2273,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6187,
-      "size_bytes": 1122815,
+      "lines": 6188,
+      "size_bytes": 1123807,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2665,10 +2665,10 @@
     {
       "path": "frontend/e2e/page-data.spec.js",
       "language": "javascript",
-      "lines": 59,
-      "size_bytes": 3489,
+      "lines": 73,
+      "size_bytes": 4378,
       "role": "config",
-      "purpose": "C35.5b (issue 20): back on the Library or the Dashboard the last data shows before its request answers and is asked again."
+      "purpose": "C35.5b-c (issue 20): back on the Library or the Dashboard the last data shows before its request answers and is asked again; League's settings use the header's /me/progress, asking nothing more."
     },
     {
       "path": "frontend/e2e/pdf-open.spec.js",
@@ -3801,8 +3801,8 @@
     {
       "path": "frontend/src/gamification/LeagueSettings.jsx",
       "language": "jsx",
-      "lines": 105,
-      "size_bytes": 4831,
+      "lines": 108,
+      "size_bytes": 5043,
       "role": "asset",
       "purpose": "League settings card (C24.6d): display name, daily goal (20-200) and leaderboard opt-out; one PUT /me/progress with only what changed; the server's reason for a refused name on the field; a toast and a league reload after saving. C24.G: the zone the days follow, and a switch to this device's."
     },
@@ -3857,8 +3857,8 @@
     {
       "path": "frontend/src/gamification/useProgress.js",
       "language": "javascript",
-      "lines": 31,
-      "size_bytes": 1467,
+      "lines": 36,
+      "size_bytes": 1925,
       "role": "asset",
       "purpose": "Hook (C24.6a): GET /me/progress once for a signed-in reader; null until it arrives or if it fails. C24.G: with adoptZone, saves the device's zone once while UTC is stored."
     },
@@ -4068,7 +4068,7 @@
       "lines": 77,
       "size_bytes": 3182,
       "role": "lib",
-      "purpose": "C35.5a (issue 20): each page's last data per request path, in memory for this tab: cached, remember, load (one request at a time per path; `fresh` ms uses a young answer as it is), forgetPageData (signing out), usePageData (the kept data at once, then the fresh answer; an error only when there is nothing to show). Used by the Library, Dashboard, Badge shelf and Concept mastery (C35.5b)."
+      "purpose": "C35.5a-c (issue 20): each page's last data per request path, in memory for this tab: cached, remember, load (one request at a time per path; `fresh` ms uses a young answer as it is), forgetPageData (signing out), usePageData (the kept data at once, then the fresh answer; an error only when there is nothing to show). Used by the Library, Dashboard, Badge shelf, Concept mastery, League and useProgress."
     },
     {
       "path": "frontend/src/lib/pageData.test.js",
@@ -4825,8 +4825,8 @@
     {
       "path": "frontend/src/pages/League.jsx",
       "language": "jsx",
-      "lines": 128,
-      "size_bytes": 5769,
+      "lines": 126,
+      "size_bytes": 5822,
       "role": "page",
       "purpose": "Weekly league page (C24.6c): time left to Monday 00:00 UTC, tier crest and chips, the reader's group ranked with soft promotion and demotion lines and gaps for hidden readers, last week's outcome, how leagues work; no-group, opted-out, loading and error states. C24.6d: the settings card, and a reload after a save."
     },
@@ -6434,7 +6434,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 813,
-      "size_bytes": 270935,
+      "size_bytes": 271021,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

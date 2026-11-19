@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import { fetchApi } from '../lib/api';
+import { load, usePageData } from '../lib/pageData';
+import { PROGRESS_FRESH_MS } from '../gamification/useProgress';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { initials, lastWeekLine, tierStates, timeLeft, withMarkers } from '../gamification/leagueView';
@@ -50,19 +51,16 @@ function Row({ row }) {
  */
 export function League() {
   useDocumentTitle('League');
-  const [state, setState] = useState({ status: 'loading' });
-  const [version, setVersion] = useState(0); // C24.6d: a saved setting reloads the league (the opt-out shows at once)
-  useEffect(() => {
-    let live = true;
-    fetchApi('/leagues/current').then((body) => { if (live) setState({ status: 'ready', ...body }); })
-      .catch(() => { if (live) setState({ status: 'error' }); });
-    return () => { live = false; };
-  }, [version]);
+  // C35.5c (issue 20): the last league at once on a return, refreshed behind it; the settings' /me/progress is
+  // asked now too, not after the league has answered (1.2 s, then 0.96 s, one after the other before).
+  const { data, loading, error, reload } = usePageData('/leagues/current');
+  useEffect(() => { load('/me/progress', { fresh: PROGRESS_FRESH_MS }).catch(() => {}); }, []);
+  const state = data;
 
-  if (state.status === 'loading') {
+  if (loading) {
     return <div className="rf-league" aria-busy="true" aria-label="Loading your league"><Skeleton height={320} /></div>;
   }
-  if (state.status === 'error') {
+  if (error) {
     return (
       <div className="rf-league" role="alert">
         <h1 className="rf-league__title">Your league didn’t load.</h1>
@@ -120,7 +118,7 @@ export function League() {
             <p>Each week you read alongside about 30 others at your tier. XP comes only from focused reading, its quizzes and badges. Nothing to buy, no extra lives.</p>
             <p>The top 7 move up and the bottom 5 move down; smaller groups move fewer, and a group under 10 moves nobody down. A quiet week just keeps you where you are.</p>
           </section>
-          <LeagueSettings onSaved={() => setVersion((v) => v + 1)} />
+          <LeagueSettings onSaved={reload} /> {/* C24.6d: a saved setting reloads the league (the opt-out shows at once) */}
         </aside>
       </div>
     </div>

@@ -1,6 +1,7 @@
-// C35.5b (issue 20): a page keeps its last data. Coming back to the Library or the Dashboard shows it at once,
-// before any request has answered, and asks again behind it. Mocked API.
-import { test, expect, BOOK } from './fixtures.js';
+// C35.5b-c (issue 20): a page keeps its last data. Coming back to the Library or the Dashboard shows it at once,
+// before any request has answered, and asks again behind it; League's settings use the progress the header
+// already asked for instead of waiting for a request of their own after the league. Mocked API.
+import { test, expect, BOOK, LEAGUE, PROGRESS } from './fixtures.js';
 
 const SHELVED = { id: BOOK, title: 'Walden', author: 'Henry David Thoreau', status: 'ready', file_type: 'pdf',
   total_chunks: 3, total_words: 900, created_at: '2026-11-01T00:00:00Z', cover_url: null, storage_mode: 'cloud',
@@ -56,4 +57,17 @@ test('back on the Dashboard, its figures show before /dashboard answers', async 
   await expect(page.getByLabel('Loading your progress')).toHaveCount(0);
   await expect.poll(() => dashboard.count).toBe(1);
   dashboard.release();
+});
+
+test('League: the settings use the header\'s progress, so no second request waits behind the league', async ({ page, api }) => {
+  api.progress = structuredClone(PROGRESS);
+  let progressGets = 0;
+  page.on('request', (r) => { if (r.method() === 'GET' && r.url().endsWith('/me/progress')) progressGets += 1; });
+  const league = await hold(page, '/leagues/current', LEAGUE);
+  await page.goto('/league');
+  await expect.poll(() => progressGets).toBe(1); // asked while the league is still on its way
+  league.release();
+  const settings = page.getByRole('region', { name: 'Your league settings' });
+  await expect(settings.getByLabel('Display name')).toBeVisible();
+  expect(progressGets).toBe(1); // the settings asked nothing more
 });

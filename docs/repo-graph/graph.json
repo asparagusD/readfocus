@@ -5782,11 +5782,6 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/gamification/useProgress.js",
-      "to": "endpoint:GET /me/progress"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/gamification/useProgress.js",
       "to": "endpoint:PUT /me/progress"
     },
     {
@@ -5828,11 +5823,6 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
       "to": "endpoint:POST /sessions/{session_id}/evaluate-single"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/League.jsx",
-      "to": "endpoint:GET /leagues/current"
     },
     {
       "type": "calls_endpoint",
@@ -11739,6 +11729,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gamification/LeagueSettings.jsx",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gamification/leagueView.test.js",
       "to": "file:frontend/src/gamification/leagueView.js"
     },
@@ -11761,6 +11756,11 @@
       "type": "imports",
       "from": "file:frontend/src/gamification/useProgress.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/useProgress.js",
+      "to": "file:frontend/src/lib/pageData.js"
     },
     {
       "type": "imports",
@@ -12680,7 +12680,12 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/League.jsx",
-      "to": "file:frontend/src/lib/api.js"
+      "to": "file:frontend/src/gamification/useProgress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/League.jsx",
+      "to": "file:frontend/src/lib/pageData.js"
     },
     {
       "type": "imports",

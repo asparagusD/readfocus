@@ -332,6 +332,21 @@ a.rf-shelf__book:hover .rf-shelf__title {
   color: var(--ink-2);
 }
 
+/* C35.3e: how much of the file has reached Storage, between the form and its buttons. */
+.rf-library__sent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rf-library__sent-line {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  font-variant-numeric: tabular-nums;
+}
+
 .rf-library__form-actions {
   display: flex;
   flex-wrap: wrap;

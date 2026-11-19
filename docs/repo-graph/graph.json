@@ -12694,6 +12694,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/lib/directUpload.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/lib/useDocumentTitle.js"
     },
     {
@@ -14760,6 +14765,11 @@
       "type": "uses_env",
       "from": "file:frontend/src/lib/supabase.js",
       "to": "env:VITE_SUPABASE_URL"
+    },
+    {
+      "type": "uses_env",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "env:VITE_SUPABASE_ANON_KEY"
     },
     {
       "type": "uses_env",

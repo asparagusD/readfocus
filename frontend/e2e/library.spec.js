@@ -1,4 +1,5 @@
 // The library (C13.3), with the API mocked: loading, empty, error and a shelf of five.
+import { createHash } from 'node:crypto';
 import { test, expect } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
@@ -102,8 +103,8 @@ test.describe('at 375 px', () => {
 });
 
 /** Record and answer the writes and the status poll; GET /books comes from `shelf()` on each call. */
-async function mockWrites(page, shelf, { progress = 0.64, failUpload = false, uploaded = {}, deleteAnswer = null } = {}) {
-  const calls = { uploads: [], deletes: [], statuses: 0 };
+async function mockWrites(page, shelf, { progress = 0.64, failUpload = false, uploaded = {}, deleteAnswer = null, holdPut = null } = {}) {
+  const calls = { uploads: [], deletes: [], statuses: 0, puts: [] };
   const json = (route, body, status = 200) => route.fulfill({ status, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   await page.route('http://localhost:8000/books', async (route) => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
@@ -134,8 +135,37 @@ async function mockWrites(page, shelf, { progress = 0.64, failUpload = false, up
     if (failUpload) return json(route, { detail: 'That file is too large' }, 400);
     return json(route, { book_id: 'new-book', status: 'processing', ...uploaded });
   });
+  // C35.3e: a PDF or EPUB kept on our server goes straight to Storage: a signed URL, the PUT, then register.
+  const asked = {};
+  await page.route('http://localhost:8000/books/upload-url', async (route) => {
+    const req = route.request();
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+    Object.assign(asked, req.postDataJSON());
+    if (failUpload) return json(route, { detail: 'That file is too large' }, 413);
+    const fileType = asked.filename.split('.').pop().toLowerCase();
+    return json(route, { book_id: 'new-book', file_type: fileType, token: 't', max_bytes: 52428800,
+      upload_url: `${STORAGE}/storage/v1/object/upload/sign/books/u/new-book.${fileType}?token=t` });
+  });
+  await page.route(`${STORAGE}/storage/v1/object/upload/**`, async (route) => {
+    const req = route.request();
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+    calls.puts.push({ method: req.method(), url: req.url(), type: req.headers()['content-type'], upsert: req.headers()['x-upsert'],
+      bytes: req.postDataBuffer()?.length ?? 0 });
+    if (holdPut) await holdPut;
+    return json(route, { Key: 'books/u/new-book.pdf' });
+  });
+  await page.route('http://localhost:8000/books/register', async (route) => {
+    const req = route.request();
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+    const body = req.postDataJSON();
+    calls.uploads.push({ title: body.title, author: body.author, mode: 'cloud', file: asked.filename });
+    return json(route, { book_id: body.book_id, status: 'processing', source_format: null, notes: [], author: null, ...uploaded });
+  });
   return calls;
 }
+
+const STORAGE = 'https://lvfhuszvuiowyeizstru.supabase.co'; // the CSP's own project host, as a real signed URL
+const keptFiles = (page) => page.evaluate(async () => (await (await caches.open('readfocus-book-files-v1')).keys()).map((r) => r.url));
 
 const PDF = { name: 'the_age_of_innocence.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 e2e') };
 
@@ -160,6 +190,54 @@ test('adding a book: picker, an inline error for the title, the author optional,
   await expect(page.getByText('The Age Of Innocence is on your shelf. Open it now; its quizzes follow in a few minutes.')).toBeVisible();
   await expect(page.locator('.rf-shelf__item').first()).toContainText('Preparing quizzes…');
   await expect(page.locator('.rf-shelf__item').first()).toContainText('Edith Wharton');
+});
+
+// C35.3e (issue 16): the file goes straight to Storage with its progress shown, then is registered, and is kept
+// in this browser under its own sha256 for its first open.
+test('a PDF goes straight to Storage with its progress, then onto the shelf, kept in this browser', async ({ page }) => {
+  let release;
+  const holdPut = new Promise((resolve) => { release = resolve; });
+  const calls = await mockWrites(page, () => SHELF.slice(0, 3), { holdPut });
+  await page.goto('/');
+  await page.getByRole('list').waitFor();
+  await page.locator('input[type=file]').setInputFiles(PDF);
+  const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
+  await dialog.getByRole('button', { name: 'Add book' }).click();
+  const bar = dialog.getByRole('progressbar', { name: 'Sending the file' });
+  await expect(bar).toBeVisible();
+  await expect(dialog).toContainText(/Sending the file: \d+%|Sent\. Putting it on your shelf…/);
+  expect(calls.uploads).toEqual([]); // registered only once Storage has the file
+  if (shots) {
+    await dialog.screenshot({ path: `${shots}/upload-progress-1440.png` });
+    await page.setViewportSize({ width: 375, height: 812 });
+    await dialog.screenshot({ path: `${shots}/upload-progress-375.png` });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375);
+  }
+  release();
+  await expect(dialog).toBeHidden();
+  expect(calls.puts).toEqual([{ method: 'PUT', url: `${STORAGE}/storage/v1/object/upload/sign/books/u/new-book.pdf?token=t`,
+    type: 'application/pdf', upsert: 'false', bytes: PDF.buffer.length }]);
+  expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: '', mode: 'cloud', file: 'the_age_of_innocence.pdf' }]);
+  const sha = createHash('sha256').update(PDF.buffer).digest('hex');
+  await expect.poll(() => keptFiles(page)).toEqual([`https://book-files.readfocus.invalid/new-book/${sha}`]);
+  await expect(page.locator('.rf-shelf__item').first()).toContainText('Preparing quizzes…');
+});
+
+test('a refused direct upload never registers and keeps the dialog open', async ({ page }) => {
+  const calls = await mockWrites(page, () => SHELF.slice(0, 3));
+  await page.route(`${STORAGE}/storage/v1/object/upload/**`, (route) => route.request().method() === 'OPTIONS'
+    ? route.fulfill({ status: 204, headers: CORS })
+    : route.fulfill({ status: 413, headers: { ...CORS, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'The object exceeded the maximum allowed size' }) }));
+  await page.goto('/');
+  await page.getByRole('list').waitFor();
+  await page.locator('input[type=file]').setInputFiles(PDF);
+  const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
+  await dialog.getByRole('button', { name: 'Add book' }).click();
+  await expect(page.getByText('We couldn’t add that book: The object exceeded the maximum allowed size.')).toBeVisible();
+  await expect(dialog).toBeVisible();
+  expect(calls.uploads).toEqual([]);
+  expect(await keptFiles(page)).toEqual([]);
 });
 
 test('a book with no author shows “Unknown author” on the shelf (C30.2)', async ({ page }) => {

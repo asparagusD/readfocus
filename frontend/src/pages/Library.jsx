@@ -15,7 +15,8 @@ import { BookCover } from '../components/BookCover';
 import { EmptyShelf, OpenBook } from '../illustrations';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { forgetBookFile, saveBookFile } from '../reader/fileStore';
-import { forgetCachedBookFile } from '../reader/fileCache';
+import { forgetCachedBookFile, keepBookFile } from '../reader/fileCache';
+import { DIRECT, uploadBook } from '../lib/directUpload';
 import { DEVICE_MAX_BYTES, epubTexts, isBig, pdfTexts, sendTexts, sha256Hex } from '../reader/browserText';
 import './Library.css';
 
@@ -96,6 +97,7 @@ export function Library() {
   const [uploadErrors, setUploadErrors] = useState({});
   const [deviceOnly, setDeviceOnly] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [sent, setSent] = useState(null); // C35.3e: how much of the file has reached Storage, 0-100
   const [sending, setSending] = useState({}); // C26.7: book id -> percent of its pages this browser has sent
   const big = selectedFile ? isBig(selectedFile) : false;
 
@@ -249,41 +251,56 @@ export function Library() {
       return;
     }
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('title', uploadTitle.trim());
-    formData.append('author', uploadAuthor.trim());
     const keepHere = deviceOnly && !converting; // a converted book is kept on the server (C19.2c)
-    formData.append('storage_mode', keepHere ? 'device' : 'cloud');
-
+    const ext = selectedFile.name.split('.').pop().toLowerCase();
     try {
-      const resp = await fetchApi('/books/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      // Optimistically add to state
-      const optimbook = {
-        id: resp.book_id,
-        title: uploadTitle.trim(),
-        author: resp.author ?? (uploadAuthor.trim() || null),
-        status: 'processing',
-        file_type: converting ? 'epub' : selectedFile.name.split('.').pop().toLowerCase(),
-        storage_mode: keepHere ? 'device' : 'cloud',
-      };
-      // A device-only book's original exists nowhere else, so it is kept in this browser (C17.1).
-      if (keepHere && !(await saveBookFile(resp.book_id, selectedFile))) {
-        toast({ kind: 'warning', message: 'This browser couldn’t keep the file. Add it again before you read.' });
+      let resp;
+      if (!keepHere && DIRECT.includes(ext)) {
+        // C35.3e (issue 16): straight to Storage with its progress, then registered; kept here for its first open.
+        setSent(0);
+        resp = await uploadBook(selectedFile, { title: uploadTitle.trim(), author: uploadAuthor.trim() }, {
+          api: fetchApi, onProgress: setSent, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          hash: async (bytes) => sha256Hex(new Blob([bytes])), keep: (bookId, bytes, sha) => keepBookFile(bookId, sha, bytes),
+        });
+      } else {
+        resp = await sendThroughServer(keepHere);
       }
-      setBooks(prev => [optimbook, ...prev]);
-      setUploadModalOpen(false);
-      toast({ kind: 'success', message: `${optimbook.title} is on your shelf. Open it now; its quizzes follow in a few minutes.` });
-      if (resp.notes?.length) toast({ kind: 'warning', message: missingImages(resp.notes) });
+      await addedToShelf(resp, keepHere, ext);
     } catch (err) {
       toast({ kind: 'warning', message: `We couldn’t add that book: ${err.message || 'the upload failed'}.` });
     } finally {
       setIsUploading(false);
+      setSent(null);
     }
+  };
+
+  // Markdown, a .zip, a notebook (converted there) and a book kept on this device go through our server.
+  const sendThroughServer = (keepHere) => {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('title', uploadTitle.trim());
+    formData.append('author', uploadAuthor.trim());
+    formData.append('storage_mode', keepHere ? 'device' : 'cloud');
+    return fetchApi('/books/upload', { method: 'POST', body: formData });
+  };
+
+  const addedToShelf = async (resp, keepHere, ext) => {
+    const optimbook = {
+      id: resp.book_id,
+      title: uploadTitle.trim(),
+      author: resp.author ?? (uploadAuthor.trim() || null),
+      status: 'processing',
+      file_type: converting ? 'epub' : ext,
+      storage_mode: keepHere ? 'device' : 'cloud',
+    };
+    // A device-only book's original exists nowhere else, so it is kept in this browser (C17.1).
+    if (keepHere && !(await saveBookFile(resp.book_id, selectedFile))) {
+      toast({ kind: 'warning', message: 'This browser couldn’t keep the file. Add it again before you read.' });
+    }
+    setBooks(prev => [optimbook, ...prev]);
+    setUploadModalOpen(false);
+    toast({ kind: 'success', message: `${optimbook.title} is on your shelf. Open it now; its quizzes follow in a few minutes.` });
+    if (resp.notes?.length) toast({ kind: 'warning', message: missingImages(resp.notes) });
   };
 
   // C26.7: over 50 MB the file stays here; this browser reads its pages' text and sends only that.
@@ -463,6 +480,13 @@ export function Library() {
                 <small>We read it once to make its quizzes and don’t store it. You can open it only in this browser.</small>
               </span>
             </label>
+          )}
+          {sent != null && (
+            <div className="rf-library__sent" role="progressbar" aria-label="Sending the file" aria-valuemin={0}
+              aria-valuemax={100} aria-valuenow={sent}>
+              <MasteryBar value={sent} />
+              <p className="rf-library__sent-line">{sent < 100 ? `Sending the file: ${sent}%` : 'Sent. Putting it on your shelf…'}</p>
+            </div>
           )}
           <div className="rf-library__form-actions">
             <Button variant="secondary" onClick={() => setUploadModalOpen(false)} disabled={isUploading}>Cancel</Button>

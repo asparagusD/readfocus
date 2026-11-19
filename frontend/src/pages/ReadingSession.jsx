@@ -279,7 +279,7 @@ export function ReadingSession() {
       const places = (await reader.current?.shownPlaces?.()) ?? [];
       const anchor = places.at(-1)?.anchor ?? reader.current?.anchor();
       const built = await fetchApi('/focus/quiz-me', { method: 'POST', body: JSON.stringify({ book_id: bookId, scope, anchor }) });
-      navigate(`/quiz/${built.session_id}`);
+      navigate(`/quiz/${built.session_id}`, { state: { questions: built.questions } }); // C36.7c: shown at once
     } catch (err) {
       setQuizMeOpen(false);
       setQuizMeBusy(false);

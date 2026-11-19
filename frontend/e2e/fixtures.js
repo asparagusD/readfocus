@@ -339,7 +339,7 @@ function focusRoute(route, request, focus, path) {
   if (action === 'quiz' && !sub) {
     if (focus.preparing > 0) { // C26.3: the book's questions are still being made; a test sets how many asks wait
       focus.preparing -= 1;
-      return json(route, { detail: { code: 'preparing', message: 'Your questions are still being prepared. Try again in a few minutes.' } }, 409);
+      return json(route, { detail: { code: 'preparing', message: 'The pages up to here are still being prepared. Try again in a moment.' } }, 409);
     }
     return json(route, { questions: FOCUS_QUIZ, count: FOCUS_QUIZ.length, words_in_range: 1200 });
   }

@@ -122,35 +122,55 @@ def _keep(session_id: str, user_id: str, book_id: str, questions: list[dict], wo
 
 
 class Preparing(Exception):
-    """C26.3: the book's questions are still being made; no quiz is built or kept, so it can be asked later."""
+    """C26.3: the range's text is still being read in; no quiz is built or kept, so it can be asked later."""
 
 
 INGESTING = ("queued", "running")
 
 
-def preparing(book: dict) -> bool:
-    """True while the book is processed: its text, and so its questions, may not reach the range yet."""
+def stored_reach(book_id: str) -> int | None:
+    """C36.3: the last page (PDF) or spine index (EPUB) the chunks stored so far reach; None without a page map
+    (an OCR-read or browser-text book, or nothing stored yet)."""
+    rows = (supabase.table("chunks").select("chunk_index, anchors, block_paths").eq("book_id", book_id)
+            .order("chunk_index", desc=True).limit(1).execute().data or [])
+    if not rows:
+        return None
+    pages = (rows[0].get("anchors") or {}).get("pages")
+    if pages:
+        return int(pages[1])
+    spines = [p["spine_index"] for p in rows[0].get("block_paths") or [] if p.get("spine_index") is not None]
+    return max(spines) if spines else None
+
+
+def preparing(book: dict, end: dict | None = None) -> bool:
+    """True while the range's text may not be stored yet: the book has no chunks, or its ingest still runs and the
+    range ends on or after the last page (or section) stored, whose rest the next batch may hold. C36.3 (issue 27):
+    a range already stored is quizzed at once (its questions are made for it); a book with no page map, or no
+    range given, waits for its whole ingest as before."""
     if book.get("status") == "processing":
         return True
     jobs = supabase.table("processing_jobs").select("status").eq("book_id", book["id"]).eq(
         "kind", "ingest").execute().data or []
-    return bool(jobs) and jobs[0].get("status") in INGESTING
+    if not jobs or jobs[0].get("status") not in INGESTING:
+        return False
+    unit, reach = (store.unit_of(end) if end else None), stored_reach(book["id"])
+    return unit is None or reach is None or unit >= reach
 
 
 def build(session: dict) -> dict:
     """The session's quiz {questions (stored form), words_in_range, count}; built once and kept.
 
-    C26.3: Preparing while the book is processed; the focus session keeps waiting for its quiz."""
+    C26.3: Preparing while its range is not stored yet (C36.3); the focus session keeps waiting for its quiz."""
     kept = supabase.table("sessions").select("test_questions").eq("id", session["id"]).eq(
         "user_id", session["user_id"]).execute().data
     if kept and kept[0].get("test_questions"):
         return {"questions": kept[0]["test_questions"], "words_in_range": session.get("words_in_range") or 0,
                 "count": session.get("quiz_total") or len(kept[0]["test_questions"])}
     book = supabase.table("books").select("id, file_type, toc, status").eq("id", session["book_id"]).execute().data[0]
-    if preparing(book):
+    end = _end_anchor(session)
+    if preparing(book, end):
         raise Preparing
-    questions, words, indices, picked = _assemble(session["user_id"], book, session["start_anchor"],
-                                                  _end_anchor(session))
+    questions, words, indices, picked = _assemble(session["user_id"], book, session["start_anchor"], end)
     _keep(session["id"], session["user_id"], book["id"], questions, words, indices, picked, session.get("started_at"))
     store.update_session(session, {"words_in_range": round(words), "quiz_total": len(questions),
                                    "quiz_question_ids": [q["id"] for q in questions if q.get("id")]})

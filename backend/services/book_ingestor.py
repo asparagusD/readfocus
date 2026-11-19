@@ -13,17 +13,16 @@ from ebooklib import epub
 from bs4 import BeautifulSoup
 
 from backend.agents import policy
-from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
-from backend.services import book_structure, covers, make_way, ocr_pages, pdf_text, processing_jobs, region_job
+from backend.regions.prose import pdf_page_anchors
+from backend.services import (book_structure, covers, make_way, ocr_pages, pdf_text, processing_jobs,
+                              reader_questions, region_job)
 from backend.services.book_purge import DELETING
 from backend.services.supabase_client import supabase
 
-question_agent = QuestionGenerationAgent()
-
-# Chunks embedded, stored and questioned together; the job's cursor is saved
-# after each batch. The first batch is smaller so the book unlocks as soon
-# as five chunks and their questions are stored.
+# Chunks embedded and stored together; the job's cursor is saved after each batch. The first batch is smaller
+# so the book unlocks as soon as five chunks are stored. C36.1 (issue 27): ingestion makes no questions; they
+# follow the reader (services/reader_questions.py).
 BROWSER_TEXT = "browser-text"  # C26.7: books.source_format of a book whose text came from the reader's browser
 FIRST_BATCH = 5
 INGEST_BATCH = 16
@@ -146,20 +145,6 @@ def chunk_text(pages: list[str], target_words: int = 600) -> list[str]:
 
     return chunks
 
-async def generate_questions(book_id: str, stored_chunks) -> None:
-    """Fill the question bank for chunks that were just stored, off the event loop.
-
-    A failure here is logged and nothing more: the chunks are stored and the
-    book stays readable; its questions can be generated again later.
-    """
-    try:
-        chunk_ids = [row["id"] for row in stored_chunks or []]
-        if chunk_ids:
-            await asyncio.to_thread(question_agent.run, book_id, chunk_ids)
-    except Exception as e:  # noqa: BLE001 - whatever goes wrong here must not fail the ingestion
-        print(f"Question generation failed for book {book_id}: {e}")
-
-
 def batches(total: int, cursor: int = 0):
     """(start, end) chunk ranges from the cursor: five first, then INGEST_BATCH at a time."""
     start = cursor
@@ -278,16 +263,27 @@ def read_pages(book: dict, file_bytes: bytes, browser: bool) -> tuple[list[str],
     return pages, ocr, every_page
 
 
-def store_batch(book_id: str, user_id: str, start: int, batch: list[str], vectors, blocks, paths) -> list[dict]:
-    """Upsert one batch of chunks with their vectors, blocks and paths; the stored rows."""
-    return supabase.table("chunks").upsert([
-        {"book_id": book_id, "user_id": user_id, "chunk_index": start + offset,
-         "word_count": len(chunk.split()), "content": chunk,
-         "blocks": blocks[start + offset] if blocks else None,
-         "block_paths": paths[start + offset] if paths else None,
-         "embedding_local": [float(value) for value in vectors[offset]]}
-        for offset, chunk in enumerate(batch)
-    ], on_conflict="book_id,chunk_index").execute().data
+def store_batch(book_id: str, user_id: str, start: int, batch: list[str], vectors, blocks, paths,
+                anchors: list[dict] | None = None) -> list[dict]:
+    """Upsert one batch of chunks with their vectors, blocks, paths and (C36.1, a PDF) page anchors; the rows."""
+    rows = [{"book_id": book_id, "user_id": user_id, "chunk_index": start + offset,
+             "word_count": len(chunk.split()), "content": chunk,
+             "blocks": blocks[start + offset] if blocks else None,
+             "block_paths": paths[start + offset] if paths else None,
+             "embedding_local": [float(value) for value in vectors[offset]]}
+            for offset, chunk in enumerate(batch)]
+    if anchors:  # the prose job replaces them once the region map is built (C18.6b)
+        for offset, row in enumerate(rows):
+            row["anchors"] = anchors[start + offset]
+    return supabase.table("chunks").upsert(rows, on_conflict="book_id,chunk_index").execute().data
+
+
+def page_anchors(book: dict, chunks: list[str], every_page: list[str] | None, ocr: dict) -> list[dict] | None:
+    """C36.1 (issue 27): a PDF's chunk pages from the page texts ingestion read, so a page maps to its chunk (quiz
+    ranges, the reader's place, Steve) before the region map. None for an EPUB, a browser-text or OCR-read book."""
+    if (book.get("file_type") or "").lower() != "pdf" or not every_page or ocr:
+        return None
+    return pdf_page_anchors(chunks, every_page)
 
 
 def _save_toc(book_id: str, toc: list) -> None:
@@ -304,7 +300,7 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
     """Ingest a claimed job's book from its cursor, saving the cursor after every batch.
 
     Safe to run again: chunks are upserted on (book_id, chunk_index) and
-    questions on their own unique key, so a batch that ran before the
+    (C36.1) no questions are made here, so a batch that ran before the
     process stopped is rewritten, not duplicated. Without `file_bytes` the
     file is read from Storage. Extraction and chunking are deterministic,
     so the chunk at an index is the same on every run.
@@ -329,17 +325,19 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         # C17.6: each EPUB block's spine index and element path, and the book's own contents.
         blocks, toc, paths = await asyncio.to_thread(
             book_structure.build_with_paths, "text" if browser else book["file_type"], file_bytes, chunks, every_page)
+        anchors = None if browser else await asyncio.to_thread(page_anchors, book, chunks, every_page, ocr)
         pdf_text.release_memory()  # C18.G: the parses are over; on Linux the freed memory goes back
         for start, end in batches(total, job["cursor"]):
             if start:  # C35.6: after the first batch (which makes the book readable), make way for requests
                 await make_way.between_batches()
             batch = chunks[start:end]
             vectors = await asyncio.to_thread(embedder.embed, batch)
-            stored = await asyncio.to_thread(store_batch, book_id, user_id, start, batch, vectors, blocks, paths)
-            await generate_questions(book_id, stored)  # questions and concepts of the batch
-            if not ready:  # the first batch is stored with its questions: the first session can start
+            await asyncio.to_thread(store_batch, book_id, user_id, start, batch, vectors, blocks, paths, anchors)
+            if not ready:  # the first batch is stored: the book opens and its first pages can be questioned
                 await asyncio.to_thread(mark_ready, book_id, total, words, toc)
                 ready = True
+            if reader_questions.pending():  # C36.2: a reader's questions are made now, not after this whole book
+                await reader_questions.serve(ingesting=book_id)
             await asyncio.to_thread(processing_jobs.advance, job["id"], end, total)
             await asyncio.to_thread(pdf_text.release_memory)
         if not ready:  # a book with no text at all is still ready, as before

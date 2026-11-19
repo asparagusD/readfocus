@@ -56,7 +56,7 @@ test('a shelf of five: next book, covers, progress and states', async ({ page })
   await expect(shelf.getByRole('link', { name: /On the Origin/ })).toHaveAttribute('href', '/read/origin'); // C26.3: opens while processed
   await expect(shelf).toContainText('25% read');
   await expect(shelf).toContainText('New · not started');
-  await expect(shelf).toContainText('Preparing quizzes…');
+  await expect(shelf).toContainText('Preparing the book…');
   await expect(shelf).toContainText('We couldn’t read this file');
   await expect(page.getByRole('button', { name: 'Remove Middlemarch from your shelf' })).toBeVisible();
   // The stored cover is drawn over the typographic one.
@@ -187,8 +187,8 @@ test('adding a book: picker, an inline error for the title, the author optional,
   await dialog.getByLabel('Title').press('Enter'); // C30.2: no author typed; the server reads it from the file
   await expect(dialog).toBeHidden();
   expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: '', mode: 'cloud', file: 'the_age_of_innocence.pdf' }]);
-  await expect(page.getByText('The Age Of Innocence is on your shelf. Open it now; its quizzes follow in a few minutes.')).toBeVisible();
-  await expect(page.locator('.rf-shelf__item').first()).toContainText('Preparing quizzes…');
+  await expect(page.getByText('The Age Of Innocence is on your shelf. Open it now; the pages you read can be quizzed as you go.')).toBeVisible();
+  await expect(page.locator('.rf-shelf__item').first()).toContainText('Preparing the book…');
   await expect(page.locator('.rf-shelf__item').first()).toContainText('Edith Wharton');
 });
 
@@ -220,7 +220,7 @@ test('a PDF goes straight to Storage with its progress, then onto the shelf, kep
   expect(calls.uploads).toEqual([{ title: 'The Age Of Innocence', author: '', mode: 'cloud', file: 'the_age_of_innocence.pdf' }]);
   const sha = createHash('sha256').update(PDF.buffer).digest('hex');
   await expect.poll(() => keptFiles(page)).toEqual([`https://book-files.readfocus.invalid/new-book/${sha}`]);
-  await expect(page.locator('.rf-shelf__item').first()).toContainText('Preparing quizzes…');
+  await expect(page.locator('.rf-shelf__item').first()).toContainText('Preparing the book…');
 });
 
 test('a refused direct upload never registers and keeps the dialog open', async ({ page }) => {
@@ -346,9 +346,9 @@ test('a processing book shows how far its quizzes are, then says when the first 
   await page.clock.install(); // C35.6: the polls back off (5 s, then 10 s, ...); the test moves the clock
   await page.goto('/');
   const tile = page.locator('.rf-shelf__item').filter({ hasText: 'On the Origin of Species' });
-  await expect(tile).toContainText('Preparing quizzes…');
+  await expect(tile).toContainText('Preparing the book…');
   await page.clock.runFor(5000); // the first poll: the list, then each processing book's status
-  await expect(tile).toContainText('Preparing quizzes… 64%');
+  await expect(tile).toContainText('Preparing the book… 64%');
   expect(calls.statuses).toBe(1);
   await page.clock.runFor(9000); // the second poll waits 10 s, not 5
   expect(polls).toBe(2);

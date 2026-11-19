@@ -112,8 +112,16 @@ What each one decides:
   abandonment caps it; focus minutes follow the measured reading speed;
   the worst failing question type gets one more place in the next mix.
 
-The question bank itself is filled at ingestion by the question generation
-agent (`question_generation/agent.py`, `strategies.py`, `quality.py`):
+The question bank is filled as the reader reads (C36, issue 27): every saved
+place (`PUT /books/{id}/position`) wants the chunk on screen and the next one
+(`services/reader_questions.py`, in memory, the latest place per book); they
+are made in the ingestion worker's slot ahead of any waiting job
+(`ingestion_worker.run_questions`), or between an ingest's batches. Chunks
+never reached are never questioned. A quiz (`focus/quiz.py` `preparing`)
+waits only while its range ends on or after the last page the stored chunks
+reach, and makes any of its range's missing questions itself. The questions
+come from the question generation agent (`question_generation/agent.py`,
+`strategies.py`, `quality.py`):
 extractive cloze, definition, why/how, main-idea and multiple-choice
 questions built from the chunk's own sentences, with YAKE concepts as
 answers and distractors. Every question keeps its evidence verbatim.
@@ -193,11 +201,13 @@ Routing (`backend/agents/graph.py`):
    is never changed afterwards: questions quote it verbatim.
 2. Build reader structure beside it (`book_structure.py`): blocks per chunk
    (`{id, type, text, marks}`) and a table of contents.
-3. Per batch of chunks: embed locally (all-MiniLM-L6-v2, 384 dimensions),
-   upsert the chunks, extract concepts (YAKE, merged with rapidfuzz and
-   embedding similarity) and fill the question bank. After the first
-   batch the book is marked `ready`, so reading can start while the rest
-   is processed.
+3. Per batch of chunks: embed locally (all-MiniLM-L6-v2, 384 dimensions)
+   and upsert the chunks; a PDF's chunks also get their page anchors
+   (pages and per-page spans, `prose.pdf_page_anchors`) from the page
+   texts just read. After the first batch the book is marked `ready`, so
+   reading can start while the rest is processed. Since C36 ingestion makes
+   no questions: between batches it serves the reader's wanted questions
+   (below).
 4. The job's cursor is saved after every batch (`processing_jobs`); a
    stopped server's jobs are picked up again by the startup sweep
    (`ingestion_worker.py`) or `POST /books/{id}/resume`.
@@ -271,7 +281,7 @@ per batch):
 PDF: pdfplumber characters ─► extract.py lines and blocks ─► classify.py math (fonts, symbols, raised characters)
        ─► code.py (monospace, language guessed) ─► figures.py / tables ─► garble.py (unreadable text) ─► page_regions (018)
 EPUB: epub.py walks each spine document: <math>, <pre>/<code>, <figure>/<img>, <table> with CFI anchors ─► page_regions (019)
-then prose_job.py: each chunk's prose-only text and anchors (020); changed chunks re-embedded, their unused questions rebuilt
+then prose_job.py: each chunk's prose-only text and anchors (020); changed chunks re-embedded, the unused questions of those with questions rebuilt (C36.5)
 ```
 
 Questions, grading and Steve's context read `chunks.prose`, so an equation

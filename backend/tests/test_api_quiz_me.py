@@ -92,6 +92,15 @@ def test_another_readers_book_a_bad_scope_and_extra_keys_are_refused(qm):
     assert extra.status_code == 422
 
 
+def test_quiz_me_on_stored_pages_works_while_the_rest_of_the_book_is_read_in(qm):
+    """C36.3 (issue 27): the stored chunks reach p. 8; a quiz up to p. 6 does not wait for the rest."""
+    qm.db.tables["books"][0]["toc"] = [{"title": "One", "page": 1}, {"title": "Two", "page": 5}]
+    qm.db.tables["processing_jobs"] = [{"book_id": BOOK, "kind": "ingest", "status": "running"}]
+    assert ask(qm, "chapter", end_of(6)).status_code == 200
+    waiting = ask(qm, "chapter", end_of(8))
+    assert waiting.status_code == 409 and waiting.json()["detail"]["code"] == "preparing"
+
+
 def test_quiz_me_waits_while_the_book_is_processed_and_makes_nothing(qm):
     qm.db.tables["books"][0].update(status="processing", toc=[{"title": "One", "page": 1}])
     response = ask(qm, "chapter", end_of(4))

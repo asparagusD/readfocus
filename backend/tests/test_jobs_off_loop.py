@@ -53,7 +53,6 @@ def db(monkeypatch):
     monkeypatch.setattr(memory_db.Query, "execute", lambda self: (time.sleep(SLOW), execute(self))[1])
     monkeypatch.setattr(memory_db.Bucket, "upload", lambda self, *a, **k: (time.sleep(SLOW), upload(self, *a, **k))[1])
     monkeypatch.setattr(embedder, "embed", lambda texts: np.zeros((len(texts), embedder.EMBEDDING_DIM), dtype=np.float32))
-    monkeypatch.setattr(book_ingestor.question_agent, "run", lambda book_id, chunk_ids: None)
     monkeypatch.setattr(book_ingestor, "look_up_cover", lambda book, data: None)
 
     async def no_prose(book, file_bytes):

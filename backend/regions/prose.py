@@ -222,6 +222,27 @@ def _ranges(chunks: list[str]) -> list[tuple[int, int]]:
     return out
 
 
+def _page_pieces(start: int, end: int, starts: list[int], total: int) -> list[dict]:
+    """The pages a chunk's skeleton range [start, end) covers, each with its characters in that page's skeleton."""
+    return [{"page": n + 1, "char_start": max(start, s) - s, "char_end": min(end, e) - s}
+            for n, (s, e) in enumerate(zip(starts, [*starts[1:], total])) if s < end and e > start and e > s]
+
+
+def pdf_page_anchors(chunks: list[str], page_texts: list[str]) -> list[dict]:
+    """C36.1: each chunk's PDF anchors before the book's region map exists: its pages and per-page spans, no
+    placeholders. The same pages and spans as pdf_prose's (only non-prose spans differ there), for ingest."""
+    starts, total = [], 0
+    for text in page_texts:
+        starts.append(total)
+        total += len(skeleton(text))
+    out = []
+    for start, end in _ranges(chunks):
+        pieces = _page_pieces(start, end, starts, total)
+        out.append({"kind": "pdf", "pages": [pieces[0]["page"], pieces[-1]["page"]] if pieces else None,
+                    "spans": pieces, "placeholders": []})
+    return out
+
+
 def pdf_prose(chunks: list[str], page_texts: list[str], regions: list[dict]) -> list[dict]:
     """Per chunk {prose, anchors} for a PDF: `page_texts` are pypdf's, one per page (empty pages included)."""
     by_page: dict[int, list[dict]] = {}
@@ -241,8 +262,7 @@ def pdf_prose(chunks: list[str], page_texts: list[str], regions: list[dict]) -> 
     for content, (start, end) in zip(chunks, _ranges(chunks)):
         text, used, at = _apply(content, start, spans)
         text, bad = unreadable(text, at, lambda p: f"p. {page_at(p)}")
-        pieces = [{"page": n + 1, "char_start": max(start, s) - s, "char_end": min(end, e) - s}
-                  for n, (s, e) in enumerate(zip(starts, [*starts[1:], total])) if s < end and e > start and e > s]
+        pieces = _page_pieces(start, end, starts, total)
         marks = [{"kind": u["region"]["kind"], "text": u["text"], "page": u["page"],
                   "order": u["region"].get("order_in_page"), "at": u["start"]} for u in used]
         marks += [{"kind": "unreadable", "text": mark, "page": page_at(p), "order": None, "at": p or 0} for mark, p in bad]

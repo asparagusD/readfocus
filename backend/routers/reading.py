@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from backend.dependencies import get_current_user
 from backend.routers.sessions import EpubAnchor, PdfAnchor
-from backend.services import file_url, reading_place
+from backend.services import file_url, ingestion_worker, reader_questions, reading_place
 from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 from backend.xp import badge_award
@@ -99,7 +99,8 @@ async def open_book(book_id: str, user_id: str = Depends(get_current_user)):
     return opening(book, progress, file)
 
 
-def save(user_id: str, book_id: str, req: BookPosition) -> dict:
+def save(user_id: str, book_id: str, req: BookPosition) -> tuple[dict, int | None, int]:
+    """Store the place; (position, the chunk it is in or None, the book's chunk count)."""
     book = own_book(user_id, book_id)
     kind = (book.get("file_format") or book.get("file_type") or "").lower()
     if req.anchor.kind != kind:
@@ -118,13 +119,20 @@ def save(user_id: str, book_id: str, req: BookPosition) -> dict:
     supabase.table("reading_progress").update(values).eq("user_id", user_id).eq("book_id", book_id).execute()
     if "chunks_completed" in values:  # C32.2: the words first reached, for "words read this week"
         reading_place.add_words(user_id, book_id, before, at + 1)
-    return position
+    return position, at, int(book.get("total_chunks") or 0)
+
+
+async def follow_reader(book_id: str, at: int | None, total: int) -> None:
+    """C36.2 (issue 27): the questions of the chunk on screen and the next one, made after the response."""
+    if reader_questions.want(book_id, at, total):
+        await ingestion_worker.run_questions()
 
 
 @router.put("/{book_id}/position")
 async def save_book_position(book_id: str, req: BookPosition, background_tasks: BackgroundTasks,
                              user_id: str = Depends(get_current_user)):
-    position = await run_in_threadpool(save, user_id, book_id, req)
+    position, at, total = await run_in_threadpool(save, user_id, book_id, req)
     background_tasks.add_task(badge_award.check_quietly, user_id, "place", book_id=book_id,
                               anchor=position["anchor"])  # C24.2: Finished a book, after the response
+    background_tasks.add_task(follow_reader, book_id, at, total)
     return {"position": position}

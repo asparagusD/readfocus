@@ -53,8 +53,8 @@ function caption(book, pct, sending) {
   if (book.status === 'error') return 'We couldn’t read this file';
   // C26.7: a book over 50 MB has its pages read in this browser first, then its quizzes are made.
   if (sending != null && book.status !== 'ready') return `Reading its pages on this device… ${sending}%`;
-  // C26.3: a book opens while it is processed; only its quizzes wait.
-  if (book.status !== 'ready') return pct == null ? 'Preparing quizzes…' : `Preparing quizzes… ${pct}%`;
+  // C26.3: a book opens while it is processed; C36 (issue 27): the pages read are quizzed as they are read.
+  if (book.status !== 'ready') return pct == null ? 'Preparing the book…' : `Preparing the book… ${pct}%`;
   return book.progress ? `${readPct(book)}% read` : 'New · not started';
 }
 
@@ -317,7 +317,7 @@ export function Library() {
     }
     setBooks(prev => [optimbook, ...prev]);
     setUploadModalOpen(false);
-    toast({ kind: 'success', message: `${optimbook.title} is on your shelf. Open it now; its quizzes follow in a few minutes.` });
+    toast({ kind: 'success', message: `${optimbook.title} is on your shelf. Open it now; the pages you read can be quizzed as you go.` });
     if (resp.notes?.length) toast({ kind: 'warning', message: missingImages(resp.notes) });
   };
 

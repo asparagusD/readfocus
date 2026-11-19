@@ -4,8 +4,9 @@
 // bytes go into Cache Storage, keyed by the book and its sha256 (from GET /books/{id}/open
 // or /file), so the next open reads them from disk and a changed file is fetched afresh.
 //
-// PDFs are not kept: they open from byte ranges (C34.1), a page after about 0.6 MB, and
-// keeping one would mean downloading all of it. Device-only books stay in fileStore.js.
+// PDFs are not kept after an open: they open from byte ranges (C34.1), a page after about 0.6 MB,
+// and keeping one would mean downloading all of it. C35.3c: a PDF or EPUB uploaded from this
+// browser is kept under the sha256 this browser worked out, which is the one the server stores. Device-only books stay in fileStore.js.
 // Cache Storage can be missing or full (private windows, quotas): then nothing is kept and
 // the file is downloaded as before. Signing out forgets every kept file.
 
@@ -24,11 +25,16 @@ async function dropBook(cache, bookId) {
   }
 }
 
-/** The kept bytes of this version of the book's file, or null. Never throws. */
+/**
+ * The kept bytes of this version of the book's file, or null. Never throws. C35.3c: with no sha256 (a
+ * book uploaded from this browser whose server has not hashed it yet), the one copy kept for the book,
+ * which is the file this browser sent.
+ */
 export async function cachedBookFile(bookId, sha256, caches = globalThis.caches) {
   try {
     const cache = await open(caches);
-    const found = cache && await cache.match(keyFor(bookId, sha256));
+    const key = sha256 ? keyFor(bookId, sha256) : (await cache?.keys() ?? []).map((r) => r.url).find((url) => url.startsWith(prefix(bookId)));
+    const found = cache && key && await cache.match(key);
     return found ? new Uint8Array(await found.arrayBuffer()) : null;
   } catch {
     return null;

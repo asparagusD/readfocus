@@ -136,10 +136,10 @@ test('the phase-2 journey, signed in, on the real stack', async ({ page, baseURL
       const dialog = page.getByRole('dialog', { name: 'Add to your shelf' });
       await dialog.getByLabel('Title').fill(`Phase 2 ${kind} ${stamp}`);
       await dialog.getByLabel('Author').fill('ReadFocus phase-2 journey');
-      const uploaded = page.waitForResponse(isApi(/^\/books\/upload$/, 'POST'), { timeout: 180_000 });
+      const uploaded = page.waitForResponse(isApi(/^\/books\/register$/, 'POST'), { timeout: 180_000 });
       await dialog.getByRole('button', { name: 'Add book' }).click();
       const response = await uploaded;
-      expect(response.status(), `POST /books/upload (${file})`).toBe(200);
+      expect(response.status(), `POST /books/register (${file})`).toBe(200);
       books[kind] = (await response.json()).book_id;
       await expect(dialog).toBeHidden();
     }

@@ -14,6 +14,7 @@ from backend.dependencies import get_current_user, require_model
 from backend.focus import policy, quiz, quiz_me, store
 from backend.routers.sessions import EpubAnchor, PdfAnchor
 from backend.services import body_start
+from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 
 router = APIRouter()
@@ -58,8 +59,8 @@ class EndRequest(BaseModel):
 
 
 def _book(book_id: str, user_id: str) -> dict:
-    rows = supabase.table("books").select("id, file_type, page_count, toc, body_start, status").eq("id", book_id).eq(
-        "user_id", user_id).execute().data
+    rows = live(supabase.table("books").select("id, file_type, page_count, toc, body_start, status").eq("id", book_id).eq(
+        "user_id", user_id).execute().data)
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
     return cast(dict[str, Any], rows[0])

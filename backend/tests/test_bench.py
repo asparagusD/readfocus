@@ -44,6 +44,11 @@ def test_the_cleanup_delete_is_sent_again_when_the_connection_drops():
     assert bench.delete_book(client, "b1", pause=0) == 200 and client.deleted == 2
 
 
+def test_a_delete_accepted_for_the_background_purge_is_done():  # C35.2: DELETE answers 202
+    client = FakeClient(deletes=[202])
+    assert bench.delete_book(client, "b1", pause=0) == 202 and client.deleted == 1
+
+
 def test_a_book_that_cannot_be_deleted_is_said_loudly():
     client = FakeClient(deletes=[500, 500, 500])
     with pytest.raises(SystemExit, match="b1 was NOT deleted"):

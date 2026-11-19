@@ -11,6 +11,7 @@ import { MotionRoot } from './motion/MotionRoot';
 import { ToastProvider } from './components/ui/Toast';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { routeFade, routeTransition } from './motion/presets';
+import { PageSkeleton } from './components/ui/PageSkeleton';
 
 // Every page but the landing loads on demand (C13.10e), so a signed-out visitor's first
 // load is the landing page alone: no charts, reader or test code. Each lazy page has its
@@ -27,7 +28,8 @@ const League = named(() => import('./pages/League'), 'League'); // C24.6c
 const Login = named(() => import('./pages/Login'), 'Login');
 const NotFound = named(() => import('./pages/NotFound'), 'NotFound');
 const Privacy = named(() => import('./pages/Privacy'), 'Privacy'); // C25.1
-const page = (Page) => <Suspense fallback={null}><Page /></Suspense>;
+// C35.5d (issue 20): a skeleton, never an empty main area, while a page's code arrives.
+const page = (Page) => <Suspense fallback={<PageSkeleton />}><Page /></Suspense>;
 
 // Dev-only review page for the illustrations (C11.1). In a production
 // build import.meta.env.DEV is false, so the import and the route are

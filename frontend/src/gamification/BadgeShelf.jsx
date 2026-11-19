@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { m } from 'motion/react';
 import { BookCheck, BookOpen, Brush, CheckCheck, Flame, Hourglass, MessageCircle, PenLine, Sigma, Timer } from 'lucide-react';
-import { fetchApi } from '../lib/api';
+import { usePageData } from '../lib/pageData';
 import { Skeleton } from '../components/ui/Skeleton';
 import { easing, prefersReducedMotion, seconds } from '../motion/presets';
 import { earnedOn, newlyEarned, SEEN_KEY, seenAfter, shelfLine } from './shelfMath';
@@ -49,37 +49,36 @@ function readSeen() {
  * once (scale 1.25 to 1 with a slight turn, --dur-5); none under reduced motion.
  */
 export function BadgeShelf() {
-  const [state, setState] = useState({ status: 'loading' });
+  // C35.5b (issue 20): the last answer at once on a return, refreshed behind it. What counts as newly earned is
+  // decided against the badges this device had shown when the shelf mounted, so a refresh never stamps twice.
+  const { data, loading, error } = usePageData('/badges');
+  const [seenAtMount] = useState(readSeen);
+  const fresh = useMemo(() => new Set(data ? newlyEarned(data.badges, seenAtMount) : []), [data, seenAtMount]);
   useEffect(() => {
-    let live = true;
-    fetchApi('/badges').then((body) => {
-      if (!live) return;
-      const seen = readSeen();
-      try { localStorage.setItem(SEEN_KEY, JSON.stringify(seenAfter(body.badges, seen))); } catch { /* blocked */ }
-      setState({ status: 'ready', ...body, fresh: new Set(newlyEarned(body.badges, seen)) });
-    }).catch(() => { if (live) setState({ status: 'error' }); });
-    return () => { live = false; };
-  }, []);
+    if (!data) return;
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify(seenAfter(data.badges, readSeen()))); } catch { /* blocked */ }
+  }, [data]);
+  const state = data ? { ...data, fresh } : null;
 
-  if (state.status === 'loading') {
-    return <section className="rf-shelf" aria-busy="true" aria-label="Badge shelf"><Skeleton height={140} /></section>;
+  if (loading) {
+    return <section className="rf-badge-shelf" aria-busy="true" aria-label="Badge shelf"><Skeleton height={140} /></section>;
   }
-  if (state.status === 'error') {
+  if (error) {
     return (
-      <section className="rf-shelf" aria-labelledby="rf-shelf-title">
-        <h2 id="rf-shelf-title" className="rf-dash__h2">Badge shelf</h2>
+      <section className="rf-badge-shelf" aria-labelledby="rf-badge-shelf-title">
+        <h2 id="rf-badge-shelf-title" className="rf-dash__h2">Badge shelf</h2>
         <p className="rf-dash__muted">Your badges didn’t load. They are safe; try again in a moment.</p>
       </section>
     );
   }
   const still = prefersReducedMotion();
   return (
-    <section className="rf-shelf" aria-labelledby="rf-shelf-title">
+    <section className="rf-badge-shelf" aria-labelledby="rf-badge-shelf-title">
       <div className="rf-dash__section-head">
-        <h2 id="rf-shelf-title" className="rf-dash__h2">Badge shelf</h2>
+        <h2 id="rf-badge-shelf-title" className="rf-dash__h2">Badge shelf</h2>
         <p className="rf-dash__muted">{shelfLine(state.earned, state.total)}</p>
       </div>
-      <ul className="rf-shelf__list">
+      <ul className="rf-badge-shelf__list">
         {state.badges.map((badge) => {
           const stamp = state.fresh.has(badge.id) && !still;
           return (

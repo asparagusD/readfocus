@@ -135,6 +135,13 @@
       "handler": "get_book_status"
     },
     {
+      "id": "endpoint:GET /boom",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/boom",
+      "handler": "boom"
+    },
+    {
       "id": "endpoint:GET /dashboard",
       "type": "endpoint",
       "method": "GET",
@@ -198,6 +205,13 @@
       "handler": "get_session"
     },
     {
+      "id": "endpoint:GET /steve/ask",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/steve/ask",
+      "handler": "ask"
+    },
+    {
       "id": "endpoint:GET /steve/key",
       "type": "endpoint",
       "method": "GET",
@@ -247,11 +261,25 @@
       "handler": "create_device_book"
     },
     {
+      "id": "endpoint:POST /books/register",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/register",
+      "handler": "register_upload"
+    },
+    {
       "id": "endpoint:POST /books/upload",
       "type": "endpoint",
       "method": "POST",
       "path": "/books/upload",
       "handler": "upload_book"
+    },
+    {
+      "id": "endpoint:POST /books/upload-url",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/upload-url",
+      "handler": "create_upload_url"
     },
     {
       "id": "endpoint:POST /books/{book_id}/annotations",
@@ -406,6 +434,13 @@
       "method": "POST",
       "path": "/steve/latex",
       "handler": "equation_latex"
+    },
+    {
+      "id": "endpoint:POST /upload",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/upload",
+      "handler": "upload"
     },
     {
       "id": "endpoint:PUT /books/{book_id}/body-start",
@@ -1138,6 +1173,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/book_purge.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/book_structure.py",
       "type": "file",
       "role": "service",
@@ -1156,6 +1197,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/direct_upload.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/ingestion_worker.py",
       "type": "file",
       "role": "service",
@@ -1163,6 +1210,12 @@
     },
     {
       "id": "file:backend/services/lookup.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/services/make_way.py",
       "type": "file",
       "role": "service",
       "language": "python"
@@ -1582,6 +1635,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_book_deleting_hidden.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_book_files.py",
       "type": "file",
       "role": "test",
@@ -1649,6 +1708,12 @@
     },
     {
       "id": "file:backend/tests/test_device_books.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_direct_upload.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -1799,6 +1864,12 @@
     },
     {
       "id": "file:backend/tests/test_lookup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_make_way.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -2482,6 +2553,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/no-blank.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/notepad.spec.js",
       "type": "file",
       "role": "config",
@@ -2525,6 +2602,18 @@
     },
     {
       "id": "file:frontend/e2e/ocr.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/open-ahead.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/page-data.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2627,6 +2716,12 @@
     },
     {
       "id": "file:frontend/e2e/time-zone.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/upload-first-open.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -3053,6 +3148,12 @@
     },
     {
       "id": "file:frontend/src/components/ui/Modal.jsx",
+      "type": "file",
+      "role": "component",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/components/ui/PageSkeleton.jsx",
       "type": "file",
       "role": "component",
       "language": "jsx"
@@ -3526,6 +3627,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/lib/backoff.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/backoff.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/lib/coverColor.js",
       "type": "file",
       "role": "lib",
@@ -3544,6 +3657,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/lib/directUpload.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/directUpload.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/lib/initials.js",
       "type": "file",
       "role": "lib",
@@ -3551,6 +3676,30 @@
     },
     {
       "id": "file:frontend/src/lib/initials.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/pageData.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/pageData.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/prefetchPage.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/prefetchPage.test.js",
       "type": "file",
       "role": "lib",
       "language": "javascript"
@@ -4361,6 +4510,18 @@
     },
     {
       "id": "file:frontend/src/reader/lookup.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/openAhead.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/openAhead.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -5242,6 +5403,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/035_book_deleting.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -5648,11 +5815,6 @@
     },
     {
       "type": "calls_endpoint",
-      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
-      "to": "endpoint:GET /mastery"
-    },
-    {
-      "type": "calls_endpoint",
       "from": "file:frontend/src/focus/ReadyModal.jsx",
       "to": "endpoint:POST /focus/{session_id}/quiz"
     },
@@ -5683,18 +5845,8 @@
     },
     {
       "type": "calls_endpoint",
-      "from": "file:frontend/src/gamification/BadgeShelf.jsx",
-      "to": "endpoint:GET /badges"
-    },
-    {
-      "type": "calls_endpoint",
       "from": "file:frontend/src/gamification/LeagueSettings.jsx",
       "to": "endpoint:PUT /me/progress"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/gamification/useProgress.js",
-      "to": "endpoint:GET /me/progress"
     },
     {
       "type": "calls_endpoint",
@@ -5740,16 +5892,6 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/ComprehensionTest.jsx",
       "to": "endpoint:POST /sessions/{session_id}/evaluate-single"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/Dashboard.jsx",
-      "to": "endpoint:GET /dashboard"
-    },
-    {
-      "type": "calls_endpoint",
-      "from": "file:frontend/src/pages/League.jsx",
-      "to": "endpoint:GET /leagues/current"
     },
     {
       "type": "calls_endpoint",
@@ -6168,7 +6310,17 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:POST /books/register"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:POST /books/upload"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
+      "to": "endpoint:POST /books/upload-url"
     },
     {
       "type": "defines_endpoint",
@@ -6404,6 +6556,31 @@
       "type": "defines_endpoint",
       "from": "file:backend/tests/test_cors.py",
       "to": "endpoint:GET /books"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:GET /books"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:GET /boom"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:GET /health"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:GET /steve/ask"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:POST /upload"
     },
     {
       "type": "defines_function",
@@ -7267,6 +7444,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/services/pdf_text.py"
     },
     {
@@ -7321,6 +7503,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/regions/extract.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/regions/figures.py",
       "to": "file:backend/regions/policy.py"
     },
@@ -7353,6 +7540,11 @@
       "type": "imports",
       "from": "file:backend/routers/annotations.py",
       "to": "file:backend/services/anchor_checks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/annotations.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -7398,6 +7590,16 @@
       "type": "imports",
       "from": "file:backend/routers/books.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/direct_upload.py"
     },
     {
       "type": "imports",
@@ -7448,6 +7650,11 @@
       "type": "imports",
       "from": "file:backend/routers/device_books.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -7507,6 +7714,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/focus.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7557,6 +7769,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/notes.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
       "to": "file:backend/services/note_content.py"
     },
     {
@@ -7578,6 +7795,11 @@
       "type": "imports",
       "from": "file:backend/routers/ocr.py",
       "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -7653,6 +7875,11 @@
       "type": "imports",
       "from": "file:backend/routers/reading.py",
       "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -7737,6 +7964,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7807,12 +8039,22 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/book_structure.py"
     },
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/covers.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/make_way.py"
     },
     {
       "type": "imports",
@@ -7841,6 +8083,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/book_purge.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/book_structure.py",
       "to": "file:backend/services/pdf_text.py"
     },
@@ -7861,8 +8108,23 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/direct_upload.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/direct_upload.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/ingestion_worker.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -7908,6 +8170,11 @@
       "type": "imports",
       "from": "file:backend/services/ocr_pages.py",
       "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/pdf_text.py",
+      "to": "file:backend/services/make_way.py"
     },
     {
       "type": "imports",
@@ -8002,6 +8269,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/region_job.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
       "to": "file:backend/services/pdf_text.py"
     },
     {
@@ -8053,6 +8325,11 @@
       "type": "imports",
       "from": "file:backend/steve/context.py",
       "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -8153,6 +8430,11 @@
       "type": "imports",
       "from": "file:backend/tests/conftest.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/conftest.py",
+      "to": "file:backend/services/make_way.py"
     },
     {
       "type": "imports",
@@ -8827,6 +9109,86 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/annotations.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/device_books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/focus.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/notes.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/ocr.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/reading.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/steve_ask.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {
@@ -9067,6 +9429,56 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/direct_upload.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {
@@ -9442,6 +9854,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
       "to": "file:backend/services/ocr_pages.py"
     },
     {
@@ -9506,6 +9923,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_mastery.py",
       "to": "file:backend/agents/knowledge_state/mastery.py"
     },
@@ -9523,6 +9945,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_migrations.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_migrations.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -10451,6 +10878,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/no-blank.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/notepad.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10487,6 +10919,16 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/ocr.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/open-ahead.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/page-data.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -10591,6 +11033,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/upload-first-open.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/warmup.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -10618,6 +11065,11 @@
       "type": "imports",
       "from": "file:frontend/src/App.jsx",
       "to": "file:frontend/src/components/RouteErrorBoundary.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/App.jsx",
+      "to": "file:frontend/src/components/ui/PageSkeleton.jsx"
     },
     {
       "type": "imports",
@@ -10876,6 +11328,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/Layout.jsx",
+      "to": "file:frontend/src/lib/prefetchPage.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/RouteErrorBoundary.jsx",
       "to": "file:frontend/src/components/ErrorScreen.jsx"
     },
@@ -10951,6 +11408,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/components/dashboard/MasteryList.jsx",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/components/test/OptionCards.jsx",
       "to": "file:frontend/src/components/test/OptionCards.css"
     },
@@ -10998,6 +11460,11 @@
       "type": "imports",
       "from": "file:frontend/src/components/ui/Modal.jsx",
       "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/components/ui/PageSkeleton.jsx",
+      "to": "file:frontend/src/components/ui/Skeleton.jsx"
     },
     {
       "type": "imports",
@@ -11352,7 +11819,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/gamification/BadgeShelf.jsx",
-      "to": "file:frontend/src/lib/api.js"
+      "to": "file:frontend/src/lib/pageData.js"
     },
     {
       "type": "imports",
@@ -11416,6 +11883,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/gamification/LeagueSettings.jsx",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/gamification/leagueView.test.js",
       "to": "file:frontend/src/gamification/leagueView.js"
     },
@@ -11438,6 +11910,16 @@
       "type": "imports",
       "from": "file:frontend/src/gamification/useProgress.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/gamification/useProgress.js",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/hooks/useAuth.jsx",
+      "to": "file:frontend/src/lib/pageData.js"
     },
     {
       "type": "imports",
@@ -11506,13 +11988,38 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/lib/backoff.test.js",
+      "to": "file:frontend/src/lib/backoff.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/lib/dashboard.test.js",
       "to": "file:frontend/src/lib/dashboard.js"
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/lib/directUpload.test.js",
+      "to": "file:frontend/src/lib/directUpload.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/lib/initials.test.js",
       "to": "file:frontend/src/lib/initials.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/pageData.test.js",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/prefetchPage.js",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/prefetchPage.test.js",
+      "to": "file:frontend/src/lib/prefetchPage.js"
     },
     {
       "type": "imports",
@@ -11907,6 +12414,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/bookFile.js",
+      "to": "file:frontend/src/reader/fileCache.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/bookFile.js",
       "to": "file:frontend/src/reader/fileStore.js"
     },
     {
@@ -12237,12 +12749,12 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Dashboard.jsx",
-      "to": "file:frontend/src/lib/api.js"
+      "to": "file:frontend/src/lib/dashboard.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Dashboard.jsx",
-      "to": "file:frontend/src/lib/dashboard.js"
+      "to": "file:frontend/src/lib/pageData.js"
     },
     {
       "type": "imports",
@@ -12263,6 +12775,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Dashboard.jsx",
       "to": "file:frontend/src/pages/Dashboard.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/reader/openAhead.js"
     },
     {
       "type": "imports",
@@ -12332,7 +12849,12 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/League.jsx",
-      "to": "file:frontend/src/lib/api.js"
+      "to": "file:frontend/src/gamification/useProgress.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/League.jsx",
+      "to": "file:frontend/src/lib/pageData.js"
     },
     {
       "type": "imports",
@@ -12397,6 +12919,21 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/lib/backoff.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/lib/directUpload.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/lib/useDocumentTitle.js"
     },
     {
@@ -12423,6 +12960,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/reader/fileStore.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/openAhead.js"
     },
     {
       "type": "imports",
@@ -12532,6 +13074,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/lib/backoff.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/lib/useDocumentTitle.js"
     },
     {
@@ -12623,6 +13170,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/openAhead.js"
     },
     {
       "type": "imports",
@@ -12878,6 +13430,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/lookup.test.js",
       "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/openAhead.test.js",
+      "to": "file:frontend/src/reader/openAhead.js"
     },
     {
       "type": "imports",
@@ -14146,6 +14703,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/book_purge.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/concept_store.py",
       "to": "table:concepts"
     },
@@ -14461,6 +15023,11 @@
     },
     {
       "type": "uses_env",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "env:VITE_SUPABASE_ANON_KEY"
+    },
+    {
+      "type": "uses_env",
       "from": "file:scripts/backfill_block_paths.py",
       "to": "env:ENV"
     },
@@ -14638,6 +15205,11 @@
       "type": "writes_table",
       "from": "file:backend/services/book_ingestor.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/book_purge.py",
+      "to": "table:books"
     },
     {
       "type": "writes_table",

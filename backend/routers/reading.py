@@ -24,6 +24,7 @@ from backend.agents import policy
 from backend.dependencies import get_current_user
 from backend.routers.sessions import EpubAnchor, PdfAnchor
 from backend.services import reading_place
+from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 from backend.xp import badge_award
 
@@ -43,7 +44,7 @@ class BookPosition(BaseModel):
 
 
 def own_book(user_id: str, book_id: str) -> dict:
-    rows = supabase.table("books").select(BOOK_FIELDS).eq("id", book_id).eq("user_id", user_id).execute().data
+    rows = live(supabase.table("books").select(BOOK_FIELDS).eq("id", book_id).eq("user_id", user_id).execute().data)
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found.")
     return cast(dict[str, Any], rows[0])

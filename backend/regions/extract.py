@@ -21,6 +21,7 @@ from statistics import median
 import pdfplumber
 
 from backend.regions import policy
+from backend.services import make_way
 
 
 @dataclass
@@ -244,4 +245,5 @@ def iter_pages(source, first: int, last: int):
     """Pages first..last (1-based, inclusive), the file opened once."""
     with _open(source) as pdf:
         for page_no in range(first, min(last, len(pdf.pages)) + 1):
+            make_way.in_thread()  # C35.6: a request being served goes first
             yield _read(pdf, page_no)

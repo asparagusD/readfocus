@@ -35,6 +35,46 @@ run against production), a timed Render cold start after 15 idle minutes,
 Render's own memory graph, Lighthouse on the live site, and a long book
 ingested in the container or on Render.
 
+### C34: opening a book on Render Free (2026-11-18)
+
+Issues 11 to 15. Production (Render Free, Singapore; Supabase, Mumbai) from this machine, as test user A, read-only
+GETs: median of 7 runs per request, before the release (main 20a9a23) and after (main 019c55e, Render d0a908b).
+The script signs in with `.env.test`, reads test user A's one book and requests each path; the "open burst" sends
+the reader's seven requests on open at once (5 runs). `/health` is the network round trip from here.
+
+| Request | Before | After |
+|---|---|---|
+| `GET /health` | 110 ms | 100 ms |
+| `GET /me/progress` | 1307 ms | 638 ms |
+| `GET /books` | 1445 ms | 277 ms |
+| `GET /books/{id}/open` | 379 ms | 310 ms (now also signs the file URL) |
+| `GET /books/{id}/file` | 450 ms | 310 ms (no longer asked on open) |
+| `GET /books/{id}/body-start` | 320 ms | 202 ms |
+| `GET /focus/current` | 397 ms | 290 ms |
+| `GET /books/{id}/annotations` | 380 ms | 300 ms |
+| `GET /books/{id}/notes` | 380 ms | 288 ms |
+| `GET /books/{id}/ocr` | 419 ms | 290 ms |
+| `GET /books/{id}/regions` (pages 1-20) | 435 ms | 310 ms |
+| Open burst, 7 requests at once | 831 ms | 551 ms |
+
+`/books` was 350 ms in a run earlier the same day, so its "before" here is noisy; the others agree with that run.
+Each authenticated request lost about 100 ms (C34.4: no Supabase Auth round trip; `get_user` measured 125 ms from
+this machine, the local check 0.18 ms after its first 378 ms that reads the keys).
+
+The file, on the user's 29.4 MB, 771-page PDF (linearized; Storage answers Range with 206 but sends no
+Accept-Ranges), in the browser on the dev server with fresh signed URLs; page 400 parsed with its text, canvas
+drawing not timed (the pane was hidden, which pauses it for both):
+
+| | Before (PDF.js given the URL) | After (C34.1 range transport) |
+|---|---|---|
+| Document open | 33.8 s | 0.27 s |
+| Page 400 ready | 33.9 s | 0.36 s |
+| Bytes to page 400 | the whole file (29.4 MB) | 621 KB in 10 requests |
+
+The outline walk C34.2 replaces with the stored contents cost 20 MB in about 300 range requests (18.9 s) once
+ranges worked. An EPUB's second open reads it from Cache Storage (C34.7, e2e). Not measured: the live reader signed
+in on production, a reader's own connection and device, a cold start.
+
 ### C15: live runs on the real stack (2026-11-12)
 
 The journey (`npm --prefix frontend run test:live`, C15.1) and the

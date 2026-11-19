@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { fetchApi } from '../lib/api';
+import { remember } from '../lib/pageData';
 import { TextInput } from '../components/ui/TextInput';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/toastContext';
@@ -18,6 +19,7 @@ function Zone({ saved, onSaved }) {
     try {
       const next = await fetchApi('/me/progress', { method: 'PUT', body: JSON.stringify({ timezone: device }) });
       toast({ kind: 'success', message: `Your days now follow ${device}.` });
+      remember('/me/progress', next); // C35.5c: the kept progress is the saved one
       onSaved(next);
     } catch {
       toast({ kind: 'warning', message: 'The time zone was not changed. Try again in a moment.' });
@@ -56,6 +58,7 @@ function Form({ saved, onSaved }) {
     try {
       const next = await fetchApi('/me/progress', { method: 'PUT', body: JSON.stringify(body) });
       toast({ kind: 'success', message: 'Your league settings are saved.' });
+      remember('/me/progress', next); // C35.5c: the kept progress is the saved one
       onSaved(next);
     } catch (err) {
       setError(err.status === 422 && typeof err.detail === 'string' ? err.detail : 'Not saved just now. Try again in a moment.');

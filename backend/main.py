@@ -27,7 +27,7 @@ from backend.routers import (
     steve,
     steve_ask,
 )
-from backend.services import ingestion_worker, pdf_text
+from backend.services import ingestion_worker, make_way, pdf_text
 
 load_dotenv()
 
@@ -59,6 +59,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="ReadFocus API", lifespan=lifespan)
 
 add_cors(app)  # FRONTEND_URL only; localhost too when ENV=development (backend/cors.py)
+app.add_middleware(make_way.RequestCounter)  # C35.6: ingestion makes way while requests are served
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(books.router, prefix="/books", tags=["Books"])

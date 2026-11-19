@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, CartesianGrid, Dot, ResponsiveContainer, XAxis, YAxis } from 'recharts';
-import { fetchApi } from '../lib/api';
+import { usePageData } from '../lib/pageData';
+import { openAheadProps } from '../reader/openAhead';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -86,28 +86,8 @@ function DashboardSkeleton() {
  */
 export function Dashboard() {
   useDocumentTitle('Dashboard');
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    fetchApi('/dashboard')
-      .then((d) => {
-        setData(d);
-        setError(null);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [attempt]);
-
-  const retry = () => {
-    setLoading(true);
-    setAttempt((n) => n + 1);
-  };
+  // C35.5b (issue 20): the last data at once on a return, refreshed behind it.
+  const { data, loading, error, reload: retry } = usePageData('/dashboard');
 
   if (loading) return <DashboardSkeleton />;
 
@@ -187,6 +167,8 @@ export function Dashboard() {
             <ScoreTrend scores={scores} />
           </section>
           <MasteryList books={books} />
+          {/* C35.1 (issue 21): under Concept mastery, so the main column is about as long as the side one. */}
+          <BadgeShelf />
         </div>
 
         <aside className="rf-dash__side">
@@ -209,7 +191,7 @@ export function Dashboard() {
                   ? `${Math.round(nextBook(books).progress_pct)}% read. It opens where you left off.`
                   : `${nextBook(books).author ? `By ${nextBook(books).author}. ` : ''}It opens at the first page.`}
               </p>
-              <Link to={`/read/${nextBook(books).book_id}`} className="rf-btn rf-btn--primary">Begin reading</Link>
+              <Link to={`/read/${nextBook(books).book_id}`} className="rf-btn rf-btn--primary" {...openAheadProps(nextBook(books).book_id)}>Begin reading</Link>
             </section>
           )}
           {books.length > 0 && (
@@ -246,7 +228,6 @@ export function Dashboard() {
           )}
         </aside>
       </div>
-      <BadgeShelf />
     </div>
   );
 }

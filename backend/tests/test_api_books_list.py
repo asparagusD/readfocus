@@ -52,8 +52,10 @@ def test_only_the_callers_books_with_the_old_fields_cover_and_progress(client):
 
 def test_the_select_keeps_the_old_columns_and_adds_the_cover_and_storage_mode():
     # MemoryDb returns whole rows, so the column list is checked here: no storage path or toc leaves the server.
-    # storage_mode (C17.1) lets the shelf say a book is only on this device.
-    assert {c.strip() for c in books.BOOK_LIST_FIELDS.split(",")} == OLD_FIELDS | {"cover_url", "storage_mode"}
+    # storage_mode (C17.1) lets the shelf say a book is only on this device; file_type (C35.4) lets it warm
+    # PDF.js only for a PDF.
+    assert {c.strip() for c in books.BOOK_LIST_FIELDS.split(",")} == OLD_FIELDS | {"cover_url", "storage_mode",
+                                                                                   "file_type"}
 
 
 def test_progress_is_the_callers_own_and_null_before_a_first_session(client):

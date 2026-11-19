@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 946,
-    "inventoried": 803,
+    "tracked": 948,
+    "inventoried": 805,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17897,
+      "size_bytes": 17933,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2273,8 +2273,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6182,
-      "size_bytes": 1117596,
+      "lines": 6183,
+      "size_bytes": 1118514,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -4013,6 +4013,22 @@
       "size_bytes": 4018,
       "role": "lib",
       "purpose": "Node test (npm run test:unit): parts of the day and the greeting, the streak line, the last eight scores and the latest, tests this week from Monday, needs revisiting."
+    },
+    {
+      "path": "frontend/src/lib/directUpload.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2966,
+      "role": "lib",
+      "purpose": "C35.3d (issue 16): a PDF or EPUB straight to Storage: POST /books/upload-url, an XHR PUT to the signed URL with progress (putFile), POST /books/register, then the file kept in Cache Storage under its sha256 for its first open (uploadBook). Used by the Library from C35.3e."
+    },
+    {
+      "path": "frontend/src/lib/directUpload.test.js",
+      "language": "javascript",
+      "lines": 82,
+      "size_bytes": 4038,
+      "role": "lib",
+      "purpose": "Unit tests for directUpload: the PUT's headers and progress, Storage's refusal and a dropped connection, the order upload-url, PUT, register, and a copy that cannot be kept never failing the upload."
     },
     {
       "path": "frontend/src/lib/initials.js",
@@ -6369,8 +6385,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 805,
-      "size_bytes": 268716,
+      "lines": 807,
+      "size_bytes": 269275,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -3588,6 +3588,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/lib/directUpload.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/directUpload.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/lib/initials.js",
       "type": "file",
       "role": "lib",
@@ -11783,6 +11795,11 @@
       "type": "imports",
       "from": "file:frontend/src/lib/dashboard.test.js",
       "to": "file:frontend/src/lib/dashboard.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/directUpload.test.js",
+      "to": "file:frontend/src/lib/directUpload.js"
     },
     {
       "type": "imports",

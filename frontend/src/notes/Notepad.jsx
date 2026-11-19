@@ -19,7 +19,7 @@ const KINDS = {
   figure: { label: 'Figure', Icon: Image },
 };
 
-function NoteState({ status, onRetry, onKeepMine, onTakeTheirs }) {
+export function NoteState({ status, onRetry, onKeepMine, onTakeTheirs }) {
   if (status === 'conflict') {
     return (
       <div className="rf-note-alert" role="alert">

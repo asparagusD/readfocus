@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 971,
-    "inventoried": 828,
+    "tracked": 975,
+    "inventoried": 832,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18553,
+      "size_bytes": 18571,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -681,8 +681,8 @@
     {
       "path": "backend/routers/notes.py",
       "language": "python",
-      "lines": 243,
-      "size_bytes": 11865,
+      "lines": 251,
+      "size_bytes": 11898,
       "role": "router",
       "purpose": "Note blocks (C22.1): GET /books/{id}/notes (live blocks in reading order, from/to overlap, signed file URLs), POST (anchors and positions checked, content allow-listed, version 1), PATCH /notes/{id} with If-Match (409 when stale, 428 without), soft DELETE, POST /books/{id}/note-files (WebP/PNG into the private notes bucket); owner only, 404 otherwise. C24.2: a created note checks the note badges."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6306,
-      "size_bytes": 1156413,
+      "lines": 6307,
+      "size_bytes": 1157616,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -4273,10 +4273,10 @@
     {
       "path": "frontend/src/notes/DrawingEditor.jsx",
       "language": "jsx",
-      "lines": 85,
-      "size_bytes": 3851,
+      "lines": 93,
+      "size_bytes": 4491,
       "role": "asset",
-      "purpose": "A drawing note's editor (C22.3), lazy: Excalidraw 0.18 with AI, export, file and image tools off, our light or dark theme, scene changes to onChange, a ResizeObserver that refreshes its offsets, Paste passage as a text element and a PNG thumbnail on Done."
+      "purpose": "A notebook page's editor (C22.3; C37.2), lazy: Excalidraw 0.18 with AI, export, file and image tools off, our light or dark theme, scene changes to onChange, a ResizeObserver that refreshes its offsets, autofocus only when asked; register hands over finish (a PNG thumbnail), paste (the passage as a text element) and idle (Escape has nothing left to do)."
     },
     {
       "path": "frontend/src/notes/DrawingNote.jsx",
@@ -4311,6 +4311,22 @@
       "purpose": "Draws a text note's TipTap JSON as plain React (C22.2): only the server's allowed nodes and marks, checklists, inline and display math through SteveMath, so the notepad loads no editor."
     },
     {
+      "path": "frontend/src/notes/Notebook.css",
+      "language": "css",
+      "lines": 215,
+      "size_bytes": 6797,
+      "role": "asset",
+      "purpose": "The notebook's layout (C37.2): the 30 % scrim and the 70 % sheet with its header, page and footer, 44 px controls, the page tablist, full screen under 760 px, a slide-in that is a fade under reduced motion."
+    },
+    {
+      "path": "frontend/src/notes/Notebook.jsx",
+      "language": "jsx",
+      "lines": 222,
+      "size_bytes": 11358,
+      "role": "asset",
+      "purpose": "The notebook (C37.2, issue 26): one per book, its pages the drawing notes in book order, a dialog over 70 % of the screen (full screen under 760 px) while the book is blurred and inert; arrows and a page tablist, Go to this place, New page, Paste passage, delete with Undo, the page's reference back to the book; Escape (once Excalidraw is idle), the close button or a click on the blurred book tuck it away and focus goes back; leaving a changed page makes its thumbnail; save line and conflict actions. Not opened by the reader until C37.2b."
+    },
+    {
       "path": "frontend/src/notes/Notepad.css",
       "language": "css",
       "lines": 419,
@@ -4322,7 +4338,7 @@
       "path": "frontend/src/notes/Notepad.jsx",
       "language": "jsx",
       "lines": 283,
-      "size_bytes": 16134,
+      "size_bytes": 16141,
       "role": "asset",
       "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note; C22.2b: a note opens in the lazy editor on click or Enter, Done in its header, and Text adds a note at the selection or the pages shown."
     },
@@ -4469,6 +4485,22 @@
       "size_bytes": 965,
       "role": "asset",
       "purpose": "Unit tests for the math input rules: inline math, prices and escaped dollars left as text, display math only alone in its paragraph."
+    },
+    {
+      "path": "frontend/src/notes/notebookPages.js",
+      "language": "javascript",
+      "lines": 40,
+      "size_bytes": 1943,
+      "role": "asset",
+      "purpose": "Notebook pages, pure (C37.2): a note's lasting key, the drawing notes as pages, the page made at the place shown, the page the notebook opens at (left on, here, before, first), the page's save line."
+    },
+    {
+      "path": "frontend/src/notes/notebookPages.test.js",
+      "language": "javascript",
+      "lines": 48,
+      "size_bytes": 2325,
+      "role": "asset",
+      "purpose": "Unit tests for notebookPages.js: pages are drawing notes in order, keys, this place's page, the opening page and the save line."
     },
     {
       "path": "frontend/src/notes/notesApi.js",
@@ -6569,8 +6601,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 830,
-      "size_bytes": 280638,
+      "lines": 834,
+      "size_bytes": 281989,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -24,10 +24,12 @@ async function thumbnail(elements) {
  * A drawing note's editor (C22.3), loaded only when a drawing is opened: Excalidraw with its own shapes, arrows,
  * freehand, text, undo and redo, in our light or Lamplight (dark) theme. Its AI, export, file and image tools are
  * off, so nothing leaves this app. Every change of the scene goes to `onChange` as { elements, appState }; "Paste
- * passage" adds the note's passage as a text element. `register(finish)` hands the parent a function that returns
- * a PNG thumbnail of the scene (or null), for Done.
+ * passage" adds the note's passage as a text element. `register` hands the parent `finish()` (a PNG thumbnail of the
+ * scene, or null), `paste()`, and C37.2 `idle()`: true when Escape has nothing left to do in Excalidraw (no text
+ * being typed, no shape being drawn, the selection tool, no menu or dialog open), so the notebook may close on it.
+ * `focus` false leaves the focus where it is (a page turned by the notebook's arrows or tabs).
  */
-export default function DrawingEditor({ content, dark, passage, register, onChange }) {
+export default function DrawingEditor({ content, dark, passage, register, onChange, focus = true }) {
   const api = useRef(null);
   const seen = useRef(null);
   const changed = useRef(onChange);
@@ -53,6 +55,12 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
   }, []);
 
   useEffect(() => register?.({
+    idle: () => {
+      const state = api.current?.getAppState();
+      if (!state) return true;
+      return !state.editingTextElement && !state.newElement && !state.multiElement && !state.openDialog
+        && !state.openMenu && !state.openPopup && !state.openSidebar && !state.contextMenu && state.activeTool?.type === 'selection';
+    },
     finish: () => thumbnail(drawingScene(api.current?.getSceneElements() ?? []).elements),
     paste: () => {
       const editor = api.current;
@@ -74,7 +82,7 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
         aiEnabled={false}
         UIOptions={UI}
         onChange={onScene}
-        autoFocus
+        autoFocus={focus}
       >
         <MainMenu>
           <MainMenu.DefaultItems.ClearCanvas />

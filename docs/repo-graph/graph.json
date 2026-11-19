@@ -3838,6 +3838,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/notes/Notebook.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/notes/Notebook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/notes/Notepad.css",
       "type": "file",
       "role": "asset",
@@ -3953,6 +3965,18 @@
     },
     {
       "id": "file:frontend/src/notes/mathRules.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookPages.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookPages.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -12364,6 +12388,41 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/Notebook.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/Notepad.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/notebookPages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/place.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -12486,6 +12545,16 @@
       "type": "imports",
       "from": "file:frontend/src/notes/mathRules.test.js",
       "to": "file:frontend/src/notes/mathRules.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookPages.js",
+      "to": "file:frontend/src/notes/sync.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookPages.test.js",
+      "to": "file:frontend/src/notes/notebookPages.js"
     },
     {
       "type": "imports",

@@ -9486,6 +9486,16 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/focus/quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
       "to": "file:backend/main.py"
     },
     {
@@ -9527,6 +9537,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_device_books.py",
       "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/reading_place.py"
     },
     {
       "type": "imports",

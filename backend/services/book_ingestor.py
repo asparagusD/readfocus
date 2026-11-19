@@ -242,13 +242,19 @@ def record_file_facts(book: dict, file_bytes: bytes) -> dict:
     return {**book, **facts}
 
 
+def numbered(texts: dict[int, str], count: int = 0) -> list[str]:
+    """Pages 1..N as a list, a page with no text as "" (N: the last page with text, or `count` if larger)."""
+    return [texts.get(n, "") for n in range(1, max([count, *texts]) + 1)] if texts or count else []
+
+
 def read_pages(book: dict, file_bytes: bytes, browser: bool) -> tuple[list[str], dict[int, str], list[str] | None]:
     """The book's page (or chapter) texts, the OCR texts it was read from ({} unless fully scanned) and, for a PDF,
-    every page's text for the outline (C26.2). Blocking: run_job calls it in a thread (C29.1)."""
+    every page's text for the outline (C26.2). Blocking: run_job calls it in a thread (C29.1). C36.G: a browser-text
+    book's ocr is its pages' texts by number, so its chunks get their pages too (page_anchors)."""
     book_id, ocr = book["id"], {}
     if browser:  # the pages in order; an empty page is left out, as pypdf's are
         texts = ocr_pages.load_texts(book_id)
-        return [texts[n] for n in sorted(texts)], ocr, None
+        return [texts[n] for n in sorted(texts)], texts, None
     if book["file_type"].lower() != "pdf":
         return extract(book["file_type"], file_bytes), ocr, None
     scanned: list[int] = []  # C19.4: scanned pages flagged; a fully scanned book read from OCR
@@ -279,11 +285,26 @@ def store_batch(book_id: str, user_id: str, start: int, batch: list[str], vector
 
 
 def page_anchors(book: dict, chunks: list[str], every_page: list[str] | None, ocr: dict) -> list[dict] | None:
-    """C36.1 (issue 27): a PDF's chunk pages from the page texts ingestion read, so a page maps to its chunk (quiz
-    ranges, the reader's place, Steve) before the region map. None for an EPUB, a browser-text or OCR-read book."""
-    if (book.get("file_type") or "").lower() != "pdf" or not every_page or ocr:
+    """C36.1 (issue 27): a PDF's chunk pages from the page texts its chunks were cut from, so a page maps to its
+    chunk (quiz ranges, the reader's place, Steve) before (or without) a region map: pypdf's pages, or (C36.G) the
+    OCR or browser texts by page number when the book was read from those. None for an EPUB."""
+    if (book.get("file_type") or "").lower() != "pdf":
         return None
-    return pdf_page_anchors(chunks, every_page)
+    pages = numbered(ocr, len(every_page or [])) if ocr else every_page
+    return pdf_page_anchors(chunks, pages) if pages else None
+
+
+def toc_with_pages(toc: list | None, anchors: list[dict] | None) -> list | None:
+    """C36.G: contents entries with a chunk but no page (a browser-text or OCR-read book's text structure) get the
+    first page of their chunk, so Quiz me's chapter and the reader's place can use them."""
+    if not toc or not anchors:
+        return toc
+    out = []
+    for entry in toc:
+        index = entry.get("chunk_index")
+        pages = (anchors[index] or {}).get("pages") if isinstance(index, int) and 0 <= index < len(anchors) else None
+        out.append({**entry, "page": pages[0]} if entry.get("page") is None and pages else entry)
+    return out
 
 
 def _save_toc(book_id: str, toc: list) -> None:
@@ -325,7 +346,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
         # C17.6: each EPUB block's spine index and element path, and the book's own contents.
         blocks, toc, paths = await asyncio.to_thread(
             book_structure.build_with_paths, "text" if browser else book["file_type"], file_bytes, chunks, every_page)
-        anchors = None if browser else await asyncio.to_thread(page_anchors, book, chunks, every_page, ocr)
+        anchors = await asyncio.to_thread(page_anchors, book, chunks, every_page, ocr)
+        toc = toc_with_pages(toc, anchors)
         pdf_text.release_memory()  # C18.G: the parses are over; on Linux the freed memory goes back
         for start, end in batches(total, job["cursor"]):
             if start:  # C35.6: after the first batch (which makes the book readable), make way for requests

@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18334,
+      "size_bytes": 18369,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -761,10 +761,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 358,
-      "size_bytes": 18252,
+      "lines": 380,
+      "size_bytes": 19473,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests. C36.1 (issue 27): ingestion makes no questions (they follow the reader) and gives a PDF's chunks their page anchors (pages, spans) from the page texts it read (prose.pdf_page_anchors), so a page maps to its chunk before the region map. C36.2b: between batches it serves the reader's wanted questions (reader_questions.serve), so a reader of a book being processed gets them at the next batch."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests. C36.1 (issue 27): ingestion makes no questions (they follow the reader) and gives a PDF's chunks their page anchors (pages, spans) from the page texts it read (prose.pdf_page_anchors), so a page maps to its chunk before the region map. C36.2b: between batches it serves the reader's wanted questions (reader_questions.serve), so a reader of a book being processed gets them at the next batch. C36.G: a PDF read from OCR or the reader's browser gets its chunk pages too (its texts by page number, numbered), and contents entries without a page take their chunk's first page (toc_with_pages)."
     },
     {
       "path": "backend/services/book_purge.py",
@@ -1497,8 +1497,8 @@
     {
       "path": "backend/tests/test_device_books.py",
       "language": "python",
-      "lines": 166,
-      "size_bytes": 7439,
+      "lines": 190,
+      "size_bytes": 8959,
       "role": "test",
       "purpose": "Pytest on MemoryDb (C26.7): a device book is made with no file; bad sizes, hashes, types and keys refused; text in batches and the last one ingests from it (chunks, ready, no region map); page order and empty pages; a resent batch replaces its pages; another reader's, a server-read or a ready book refused; bad batches refused; a failed browser-text book resumes from its stored text; a device book read on the server still cannot resume."
     },
@@ -1657,8 +1657,8 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 315,
-      "size_bytes": 13599,
+      "lines": 333,
+      "size_bytes": 14680,
       "role": "test",
       "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume. C17.6: no structure leaves block_paths empty too."
     },
@@ -2257,8 +2257,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5483,
-      "size_bytes": 256000,
+      "lines": 5548,
+      "size_bytes": 260521,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2321,8 +2321,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6240,
-      "size_bytes": 1144093,
+      "lines": 6241,
+      "size_bytes": 1144803,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6554,7 +6554,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 828,
-      "size_bytes": 278261,
+      "size_bytes": 278459,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -184,7 +184,7 @@ def delete_book(client, book_id, attempts=3, pause=1.0):
     for attempt in range(1, attempts + 1):
         try:
             resp = client.delete(f"/books/{book_id}")
-            if resp.status_code in (200, 404):  # 404: already gone
+            if resp.status_code in (200, 202, 404):  # 202: C35.2 purges in the background; 404: already gone
                 return resp.status_code
             error = f"HTTP {resp.status_code}"
         except httpx.TransportError as exc:

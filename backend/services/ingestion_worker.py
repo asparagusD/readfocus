@@ -22,7 +22,7 @@ import os
 import weakref
 from datetime import UTC, datetime
 
-from backend.services import book_ingestor, region_job
+from backend.services import book_ingestor, book_purge, region_job
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 
@@ -168,8 +168,20 @@ async def sweep(now: datetime | None = None) -> dict:
     return report
 
 
+async def purge_deleted() -> list[str]:
+    """C35.2 (issue 18): finish the deletes a restart or a failure left (book_purge); never raises."""
+    try:
+        return await asyncio.to_thread(book_purge.purge_left)
+    except Exception as error:  # noqa: BLE001 - a failed purge must not stop the sweep
+        print(f"Purge of deleted books failed: {error}")
+        return []
+
+
 async def sweep_forever() -> None:
     while True:
+        purged = await purge_deleted()
+        if purged:
+            print(f"Purged deleted books: {purged}")
         report = await sweep()
         if report["resumed"] or report["gave_up"]:
             print(f"Ingestion sweep: {report}")

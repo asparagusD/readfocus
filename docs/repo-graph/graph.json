@@ -1138,6 +1138,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/book_purge.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/book_structure.py",
       "type": "file",
       "role": "service",
@@ -7402,6 +7408,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/services/ingestion_worker.py"
     },
     {
@@ -7841,6 +7852,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/book_purge.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/book_structure.py",
       "to": "file:backend/services/pdf_text.py"
     },
@@ -7863,6 +7879,11 @@
       "type": "imports",
       "from": "file:backend/services/ingestion_worker.py",
       "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -8823,6 +8844,16 @@
       "type": "imports",
       "from": "file:backend/tests/test_book_delete.py",
       "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/services/ingestion_worker.py"
     },
     {
       "type": "imports",
@@ -14146,6 +14177,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/book_purge.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/concept_store.py",
       "to": "table:concepts"
     },
@@ -14638,6 +14674,11 @@
       "type": "writes_table",
       "from": "file:backend/services/book_ingestor.py",
       "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/services/book_purge.py",
+      "to": "table:books"
     },
     {
       "type": "writes_table",

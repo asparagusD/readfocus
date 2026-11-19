@@ -5555,3 +5555,45 @@ while you read), and the quiz made every missing chunk's questions in the reques
 `quiz._assemble` now tops up at most `QUIZ_TOPUP_MAX_CHUNKS` (4) chunks spread across the range
 (`range_quiz.spread`); test `test_api_focus_quiz.py::test_a_long_range_with_no_questions_tops_up_only_a_few_chunks_spread_across_it`
 failed with the old `quiz.py` and passes.
+
+## 2026-11-19 C36.G — page texts past the first 1,000 pages are never read
+
+**Status:** fixed
+
+### Symptom
+Found in passing while fixing the entry above. `ocr_pages.load_texts` and `ocr_pages.done_pages` read `page_ocr` in
+one select with no range. PostgREST returns at most 1000 rows per select (the reason `prose_job._rows` and
+`reading_place._chunks` page by 1000), so for a book with more than 1000 text pages:
+
+- a book read on the device (C26.7, up to `BROWSER_TEXT_MAX_PAGES` pages) is ingested from at most 1000 pages, in
+  whatever rows the server returns first: the rest of the book is missing from its chunks, quizzes and Steve;
+- a fully scanned book kept on the server never counts more than 1000 pages done, so with more than 1000 scanned
+  pages `ready_to_reingest` never holds and it is never re-read from its OCR text.
+
+No production book is affected yet (the largest device book has 878 page rows).
+
+### Repro
+`pytest backend/tests/test_ocr_pages.py -q -k thousand` (added with the fix): 1,200 page rows on an in-memory
+database that, like PostgREST, returns at most 1000 rows per select.
+
+### Hypotheses
+1. The selects have no range, so the server's row cap cuts them. Evidence: both functions use one plain select;
+   other readers of large tables page by 1000. Ruled out if: the capped fake still returns 1,200 pages. Result:
+   confirmed by the test (1000 returned).
+
+### Root cause
+`ocr_pages.load_texts` and `ocr_pages.done_pages` (`backend/services/ocr_pages.py`) read every page row of a book in
+one select, which PostgREST caps at 1000 rows.
+
+### Fix
+`ocr_pages._rows(book_id, columns)` reads the rows 1000 at a time in page order (`.order("page").range(...)`), as
+`prose_job._rows` does; both functions use it. `routers/ocr.py` `_ocr_rows` reads a page window the reader asks for
+and is left as it is.
+
+### Regression test
+`backend/tests/test_ocr_pages.py::test_a_book_over_a_thousand_pages_has_every_pages_text_read` (1,200 pages on an
+in-memory database capped at 1000 rows per select). Failed before the fix (`git stash` of `ocr_pages.py`: pages
+201-1200 only); passes after.
+
+### Commit
+fix(ingest): read every page's text of a book over 1,000 pages

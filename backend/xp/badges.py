@@ -17,7 +17,7 @@ class Facts:
     focus_seconds: int = 0  # their final active time
     perfect_quiz: bool = False  # this session's bookmark quiz had every answer right
     streak_days: int = 0  # the stored streak (G7)
-    text_notes: int = 0
+    notebook_words: bool = False  # C37.1: the note just saved is a notebook page with words written on it
     drawings: int = 0
     steve_answers: int = 0
     first_chapter: bool = False  # this session's quiz covered the end of chapter 1
@@ -61,7 +61,7 @@ CATALOGUE: tuple[Badge, ...] = (
     Badge("streak_7", "7-day streak", "Meet your daily goal 7 days running.", _streak(7), 50, FOCUS, "seal"),
     Badge("streak_30", "30-day streak", "Meet your daily goal 30 days running.", _streak(30), 150, FOCUS, "seal"),
     Badge("streak_100", "100-day streak", "Meet your daily goal 100 days running.", _streak(100), 500, FOCUS, "seal"),
-    Badge("first_note", "First note", "Write your first typed note.", lambda f: f.text_notes >= 1, 10, ("note",),
+    Badge("first_note", "First note", "Write your first words in your notebook.", lambda f: f.notebook_words, 10, ("note",),
           "seal"),
     Badge("first_drawing", "First drawing", "Save your first drawing.", lambda f: f.drawings >= 1, 10, ("note",),
           "seal"),

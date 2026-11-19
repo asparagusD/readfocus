@@ -6261,3 +6261,47 @@ questions it was handed instead of fetching them again.
 | [x] C36.7b opening Quiz me starts both ranges' questions (your request) | d0b201c | `POST /focus/quiz-me/prepare` (202, `{queued}`): `quiz_me.prepare` queues each scope's chunks without questions, nearest the place first, at most `QUIZ_TOPUP_MAX_CHUNKS` each, through `reader_questions.fill`, and runs them after the response; reads only, no session; `quiz.gaps`; `quiz_me._start` shared with `build`; `reader_questions` makes a quiz range's chunks one at a time, the latest read first; `ReadingSession.jsx`: the Quiz me button opens the dialog and sends the place (`openQuizMe`); tests: API +1, e2e +1, 2 order assertions | pytest 2185 (+1); e2e 359 (+1); unit 325; lint 3; build; contrast 304/0; images; bundle 0 failing; ruff 21; graph 64; red: the API test fails with the old `quiz_me.py` and `focus.py`, the e2e test with the old `ReadingSession.jsx` | 0.7 h | |
 | [x] C36.7c the quiz shows the questions Quiz me handed it (your request) | ebf534e | `ReadingSession.jsx`: Quiz me navigates with the built questions in the router state; `ComprehensionTest.jsx`: a Quiz me quiz uses them and skips `GET /sessions/{id}` (a reload keeps the browser's history state, so it shows them again; any other way in reads them from the server); e2e +1 | e2e 360 (+1); unit 325; lint 3; build; contrast 304/0; images; bundle 182.3 KB, 0 failing; red: the e2e test fails with the old pages (one read where none is expected) | 0.5 h | not timed on production |
 | [x] C36.7 released (your go-ahead, 2026-11-19: "Release it") | (this commit) | `readfocus-2.0` 1279ef9 pushed; Render deployed it first (dep-dbvitpd9fdbs73bcn6q0, live 1279ef9); smoke: `/health` 200 in 0.30 s, `/books` and `POST /focus/quiz-me/prepare` 401 signed out, the prepare route in the live `/openapi.json`; `main` 7b85eef pushed (the same tree), Vercel "success" | `render deploys list`: live 1279ef9; curl | 0.1 h | Quiz me not timed signed in on production |
+
+## C37 — the notebook (issues 25 and 26)
+
+From your requests on 2026-11-19 ("Get rid of the Text notes ... they will only take notes in the excalidraw";
+"it must take 70% of the screen, while 30% of the rest look kinda blurry ... add smooth animations when the
+notebook opens"). Issues 25 and 26. On `chunk/C37-notebook` from `readfocus-2.0` at `503fa9f`.
+
+### Your decisions (2026-11-19)
+
+- **Typed notes readers already have (#25 D1):** moved on open. The first time a reader opens a book's
+  notebook, each typed note becomes a text element on a notebook page, done in the browser and saved like any
+  edit (no backfill, no bulk write to the shared project); the old row is soft-deleted only after its page saves.
+- **Equation, code and figure notes (#25 D2):** dragged into the notebook as an image (figure) or text (code,
+  the equation's LaTeX); block notes that already exist stay readable as they are.
+- **`first_note` badge (#25 D3):** becomes "Write your first words in your notebook", earned by a text element
+  on a notebook page; badges already awarded stay.
+- **Organisation (#26 D1):** one notebook per book, made of pages; each existing drawing note is a page, in
+  book order (no migration).
+- **Side (#26 D2):** the right, 70% of the width, the book blurred in the other 30%.
+- **Paper default (#26 D3):** ruled; squared and plain per page.
+
+### Plan (written at chunk start, 2026-11-19, before any code)
+
+| Step | What | Hours | Done when |
+|---|---|---|---|
+| C37.1 | Server: `POST` refuses new `text` notes (`policy.NEW_NOTE_KINDS`; `NOTE_KINDS` keeps `text` for the CHECK); a drawing's app state may keep `paper` (ruled, squared, plain); `first_note` is earned by a text element in a drawing note, with the new name | 1.0 | tests: a text POST is 422, PATCH of an old text note still works; `paper` accepted, other keys refused; the badge from a drawing with text, not from an empty one |
+| C37.2 | The notebook overlay: 70% on the right, the reader layer blurred and dimmed behind; clicking the blurred book or Esc tucks it away and keeps its page; focus kept inside; full screen below 760 px; Steve over the 30%; the focus stopwatch keeps running (F15). Pages are the book's drawing notes in book order: arrows, tabs, "New page" at the place, "Go to this place's page" | 2.5 | e2e: opens at 70%, blur on the reader, closes by click and Esc, pages turn, a new page saves with its anchor; 375 px full screen |
+| C37.3 | Every "add a note" path opens the notebook at the place: the N key and the selection's Note paste the passage as a text element; the highlight chip's Note does the same with `annotation_id`; Steve's Save to notes adds his answer and a citation line; dragged equation, code and figure blocks become elements; the "+ Text" pill goes. A passage lands on the page made in the same chapter as the place, else a new page there | 2.0 | e2e: each path ends with the element on the right page and one save; no text note is created |
+| C37.4 | Typed notes move on open (one page per note, keeping its anchor and highlight link; soft-delete after the save); TipTap leaves the bundle (`LAZY_PACKAGES`, `bundleBudget.test.js`); old block notes listed beside the pages | 1.5 | unit: TipTap JSON to text elements (marks, lists, quotes); e2e: an old note becomes a page and its row is deleted only after the save, a failed save keeps it; bundle has no TipTap chunk |
+| C37.5 | The notebook look: ruled paper with a margin line (and squared, plain) drawn behind a transparent canvas so it pans and zooms with it; binding edge, page number and date, the book's title on the cover tab, soft page edges; the theme follows Paper or Lamplight | 2.0 | design-review at 375 and 1440 px; contrast check green; e2e: the paper choice saves per page |
+| C37.6 | Excalidraw's full tools, AI off: images through `note-files` (downscaled to WebP under the bucket's 256 KB), the library (kept in the browser), frames, laser, export of a page as PNG or SVG, Mermaid | 1.5 | e2e: an image uploads and comes back after a reload; export gives a file; no AI entry in the UI |
+| C37.7 | The rack-focus open and close: the book recedes (scale 0.97, blur 8 px, dim) while the notebook slides in on a spring, about 450 ms, interruptible; reduced motion is a crossfade with the blur kept; only transform, opacity and filter animate | 1.0 | e2e: closing midway reverses; reduced motion has no transform; screenshots |
+| C37.8 | Measure frame rate with the notebook open over a 300-page PDF (the static blur, or a pre-blurred snapshot if it costs too much) and memory; docs; merge | 1.0 | numbers in `docs/BENCHMARKS.md`; standard checks green |
+| | **Total** | **12.5** | |
+
+Safe to cut, in this order: the binding art, then the page tabs (arrows only), then Mermaid and the library.
+No migration: `paper` lives in the scene's app state and pages are today's drawing rows. The selection's Note
+becoming Edge's "Add comment" waits for issue 23's D1 (C38-C40).
+
+### Log
+
+| Step | Commit | Change | Verified by | Time | Open issues |
+|---|---|---|---|---|---|
+| [x] C37.1 the server makes no new typed notes; a page's paper; First note is notebook words (issues 25, 26) | (this commit) | `policy.py`: `NEW_NOTE_KINDS` (no `text`; `NOTE_KINDS` keeps it for the CHECK), `NOTE_PAPERS`; `routers/notes.py`: `POST` refuses `text` ("write in the notebook instead"), old text rows still edited and deleted; the note badge check gets `words`, and a `PATCH` whose content has words asks after the response; `note_content.py`: `paper` in a drawing's app state (ruled, squared, plain), `has_words` (a live, non-blank text element); `xp/badges.py`, `badge_award.py`: First note ("Write your first words in your notebook.") from `notebook_words`, not typed notes; `GAMIFICATION.md` and two e2e fixtures: the new copy; tests: notes API +3 (and its notes are drawings now), content +6, two badge tests rewritten | pytest 2194 (+9); ruff 21; lint 3; build; import; graph 64; contrast 304/0; images; bundle 0 failing; unit 325; e2e 360 (13.7 min this run); red: 13 notes and badge tests fail before the code | 0.6 h | until C37.3 the reader's "+ Text", N key and selection Note still try to make a typed note and now get 422 (on this branch only; not released until C37 merges) |

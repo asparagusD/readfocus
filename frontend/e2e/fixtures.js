@@ -288,7 +288,7 @@ const CATALOGUE = [
   ['streak_7', '7-day streak', 'Meet your daily goal 7 days running.', 50, 'seal'],
   ['streak_30', '30-day streak', 'Meet your daily goal 30 days running.', 150, 'seal'],
   ['streak_100', '100-day streak', 'Meet your daily goal 100 days running.', 500, 'seal'],
-  ['first_note', 'First note', 'Write your first typed note.', 10, 'seal'],
+  ['first_note', 'First note', 'Write your first words in your notebook.', 10, 'seal'],
   ['first_drawing', 'First drawing', 'Save your first drawing.', 10, 'seal'],
   ['first_steve', 'First Ask Steve', 'Get your first answer from Steve.', 10, 'seal'],
   ['finished_book', 'Finished a book', 'Reach the last page of a book.', 200, 'bookplate'],

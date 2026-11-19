@@ -257,8 +257,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 453,
-      "size_bytes": 21697,
+      "lines": 457,
+      "size_bytes": 22014,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime). C26.7: MAX_DEVICE_BOOK_FILE_BYTES (300 MB), BROWSER_TEXT_PAGES_PER_BATCH, BROWSER_TEXT_MAX_PAGE_CHARS, BROWSER_TEXT_MAX_PAGES."
     },
@@ -681,8 +681,8 @@
     {
       "path": "backend/routers/notes.py",
       "language": "python",
-      "lines": 238,
-      "size_bytes": 11375,
+      "lines": 243,
+      "size_bytes": 11865,
       "role": "router",
       "purpose": "Note blocks (C22.1): GET /books/{id}/notes (live blocks in reading order, from/to overlap, signed file URLs), POST (anchors and positions checked, content allow-listed, version 1), PATCH /notes/{id} with If-Match (409 when stale, 428 without), soft DELETE, POST /books/{id}/note-files (WebP/PNG into the private notes bucket); owner only, 404 otherwise. C24.2: a created note checks the note badges."
     },
@@ -841,8 +841,8 @@
     {
       "path": "backend/services/note_content.py",
       "language": "python",
-      "lines": 161,
-      "size_bytes": 7552,
+      "lines": 171,
+      "size_bytes": 8166,
       "role": "service",
       "purpose": "Allow-lists a note block's content by kind (C22.1): TipTap JSON nodes, marks and attributes with depth and length caps, Excalidraw scenes with files only in the reader's notes folder, equation/code/figure fields, and the per-block size cap."
     },
@@ -1361,8 +1361,8 @@
     {
       "path": "backend/tests/test_badge_award.py",
       "language": "python",
-      "lines": 270,
-      "size_bytes": 13019,
+      "lines": 269,
+      "size_bytes": 13026,
       "role": "test",
       "purpose": "Pytest on an in-memory database with user_badges' and xp_events' keys: each badge once with one XP row, a race refused by the key, facts from the reader's own rows for every trigger, badge XP outside the day's goal (C24.2)."
     },
@@ -1370,7 +1370,7 @@
       "path": "backend/tests/test_badges.py",
       "language": "python",
       "lines": 138,
-      "size_bytes": 6683,
+      "size_bytes": 6730,
       "role": "test",
       "purpose": "Pytest: the 14-badge catalogue, each rule at its edge, earned() per trigger, chapter 1's last chunk, a place at a book's end, the technical share (C24.2)."
     },
@@ -1769,16 +1769,16 @@
     {
       "path": "backend/tests/test_note_content.py",
       "language": "python",
-      "lines": 150,
-      "size_bytes": 7113,
+      "lines": 165,
+      "size_bytes": 7879,
       "role": "test",
       "purpose": "Pytest for note block content: rich text with inline math kept; nodes, marks, attributes, empty text and HTML outside the allow-list refused; depth and length caps; drawings with files only in the reader's folder; equation, code and figure fields; the size cap."
     },
     {
       "path": "backend/tests/test_notes_api.py",
       "language": "python",
-      "lines": 232,
-      "size_bytes": 11752,
+      "lines": 260,
+      "size_bytes": 13372,
       "role": "test",
       "purpose": "Pytest for the note blocks API: selection, view and EPUB notes stored at version 1 with an ETag; bad kinds, scopes, anchors, positions, content and links refused; reading order and range listing; If-Match versions (428, 409, 412) and bumps; re-anchor, orphan and thumbnail; soft delete; another reader sees nothing; files in the reader's folder, signed in lists, bad files refused."
     },
@@ -2098,7 +2098,7 @@
       "path": "backend/xp/badge_award.py",
       "language": "python",
       "lines": 139,
-      "size_bytes": 6702,
+      "size_bytes": 6773,
       "role": "lib",
       "purpose": "Badge awarding (C24.2): evaluate_badges(user, trigger) gathers the facts the trigger's unheld badges need from the reader's rows (focus sessions, progress, quiz chunk range, contents, regions, notes, Steve answers, places), inserts each earned badge once (primary key) and credits its XP; check_quietly logs failures for callers."
     },
@@ -2106,7 +2106,7 @@
       "path": "backend/xp/badges.py",
       "language": "python",
       "lines": 113,
-      "size_bytes": 5570,
+      "size_bytes": 5664,
       "role": "lib",
       "purpose": "Pure badge catalogue (C24.2, GAMIFICATION Badges): 14 badges with id, name, description, rule over Facts, XP reward, triggers and shelf kind; earned(), the first chapter's last chunk from the contents and body start, a place at a book's end, the technical-book share."
     },
@@ -2313,8 +2313,8 @@
     {
       "path": "docs/GAMIFICATION.md",
       "language": "markdown",
-      "lines": 176,
-      "size_bytes": 9952,
+      "lines": 177,
+      "size_bytes": 10127,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): XP from focus points, daily goal, streaks with earned freezes, the badge catalogue, weekly book-themed leagues, opt-out and no dark patterns."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6263,
-      "size_bytes": 1151355,
+      "lines": 6306,
+      "size_bytes": 1156413,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2474,7 +2474,7 @@
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
       "lines": 515,
-      "size_bytes": 33535,
+      "size_bytes": 33547,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed."
     },
@@ -2530,7 +2530,7 @@
       "path": "frontend/e2e/fixtures/gamification-journey.json",
       "language": "json",
       "lines": 568,
-      "size_bytes": 11409,
+      "size_bytes": 11421,
       "role": "config",
       "purpose": "The server's answers to A and B at each step of backend/tests/test_gamification_journey.py (C24.7), replayed by e2e/gamification.spec.js; generated, kept in step by that test."
     },

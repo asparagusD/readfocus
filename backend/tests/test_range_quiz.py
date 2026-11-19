@@ -116,3 +116,11 @@ def test_correct_answers_are_weighted_by_confidence():
               {"score": 9, "max_score": 10, "confidence": "low"}, {"score": 6, "max_score": 10, "confidence": "high"},
               {"score": 0, "max_score": 10, "confidence": "low"}]
     assert rq.weighted_correct(grades) == (2.5, 3)
+
+
+@pytest.mark.parametrize("items, k, expected", [
+    ([1, 2, 3], 4, [1, 2, 3]), (list(range(10)), 4, [0, 3, 6, 9]), (list(range(10)), 1, [0]), ([1, 2], 0, []),
+    (list(range(5)), 2, [0, 4]),
+])
+def test_spread_picks_at_most_k_evenly_from_first_to_last(items, k, expected):
+    assert rq.spread(items, k) == expected

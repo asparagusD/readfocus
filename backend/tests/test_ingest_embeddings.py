@@ -313,3 +313,21 @@ def test_the_regions_job_follows_a_finished_ingestion(env):
     assert (book["id"], book["user_id"], book["file_type"], book["storage_path"]) == (
         BOOK, USER, "pdf", f"{USER}/{BOOK}.pdf")
     assert data == b"%PDF bytes" and ingest_status == "done"
+
+
+def test_a_pdf_read_from_ocr_or_browser_text_gets_its_pages_by_number():
+    """DEBUG_LOG 2026-11-19 C36.G: the texts by page number stand in for pypdf's pages (a blank page 2 kept)."""
+    book = {"file_type": "pdf"}
+    texts = {1: "alpha beta", 3: "gamma delta"}
+    anchors = book_ingestor.page_anchors(book, ["alpha beta\n\ngamma", "delta"], [], texts)
+    assert [a["pages"] for a in anchors] == [[1, 3], [3, 3]]
+    assert book_ingestor.page_anchors({"file_type": "epub"}, ["x"], None, texts) is None
+    assert book_ingestor.numbered({2: "b"}, 4) == ["", "b", "", ""]
+
+
+def test_contents_entries_without_a_page_take_their_chunks_first_page():
+    anchors = [{"pages": [1, 2]}, {"pages": [2, 5]}, {"pages": None}]
+    toc = [{"title": "One", "chunk_index": 1, "page": None}, {"title": "Two", "chunk_index": 2, "page": None},
+           {"title": "Kept", "chunk_index": 0, "page": 9}, {"title": "None", "page": None}]
+    assert [e["page"] for e in book_ingestor.toc_with_pages(toc, anchors)] == [2, None, 9, None]
+    assert book_ingestor.toc_with_pages(toc, None) is toc

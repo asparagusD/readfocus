@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 969,
-    "inventoried": 826,
+    "tracked": 971,
+    "inventoried": 828,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18334,
+      "size_bytes": 18440,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -257,8 +257,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 449,
-      "size_bytes": 21323,
+      "lines": 452,
+      "size_bytes": 21578,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime). C26.7: MAX_DEVICE_BOOK_FILE_BYTES (300 MB), BROWSER_TEXT_PAGES_PER_BATCH, BROWSER_TEXT_MAX_PAGE_CHARS, BROWSER_TEXT_MAX_PAGES."
     },
@@ -433,10 +433,10 @@
     {
       "path": "backend/focus/quiz.py",
       "language": "python",
-      "lines": 227,
-      "size_bytes": 13574,
+      "lines": 229,
+      "size_bytes": 13795,
       "role": "lib",
-      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz. C36.3 (issue 27): preparing(book, end) is per range: while the ingest runs it waits only when the range ends on or after the last page (or section) the stored chunks reach (stored_reach), or when the book has no page map; a range already stored is quizzed at once."
+      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz. C36.3 (issue 27): preparing(book, end) is per range: while the ingest runs it waits only when the range ends on or after the last page (or section) the stored chunks reach (stored_reach), or when the book has no page map; a range already stored is quizzed at once. C36.G: the inline top-up makes at most QUIZ_TOPUP_MAX_CHUNKS of the range's missing chunks, spread across it (range_quiz.spread)."
     },
     {
       "path": "backend/focus/quiz_me.py",
@@ -449,10 +449,10 @@
     {
       "path": "backend/focus/range_quiz.py",
       "language": "python",
-      "lines": 198,
-      "size_bytes": 9166,
+      "lines": 209,
+      "size_bytes": 9504,
       "role": "lib",
-      "purpose": "Bookmark-range quiz, pure (C23.5, FOCUS_RULES F10-F11): question count clamp(round(words/400), 3, 15) with halves up; range slices by PDF pages (chunk anchors), EPUB blocks (block paths) or contents chapters; prose words without placeholders; a question's place from its evidence; selection stratified over the range with the scaled mix, unused, difficulty and quality; correct answers weighted by confidence."
+      "purpose": "Bookmark-range quiz, pure (C23.5, FOCUS_RULES F10-F11): question count clamp(round(words/400), 3, 15) with halves up; range slices by PDF pages (chunk anchors), EPUB blocks (block paths) or contents chapters; prose words without placeholders; a question's place from its evidence; selection stratified over the range with the scaled mix, unused, difficulty and quality; correct answers weighted by confidence. C36.G: spread(items, k) picks at most k evenly from first to last."
     },
     {
       "path": "backend/focus/scoring.py",
@@ -761,10 +761,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 358,
-      "size_bytes": 18252,
+      "lines": 380,
+      "size_bytes": 19473,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests. C36.1 (issue 27): ingestion makes no questions (they follow the reader) and gives a PDF's chunks their page anchors (pages, spans) from the page texts it read (prose.pdf_page_anchors), so a page maps to its chunk before the region map. C36.2b: between batches it serves the reader's wanted questions (reader_questions.serve), so a reader of a book being processed gets them at the next batch."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests. C36.1 (issue 27): ingestion makes no questions (they follow the reader) and gives a PDF's chunks their page anchors (pages, spans) from the page texts it read (prose.pdf_page_anchors), so a page maps to its chunk before the region map. C36.2b: between batches it serves the reader's wanted questions (reader_questions.serve), so a reader of a book being processed gets them at the next batch. C36.G: a PDF read from OCR or the reader's browser gets its chunk pages too (its texts by page number, numbered), and contents entries without a page take their chunk's first page (toc_with_pages)."
     },
     {
       "path": "backend/services/book_purge.py",
@@ -1217,8 +1217,8 @@
     {
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
-      "lines": 420,
-      "size_bytes": 22448,
+      "lines": 439,
+      "size_bytes": 23333,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only. C26.3: while the book is processed the quiz is 409 preparing with nothing kept and the session awaiting, then asked once it is done; a quiz already built is still asked."
     },
@@ -1325,6 +1325,14 @@
       "size_bytes": 3430,
       "role": "test",
       "purpose": "Pytest for scripts/backfill_covers.py on the in-memory database: pending books (ready, never looked up or failed) in id order, one book at a time with a pause between, dry run, the dev-only guard, a failing book not stopping the run, and a book without a readable file looked up by its typed title."
+    },
+    {
+      "path": "backend/tests/test_backfill_page_anchors.py",
+      "language": "python",
+      "lines": 60,
+      "size_bytes": 2543,
+      "role": "test",
+      "purpose": "Tests for backfill_page_anchors: dry run writes nothing, chunks and contents get pages once, a chunk with anchors is kept, mismatched texts and books with no page texts are skipped."
     },
     {
       "path": "backend/tests/test_backfill_positions.py",
@@ -1497,8 +1505,8 @@
     {
       "path": "backend/tests/test_device_books.py",
       "language": "python",
-      "lines": 166,
-      "size_bytes": 7439,
+      "lines": 190,
+      "size_bytes": 8959,
       "role": "test",
       "purpose": "Pytest on MemoryDb (C26.7): a device book is made with no file; bad sizes, hashes, types and keys refused; text in batches and the last one ingests from it (chunks, ready, no region map); page order and empty pages; a resent batch replaces its pages; another reader's, a server-read or a ready book refused; bad batches refused; a failed browser-text book resumes from its stored text; a device book read on the server still cannot resume."
     },
@@ -1657,8 +1665,8 @@
     {
       "path": "backend/tests/test_ingest_embeddings.py",
       "language": "python",
-      "lines": 315,
-      "size_bytes": 13599,
+      "lines": 333,
+      "size_bytes": 14680,
       "role": "test",
       "purpose": "Pytest on the in-memory database: bounded batches from the cursor, every chunk stored once with a local embedding and the job done, the book ready only once the first batch and its questions are stored, ready even if those questions fail, a crash keeps the cursor and a resume from Storage finishes without duplicate chunks or questions, a batch stored but not recorded is safe to rerun, error before the first batch, an empty book, a failing question agent; the cover lookup after ingestion (typed title as fallback, metadata preferred, skipped once checked, never failing the job, not run when ingestion fails); reader blocks stored with every chunk and the toc with the book, an empty toc without chapters, no structure never failing the job, blocks for every chunk after a resume. C17.6: no structure leaves block_paths empty too."
     },
@@ -1881,8 +1889,8 @@
     {
       "path": "backend/tests/test_range_quiz.py",
       "language": "python",
-      "lines": 118,
-      "size_bytes": 7001,
+      "lines": 126,
+      "size_bytes": 7321,
       "role": "test",
       "purpose": "Pytest for the pure range quiz: the count formula, placeholders, PDF/EPUB/contents slices, positions in the range, stratified selection with mix, unused, difficulty and dedupe, confidence-weighted correct answers."
     },
@@ -2257,8 +2265,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5483,
-      "size_bytes": 256000,
+      "lines": 5557,
+      "size_bytes": 261378,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2321,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6239,
-      "size_bytes": 1143324,
+      "lines": 6243,
+      "size_bytes": 1146275,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5903,6 +5911,14 @@
       "purpose": "Fills chunks.embedding_local for chunks stored before local embeddings: only null rows, in id order, idempotent and resumable, with --dry-run, --limit and --book-id; refuses to run unless ENV=development."
     },
     {
+      "path": "scripts/backfill_page_anchors.py",
+      "language": "python",
+      "lines": 108,
+      "size_bytes": 5123,
+      "role": "script",
+      "purpose": "DEBUG_LOG 2026-11-19 C36.G: gives ready PDFs read from OCR or the reader's browser (no chunk anchors, page_ocr texts) their chunk page anchors and contents pages, after checking the chunks were cut from those texts; never touches a chunk with anchors; --dry-run writes nothing; ENV guard; a write needs approval and a dump."
+    },
+    {
       "path": "scripts/backfill_positions.py",
       "language": "python",
       "lines": 224,
@@ -6553,8 +6569,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 828,
-      "size_bytes": 278261,
+      "lines": 830,
+      "size_bytes": 279255,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -48,12 +48,15 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    and Jupyter notebooks are converted to EPUB on the server, images kept.
    The backend cuts the text into sections of about 600 words, embeds each
    with a local model (all-MiniLM-L6-v2, 384 dimensions, on the CPU),
-   extracts its key concepts (YAKE) and pre-builds a bank of questions
-   from the section's own sentences: cloze, multiple choice, definition,
-   why/how and main idea, each keeping the sentence it came from as
-   evidence. The book opens at once, before any of this (C26); quizzes
-   and Steve wait until its text is ready ("Preparing quizzes… n%"). One
-   book is processed at a time, in order. Then a region map splits every
+   and stores it. Questions follow the reader (C36): as you read, the
+   section on screen and the next one get their key concepts (YAKE) and a
+   bank of questions from their own sentences (cloze, multiple choice,
+   definition, why/how and main idea, each keeping the sentence it came
+   from as evidence), so a quiz on the pages you read is ready when you
+   finish them; pages you never read are never questioned. The book opens
+   at once, before any of this (C26) ("Preparing the book… n%"); a quiz
+   waits only while its own pages are still being read in. One book is
+   processed at a time, in order, and the reader's questions go first. Then a region map splits every
    page into prose, math, code, figure and table regions, so questions and
    Steve read prose only; region maps wait behind any upload still in the
    queue, so a new book's quizzes are never held up by an older book's map
@@ -288,7 +291,8 @@ with the labelled answers: `python scripts/eval_grader.py`.
   0.1 CPU and 512 MB. A whole novel takes minutes to finish ingesting
   (Pride and Prejudice: about 134 s on a desktop; a 883-page PDF's first
   questions about 2 minutes in a Render-like container), though the book
-  opens and can be read at once; only quizzes and Steve wait.
+  opens and can be read at once; Steve and quizzes on pages not read in
+  yet wait.
   Supabase Free pauses after a week without activity and has no automatic
   backups; development and production share one project.
 - **Google accounts only.** There is no email and password sign-in in the

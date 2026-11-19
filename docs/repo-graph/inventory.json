@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 968,
-    "inventoried": 825,
+    "tracked": 969,
+    "inventoried": 826,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18243,
+      "size_bytes": 18334,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -121,8 +121,8 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 297,
-      "size_bytes": 14901,
+      "lines": 301,
+      "size_bytes": 15172,
       "role": "doc",
       "purpose": "Product overview (C15.4, phase 2 in C25.1): the honest positioning (algorithmic quizzes, grading, planning and scoring on our servers; Steve alone uses Google's Gemini, opt-in, free tier or the reader's key), live URL, how it works in nine steps (upload and conversion, plan, the original view, focus, Steve, test, grade, adapt, progress), the architecture in brief, local setup, the standard and live checks, and limitations."
     },
@@ -1337,8 +1337,8 @@
     {
       "path": "backend/tests/test_backfill_prose.py",
       "language": "python",
-      "lines": 113,
-      "size_bytes": 5181,
+      "lines": 116,
+      "size_bytes": 5447,
       "role": "test",
       "purpose": "Pytest for scripts/backfill_prose.py on the in-memory database: pending books, a dry run that only reads, a book without regions getting its regions job and prose, a second run changing nothing, a regions job running elsewhere left alone, one failing book not stopping the run, the environment guard."
     },
@@ -2233,8 +2233,8 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
-      "lines": 466,
-      "size_bytes": 30576,
+      "lines": 476,
+      "size_bytes": 31303,
       "role": "doc",
       "purpose": "Architecture (C15.4, phase 2 in C25.1): the system with Gemini for Steve only, the five agents' pure decide() contracts, the LangGraph diagram, event flows per endpoint, ingestion, conversions to EPUB, the region map, the data model through migration 033, the original view (PDF.js, foliate-js, OCR; the book view retired), word lookup, annotations, notes, Steve, focus mode, XP and leagues, and the security layers."
     },
@@ -2249,8 +2249,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1838,
-      "size_bytes": 105964,
+      "lines": 1866,
+      "size_bytes": 108005,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
@@ -2321,8 +2321,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6238,
-      "size_bytes": 1142456,
+      "lines": 6239,
+      "size_bytes": 1143324,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6031,6 +6031,14 @@
       "purpose": "C26.G measuring script, offline in the production image: books queued as uploads hand them on (ingestion_worker.run, or all at once with --no-queue as before C26.1), on MemoryDb; per book the time to first questions, to the whole text questioned and to everything done (--until ingest|all), with peak RSS and the cgroup peak. C27.1: waits for the queued region maps (drain) and times each (regions_done_s)."
     },
     {
+      "path": "scripts/dev/measure_c36.py",
+      "language": "python",
+      "lines": 131,
+      "size_bytes": 5647,
+      "role": "script",
+      "purpose": "C36.6 (issue 27): offline measurement in the production image of upload to a quiz on the reader's page: the real pipeline on MemoryDb, a reader saving the place once a second (reader_questions.want, ingestion_worker.run_questions as a task); times the book ready, the page's chunk stored, its questions made, the ingest done, and peak memory."
+    },
+    {
       "path": "scripts/dev/measure_embedder.py",
       "language": "python",
       "lines": 86,
@@ -6545,8 +6553,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 827,
-      "size_bytes": 277883,
+      "lines": 828,
+      "size_bytes": 278261,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

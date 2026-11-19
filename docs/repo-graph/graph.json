@@ -5121,6 +5121,12 @@
       "language": "python"
     },
     {
+      "id": "file:scripts/dev/measure_c36.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
       "id": "file:scripts/dev/measure_embedder.py",
       "type": "file",
       "role": "script",
@@ -14305,6 +14311,56 @@
     {
       "type": "imports",
       "from": "file:scripts/dev/measure_c26.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/agents/question_generation/agent.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/services/concept_store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/services/reader_questions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/dev/measure_c36.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {

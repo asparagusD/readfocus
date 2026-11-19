@@ -5481,3 +5481,67 @@ The changed test itself. It cannot be made to fail on demand here (the race need
 
 ### Commit
 test(notes): read the phone toolbar's tools in one frame
+
+## 2026-11-19 C36.G — Quiz me says "nothing to ask" after 27 pages of a book read on the device
+
+**Status:** fixed for new books; the book already read needs the backfill (your approval)
+
+### Symptom
+Reported by you after the C36 release: Quiz me, after reading about 27 pages, answers 409 "There is nothing to ask
+about yet. Read a little further first." (`routers/focus.py` `_quiz_me`, from `quiz_me.NothingToAsk`).
+
+Production, read only (selects through the service client, 2026-11-19): the book is "Hands On Machine Learning ...",
+a PDF over 50 MB kept on the device (`source_format` browser-text, `storage_mode` device, C26.7): 394 chunks, ingest
+`done`, 878 `page_ocr` rows; **no chunk has `anchors`** (pages None, no spans) or `block_paths`; its 21 contents
+entries have `chunk_index` but **`page` None**; `page_count` None; the saved place is page 68 but
+`reading_progress.chunks_completed` is **0**; `question_bank` holds **no rows** for it and no session exists.
+
+### Repro
+A browser-text PDF book (chunks without anchors, contents without pages) and Quiz me to page 20:
+`pytest backend/tests/test_api_quiz_me.py -q -k device` (added with the fix; fails before it).
+
+### Hypotheses
+1. The range cannot be mapped to chunks, so it has no words. Evidence: `quiz._slices` for a PDF uses chunks'
+   `anchors.pages`/`spans` (none: C36.1 gives anchors only to a PDF parsed on the server; a browser-text book was
+   left out), then `range_quiz.toc_slices` by contents `page` (all None), so the slices are empty, `words` is 0 and
+   `quiz_me.build` raises NothingToAsk. Ruled out if: the book's chunks had anchors or its contents pages. Result:
+   **confirmed** by the production read above.
+2. The place is before the range's start (`order_key(start) >= order_key(place)`). Evidence: chapter scope falls
+   back to the body start. Ruled out if: the body start is before page 68. Result: ruled out: `body_start` is None,
+   so the start is page 0, before 68.
+3. C36's reader-follow questions never ran, so there were none to pick. Evidence: no `question_bank` rows. Result:
+   a consequence of 1, not the cause: `reading_place.chunk_at` maps the place the same way (no anchors, no contents
+   pages, no page count), returns None, so nothing is wanted and `chunks_completed` stays 0. `_assemble` would
+   make missing questions inline anyway.
+
+### Root cause
+C36.1 gave page anchors only to a PDF whose text came from pypdf (`book_ingestor.page_anchors` returned None when
+the book was read from OCR or from the reader's browser), and such a book's contents come from its text structure,
+with chunk indices but no pages. Nothing then maps a page to a chunk: `quiz._slices` finds no slices (no words, so
+NothingToAsk) and `reading_place.chunk_at` returns None (no reader questions, `chunks_completed` stuck at 0). Books
+over 50 MB are read on the device (C26.7), so every such book is affected; it predates C36 (C26.7 never mapped
+pages either), C36 only did not cover it.
+
+### Fix
+`book_ingestor.py`: `read_pages` returns a browser-text book's texts by page number as its `ocr`; `page_anchors`
+builds a PDF's chunk anchors from the texts its chunks were cut from: pypdf's pages, or the OCR/browser texts by
+page number (`numbered`, blank pages kept as ""); `toc_with_pages` gives contents entries with a chunk but no page
+their chunk's first page. A browser-text book still gets no region map (it has no file).
+
+The book already read was ingested before this: `scripts/backfill_page_anchors.py` (next commit) writes its
+anchors and contents pages; running it on the shared project needs your approval and a fresh dump.
+
+### Regression test
+`backend/tests/test_device_books.py::test_a_device_books_chunks_know_their_pages_so_a_place_and_a_quiz_range_map_to_them`
+(a 60-page device book with a blank page: every chunk has pages, page 30 maps to a chunk holding it, a quiz range
+from page 1 to 30 has words), plus `test_ingest_embeddings.py`
+`::test_a_pdf_read_from_ocr_or_browser_text_gets_its_pages_by_number` and
+`::test_contents_entries_without_a_page_take_their_chunks_first_page`. Failed before the fix (`git stash` of
+`book_ingestor.py`: 3 failed, 45 passed); pass after (48 passed).
+
+### Found in passing (not fixed here)
+`ocr_pages.load_texts` reads `page_ocr` in one select, and PostgREST returns at most 1000 rows, so a device or
+scanned book with more than 1000 text pages would be ingested without the rest (this book has 878).
+
+### Commit
+fix(ingest): give a book read from OCR or the browser its page map

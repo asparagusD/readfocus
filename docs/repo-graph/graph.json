@@ -1593,6 +1593,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_backfill_page_anchors.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_backfill_positions.py",
       "type": "file",
       "role": "test",
@@ -5020,6 +5026,12 @@
     },
     {
       "id": "file:scripts/backfill_local_embeddings.py",
+      "type": "file",
+      "role": "script",
+      "language": "python"
+    },
+    {
+      "id": "file:scripts/backfill_page_anchors.py",
       "type": "file",
       "role": "script",
       "language": "python"
@@ -9080,6 +9092,21 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/tests/test_backfill_page_anchors.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_page_anchors.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_backfill_page_anchors.py",
+      "to": "file:scripts/backfill_page_anchors.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/tests/test_backfill_positions.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -9486,6 +9513,16 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/focus/quiz.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/focus/store.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
       "to": "file:backend/main.py"
     },
     {
@@ -9527,6 +9564,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_device_books.py",
       "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/services/reading_place.py"
     },
     {
       "type": "imports",
@@ -14080,6 +14122,21 @@
     },
     {
       "type": "imports",
+      "from": "file:scripts/backfill_page_anchors.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_page_anchors.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:scripts/backfill_page_anchors.py",
+      "to": "file:scripts/backfill_structure.py"
+    },
+    {
+      "type": "imports",
       "from": "file:scripts/backfill_positions.py",
       "to": "file:backend/services/book_ingestor.py"
     },
@@ -15140,6 +15197,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:scripts/backfill_page_anchors.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
       "from": "file:scripts/backfill_positions.py",
       "to": "table:books"
     },
@@ -15596,6 +15658,16 @@
     {
       "type": "writes_table",
       "from": "file:scripts/backfill_local_embeddings.py",
+      "to": "table:chunks"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_page_anchors.py",
+      "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:scripts/backfill_page_anchors.py",
       "to": "table:chunks"
     },
     {

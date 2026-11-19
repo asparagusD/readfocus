@@ -107,6 +107,30 @@ def test_the_text_comes_in_batches_and_the_last_one_starts_ingestion(client, db)
     assert db.regions == []  # no file, so no region map
 
 
+def test_a_device_books_chunks_know_their_pages_so_a_place_and_a_quiz_range_map_to_them(client, db, monkeypatch):
+    """DEBUG_LOG 2026-11-19 C36.G: a book read on the device had no page map, so Quiz me found no words ("nothing
+    to ask") and the reader's place no chunk (no questions followed it). Its chunks get their pages at ingest."""
+    from backend.focus import quiz, store
+    from backend.services import reading_place
+    monkeypatch.setattr(quiz, "supabase", db)
+    monkeypatch.setattr(reading_place, "supabase", db)
+    book_id = create(client).json()["book_id"]
+    texts = [page_text(n) if n != 3 else "" for n in range(1, 61)]  # page 3 is blank
+    send(client, book_id, 1, texts[:50])
+    send(client, book_id, 51, texts[50:], last=True)
+    chunks = sorted(db.tables["chunks"], key=lambda c: c["chunk_index"])
+    assert len(chunks) > 3 and all((c.get("anchors") or {}).get("pages") for c in chunks)
+    holding = next(c for c in chunks if "Page 30 begins." in c["content"])
+    first, last = holding["anchors"]["pages"]
+    assert first <= 30 <= last
+    book = db.tables["books"][0]
+    place = {"kind": "pdf", "page": 30, "quads": [[0, 0, 0, 0]], "text": ""}
+    at = reading_place.chunk_at(book, place)
+    assert at is not None and chunks[at]["anchors"]["pages"][0] <= 30 <= chunks[at]["anchors"]["pages"][1]
+    slices, _ = quiz._slices(book, {"kind": "pdf", "page": 1, "quads": [[0, 0, 0, 0]], "text": ""}, place)
+    assert sum(s.words for s in slices) > 0 and store.unit_of(place) == 30
+
+
 def test_pages_are_read_in_page_order_and_empty_pages_are_left_out(client, db):
     book_id = create(client).json()["book_id"]
     send(client, book_id, 3, [page_text(3), ""])

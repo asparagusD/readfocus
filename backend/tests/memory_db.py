@@ -152,13 +152,21 @@ class Bucket:
         options = options or {}
         prefix = f"{path.rstrip('/')}/" if path else ""
         names = sorted(p[len(prefix):] for p in self.db.files if p.startswith(prefix) and "/" not in p[len(prefix):])
+        if options.get("search"):  # as Storage: names that start with it
+            names = [n for n in names if n.startswith(options["search"])]
         start = options.get("offset", 0)
         self.db.calls.append(("storage", "list", self.name, path))
-        return [{"name": n, "id": n} for n in names[start: start + options.get("limit", 100)]]
+        return [{"name": n, "id": n, "metadata": {"size": len(self.db.files[prefix + n])}}
+                for n in names[start: start + options.get("limit", 100)]]
 
     def remove(self, paths):
         self.db.calls.append(("storage", "remove", self.name, tuple(paths)))
         return [{"name": p} for p in paths if self.db.files.pop(p, None) is not None]
+
+    def create_signed_upload_url(self, path, options=None):
+        self.db.calls.append(("storage", "sign-upload", path))
+        url = f"https://storage.test/object/upload/sign/{self.name}/{path}?token=t-{path}"
+        return {"signed_url": url, "signedUrl": url, "token": f"t-{path}", "path": path}
 
     def create_signed_url(self, path, expires_in, options=None):
         self.db.calls.append(("storage", "sign", path, expires_in))

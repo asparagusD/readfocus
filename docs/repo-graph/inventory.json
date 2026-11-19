@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 943,
-    "inventoried": 800,
+    "tracked": 945,
+    "inventoried": 802,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17841,
+      "size_bytes": 17859,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -625,8 +625,8 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 410,
-      "size_bytes": 21787,
+      "lines": 442,
+      "size_bytes": 23521,
       "role": "router",
       "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop. C30.1: the upload's author is optional; a blank one is read from the file's own metadata (file_author: PDF info Author, EPUB dc:creator, whitespace tidied, at most AUTHOR_MAX), else stored as null, and the response returns the author used."
     },
@@ -797,6 +797,14 @@
       "size_bytes": 6385,
       "role": "service",
       "purpose": "Book covers from Open Library (C11.2), backend only: title search (first author, no edition notes) for a cover ID, the image by ID through archive.org redirects (https, Open Library and archive.org hosts only), copied unchanged (at most 150 KB, the C11.5 image budget) into the public covers bucket once per cover ID; the outcome (cover_url, cover_source openlibrary/none/error) saved on the book; 3 s timeout, one attempt, descriptive User-Agent; never raises."
+    },
+    {
+      "path": "backend/services/direct_upload.py",
+      "language": "python",
+      "lines": 77,
+      "size_bytes": 3475,
+      "role": "service",
+      "purpose": "C35.3a (issue 16): a PDF or EPUB sent straight to Storage. object_path (the reader's own <user>/<book>.<ext> in the books bucket), signed_upload (a signed upload URL), stored_size (from a Storage listing), first_bytes (one Range request through a short signed URL), kind_of (pdf or epub by the first bytes), check (exists, at most MAX_BOOK_FILE_BYTES, its type; a refused object is removed)."
     },
     {
       "path": "backend/services/ingestion_worker.py",
@@ -1113,8 +1121,8 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 184,
-      "size_bytes": 7322,
+      "lines": 192,
+      "size_bytes": 7844,
       "role": "test",
       "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1); project_columns (C25.G, on by default) returns only the selected columns, as PostgREST does."
     },
@@ -1469,6 +1477,14 @@
       "size_bytes": 7533,
       "role": "test",
       "purpose": "Pytest on MemoryDb (C26.7): a device book is made with no file; bad sizes, hashes, types and keys refused; text in batches and the last one ingests from it (chunks, ready, no region map); page order and empty pages; a resent batch replaces its pages; another reader's, a server-read or a ready book refused; bad batches refused; a failed browser-text book resumes from its stored text; a device book read on the server still cannot resume."
+    },
+    {
+      "path": "backend/tests/test_direct_upload.py",
+      "language": "python",
+      "lines": 83,
+      "size_bytes": 3374,
+      "role": "test",
+      "purpose": "C35.3a (issue 16): POST /books/upload-url signs only the reader's own path and refuses other types, empty or oversize files and a full shelf, writing nothing; first_bytes reads one Range."
     },
     {
       "path": "backend/tests/test_embedder.py",
@@ -2193,8 +2209,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5306,
-      "size_bytes": 246578,
+      "lines": 5340,
+      "size_bytes": 248043,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2257,8 +2273,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6178,
-      "size_bytes": 1112594,
+      "lines": 6179,
+      "size_bytes": 1113615,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6345,8 +6361,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 802,
-      "size_bytes": 267679,
+      "lines": 804,
+      "size_bytes": 268345,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

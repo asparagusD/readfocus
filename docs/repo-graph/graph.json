@@ -254,6 +254,13 @@
       "handler": "upload_book"
     },
     {
+      "id": "endpoint:POST /books/upload-url",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/upload-url",
+      "handler": "create_upload_url"
+    },
+    {
       "id": "endpoint:POST /books/{book_id}/annotations",
       "type": "endpoint",
       "method": "POST",
@@ -1162,6 +1169,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/direct_upload.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/ingestion_worker.py",
       "type": "file",
       "role": "service",
@@ -1661,6 +1674,12 @@
     },
     {
       "id": "file:backend/tests/test_device_books.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_direct_upload.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -6191,6 +6210,11 @@
     {
       "type": "defines_endpoint",
       "from": "file:backend/routers/books.py",
+      "to": "endpoint:POST /books/upload-url"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/books.py",
       "to": "endpoint:POST /books/{book_id}/resume"
     },
     {
@@ -7430,6 +7454,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/books.py",
+      "to": "file:backend/services/direct_upload.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/books.py",
       "to": "file:backend/services/ingestion_worker.py"
     },
     {
@@ -7925,6 +7954,16 @@
     {
       "type": "imports",
       "from": "file:backend/services/covers.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/direct_upload.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/direct_upload.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -9225,6 +9264,51 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_device_books.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/direct_upload.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_direct_upload.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {

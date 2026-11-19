@@ -11,7 +11,7 @@ from pypdf import PdfReader
 from backend.agents import policy
 from backend.convert.epub_builder import build_epub
 from backend.convert.sources import FORMATS as CONVERTED, convert_upload
-from backend.services import body_start, book_purge, ingestion_worker
+from backend.services import body_start, book_purge, direct_upload, ingestion_worker
 from backend.services.book_purge import live
 from backend.services.book_ingestor import BROWSER_TEXT, extract_metadata
 from backend.services import processing_jobs as jobs
@@ -169,6 +169,38 @@ async def upload_book(
     # 6. Return immediately
     return {"book_id": book_id, "status": "processing", "source_format": source_format, "notes": notes,
             "author": author}
+
+def shelf_full(used: int) -> HTTPException:
+    return HTTPException(status_code=413, detail=(
+        f"Your shelf is full: {megabytes(used)} of {megabytes(policy.MAX_SHELF_BYTES_PER_USER)} kept on our "
+        "server. Remove a book, or keep this one on this device only."))
+
+
+class UploadUrlRequest(BaseModel):
+    """C35.3a (issue 16): a PDF or EPUB the browser will send straight to Storage, with its size in bytes."""
+    model_config = ConfigDict(extra="forbid")
+    filename: str = Field(min_length=1, max_length=1024)
+    size: int = Field(ge=1)
+
+
+@router.post("/upload-url")
+def create_upload_url(req: UploadUrlRequest, user_id: str = Depends(get_current_user)):
+    """Check the book fits (its type, its size, the shelf), then a signed upload URL for the reader's own path.
+    Markdown, a .zip and notebooks are converted, and device-only books stay on the device: both use /upload."""
+    file_type = req.filename.rsplit(".", 1)[-1].lower()
+    if file_type not in direct_upload.KINDS:
+        raise HTTPException(status_code=400, detail="Only a .pdf or .epub is sent this way.")
+    if req.size > policy.MAX_BOOK_FILE_BYTES:
+        raise HTTPException(status_code=413, detail=(
+            f"This file is over {megabytes(policy.MAX_BOOK_FILE_BYTES)}, the most one book can be."))
+    used = shelf_bytes(user_id)
+    if used + req.size > policy.MAX_SHELF_BYTES_PER_USER:
+        raise shelf_full(used)
+    book_id = str(uuid.uuid4())
+    signed = direct_upload.signed_upload(direct_upload.object_path(user_id, book_id, file_type))
+    return {"book_id": book_id, "file_type": file_type, "upload_url": signed["signed_url"], "token": signed["token"],
+            "max_bytes": policy.MAX_BOOK_FILE_BYTES}
+
 
 BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url, storage_mode"
 PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")

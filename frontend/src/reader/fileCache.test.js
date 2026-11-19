@@ -103,3 +103,13 @@ test('removing a book forgets its copy; signing out forgets them all', async () 
   await forgetCachedBookFiles(caches);
   assert.equal(await cachedBookFile('b2', 'cc', caches), null);
 });
+
+test('C35.3c: before the server has hashed an uploaded book, its one kept copy is found without a sha256', async () => {
+  const caches = fakeCaches();
+  assert.equal(await cachedBookFile('b1', null, caches), null);
+  await keepBookFile('b1', 'abc', bytes('%PDF uploaded'), caches);
+  await keepBookFile('b2', 'def', bytes('other book'), caches);
+  assert.equal(text(await cachedBookFile('b1', null, caches)), '%PDF uploaded');
+  assert.equal(text(await cachedBookFile('b1', 'abc', caches)), '%PDF uploaded'); // the server's hash, the same bytes
+  assert.equal(await cachedBookFile('b1', 'changed', caches), null); // a new version is fetched afresh
+});

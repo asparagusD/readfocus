@@ -2670,6 +2670,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/upload-first-open.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/warmup.spec.js",
       "type": "file",
       "role": "config",
@@ -10855,6 +10861,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/upload-first-open.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/warmup.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -12167,6 +12178,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/bookFile.js",
       "to": "file:frontend/src/originalview/documentSource.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/bookFile.js",
+      "to": "file:frontend/src/reader/fileCache.js"
     },
     {
       "type": "imports",

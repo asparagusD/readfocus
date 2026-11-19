@@ -876,7 +876,7 @@
       "lines": 133,
       "size_bytes": 6918,
       "role": "service",
-      "purpose": "Prose-only text per chunk after the regions job (C18.6b): load() reads the book's page_regions and chunks (paged by 1000), plan() builds prose and anchors without writing, rebuild(book, file_bytes) applies it: through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises."
+      "purpose": "Prose-only text per chunk after the regions job (C18.6b): load() reads the book's page_regions and chunks (paged by 1000), plan() builds prose and anchors without writing, rebuild(book, file_bytes) applies it: through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises. C36.5 (issue 27): a changed chunk is questioned again only when it already has questions (questions follow the reader); others get prose and vectors only."
     },
     {
       "path": "backend/services/question_bank.py",
@@ -2321,8 +2321,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6237,
-      "size_bytes": 1141988,
+      "lines": 6238,
+      "size_bytes": 1142456,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6546,7 +6546,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 827,
-      "size_bytes": 277728,
+      "size_bytes": 277883,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

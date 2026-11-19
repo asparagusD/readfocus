@@ -65,6 +65,14 @@ def test_only_chunks_whose_text_changed_are_embedded_again_and_requestioned(db):
     assert ids == {"q-used", "q-c1"}  # c0's unused question went; a used one and other chunks' stay
 
 
+def test_a_changed_chunk_with_no_questions_is_embedded_again_but_not_questioned(db):
+    """C36.5 (issue 27): questions follow the reader; a chunk not reached yet gets them when it is read."""
+    db.tables["question_bank"] = [q for q in db.tables["question_bank"] if q["chunk_id"] != "c0"]
+    report = rebuild(db)
+    assert db.generated == [] and report["requestioned"] == 0
+    assert "embedding_local" in db.tables["chunks"][0] and db.tables["chunks"][0]["prose"].count("[Equation 2.1")
+
+
 def test_rebuild_is_idempotent(db):
     rebuild(db)
     calls = len(db.calls)

@@ -3,8 +3,9 @@
 After the regions job (region_job.run_job) has written a book's page_regions,
 `rebuild` lines its chunks up with them (backend/regions/prose.py) and stores
 each chunk's `prose`, `anchors` and `garbled_sentences` (migration 020).
-Chunks whose agent text changed are embedded again from their prose, their
-unused questions are deleted and the question generation agent runs on them
+Chunks whose agent text changed are embedded again from their prose; those that
+already have questions (C36.5: questions follow the reader, so most do not) get
+their unused questions deleted and the question generation agent run on them
 again (it reads prose and saves the chunk's concepts); questions already used
 in a session stay. `content` is never written.
 
@@ -90,23 +91,34 @@ def plan(book: dict, file_bytes: bytes, regions: list[dict], chunks: list[dict])
     return writes, report
 
 
+def _questioned(chunk_ids: list[str]) -> list[str]:
+    """The chunks among these that have questions (C36.5), in the given order."""
+    rows = supabase.table("question_bank").select("chunk_id").in_("chunk_id", chunk_ids).execute().data or []
+    asked = {row["chunk_id"] for row in rows}
+    return [chunk_id for chunk_id in chunk_ids if chunk_id in asked]
+
+
 def rebuild(book: dict, file_bytes: bytes) -> dict:
-    """Store every chunk's prose, anchors and garbled count; embed and question again the chunks that changed."""
+    """Store every chunk's prose, anchors and garbled count; embed the chunks that changed, and question again
+    those of them that had questions."""
     writes, report = plan(book, file_bytes, *load(book["id"]))
     pdf_text.release_memory()  # the regions and page texts are no longer needed (C18.G)
     for row, values, changed in writes:
         if not changed:
             supabase.table("chunks").update(values).eq("id", row["id"]).execute()
     changed = [(row, values) for row, values, text_changed in writes if text_changed]
+    report["requestioned"] = 0
     for start in range(0, len(changed), BATCH):
         batch = changed[start:start + BATCH]
         vectors = embedder.embed([values["prose"] for _, values in batch])
         for (row, values), vector in zip(batch, vectors):
             supabase.table("chunks").update({**values, "embedding_local": [float(v) for v in vector]}).eq(
                 "id", row["id"]).execute()
-        ids = [row["id"] for row, _ in batch]
-        supabase.table("question_bank").delete().in_("chunk_id", ids).eq("times_used", 0).execute()
-        question_agent.run(book["id"], ids)
+        ids = _questioned([row["id"] for row, _ in batch])
+        if ids:  # C36.5 (issue 27): a chunk the reader has not reached gets its questions when it is read
+            supabase.table("question_bank").delete().in_("chunk_id", ids).eq("times_used", 0).execute()
+            question_agent.run(book["id"], ids)
+            report["requestioned"] += len(ids)
     return report
 
 

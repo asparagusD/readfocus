@@ -5338,3 +5338,51 @@ The existing `tools/repo_graph/tests` are the test: 5 failed before, 64 passed a
 
 ### Commit
 fix(graph): add purposes for C35.2b's test file and migration 035
+
+## 2026-11-19 C35.7 — CI's graph job fails on main: docs/repo-graph/ is stale
+
+**Status:** fixed
+
+### Symptom
+CI on main after the C35 release (run 44491679016, push of 69d99e7), job `graph`, step "Fail if docs/repo-graph/
+is stale":
+
+    git diff --exit-code docs/repo-graph/
+    ::error::docs/repo-graph/ is stale. Run 'make graph' and commit the result.
+
+frontend and backend passed; e2e and deploy-render did not run behind it. Render was already deployed by hand
+(18575d5) and Vercel had deployed main, so production was not affected.
+
+### Repro
+On readfocus-2.0 (the same tree as main):
+
+    make graph && git diff --stat docs/repo-graph/
+
+    docs/repo-graph/REPO_MAP.md    | 2 +-
+    docs/repo-graph/inventory.json | 6 +++---   (CLAUDE.md size_bytes 18134 -> 18152; docs/PROGRESS.md lines
+                                                  6191 -> 6192, size_bytes 1127335 -> 1128312)
+
+### Hypotheses
+1. The graph was regenerated before the last CLAUDE.md and PROGRESS.md edits of C35.6b, whose sizes the
+   inventory records. Evidence: only those two files differ; C35.6b ran `make graph` at staging, then edited the
+   baselines and the progress row. Ruled out if: other files differ. Result: confirmed (only those two).
+2. A line-ending difference between Windows and CI. Ruled out if: the regenerated graph here differs from the
+   committed one too. Result: ruled out (it differs here, on Windows).
+
+### Root cause
+Order of work, not code: in C35.6b `make graph` ran before the final `CLAUDE.md` and `docs/PROGRESS.md` edits,
+so `docs/repo-graph/inventory.json` and `REPO_MAP.md` carried their older sizes. The local graph tests read the
+graph, not the docs, so they passed; only CI's freshness check compares. (The same slip as C33.G's first CI
+failure.)
+
+### Fix
+`make graph` after the last docs edit, committed. From now on the order is: docs edits, `git add`, `make graph`,
+`git add docs/repo-graph/`, then `make graph` once more and `git diff --exit-code docs/repo-graph/` before the
+commit. One attempt.
+
+### Regression test
+None automated beyond CI's own freshness step, which is the test: `make graph && git diff --exit-code
+docs/repo-graph/` failed before (the diff above) and passes after.
+
+### Commit
+fix(graph): regenerate the repo graph after C35's last docs edits

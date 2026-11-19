@@ -35,6 +35,58 @@ run against production), a timed Render cold start after 15 idle minutes,
 Render's own memory graph, Lighthouse on the live site, and a long book
 ingested in the container or on Render.
 
+### C35: upload, open, delete and navigation on production (2026-11-19)
+
+Issues 16 to 21. Before: main 019c55e (Render d0a908b); after: main 69d99e7 (Render 18575d5, deployed first). The
+API timings are from this machine as test user A, read-only GETs, median of 7; the browser timings are in the
+in-app browser (Edge), signed in as the user, on their books, with the pane shown, the same network both times.
+
+| Request | Before | After |
+|---|---|---|
+| `GET /health` | 64 ms | 66 ms |
+| `GET /books` | 260 ms | 284 ms |
+| `GET /dashboard` | 441 ms | 427 ms |
+| `GET /badges` | 160 ms | 164 ms |
+| `GET /leagues/current` | 770 ms | 858 ms |
+| `GET /me/progress` | 712 ms | 487 ms |
+| `GET /books/{id}/open` | 271 ms | 283 ms |
+
+C35 changed none of these handlers; the differences are noise. Moving between pages (a scripted click on a nav
+link to the page's real content, so the hover prefetch is not counted; "blank" counts 16 ms samples in which the
+main area had neither text nor a skeleton):
+
+| Move | Before | After |
+|---|---|---|
+| Library to Dashboard, first visit | 1229 ms, blank about 400 ms | 931 ms, never blank |
+| Dashboard to League, first visit | 1472 ms, blank about 380 ms | 1338 ms, never blank |
+| Back to Library | 440 ms, 398 ms | 162 ms, 158 ms |
+| Back to Dashboard | 519 ms | 164 ms |
+| Back to League | 1068 ms | 169 ms |
+
+The first after-run, the first requests to the freshly deployed server, took 4.8 s and 3.9 s for the two first
+visits; a reload later gave the figures above. League's first visit now asks `/leagues/current` and `/me/progress`
+at once (845 and 463 ms, side by side).
+
+Opening the user's 15.9 MB, 120-page thesis PDF (not linearized), from loading the reader to its first page:
+
+| | Before | After |
+|---|---|---|
+| First page drawn | 14.0 s, 14.6 s | 19.6 s, 15.2 s |
+| PDF.js worker starts | 1.88 s (after the first bytes) | 1.07 s (with `/open`) |
+| Requests to the file | 9 (HEAD and 64 KB ranges) | 4 (HEAD and 256 KB ranges) |
+
+**The 1.5 s target of C35.4 was not met, and the open is not faster on this network.** Logging each range showed
+why: PDF.js first reads the file's last 115 KB (`bytes=16515072-16633115`, where a non-linearized PDF keeps its
+cross-reference table), and on an object Storage has not served recently that one read took 12.6 s; a read of
+the 256 KB just before it, right after, took 60 ms. The old build paid the same (its one 12 s request). This
+network to Storage measured 64 KB in 1.0 s and 2 MB in 8.8 s before, 0.6 s and 3.6 s after, so bandwidth also
+varied. Issue 19's 2.8 s was most likely taken with the object already warm. C35.4's earlier worker and fewer
+round trips are real but small beside the cold tail read; a follow-up (read the tail at once beside the head,
+and find why Storage is slow there) is proposed.
+
+Not measured: the upload of a 29 MB PDF and a delete (the user chose reads only); `/open` during processing (no
+book was processing).
+
 ### C34: opening a book on Render Free (2026-11-18)
 
 Issues 11 to 15. Production (Render Free, Singapore; Supabase, Mumbai) from this machine, as test user A, read-only

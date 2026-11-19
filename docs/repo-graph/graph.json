@@ -2568,6 +2568,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/open-ahead.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/pdf-open.spec.js",
       "type": "file",
       "role": "config",
@@ -4417,6 +4423,18 @@
     },
     {
       "id": "file:frontend/src/reader/lookup.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/openAhead.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/openAhead.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -10773,6 +10791,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/open-ahead.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/pdf-open.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -12563,6 +12586,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/Dashboard.jsx",
+      "to": "file:frontend/src/reader/openAhead.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/Landing.jsx",
       "to": "file:frontend/src/illustrations/index.js"
     },
@@ -12725,6 +12753,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/reader/fileStore.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/openAhead.js"
     },
     {
       "type": "imports",
@@ -12925,6 +12958,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/openAhead.js"
     },
     {
       "type": "imports",
@@ -13180,6 +13218,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/lookup.test.js",
       "to": "file:frontend/src/reader/lookup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/openAhead.test.js",
+      "to": "file:frontend/src/reader/openAhead.js"
     },
     {
       "type": "imports",

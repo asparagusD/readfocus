@@ -17,6 +17,7 @@ import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { forgetBookFile, saveBookFile } from '../reader/fileStore';
 import { forgetCachedBookFile, keepBookFile } from '../reader/fileCache';
 import { DIRECT, uploadBook } from '../lib/directUpload';
+import { openAheadProps } from '../reader/openAhead';
 import { DEVICE_MAX_BYTES, epubTexts, isBig, pdfTexts, sendTexts, sha256Hex } from '../reader/browserText';
 import './Library.css';
 
@@ -402,7 +403,7 @@ export function Library() {
               {next.progress ? `${readPct(next)}% read so far. It opens where you left off.` : `${next.author ? `By ${next.author}. ` : ''}It opens at the first page.`}
             </p>
           </div>
-          <Link to={`/read/${next.id}`} className="rf-btn rf-btn--primary rf-today__go">
+          <Link to={`/read/${next.id}`} className="rf-btn rf-btn--primary rf-today__go" {...openAheadProps(next.id, next.file_type)}>
             <span>Begin reading</span>
             <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
           </Link>
@@ -437,7 +438,7 @@ export function Library() {
                   initial={arrived.has(book.id) ? 'hidden' : undefined}
                   animate={arrived.has(book.id) ? 'visible' : undefined}
                 >
-                  {openable ? <Link to={`/read/${book.id}`} className="rf-shelf__book">{face}</Link> : <div className="rf-shelf__book">{face}</div>}
+                  {openable ? <Link to={`/read/${book.id}`} className="rf-shelf__book" {...openAheadProps(book.id, book.file_type)}>{face}</Link> : <div className="rf-shelf__book">{face}</div>}
                   <MasteryBar value={readPct(book)} className="rf-shelf__bar" />
                   <div className="rf-shelf__foot">
                     <p className={`rf-shelf__caption${book.status === 'error' ? ' is-error' : ''}`} aria-live={book.status === 'processing' ? 'polite' : undefined}>{caption(book, ingest[book.id], sending[book.id])}</p>

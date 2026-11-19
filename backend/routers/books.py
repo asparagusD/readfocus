@@ -239,7 +239,7 @@ def register_upload(req: RegisterRequest, background_tasks: BackgroundTasks, use
     return {"book_id": book_id, "status": "processing", "source_format": None, "notes": [], "author": author}
 
 
-BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url, storage_mode"
+BOOK_LIST_FIELDS = "id, status, title, author, total_chunks, total_words, created_at, cover_url, storage_mode, file_type"  # C35.4
 PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")
 
 

@@ -64,7 +64,7 @@ export async function mockBackend(page, api, book) {
     const path = url.pathname;
     if (path === '/health') return json(route, { status: 'ok', model_ready: true, timestamp: '2026-11-11T20:00:00' });
     if (path === '/auth/profile') return json(route, { id: 'e2e-reader', is_calibrated: true, wpm: 240 });
-    if (path === '/books' && request.method() === 'GET') return json(route, []);
+    if (path === '/books' && request.method() === 'GET') return json(route, api.shelf ?? []); // C35.4: a test may shelve the book
     if (path === '/dashboard') return json(route, { book_progress: [], score_over_time: [], reading_streak: 0, words_this_week: 0, recent_feedback: [] });
     if (path === '/badges') return json(route, badgesBody(api.badgesEarned)); // C24.6b: the shelf
     if (path === '/leagues/current') { // C24.6c

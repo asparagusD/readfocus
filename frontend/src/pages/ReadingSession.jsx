@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchApi } from '../lib/api';
+import { takeOpened } from '../reader/openAhead';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Reader } from '../originalview/Reader';
@@ -390,7 +391,7 @@ export function ReadingSession() {
   useEffect(() => {
     async function openBook() {
       try {
-        const opened = await fetchApi(`/books/${bookId}/open`);
+        const opened = await (takeOpened(bookId) ?? fetchApi(`/books/${bookId}/open`)); // C35.4: begun on the click
         setSessionData({ ...opened, processing: opened.status === 'processing' && !opened.pages_only,
           session_id: null, chunk_indices: [], chunks: [] });
         setLoading(false);

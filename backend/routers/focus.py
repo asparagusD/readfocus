@@ -198,7 +198,7 @@ def _awaiting(user_id: str, session_id: str) -> tuple[dict, list[dict]]:
     return session, events
 
 
-PREPARING = {"code": "preparing", "message": "Your questions are still being prepared. Try again in a few minutes."}
+PREPARING = {"code": "preparing", "message": "The pages up to here are still being prepared. Try again in a moment."}
 
 
 def _quiz(user_id: str, session_id: str) -> dict:

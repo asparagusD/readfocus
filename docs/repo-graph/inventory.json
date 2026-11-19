@@ -433,18 +433,18 @@
     {
       "path": "backend/focus/quiz.py",
       "language": "python",
-      "lines": 207,
-      "size_bytes": 12420,
+      "lines": 227,
+      "size_bytes": 13574,
       "role": "lib",
-      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz."
+      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz. C36.3 (issue 27): preparing(book, end) is per range: while the ingest runs it waits only when the range ends on or after the last page (or section) the stored chunks reach (stored_reach), or when the book has no page map; a range already stored is quizzed at once."
     },
     {
       "path": "backend/focus/quiz_me.py",
       "language": "python",
       "lines": 89,
-      "size_bytes": 4327,
+      "size_bytes": 4363,
       "role": "lib",
-      "purpose": "Quiz me (C23.7b, FOCUS_RULES F13): the range for a quiz outside focus mode, ending at the reader's place and starting at the contents entry holding it ('chapter') or where the last quiz on the book ended ('since_last': a focus session's bookmark, else the PDF page or contents entry of the chunk after the last test's chunks, else the body start); refuses an empty range (NothingToAsk); builds the questions with focus/quiz.py and keeps them on a new sessions row for submit-answers. Never scored for points. C26.3: raises quiz.Preparing while the book is processed; nothing is made."
+      "purpose": "Quiz me (C23.7b, FOCUS_RULES F13): the range for a quiz outside focus mode, ending at the reader's place and starting at the contents entry holding it ('chapter') or where the last quiz on the book ended ('since_last': a focus session's bookmark, else the PDF page or contents entry of the chunk after the last test's chunks, else the body start); refuses an empty range (NothingToAsk); builds the questions with focus/quiz.py and keeps them on a new sessions row for submit-answers. Never scored for points. C26.3: raises quiz.Preparing while the book is processed; nothing is made. C36.3: it waits (quiz.Preparing) only while the range up to the place is not stored yet."
     },
     {
       "path": "backend/focus/range_quiz.py",
@@ -650,7 +650,7 @@
       "path": "backend/routers/focus.py",
       "language": "python",
       "lines": 313,
-      "size_bytes": 15558,
+      "size_bytes": 15559,
       "role": "router",
       "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet. C26.3: the focus quiz and Quiz me answer 409 {code: preparing} while the book is processed; the focus session stays awaiting its quiz."
     },
@@ -1217,8 +1217,8 @@
     {
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
-      "lines": 396,
-      "size_bytes": 21038,
+      "lines": 420,
+      "size_bytes": 22448,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only. C26.3: while the book is processed the quiz is 409 preparing with nothing kept and the session awaiting, then asked once it is done; a quiz already built is still asked."
     },
@@ -1241,8 +1241,8 @@
     {
       "path": "backend/tests/test_api_quiz_me.py",
       "language": "python",
-      "lines": 99,
-      "size_bytes": 4654,
+      "lines": 108,
+      "size_bytes": 5230,
       "role": "test",
       "purpose": "API tests for POST /focus/quiz-me (C23.7b): this chapter from its contents entry, graded by submit-answers with mastery moved and no points; since the last focus bookmark, the body start, or after a test's chunks; nothing to ask refused with 409; another reader's book, a bad scope and extra keys refused. C26.3: Quiz me is 409 preparing while the book is processed."
     },
@@ -2321,8 +2321,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6235,
-      "size_bytes": 1139975,
+      "lines": 6236,
+      "size_bytes": 1140958,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6546,7 +6546,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 827,
-      "size_bytes": 277128,
+      "size_bytes": 277482,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -380,13 +380,37 @@ def test_while_the_book_is_processed_the_quiz_waits_and_the_session_is_kept(api,
     sid = read_and_end(api)
     api.db.tables["books"][0].update(book)
     api.db.tables["processing_jobs"] = [{"book_id": BOOK, "kind": "ingest", "status": job}] if job else []
+    every_chunk = api.db.tables["chunks"]
+    api.db.tables["chunks"] = every_chunk[:2]  # C36.3: stored up to p. 4 so far; the bookmark is on p. 6
     waiting = api.client.post(f"/focus/{sid}/quiz")
     assert waiting.status_code == 409 and waiting.json()["detail"]["code"] == "preparing"
     assert focus_row(api, sid)["status"] == "awaiting_quiz" and api.db.tables["sessions"] == []  # nothing kept
+    api.db.tables["chunks"] = every_chunk
     api.db.tables["books"][0]["status"] = "ready"
     api.db.tables["processing_jobs"] = [{"book_id": BOOK, "kind": "ingest", "status": "done"}]
     asked = api.client.post(f"/focus/{sid}/quiz")
     assert asked.status_code == 200 and asked.json()["count"] >= 1
+
+
+@pytest.mark.parametrize("end, ready", [(6, True), (7, True), (8, False)])
+def test_while_the_book_is_read_in_a_range_already_stored_is_quizzed_at_once(api, end, ready):
+    """C36.3 (issue 27): the stored chunks reach p. 8; a bookmark before that page is quizzed now, one on it waits
+    (the rest of p. 8 may be in the next batch)."""
+    api.db.tables["chunks"] = api.db.tables["chunks"][:3]  # pages 1-6 stored
+    api.db.tables["chunks"][2]["anchors"] = {**api.db.tables["chunks"][2]["anchors"], "pages": [5, 8]}
+    sid = read_and_end(api, end=end)
+    api.db.tables["processing_jobs"] = [{"book_id": BOOK, "kind": "ingest", "status": "running"}]
+    asked = api.client.post(f"/focus/{sid}/quiz")
+    assert asked.status_code == (200 if ready else 409)
+    assert (asked.json()["count"] >= 3) if ready else (asked.json()["detail"]["code"] == "preparing")
+
+
+def test_a_book_with_no_page_map_waits_for_its_whole_ingest(api):
+    for chunk in api.db.tables["chunks"]:
+        chunk["anchors"] = None
+    sid = read_and_end(api)
+    api.db.tables["processing_jobs"] = [{"book_id": BOOK, "kind": "ingest", "status": "running"}]
+    assert api.client.post(f"/focus/{sid}/quiz").json()["detail"]["code"] == "preparing"
 
 
 def test_a_quiz_built_before_processing_started_again_is_still_asked(api):

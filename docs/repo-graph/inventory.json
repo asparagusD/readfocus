@@ -2241,8 +2241,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5438,
-      "size_bytes": 253850,
+      "lines": 5483,
+      "size_bytes": 256000,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2665,8 +2665,8 @@
     {
       "path": "frontend/e2e/notes-editor.spec.js",
       "language": "javascript",
-      "lines": 193,
-      "size_bytes": 10770,
+      "lines": 191,
+      "size_bytes": 10966,
       "role": "config",
       "purpose": "E2E for writing notes (C22.2b): Text adds a note at the pages shown and lazy-loads the editor; rich text, checklist and math autosave after 800 ms and draw as written; editing an equation; a selection-anchored note; offline edits queued in IndexedDB and saved on online; keyboard; EPUB; the phone sheet."
     },

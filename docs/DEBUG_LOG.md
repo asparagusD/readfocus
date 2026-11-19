@@ -5436,3 +5436,48 @@ the first bytes have arrived, once) and `open-ahead.spec.js` (the shelf warms th
 
 ### Commit
 99d9780 perf(api) C35.8a, 9ce48e1 perf(frontend) C35.8b, and perf(frontend) C35.8c (the Library warm)
+
+## 2026-11-19 C35.8 — CI e2e: the notes editor's phone toolbar reads as two rows
+
+**Status:** fixed
+
+### Symptom
+CI on main (run 44503479461, ca2d819), job e2e, 1 failed and 356 passed:
+
+    npx playwright test (CI)
+    1) [e2e] › e2e/notes-editor.spec.js:176:3 › phone › the editor in the sheet: 44 px tools, nothing sideways
+      Error: expect(received).toBe(expected) // Object.is equality
+      Expected: 1
+      Received: 2
+      > 188 |     expect(tops.size).toBe(1); // one row of tools
+        at /home/runner/work/readfocus/readfocus/frontend/e2e/notes-editor.spec.js:188:23
+
+deploy-render was skipped behind it; Render had already been deployed by hand (3acb791). The same test passed in
+CI run 44499198673 an hour earlier and in every local run; C35.8 did not touch the notes editor.
+
+### Repro
+Not reproducible locally: `npm --prefix frontend run test:e2e -- notes-editor.spec.js -g "44 px tools"
+--repeat-each=8`: 8 passed. Once in CI so far.
+
+### Hypotheses
+1. The test reads the seven tools' boxes one call at a time (`boundingBox()` in a loop) while the notes sheet is
+   still sliding up, so tools read at different moments have different `y`. Evidence: CI's failure screenshot
+   (test-failed-4.png, taken after) shows the tools on one row; the sheet has an entrance motion; the runner is
+   slower. Ruled out if: the screenshot showed two rows. Result: confirmed as the likely cause (one row in the
+   screenshot).
+2. The toolbar really wraps on the runner (font metrics). Ruled out by the same screenshot: one row at 375 px.
+
+### Root cause
+`frontend/e2e/notes-editor.spec.js:181-187`: positions measured across several round trips during an animation;
+a timing race in the test, not a layout fault.
+
+### Fix
+The tools' tops and heights are read in one `evaluate`, in one frame, so a sheet still moving moves them all
+alike; the row check compares those. One attempt.
+
+### Regression test
+The changed test itself. It cannot be made to fail on demand here (the race needs a slow runner); checked with
+`--repeat-each=20` locally and by the next CI run.
+
+### Commit
+test(notes): read the phone toolbar's tools in one frame

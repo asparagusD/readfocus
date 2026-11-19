@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 966,
-    "inventoried": 823,
+    "tracked": 968,
+    "inventoried": 825,
     "excluded": 143
   },
   "files": [
@@ -887,6 +887,14 @@
       "purpose": "assemble_session_test: reads the bank rows of a session's chunks, generates them on demand for chunks that have none, gives each picked question the concept_keys its key terms name, stores the questions with the session only if it has none yet (otherwise returns the stored test; issue 34) and increments times_used for the run that stored."
     },
     {
+      "path": "backend/services/reader_questions.py",
+      "language": "python",
+      "lines": 93,
+      "size_bytes": 4220,
+      "role": "service",
+      "purpose": "Questions follow the reader (C36.2, issue 27): want(book, chunk, total) records the chunk on screen and the next one (latest place per book, in memory); serve() makes, through the question generation agent, the questions of those that are stored and have none, keeping not-yet-stored ones only for the book being ingested; idempotent through the bank's unique key; never raises."
+    },
+    {
       "path": "backend/services/reading_place.py",
       "language": "python",
       "lines": 137,
@@ -1033,8 +1041,8 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 113,
-      "size_bytes": 3337,
+      "lines": 123,
+      "size_bytes": 3616,
       "role": "test",
       "purpose": "Offline test setup: dummy environment (ingestion sweep and model preload off), a fake Supabase client, a guard that blocks non-loopback connections, and an autouse fixture that marks the embedding model ready."
     },
@@ -1877,6 +1885,14 @@
       "size_bytes": 7001,
       "role": "test",
       "purpose": "Pytest for the pure range quiz: the count formula, placeholders, PDF/EPUB/contents slices, positions in the range, stratified selection with mix, unused, difficulty and dedupe, confidence-weighted correct answers."
+    },
+    {
+      "path": "backend/tests/test_reader_questions.py",
+      "language": "python",
+      "lines": 87,
+      "size_bytes": 3818,
+      "role": "test",
+      "purpose": "Tests for reader_questions: the wanted chunks, only stored chunks without questions get them once, the latest place wins, a failing agent, not-yet-stored chunks kept only while ingesting."
     },
     {
       "path": "backend/tests/test_reading_place.py",
@@ -6529,8 +6545,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 825,
-      "size_bytes": 275842,
+      "lines": 827,
+      "size_bytes": 276501,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

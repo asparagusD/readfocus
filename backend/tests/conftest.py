@@ -111,3 +111,13 @@ def no_batch_pause(monkeypatch):
     from backend.services import make_way
 
     monkeypatch.setattr(make_way, "BATCH_PAUSE", 0.0)
+
+
+@pytest.fixture(autouse=True)
+def no_reader_wants():
+    """C36.2: the reader's wanted questions are kept in memory per process; no test sees another's."""
+    from backend.services import reader_questions
+
+    reader_questions.forget()
+    yield
+    reader_questions.forget()

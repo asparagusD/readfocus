@@ -36,7 +36,7 @@ export function loadPdfjs() {
 export async function openPdf(source) {
   const pdfjs = await loadPdfjs();
   const input = source.url
-    ? await rangeSource(source.url, { Transport: pdfjs.PDFDataRangeTransport, renew: source.renew })
+    ? await rangeSource(source.url, { Transport: pdfjs.PDFDataRangeTransport, renew: source.renew, chunk: RANGE_BYTES })
     : source;
   return pdfjs.getDocument({
     ...input,

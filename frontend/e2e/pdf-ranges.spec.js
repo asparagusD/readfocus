@@ -37,3 +37,36 @@ test('a stored PDF opens after reading only a few of its bytes', async ({ page, 
   expect(served.ranges.length).toBeGreaterThan(1);
   expect(served.bytes).toBeLessThan(file.length / 10); // about 200 KB of 5 MB
 });
+
+// C35.8b (issue 19): a PDF that is not linearized (bigPdf's, like the user's thesis) keeps its cross-reference table
+// at its end, which PDF.js reads before any page. That last range is asked for beside the first bytes, before they
+// have even arrived (their answer is held back here), and only once.
+test('the last range of a stored PDF is read beside its first bytes, once', async ({ page, api }) => {
+  const file = bigPdf({ pages: 6, padBytes: 5 * 1024 * 1024 });
+  const tailBegin = Math.floor((file.length - 1) / (256 * 1024)) * 256 * 1024; // PDF.js's last 256 KB chunk
+  const ranges = [];
+  let firstAnswered = false;
+  let tailAskedBeforeFirstAnswered = false;
+  api.fileUrl = `${STORE}?token=t`;
+  await page.route(`${STORE}**`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+    const headers = { ...CORS, 'Content-Type': 'application/pdf' };
+    if (request.method() === 'HEAD') return route.fulfill({ status: 200, headers: { ...headers, 'Content-Length': String(file.length) } });
+    const match = /bytes=(\d+)-(\d+)/.exec(request.headers().range ?? '');
+    const [begin, last] = [Number(match[1]), Math.min(Number(match[2]), file.length - 1)];
+    ranges.push([begin, last]);
+    if (begin === tailBegin && !firstAnswered) tailAskedBeforeFirstAnswered = true;
+    if (begin === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 400)); // a slow first answer
+      firstAnswered = true;
+    }
+    return route.fulfill({ status: 206, headers: { ...headers, 'Content-Range': `bytes ${begin}-${last}/${file.length}` },
+      body: file.subarray(begin, last + 1) });
+  });
+
+  await openReader(page);
+  await expect(page.locator('.rf-pdf-page[data-page="1"] .textLayer')).toContainText(bigPdfLine(1), { timeout: 15_000 });
+  expect(tailAskedBeforeFirstAnswered).toBe(true);
+  expect(ranges.filter(([, last]) => last === file.length - 1)).toEqual([[tailBegin, file.length - 1]]);
+});

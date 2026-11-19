@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 964,
-    "inventoried": 821,
+    "tracked": 966,
+    "inventoried": 823,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18207,
+      "size_bytes": 18243,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2233,16 +2233,16 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1807,
-      "size_bytes": 103967,
+      "lines": 1825,
+      "size_bytes": 105188,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5388,
-      "size_bytes": 250336,
+      "lines": 5438,
+      "size_bytes": 253850,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2305,8 +2305,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6195,
-      "size_bytes": 1131615,
+      "lines": 6196,
+      "size_bytes": 1132660,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2697,10 +2697,10 @@
     {
       "path": "frontend/e2e/open-ahead.spec.js",
       "language": "javascript",
-      "lines": 33,
-      "size_bytes": 1892,
+      "lines": 56,
+      "size_bytes": 3187,
       "role": "config",
-      "purpose": "C35.4 (issue 19): hovering a PDF on the shelf fetches the PDF.js worker and asks the server nothing; the click's /open is the reader's only one; the worker script is fetched once."
+      "purpose": "C35.4 (issue 19): hovering a PDF on the shelf fetches the PDF.js worker and asks the server nothing; the click's /open is the reader's only one; the worker script is fetched once. C35.8c: the shelf asks the next stored PDF's URL for one byte, with no /open, and not again on a return within ten minutes."
     },
     {
       "path": "frontend/e2e/page-data.spec.js",
@@ -4921,10 +4921,10 @@
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 517,
-      "size_bytes": 25277,
+      "lines": 525,
+      "size_bytes": 25719,
       "role": "page",
-      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\"."
+      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\". C35.8c: once the shelf has loaded, the next book's stored PDF is warmed in the CDN's cache (warmBookFile)."
     },
     {
       "path": "frontend/src/pages/Login.css",
@@ -5301,6 +5301,22 @@
       "size_bytes": 3138,
       "role": "asset",
       "purpose": "The word card's state and closing rules (C12.8): open() shows a loading card and fetches through the lookup client; a hover-opened card closes 200 ms after the pointer leaves both word and card; any card closes on Esc, a press elsewhere or close(); closing from inside the card returns focus to the book. The pointer's distance to the word is measured through outerBox (C17.5)."
+    },
+    {
+      "path": "frontend/src/reader/warmFile.js",
+      "language": "javascript",
+      "lines": 28,
+      "size_bytes": 1974,
+      "role": "asset",
+      "purpose": "C35.8c (issue 19): warmBookFile(book) puts a stored PDF in the CDN's cache before it is opened: GET /books/{id}/file (never /open, which marks a book begun) and one byte (Range: bytes=0-0) from the reused signed URL (C35.8a), starting the CDN's whole-file fetch from the reader's own edge; at most once per book in ten minutes; an EPUB or a device-only book is skipped; never rejects."
+    },
+    {
+      "path": "frontend/src/reader/warmFile.test.js",
+      "language": "javascript",
+      "lines": 55,
+      "size_bytes": 1975,
+      "role": "asset",
+      "purpose": "C35.8c: one byte asked at the signed URL; once in ten minutes per book; no warm for an EPUB, a device-only book or none; a failure never rejects and is not asked again at once."
     },
     {
       "path": "frontend/src/reader/wordAt.js",
@@ -6513,8 +6529,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 823,
-      "size_bytes": 274629,
+      "lines": 825,
+      "size_bytes": 275507,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

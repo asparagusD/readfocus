@@ -31,3 +31,26 @@ test('a PDF opened straight from its address downloads the worker once', async (
   await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 15_000 });
   expect(workers.filter((url) => url.endsWith('.mjs'))).toHaveLength(1);
 });
+
+// C35.8c (issue 19): the shelf's next book, a stored PDF, is asked for one byte at its signed URL while the reader
+// looks at the shelf, so the CDN has the file cached before it is opened; a second visit within ten minutes does not.
+test('the next stored PDF is put in the CDN cache from the shelf, once', async ({ page, api }) => {
+  api.shelf = [SHELVED];
+  const STORE = 'http://localhost:8000/e2e-storage/warm.pdf';
+  api.fileUrl = `${STORE}?token=t`;
+  const warms = [];
+  await page.route(`${STORE}**`, (route) => {
+    const request = route.request();
+    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*' };
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    warms.push(request.headers().range);
+    return route.fulfill({ status: 206, headers: { ...cors, 'Content-Range': 'bytes 0-0/9' }, body: '%' });
+  });
+  await page.goto('/');
+  await expect.poll(() => warms).toEqual(['bytes=0-0']);
+  expect(api.opens).toBe(0); // warming never opens the book
+  await page.getByRole('link', { name: 'Dashboard' }).first().click();
+  await page.getByRole('link', { name: 'Library' }).first().click();
+  await expect(page.locator('.rf-shelf__item')).toHaveCount(1);
+  expect(warms).toEqual(['bytes=0-0']);
+});

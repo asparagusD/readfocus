@@ -4575,6 +4575,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/warmFile.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/warmFile.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/wordAt.js",
       "type": "file",
       "role": "asset",
@@ -5959,6 +5971,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/reader/warmFile.js",
+      "to": "endpoint:GET /books/{book_id}/file"
     },
     {
       "type": "calls_endpoint",
@@ -13015,6 +13032,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/reader/warmFile.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/pages/Login.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
@@ -13512,6 +13534,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/useWordCard.js",
       "to": "file:frontend/src/reader/highlight.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/warmFile.test.js",
+      "to": "file:frontend/src/reader/warmFile.js"
     },
     {
       "type": "imports",

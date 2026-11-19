@@ -5386,3 +5386,53 @@ docs/repo-graph/` failed before (the diff above) and passes after.
 
 ### Commit
 fix(graph): regenerate the repo graph after C35's last docs edits
+
+## 2026-11-19 C35.8 — a large PDF that is not linearized waits 14-20 s for its first page (issue 19 follow-up)
+
+**Status:** fixed (C35.8a-c, not yet measured on production)
+
+### Symptom
+C35.7's production measurement (`docs/BENCHMARKS.md`, C35): opening the user's 15.9 MB, 120-page thesis took
+14.0-19.6 s to its first page; PDF.js's read of the file's last 115 KB (`bytes=16515072-16633115`, the
+cross-reference table) took 12.6 s, and the 256 KB just before it, read right after, 60 ms.
+
+### Repro
+Read-only, from this machine, Python + httpx on signed URLs made with the service key (no row or object written),
+timing Range GETs and reading Cloudflare's `cf-cache-status`:
+
+    thesis 16.6 MB, last range first          MISS 19 526 ms; then the range before it, the head, the middle: HIT ~50 ms
+    5.1 MB, head, middle, last                head MISS 1 902 ms, middle HIT 1 213 ms, last HIT 424 ms
+    the same 5.1 MB, a new token, a minute on last range MISS 9 011 ms
+    10.8 MB, /object/authenticated/ endpoint  last range MISS 10 261 ms; signed URL after it MISS 5 306 ms
+    5.1 MB, Cache-Control: no-cache           last range MISS 17 118 ms (not bypassed)
+    3.5 MB, Range: bytes=0-0 first            MISS 807 ms; the last range right after HIT 220 ms
+
+### Hypotheses
+1. Storage reads the object up to the offset. Ruled out if: a range far into the file is fast on a cold object.
+   Result: partly right, at the CDN: a range is answered only once the CDN's own fetch has reached it.
+2. A CDN miss fetches the whole object. Ruled out if: a cold first range is fast and later ranges stay slow.
+   Result: confirmed: the first range of a cold object waits, after it every range is a HIT, also ones never read.
+3. "Not served recently" means eviction. Ruled out if: a fresh token on a just-cached object hits. Result: ruled
+   out: a new token misses (9.0 s); the cache key includes the signed URL's token (an extra `&cb=` does not count).
+
+### Root cause
+Supabase Storage serves signed URLs through Cloudflare; on a miss Cloudflare downloads the whole object from
+Storage (0.3-2 MB/s here) and answers a range only when that download reaches it. The cache key includes the
+token, and `/open` signed a new URL on every open, so every open of a stored PDF was a cold whole-file download,
+and a non-linearized PDF needs its last bytes before page 1. Reading the tail earlier alone (the follow-up C35.7
+proposed) cannot help a miss: the tail arrives when the download ends, whenever it is asked for.
+
+### Fix
+Your choice, 2026-11-19 ("Reuse URL + warm it"): C35.8a the server hands out one signed URL per book file for up
+to an hour (`services/file_url.py`, replaced when less than 15 minutes are left), so later opens hit the cache;
+C35.8b the last range is read as soon as HEAD gives the length, beside the first bytes (a warm open then waits
+for no second round trip); C35.8c the Library asks the next stored PDF's URL for one byte, at most every ten
+minutes, so the CDN fetch starts before the click, from the reader's own edge. One attempt.
+
+### Regression test
+`backend/tests/test_file_url.py`, `test_api_reading.py` (a second open gets the same URL), `test_book_delete.py`;
+`rangeSource.test.js` (five tests), `warmFile.test.js`; e2e `pdf-ranges.spec.js` (the last range is asked before
+the first bytes have arrived, once) and `open-ahead.spec.js` (the shelf warms the next PDF once).
+
+### Commit
+99d9780 perf(api) C35.8a, 9ce48e1 perf(frontend) C35.8b, and perf(frontend) C35.8c (the Library warm)

@@ -343,11 +343,17 @@ test('a processing book shows how far its quizzes are, then says when the first 
     polls += 1;
     return [SHELF[0], polls < 3 ? origin : { ...origin, status: 'ready', total_chunks: 30 }];
   });
+  await page.clock.install(); // C35.6: the polls back off (5 s, then 10 s, ...); the test moves the clock
   await page.goto('/');
   const tile = page.locator('.rf-shelf__item').filter({ hasText: 'On the Origin of Species' });
-  await expect(tile).toContainText('Preparing quizzes… 64%', { timeout: 6000 });
-  expect(calls.statuses).toBeGreaterThan(0);
-  await expect(page.getByText('On the Origin of Species: your first quizzes are ready.')).toBeVisible({ timeout: 6000 });
+  await expect(tile).toContainText('Preparing quizzes…');
+  await page.clock.runFor(5000); // the first poll: the list, then each processing book's status
+  await expect(tile).toContainText('Preparing quizzes… 64%');
+  expect(calls.statuses).toBe(1);
+  await page.clock.runFor(9000); // the second poll waits 10 s, not 5
+  expect(polls).toBe(2);
+  await page.clock.runFor(1000);
+  await expect(page.getByText('On the Origin of Species: your first quizzes are ready.')).toBeVisible();
   await expect(tile).toContainText('New · not started');
 });
 

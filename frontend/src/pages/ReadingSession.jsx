@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchApi } from '../lib/api';
 import { takeOpened } from '../reader/openAhead';
+import { pollWithBackoff } from '../lib/backoff';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Reader } from '../originalview/Reader';
@@ -151,8 +152,8 @@ export function ReadingSession() {
       else setPrepared({ progress: typeof job?.progress === 'number' ? job.progress : null });
     }).catch(() => {});
     check();
-    const timer = setInterval(check, 5000);
-    return () => { live = false; clearInterval(timer); };
+    const stop = pollWithBackoff(check); // C35.6 (issue 17): 5 s, 10, 20, 40, then every 60 s
+    return () => { live = false; stop(); };
   }, [processing, quizzesDone, bookId]);
   const scannedCount = ocrProgress?.scanned?.length ?? sessionData?.scanned_pages?.length ?? 0;
   const readCount = ocrProgress?.done?.length ?? 0;

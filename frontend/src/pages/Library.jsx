@@ -19,6 +19,7 @@ import { forgetCachedBookFile, keepBookFile } from '../reader/fileCache';
 import { DIRECT, uploadBook } from '../lib/directUpload';
 import { openAheadProps } from '../reader/openAhead';
 import { cached, load, remember } from '../lib/pageData';
+import { pollWithBackoff } from '../lib/backoff';
 import { DEVICE_MAX_BYTES, epubTexts, isBig, pdfTexts, sendTexts, sha256Hex } from '../reader/browserText';
 import './Library.css';
 
@@ -154,16 +155,19 @@ export function Library() {
     }
   };
 
-  // Polling logic for processing books
+  // Polling for processing books. C35.6 (issue 17): with back-off (5 s, 10, 20, 40, then every 60 s) for as long as
+  // any book is processing, on one timer; the list it compares with is the latest (a ref), so a poll that changes
+  // the list does not start the waits again.
+  const hasProcessing = books.some(b => b.status === 'processing');
+  const latest = useRef(books);
+  useEffect(() => { latest.current = books; }, [books]);
   useEffect(() => {
-    const hasProcessing = books.some(b => b.status === 'processing');
-    if (!hasProcessing) return;
-
-    const interval = setInterval(async () => {
+    if (!hasProcessing) return undefined;
+    return pollWithBackoff(async () => {
       // Reload the list for statuses, and ask each processing book how far its pages are read.
       try {
         const data = await fetchApi('/books');
-        const was = new Map(books.map((b) => [b.id, b.status]));
+        const was = new Map(latest.current.map((b) => [b.id, b.status]));
         for (const book of data) {
           if (was.get(book.id) === 'processing' && book.status === 'ready') {
             setArrived((prev) => new Set(prev).add(book.id));
@@ -184,10 +188,8 @@ export function Library() {
       } catch {
         // ignore polling errors
       }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [books, toast, navigate]);
+    });
+  }, [hasProcessing, toast, navigate]);
 
   // A file dropped anywhere in the window is offered for upload; while one is dragged over, the page says so.
   const selectFile = useRef(null);

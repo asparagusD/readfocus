@@ -3627,6 +3627,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/lib/backoff.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/backoff.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/lib/coverColor.js",
       "type": "file",
       "role": "lib",
@@ -11976,6 +11988,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/lib/backoff.test.js",
+      "to": "file:frontend/src/lib/backoff.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/lib/dashboard.test.js",
       "to": "file:frontend/src/lib/dashboard.js"
     },
@@ -12902,6 +12919,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/Library.jsx",
+      "to": "file:frontend/src/lib/backoff.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/Library.jsx",
       "to": "file:frontend/src/lib/directUpload.js"
     },
     {
@@ -13048,6 +13070,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/lib/backoff.js"
     },
     {
       "type": "imports",

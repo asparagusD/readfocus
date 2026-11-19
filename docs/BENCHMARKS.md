@@ -100,7 +100,6 @@ On a miss the CDN downloads the whole file from Storage (0.3 to 2 MB/s here) and
 download has reached it; its cache key includes the signed URL's token, and `/open` signed a new one on every
 open, so every open of a stored PDF was a cold whole-file download. C35.8 reuses one URL per book for up to an
 hour, reads the last range beside the first bytes, and warms the shelf's next PDF (`docs/DEBUG_LOG.md`, C35.8).
-Not measured yet: the opens after C35.8 on production.
 
 Not measured: the upload of a 29 MB PDF and a delete (the user chose reads only); `/open` during processing (no
 book was processing).

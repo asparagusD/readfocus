@@ -12,6 +12,7 @@ from backend.agents import policy
 from backend.convert.epub_builder import build_epub
 from backend.convert.sources import FORMATS as CONVERTED, convert_upload
 from backend.services import body_start, book_purge, ingestion_worker
+from backend.services.book_purge import live
 from backend.services.book_ingestor import BROWSER_TEXT, extract_metadata
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
@@ -37,8 +38,8 @@ async def read_capped(file: UploadFile, limit: int) -> tuple[bytes, str]:
 
 def shelf_bytes(user_id: str) -> int:
     """Bytes of the reader's originals kept on our server (device-only books do not count)."""
-    rows = supabase.table("books").select("file_bytes").eq("user_id", user_id).eq("storage_mode", "cloud").execute().data
-    return sum(int(cast(dict[str, Any], row).get("file_bytes") or 0) for row in rows or [])
+    rows = supabase.table("books").select("file_bytes, status").eq("user_id", user_id).eq("storage_mode", "cloud").execute().data
+    return sum(int(row.get("file_bytes") or 0) for row in live(rows))
 
 
 def pdf_page_count(ext: str, file_bytes: bytes) -> int | None:
@@ -176,7 +177,7 @@ PROGRESS_FIELDS = ("chunks_completed", "last_chunk_index", "updated_at")
 @router.get("")
 def get_books(user_id: str = Depends(get_current_user)):
     """The caller's books for the shelf, each with its cover and reading progress (null before a first session)."""
-    books = supabase.table("books").select(BOOK_LIST_FIELDS).eq("user_id", user_id).execute().data or []
+    books = live(supabase.table("books").select(BOOK_LIST_FIELDS).eq("user_id", user_id).execute().data)
     rows = supabase.table("reading_progress").select(
         "book_id, " + ", ".join(PROGRESS_FIELDS)).eq("user_id", user_id).execute().data or []
     progress = {row["book_id"]: {key: row.get(key) for key in PROGRESS_FIELDS} for row in cast(list[dict[str, Any]], rows)}
@@ -185,8 +186,8 @@ def get_books(user_id: str = Depends(get_current_user)):
 @router.get("/{book_id}/file")
 def get_book_file(book_id: str, user_id: str = Depends(get_current_user)):
     """A short-lived signed URL for the owner's original file; 404 for other readers and device-only books."""
-    rows = supabase.table("books").select("storage_path, storage_mode, file_sha256").eq(
-        "id", book_id).eq("user_id", user_id).execute().data
+    rows = live(supabase.table("books").select("storage_path, storage_mode, file_sha256, status").eq(
+        "id", book_id).eq("user_id", user_id).execute().data)
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
     book = cast(dict[str, Any], rows[0])
@@ -199,11 +200,11 @@ def get_book_file(book_id: str, user_id: str = Depends(get_current_user)):
 
 @router.get("/{book_id}")
 def get_book_details(book_id: str, user_id: str = Depends(get_current_user)):
-    book_resp = supabase.table("books").select("*").eq("id", book_id).eq("user_id", user_id).execute()
-    if not book_resp.data:
+    found = live(supabase.table("books").select("*").eq("id", book_id).eq("user_id", user_id).execute().data)
+    if not found:
         raise HTTPException(status_code=404, detail="Book not found")
-        
-    book: dict[str, Any] = cast(dict[str, Any], book_resp.data[0])
+
+    book: dict[str, Any] = found[0]
     
     progress_resp = supabase.table("reading_progress").select("*").eq("book_id", book_id).eq("user_id", user_id).execute()
     
@@ -225,8 +226,8 @@ def get_pages(book_id: str, start: int = Query(ge=0), end: int | None = Query(de
     end = start if end is None else end
     if end < start or end - start + 1 > PAGES_MAX_CHUNKS:
         raise HTTPException(status_code=422, detail=f"Ask for 1 to {PAGES_MAX_CHUNKS} chunks, start to end.")
-    owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
-    if not owned.data:
+    owned = live(supabase.table("books").select("id, status").eq("id", book_id).eq("user_id", user_id).execute().data)
+    if not owned:
         raise HTTPException(status_code=404, detail="Book not found")
     rows = supabase.table("chunks").select(", ".join(PAGE_FIELDS)).eq("book_id", book_id).in_(
         "chunk_index", list(range(start, end + 1))).execute().data or []
@@ -245,8 +246,8 @@ def get_regions(book_id: str, first: int = Query(ge=1), last: int = Query(ge=1),
     inline math, as {page, kind, bbox} in points from the page's top-left (ANCHORS A1). Read-only."""
     if last < first or last - first + 1 > REGIONS_MAX_PAGES:
         raise HTTPException(status_code=422, detail=f"Ask for 1 to {REGIONS_MAX_PAGES} pages, first to last.")
-    owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
-    if not owned.data:
+    owned = live(supabase.table("books").select("id, status").eq("id", book_id).eq("user_id", user_id).execute().data)
+    if not owned:
         raise HTTPException(status_code=404, detail="Book not found")
     rows = (supabase.table("page_regions").select("id, page, kind, bbox, order_in_page, meta").eq("book_id", book_id)
             .gte("page", first).lte("page", last).execute().data or [])
@@ -278,8 +279,8 @@ def region_detail(row: dict) -> dict:
 
 
 def _owned(book_id: str, user_id: str) -> None:
-    owned = supabase.table("books").select("id").eq("id", book_id).eq("user_id", user_id).execute()
-    if not owned.data:
+    owned = live(supabase.table("books").select("id, status").eq("id", book_id).eq("user_id", user_id).execute().data)
+    if not owned:
         raise HTTPException(status_code=404, detail="Book not found")
 
 
@@ -309,11 +310,11 @@ def get_region_at(book_id: str, spine_index: int = Query(ge=0, le=100_000), path
     return region_detail(cast(dict[str, Any], found))
 
 
-BODY_START_FIELDS = "id, file_type, page_count, toc, body_start, body_start_source"
+BODY_START_FIELDS = "id, file_type, page_count, toc, body_start, body_start_source, status"
 
 
 def _book_for_body_start(book_id: str, user_id: str) -> dict:
-    rows = supabase.table("books").select(BODY_START_FIELDS).eq("id", book_id).eq("user_id", user_id).execute().data
+    rows = live(supabase.table("books").select(BODY_START_FIELDS).eq("id", book_id).eq("user_id", user_id).execute().data)
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
     return cast(dict[str, Any], rows[0])
@@ -368,18 +369,18 @@ def public_job(job: dict | None) -> dict | None:
 
 @router.get("/{book_id}/status")
 def get_book_status(book_id: str, user_id: str = Depends(get_current_user)):
-    resp = supabase.table("books").select("status, total_chunks").eq("id", book_id).eq("user_id", user_id).execute()
-    if not resp.data:
+    rows = live(supabase.table("books").select("status, total_chunks").eq("id", book_id).eq("user_id", user_id).execute().data)
+    if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
 
-    return {**resp.data[0], "ingestion": public_job(jobs.get(book_id))}
+    return {**rows[0], "ingestion": public_job(jobs.get(book_id))}
 
 
 @router.post("/{book_id}/resume")
 def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     """Run a book's ingestion again from its cursor: after a failure, or for a book left processing with no job."""
-    rows = supabase.table("books").select("id, status, storage_path, source_format").eq("id", book_id).eq(
-        "user_id", user_id).execute().data
+    rows = live(supabase.table("books").select("id, status, storage_path, source_format").eq("id", book_id).eq(
+        "user_id", user_id).execute().data)
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
     # A device-only book: the server never kept its file. C26.7: a browser-text book kept its text, so it resumes.
@@ -402,7 +403,7 @@ def resume_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = 
 @router.delete("/{book_id}", status_code=202)
 def delete_book(book_id: str, background_tasks: BackgroundTasks, user_id: str = Depends(get_current_user)):
     """C35.2 (issue 18): mark the book `deleting` and answer at once; the file, note pictures and rows go in the
-    background (book_purge)."""
+    background (book_purge), and from now on no listing or lookup shows the book (C35.2b)."""
     if not book_purge.mark(book_id, user_id):
         raise HTTPException(status_code=404, detail="Book not found")
     background_tasks.add_task(book_purge.purge, book_id, user_id)

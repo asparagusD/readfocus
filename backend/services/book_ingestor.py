@@ -15,6 +15,7 @@ from backend.agents import policy
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
 from backend.services import book_structure, covers, ocr_pages, pdf_text, processing_jobs, region_job
+from backend.services.book_purge import DELETING
 from backend.services.supabase_client import supabase
 
 question_agent = QuestionGenerationAgent()
@@ -216,7 +217,8 @@ def mark_ready(book_id: str, total: int, words: int, toc: list | None = None) ->
     values = {"total_chunks": total, "total_words": words, "status": "ready"}
     if toc is not None:  # the contents are known before the first batch, so the reader has them at once
         values["toc"] = toc
-    supabase.table("books").update(values).eq("id", book_id).execute()
+    # C35.2b: never over a book being deleted, which the purge would then keep (book_purge.purge checks the status)
+    supabase.table("books").update(values).eq("id", book_id).neq("status", DELETING).execute()
 
 
 def download(storage_path: str) -> bytes:
@@ -269,7 +271,7 @@ def _save_toc(book_id: str, toc: list) -> None:
 def _record_failure(job_id: str, book_id: str, error: str, ready: bool) -> None:
     processing_jobs.fail(job_id, error)
     if not ready:  # a book with readable chunks stays readable
-        supabase.table("books").update({"status": "error"}).eq("id", book_id).execute()
+        supabase.table("books").update({"status": "error"}).eq("id", book_id).neq("status", DELETING).execute()
 
 
 async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:

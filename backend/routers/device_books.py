@@ -19,6 +19,7 @@ from backend.dependencies import get_current_user
 from backend.services import ingestion_worker
 from backend.services import processing_jobs as jobs
 from backend.services.book_ingestor import BROWSER_TEXT
+from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 
 router = APIRouter()
@@ -60,8 +61,8 @@ async def create_device_book(req: DeviceBook, user_id: str = Depends(get_current
 
 def store(user_id: str, book_id: str, req: PageBatch) -> dict | None:
     """Keep the batch's page texts; the claimed ingestion job after the last batch, else None."""
-    rows = supabase.table("books").select("id, user_id, status, source_format").eq("id", book_id).eq(
-        "user_id", user_id).execute().data
+    rows = live(supabase.table("books").select("id, user_id, status, source_format").eq("id", book_id).eq(
+        "user_id", user_id).execute().data)
     if not rows:
         raise HTTPException(status_code=404, detail="Book not found")
     book = cast(dict[str, Any], rows[0])

@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 
 from backend.nlp import text as nlp_text
 from backend.services import retriever
+from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 from backend.steve import policy
 
@@ -183,8 +184,8 @@ def _prose(chunk: dict) -> str:
 # --- reading from the database (all filtered by book; the book by its owner) ------------------------------------
 
 def _load(user_id: str, book_id: str, region_id: str | None) -> dict:
-    book = supabase.table("books").select("id, title, author, toc, file_type").eq("id", book_id).eq(
-        "user_id", user_id).execute().data
+    book = live(supabase.table("books").select("id, title, author, toc, file_type, status").eq("id", book_id).eq(
+        "user_id", user_id).execute().data)
     if not book:
         raise ContextError("book_not_found")
     region = None

@@ -37,6 +37,10 @@ PLACE_NULLABLE = ("ALTER TABLE public.page_regions ALTER COLUMN page DROP NOT NU
                   "ALTER TABLE public.page_regions ALTER COLUMN bbox DROP NOT NULL;")
 
 
+# 035 widens books' CHECK on status with 'deleting' (your decision at C35.2b): the same swap as 018.
+STATUS_CHECK_SWAP = "DROP CONSTRAINT IF EXISTS books_status_check,"
+
+
 @pytest.mark.parametrize("path", sorted(MIGRATIONS.glob("*.sql")), ids=lambda p: p.name)
 def test_migrations_are_additive(path):
     sql = sql_without_comments(path)
@@ -46,6 +50,8 @@ def test_migrations_are_additive(path):
         sql = re.sub(r"\s+", " ", sql)
         for statement in PLACE_NULLABLE:
             sql = sql.replace(statement, "")
+    if path.name == "035_book_deleting.sql":
+        sql = re.sub(r"\s+", " ", sql).replace(STATUS_CHECK_SWAP, "")
     found = DESTRUCTIVE.findall(sql)
     assert not found, f"{path.name} has destructive statements: {found}"
 
@@ -976,3 +982,11 @@ def test_033_readers_read_only_their_own_membership_and_nothing_else():
     assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == [
         "league_groups", "league_members", "league_weeks"]
     assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.|SECURITY DEFINER", sql)
+
+
+def test_035_keeps_every_status_and_adds_deleting():
+    sql = re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "035_book_deleting.sql"))
+    assert "ALTER TABLE public.books DROP CONSTRAINT IF EXISTS books_status_check, ADD CONSTRAINT books_status_check" in sql
+    assert "CHECK (status IN ('processing', 'ready', 'error', 'deleting'))" in sql
+    from backend.services import book_purge
+    assert book_purge.DELETING == "deleting"

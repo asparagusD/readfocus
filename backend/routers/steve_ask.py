@@ -24,6 +24,7 @@ from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from backend.dependencies import get_current_user
 from backend.routers.sessions import EpubAnchor, PdfAnchor
+from backend.services.book_purge import live
 from backend.services.supabase_client import supabase
 from backend.steve import consent, policy, prompts, service, threads
 from backend.steve.context import ContextError, build_context
@@ -220,7 +221,7 @@ def bbox_hash(bbox) -> str:
 
 
 def _pdf_equation(user_id: str, book_id: str, region_id: str) -> tuple[dict, dict]:
-    books = supabase.table("books").select("id, file_sha256").eq("id", book_id).eq("user_id", user_id).execute().data
+    books = live(supabase.table("books").select("id, file_sha256, status").eq("id", book_id).eq("user_id", user_id).execute().data)
     if not books:
         raise fail(404, "book_not_found")
     rows = supabase.table("page_regions").select("id, kind, page, bbox").eq("id", region_id).eq(

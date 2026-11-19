@@ -7363,6 +7363,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/annotations.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/annotations.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7463,6 +7468,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/device_books.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/device_books.py",
       "to": "file:backend/services/ingestion_worker.py"
     },
     {
@@ -7518,6 +7528,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/focus.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7568,6 +7583,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/notes.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/notes.py",
       "to": "file:backend/services/note_content.py"
     },
     {
@@ -7589,6 +7609,11 @@
       "type": "imports",
       "from": "file:backend/routers/ocr.py",
       "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -7664,6 +7689,11 @@
       "type": "imports",
       "from": "file:backend/routers/reading.py",
       "to": "file:backend/routers/sessions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -7748,6 +7778,11 @@
     {
       "type": "imports",
       "from": "file:backend/routers/steve_ask.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/steve_ask.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7814,6 +7849,11 @@
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -8074,6 +8114,11 @@
       "type": "imports",
       "from": "file:backend/steve/context.py",
       "to": "file:backend/nlp/text.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/steve/context.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",
@@ -9554,6 +9599,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_migrations.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_migrations.py",
+      "to": "file:backend/services/book_purge.py"
     },
     {
       "type": "imports",

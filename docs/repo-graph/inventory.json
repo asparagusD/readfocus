@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17786,
+      "size_bytes": 17822,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -609,8 +609,8 @@
     {
       "path": "backend/routers/annotations.py",
       "language": "python",
-      "lines": 103,
-      "size_bytes": 5046,
+      "lines": 104,
+      "size_bytes": 5105,
       "role": "router",
       "purpose": "Highlights and underlines (C21.1, docs/ANCHORS.md): GET /books/{id}/annotations (reading order, from/to overlap filter), POST (anchors checked against A1/A2, positions against A4, text snapshot), PATCH /annotations/{id} (style, color), DELETE; owner only, 404 otherwise."
     },
@@ -625,8 +625,8 @@
     {
       "path": "backend/routers/books.py",
       "language": "python",
-      "lines": 409,
-      "size_bytes": 21658,
+      "lines": 410,
+      "size_bytes": 21787,
       "role": "router",
       "purpose": "Book endpoints: upload (.md, a Markdown .zip and .ipynb converted to an EPUB on the server first, source_format recorded when migration 021 is there, converted sources never device-only; read 1 MB at a time to the per-file limit, sha256 and size stored, the per-reader cap on cloud-kept bytes, a device-only mode that stores no file) to Storage, record a processing_jobs row and ingest after the response; list (with cover_url and the caller's reading progress, null before a first session); details with progress; pages (GET, read-only: chunks start..end of the caller's book, at most four, index, content, word count and blocks; no session touched); status poll with the job's status, progress and cursor; resume a failed or stuck book's ingestion from its cursor; delete. GET /books/{id}/file: a short-lived signed URL for the owner's stored original (404 for device-only books); resume refuses a device-only book; GET /books/{id}/regions (C18.6d): math, code, figure, table and inline math boxes of PDF pages first..last (at most 20), owner only. C20.8: region ids in GET /books/{id}/regions, and GET /books/{id}/regions/{region_id} and /books/{id}/region-at for one region's details. C23.1: GET /books/{id}/body-start (stored, else detected from the outline, region headings or prose and stored unless the reader chose one) and PUT (the reader's page or spine index, source user, checked against the book's kind and pages); delete (C25.1 fix) also removes the book's folder of note pictures in the notes bucket, a page at a time, logging a storage failure without failing the delete; C25.G: GET /books/{id}/regions selects id, so each region carries its id on the real database. C26.7: resume also takes a browser-text device book (its text is kept). C29.1b: the upload's shelf total, Storage upload, page count, book row and job are made in a thread, not on the event loop. C30.1: the upload's author is optional; a blank one is read from the file's own metadata (file_author: PDF info Author, EPUB dc:creator, whitespace tidied, at most AUTHOR_MAX), else stored as null, and the response returns the author used."
     },
@@ -641,16 +641,16 @@
     {
       "path": "backend/routers/device_books.py",
       "language": "python",
-      "lines": 88,
-      "size_bytes": 4456,
+      "lines": 89,
+      "size_bytes": 4507,
       "role": "router",
       "purpose": "C26.7: books over 50 MB kept on the reader's device. POST /books/device makes a PDF or EPUB book (over MAX_BOOK_FILE_BYTES, at most MAX_DEVICE_BOOK_FILE_BYTES = 300 MB) with no file, storage_mode device and source_format browser-text; POST /books/{id}/pages takes the browser's page texts in batches (at most BROWSER_TEXT_PAGES_PER_BATCH) into page_ocr (engine browser), owner only, the book still processing, and the last batch queues ingestion on the one worker."
     },
     {
       "path": "backend/routers/focus.py",
       "language": "python",
-      "lines": 312,
-      "size_bytes": 15507,
+      "lines": 313,
+      "size_bytes": 15558,
       "role": "router",
       "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet. C26.3: the focus quiz and Quiz me answer 409 {code: preparing} while the book is processed; the focus session stays awaiting its quiz."
     },
@@ -681,16 +681,16 @@
     {
       "path": "backend/routers/notes.py",
       "language": "python",
-      "lines": 237,
-      "size_bytes": 11316,
+      "lines": 238,
+      "size_bytes": 11375,
       "role": "router",
       "purpose": "Note blocks (C22.1): GET /books/{id}/notes (live blocks in reading order, from/to overlap, signed file URLs), POST (anchors and positions checked, content allow-listed, version 1), PATCH /notes/{id} with If-Match (409 when stale, 428 without), soft DELETE, POST /books/{id}/note-files (WebP/PNG into the private notes bucket); owner only, 404 otherwise. C24.2: a created note checks the note badges."
     },
     {
       "path": "backend/routers/ocr.py",
       "language": "python",
-      "lines": 96,
-      "size_bytes": 4986,
+      "lines": 97,
+      "size_bytes": 5037,
       "role": "router",
       "purpose": "OCR endpoints (C19.4): POST /books/{id}/ocr stores one scanned page's tesseract.js words (owner only, flagged pages only, cleaned by ocr_pages) and, when that completes a fully scanned book with no chunks, requeues and runs ingestion from the OCR text; GET /books/{id}/ocr gives scanned_pages, done, and with first..last (at most 20) each page's words for the text layer."
     },
@@ -705,8 +705,8 @@
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 131,
-      "size_bytes": 7253,
+      "lines": 132,
+      "size_bytes": 7304,
       "role": "router",
       "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days. C34.3 (issue 13): GET /books/{id}/open also returns `file`, the original's signed URL as /file gives it (None for a device-only book or a failed signing), signed in parallel with the progress read."
     },
@@ -729,8 +729,8 @@
     {
       "path": "backend/routers/steve_ask.py",
       "language": "python",
-      "lines": 281,
-      "size_bytes": 14615,
+      "lines": 282,
+      "size_bytes": 14674,
       "role": "router",
       "purpose": "POST /steve/ask (C20.6): consent, off switch, open test, image (PNG, 500 KB), thread and book checked first with typed errors; then context, prompt and service.ask streamed as Server-Sent Events (start, token, done with checked citations and usage, or error); GET /steve/threads?book_id and GET /steve/threads/{id}, the reader's own only. C20.8: POST /steve/latex, a PDF equation as LaTeX, cached per file, page and box in equation_latex (one Gemini call per equation ever). C24.2: after the done event, checks the First Ask Steve badge. C26.3: 409 {code: preparing} (\"Steve can read this book in a moment\") for a book still being processed; nothing is sent."
     },
@@ -761,8 +761,8 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 328,
-      "size_bytes": 16129,
+      "lines": 330,
+      "size_bytes": 16342,
       "role": "service",
       "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests."
     },
@@ -929,8 +929,8 @@
     {
       "path": "backend/steve/context.py",
       "language": "python",
-      "lines": 450,
-      "size_bytes": 21304,
+      "lines": 451,
+      "size_bytes": 21363,
       "role": "lib",
       "purpose": "Steve's context builder (C20.4): build_context() returns delimited parts (book card, session prose to the reader's place, highlight with its paragraph, top-k retrieved passages minus the session and highlight, region source or code, image) and a {label: anchor} citations map, under a conservative 12k-token cap; never the whole book. C26.6a: the reading text is the chunk at the reader's saved place (its chunk, else the chunk holding its anchor; with no place, the highlight's) and the AROUND_CHUNKS_BEFORE chunks before it, in <reading_text> (was <session_text>, still escaped in book text); the sessions table is no longer read."
     },
@@ -1113,8 +1113,8 @@
     {
       "path": "backend/tests/memory_db.py",
       "language": "python",
-      "lines": 180,
-      "size_bytes": 7141,
+      "lines": 184,
+      "size_bytes": 7322,
       "role": "test",
       "purpose": "Test helper: an in-memory stand-in for the Supabase client (select, insert, update, upsert with on_conflict and ignore_duplicates, delete, eq, in_, lt, gte, lte, is_, order, limit, range, Storage upload, download and get_public_url per bucket), recording each select's columns and window and able to delay every call, for the ingestion, job and dashboard tests; Storage buckets list a folder (limit, offset) and remove paths (C25.1); project_columns (C25.G, on by default) returns only the selected columns, as PostgREST does."
     },
@@ -1673,8 +1673,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 978,
-      "size_bytes": 46498,
+      "lines": 992,
+      "size_bytes": 47226,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -2249,8 +2249,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6175,
-      "size_bytes": 1108227,
+      "lines": 6176,
+      "size_bytes": 1109782,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

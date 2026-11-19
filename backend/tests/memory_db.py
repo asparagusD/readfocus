@@ -53,6 +53,10 @@ class Query:
         self.filters.append(lambda r: r.get(column) == value)
         return self
 
+    def neq(self, column, value):  # as PostgREST: a null never matches
+        self.filters.append(lambda r: r.get(column) is not None and r[column] != value)
+        return self
+
     def in_(self, column, values):
         self.filters.append(lambda r: r.get(column) in values)
         return self

@@ -7930,6 +7930,16 @@
     {
       "type": "imports",
       "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
+      "to": "file:backend/services/reader_questions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/reading.py",
       "to": "file:backend/services/reading_place.py"
     },
     {
@@ -8120,6 +8130,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/reader_questions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/region_job.py"
     },
     {
@@ -8186,6 +8201,11 @@
       "type": "imports",
       "from": "file:backend/services/ingestion_worker.py",
       "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/ingestion_worker.py",
+      "to": "file:backend/services/reader_questions.py"
     },
     {
       "type": "imports",
@@ -10355,12 +10375,57 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/routers/reading.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/services/ingestion_worker.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/services/processing_jobs.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
       "to": "file:backend/services/reader_questions.py"
     },
     {
       "type": "imports",
       "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/services/region_job.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_reader_questions.py",
+      "to": "file:backend/xp/badge_award.py"
     },
     {
       "type": "imports",

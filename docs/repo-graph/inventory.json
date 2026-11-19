@@ -705,10 +705,10 @@
     {
       "path": "backend/routers/reading.py",
       "language": "python",
-      "lines": 130,
-      "size_bytes": 7184,
+      "lines": 138,
+      "size_bytes": 7733,
       "role": "router",
-      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days. C34.3 (issue 13): GET /books/{id}/open also returns `file`, the original's signed URL as /file gives it (None for a device-only book or a failed signing), signed in parallel with the progress read. C35.8a: /open's file URL comes from file_url.signed_url, the same URL for a book for up to an hour, with the seconds it still lives."
+      "purpose": "C26.4: a book opened at the reader's place with no session or plan. GET /books/{id}/open: title, author, format, storage mode, contents, status, the pages-only flag of a fully scanned book with no text yet, and the saved place; makes the reader's reading_progress row on a first open with the planner's defaults (one row for two opens). PUT /books/{id}/position: an anchor in the book's own format (and its chunk when known), saved on every page turn, also for a book still being processed; asks for the Finished a book badge after the response. Owner only. C26.7: GET /books/{id}/open says text_only for a browser-text book. C32.1 (issue 4): saving a place also raises reading_progress.chunks_completed to the chunk it is in (reading_place.chunk_at, or the chunk_index sent), never lowering it, so progress follows reading. C32.2: a save that moves the furthest point adds the words first reached to reading_days. C34.3 (issue 13): GET /books/{id}/open also returns `file`, the original's signed URL as /file gives it (None for a device-only book or a failed signing), signed in parallel with the progress read. C35.8a: /open's file URL comes from file_url.signed_url, the same URL for a book for up to an hour, with the seconds it still lives. C36.2b: every saved place (PUT /position) wants the questions of its chunk and the next one after the response (follow_reader -> reader_questions, ingestion_worker.run_questions)."
     },
     {
       "path": "backend/routers/sessions.py",
@@ -761,10 +761,10 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 355,
-      "size_bytes": 18069,
+      "lines": 358,
+      "size_bytes": 18252,
       "role": "service",
-      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests. C36.1 (issue 27): ingestion makes no questions (they follow the reader) and gives a PDF's chunks their page anchors (pages, spans) from the page texts it read (prose.pdf_page_anchors), so a page maps to its chunk before the region map."
+      "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests. C36.1 (issue 27): ingestion makes no questions (they follow the reader) and gives a PDF's chunks their page anchors (pages, spans) from the page texts it read (prose.pdf_page_anchors), so a page maps to its chunk before the region map. C36.2b: between batches it serves the reader's wanted questions (reader_questions.serve), so a reader of a book being processed gets them at the next batch."
     },
     {
       "path": "backend/services/book_purge.py",
@@ -817,10 +817,10 @@
     {
       "path": "backend/services/ingestion_worker.py",
       "language": "python",
-      "lines": 188,
-      "size_bytes": 7544,
+      "lines": 212,
+      "size_bytes": 8635,
       "role": "service",
-      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job. C27.1: a priority slot instead of the lock: waiting ingest jobs before waiting regions jobs, each in arrival order, a cancelled waiter skipped; defer(job) queues a regions job from inside the worker (read from Storage on its turn), drain() waits for the deferred ones. C27.2: _held keeps the ids of the jobs this process holds (waiting or running, deferred ones from defer on); the sweep skips them, so a waiting job is never claimed twice or failed for waiting."
+      "purpose": "The ingestion sweep: at startup and once per stale window, claims queued or running processing_jobs not updated within INGEST_STALE_MINUTES and runs them again from their cursor one at a time (regions jobs through region_job, ingest jobs through book_ingestor), or fails them (and a never-ready book) after MAX_ATTEMPTS; INGEST_SWEEP=0 turns it off. C26.1: run() is the one in-process queue: every job (upload, resume, OCR re-read, sweep) runs one at a time in arrival order on a per-loop asyncio.Lock, a job that raises never stops the next; uploads, resume and OCR now call it instead of book_ingestor.run_job. C27.1: a priority slot instead of the lock: waiting ingest jobs before waiting regions jobs, each in arrival order, a cancelled waiter skipped; defer(job) queues a regions job from inside the worker (read from Storage on its turn), drain() waits for the deferred ones. C27.2: _held keeps the ids of the jobs this process holds (waiting or running, deferred ones from defer on); the sweep skips them, so a waiting job is never claimed twice or failed for waiting. C36.2b: run_questions serves the reader's wanted questions (reader_questions) in the slot ahead of any waiting job (QUESTIONS_FIRST), with at most one waiter per loop."
     },
     {
       "path": "backend/services/lookup.py",
@@ -1889,10 +1889,10 @@
     {
       "path": "backend/tests/test_reader_questions.py",
       "language": "python",
-      "lines": 87,
-      "size_bytes": 3818,
+      "lines": 161,
+      "size_bytes": 7303,
       "role": "test",
-      "purpose": "Tests for reader_questions: the wanted chunks, only stored chunks without questions get them once, the latest place wins, a failing agent, not-yet-stored chunks kept only while ingesting."
+      "purpose": "Tests for reader_questions: the wanted chunks, only stored chunks without questions get them once, the latest place wins, a failing agent, not-yet-stored chunks kept only while ingesting; the slot order (before a waiting job, one waiter), an ingest serving them between batches, a saved place triggering them."
     },
     {
       "path": "backend/tests/test_reading_place.py",
@@ -2321,8 +2321,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6233,
-      "size_bytes": 1138389,
+      "lines": 6235,
+      "size_bytes": 1139975,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6546,7 +6546,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 827,
-      "size_bytes": 276501,
+      "size_bytes": 277128,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

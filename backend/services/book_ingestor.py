@@ -15,13 +15,14 @@ from bs4 import BeautifulSoup
 from backend.agents import policy
 from backend.nlp import embedder
 from backend.regions.prose import pdf_page_anchors
-from backend.services import book_structure, covers, make_way, ocr_pages, pdf_text, processing_jobs, region_job
+from backend.services import (book_structure, covers, make_way, ocr_pages, pdf_text, processing_jobs,
+                              reader_questions, region_job)
 from backend.services.book_purge import DELETING
 from backend.services.supabase_client import supabase
 
 # Chunks embedded and stored together; the job's cursor is saved after each batch. The first batch is smaller
-# so the book unlocks as soon as five chunks are stored. C36.1 (issue 27): ingestion makes no questions; the
-# quizzes make the questions of their range (focus/quiz.py) until they follow the reader (C36.2).
+# so the book unlocks as soon as five chunks are stored. C36.1 (issue 27): ingestion makes no questions; they
+# follow the reader (services/reader_questions.py).
 BROWSER_TEXT = "browser-text"  # C26.7: books.source_format of a book whose text came from the reader's browser
 FIRST_BATCH = 5
 INGEST_BATCH = 16
@@ -335,6 +336,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
             if not ready:  # the first batch is stored: the book opens and its first pages can be questioned
                 await asyncio.to_thread(mark_ready, book_id, total, words, toc)
                 ready = True
+            if reader_questions.pending():  # C36.2: a reader's questions are made now, not after this whole book
+                await reader_questions.serve(ingesting=book_id)
             await asyncio.to_thread(processing_jobs.advance, job["id"], end, total)
             await asyncio.to_thread(pdf_text.release_memory)
         if not ready:  # a book with no text at all is still ready, as before

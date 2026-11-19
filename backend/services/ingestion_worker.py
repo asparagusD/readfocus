@@ -22,7 +22,7 @@ import os
 import weakref
 from datetime import UTC, datetime
 
-from backend.services import book_ingestor, book_purge, region_job
+from backend.services import book_ingestor, book_purge, reader_questions, region_job
 from backend.services import processing_jobs as jobs
 from backend.services.supabase_client import supabase
 
@@ -30,6 +30,7 @@ MIN_SWEEP_SECONDS = 30
 
 
 INGEST_FIRST, REGIONS_LATER = 0, 1  # C27.1: a waiting ingest job goes before a waiting regions job
+QUESTIONS_FIRST = -1  # C36.2: the reader's questions go before any waiting job
 
 
 class _Slot:
@@ -69,6 +70,9 @@ _deferred: set[asyncio.Task] = set()
 # it waits, so without this the sweep would take it for abandoned once the stale window passed, claim it again
 # (a second run) and, after MAX_ATTEMPTS, fail a job that was only waiting.
 _held: set[str] = set()
+# C36.2: loops with a questions run waiting for the slot; one waiter serves every want, so a page turn a second
+# never queues more than one.
+_questions_waiting: "weakref.WeakSet[asyncio.AbstractEventLoop]" = weakref.WeakSet()
 
 
 def _slot() -> _Slot:
@@ -102,6 +106,26 @@ async def run(job: dict, file_bytes: bytes | None = None) -> dict:
     finally:
         _in_worker.reset(inside)
         _held.discard(held)
+        slot.release()
+
+
+async def run_questions() -> int:
+    """C36.2 (issue 27): make the reader's wanted questions (reader_questions) when the slot is free, ahead of any
+    waiting job; the books served. While an ingest holds the slot it serves them between its batches itself."""
+    loop = asyncio.get_running_loop()
+    if not reader_questions.pending() or loop in _questions_waiting:
+        return 0
+    slot = _slot()
+    _questions_waiting.add(loop)
+    try:
+        await slot.acquire(QUESTIONS_FIRST)
+    finally:
+        _questions_waiting.discard(loop)  # a want that comes while these are made queues the next run
+    inside = _in_worker.set(True)
+    try:
+        return await reader_questions.serve()
+    finally:
+        _in_worker.reset(inside)
         slot.release()
 
 

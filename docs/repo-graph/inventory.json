@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18498,
+      "size_bytes": 18535,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -433,18 +433,18 @@
     {
       "path": "backend/focus/quiz.py",
       "language": "python",
-      "lines": 239,
-      "size_bytes": 14364,
+      "lines": 246,
+      "size_bytes": 14753,
       "role": "lib",
-      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz. C36.3 (issue 27): preparing(book, end) is per range: while the ingest runs it waits only when the range ends on or after the last page (or section) the stored chunks reach (stored_reach), or when the book has no page map; a range already stored is quizzed at once. C36.G: the inline top-up makes at most QUIZ_TOPUP_MAX_CHUNKS of the range's missing chunks, spread across it (range_quiz.spread). C36.7: the quiz is built from the range's questions at once; it waits only with fewer than QUIZ_MIN_QUESTIONS (the chunks nearest the place, one by one); the other gaps go to reader_questions.fill; picked questions counted in one update per count."
+      "purpose": "Bookmark-range quiz I/O (C23.5): builds the quiz once from the bank (generating for range chunks without questions), keeps it on a sessions row with the focus session's id, grades it through the submit_answers flow (test_results, mastery, optimizer, planner) and scores the focus session with the engine. C23.6b: the graded quiz also returns total_score, max_score and percentage for the results page. C23.7: it also returns quiz_correct and quiz_total (whole answers) for 'you got X of Y'. C23.7b: the range's questions (_assemble) and keeping them on a sessions row (_keep) are shared with Quiz me. C23.8: scoring also stamps rules_version, so the row names the rules that scored it. C24.1: a scored session's final points are credited as XP (xp/award.py); an award failure is logged and never fails the grade. C24.2: then checks the focus badges (badge_award.check_quietly). C26.3: preparing(book) (status processing, or its ingest job queued or running) and Preparing: build raises it before building or keeping a quiz, so the focus session keeps waiting for its quiz. C36.3 (issue 27): preparing(book, end) is per range: while the ingest runs it waits only when the range ends on or after the last page (or section) the stored chunks reach (stored_reach), or when the book has no page map; a range already stored is quizzed at once. C36.G: the inline top-up makes at most QUIZ_TOPUP_MAX_CHUNKS of the range's missing chunks, spread across it (range_quiz.spread). C36.7: the quiz is built from the range's questions at once; it waits only with fewer than QUIZ_MIN_QUESTIONS (the chunks nearest the place, one by one); the other gaps go to reader_questions.fill; picked questions counted in one update per count. C36.7b: gaps(user, book, start, end) lists a range's chunks without questions, nearest the end first."
     },
     {
       "path": "backend/focus/quiz_me.py",
       "language": "python",
-      "lines": 89,
-      "size_bytes": 4363,
+      "lines": 115,
+      "size_bytes": 5538,
       "role": "lib",
-      "purpose": "Quiz me (C23.7b, FOCUS_RULES F13): the range for a quiz outside focus mode, ending at the reader's place and starting at the contents entry holding it ('chapter') or where the last quiz on the book ended ('since_last': a focus session's bookmark, else the PDF page or contents entry of the chunk after the last test's chunks, else the body start); refuses an empty range (NothingToAsk); builds the questions with focus/quiz.py and keeps them on a new sessions row for submit-answers. Never scored for points. C26.3: raises quiz.Preparing while the book is processed; nothing is made. C36.3: it waits (quiz.Preparing) only while the range up to the place is not stored yet."
+      "purpose": "Quiz me (C23.7b, FOCUS_RULES F13): the range for a quiz outside focus mode, ending at the reader's place and starting at the contents entry holding it ('chapter') or where the last quiz on the book ended ('since_last': a focus session's bookmark, else the PDF page or contents entry of the chunk after the last test's chunks, else the body start); refuses an empty range (NothingToAsk); builds the questions with focus/quiz.py and keeps them on a new sessions row for submit-answers. Never scored for points. C26.3: raises quiz.Preparing while the book is processed; nothing is made. C36.3: it waits (quiz.Preparing) only while the range up to the place is not stored yet. C36.7b: prepare(user, book, place) queues both scopes' chunks without questions (nearest the place first, at most QUIZ_TOPUP_MAX_CHUNKS each) for the background; _start shared with build."
     },
     {
       "path": "backend/focus/range_quiz.py",
@@ -649,10 +649,10 @@
     {
       "path": "backend/routers/focus.py",
       "language": "python",
-      "lines": 318,
-      "size_bytes": 15942,
+      "lines": 341,
+      "size_bytes": 16847,
       "role": "router",
-      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet. C26.3: the focus quiz and Quiz me answer 409 {code: preparing} while the book is processed; the focus session stays awaiting its quiz. C36.7: the focus quiz and Quiz me run ingestion_worker.run_questions after the response (the range's gaps)."
+      "purpose": "Focus session API (C23.4): POST /focus/start (at or after the body start, one open session per reader), /{id}/event (server-timed, at most one heartbeat per 25 s and one other event of a kind per 2 s; resends and extras ignored and counted), /pause, /resume, /end (the bookmark after the start; awaiting_quiz, time frozen), GET /{id} (server time and state); cap and abandon checks on each call; owner only. C23.5: POST /focus/{id}/quiz (the bookmark-range quiz, public questions only) and /quiz/answers (graded once through submit_answers, the session scored). C23.6a: GET /focus/current?book_id (the open or waiting session, for a reload), POST /{id}/discard (abandoned, 0 points), and the bookmark of a capped session placed afterwards with no time added. C23.7b: POST /focus/quiz-me {book_id, scope: chapter | since_last, anchor} (the owner's book, the place checked): a Quiz me quiz with public questions and its session id; 409 when there is nothing to ask yet. C26.3: the focus quiz and Quiz me answer 409 {code: preparing} while the book is processed; the focus session stays awaiting its quiz. C36.7: the focus quiz and Quiz me run ingestion_worker.run_questions after the response (the range's gaps). C36.7b: POST /focus/quiz-me/prepare (202) queues the questions both Quiz me ranges lack as the dialog opens."
     },
     {
       "path": "backend/routers/internal.py",
@@ -889,8 +889,8 @@
     {
       "path": "backend/services/reader_questions.py",
       "language": "python",
-      "lines": 115,
-      "size_bytes": 5300,
+      "lines": 116,
+      "size_bytes": 5453,
       "role": "service",
       "purpose": "Questions follow the reader (C36.2, issue 27): want(book, chunk, total) records the chunk on screen and the next one (latest place per book, in memory); serve() makes, through the question generation agent, the questions of those that are stored and have none, keeping not-yet-stored ones only for the book being ingested; idempotent through the bank's unique key; never raises. C36.7: fill(book, chunks) keeps a quiz range's gaps (merged), served after the reader's own place."
     },
@@ -1218,7 +1218,7 @@
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
       "lines": 461,
-      "size_bytes": 24608,
+      "size_bytes": 24613,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only. C26.3: while the book is processed the quiz is 409 preparing with nothing kept and the session awaiting, then asked once it is done; a quiz already built is still asked."
     },
@@ -1241,8 +1241,8 @@
     {
       "path": "backend/tests/test_api_quiz_me.py",
       "language": "python",
-      "lines": 108,
-      "size_bytes": 5230,
+      "lines": 120,
+      "size_bytes": 6112,
       "role": "test",
       "purpose": "API tests for POST /focus/quiz-me (C23.7b): this chapter from its contents entry, graded by submit-answers with mastery moved and no points; since the last focus bookmark, the body start, or after a test's chunks; nothing to ask refused with 409; another reader's book, a bad scope and extra keys refused. C26.3: Quiz me is 409 preparing while the book is processed."
     },
@@ -1898,7 +1898,7 @@
       "path": "backend/tests/test_reader_questions.py",
       "language": "python",
       "lines": 171,
-      "size_bytes": 7764,
+      "size_bytes": 7800,
       "role": "test",
       "purpose": "Tests for reader_questions: the wanted chunks, only stored chunks without questions get them once, the latest place wins, a failing agent, not-yet-stored chunks kept only while ingesting; the slot order (before a waiting job, one waiter), an ingest serving them between batches, a saved place triggering them."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6260,
-      "size_bytes": 1149437,
+      "lines": 6261,
+      "size_bytes": 1150307,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2777,8 +2777,8 @@
     {
       "path": "frontend/e2e/quiz-me.spec.js",
       "language": "javascript",
-      "lines": 93,
-      "size_bytes": 5869,
+      "lines": 110,
+      "size_bytes": 6743,
       "role": "config",
       "purpose": "E2E for Quiz me (C23.7b, mocked API): the toolbar's Quiz me and its This chapter / Since my last quiz dialog, the request to the end of the page shown, the clockless questions, submit-answers and the no-points results; a 409 said kindly; the button and dialog at 375; not offered in focus mode."
     },
@@ -5001,10 +5001,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 595,
-      "size_bytes": 30285,
+      "lines": 604,
+      "size_bytes": 30775,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown. C36.7b: opening Quiz me sends the place to /focus/quiz-me/prepare (openQuizMe)."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -6570,7 +6570,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 830,
-      "size_bytes": 279822,
+      "size_bytes": 280301,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

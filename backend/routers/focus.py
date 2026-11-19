@@ -53,6 +53,13 @@ class QuizMeRequest(BaseModel):
     anchor: Anchor
 
 
+class QuizMePrepare(BaseModel):
+    """C36.7b: the reader's place as the Quiz me dialog opens."""
+    model_config = ConfigDict(extra="forbid")
+    book_id: str = Field(max_length=64)
+    anchor: Anchor
+
+
 class EndRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     bookmark_anchor: Anchor
@@ -267,6 +274,22 @@ def _quiz_me(user_id: str, req: QuizMeRequest) -> dict:
         raise HTTPException(status_code=409, detail="There is nothing to ask about yet. Read a little further first.") from None
     return {"session_id": built["session_id"], "questions": [public_question(q) for q in built["questions"]],
             "count": built["count"], "words_in_range": built["words_in_range"]}
+
+
+def _quiz_me_prepare(user_id: str, req: QuizMePrepare) -> dict:
+    book = _book(req.book_id, user_id)
+    place = req.anchor.model_dump()
+    _check_place(book, place)
+    return {"queued": quiz_me.prepare(user_id, book, place)}
+
+
+@router.post("/quiz-me/prepare", status_code=202)
+async def quiz_me_prepare(req: QuizMePrepare, background_tasks: BackgroundTasks,
+                          user_id: str = Depends(get_current_user)):
+    """C36.7b: start making the questions both Quiz me ranges lack, as the dialog opens; nothing else is written."""
+    queued = await run_in_threadpool(_quiz_me_prepare, user_id, req)
+    background_tasks.add_task(ingestion_worker.run_questions)
+    return queued
 
 
 @router.post("/quiz-me")

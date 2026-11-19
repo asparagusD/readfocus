@@ -42,7 +42,7 @@ def want(book_id: str, at: int | None, total: int) -> bool:
 def fill(book_id: str, indices: list[int]) -> bool:
     """C36.7: chunks of a quiz range that have no questions, made in the background (added to any already
     waiting), so the next quiz on that range has them; True when there is something to make."""
-    merged = sorted(set(_filling.get(book_id, [])) | {int(i) for i in indices})
+    merged = sorted(set(_filling.get(book_id, [])) | {int(i) for i in indices}, reverse=True)  # nearest the place first
     if merged:
         _filling[book_id] = merged
     return bool(merged)
@@ -97,7 +97,8 @@ async def serve(ingesting: str | None = None) -> int:
         if not indices:
             continue
         try:
-            await asyncio.to_thread(make, book_id, indices)
+            for index in indices:  # one chunk at a time, the latest read first, so the first lands soonest
+                await asyncio.to_thread(make, book_id, [index])
         except Exception as error:  # noqa: BLE001 - the next quiz on the range makes what it needs
             print(f"Questions for book {book_id}'s quiz range not made: {error}")
             continue

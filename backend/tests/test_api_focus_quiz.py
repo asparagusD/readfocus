@@ -180,7 +180,7 @@ def test_a_range_with_no_questions_waits_only_for_the_chunk_nearest_the_place(ap
     sid = read_and_end(api, start=1, end=8)
     body = api.client.post(f"/focus/{sid}/quiz").json()
     assert api.generated == [["chunk-3"]] and body["count"] >= 3
-    assert background == [["chunk-0", "chunk-2"]]  # chunks 0, 1 and 2 lacked questions: two of them, spread
+    assert background == [["chunk-2"], ["chunk-0"]]  # chunks 0-2 lacked questions: two, spread, the latest first
 
 
 def test_the_picked_questions_are_counted_in_one_write_per_count(api):

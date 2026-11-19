@@ -168,4 +168,4 @@ def test_a_quiz_ranges_gaps_are_made_after_the_readers_place_and_merged(db, made
     reader_questions.fill(BOOK, [4, 5])
     reader_questions.want(BOOK, 2, 6)
     asyncio.run(reader_questions.serve())
-    assert made == [[2, 3], [1, 4, 5]] and not reader_questions.pending()
+    assert made == [[2, 3], [5], [4], [1]] and not reader_questions.pending()  # one by one, the latest first

@@ -263,6 +263,15 @@ export function ReadingSession() {
     setFocusWanted(false);
     toast({ kind: 'neutral', message: 'Focus session discarded. Nothing was scored.' });
   }, '');
+  // C36.7b: as the Quiz me dialog opens, the server starts making the questions both ranges lack.
+  const openQuizMe = async () => {
+    setQuizMeOpen(true);
+    try {
+      const places = (await reader.current?.shownPlaces?.()) ?? [];
+      const anchor = places.at(-1)?.anchor ?? reader.current?.anchor();
+      if (anchor) fetchApi('/focus/quiz-me/prepare', { method: 'POST', body: JSON.stringify({ book_id: bookId, anchor }) }).catch(() => {});
+    } catch { /* the quiz itself still works */ }
+  };
   // C23.7b: Quiz me outside focus mode, to the end of the page(s) shown; no points.
   const quizMe = async (scope) => {
     setQuizMeBusy(true);
@@ -466,7 +475,7 @@ export function ReadingSession() {
           onFocusMode={pagesOnly ? undefined : turnFocusOn}
         >
           {!pagesOnly && (
-            <button type="button" className="rf-tool" onClick={() => setQuizMeOpen(true)}>
+            <button type="button" className="rf-tool" onClick={openQuizMe}>
               <span>Quiz me</span>
             </button>
           )}

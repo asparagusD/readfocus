@@ -91,3 +91,20 @@ test('Quiz me is not offered in focus mode', async ({ page }) => {
   await page.getByRole('switch', { name: 'Focus mode' }).click();
   await expect(page.getByRole('button', { name: 'Quiz me' })).toHaveCount(0);
 });
+
+test('opening Quiz me asks the server to start the questions at the place shown', async ({ page }) => {
+  await mockQuizMe(page);
+  const prepared = [];
+  await page.route('http://localhost:8000/focus/quiz-me/prepare', (route) => {
+    if (route.request().method() === 'POST') prepared.push(route.request().postDataJSON());
+    return route.request().method() === 'OPTIONS'
+      ? route.fulfill({ status: 204, headers: CORS })
+      : route.fulfill({ status: 202, headers: { ...CORS, 'Content-Type': 'application/json' }, body: '{"queued": 2}' });
+  });
+  await openReader(page);
+  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await expect(page.getByRole('dialog', { name: 'Quiz me' })).toBeVisible();
+  await expect.poll(() => prepared.length).toBe(1);
+  expect(prepared[0].book_id).toBe('e2e-book');
+  expect(prepared[0].anchor.kind).toBeTruthy();
+});

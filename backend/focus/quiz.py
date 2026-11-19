@@ -77,6 +77,13 @@ def _candidates(user_id: str, book_id: str, slices: list[rq.Slice], texts: dict[
     return out
 
 
+def gaps(user_id: str, book: dict, start: dict, end: dict) -> list[int]:
+    """C36.7b: the range's chunks without questions, nearest the end first (read only)."""
+    slices, texts = _slices(book, start, end)
+    asked = {c.question.chunk_index for c in _candidates(user_id, book["id"], slices, texts)}
+    return [s.chunk_index for s in reversed(slices) if s.chunk_index not in asked]
+
+
 def _preferences(user_id: str, book_id: str) -> tuple[list | None, float]:
     """The optimizer's question mix and a difficulty for the reader's recent scores (the planner's bands)."""
     rows = supabase.table("reading_progress").select("average_score, pace_recommendation").eq("user_id", user_id).eq(

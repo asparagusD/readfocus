@@ -14,7 +14,7 @@ const RATIO = 1.5; // 2:3
  * and the image carries width and height, so nothing shifts.
  *
  * - `width`: px, also the image's intrinsic size. Omit to fill the parent.
- * - `processing`: the book's quizzes are still being prepared (C26.3; it opens already): a soft shimmer runs down
+ * - `processing`: the book is still being prepared (C26.3; it opens already, and C36 quizzes what is read): a soft shimmer runs down
  *   the spine; `progress` (0-100) is added to the accessible name.
  * - `decorative`: hide it from assistive tech when the title is printed
  *   beside it. Otherwise it is one image named "Cover of <title> by <author>".
@@ -29,7 +29,7 @@ export function BookCover({
   const showImage = Boolean(coverUrl) && state !== 'failed';
 
   let name = `Cover of ${title || 'an untitled book'}${author ? ` by ${author}` : ''}`;
-  if (processing) name += `, quizzes being prepared${progress != null ? ` (${Math.round(progress)}%)` : ''}`;
+  if (processing) name += `, being prepared${progress != null ? ` (${Math.round(progress)}%)` : ''}`;
 
   const intrinsic = width ?? 160;
   return (

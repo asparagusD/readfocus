@@ -873,8 +873,8 @@
     {
       "path": "backend/services/prose_job.py",
       "language": "python",
-      "lines": 121,
-      "size_bytes": 6227,
+      "lines": 133,
+      "size_bytes": 6918,
       "role": "service",
       "purpose": "Prose-only text per chunk after the regions job (C18.6b): load() reads the book's page_regions and chunks (paged by 1000), plan() builds prose and anchors without writing, rebuild(book, file_bytes) applies it: through backend/regions/prose.py (pypdf page texts for PDFs, blocks and block paths for EPUBs), stores prose, anchors and garbled_sentences on chunks that changed, re-embeds and re-questions those whose text changed (unused questions deleted, used ones kept); idempotent; after_regions never raises."
     },
@@ -1841,8 +1841,8 @@
     {
       "path": "backend/tests/test_prose_job.py",
       "language": "python",
-      "lines": 143,
-      "size_bytes": 6384,
+      "lines": 151,
+      "size_bytes": 6878,
       "role": "test",
       "purpose": "Pytest for backend/services/prose_job.py and the evaluator's passage: prose, anchors and garbled counts stored, only changed chunks embedded again and re-questioned (unused questions deleted, used kept), idempotent second run, a book without regions left alone, after_regions never raising, load_passage reading prose, reference sentences without placeholders or garbled text."
     },
@@ -2321,8 +2321,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6236,
-      "size_bytes": 1140958,
+      "lines": 6237,
+      "size_bytes": 1141988,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2466,7 +2466,7 @@
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
       "lines": 515,
-      "size_bytes": 33534,
+      "size_bytes": 33535,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed."
     },
@@ -2618,7 +2618,7 @@
       "path": "frontend/e2e/library.spec.js",
       "language": "javascript",
       "lines": 466,
-      "size_bytes": 27827,
+      "size_bytes": 27840,
       "role": "config",
       "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs. C30.2: the author is optional (the title alone is checked; a blank author is sent and the returned one shown) and an authorless book shows \"Unknown author\"."
     },
@@ -2706,9 +2706,9 @@
       "path": "frontend/e2e/ocr.spec.js",
       "language": "javascript",
       "lines": 65,
-      "size_bytes": 3797,
+      "size_bytes": 3798,
       "role": "config",
-      "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page. C26.5a: the scanned book opens through /open and then says \"Preparing quizzes…\"."
+      "purpose": "E2E for C19.4b with real tesseract.js in Edge: a scanned page shows 'Making this page selectable...', is read once, gets a text layer of OCR words and word lookup on them; a fully scanned book opens pages-only ('Reading this scan: n of 2 pages'), reads both pages, then shows 'Preparing your first session...'; logs seconds per page. C26.5a: the scanned book opens through /open and then says \"Preparing quizzes (C36.4: “Preparing the book”)…\"."
     },
     {
       "path": "frontend/e2e/open-ahead.spec.js",
@@ -2761,10 +2761,10 @@
     {
       "path": "frontend/e2e/processing.spec.js",
       "language": "javascript",
-      "lines": 87,
-      "size_bytes": 5293,
+      "lines": 106,
+      "size_bytes": 6538,
       "role": "config",
-      "purpose": "Playwright, mocked API (C26.3): a book still being processed opens at once with no session start (PDF and EPUB), shows \"Preparing quizzes… 40%\" and no Suggested next, saves its place on the book and resumes there after a reload; the notice goes once processing is done; Quiz me says the questions are being prepared and the book stays open; a focus session ended while they are prepared is kept and its questions appear when ready; at 375 the notice fits with no sideways scroll."
+      "purpose": "Playwright, mocked API (C26.3): a book still being processed opens at once with no session start (PDF and EPUB), shows \"Preparing quizzes (C36.4: “Preparing the book”)… 40%\" and no Suggested next, saves its place on the book and resumes there after a reload; the notice goes once processing is done; Quiz me says the questions are being prepared and the book stays open; a focus session ended while they are prepared is kept and its questions appear when ready; at 375 the notice fits with no sideways scroll. C36.4: Quiz me on the pages read opens its quiz while the book is still prepared."
     },
     {
       "path": "frontend/e2e/quiz-me.spec.js",
@@ -3218,9 +3218,9 @@
       "path": "frontend/src/components/BookCover.jsx",
       "language": "jsx",
       "lines": 74,
-      "size_bytes": 3140,
+      "size_bytes": 3151,
       "role": "component",
-      "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative. C26.3: a processing cover is named \"quizzes being prepared\"."
+      "purpose": "BookCover (C11.3, D5): 2:3 cover; typographic face always drawn (D5 colour from coverColor, Playfair italic title, spaced-caps author over a short rule, hairline frame, spine shading); a real cover (coverUrl) fades in over it once loaded and is dropped on error; lazy, async decoding, explicit width and height; processing shimmer on the spine; one image named 'Cover of <title> by <author>' unless decorative. C26.3: a processing cover is named \"quizzes being prepared\" (C36.4: \"being prepared\")."
     },
     {
       "path": "frontend/src/components/ErrorScreen.css",
@@ -3642,7 +3642,7 @@
       "path": "frontend/src/focus/ReadyModal.jsx",
       "language": "jsx",
       "lines": 60,
-      "size_bytes": 2922,
+      "size_bytes": 2937,
       "role": "asset",
       "purpose": "\"Ready for your questions?\" (C23.6b): builds the focus quiz once to say how many questions and about how long, the points so far and how many right answers keep them; Not now, keep my place / Start questions. C26.3: a 409 preparing says the questions are still being prepared and the session is kept, and asks again every 15 s until they come."
     },
@@ -4938,9 +4938,9 @@
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
       "lines": 525,
-      "size_bytes": 25719,
+      "size_bytes": 25767,
       "role": "page",
-      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\". C35.8c: once the shelf has loaded, the next book's stored PDF is warmed in the CDN's cache (warmBookFile)."
+      "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes (C36.4: “Preparing the book”)… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\". C35.8c: once the shelf has loaded, the next book's stored PDF is warmed in the CDN's cache (warmBookFile)."
     },
     {
       "path": "frontend/src/pages/Login.css",
@@ -4994,9 +4994,9 @@
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
       "lines": 595,
-      "size_bytes": 30225,
+      "size_bytes": 30285,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -6546,7 +6546,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 827,
-      "size_bytes": 277482,
+      "size_bytes": 277728,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

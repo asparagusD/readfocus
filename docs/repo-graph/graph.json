@@ -14914,6 +14914,11 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/services/prose_job.py",
+      "to": "table:question_bank"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/services/question_bank.py",
       "to": "table:chunks"
     },

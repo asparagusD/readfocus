@@ -83,7 +83,6 @@ export function Library() {
   const [ingest, setIngest] = useState({}); // book id -> percent of its pages the ingestion job has read
   const [dragging, setDragging] = useState(false);
   const [removing, setRemoving] = useState(null); // the book whose removal is being confirmed
-  const [isRemoving, setIsRemoving] = useState(false);
   const [arrived, setArrived] = useState(() => new Set()); // books that turned ready while the shelf was open
   const reduced = useReducedMotion();
 
@@ -122,20 +121,26 @@ export function Library() {
     loadBooks();
   };
 
+  // C35.2 (issue 18): the book leaves the shelf at once; the server marks it and purges it behind the answer.
+  // If the request fails, the book goes back where it was and the reader is told.
   const confirmRemove = async () => {
     const book = removing;
-    setIsRemoving(true);
+    const at = books.findIndex(b => b.id === book.id);
+    setBooks(prev => prev.filter(b => b.id !== book.id));
+    setRemoving(null);
+    toast({ kind: 'neutral', message: `${book.title} is off your shelf.` });
     try {
       await fetchApi(`/books/${book.id}`, { method: 'DELETE' });
       forgetBookFile(book.id);
       forgetCachedBookFile(book.id); // C34.7: its kept copy too
-      setBooks(prev => prev.filter(b => b.id !== book.id));
-      setRemoving(null);
-      toast({ kind: 'neutral', message: `${book.title} is off your shelf.` });
     } catch (err) {
-      toast({ kind: 'warning', message: `We couldn’t remove ${book.title}: ${err.message}` });
-    } finally {
-      setIsRemoving(false);
+      setBooks(prev => {
+        if (prev.some(b => b.id === book.id)) return prev;
+        const next = [...prev];
+        next.splice(at < 0 ? next.length : Math.min(at, next.length), 0, book);
+        return next;
+      });
+      toast({ kind: 'warning', message: `We couldn’t remove ${book.title}, so it is back on your shelf: ${err.message}` });
     }
   };
 
@@ -466,11 +471,11 @@ export function Library() {
         </form>
       </Modal>
 
-      <Modal isOpen={removing !== null} onClose={() => !isRemoving && setRemoving(null)} title={removing ? `Remove ${removing.title}?` : ''}>
+      <Modal isOpen={removing !== null} onClose={() => setRemoving(null)} title={removing ? `Remove ${removing.title}?` : ''}>
         <p className="rf-library__confirm">Its sessions, test results and reading progress go with it. This can’t be undone.</p>
         <div className="rf-library__form-actions">
-          <Button variant="secondary" onClick={() => setRemoving(null)} disabled={isRemoving}>Keep it</Button>
-          <Button variant="danger" onClick={confirmRemove} loading={isRemoving} loadingLabel="Removing…">Remove</Button>
+          <Button variant="secondary" onClick={() => setRemoving(null)}>Keep it</Button>
+          <Button variant="danger" onClick={confirmRemove}>Remove</Button>
         </div>
       </Modal>
     </div>

@@ -102,7 +102,7 @@ test.describe('at 375 px', () => {
 });
 
 /** Record and answer the writes and the status poll; GET /books comes from `shelf()` on each call. */
-async function mockWrites(page, shelf, { progress = 0.64, failUpload = false, uploaded = {} } = {}) {
+async function mockWrites(page, shelf, { progress = 0.64, failUpload = false, uploaded = {}, deleteAnswer = null } = {}) {
   const calls = { uploads: [], deletes: [], statuses: 0 };
   const json = (route, body, status = 200) => route.fulfill({ status, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   await page.route('http://localhost:8000/books', async (route) => {
@@ -120,7 +120,8 @@ async function mockWrites(page, shelf, { progress = 0.64, failUpload = false, up
     }
     if (req.method() === 'DELETE') {
       calls.deletes.push(path);
-      return json(route, { message: 'deleted' });
+      if (deleteAnswer) return deleteAnswer(route, json); // C35.2: held or failed
+      return json(route, { status: 'deleting', book_id: path.split('/').pop() }, 202);
     }
     return route.fallback();
   });
@@ -291,6 +292,37 @@ test('removing a book asks first, in a dialog; Keep it changes nothing', async (
   expect(calls.deletes).toEqual(['/books/middlemarch']);
   await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(2);
   await expect(page.getByText('Middlemarch is off your shelf.')).toBeVisible();
+});
+
+// C35.2 (issue 18): the book leaves the shelf at once, before the server answers; a failure puts it back.
+test('a removed book leaves the shelf before the server answers', async ({ page }) => {
+  let answer;
+  const answered = new Promise((resolve) => { answer = resolve; });
+  const calls = await mockWrites(page, () => SHELF.slice(0, 3), {
+    deleteAnswer: async (route, json) => { await answered; return json(route, { status: 'deleting' }, 202); },
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Remove Middlemarch from your shelf' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Remove', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(2);
+  await expect(page.getByText('Middlemarch is off your shelf.')).toBeVisible();
+  expect(calls.deletes).toEqual(['/books/middlemarch']); // asked, not yet answered
+  answer();
+  await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(2);
+});
+
+test('a removal that fails puts the book back where it was and says so', async ({ page }) => {
+  await mockWrites(page, () => SHELF.slice(0, 3), { deleteAnswer: (route, json) => json(route, { detail: 'down' }, 503) });
+  await page.goto('/');
+  const titles = () => page.locator('.rf-shelf__item .rf-shelf__title').allTextContents();
+  await expect(page.getByRole('list').getByRole('listitem')).toHaveCount(3);
+  const before = await titles();
+  expect(before).toContain('Middlemarch');
+  await page.getByRole('button', { name: 'Remove Middlemarch from your shelf' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Remove', exact: true }).click();
+  await expect(page.getByText(/We couldn’t remove Middlemarch, so it is back on your shelf/)).toBeVisible();
+  await expect.poll(titles).toEqual(before);
 });
 
 /** Every frame, each shelf tile's first words and transform, with the time since the page started. */

@@ -105,6 +105,20 @@ Not measured yet: the opens after C35.8 on production.
 Not measured: the upload of a 29 MB PDF and a delete (the user chose reads only); `/open` during processing (no
 book was processing).
 
+After C35.8 (main ca2d819, Render 3acb791 deployed first; one signed URL per book file reused for an hour, the
+last range read beside the first bytes, the shelf's next PDF warmed): the same thesis, the same in-app browser and
+network, reloading the reader:
+
+| | C35 (before C35.8) | C35.8 |
+|---|---|---|
+| First open with a new signed URL (cold) | 14.0-19.6 s | 4.7 s |
+| Reopening (the same URL, reused) | 15.2 s (a new URL every time) | 1.37 s, 1.30 s |
+
+On the cold open the tail request (2.4 to 4.5 s) now overlaps the first bytes. On a reopen every file request
+took 1 to 60 ms: with a stable URL the browser's own HTTP cache answers too, not only the CDN, so this is the gain
+for a reader coming back within the hour. Smoke after Render: two `/open` calls and `/file` returned the same URL
+with `expires_in` 3600 and 3599.
+
 ### C34: opening a book on Render Free (2026-11-18)
 
 Issues 11 to 15. Production (Render Free, Singapore; Supabase, Mumbai) from this machine, as test user A, read-only

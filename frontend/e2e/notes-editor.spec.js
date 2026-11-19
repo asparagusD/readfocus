@@ -178,14 +178,12 @@ test.describe('phone', () => {
     await addNote(page);
     await expect.poll(() => api.notes.length).toBe(1);
     await page.keyboard.type('Small screen, $e^{i\\pi}$ ');
-    const tools = await panel(page).getByRole('toolbar', { name: 'Format' }).getByRole('button').all();
-    const tops = new Set();
-    for (const tool of tools) {
-      const box = await tool.boundingBox();
-      expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
-      tops.add(Math.round(box.y));
-    }
-    expect(tops.size).toBe(1); // one row of tools
+    // C35.8 (DEBUG_LOG 2026-11-19): all the tools in one frame, so a sheet still sliding up moves them alike.
+    const boxes = await panel(page).getByRole('toolbar', { name: 'Format' }).evaluate((bar) =>
+      [...bar.querySelectorAll('button')].map((b) => { const r = b.getBoundingClientRect(); return { top: r.top, height: r.height }; }));
+    expect(boxes.length).toBe(7);
+    for (const box of boxes) expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
+    expect(new Set(boxes.map((box) => Math.round(box.top))).size).toBe(1); // one row of tools
     expect(Math.round((await panel(page).getByRole('button', { name: 'Done' }).boundingBox()).height)).toBeGreaterThanOrEqual(44);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     if (shots) { await page.waitForTimeout(700); await page.screenshot({ path: `${shots}/notes-editor-lamplight-375.png` }); }

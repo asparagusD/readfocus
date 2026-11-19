@@ -5304,3 +5304,37 @@ made to fail reliably on a fast machine without a heap of about a gigabyte, so t
 
 ### Commit
 fix(ingest): keep the startup heap out of the job threads' collections (C33.G)
+
+## 2026-11-19 C35.2b — repo graph tests fail after the commit: two new files have no purpose
+
+**Status:** fixed
+
+### Symptom
+Before C35.2c's commit, `pytest tools/repo_graph/tests -q`: 5 failed, 59 passed, each with
+
+    tools.repo_graph.inventory.InventoryError: purposes.json is out of date.
+      No purpose (read the file, then add one): ['backend/tests/test_book_deleting_hidden.py',
+      'supabase/migrations/035_book_deleting.sql']
+
+### Reproduce
+`python tools/repo_graph/inventory.py` on `b233484` raises the same error.
+
+### Hypotheses
+1. (confirmed) The inventory lists git-tracked files. C35.2b's `make graph` and graph tests ran before the two new
+   files were staged, so they were not inventoried and the tests passed; once committed, they were tracked and had
+   no purpose.
+2. (ruled out) A stale `docs/repo-graph/inventory.json`: regenerating alone gives the same error.
+
+### Root cause
+Process: the graph was regenerated and its tests run before `git add` of the new files in C35.2b, so the checks
+saw a different file set from the commit's.
+
+### Fix
+`tools/repo_graph/purposes.json`: purposes for both files; `make graph`; `docs/repo-graph/` regenerated. From now
+on the graph is regenerated, and its tests run, after the new files are staged. One attempt.
+
+### Regression test
+The existing `tools/repo_graph/tests` are the test: 5 failed before, 64 passed after.
+
+### Commit
+fix(graph): add purposes for C35.2b's test file and migration 035

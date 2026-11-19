@@ -1588,6 +1588,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/tests/test_book_deleting_hidden.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
       "id": "file:backend/tests/test_book_files.py",
       "type": "file",
       "role": "test",
@@ -5248,6 +5254,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/035_book_deleting.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -8903,6 +8915,76 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_book_delete.py",
+      "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/annotations.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/device_books.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/focus.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/notes.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/ocr.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/reading.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/steve_ask.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/services/book_ingestor.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/steve/context.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
       "to": "file:backend/tests/memory_db.py"
     },
     {

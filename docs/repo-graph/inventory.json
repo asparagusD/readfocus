@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 941,
-    "inventoried": 798,
+    "tracked": 943,
+    "inventoried": 800,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17822,
+      "size_bytes": 17841,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1367,6 +1367,14 @@
       "purpose": "DELETE /books/{id} (C25.1 fix): the book's original and every file in notes/<user>/<book>/ go with it, page by page; another book's and another reader's files stay; another reader's book is 404; a storage failure, or a remove that removes nothing, is logged once and the book is still deleted."
     },
     {
+      "path": "backend/tests/test_book_deleting_hidden.py",
+      "language": "python",
+      "lines": 84,
+      "size_bytes": 3424,
+      "role": "test",
+      "purpose": "C35.2b (issue 18): a book marked deleting is off the shelf and out of the shelf space, 404 at every endpoint that takes its id (details, file, pages, regions, status, resume, body start, open, OCR, highlights, notes), closed to focus, Steve and device pages, and never marked ready or failed by ingestion."
+    },
+    {
       "path": "backend/tests/test_book_files.py",
       "language": "python",
       "lines": 115,
@@ -2249,8 +2257,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6176,
-      "size_bytes": 1109782,
+      "lines": 6178,
+      "size_bytes": 1112594,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2545,8 +2553,8 @@
     {
       "path": "frontend/e2e/library.spec.js",
       "language": "javascript",
-      "lines": 350,
-      "size_bytes": 20409,
+      "lines": 382,
+      "size_bytes": 22444,
       "role": "config",
       "purpose": "Playwright e2e for the library (C13.3a) with GET /books answered in the spec (SHELF: read, unread, processing, failed, one stored cover): skeleton while loading, the next-book card and its link, covers, progress and captions per status, the empty shelf, a failed load with Try again, three across at 375 with no sideways scroll; adding a book (inline errors, the same multipart fields, toast, processing tile), a failed upload, a dropped file and a refused one, live ingestion percent then the ready toast, remove with Keep it and Remove; with and without reduced motion, the first-load stagger (first tile settles before the last) and the arrival of a book that turns ready; mockShelf for later specs. C30.2: the author is optional (the title alone is checked; a blank author is sent and the returned one shown) and an authorless book shows \"Unknown author\"."
     },
@@ -4761,8 +4769,8 @@
     {
       "path": "frontend/src/pages/Library.jsx",
       "language": "jsx",
-      "lines": 478,
-      "size_bytes": 22633,
+      "lines": 483,
+      "size_bytes": 22923,
       "role": "page",
       "purpose": "Library (handoff screens 03-05): 'Your shelf' with the count, the next book to open (read most recently, else newest ready) with Begin reading, a grid of BookCovers linking to /read for ready books with title, author, read progress (MasteryBar) and a caption per status, remove; skeleton while loading, the empty shelf, a load error with Try again; upload (file picker, or a file dropped anywhere in the window over a page-wide drop target; title and author in a modal with inline errors), toasts for added, ready, refused and failed books, a confirm dialog before removing, and the 3 s poll while a book is processing (GET /books plus GET /books/{id}/status for each processing book's percent). Motion: the shelf's tiles rise in 60 ms apart on a first load (a nested AnimatePresence), a book that turns ready remounts and plays shelfArrive; fades only under reduced motion. C17.1: a 'Keep the file on this device only' choice in the upload modal (the file saved to IndexedDB, forgotten on remove) and 'This book is only on this device' under such a book. C26.3: a book being processed opens from the shelf; its caption is \"Preparing quizzes… n%\", the upload toast says it opens now, and the ready toast says its first quizzes are ready. C26.5b: the Continue reading card and the empty shelf no longer promise planned sessions. C26.7: a PDF or EPUB over 50 MB (at most 300 MB) is added with POST /books/device, kept in this browser, and its pages read here and sent in the background (\"Reading its pages on this device… n%\"); the dialog says it stays on this device instead of offering the choice. C30.2: the Author field is optional (a hint says a blank one is read from the file); the new tile shows the author the upload returns, and a book with none says \"Unknown author\"."
     },
@@ -6247,6 +6255,14 @@
       "purpose": "C32.2 (issue 4): reading_days, words read per reader, book and calendar day in the reader's time zone, written by PUT /books/{id}/position as the place moves forward; readers read their own rows, only the backend writes; additive."
     },
     {
+      "path": "supabase/migrations/035_book_deleting.sql",
+      "language": "sql",
+      "lines": 12,
+      "size_bytes": 768,
+      "role": "migration",
+      "purpose": "C35.2 (issue 18): books_status_check replaced in one statement by processing, ready, error and deleting, so DELETE /books/{id} can mark a book and purge it in the background. Applied 2026-11-19 after a dump."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -6329,8 +6345,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 800,
-      "size_bytes": 267064,
+      "lines": 802,
+      "size_bytes": 267679,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

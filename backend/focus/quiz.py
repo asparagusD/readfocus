@@ -96,9 +96,11 @@ def _assemble(user_id: str, book: dict, start: dict, end: dict | None) -> tuple[
     n = rq.question_count(words)
     candidates = _candidates(user_id, book["id"], slices, texts)
     # Top up: range chunks with no bank questions (too few in all, or a stretch of the range left uncovered)
-    # get them now from their prose, with the C5 strategies, and persisted.
+    # get them now from their prose, with the C5 strategies, and persisted. C36.G: at most QUIZ_TOPUP_MAX_CHUNKS of
+    # them, spread across the range, so a quiz over a long stretch read without questions answers in seconds.
     asked = {c.question.chunk_index for c in candidates}
-    missing = [s.chunk_index for s in slices if s.chunk_index not in asked]
+    missing = rq.spread([s.chunk_index for s in slices if s.chunk_index not in asked],
+                        agent_policy.QUIZ_TOPUP_MAX_CHUNKS)
     if missing and question_bank._generate_missing(book["id"], missing):
         candidates = _candidates(user_id, book["id"], slices, texts)
     mix, target = _preferences(user_id, book["id"])

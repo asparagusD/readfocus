@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.agents import evaluator_agent, optimizer_agent, planner_agent, workflow
+from backend.agents import policy as agent_policy
 from backend.agents.knowledge_state import agent as knowledge_agent
 from backend.dependencies import get_current_user
 from backend.focus import quiz, store
@@ -149,6 +150,24 @@ def test_a_range_chunk_without_questions_is_generated_on_the_fly(api):
     body = api.client.post(f"/focus/{sid}/quiz").json()
     assert api.generated == [["chunk-2"]]
     assert len(body["questions"]) == 3 and 2 in {q["chunk_index"] for q in stored_questions(api, sid)}
+
+
+def test_a_long_range_with_no_questions_tops_up_only_a_few_chunks_spread_across_it(api, monkeypatch):
+    """DEBUG_LOG 2026-11-19 C36.G: a quiz over a stretch read without questions makes those of at most
+    QUIZ_TOPUP_MAX_CHUNKS chunks, first to last, so it answers in seconds, not minutes, at 0.1 CPU."""
+    monkeypatch.setattr(agent_policy, "QUIZ_TOPUP_MAX_CHUNKS", 2)
+    api.db.tables["question_bank"] = []
+
+    def generate(book_id, ids):
+        api.generated.append(list(ids))
+        for chunk_id in ids:
+            api.db.tables["question_bank"].extend(bank(int(chunk_id.split("-")[1])))
+
+    question_bank.question_agent.run = generate
+    sid = read_and_end(api, start=1, end=8)
+    body = api.client.post(f"/focus/{sid}/quiz").json()
+    assert api.generated == [["chunk-0", "chunk-3"]]
+    assert body["count"] >= 3
 
 
 def test_a_capped_session_without_a_bookmark_anchor_uses_its_last_place(api):

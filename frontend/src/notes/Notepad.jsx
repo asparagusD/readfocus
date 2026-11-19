@@ -1,8 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Bookmark, Code2, Image, Link2, PenLine, Plus, Sigma, Trash2, Type } from 'lucide-react';
+import { Bookmark, Code2, Image, Link2, NotebookPen, PenLine, Plus, Sigma, Trash2, Type } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NoteDoc } from './NoteDoc';
-import { DrawingFrame, DrawingThumb } from './DrawingNote';
+import { DrawingThumb } from './DrawingNote';
 import { BlockNote } from './BlockNote';
 import { NOTE_DRAG, useNotesActions } from './NotesContext';
 import { reference } from './place';
@@ -50,7 +50,8 @@ const TextEditor = lazy(() => import('./TextEditor'));
  * passage ("p. 45 · Fourier series", a button that goes there) and its kind. Text notes are drawn by NoteDoc and
  * edited in TipTap, loaded the first time one is opened (C22.2b): a click, or Enter on a focused note, opens it;
  * Escape or Done closes it. "Text" adds a note at the selection or the pages shown and opens it. C22.3: drawings
- * show their thumbnail and open in Excalidraw (DrawingNote.jsx); "Drawing" adds one. Loading, error and empty
+ * show their thumbnail; since C37.2 they are notebook pages and open in the notebook (`onOpenPage`), and
+ * "Notebook" opens it (`onNotebook`). Loading, error and empty
  * states; one save line, announced politely; a conflict or a refused save on its note. C22.4: `request` from the
  * book ({ type: 'edit', key } for a new note by N or the selection toolbar, { type: 'focus', ids } from a margin
  * marker) opens or focuses notes; each note's link button moves its anchor to the selection (`onRelink`).
@@ -82,7 +83,7 @@ function NotesFilter({ value, onChange }) {
     </div>
   );
 }
-export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd, onThumbnail, onDrawing, onRelink, request = null, range = null, contents = () => [] }) {
+export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd, onOpenPage, onNotebook, onRelink, request = null, range = null, contents = () => [] }) {
   const [editing, setEditing] = useState(null); // a note's key (or id)
   const [focused, setFocused] = useState(null); // { ids } opened from a margin marker
   const [seen, setSeen] = useState(null); // the last request taken, so each is taken once, when the list is ready
@@ -157,9 +158,6 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
   };
   const byHand = useCallback(() => { handAt.current = Date.now(); }, []);
   const goTo = useCallback((note) => { jumpAt.current = Date.now(); setPill(null); onGoTo(note); }, [onGoTo]);
-  const drawingOpen = notes.some((n) => (n.key ?? n.id) === editing && n.kind === 'drawing');
-  useEffect(() => { onDrawing?.(drawingOpen); }, [drawingOpen, onDrawing]); // the side panel widens for it
-  useEffect(() => () => onDrawing?.(false), [onDrawing]);
   const status = overallStatus(statuses, notes.filter((n) => !n.pending).map((n) => n.id));
   const add = async (kind) => {
     const key = await onAdd(kind);
@@ -209,7 +207,7 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
             const where = describe(note);
             const ref = reference(where.page, where.chapter);
             const key = note.key ?? note.id;
-            const open = editing === key && (note.kind === 'text' || note.kind === 'drawing');
+            const open = editing === key && note.kind === 'text';
             return (
               <li key={key} className="rf-note" data-kind={note.kind} data-id={note.id} data-key={key}
                 data-new={note.key ? 'true' : undefined} data-editing={open || undefined}
@@ -238,11 +236,7 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
                   </button>
                 </div>
                 <div className="rf-note-body">
-                  {open && note.kind === 'drawing' && (
-                    <DrawingFrame note={note} reference={ref} onChange={(content) => onChange(note.id, { content })}
-                      onDone={(blob) => { onThumbnail(note, blob); stop(note); }} />
-                  )}
-                  {!open && note.kind === 'drawing' && <DrawingThumb note={note} reference={ref} onOpen={() => setEditing(key)} />}
+                  {note.kind === 'drawing' && <DrawingThumb note={note} reference={ref} onOpen={() => onOpenPage(note)} />}
                   {open && note.kind === 'text' && (
                     <Suspense fallback={<NoteDoc doc={note.content} />}>
                       <TextEditor content={note.content} label={`Note at ${ref}`}
@@ -272,8 +266,8 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
           <button type="button" className="rf-notes-pill" onClick={() => add('text')}>
             <Plus size={15} strokeWidth={1.75} aria-hidden="true" />Text
           </button>
-          <button type="button" className="rf-notes-pill" onClick={() => add('drawing')}>
-            <Plus size={15} strokeWidth={1.75} aria-hidden="true" />Drawing
+          <button type="button" className="rf-notes-pill" onClick={onNotebook}>
+            <NotebookPen size={15} strokeWidth={1.75} aria-hidden="true" />Notebook
           </button>
           <p className="rf-note-small">At your selection, or the pages you are on</p>
         </div>

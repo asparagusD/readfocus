@@ -12363,16 +12363,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/DrawingNote.jsx",
-      "to": "file:frontend/src/notes/drawing.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/DrawingNote.jsx",
-      "to": "file:frontend/src/notes/excalidrawFonts.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/notes/MarginMarkers.jsx",
       "to": "file:frontend/src/notes/MarginMarkers.css"
     },
@@ -13434,6 +13424,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/Notebook.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/notes/Notepad.jsx"
     },
     {
@@ -13450,6 +13445,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/notes/fromBook.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/notebookPages.js"
     },
     {
       "type": "imports",

@@ -8,7 +8,7 @@ import './SidePanel.css';
  * The tabs are a WAI-ARIA tablist (arrows, Home, End). Opening focuses the chosen tab; Esc inside or the close
  * button closes it and focus goes back to the toolbar button that opened it. The panel is named after its tab.
  */
-export function SidePanel({ tabs, current, onTab, onClose, returnTo, wide = false, children }) {
+export function SidePanel({ tabs, current, onTab, onClose, returnTo, beside = false, children }) {
   const panel = useRef(null);
   const buttons = useRef({});
   const active = tabs.find((t) => t.id === current) ?? tabs[0];
@@ -42,7 +42,7 @@ export function SidePanel({ tabs, current, onTab, onClose, returnTo, wide = fals
   };
 
   return (
-    <aside ref={panel} id="rf-side-panel" className="rf-side" data-wide={wide || undefined} aria-label={active.label}>
+    <aside ref={panel} id="rf-side-panel" className="rf-side" data-beside={beside || undefined} aria-label={active.label}>
       <span className="rf-side-grab" aria-hidden="true" />
       <header className="rf-side-head">
         <div className="rf-side-tabs" role="tablist" aria-label="Beside the book">

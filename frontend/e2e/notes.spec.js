@@ -24,9 +24,11 @@ for (const kind of ['pdf', 'epub']) {
       await expect(editor(page)).toBeFocused();
       await page.keyboard.type('On the first page');
       await panel(page).getByRole('button', { name: 'Done' }).click();
-      await panel(page).getByRole('button', { name: 'Drawing' }).click();
-      await expect(panel(page).locator('.rf-drawing canvas.interactive')).toBeVisible({ timeout: 15_000 });
-      await panel(page).getByRole('button', { name: 'Done' }).click();
+      await panel(page).getByRole('button', { name: 'Notebook', exact: true }).click(); // C37.2: a drawing is a notebook page
+      await page.getByRole('dialog', { name: 'Notebook' }).getByRole('button', { name: 'New page' }).first().click();
+      await expect(page.locator('.rf-notebook canvas.interactive')).toBeVisible({ timeout: 15_000 });
+      await page.getByRole('button', { name: 'Close notebook' }).click();
+      await page.getByRole('button', { name: /^Notes/ }).click();
       await expect.poll(() => api.notes.map((n) => n.kind)).toEqual(['text', 'drawing']);
       await expect(panel(page).locator('.rf-note[data-here]')).toHaveCount(2);
 

@@ -27,6 +27,8 @@ import { useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
 import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
+import { Notebook } from '../notes/Notebook';
+import { openingPage, pageKey, pagesOf } from '../notes/notebookPages';
 import { useNotes } from '../notes/useNotes';
 import { chapterOf } from '../notes/place';
 import { shownRange } from '../notes/sync';
@@ -90,7 +92,10 @@ export function ReadingSession() {
   const opener = useRef(null); // the toolbar button that opened the panel gets focus back
   const steve = useSteve(bookId, steveOpen);
   const notepad = useNotes(bookId);
-  const [drawingOpen, setDrawingOpen] = useState(false); // C22.3: the panel widens while a drawing is open
+  // C37.2 (issue 26): the notebook over 70 % of the screen, the book blurred beside it; it keeps the page it was on.
+  const [notebookOpen, setNotebookOpen] = useState(false);
+  const [notebookPage, setNotebookPage] = useState(null);
+  const notebookOpener = useRef(null);
   const [entries, setEntries] = useState([]);
   const [quizMeOpen, setQuizMeOpen] = useState(false); // C23.7b
   const [quizMeBusy, setQuizMeBusy] = useState(false);
@@ -326,7 +331,18 @@ export function ReadingSession() {
     openNotes();
     setNoteRequest({ type: 'edit', key, n: Date.now() });
   };
+  const pages = useMemo(() => pagesOf(notepad.notes), [notepad.notes]);
+  const openNotebook = (key = null) => {
+    // The notepad gives way to the notebook (it would cover the book's 30 %); Steve stays, over that 30 %.
+    notebookOpener.current = side === 'notes' ? notesButton.current : document.activeElement;
+    setSide((now) => (now === 'notes' ? null : now));
+    setNotebookPage((last) => key ?? openingPage(pages, shown, last));
+    setNotebookOpen(true);
+  };
+  const closeNotebook = useCallback(() => setNotebookOpen(false), []);
   const onOpenNotes = (ids) => {
+    const drawn = ids.map((id) => pages.find((p) => p.id === id || p.key === id)).filter(Boolean);
+    if (drawn.length && drawn.length === ids.length) { openNotebook(pageKey(drawn[0])); return; } // C37.2: pages
     openNotes();
     setNoteRequest({ type: 'focus', ids, n: Date.now() });
   };
@@ -438,8 +454,8 @@ export function ReadingSession() {
   const bookTitle = sessionData.book?.title || 'Your book';
 
   return (
-    <div className="rf-reading-page" data-focus={inFocus}>
-      <div className="rf-reading-chrome">
+    <div className="rf-reading-page" data-focus={inFocus} data-notebook={notebookOpen || undefined}>
+      <div className="rf-reading-chrome" inert={notebookOpen}>
         {inFocus ? (
           <FocusBar session={focus.session} readAt={focus.readAt} locked={focusLocked}
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
@@ -500,7 +516,7 @@ export function ReadingSession() {
       <SteveContext.Provider value={steveHere ? steveActions : null}>
       <NotesContext.Provider value={notesActions}>
       <div className="rf-reading-body">
-      <main className="rf-reading-area">
+      <main className="rf-reading-area" inert={notebookOpen}>
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
         <h1 className="sr-only">{bookTitle}</h1>
         <Reader
@@ -546,19 +562,28 @@ export function ReadingSession() {
           onTab={setSide}
           onClose={closeSide}
           returnTo={opener}
-          wide={side === 'notes' && drawingOpen}
+          beside={notebookOpen}
         >
           {shownSide === 'steve' ? (
             <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer} />
           ) : (
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
               onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}
-              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit} onAdd={addNote} onThumbnail={notepad.attachThumbnail} onDrawing={setDrawingOpen}
+              onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onChange={notepad.edit} onAdd={addNote}
+              onOpenPage={(note) => openNotebook(pageKey(note))} onNotebook={() => openNotebook()}
               onRelink={relinkNote} request={noteRequest} range={shown} contents={contentsOf} />
           )}
         </SidePanel>
       )}
       </div>
+      {notebookOpen && (
+        <Notebook title={bookTitle} pages={pages} state={notepad.state} statuses={notepad.statuses} range={shown}
+          describe={describeNote} current={notebookPage} onPage={setNotebookPage} onNew={() => addNote('drawing')}
+          onChange={notepad.edit} onThumbnail={notepad.attachThumbnail} onRemove={notepad.remove} onGoTo={goToNote}
+          onRetry={notepad.flush} onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onReload={notepad.reload}
+          onClose={closeNotebook} returnTo={notebookOpener} beside={Boolean(shownSide)}
+          others={notepad.notes.length - pages.length} onOthers={openNotes} />
+      )}
       </NotesContext.Provider>
       </SteveContext.Provider>
 

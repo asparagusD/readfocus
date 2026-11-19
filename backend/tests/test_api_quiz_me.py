@@ -11,6 +11,7 @@ from backend.tests.test_api_focus_quiz import (  # noqa: F401
     USER,
     answer,
     api,
+    background,
     pdf,
     read_and_end,
     stored_questions,
@@ -106,3 +107,14 @@ def test_quiz_me_waits_while_the_book_is_processed_and_makes_nothing(qm):
     response = ask(qm, "chapter", end_of(4))
     assert response.status_code == 409 and response.json()["detail"]["code"] == "preparing"
     assert "being prepared" in response.json()["detail"]["message"] and qm.db.tables["sessions"] == []
+
+
+def test_opening_quiz_me_queues_both_ranges_gaps_and_writes_no_quiz(qm, background):  # noqa: F811
+    """C36.7b: the dialog's prepare call queues the chunks without questions (the latest read first) and makes
+    them after the response; no session, no quiz."""
+    qm.db.tables["books"][0]["toc"] = [{"title": "One", "page": 1}, {"title": "Two", "page": 5}]
+    qm.db.tables["question_bank"] = [q for q in qm.db.tables["question_bank"] if q["chunk_index"] not in (1, 3)]
+    response = qm.client.post("/focus/quiz-me/prepare", json={"book_id": BOOK, "anchor": end_of(8)})
+    assert response.status_code == 202 and response.json() == {"queued": 2}
+    assert qm.db.tables["sessions"] == [] and background == [["chunk-3"], ["chunk-1"]]
+    assert qm.client.post("/focus/quiz-me/prepare", json={"book_id": "someone-elses", "anchor": end_of(8)}).status_code == 404

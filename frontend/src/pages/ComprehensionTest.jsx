@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { easing, fadeIn, seconds } from '../motion/presets';
@@ -69,6 +69,11 @@ export function ComprehensionTest({ focus = false, quizMe = false }) {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  // C36.7c: Quiz me hands over the questions it was just given (the same public form GET /sessions/{id} returns),
+  // so the quiz shows at once (a reload keeps the browser's history state, so it shows them again); opened any other
+  // way (a link, the address typed), it reads them from the server.
+  const handed = useLocation().state?.questions;
+  const handedRef = useRef(quizMe && Array.isArray(handed) && handed.length ? handed : null);
 
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
@@ -92,10 +97,12 @@ export function ComprehensionTest({ focus = false, quizMe = false }) {
     async function fetchSession() {
       try {
         // C23.6b: a focus session's quiz is built (once) from its start to its bookmark; a test is the session's.
-        const data = focus
+        const kept = handedRef.current;
+        handedRef.current = null;
+        const data = kept ? null : focus
           ? await fetchApi(`/focus/${sessionId}/quiz`, { method: 'POST' })
           : await fetchApi(`/sessions/${sessionId}`);
-        const list = (focus ? data.questions : data.test_questions) ?? [];
+        const list = kept ?? (focus ? data.questions : data.test_questions) ?? [];
         began.current = Date.now();
         if (!list.length) {
           toast({ kind: 'warning', message: 'This quiz has no questions yet. Try again in a few minutes.' });

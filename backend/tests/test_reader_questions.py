@@ -159,3 +159,13 @@ def test_saving_the_place_makes_the_questions_of_that_chunk_and_the_next(client,
     assert client.put(f"/books/{BOOK}/position", json={"anchor": PLACE, "chunk_index": 2}).status_code == 200
     assert client.put(f"/books/{BOOK}/position", json={"anchor": PLACE, "chunk_index": 2}).status_code == 200
     assert made == [[2, 3]]  # the second save found them made
+
+
+def test_a_quiz_ranges_gaps_are_made_after_the_readers_place_and_merged(db, made):
+    """C36.7: fill() adds a quiz range's chunks without questions; serve makes them after the reader's own place."""
+    store(db, *range(6))
+    reader_questions.fill(BOOK, [1, 4])
+    reader_questions.fill(BOOK, [4, 5])
+    reader_questions.want(BOOK, 2, 6)
+    asyncio.run(reader_questions.serve())
+    assert made == [[2, 3], [5], [4], [1]] and not reader_questions.pending()  # one by one, the latest first

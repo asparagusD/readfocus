@@ -406,8 +406,9 @@ FOCUS_SESSION_CAP_MIN = 180  # F8
 QUIZ_WORDS_PER_QUESTION = 400  # F10
 QUIZ_MIN_QUESTIONS = 3  # F10
 QUIZ_MAX_QUESTIONS = 15  # F10
-# C36.G: a quiz makes the missing questions of at most this many of its range's chunks itself, spread across the
-# range (3-7 s each at Render's 0.1 CPU); the reader's own questions (reader_questions) cover the rest as it reads.
+# C36.G: a quiz's range gets the missing questions of at most this many of its chunks, spread across it (3-7 s each
+# at Render's 0.1 CPU). C36.7: in the background (reader_questions.fill), not while the reader waits; the quiz waits
+# only when its range holds fewer than QUIZ_MIN_QUESTIONS questions, for the chunks nearest the place, one by one.
 QUIZ_TOPUP_MAX_CHUNKS = 4
 QUIZ_POINTS_PER_CORRECT = 20  # F11
 QUIZ_PASS_SCORE = 0.40  # F12

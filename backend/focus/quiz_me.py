@@ -6,8 +6,9 @@ kept on a new sessions row, so POST /sessions/{id}/submit-answers grades it and 
 import uuid
 from typing import Literal
 
+from backend.agents import policy as agent_policy
 from backend.focus import quiz, store
-from backend.services import body_start
+from backend.services import body_start, reader_questions
 from backend.services.supabase_client import supabase
 
 Scope = Literal["chapter", "since_last"]
@@ -72,14 +73,39 @@ def since_last_start(user_id: str, book: dict) -> dict:
     return anchor_at(kind, max(units)) if units else _body_start(book)
 
 
+def _start(user_id: str, book: dict, scope: Scope, place: dict) -> dict | None:
+    """The range's start for the scope, or None when the place is not after it."""
+    start = chapter_start(book, place) if scope == "chapter" else since_last_start(user_id, book)
+    if start["kind"] != place["kind"] or store.order_key(start) >= store.order_key(place):
+        return None
+    return start
+
+
+def prepare(user_id: str, book: dict, place: dict) -> int:
+    """C36.7b: as the Quiz me dialog opens, both ranges' chunks without questions (nearest the place first, at most
+    QUIZ_TOPUP_MAX_CHUNKS each) are queued for the background (reader_questions.fill), so the quiz the reader picks
+    a moment later finds them made, or being made. Reads only; the number of chunks queued."""
+    if quiz.preparing(book, place):
+        return 0
+    queued: list[int] = []
+    for scope in ("chapter", "since_last"):
+        start = _start(user_id, book, scope, place)
+        if start is not None:
+            queued += [i for i in quiz.gaps(user_id, book, start, place)[:agent_policy.QUIZ_TOPUP_MAX_CHUNKS]
+                       if i not in queued]
+    if queued:
+        reader_questions.fill(book["id"], queued)
+    return len(queued)
+
+
 def build(user_id: str, book: dict, scope: Scope, place: dict) -> dict:
     """A new Quiz me quiz {session_id, questions (stored form), count, words_in_range}.
 
     C26.3: quiz.Preparing while the range up to the place is not stored yet (C36.3; nothing is made)."""
     if quiz.preparing(book, place):
         raise quiz.Preparing
-    start = chapter_start(book, place) if scope == "chapter" else since_last_start(user_id, book)
-    if start["kind"] != place["kind"] or store.order_key(start) >= store.order_key(place):
+    start = _start(user_id, book, scope, place)
+    if start is None:
         raise NothingToAsk
     questions, words, indices, picked = quiz._assemble(user_id, book, start, place)
     if words <= 0:

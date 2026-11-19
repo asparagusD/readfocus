@@ -331,6 +331,13 @@
       "handler": "quiz_me_start"
     },
     {
+      "id": "endpoint:POST /focus/quiz-me/prepare",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/focus/quiz-me/prepare",
+      "handler": "quiz_me_prepare"
+    },
+    {
       "id": "endpoint:POST /focus/start",
       "type": "endpoint",
       "method": "POST",
@@ -5994,6 +6001,11 @@
     },
     {
       "type": "calls_endpoint",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "endpoint:POST /focus/quiz-me/prepare"
+    },
+    {
+      "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /books/{book_id}"
     },
@@ -6420,6 +6432,11 @@
       "type": "defines_endpoint",
       "from": "file:backend/routers/focus.py",
       "to": "endpoint:POST /focus/quiz-me"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/focus.py",
+      "to": "endpoint:POST /focus/quiz-me/prepare"
     },
     {
       "type": "defines_endpoint",
@@ -7323,6 +7340,11 @@
     {
       "type": "imports",
       "from": "file:backend/focus/quiz.py",
+      "to": "file:backend/services/reader_questions.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -7338,6 +7360,11 @@
     {
       "type": "imports",
       "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
       "to": "file:backend/focus/quiz.py"
     },
     {
@@ -7349,6 +7376,11 @@
       "type": "imports",
       "from": "file:backend/focus/quiz_me.py",
       "to": "file:backend/services/body_start.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/focus/quiz_me.py",
+      "to": "file:backend/services/reader_questions.py"
     },
     {
       "type": "imports",
@@ -7779,6 +7811,11 @@
       "type": "imports",
       "from": "file:backend/routers/focus.py",
       "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/focus.py",
+      "to": "file:backend/services/ingestion_worker.py"
     },
     {
       "type": "imports",
@@ -8799,6 +8836,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_api_focus_quiz.py",
       "to": "file:backend/services/question_bank.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_api_focus_quiz.py",
+      "to": "file:backend/services/reader_questions.py"
     },
     {
       "type": "imports",

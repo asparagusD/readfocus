@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from backend.agents import policy
 from backend.agents.question_generation.agent import QuestionGenerationAgent
 from backend.nlp import embedder
-from backend.services import book_structure, covers, ocr_pages, pdf_text, processing_jobs, region_job
+from backend.services import book_structure, covers, make_way, ocr_pages, pdf_text, processing_jobs, region_job
 from backend.services.book_purge import DELETING
 from backend.services.supabase_client import supabase
 
@@ -331,6 +331,8 @@ async def run_job(job: dict, file_bytes: bytes | None = None) -> dict:
             book_structure.build_with_paths, "text" if browser else book["file_type"], file_bytes, chunks, every_page)
         pdf_text.release_memory()  # C18.G: the parses are over; on Linux the freed memory goes back
         for start, end in batches(total, job["cursor"]):
+            if start:  # C35.6: after the first batch (which makes the book readable), make way for requests
+                await make_way.between_batches()
             batch = chunks[start:end]
             vectors = await asyncio.to_thread(embedder.embed, batch)
             stored = await asyncio.to_thread(store_batch, book_id, user_id, start, batch, vectors, blocks, paths)

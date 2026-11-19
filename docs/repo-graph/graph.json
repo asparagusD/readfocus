@@ -135,6 +135,13 @@
       "handler": "get_book_status"
     },
     {
+      "id": "endpoint:GET /boom",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/boom",
+      "handler": "boom"
+    },
+    {
       "id": "endpoint:GET /dashboard",
       "type": "endpoint",
       "method": "GET",
@@ -196,6 +203,13 @@
       "method": "GET",
       "path": "/sessions/{session_id}",
       "handler": "get_session"
+    },
+    {
+      "id": "endpoint:GET /steve/ask",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/steve/ask",
+      "handler": "ask"
     },
     {
       "id": "endpoint:GET /steve/key",
@@ -420,6 +434,13 @@
       "method": "POST",
       "path": "/steve/latex",
       "handler": "equation_latex"
+    },
+    {
+      "id": "endpoint:POST /upload",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/upload",
+      "handler": "upload"
     },
     {
       "id": "endpoint:PUT /books/{book_id}/body-start",
@@ -1194,6 +1215,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/services/make_way.py",
+      "type": "file",
+      "role": "service",
+      "language": "python"
+    },
+    {
       "id": "file:backend/services/note_content.py",
       "type": "file",
       "role": "service",
@@ -1837,6 +1864,12 @@
     },
     {
       "id": "file:backend/tests/test_lookup.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_make_way.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -6513,6 +6546,31 @@
       "to": "endpoint:GET /books"
     },
     {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:GET /books"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:GET /boom"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:GET /health"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:GET /steve/ask"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "endpoint:POST /upload"
+    },
+    {
       "type": "defines_function",
       "from": "file:supabase/migrations/001_initial.sql",
       "to": "function:handle_new_user"
@@ -7374,6 +7432,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/services/pdf_text.py"
     },
     {
@@ -7425,6 +7488,11 @@
       "type": "imports",
       "from": "file:backend/regions/extract.py",
       "to": "file:backend/regions/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/regions/extract.py",
+      "to": "file:backend/services/make_way.py"
     },
     {
       "type": "imports",
@@ -7974,6 +8042,11 @@
     {
       "type": "imports",
       "from": "file:backend/services/book_ingestor.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/book_ingestor.py",
       "to": "file:backend/services/ocr_pages.py"
     },
     {
@@ -8088,6 +8161,11 @@
     },
     {
       "type": "imports",
+      "from": "file:backend/services/pdf_text.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
       "from": "file:backend/services/processing_jobs.py",
       "to": "file:backend/services/supabase_client.py"
     },
@@ -8175,6 +8253,11 @@
       "type": "imports",
       "from": "file:backend/services/region_job.py",
       "to": "file:backend/regions/garble.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/services/region_job.py",
+      "to": "file:backend/services/make_way.py"
     },
     {
       "type": "imports",
@@ -8335,6 +8418,11 @@
       "type": "imports",
       "from": "file:backend/tests/conftest.py",
       "to": "file:backend/nlp/embedder.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/conftest.py",
+      "to": "file:backend/services/make_way.py"
     },
     {
       "type": "imports",
@@ -9754,6 +9842,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_jobs_off_loop.py",
+      "to": "file:backend/services/make_way.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_jobs_off_loop.py",
       "to": "file:backend/services/ocr_pages.py"
     },
     {
@@ -9815,6 +9908,11 @@
       "type": "imports",
       "from": "file:backend/tests/test_lookup.py",
       "to": "file:backend/tests/memory_db.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_make_way.py",
+      "to": "file:backend/services/make_way.py"
     },
     {
       "type": "imports",

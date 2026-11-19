@@ -157,3 +157,42 @@ def test_an_upload_never_blocks_the_loop(db, monkeypatch):
         result.update(await books.upload_book(tasks, upload, "A Book", "An Author", "cloud", USER))
     assert worst_wait(work) < LATE
     assert result["status"] == "processing" and len(tasks.tasks) == 1
+
+
+def test_ingestion_makes_way_between_batches_while_a_request_is_served(db, monkeypatch):
+    """C35.6 (issue 17): with a request in flight, each batch after the first waits for it (capped)."""
+    from backend.services import make_way
+
+    add_book(db, "pdf", b"%PDF")
+    monkeypatch.setattr(book_ingestor, "extract_text_from_pdf", lambda data, *a, **k: ["word " * 700] * 8)
+    monkeypatch.setattr(region_job, "after_ingest", lambda book, data=None: asyncio.sleep(0))
+    waits = []
+    real = make_way.between_batches
+
+    async def recorded(*args, **kwargs):
+        waits.append(make_way.busy())
+        return await real(pause=0.0, max_wait=0.05)
+    monkeypatch.setattr(make_way, "between_batches", recorded)
+    monkeypatch.setattr(make_way, "_in_flight", 1)  # a request being served throughout
+    job = jobs.claim(jobs.create(BOOK, USER))
+    result = asyncio.run(book_ingestor.run_job(job))
+    assert result["status"] == "ready"
+    assert waits and all(w == 1 for w in waits)
+    assert len(waits) == len(list(book_ingestor.batches(result["total_chunks"]))) - 1  # every batch but the first
+
+
+def test_reading_a_pdfs_pages_makes_way_page_by_page(monkeypatch):
+    """C35.6: the page parse asks make_way before each page, so a request's thread runs first."""
+    from pypdf import PdfWriter
+
+    from backend.services import make_way
+
+    writer = PdfWriter()
+    for _ in range(4):
+        writer.add_blank_page(width=100, height=100)
+    out = io.BytesIO()
+    writer.write(out)
+    asked = []
+    monkeypatch.setattr(make_way, "in_thread", lambda *a, **k: asked.append(1) or 0.0)
+    assert pdf_text.page_texts(out.getvalue()) == ["", "", "", ""]
+    assert len(asked) == 4

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 958,
-    "inventoried": 815,
+    "tracked": 960,
+    "inventoried": 817,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18057,
+      "size_bytes": 18115,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -473,8 +473,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 88,
-      "size_bytes": 3404,
+      "lines": 89,
+      "size_bytes": 3514,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP). C24.4: the internal router under /internal (scheduled jobs). C24.5: the progress router (/me/progress, /badges, /leagues/current)."
     },
@@ -553,8 +553,8 @@
     {
       "path": "backend/regions/extract.py",
       "language": "python",
-      "lines": 247,
-      "size_bytes": 9376,
+      "lines": 249,
+      "size_bytes": 9491,
       "role": "lib",
       "purpose": "PDF page characters (and, since C18.5a, its graphics and, on ruled pages only, pdfplumber's table candidates) with font name, size, box and uprightness via pdfplumber, grouped by the pure build_page into lines (each character's offset in the line text, sub- and superscripts joined with their baseline offset, split at column gutters, word gaps from positions) and blocks, in points from the crop box's top-left; page_chars, iter_pages (file opened once per range, pages closed) and page_count."
     },
@@ -761,8 +761,8 @@
     {
       "path": "backend/services/book_ingestor.py",
       "language": "python",
-      "lines": 358,
-      "size_bytes": 17709,
+      "lines": 360,
+      "size_bytes": 17877,
       "role": "service",
       "purpose": "Extracts text from PDF and EPUB, chunks it by paragraph to about 600 words, and runs a claimed ingestion job from its cursor in bounded batches (five, then 16): embeds each batch with the local model, upserts it on (book_id, chunk_index), has the question generation agent fill the bank (and concepts) for the batch, marks the book ready once the first batch and its questions are stored, and saves the cursor; stores each chunk's reader blocks beside its unchanged content and the book's toc when it becomes ready (book_structure.build, once per job, never failing it); a failure is recorded on the job. Reads the file from Storage when resuming. Reads the file's own title and author (PDF info, EPUB OPF) and, once a job finishes, looks up the book's cover through covers.py unless it was looked up before; a failed lookup never fails the job. C17.6: stores chunks.block_paths beside the blocks and the book's own contents in books.toc; once done, hands the book and its bytes to region_job.after_ingest (C18.2b). C26.2: extract_text_from_pdf collects every page's text (every_page) and run_job hands it to book_structure.build_with_paths, so a PDF's text is read once. C26.7: a browser-text book (source_format browser-text) is ingested from its page_ocr texts in page order, with no file: text structure, no PDF outline, no region map, a cover by title and author only. C29.1a: every blocking step of run_job (the parse through read_pages, chunking, every Supabase call through store_batch and the other helpers) runs in a thread, so the server keeps answering /health while a book ingests."
     },
@@ -823,6 +823,14 @@
       "purpose": "Word and phrase lookup (C12.6), backend only: normalise, then the shared term_lookups cache (an in-process LRU in front; 90 days found, 7 days not found), then the Free Dictionary API with simple base-form retries and Wikipedia's page summary (first for proper nouns and phrases; disambiguation pages reported as ambiguous); compact payload of up to 3 meanings x 2 definitions and a 2-sentence extract and Wikipedia's short description; 2.5 s timeout, one attempt per source; a failed source is skipped and the other still asked, an answer after a failure is not cached, a busy source (429, 502-504) is skipped for its Retry-After, and both failing returns 'couldn't look this up'; app User-Agent; per-user sliding-window rate limit."
     },
     {
+      "path": "backend/services/make_way.py",
+      "language": "python",
+      "lines": 97,
+      "size_bytes": 3494,
+      "role": "service",
+      "purpose": "C35.6 (issue 17): ingestion makes way for API requests on the shared 0.1 CPU. RequestCounter (ASGI middleware, added in backend/main.py) counts the requests being served, not /health, /steve/ask or a preflight; between_batches (a job's batch loop: a 0.2 s pause, then a wait while requests are in flight, at most 2 s) and in_thread (a parse's per-page loop: a wait of at most 0.25 s, time.sleep letting go of the GIL)."
+    },
+    {
       "path": "backend/services/note_content.py",
       "language": "python",
       "lines": 161,
@@ -841,8 +849,8 @@
     {
       "path": "backend/services/pdf_text.py",
       "language": "python",
-      "lines": 57,
-      "size_bytes": 2342,
+      "lines": 61,
+      "size_bytes": 2472,
       "role": "service",
       "purpose": "PDF page text with bounded memory (C18.G): page_texts reads every page's pypdf text 50 pages per fresh reader (the same text as one reader, about a quarter of the memory); release_memory runs gc and glibc malloc_trim(0) so a phase's freed memory goes back on Linux; freeze_startup_heap (C33.G, called in backend/main.py's lifespan) keeps the loaded modules out of later collections so that gc never holds the event loop for a walk of the whole heap. Used by ingestion, book_structure's page starts and the prose rebuild."
     },
@@ -881,8 +889,8 @@
     {
       "path": "backend/services/region_job.py",
       "language": "python",
-      "lines": 169,
-      "size_bytes": 8569,
+      "lines": 170,
+      "size_bytes": 8672,
       "role": "service",
       "purpose": "The regions job (processing_jobs kind 'regions', C18.2b): after ingestion, reads a PDF's pages 20 at a time through backend.regions.extract (pdfplumber imported on first use, file reopened per batch), rewrites each batch's page_regions rows from backend.regions.classify (display math as 'math', the rest as 'block' with inline math ranges) with fonts, size and garble score, saves the page cursor after each batch, records failures on the job without touching the book; EPUBs (since C18.5b) through backend.regions.epub a spine document at a time with anchors and no page or box; skips device-only books; once done, hands the book to prose_job.after_regions (C18.6b) and returns its report as 'prose'. C27.1: after_ingest asks `defer` (set by ingestion_worker) to queue the regions job behind waiting ingests; outside the worker it runs at once. C29.1b: the book select, each batch's classification and writes (_store, _store_epub), the job's bookkeeping and after_ingest's queue run in a thread, so the server keeps answering /health during a region map."
     },
@@ -1017,8 +1025,8 @@
     {
       "path": "backend/tests/conftest.py",
       "language": "python",
-      "lines": 95,
-      "size_bytes": 2761,
+      "lines": 104,
+      "size_bytes": 3103,
       "role": "test",
       "purpose": "Offline test setup: dummy environment (ingestion sweep and model preload off), a fake Supabase client, a guard that blocks non-loopback connections, and an autouse fixture that marks the embedding model ready."
     },
@@ -1657,8 +1665,8 @@
     {
       "path": "backend/tests/test_jobs_off_loop.py",
       "language": "python",
-      "lines": 159,
-      "size_bytes": 6074,
+      "lines": 198,
+      "size_bytes": 7766,
       "role": "test",
       "purpose": "Pytest (C29.1, issue 1): with every in-memory database call, upload and parse made to block 0.3 s, a 10 ms heartbeat on the same event loop is never more than 0.15 s late while a PDF or EPUB ingests (C29.1a), while a PDF or EPUB region map runs or is queued, or during POST /books/upload (C29.1b)."
     },
@@ -1685,6 +1693,14 @@
       "size_bytes": 13608,
       "role": "test",
       "purpose": "Pytest with httpx.MockTransport and the in-memory database through TestClient: normalisation and base forms, dictionary hit payload and User-Agent, base-form retry, dictionary miss to Wikipedia, proper noun and phrase to Wikipedia, disambiguation, timeout answered gracefully and not cached, cache hit with no request, 90-day and 7-day expiry, a broken cache table, the per-user 429, 422 for non-terms, 401 without a user."
+    },
+    {
+      "path": "backend/tests/test_make_way.py",
+      "language": "python",
+      "lines": 130,
+      "size_bytes": 3826,
+      "role": "test",
+      "purpose": "C35.6 (issue 17): requests are counted while served (not /health, Steve's stream or a preflight, and a failing one counted out); between_batches pauses then waits for requests; every wait is capped; a parse thread waits while a request is served."
     },
     {
       "path": "backend/tests/test_mastery.py",
@@ -2273,8 +2289,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6189,
-      "size_bytes": 1124745,
+      "lines": 6190,
+      "size_bytes": 1125954,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6465,8 +6481,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 817,
-      "size_bytes": 271890,
+      "lines": 819,
+      "size_bytes": 272632,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -3618,6 +3618,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/lib/pageData.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/lib/pageData.test.js",
+      "type": "file",
+      "role": "lib",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/lib/results.js",
       "type": "file",
       "role": "lib",
@@ -11752,6 +11764,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/hooks/useAuth.jsx",
+      "to": "file:frontend/src/lib/pageData.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/hooks/useAuth.jsx",
       "to": "file:frontend/src/lib/supabase.js"
     },
     {
@@ -11828,6 +11845,11 @@
       "type": "imports",
       "from": "file:frontend/src/lib/initials.test.js",
       "to": "file:frontend/src/lib/initials.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/lib/pageData.test.js",
+      "to": "file:frontend/src/lib/pageData.js"
     },
     {
       "type": "imports",

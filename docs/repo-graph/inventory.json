@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 951,
-    "inventoried": 808,
+    "tracked": 953,
+    "inventoried": 810,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 17969,
+      "size_bytes": 18003,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -1169,8 +1169,8 @@
     {
       "path": "backend/tests/test_api_books_list.py",
       "language": "python",
-      "lines": 68,
-      "size_bytes": 3215,
+      "lines": 70,
+      "size_bytes": 3371,
       "role": "test",
       "purpose": "GET /books (C13.3a) on the in-memory database: only the caller's books, the old fields plus cover_url and progress, progress the caller's own and null before a first session, the selected columns, an empty shelf."
     },
@@ -2273,8 +2273,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6185,
-      "size_bytes": 1120432,
+      "lines": 6186,
+      "size_bytes": 1121980,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3857,8 +3857,8 @@
     {
       "path": "frontend/src/hooks/useAuth.jsx",
       "language": "jsx",
-      "lines": 48,
-      "size_bytes": 1490,
+      "lines": 49,
+      "size_bytes": 1557,
       "role": "hook",
       "purpose": "AuthProvider and useAuth: Supabase session state plus signInWithGoogle (OAuth, back to /login; C28.1) and signOut. C34.7b: a SIGNED_OUT event forgets every book file kept in the browser."
     },
@@ -4053,6 +4053,22 @@
       "size_bytes": 1111,
       "role": "lib",
       "purpose": "Node test (npm run test:unit): initials from a display name, from email local parts with separators and accents, and the fallbacks."
+    },
+    {
+      "path": "frontend/src/lib/pageData.js",
+      "language": "javascript",
+      "lines": 77,
+      "size_bytes": 3182,
+      "role": "lib",
+      "purpose": "C35.5a (issue 20): each page's last data per request path, in memory for this tab: cached, remember, load (one request at a time per path; `fresh` ms uses a young answer as it is), forgetPageData (signing out), usePageData (the kept data at once, then the fresh answer; an error only when there is nothing to show). Used by pages from C35.5b."
+    },
+    {
+      "path": "frontend/src/lib/pageData.test.js",
+      "language": "javascript",
+      "lines": 58,
+      "size_bytes": 2363,
+      "role": "lib",
+      "purpose": "Unit tests for pageData: an answer kept per path, a request under way shared, a failure keeping the last data, the freshness window, signing out forgetting all."
     },
     {
       "path": "frontend/src/lib/results.js",
@@ -6409,8 +6425,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 810,
-      "size_bytes": 270143,
+      "lines": 812,
+      "size_bytes": 270726,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

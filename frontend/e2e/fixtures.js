@@ -449,6 +449,10 @@ export const spoken = (page) => page.locator('.rf-ov-live');
 /** The book on the page: focus it before keys. */
 export const book = (page) => page.locator('.rf-ov-stage');
 
+/** C38.6a: the contents: Edge's left pane beside the pages from 1024 px, else a drawer (a dialog). */
+export const contentsPane = (page) => page.getByRole('complementary', { name: 'Contents' })
+  .or(page.getByRole('dialog', { name: 'Contents' }));
+
 /** The place shown: { start, end } as the frame reports them ("5", or "2:340" for an EPUB). */
 export const shown = (page) => page.locator('.rf-ov').evaluate((el) => ({ start: el.dataset.start, end: el.dataset.end }));
 

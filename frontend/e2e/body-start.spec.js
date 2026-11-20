@@ -1,7 +1,7 @@
 // C23.1: where the book's body (chapter 1) begins. Pages before it say "Focus mode starts at Chapter 1" in the
 // folio line; the contents drawer marks the start entry and offers "The book starts here", which moves the start
 // to the page shown (the reader's choice, kept by the server). PDF and EPUB; a failed lookup changes nothing.
-import { book, expect, openReader, settled, test } from './fixtures';
+import { book, contentsPane, expect, openReader, settled, test } from './fixtures';
 
 const folio = (page) => page.locator('.rf-ov-folio, .rf-ov-status, .rf-ov-live').first(); // C38.4c: a PDF's note, or its live region
 const NOTE = 'Focus mode starts at Chapter 1';
@@ -10,7 +10,7 @@ const pdfStart = (page) => ({ source: 'outline', body_start: { kind: 'pdf', page
 
 async function openContents(page) {
   await page.getByRole('button', { name: 'Contents' }).click();
-  return page.getByRole('dialog', { name: 'Contents' });
+  return contentsPane(page);
 }
 
 test('PDF: front matter says where focus mode starts; turning past it, the note goes', async ({ page, api }) => {

@@ -2,12 +2,12 @@
 // Annotations tab in the contents drawer (reading order, colour, snippet, page, a colour filter, a jump to the
 // passage); with word lookup off the chip's Ask Steve opens the panel (Steve mocked), with it on the word card;
 // delete. Every call is mocked (fixtures.js).
-import { book, clickTool, expect, openReader, shown, test, wordPoint } from './fixtures';
+import { book, clickTool, contentsPane, expect, openReader, shown, test, wordPoint } from './fixtures';
 
 const toolbar = (page) => page.getByRole('toolbar', { name: 'Highlight the selection' });
 const chip = (page) => page.getByRole('toolbar', { name: /^(Honey|Sage|Sky|Rose|Lilac) (highlight|underline):/ });
 const lookupSwitch = (page) => page.getByRole('switch', { name: 'Look up words on hover' });
-const drawer = (page) => page.getByRole('dialog', { name: 'Contents' });
+const drawer = (page) => contentsPane(page);
 const items = (page) => drawer(page).getByRole('tabpanel', { name: 'Annotations' }).getByRole('listitem');
 
 async function highlight(page, from, to, button) {
@@ -22,7 +22,8 @@ async function highlight(page, from, to, button) {
 }
 
 async function openList(page) {
-  await page.getByRole('button', { name: 'Contents' }).click();
+  const contents = page.getByRole('button', { name: 'Contents', exact: true });
+  if ((await contents.getAttribute('aria-expanded')) !== 'true') await contents.click(); // C38.6a: a docked pane stays
   await drawer(page).getByRole('tab', { name: /^Annotations/ }).click();
 }
 
@@ -76,7 +77,7 @@ test.describe('pdf', () => {
     await drawer(page).getByRole('radio', { name: 'Honey' }).click();
     await expect(items(page)).toHaveCount(1);
     await items(page).getByRole('button').click(); // jump to page 2
-    await expect(drawer(page)).toHaveCount(0);
+    await expect(drawer(page)).toBeVisible(); // C38.6a: at 1440 the pane stays beside the pages
     await expect.poll(async () => (await shown(page)).start).toBe('2');
     await expect(page.locator('.rf-pdf-page[data-page="2"] .rf-anno')).toHaveCount(1); // C38.2: the pages near are drawn too
 
@@ -142,6 +143,8 @@ test.describe('epub', () => {
     await items(page).getByRole('button').click();
     await expect.poll(async () => (await shown(page)).start).not.toBe(away.start);
     await expect.poll(() => epubMarks(page)).toEqual([text]);
+    await drawer(page).getByRole('button', { name: 'Close contents' }).click(); // C38.6a: the book at its full width
+    await page.waitForTimeout(600);
 
     await clickTool(page, lookupSwitch(page));
     const small = await wordPoint(page, 'small');

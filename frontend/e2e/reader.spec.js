@@ -1,7 +1,7 @@
 // The reader end to end (C12.10; on the original view since C17.5), on the real /read page with the
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { test, expect, book, openReader, settled, shown, spoken, timeToCard, wake, wordPoint } from './fixtures.js';
+import { book, contentsPane, expect, openReader, settled, shown, spoken, test, timeToCard, wake, wordPoint } from './fixtures.js';
 
 /** "5" -> 5; "2:340" -> [2, 340]. */
 const at = (spot) => (spot.includes(':') ? spot.split(':').map(Number) : Number(spot));
@@ -243,7 +243,7 @@ test('the reading page has one h1 naming the book', async ({ page }) => {
 test('the contents list the PDF outline, and an entry opens its page', async ({ page }) => {
   await openReader(page);
   await page.getByRole('button', { name: 'Contents' }).click();
-  const items = page.getByRole('dialog', { name: 'Contents' }).locator('.rf-contents-item');
+  const items = contentsPane(page).locator('.rf-contents-item');
   await expect(items).toHaveText(['Chapter 1 Signals', 'Chapter 2 Noise']); // C26.5: no "today" any more
   await items.nth(1).click();
   await expect.poll(() => shown(page)).toEqual({ start: '5', end: '5' }); // C38.2: page 5 at the top of the view

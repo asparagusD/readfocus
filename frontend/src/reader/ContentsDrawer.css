@@ -1,4 +1,5 @@
-/* Contents drawer (C12.5b, D4): from the left on wider screens, a sheet from the bottom on phones. */
+/* Contents drawer (C12.5b, D4): from the left on wider screens, a sheet from the bottom on phones. C38.6a: from
+   1024 px Edge's left pane, beside the pages (data-docked, at the end of this file). */
 .rf-contents {
   position: fixed;
   top: 0;
@@ -225,4 +226,19 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+/* C38.6a (issue 22): Edge's left pane: a column of the reading body, the pages narrowing beside it. */
+.rf-contents[data-docked] {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  z-index: auto;
+  flex: none;
+  width: 300px;
+  margin: var(--space-3) 0 var(--space-2) var(--space-4);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-panel);
+  box-shadow: none;
 }

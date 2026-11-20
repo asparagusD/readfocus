@@ -2,19 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
+import { useMedia } from './useMedia';
 import './ReaderToolbar.css';
-
-/** Whether a media query matches, kept current. */
-function useMedia(query) {
-  const [on, setOn] = useState(() => globalThis.matchMedia?.(query).matches ?? true);
-  useEffect(() => {
-    const list = globalThis.matchMedia?.(query);
-    const change = () => setOn(list.matches);
-    list?.addEventListener('change', change);
-    return () => list?.removeEventListener('change', change);
-  }, [query]);
-  return on;
-}
 
 /** Full screen for the whole page (C38.4b): whether it is on, kept current, and a toggle; null where it is not allowed. */
 function useFullScreen() {
@@ -40,11 +29,12 @@ function useFullScreen() {
  * own. Pinned (`pinned`, `onPin`; the default) it stays shown; unpinned it fades and lifts 8 px while the reader reads
  * (`visible`), and focus inside keeps it shown, so it is always reachable by keyboard. Without `onSize` the
  * text-size pair is left out and `controls` (the original view's, C17.4) take its place. `onSteve` adds Steve (C20.7b).
+ * C38.6a: `contentsDocked`: Contents opens a pane beside the pages, not a dialog.
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
   lookupOn, onLookupToggle, controls, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef, onFocusMode,
-  pinned = false, onPin = null, children,
+  pinned = false, onPin = null, contentsDocked = false, children,
 }) {
   const index = SIZES.indexOf(size);
   const full = useFullScreen();
@@ -120,7 +110,7 @@ export function ReaderToolbar({
         </p>
         {onContents && (
           <button type="button" className="rf-tool" ref={contentsRef} onClick={onContents}
-            aria-haspopup="dialog" aria-expanded={contentsOpen} aria-label="Contents">
+            aria-haspopup={contentsDocked ? undefined : 'dialog'} aria-expanded={contentsOpen} aria-label="Contents">
             <List size={18} strokeWidth={1.75} aria-hidden="true" />
             <span className="rf-tool-label">Contents</span>
           </button>

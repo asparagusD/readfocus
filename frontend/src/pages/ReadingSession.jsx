@@ -17,6 +17,7 @@ import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
 import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
+import { useMedia } from '../reader/useMedia';
 import { useToast } from '../components/ui/toastContext';
 import { createLookupClient, readLookupOn, storeLookupOn } from '../reader/lookup';
 import { useAuth } from '../hooks/useAuth';
@@ -202,6 +203,8 @@ export function ReadingSession() {
     toast({ kind: 'neutral', message: `Place saved at ${folioShort(place?.folio) || 'this page'}.` });
   }, [saveNow, toast, place]);
 
+  // C38.6a (issue 22): from 1024 px the contents are Edge's left pane, beside the pages; below, the drawer.
+  const docked = useMedia('(min-width: 1024px)');
   // The contents (D4): the book's own outline or nav.
   const closeContents = useCallback(() => setContentsOpen(false), []);
   const openContents = () => {
@@ -213,14 +216,14 @@ export function ReadingSession() {
     setContentsOpen((open) => !open);
   };
   const onPickAnnotation = useCallback((annotation) => {
-    setContentsOpen(false);
+    if (!docked) setContentsOpen(false); // C38.6a: the pane stays beside the pages
     const [anchor] = annotation.anchors;
     reader.current?.goTo(anchor.kind === 'epub' ? { cfi: anchor.cfi } : anchor);
-  }, []);
+  }, [docked]);
   const onPick = useCallback((entry) => {
-    setContentsOpen(false);
+    if (!docked) setContentsOpen(false);
     reader.current?.goTo(entry.target);
-  }, []);
+  }, [docked]);
   // C23.1: "The book starts here": the page or section shown becomes the body start (the reader's choice wins).
   const { choose } = body;
   const [startPage, setStartPage] = useState('');
@@ -509,6 +512,24 @@ export function ReadingSession() {
 
   const bookTitle = sessionData.book?.title || 'Your book';
 
+  const contents = (
+    <ContentsDrawer
+      open={contentsOpen}
+      onClose={closeContents}
+      entries={entries}
+      current={chapter}
+      onPick={onPick}
+      returnTo={contentsButton}
+      annotations={pagesOnly ? null : notes.annotations}
+      pageOf={(a) => annotationPages.get(a.id) ?? ''}
+      onPickAnnotation={onPickAnnotation}
+      bodyStart={body.bodyStart}
+      startPage={startPage}
+      onStartHere={pagesOnly ? null : startHere}
+      docked={docked}
+    />
+  );
+
   return (
     <div className="rf-reading-page" data-focus={inFocus} data-notebook={notebookOpen || undefined}>
       <m.div className="rf-reading-chrome" inert={notebookOpen} variants={bookRecede} initial={false} animate={recede === 'receded' ? 'blurred' : recede}>
@@ -537,6 +558,7 @@ export function ReadingSession() {
           )}
           onContents={openContents}
           contentsOpen={contentsOpen}
+          contentsDocked={docked}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -575,6 +597,7 @@ export function ReadingSession() {
       <SteveContext.Provider value={steveHere ? steveActions : null}>
       <NotesContext.Provider value={notesActions}>
       <div className="rf-reading-body">
+      {docked && <div className="rf-reading-pane" inert={notebookOpen}>{contents}</div>}
       <m.main className="rf-reading-area" inert={notebookOpen} variants={bookRecede} initial={false} animate={recede}>
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
         <h1 className="sr-only">{bookTitle}</h1>
@@ -650,20 +673,7 @@ export function ReadingSession() {
       </NotesContext.Provider>
       </SteveContext.Provider>
 
-      <ContentsDrawer
-        open={contentsOpen}
-        onClose={closeContents}
-        entries={entries}
-        current={chapter}
-        onPick={onPick}
-        returnTo={contentsButton}
-        annotations={pagesOnly ? null : notes.annotations}
-        pageOf={(a) => annotationPages.get(a.id) ?? ''}
-        onPickAnnotation={onPickAnnotation}
-        bodyStart={body.bodyStart}
-        startPage={startPage}
-        onStartHere={pagesOnly ? null : startHere}
-      />
+      {!docked && contents}
 
       <ReadyModal open={Boolean(focusReady)} sessionId={focus.session?.id} label={focusReady?.label}
         points={focus.session?.points_time ?? 0} onLater={() => setFocusReady(null)}

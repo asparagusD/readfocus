@@ -2,7 +2,7 @@
 // /books/{id}/open's book.toc) instead of resolving every outline entry in the browser, and the first page
 // rendered is the saved place, not page 1 followed by a jump. C34.3 (issue 13): the file's signed URL comes with
 // /open, so the reader does not ask /file for it. sample.pdf, mocked API.
-import { test, expect, openReader, shown } from './fixtures.js';
+import { contentsPane, expect, openReader, shown, test } from './fixtures.js';
 
 test('the contents come from the stored outline when it has pages', async ({ page, api }) => {
   // Titles the PDF's own outline does not have ("Chapter 1 Signals", "Chapter 2 Noise"): they can only come from toc.
@@ -10,7 +10,7 @@ test('the contents come from the stored outline when it has pages', async ({ pag
     { title: 'Stored: the noise', page: 5, chunk_index: 2, block_id: '2.0' }];
   await openReader(page);
   await page.getByRole('button', { name: 'Contents' }).click();
-  const items = page.getByRole('dialog', { name: 'Contents' }).locator('.rf-contents-item');
+  const items = contentsPane(page).locator('.rf-contents-item');
   await expect(items).toHaveText(['Stored: the opening', 'Stored: the noise']);
   await items.nth(1).click();
   await expect.poll(() => shown(page)).toEqual({ start: '5', end: '5' }); // C38.2: page 5 at the top of the view

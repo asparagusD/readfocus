@@ -2428,6 +2428,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/contents-pane.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/converted.spec.js",
       "type": "file",
       "role": "config",
@@ -4637,6 +4643,12 @@
     },
     {
       "id": "file:frontend/src/reader/useChromeVisible.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useMedia.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -11113,6 +11125,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/contents-pane.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/converted.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -13624,6 +13641,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useMedia.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/usePlaceSaver.js"
     },
     {
@@ -13820,6 +13842,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/ReaderToolbar.jsx",
       "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/reader/useMedia.js"
     },
     {
       "type": "imports",

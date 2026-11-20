@@ -1,7 +1,7 @@
 // A book made by the shared EPUB 3 builder (C19.1, tools/make_converted_fixture.py) opens in the
 // original view's EPUB renderer like any EPUB: its nav is the contents, every image is drawn at the
 // size the builder wrote with the alt it gave, display MathML gets a box, and code keeps its spaces.
-import { test, expect, BOOKS, book, openReader } from './fixtures.js';
+import { book, BOOKS, contentsPane, expect, openReader, test } from './fixtures.js';
 
 BOOKS.converted = { file: 'converted.epub', format: 'epub', type: 'application/epub+zip', today: [0],
   chunks: ['Converted text that no book holds, so today runs from the start to the end of the book.'] };
@@ -24,7 +24,7 @@ function drawn() {
 test('the contents are the builder\'s nav, from the headings', async ({ page }) => {
   await openReader(page);
   await page.getByRole('button', { name: 'Contents' }).click();
-  const items = page.getByRole('dialog', { name: 'Contents' }).locator('.rf-contents-item');
+  const items = contentsPane(page).locator('.rf-contents-item');
   await expect(items).toHaveText([/^Getting started/, /^A plot/, /^Equations and code/]);
 });
 

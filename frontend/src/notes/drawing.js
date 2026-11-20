@@ -1,13 +1,15 @@
 /**
  * Drawing notes, without Excalidraw (C22.3): what of a scene is saved, and the passage as a text element's lines.
  * The server keeps elements, `appState.viewBackgroundColor` (and since C37.1 `paper`) and files in the reader's
- * folder (note_content.py); images are off in the editor, so deleted and image elements are dropped and no files
- * are sent. C37.5: a notebook page's paper is kept with its scene.
+ * folder (note_content.py); deleted elements are dropped. C37.5: a notebook page's paper is kept with its scene.
+ * C37.6: pictures are kept too, with `files` ({ fileId: { path, mimeType } }, pageImages.keptFiles) for those
+ * uploaded; without `files` (a scene with no pictures) none are sent.
  */
-export function drawingScene(elements, paper = null) {
+export function drawingScene(elements, paper = null, files = null) {
   return {
-    elements: (elements ?? []).filter((e) => !e.isDeleted && e.type !== 'image').map((e) => JSON.parse(JSON.stringify(e))),
+    elements: (elements ?? []).filter((e) => !e.isDeleted).map((e) => JSON.parse(JSON.stringify(e))),
     appState: { viewBackgroundColor: '#ffffff', ...(paper ? { paper } : {}) },
+    ...(files && Object.keys(files).length ? { files } : {}),
   };
 }
 

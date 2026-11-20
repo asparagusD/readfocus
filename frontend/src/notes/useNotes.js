@@ -123,8 +123,13 @@ export function useNotes(bookId) {
     }
   }, [bookId, autosave, toast]);
 
-  /** C22.6: a crop (base64 PNG) into the notes bucket: { path, url }. */
-  const uploadImage = useCallback((data) => notesApi.upload(bookId, { content_type: 'image/png', data }), [bookId]);
+  /** C22.6: a crop (base64 PNG) into the notes bucket: { path, url }. C37.6: or a page's picture (WebP or PNG), its
+   * signed URL added to that page's `urls` so the page can show it again this visit. */
+  const uploadImage = useCallback(async (data, contentType = 'image/png', noteId = null) => {
+    const made = await notesApi.upload(bookId, { content_type: contentType, data });
+    if (noteId) setNotes((list) => list.map((n) => (n.id === noteId || n.key === noteId ? { ...n, urls: { ...(n.urls ?? {}), [made.path]: made.url } } : n)));
+    return made;
+  }, [bookId]);
 
   const keepMine = useCallback((id) => autosave.keepMine(id), [autosave]);
   const takeTheirs = useCallback(async (id) => {

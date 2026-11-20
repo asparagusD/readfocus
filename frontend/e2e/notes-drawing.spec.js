@@ -110,7 +110,7 @@ test('Notes opens the notebook over 70 % with the book blurred and inert; a new 
   expect(lastScene(api).elements.find((e) => e.type === 'text').text).toBe('never shrinks');
   expect(lastScene(api).appState).toEqual({ viewBackgroundColor: '#ffffff', paper: 'ruled' }); // C37.5: a new page is ruled
   await expect(notebook(page).getByRole('status').filter({ hasText: /^Saved$/ })).toBeVisible({ timeout: 5000 });
-  for (const absent of ['Text to diagram', 'Export', 'Open', 'Save to', 'Excalidraw+', 'Live collaboration']) {
+  for (const absent of ['Text to diagram', 'Open', 'Save to', 'Excalidraw+', 'Live collaboration']) { // C37.6: export as an image is on
     await expect(notebook(page).getByText(absent, { exact: false })).toHaveCount(0);
   }
   if (shots) { await page.waitForTimeout(400); await page.screenshot({ path: `${shots}/notebook-page-1440.png` }); }
@@ -221,6 +221,81 @@ test('each page keeps its own paper: a new page is ruled, an older drawing plain
   await expect(paper.getByRole('radio', { name: 'Plain' })).toHaveAttribute('aria-checked', 'true');
   await notebook(page).getByRole('button', { name: 'Previous page' }).click();
   await expect(paper.getByRole('radio', { name: 'Squared' })).toHaveAttribute('aria-checked', 'true');
+});
+
+/** Drops a PNG (a 64 x 40 terracotta block, made in the page) onto the canvas, as a file from the desktop. */
+async function dropPicture(page) {
+  const box = await canvas(page).boundingBox();
+  await page.evaluate(async ({ x, y }) => {
+    const c = document.createElement('canvas');
+    c.width = 64; c.height = 40;
+    const g = c.getContext('2d');
+    g.fillStyle = '#a64b2a'; g.fillRect(0, 0, 64, 40);
+    const blob = await new Promise((resolve) => { c.toBlob(resolve, 'image/png'); });
+    const data = new DataTransfer();
+    data.items.add(new File([blob], 'block.png', { type: 'image/png' }));
+    const target = document.querySelector('.rf-notebook canvas.interactive');
+    for (const type of ['dragenter', 'dragover', 'drop']) {
+      target.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, dataTransfer: data }));
+    }
+  }, { x: box.x + 420, y: box.y + 260 });
+}
+
+test('a picture goes to the notes folder as WebP, is kept with the page and comes back after a reload', async ({ page, api }) => {
+  await openReader(page);
+  await openNotebook(page);
+  await newPage(page);
+  await expect.poll(() => api.notes.length).toBe(1);
+  await dropPicture(page);
+  await expect.poll(() => api.noteFilePosts.length, { timeout: 8000 }).toBe(1);
+  const [file] = api.noteFilePosts;
+  expect(['image/webp', 'image/png']).toContain(file.content_type);
+  expect(Buffer.from(file.data, 'base64').length).toBeLessThanOrEqual(262_144);
+  await expect.poll(() => Object.values(lastScene(api)?.files ?? {}), { timeout: 8000 }).toHaveLength(1);
+  const kept = lastScene(api);
+  const [fileId, saved] = Object.entries(kept.files)[0];
+  expect(saved).toEqual({ path: expect.stringMatching(/^e2e-reader\/e2e-book\/file-1\.(webp|png)$/), mimeType: file.content_type });
+  expect(kept.elements.find((e) => e.type === 'image').fileId).toBe(fileId);
+  expect(JSON.stringify(kept)).not.toContain('data:image'); // only the path is kept, never the picture itself
+  if (shots) { await page.waitForTimeout(400); await page.screenshot({ path: `${shots}/notebook-picture-1440.png` }); }
+
+  await page.reload();
+  await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor();
+  await openNotebook(page);
+  await expect(canvas(page)).toBeVisible({ timeout: 15_000 });
+  await settledCanvas(page);
+  await notebook(page).getByTitle(/^Rectangle —/).click();
+  await drag(page, 300, 380, 360, 420);
+  // the page came back with its picture: the next save still holds it and its file
+  await expect.poll(() => (lastScene(api)?.elements ?? []).map((e) => e.type).sort(), { timeout: 5000 }).toEqual(['image', 'rectangle']);
+  expect(lastScene(api).files).toEqual({ [fileId]: saved });
+  expect(api.noteFilePosts).toHaveLength(1); // read back, not uploaded again
+});
+
+test('a page saves as a PNG image, and Excalidraw\'s other tools are there', async ({ page }) => {
+  await page.addInitScript(() => { // the download path, not the system's save dialog (Excalidraw asks for showOpenFilePicker)
+    for (const name of ['showOpenFilePicker', 'showSaveFilePicker', 'showDirectoryPicker']) { delete Window.prototype[name]; delete window[name]; }
+  });
+  await openReader(page);
+  await openNotebook(page);
+  await newPage(page);
+  await notebook(page).getByTitle(/^Rectangle —/).click();
+  await drag(page, 40, 140, 140, 200);
+  await notebook(page).locator('[data-testid="main-menu-trigger"]').click();
+  await notebook(page).getByText('Export image...').click();
+  const dialog = page.getByRole('dialog').filter({ hasText: 'Export image' }).last();
+  await expect(dialog).toBeVisible();
+  const download = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Export to PNG' }).click();
+  await expect(dialog.getByRole('button', { name: 'Export to SVG' })).toBeVisible();
+  expect((await download).suggestedFilename()).toMatch(/\.png$/);
+  await page.keyboard.press('Escape'); // closes Excalidraw's dialog, not the notebook
+  await expect(notebook(page)).toBeVisible();
+  await notebook(page).getByRole('button', { name: 'More tools' }).click();
+  for (const tool of ['Frame tool', 'Laser pointer', 'Mermaid to Excalidraw']) {
+    await expect(notebook(page).getByText(tool, { exact: false }).first()).toBeVisible();
+  }
+  await expect(notebook(page).getByText('Text to diagram')).toHaveCount(0); // its AI stays off
 });
 
 test('a page can be deleted, with Undo', async ({ page, api }) => {

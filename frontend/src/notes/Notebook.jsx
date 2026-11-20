@@ -85,7 +85,7 @@ function PageTabs({ pages, current, onPick }) {
  */
 export function Notebook({ title, pages, state, statuses, range, describe, current, onPage, onNew, onChange, onThumbnail,
   onRemove, onGoTo, onRetry, onKeepMine, onTakeTheirs, onReload, onClose, returnTo, beside = false, total = 0, onAll,
-  incoming = null, onIncoming, moving = false }) {
+  incoming = null, onIncoming, moving = false, onUpload }) {
   const tools = useRef(null);
   const dirty = useRef(null); // the key of the page changed since it was opened
   const layer = useRef(null);
@@ -240,6 +240,7 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
           {state === 'ready' && page && (
             <Suspense fallback={<p className="rf-notebook-note" role="status">Opening the page…</p>}>
               <DrawingEditor key={`${pageKey(page)}:${epoch}`} content={page.content} passage={passage} paper={paper}
+                urls={page.urls} onUpload={(blob) => onUpload?.(blob, page.id)}
                 dark={document.documentElement.dataset.theme === 'lamplight'}
                 focus={grab} onChange={(content) => { dirty.current = pageKey(page); onChange(page.id, { content }); }}
                 register={register} />

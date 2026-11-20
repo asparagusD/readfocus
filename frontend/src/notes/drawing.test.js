@@ -2,16 +2,19 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { base64Of, drawingScene, newPageContent, pagePaper, paperView, passageLines, passageOf } from './drawing.js';
 
-test('a saved scene keeps live shapes only, with the one app-state key the server allows', () => {
+test('a saved scene keeps live shapes and pictures, the app state the server allows, and uploaded files', () => {
   const scene = drawingScene([
     { id: 'a', type: 'rectangle', x: 1 },
     { id: 'b', type: 'arrow', isDeleted: true },
     { id: 'c', type: 'image', fileId: 'f' },
     { id: 'd', type: 'text', text: 'never shrinks' },
   ]);
-  assert.deepEqual(scene.elements.map((e) => e.id), ['a', 'd']);
+  assert.deepEqual(scene.elements.map((e) => e.id), ['a', 'c', 'd']); // C37.6: pictures stay
   assert.deepEqual(scene.appState, { viewBackgroundColor: '#ffffff' });
   assert.equal('files' in scene, false);
+  const files = { f: { path: 'u/b/1.webp', mimeType: 'image/webp' } };
+  assert.deepEqual(drawingScene([], null, files).files, files);
+  assert.equal('files' in drawingScene([], null, {}), false);
   assert.deepEqual(drawingScene(undefined).elements, []);
 });
 

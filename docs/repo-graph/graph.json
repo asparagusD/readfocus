@@ -3976,6 +3976,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/notes/pageImages.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/pageImages.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/notes/pageText.js",
       "type": "file",
       "role": "asset",
@@ -12347,6 +12359,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/notes/DrawingEditor.jsx",
+      "to": "file:frontend/src/notes/pageImages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/DrawingEditor.jsx",
       "to": "file:frontend/src/notes/pageText.js"
     },
     {
@@ -12523,6 +12540,11 @@
       "type": "imports",
       "from": "file:frontend/src/notes/notesApi.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/pageImages.test.js",
+      "to": "file:frontend/src/notes/pageImages.js"
     },
     {
       "type": "imports",

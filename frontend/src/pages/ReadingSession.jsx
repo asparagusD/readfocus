@@ -35,7 +35,7 @@ import { notesApi } from '../notes/notesApi';
 import { moveTyped, movedStore, typedNotes } from '../notes/moveTyped';
 import { serveOwnFonts } from '../notes/excalidrawFonts';
 import { chapterOf, reference } from '../notes/place';
-import { newPageContent } from '../notes/drawing';
+import { base64Of, newPageContent } from '../notes/drawing';
 import { shownRange } from '../notes/sync';
 import { NotesContext } from '../notes/NotesContext';
 import { useBodyStart } from '../focus/useBodyStart';
@@ -386,6 +386,15 @@ export function ReadingSession() {
   };
   const closeNotebook = useCallback(() => setNotebookOpen(false), []);
   const doneIncoming = useCallback((n) => setIncoming((now) => (now?.n === n ? null : now)), []);
+  // C37.6: a picture put on a notebook page goes to the reader's notes folder first; a refusal is said once.
+  const uploadPicture = async (blob, pageId) => {
+    try {
+      return await notepad.uploadImage(await base64Of(blob), blob.type, pageId);
+    } catch (err) {
+      toast({ kind: 'warning', message: "That picture wasn't kept: it couldn't be uploaded. It stays on the page until you close it." });
+      throw err;
+    }
+  };
   const onOpenNotes = (ids) => {
     const drawn = ids.map((id) => pages.find((p) => p.id === id || p.key === id)).filter(Boolean);
     if (drawn.length && drawn.length === ids.length) { openNotebook(pageKey(drawn[0])); return; } // C37.2: pages
@@ -631,7 +640,8 @@ export function ReadingSession() {
           onChange={notepad.edit} onThumbnail={notepad.attachThumbnail} onRemove={notepad.remove} onGoTo={goToNote}
           onRetry={notepad.flush} onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onReload={notepad.reload}
           onClose={closeNotebook} returnTo={notebookOpener} beside={Boolean(shownSide)}
-          total={notepad.notes.length} onAll={openNotes} incoming={incoming} onIncoming={doneIncoming} moving={moving} />
+          total={notepad.notes.length} onAll={openNotes} incoming={incoming} onIncoming={doneIncoming} moving={moving}
+          onUpload={uploadPicture} />
       )}
       </NotesContext.Provider>
       </SteveContext.Provider>

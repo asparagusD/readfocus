@@ -5632,3 +5632,34 @@ check the book has no transform or filter once the notebook has gone.
 
 ### Commit
 feat(ui): rack-focus the book as the notebook opens and closes
+
+## 2026-11-20 C38.1 — notepad "empty, failed load and Try again" timed out once
+
+**Status:** not reproduced (watch)
+
+### Symptom
+The full e2e run for C38.1: 362 passed, 1 failed. `notepad.spec.js` "empty, failed load and Try again" hit the
+30 s test timeout after `page.reload()`; the log shows the reload's requests up to `PUT /books/e2e-book/position`
+and nothing after. The page snapshot was overwritten by the rerun below before it was read.
+
+### Repro
+Not reproduced: the test alone 5 of 5; `notepad.spec.js` with `--repeat-each=3` 27 of 27; the full suite again
+363 of 363 (14.8 min).
+
+### Hypotheses
+1. C38.1 changed it. Ruled out: `originalview/scroll.js` is imported by nothing yet, and `focus/clock.js`
+   `pageKey` returns what it did for a place without `main` (unit tests), which every place is today.
+2. A slow reload or a held route in a long run (this test reroutes `/notes` to fail twice). Not tested; it has
+   not failed before in this session's six full runs.
+
+### Root cause
+Unknown.
+
+### Fix
+None. If it fails again, keep the trace (`trace: 'retain-on-failure'`) and read `error-context.md` first.
+
+### Regression test
+None.
+
+### Commit
+feat(frontend): add the place model for a scrolled book (C38.1)

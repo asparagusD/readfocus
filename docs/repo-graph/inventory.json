@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 976,
-    "inventoried": 833,
+    "tracked": 978,
+    "inventoried": 835,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18871,
+      "size_bytes": 18888,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6317,
-      "size_bytes": 1173371,
+      "lines": 6364,
+      "size_bytes": 1180606,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3721,16 +3721,16 @@
     {
       "path": "frontend/src/focus/clock.js",
       "language": "javascript",
-      "lines": 50,
-      "size_bytes": 2283,
+      "lines": 55,
+      "size_bytes": 2560,
       "role": "asset",
-      "purpose": "Focus mode's display clock (C23.6): mm:ss then h:mm, the time in words, the server's seconds running on between reads (capped at 3 h), the idle prompt, its answer window and the 2 h 45 notice due, page keys and A4 positions for events."
+      "purpose": "Focus mode's display clock (C23.6): mm:ss then h:mm, the time in words, the server's seconds running on between reads (capped at 3 h), the idle prompt, its answer window and the 2 h 45 notice due, page keys and A4 positions for events. C38.1: pageKey follows a scrolled place's main page (the most area in view; \"l<n>\" for an EPUB location page)."
     },
     {
       "path": "frontend/src/focus/clock.test.js",
       "language": "javascript",
-      "lines": 46,
-      "size_bytes": 2079,
+      "lines": 50,
+      "size_bytes": 2422,
       "role": "asset",
       "purpose": "Unit tests for focus/clock.js: stopwatch format, spoken time, display between reads and at the cap, idle and notice thresholds, page keys and positions."
     },
@@ -4901,6 +4901,22 @@
       "size_bytes": 1424,
       "role": "asset",
       "purpose": "node --test: squeeze, compare by page or section then character, a place's start and end, and folioShort."
+    },
+    {
+      "path": "frontend/src/originalview/scroll.js",
+      "language": "javascript",
+      "lines": 149,
+      "size_bytes": 6512,
+      "role": "asset",
+      "purpose": "The place in a scrolled book (C38.1, issue 22), pure: rows of one page, two, or two after the cover alone; pages laid out from their sizes with a gap and centred; the pages in view and the main page (the most area in view, focus's page), at start and end; a page's scroll; the point held through a zoom; Arrow and Page Up/Down steps; an EPUB's main location page."
+    },
+    {
+      "path": "frontend/src/originalview/scroll.test.js",
+      "language": "javascript",
+      "lines": 107,
+      "size_bytes": 5785,
+      "role": "asset",
+      "purpose": "Unit tests for scroll.js (C38.1): rows, layout and centring, two across, the main page and ties, a tall zoom, the end of the book, going to a page, the zoom hold, steps, the EPUB main page."
     },
     {
       "path": "frontend/src/originalview/useBoxSize.js",
@@ -6609,8 +6625,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 835,
-      "size_bytes": 288049,
+      "lines": 837,
+      "size_bytes": 288809,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

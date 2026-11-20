@@ -4282,6 +4282,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/scroll.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/scroll.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/useBoxSize.js",
       "type": "file",
       "role": "asset",
@@ -13011,6 +13023,16 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/place.test.js",
       "to": "file:frontend/src/originalview/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/scroll.test.js",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/scroll.test.js",
+      "to": "file:frontend/src/originalview/scroll.js"
     },
     {
       "type": "imports",

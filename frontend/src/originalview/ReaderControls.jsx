@@ -42,7 +42,7 @@ function PageBox({ page, total, onGo }) {
  * (fit page, fit width, 125-200 %; click to cycle the fits) and zoom in for a PDF;
  * smaller and larger text, line spacing and margins for an EPUB. C38.3: the "Original
  * colours" switch is gone: a book is never recoloured. C38.4a (issue 22): a PDF also has Edge's page box (`place`,
- * `onGoToPage`) and Page view (`pageView`, `onPageView`). C38.5: Find (`onFind`, also Ctrl+F) for a PDF.
+ * `onGoToPage`) and Page view (`pageView`, `onPageView`). C38.5: Find (`onFind`, also Ctrl+F); C38.5c: for an EPUB too.
  */
 export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place = null, onGoToPage = null, pageView = 'one', onPageView = null, onFind = null }) {
   const set = (patch) => onSettings({ ...settings, ...patch });
@@ -66,12 +66,6 @@ export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place
             <select className="rf-tool rf-select" aria-label="Page view" value={pageView} onChange={(event) => onPageView(event.target.value)}>
               {PAGE_VIEWS.map(([value, name]) => <option key={value} value={value}>{name}</option>)}
             </select>
-          )}
-          {onFind && (
-            <button type="button" className="rf-tool" onClick={onFind} aria-label="Find in the book" aria-keyshortcuts="Control+F"
-              title="Find (Ctrl+F)">
-              <Search size={18} strokeWidth={1.75} aria-hidden="true" />
-            </button>
           )}
         </div>
       ) : (
@@ -97,6 +91,12 @@ export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place
             <span className="rf-tool-value" aria-hidden="true">{settings.style === 'readfocus' ? 'ReadFocus' : 'Publisher'}</span>
           </button>
         </div>
+      )}
+      {onFind && (
+        <button type="button" className="rf-tool" onClick={onFind} aria-label="Find in the book" aria-keyshortcuts="Control+F"
+          title="Find (Ctrl+F)">
+          <Search size={18} strokeWidth={1.75} aria-hidden="true" />
+        </button>
       )}
     </>
   );

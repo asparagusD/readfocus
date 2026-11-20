@@ -96,3 +96,43 @@ test('on a phone the bar fits across the top', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   await besideRibbon(page); // the ribbon moves below the bar
 });
+
+// C38.5c: an EPUB (e2e/fixtures/books/reflow.epub: a cover, then chapters 1-3 with 24, 18 and 12 "circle of light"),
+// searched through each section's text; the matches are painted inside the section's own document.
+test.describe('epub', () => {
+  test.use({ book: 'epub' });
+  /** The match shown, as painted in the sections' documents. */
+  const shownMatch = async (page) => (await Promise.all(page.frames().filter((f) => f !== page.mainFrame()).map((f) => f
+    .evaluate(() => [...(CSS.highlights.get('rf-find-current') ?? [])].map((range) => range.toString())).catch(() => [])))).flat();
+
+  test('Ctrl+F finds across the chapters and turns to the match; Escape closes', async ({ page }) => {
+    await openReader(page);
+    await book(page).focus();
+    await page.keyboard.press('Control+f');
+    await input(page).fill('chapter 3');
+    await expect(count(page)).toHaveText('1 of 1');
+    await expect(page.locator('.rf-ov')).toHaveAttribute('data-start', /^3:/); // the third chapter's section
+    await expect.poll(() => shownMatch(page)).toEqual(['Chapter 3']);
+
+    await input(page).fill('circle of light');
+    await expect(count(page)).toHaveText('43 of 54'); // the first from chapter 3, shown now: 24 + 18 + 1
+    await page.keyboard.press('Enter');
+    await expect(count(page)).toHaveText('44 of 54');
+    await expect.poll(() => shownMatch(page)).toEqual(['circle of light']);
+    await besideRibbon(page); // the ribbon drops below the bar while it is open
+    await page.keyboard.press('Escape');
+    await expect(bar(page)).toHaveCount(0);
+    await expect(book(page)).toBeFocused();
+    await expect.poll(() => shownMatch(page)).toEqual([]);
+  });
+
+  test('Ctrl+F inside a section opens the bar, not the browser\'s find; the toolbar has Find', async ({ page }) => {
+    await openReader(page);
+    const section = page.frames().find((f) => f !== page.mainFrame() && f.url().startsWith('blob:'));
+    await section.locator('body').press('Control+f');
+    await expect(input(page)).toBeFocused();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Find in the book' }).click();
+    await expect(input(page)).toBeFocused();
+  });
+});

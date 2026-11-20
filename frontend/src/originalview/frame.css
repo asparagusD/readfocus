@@ -138,7 +138,7 @@
   pointer-events: none;
 }
 
-/* C38.5: Edge's find bar over the book's top right, left of the ribbon (across the top on a phone, the ribbon
+/* C38.5: Edge's find bar over the book's top right, left of a PDF's ribbon (across the top on a phone, the ribbon
    below it). */
 .rf-find {
   position: absolute;
@@ -155,6 +155,9 @@
   color: var(--ink);
   box-shadow: var(--elevation-lift);
 }
+
+/* C38.5c: an EPUB's ribbon hangs from the paper's edge, under the bar: while find is open it drops below it. */
+.rf-ov[data-kind="epub"][data-finding] .rf-ov-ribbon { translate: 0 72px; }
 
 .rf-find-icon { flex: none; color: var(--ink-2); }
 

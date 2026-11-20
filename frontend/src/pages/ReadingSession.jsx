@@ -533,7 +533,7 @@ export function ReadingSession() {
           controls={(
             <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
               place={place} onGoToPage={(page) => reader.current?.goTo({ kind: 'pdf', page })} pageView={pageView} onPageView={setPageView}
-              onFind={kind === 'pdf' ? () => reader.current?.openFind?.() : null} />
+              onFind={() => reader.current?.openFind?.()} />
           )}
           onContents={openContents}
           contentsOpen={contentsOpen}

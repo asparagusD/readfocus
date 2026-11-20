@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { locationAt } from '../frame';
+import { findPattern, matchesIn, searchOrder } from '../find';
 import { EpubView } from './EpubView';
 import { epubAnchor, epubPositions } from '../../anchors';
 import { epubEndPoint } from '../../focus/bookmark';
@@ -32,8 +33,11 @@ function deferred() {
  * each section shown. Since C17.5 it also finds text (find) and goes to a located
  * { index, char }; both wait for the engine, which can report a first place before it
  * is handed over.
+ * C38.5c: find (Ctrl+F) through every section's text as packaged: `search(query, onUpdate)` in book order from the
+ * section shown round the book, `showMatch` turns to the page holding a match, and `found` ({ matches, current })
+ * is highlighted in each shown section's document (CSS Custom Highlights rf-find and rf-find-current, as a PDF's).
  */
-export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument, onError, annotations = null, ref }) {
+export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument, onError, annotations = null, found = null, ref }) {
   const [locations, setLocations] = useState(null);
   const [opened] = useState(deferred);
   const engine = useRef(null);
@@ -75,6 +79,42 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
     for (const { doc, index } of made.contents()) paintSection(doc, index, annotations, made.rangeFor, palette);
   }, [annotations, loads]);
 
+  // C38.5c: find's matches in each shown section's own registry, in the page's find colours.
+  useEffect(() => {
+    const made = engine.current;
+    if (!made || !found?.matches.length) return undefined;
+    const marked = [];
+    const page = getComputedStyle(document.documentElement);
+    for (const { doc, index } of made.contents()) {
+      const win = doc?.defaultView;
+      if (!win?.CSS?.highlights || typeof win.Highlight !== 'function') continue;
+      const here = found.matches.filter((m) => m.index === index);
+      const ranges = made.rangesOf(doc.body, here.map((m) => [m.start, m.end])); // engine.js loads lazily
+      const all = [];
+      const current = [];
+      here.forEach((m, i) => ranges[i] && (m === found.current ? current : all).push(ranges[i]));
+      let style = doc.head?.querySelector('style[data-rf-find]');
+      if (!style) {
+        style = doc.createElement('style');
+        style.setAttribute('data-rf-find', '');
+        doc.head?.append(style);
+      }
+      style.textContent = `::highlight(rf-find) { background-color: ${page.getPropertyValue('--find-match').trim()}; }
+::highlight(rf-find-current) { background-color: ${page.getPropertyValue('--find-current').trim()}; }`;
+      win.CSS.highlights.set('rf-find', new win.Highlight(...all));
+      win.CSS.highlights.set('rf-find-current', new win.Highlight(...current));
+      marked.push(win);
+    }
+    return () => marked.forEach((win) => {
+      try {
+        win.CSS.highlights.delete('rf-find');
+        win.CSS.highlights.delete('rf-find-current');
+      } catch { /* the section's document is gone */ }
+    });
+  }, [found, loads]);
+  const searching = useRef(null);
+  useEffect(() => () => { searching.current = null; }, []);
+
   useImperativeHandle(ref, () => {
     const now = () => engine.current;
     const later = (act) => opened.promise.then(act).then(() => true);
@@ -91,6 +131,31 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
         return e.goTo(target?.cfi ?? target);
       }),
       find: (snippets) => opened.promise.then((e) => e.find(snippets)),
+      // C38.5c: every match of `query`, section by section from the one shown round the book; onUpdate as PdfBook's.
+      search: async (query, onUpdate) => {
+        const run = {};
+        searching.current = run;
+        const made = await opened.promise;
+        const pattern = findPattern(query);
+        const shown = last.current?.index ?? 0;
+        const order = pattern ? searchOrder(made.sectionCount(), shown + 1).map((n) => n - 1) : [];
+        const after = [];
+        const before = [];
+        let told = 0;
+        for (const [i, index] of order.entries()) {
+          const text = await made.sectionPlain(index);
+          if (searching.current !== run) return;
+          for (const [start, end] of matchesIn(text, pattern)) (index >= shown ? after : before).push({ index, start, end });
+          const done = i === order.length - 1;
+          if (done || performance.now() - told > 120) {
+            told = performance.now();
+            onUpdate({ matches: before.concat(after), first: after[0] ?? before[0] ?? null, done });
+          }
+        }
+        if (!order.length) onUpdate({ matches: [], first: null, done: true });
+      },
+      stopSearch: () => { searching.current = null; },
+      showMatch: (match) => { now()?.goToMatch(match); },
       visibleRange: () => ({ kind: 'epub', cfi: last.current?.cfi ?? null }),
       // The reading position, a point (A3) a little inside the text shown: a page's first character can
       // fall on the page before after any re-layout, so it would reopen a page early (DEBUG_LOG C17.6).

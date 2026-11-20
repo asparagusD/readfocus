@@ -58,6 +58,37 @@ export function rangeAtChar(root, char) {
   return null;
 }
 
+/**
+ * C38.5c: ranges over characters [start, end] of root's text (textContent order), one for each of `spans` (in order,
+ * not overlapping, as find's matches are), or null for one past the text's end; one walk over the text.
+ */
+export function rangesOf(root, spans) {
+  const out = spans.map(() => null);
+  if (!root || !spans.length) return out;
+  const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let count = 0;
+  let i = 0;
+  let open = null;
+  for (let text = walker.nextNode(); text && i < spans.length; text = walker.nextNode()) {
+    const end = count + text.length;
+    while (i < spans.length) {
+      const [from, to] = spans[i];
+      if (!open) {
+        if (from >= end) break;
+        open = root.ownerDocument.createRange();
+        open.setStart(text, Math.max(0, from - count));
+      }
+      if (to > end) break;
+      open.setEnd(text, to - count);
+      out[i] = open;
+      open = null;
+      i += 1;
+    }
+    count = end;
+  }
+  return out;
+}
+
 /** A collapsed range in text widened over the character after it, so it has a box on its own page. */
 function around(range) {
   const node = range?.startContainer;
@@ -185,6 +216,15 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
     }
     return texts.get(index);
   };
+  // C38.5c: a section's whole text as packaged (its body's textContent), read once, for find.
+  const plain = new Map();
+  const sectionPlain = (index) => {
+    if (!plain.has(index)) {
+      plain.set(index, Promise.resolve(book.sections[index]?.createDocument?.())
+        .then((doc) => doc?.body?.textContent ?? '').catch(() => ''));
+    }
+    return plain.get(index);
+  };
   /** { kind: 'epub', index, char } for the first section holding a snippet (longest first), or null. */
   async function find(snippets) {
     for (const snippet of snippets) {
@@ -201,6 +241,11 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
     book,
     isFixedLayout: view.isFixedLayout,
     find,
+    sectionPlain, // C38.5c
+    rangesOf,
+    sectionCount: () => book.sections.length,
+    /** C38.5c: a find match ({ index, start, end }) on screen: the page holding it. */
+    goToMatch: ({ index, start, end }) => renderer.goTo({ index, anchor: (doc) => rangesOf(doc.body, [[start, end]])[0] ?? doc.body }),
     goToChar: ({ index, char }) => renderer.goTo({ index, anchor: (doc) => around(rangeAtChar(doc.body, char)) ?? doc.body }),
     // A saved point CFI (C17.6): aimed at its first character, as a collapsed range at a page's
     // first character resolves to the page before it (DEBUG_LOG C17.6).

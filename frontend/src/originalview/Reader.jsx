@@ -102,9 +102,10 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * below its last page. An EPUB keeps the frame until C38.7. C38.4a: `pageView` is a PDF's Page view (PdfBook).
  * C38.4c: a PDF has no footer: the toolbar's page box names the page, `status` is a quiet note on the desk, and the
  * live region still says the page or the end.
- * C38.5: a PDF's find bar (FindBar, useFind): Ctrl+F (or `openFind()` on the ref, the toolbar's Find) opens it with
+ * C38.5: the find bar (FindBar, useFind): Ctrl+F (or `openFind()` on the ref, the toolbar's Find) opens it with
  * the query selected, F3 and Shift+F3 step through the matches while it is open, and Escape in it closes it, focus
- * back on the book. Not in a dialog over the book (the notebook has its own).
+ * back on the book. Not in a dialog over the book (the notebook has its own). C38.5c: an EPUB's too, its keys heard
+ * inside its sections.
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
@@ -143,11 +144,11 @@ export function Reader({
   const toolbar = useRef(null);
   const finder = useFind(book); // C38.5
   const { openFind, close: closeFind } = finder;
-  const finding = kind === 'pdf' && finder.open;
+  const finding = finder.open;
   const findNext = finder.next;
   const findPrev = finder.prev;
+  const findKeyRef = useRef(null);
   useEffect(() => {
-    if (kind !== 'pdf') return undefined;
     const onFindKey = (event) => {
       if (event.defaultPrevented || event.altKey || event.target?.closest?.('[role="dialog"]')) return;
       if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'f') {
@@ -159,9 +160,10 @@ export function Reader({
         else findNext();
       }
     };
+    findKeyRef.current = onFindKey;
     document.addEventListener('keydown', onFindKey);
     return () => document.removeEventListener('keydown', onFindKey);
-  }, [kind, openFind, finding, findNext, findPrev]);
+  }, [openFind, finding, findNext, findPrev]);
   useEffect(() => { // C18.6d: the boxes of the pages shown are asked for before a word is hovered
     if (regions && shownPages) shownPages.split(',').forEach((n) => regions.load(Number(n)));
   }, [regions, shownPages]);
@@ -302,7 +304,7 @@ export function Reader({
   const onDocument = useCallback((doc) => {
     if (watched.current.has(doc)) return;
     watched.current.add(doc);
-    doc.addEventListener('keydown', (e) => onKeyRef.current?.(e));
+    doc.addEventListener('keydown', (e) => { findKeyRef.current?.(e); if (!e.defaultPrevented) onKeyRef.current?.(e); });
     doc.addEventListener('pointerdown', (e) => swipeStart.current?.(e));
     // The page hears what happens in the section too, in its own coordinates: the word card closes
     // on a press or when the pointer leaves the word, Esc closes it, and the toolbar wakes on movement.
@@ -393,7 +395,7 @@ export function Reader({
           {kind === 'pdf'
             ? <PdfBook key={attempt} {...shared} zoom={zoom} view={pageView} ocr={ocr} contents={contents} startPage={startPage(start)}
               end={closing && <div className="rf-end">{closing}</div>} found={finding ? finder.found : null} />
-            : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} />}
+            : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} found={finding ? finder.found : null} />}
           {turn && (
             <TurnLeaf key={turn.id} turn={turn} wide={wide}
               onMiddle={() => (turn.dir > 0 ? book.current?.next() : book.current?.prev())}

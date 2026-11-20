@@ -1,7 +1,7 @@
 // C22.6: things from the book go to the notes; since C37.3 (issue 25) words go onto a notebook page. "Add to notes"
-// on a PDF equation writes its LaTeX (from /steve/latex while Steve is on; with none it stays a block note with
-// its crop), code writes its exact text (no Steve call), a figure stays a block note (its crop and caption) until
-// pictures come (C37.6); on an EPUB an equation writes its own LaTeX and a listing its text, on the device; a
+// on a PDF equation writes its LaTeX (from /steve/latex while Steve is on; with none, since C37.6, its crop goes on
+// the page as a picture), code writes its exact text (no Steve call), a figure goes on as its picture and caption
+// (C37.6); on an EPUB an equation writes its own LaTeX and a listing its text, on the device; a
 // highlight's chip writes the passage on a page linked to it; a Steve answer ("Save to notes") writes his answer
 // and its sources. Mocked API (fixtures.js).
 import { test, expect, BOOKS, book, openReader, settled, wordPoint } from './fixtures.js';
@@ -10,10 +10,15 @@ const EQ = { id: 'r-eq', page: 1, kind: 'math', bbox: [72, 110, 300, 140], inlin
 const CODE = { id: 'r-code', page: 1, kind: 'code', bbox: [72, 160, 300, 200], inline: false };
 const FIG = { id: 'r-fig', page: 1, kind: 'figure', bbox: [72, 220, 300, 300], inline: false };
 const CODE_TEXT = 'def toll(n):\n    return  2 * n   # two spaces kept';
-const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const bar = (page, name) => page.getByRole('toolbar', { name });
 const shots = process.env.E2E_SHOTS;
 const notebook = (page) => page.getByRole('dialog', { name: 'Notebook' });
+/** The last saved picture on a notebook page: its element and the file the page keeps for it, or null. */
+const picture = (api) => {
+  const scene = api.notePatches.filter((p) => p.content?.files).at(-1)?.content;
+  const element = scene?.elements.find((e) => e.type === 'image');
+  return element && scene.files[element.fileId] ? { element, file: scene.files[element.fileId] } : null;
+};
 /** Every text written on a notebook page, from every save. */
 const written = (api) => api.notePatches.flatMap((p) => (p.content?.elements ?? []).filter((e) => e.type === 'text').map((e) => e.text));
 
@@ -61,19 +66,24 @@ test.describe('pdf regions', () => {
     expect(api.steve.latexAsks).toHaveLength(0);
   });
 
-  test('a figure goes as its crop and caption', async ({ page, api }) => {
+  test('a figure goes onto a notebook page as its picture and caption', async ({ page, api }) => {
     await openReader(page);
     await hover(page, FIG);
     await bar(page, 'Figure, page 1').getByRole('button', { name: 'Add to notes' }).click();
+    await expect(notebook(page)).toBeVisible();
+    await expect.poll(() => api.noteFilePosts.length).toBe(1);
+    expect(api.noteFilePosts[0].content_type).toBe('image/png'); // the crop, already under 256 KB
     await expect.poll(() => api.notePosts.length).toBe(1);
-    expect(api.notePosts[0]).toMatchObject({ kind: 'figure', region_id: 'r-fig',
-      content: { caption: 'Figure 1. The toll road.', image_path: expect.stringMatching(/\.png$/) } });
-    const card = panel(page).locator('.rf-note[data-kind="figure"]');
-    await expect(card.locator('img')).toBeVisible();
-    await expect(card.getByRole('textbox', { name: 'Caption' })).toHaveValue('Figure 1. The toll road.');
+    expect(api.notePosts[0]).toMatchObject({ kind: 'drawing', region_id: 'r-fig' });
+    await expect.poll(() => picture(api), { timeout: 8000 }).toBeTruthy();
+    const { element, file } = picture(api);
+    expect(file).toEqual({ path: 'e2e-reader/e2e-book/file-1.png', mimeType: 'image/png' });
+    expect(element.width).toBeGreaterThan(0);
+    expect(written(api)).toContain('Figure 1. The toll road.');
+    if (shots) { await page.waitForTimeout(500); await page.screenshot({ path: `${shots}/notebook-figure-1440.png` }); }
   });
 
-  test('with Steve off an equation keeps its crop and an empty LaTeX field, and nothing asks him', async ({ page, api }) => {
+  test('with Steve off an equation goes onto the page as its picture, and nothing asks him', async ({ page, api }) => {
     api.steve.enabled = false;
     await openReader(page);
     await page.getByRole('button', { name: 'Ask Steve' }).click(); // his settings load: he is off
@@ -82,10 +92,9 @@ test.describe('pdf regions', () => {
     await hover(page, EQ);
     await bar(page, 'Equation, page 1').getByRole('button', { name: 'Add to notes' }).click();
     await expect.poll(() => api.notePosts.length).toBe(1);
-    expect(api.notePosts[0].content.latex).toBe('');
-    await page.waitForTimeout(800);
+    expect(api.notePosts[0]).toMatchObject({ kind: 'drawing', region_id: 'r-eq' });
+    await expect.poll(() => picture(api), { timeout: 8000 }).toBeTruthy();
     expect(api.steve.latexAsks).toHaveLength(0);
-    await expect(panel(page).locator('.rf-note[data-kind="equation"]').getByRole('textbox', { name: 'LaTeX' })).toHaveValue('');
   });
 });
 

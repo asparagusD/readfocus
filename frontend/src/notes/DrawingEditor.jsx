@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, exportToBlob, hashElementsVersion, MainMenu } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
 import { drawingScene, paperView, passageLines } from './drawing';
-import { dataUrlOf, keptFiles, libraryStore, shrinkImage } from './pageImages';
-import { BREAK, facesFor, textElements, TOP_LEFT } from './pageText';
+import { dataUrlOf, keptFiles, libraryStore, pictureSize, shrinkImage } from './pageImages';
+import { BREAK, facesFor, lineElements, TOP_LEFT } from './pageText';
 
 // C37.6 (issue 26): Excalidraw's full tools but its AI (constraint 1): pictures (uploaded to the reader's notes
 // folder, pageImages.js), the library (kept in this browser), frames, the laser and Mermaid, and a page saved as a
@@ -118,12 +118,20 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
     },
     add: async (lines) => {
       const editor = await ready.promise;
-      await facesFor(lines);
+      await facesFor(lines.filter((l) => l.text));
       const before = editor.getSceneElements();
       const { scrollX, scrollY, zoom } = editor.getAppState();
       const x = before.length ? Math.min(...before.map((e) => e.x)) : -scrollX + TOP_LEFT.x / zoom.value;
       const y = before.length ? Math.max(...before.map((e) => e.y + e.height)) + BREAK : -scrollY + TOP_LEFT.y / zoom.value;
-      const made = textElements(lines, { x, y });
+      // C37.6: a picture from the book is already in the reader's folder: kept by its path, shown from its data URL.
+      const made = await lineElements(lines, { x, y }, async (image, at, top) => {
+        const { width, height } = await pictureSize(image.dataURL).catch(() => ({ width: 0, height: 0 }));
+        if (!width || !height) return null;
+        const id = `book-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+        stored.set(id, { path: image.path, mimeType: image.mimeType });
+        editor.addFiles([{ id, mimeType: image.mimeType, dataURL: image.dataURL, created: Date.now() }]);
+        return convertToExcalidrawElements([{ type: 'image', fileId: id, x: at, y: top, width, height }])[0];
+      });
       if (!made.length) return;
       editor.updateScene({ elements: [...before, ...made], captureUpdate: CaptureUpdateAction.IMMEDIATELY });
       if (before.length) editor.scrollToContent(made, { fitToViewport: false }); // an empty page: already in view
@@ -141,7 +149,7 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
         x: -scrollX + 40 / zoom.value, y: -scrollY + 40 / zoom.value }]);
       editor.updateScene({ elements: [...editor.getSceneElements(), text], captureUpdate: CaptureUpdateAction.IMMEDIATELY });
     },
-  }), [register, passage, ready, scene]);
+  }), [register, passage, ready, scene, stored]);
 
   return (
     <div className="rf-drawing-canvas" data-own-escape="true" data-paper={paper || undefined} ref={box}>

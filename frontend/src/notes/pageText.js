@@ -19,16 +19,31 @@ export async function facesFor(lines) {
   await Promise.race([loading, new Promise((resolve) => { setTimeout(resolve, 3000); })]).catch(() => {});
 }
 
+const textElement = (piece, x, y) => convertToExcalidrawElements([{ type: 'text', text: piece.text, x, y, fontSize: piece.size,
+  fontFamily: FACES[piece.font] ?? FACES.hand, ...(piece.muted ? { strokeColor: MUTED } : {}) }])[0];
+
 /** The lines as text elements, the first at (x, y), each below the last; call after facesFor. */
 export function textElements(lines, { x, y }) {
   const made = [];
   let at = y;
   for (const piece of lines) {
     if (!piece.text) continue;
-    const [text] = convertToExcalidrawElements([{ type: 'text', text: piece.text, x, y: at, fontSize: piece.size,
-      fontFamily: FACES[piece.font] ?? FACES.hand, ...(piece.muted ? { strokeColor: MUTED } : {}) }]);
+    const text = textElement(piece, x, at);
     made.push(text);
     at = text.y + text.height + GAP;
+  }
+  return made;
+}
+
+/** C37.6: text and pictures stacked the same way; `addImage(image, x, y)` makes a picture's element (or null). */
+export async function lineElements(lines, { x, y }, addImage) {
+  const made = [];
+  let at = y;
+  for (const piece of lines) {
+    const element = piece.image ? await addImage(piece.image, x, at) : piece.text ? textElement(piece, x, at) : null;
+    if (!element) continue;
+    made.push(element);
+    at = element.y + element.height + GAP;
   }
   return made;
 }

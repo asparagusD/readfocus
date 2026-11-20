@@ -91,3 +91,12 @@ export function typedLines(doc, ref = '') {
   const body = (doc?.content ?? []).flatMap(blockLines);
   return body.length ? [...(ref ? [small(ref)] : []), ...body] : [];
 }
+
+/**
+ * C37.6: a picture from the book (a figure, or an equation with no LaTeX): its reference, the picture (already in
+ * the reader's notes folder at `path`; `dataURL` to show it at once), then its caption.
+ */
+export function imageItems({ dataURL, path, mimeType = 'image/png' }, caption = '', ref = '') {
+  const words = wrap(caption);
+  return [...(ref ? [small(ref)] : []), { image: { dataURL, path, mimeType } }, ...(words ? [small(words)] : [])];
+}

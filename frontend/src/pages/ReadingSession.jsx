@@ -29,7 +29,7 @@ import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
 import { Notebook } from '../notes/Notebook';
 import { openingPage, pageFor, pageKey, pagesOf } from '../notes/notebookPages';
-import { answerItems, codeItems, latexItems, passageItems, typedLines } from '../notes/notebookItems';
+import { answerItems, codeItems, imageItems, latexItems, passageItems, typedLines } from '../notes/notebookItems';
 import { useNotes } from '../notes/useNotes';
 import { notesApi } from '../notes/notesApi';
 import { moveTyped, movedStore, typedNotes } from '../notes/moveTyped';
@@ -410,13 +410,13 @@ export function ReadingSession() {
     notepad.relink(note.id, place);
     toast({ kind: 'neutral', message: 'Note linked to the selection.' });
   };
-  // C22.6: notes made from the book's blocks. C37.3: code and an equation with its LaTeX go into the notebook as
-  // text; a figure, or an equation with no LaTeX, stays a block note in the notepad until pictures come (C37.6):
-  // its crop goes to the notes bucket first, then the note shows at once; `open` reveals it ('focus').
-  const { create: createNote, edit: editNote, uploadImage } = notepad;
+  // C22.6: notes made from the book's blocks; since C37.6 (issue 25, D2 A) every one goes onto a notebook page: code
+  // and an equation with its LaTeX as text (C37.3), a figure or an equation with no LaTeX as its picture (the crop
+  // uploaded to the reader's notes folder first) and its caption.
+  const { edit: editNote, uploadImage } = notepad;
   const toNotebookRef = useRef(toNotebook);
   useEffect(() => { toNotebookRef.current = toNotebook; });
-  const addFromBook = useCallback(async ({ kind, place, content, imageB64 = null, regionId = null, annotationId = null, open = 'focus' }) => {
+  const addFromBook = useCallback(async ({ kind, place, content, imageB64 = null, regionId = null }) => {
     if (!place) {
       toast({ kind: 'warning', message: "That wasn't added to your notes. Try again." });
       return { key: null, content };
@@ -425,25 +425,18 @@ export function ReadingSession() {
       const lines = kind === 'code' ? codeItems(content.code) : latexItems(content.latex);
       return { key: toNotebookRef.current(place, lines, { regionId }), content };
     }
-    let body = content;
-    let local = {};
+    const caption = kind === 'figure' ? content?.caption ?? '' : '';
+    let lines = caption ? passageItems(caption) : [];
     if (imageB64) {
       try {
-        const { path, url } = await uploadImage(imageB64);
-        body = { ...content, image_path: path };
-        local = { urls: { [path]: url } };
+        const { path } = await uploadImage(imageB64);
+        lines = imageItems({ dataURL: `data:image/png;base64,${imageB64}`, path, mimeType: 'image/png' }, caption);
       } catch {
-        toast({ kind: 'warning', message: "The picture wasn't saved, so the note is added without it." });
+        toast({ kind: 'warning', message: "The picture wasn't saved, so only its caption goes on the page." });
       }
     }
-    const key = createNote({ kind, scope: place.scope, anchors: place.anchors, position_start: place.start, position_end: place.end,
-      content: body, ...(regionId ? { region_id: regionId } : {}), ...(annotationId ? { annotation_id: annotationId } : {}) }, local);
-    if (open) {
-      setSide((now) => { if (!now) opener.current = notesButton.current; return 'notes'; });
-      setNoteRequest(open === 'edit' ? { type: 'edit', key, n: Date.now() } : { type: 'focus', ids: [key], n: Date.now() });
-    }
-    return { key, content: body };
-  }, [createNote, uploadImage, toast]);
+    return { key: toNotebookRef.current(place, lines, { regionId }), content };
+  }, [uploadImage, toast]);
   const notesActions = useMemo(() => ({ add: addFromBook, edit: editNote }), [addFromBook, editNote]);
   // A highlight's Note: its passage on the notebook page, the page linked to the highlight when it is new.
   const noteOnHighlight = (annotation) => {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { answerItems, codeItems, latexItems, passageItems, typedLines } from './notebookItems.js';
+import { answerItems, codeItems, imageItems, latexItems, passageItems, typedLines } from './notebookItems.js';
 
 test('a passage is its reference, small and muted, then its words wrapped', () => {
   const items = passageItems('The cost of a thing is the amount of what I will call life which is required to be exchanged for it', 'p. 31 · Economy');
@@ -62,4 +62,14 @@ test('a typed note becomes its reference and its blocks as text; an empty one no
   assert.deepEqual(items.map((i) => i.font), ['hand', 'hand', 'hand', 'hand', 'hand', 'code', 'hand']);
   assert.deepEqual(typedLines({ type: 'doc', content: [{ type: 'paragraph' }] }, 'p. 1'), []);
   assert.deepEqual(typedLines(null), []);
+});
+
+test('a picture from the book is its reference, the picture, then its caption', () => {
+  const picture = { dataURL: 'data:image/png;base64,AAAA', path: 'u/b/1.png', mimeType: 'image/png' };
+  assert.deepEqual(imageItems(picture, 'Figure 1. The toll road.', 'p. 1'), [
+    { text: 'p. 1', size: 14, font: 'hand', muted: true },
+    { image: picture },
+    { text: 'Figure 1. The toll road.', size: 14, font: 'hand', muted: true },
+  ]);
+  assert.deepEqual(imageItems(picture), [{ image: picture }]);
 });

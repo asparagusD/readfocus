@@ -3,7 +3,7 @@
 // to the page shown (the reader's choice, kept by the server). PDF and EPUB; a failed lookup changes nothing.
 import { book, expect, openReader, settled, test } from './fixtures';
 
-const folio = (page) => page.locator('.rf-ov-folio');
+const folio = (page) => page.locator('.rf-ov-folio, .rf-ov-status, .rf-ov-live').first(); // C38.4c: a PDF's note, or its live region
 const NOTE = 'Focus mode starts at Chapter 1';
 const pdfStart = (page) => ({ source: 'outline', body_start: { kind: 'pdf', page, title: 'Chapter 1',
   anchor: { kind: 'pdf', page, quads: [[0, 0, 0, 0]], text: '' } } });

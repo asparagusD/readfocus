@@ -517,7 +517,7 @@ export function ReadingSession() {
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
             onStart={startFocus} onPause={() => focusDo(focus.pause, '')} onResume={() => focusDo(focus.resume, '')}
             onEnd={endFocus} onLeave={focus.readOnly ? () => navigate('/') : leaveFocus} onAnswerIdle={focus.answerIdle}
-            placing={placingRibbon} readOnly={focus.readOnly}
+            placing={placingRibbon} readOnly={focus.readOnly} folio={kind === 'pdf' ? place?.folio : null}
             onNotes={() => openNotebook()} notesOpen={notebookOpen} notesRef={notesButton}
             notesCount={notepad.notes.length} onSteve={steveHere ? () => toggleSide('steve', steveButton) : undefined}
             steveOpen={steveOpen} steveRef={steveButton} />

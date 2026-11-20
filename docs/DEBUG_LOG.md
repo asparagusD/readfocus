@@ -5701,3 +5701,32 @@ the three `focus-end.spec.js` tests; 48 of 48 in `focus-end`, `reading` and `rea
 
 ### Commit
 feat(ui): add Edge's page box and Page view for a PDF
+
+## 2026-11-20 C38.4c — the PDF page-turn bench ran at 25.2 fps once
+
+**Status:** not reproduced (watch)
+
+### Symptom
+The full e2e run for C38.4c: 368 passed, 1 failed. `reader.spec.js` "page-turn frame rate" (pdf, the frame-rate
+project): 25.2 fps against its floor of 30.
+
+### Repro
+Not reproduced: `npx playwright test e2e/reader.spec.js --project=frame-rate --repeat-each=3`: 75 fps on every run, PDF
+and EPUB, worst frame 13.5-13.8 ms, none over 33 ms.
+
+### Hypotheses
+1. C38.4c's taller pages (no footer, so fit-page draws them larger) cost frames when a step draws new canvases.
+   Against: the bench alone holds headless Edge's 75 fps ceiling three times.
+2. The machine was loaded near the end of a 15-minute run. Not tested directly.
+
+### Root cause
+Unknown; most likely load on the machine (hypothesis 2).
+
+### Fix
+None. The scroll bench of C38.10 replaces this one.
+
+### Regression test
+None.
+
+### Commit
+feat(ui): retire a PDF's footer; its page in the toolbar and the focus bar

@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { signInAs } from './liveSignIn.js';
 import { createClient } from '@supabase/supabase-js';
-import { settled, STEVE_NOTICE, steveStream } from './fixtures.js';
+import { book, settled, STEVE_NOTICE, steveStream } from './fixtures.js';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const SHELF = `${ROOT}samples/technical/`;
@@ -327,9 +327,10 @@ test('the phase-2 journey, signed in, on the real stack', async ({ page, baseURL
     const here = notes.locator('.rf-note[data-here]');
     await expect.poll(() => here.count(), { timeout: 10_000 }).toBeGreaterThan(0);
     const atNotes = await settled(page);
-    await page.getByRole('button', { name: 'Next' }).click();
+    await book(page).focus(); // C38.4c: Page Down, the PDF has no Next button
+    await page.keyboard.press('PageDown');
     const next1 = await settled(page, atNotes);
-    await page.getByRole('button', { name: 'Next' }).click();
+    await page.keyboard.press('PageDown');
     await settled(page, next1);
     await expect.poll(() => here.count(), { timeout: 10_000 }).toBe(0);
     await cite.click().catch(async () => { await goTo(citePage); });

@@ -6,7 +6,7 @@
 // blurred book or Escape (once Excalidraw has nothing left to do) tucks it away and it reopens where it was left.
 // Lamplight draws dark; a phone opens it full screen. C37.7: it slides in on a spring as the book recedes, a close
 // midway reverses, and under reduced motion it crossfades with no transform. Mocked API (fixtures.js).
-import { test, expect, openReader, settled } from './fixtures.js';
+import { book, expect, openReader, settled, test } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
@@ -247,7 +247,8 @@ test('pages turn by arrows and tabs, "Go to this place" finds the page made here
   await expect.poll(() => api.notes.length).toBe(1);
   await page.locator('.rf-notebook-scrim').click(); // a click on the blurred book
   await expect(notebook(page)).toHaveCount(0);
-  await page.getByRole('button', { name: 'Next' }).click();
+  await book(page).focus();
+  await page.keyboard.press('PageDown'); // C38.4c: a PDF has no Next button
   await settled(page, first);
   await openNotebook(page);
   await expect(notebook(page).getByRole('tab', { name: 'Page 1' })).toHaveAttribute('aria-selected', 'true'); // where it was left

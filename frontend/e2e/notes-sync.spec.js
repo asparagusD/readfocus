@@ -2,7 +2,7 @@
 // pages shown and marks those notes softly; while a note is being written the notepad stays put and offers "Jump
 // to notes for this page" instead. A note's reference moves the book to its passage and pulses it. A filter
 // shows this page, this chapter or all. PDF and EPUB; reduced motion; mocked API.
-import { expect, openNotepad, openReader, settled, test } from './fixtures';
+import { book, expect, openNotepad, openReader, settled, test } from './fixtures';
 
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const list = (page) => page.locator('.rf-notes');
@@ -39,7 +39,8 @@ async function shownMarks(page) {
 
 async function turn(page) {
   const before = await settled(page);
-  await page.getByRole('button', { name: 'Next' }).click();
+  await book(page).focus();
+  await page.keyboard.press('PageDown'); // C38.4c: a PDF has no Next button
   return settled(page, before);
 }
 

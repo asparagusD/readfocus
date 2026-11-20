@@ -21,7 +21,8 @@ for (const kind of ['pdf', 'epub']) {
       await page.keyboard.press('ArrowRight');
       const second = await settled(page, first); // each place read once its turn has landed (DEBUG_LOG C17.6)
       expect(before(at(first.start), at(second.start))).toBe(true);
-      await page.getByRole('button', { name: 'Next', exact: true }).click();
+      if (kind === 'pdf') await page.keyboard.press('PageDown'); // C38.4c: the toolbar's page box, no Next button
+      else await page.getByRole('button', { name: 'Next', exact: true }).click();
       const third = await settled(page, second);
       await book(page).focus(); // the arrow keys belong to the book; the button keeps focus after a click
       await page.keyboard.press('ArrowLeft');
@@ -114,7 +115,7 @@ for (const kind of ['pdf', 'epub']) {
         await page.keyboard.press('End');
         await expect(page.locator('.rf-pdf-end .rf-end')).toBeInViewport();
         await expect(spoken(page)).toHaveText('End of the book');
-        await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeDisabled();
+        await expect(page.locator('.rf-ov-foot')).toHaveCount(0); // C38.4c: no footer on a PDF
         await page.keyboard.press('Home');
         await expect(spoken(page)).toHaveText(/^p\. i of 6/);
         expect(await shown(page)).toEqual({ start: '1', end: '1' });

@@ -2,7 +2,7 @@
 // the selected passage on the notebook page for this place, a second passage on the same page of the book joins it,
 // the notepad's list follows the book and a page's reference jumps back to its passage. A page changed offline is
 // saved on reconnect, and a change another tab saved first shows the merge prompt. Mocked API (fixtures.js).
-import { test, expect, bookAtRest, openNotepad, openReader, settled, wordPoint } from './fixtures.js';
+import { book, bookAtRest, expect, openNotepad, openReader, settled, test, wordPoint } from './fixtures.js';
 
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const notebook = (page) => page.getByRole('dialog', { name: 'Notebook' });
@@ -11,7 +11,8 @@ const written = (api) => api.notePatches.filter((p) => p.content?.elements).at(-
 
 async function turn(page) {
   const before = await settled(page);
-  await page.getByRole('button', { name: 'Next' }).click();
+  await book(page).focus();
+  await page.keyboard.press('PageDown'); // C38.4c: a PDF has no Next button
   return settled(page, before);
 }
 

@@ -98,6 +98,8 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * C38.2 (issue 22): a PDF scrolls, as in Edge (PdfBook): no running header, leaf, edge zones or closing page over
  * it; Previous, Next and the page keys move a page at a time, Up and Down scroll a little, and the closing words sit
  * below its last page. An EPUB keeps the frame until C38.7. C38.4a: `pageView` is a PDF's Page view (PdfBook).
+ * C38.4c: a PDF has no footer: the toolbar's page box names the page, `status` is a quiet note on the desk, and the
+ * live region still says the page or the end.
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
@@ -409,6 +411,7 @@ export function Reader({
             </button>
           )}
         </div>
+        {kind === 'pdf' && status && !opening && <p className="rf-ov-status">{status}</p>}
         {failure && (
           <div className="rf-ov-error" role="alert">
             <h2>This book could not be opened</h2>
@@ -420,6 +423,7 @@ export function Reader({
           </div>
         )}
       </div>
+      {kind !== 'pdf' && (
       <footer className="rf-ov-foot">
         <button type="button" className="rf-ov-turn" onClick={() => move(-1)} disabled={!place || (place.atStart && !ending)}>
           <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" /><span>Previous</span>
@@ -431,6 +435,7 @@ export function Reader({
           <span>Next</span><ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </footer>
+      )}
       {lookupClient && (
         <BookLookup ref={lookup} surfaces={surfaces} client={lookupClient} hover={hoverLookup} returnFocusTo={stage}
           paused={!place || opening || ending || Boolean(turn) || Boolean(failure)}

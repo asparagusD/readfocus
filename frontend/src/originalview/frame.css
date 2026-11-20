@@ -118,6 +118,26 @@
   box-shadow: 0 0 0 var(--border-hair) var(--line), var(--elevation-lift);
 }
 
+/* C38.4c: a PDF has no footer; a status ("Focus mode starts at …") is a quiet note at the desk's lower left. */
+.rf-ov-status {
+  position: absolute;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  z-index: 5;
+  max-width: calc(100% - 2 * var(--space-4));
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  box-shadow: var(--elevation-lift);
+  pointer-events: none;
+}
+
 /* The end of the book: its closing words below the last page, quiet, not a page over the book. */
 .rf-pdf-end { display: flex; justify-content: center; padding: var(--space-6) var(--space-5) var(--space-8); }
 .rf-pdf-end .rf-end { align-items: center; width: min(100%, 36rem); padding: var(--space-5); border: 0; background: none; box-shadow: none; text-align: center; }

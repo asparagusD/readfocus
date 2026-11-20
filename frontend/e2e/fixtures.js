@@ -288,7 +288,7 @@ const CATALOGUE = [
   ['streak_7', '7-day streak', 'Meet your daily goal 7 days running.', 50, 'seal'],
   ['streak_30', '30-day streak', 'Meet your daily goal 30 days running.', 150, 'seal'],
   ['streak_100', '100-day streak', 'Meet your daily goal 100 days running.', 500, 'seal'],
-  ['first_note', 'First note', 'Write your first typed note.', 10, 'seal'],
+  ['first_note', 'First note', 'Write your first words in your notebook.', 10, 'seal'],
   ['first_drawing', 'First drawing', 'Save your first drawing.', 10, 'seal'],
   ['first_steve', 'First Ask Steve', 'Get your first answer from Steve.', 10, 'seal'],
   ['finished_book', 'Finished a book', 'Reach the last page of a book.', 200, 'bookplate'],
@@ -414,6 +414,17 @@ export async function openReader(page) {
   await page.waitForTimeout(300); // an EPUB lays out again once its fonts are in
 }
 
+/**
+ * C37.3: the notepad's list of every note, beside the book. The toolbar's Notes opens the notebook (whose "All
+ * notes" opens the list); since C37.4 opening the notebook moves typed notes into it, so a test of the list opens
+ * it from Steve's panel, the side area's other tab, and seeded typed notes stay as they are.
+ */
+export async function openNotepad(page) {
+  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await page.getByRole('complementary').getByRole('tab', { name: /^Notes/ }).click();
+  await expect(page.getByRole('complementary', { name: 'Notes' })).toBeVisible();
+}
+
 /** The polite page announcement, e.g. "pp. ii–1 of 6" or "End of the book". */
 export const spoken = (page) => page.locator('.rf-ov-live');
 
@@ -448,6 +459,17 @@ export async function settled(page, away = null) {
     return ok;
   }, { intervals: [300], timeout: 10_000 }).toBe(true);
   return JSON.parse(last);
+}
+
+/**
+ * C37.7: the book back at rest once the notebook has gone: it recedes (scale, blur, dim) while the notebook is open
+ * and comes forward over about 450 ms, so a word or a marker measured sooner is still moving.
+ */
+export async function bookAtRest(page) {
+  await expect.poll(() => page.locator('.rf-reading-area').evaluate((el) => {
+    const look = getComputedStyle(el);
+    return [look.transform, look.filter, look.opacity].join(' ');
+  })).toBe('none none 1');
 }
 
 /** The boxes of every whole-word occurrence of `w` in a document's book text (the PDF's spread, or a section's body). */

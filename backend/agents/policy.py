@@ -356,6 +356,10 @@ ANNOTATIONS_LIST_MAX = 2_000
 
 # Block kinds and anchoring scopes (a selection, or the pages shown); migration 027 checks the same lists.
 NOTE_KINDS = ("text", "drawing", "equation", "code", "figure")
+# C37.1 (issue 25): typed notes are no longer made; every note goes into the notebook. Old text rows stay editable.
+NEW_NOTE_KINDS = ("drawing", "equation", "code", "figure")
+# C37.1 (issue 26): a notebook page's paper, kept in its scene's app state; ruled is the default.
+NOTE_PAPERS = ("ruled", "squared", "plain")
 NOTE_SCOPES = ("selection", "view")
 # One block's content as JSON, also a check in 027 (octet_length of content::text).
 NOTE_CONTENT_MAX_BYTES = 262_144

@@ -190,8 +190,9 @@ document.
 
 - **Storage** (migration 027): a `note_blocks` row carries `anchors` and
   `position_start` / `position_end` exactly as A10, plus `scope`.
-- **Scope `selection`**: "Note" in the selection toolbar, N with a
-  selection, or the notepad's Text / Drawing pills while text is selected.
+- **Scope `selection`**: "Note" in the selection toolbar or N with a
+  selection (since C37.3 a notebook page; the notepad's Text / Drawing
+  pills are gone).
   The anchors and positions are the selection's, as for a highlight (one
   PDF anchor per page with a quad per line, or one EPUB range CFI), with
   their text.

@@ -2,7 +2,7 @@
 // pages shown and marks those notes softly; while a note is being written the notepad stays put and offers "Jump
 // to notes for this page" instead. A note's reference moves the book to its passage and pulses it. A filter
 // shows this page, this chapter or all. PDF and EPUB; reduced motion; mocked API.
-import { book, expect, openReader, settled, test } from './fixtures';
+import { expect, openNotepad, openReader, settled, test } from './fixtures';
 
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const list = (page) => page.locator('.rf-notes');
@@ -42,7 +42,7 @@ test.describe('pdf', () => {
   test('turning pages scrolls the notepad to that spread\'s notes and marks them', async ({ page, api }) => {
     seedPdf(api);
     await openReader(page);
-    await page.getByRole('button', { name: /^Notes/ }).click();
+    await openNotepad(page);
     await expect(panel(page).locator('.rf-note')).toHaveCount(12);
     await expect.poll(() => markedPages(page)).toEqual([1, 1]);
     await page.waitForTimeout(300);
@@ -57,21 +57,23 @@ test.describe('pdf', () => {
     await expect(panel(page).getByRole('button', { name: 'Jump to notes for this page' })).toHaveCount(0);
   });
 
-  test('while a note is being written the notepad stays put and offers the jump instead', async ({ page, api }) => {
+  test('just after the reader scrolled the list the notepad stays put and offers the jump instead', async ({ page, api }) => {
     seedPdf(api);
     await openReader(page);
     // Scroll anchoring would hide a jump measured before the pill above the notes goes (DEBUG_LOG 2026-11-17 C25.5).
     await page.addStyleTag({ content: '.rf-notes, .rf-notes * { overflow-anchor: none !important; }' });
-    await page.getByRole('button', { name: /^Notes/ }).click();
-    await panel(page).getByRole('button', { name: /^Edit note at / }).first().click();
-    await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
+    await openNotepad(page);
+    await turn(page); // pages 2-3
+    await page.waitForTimeout(400);
+    const box = await list(page).boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 40); // by hand, just before the turn (C37.4: no typed note to write in any more)
+    await page.waitForTimeout(200);
     const top = await list(page).evaluate((el) => el.scrollTop);
-    await turn(page);
-    await turn(page); // pages 4-5
+    await turn(page); // pages 4-5, within the 2 s the notepad holds still after a hand scroll
     const jump = panel(page).getByRole('button', { name: 'Jump to notes for this page' });
     await expect(jump).toBeVisible();
     expect(await list(page).evaluate((el) => el.scrollTop)).toBe(top);
-    await expect(panel(page).locator('.rf-note[data-editing]')).toHaveCount(1); // still writing
     await jump.click();
     await expect.poll(() => inView(page, 'n4a')).toBe(true);
     await expect(jump).toHaveCount(0);
@@ -80,7 +82,7 @@ test.describe('pdf', () => {
   test('a note\'s reference moves the book to its passage and pulses it; the notepad holds still', async ({ page, api }) => {
     seedPdf(api);
     await openReader(page);
-    await page.getByRole('button', { name: /^Notes/ }).click();
+    await openNotepad(page);
     await panel(page).locator('.rf-note[data-id="n5b"]').scrollIntoViewIfNeeded();
     const top = await list(page).evaluate((el) => el.scrollTop);
     await panel(page).locator('.rf-note[data-id="n5b"]').getByRole('button', { name: /^Go to / }).click();
@@ -99,7 +101,7 @@ test.describe('pdf', () => {
   test('the filter shows this page, this chapter or all', async ({ page, api }) => {
     seedPdf(api);
     await openReader(page);
-    await page.getByRole('button', { name: /^Notes/ }).click();
+    await openNotepad(page);
     const filter = panel(page).getByRole('radiogroup', { name: 'Show notes' });
     await expect(filter.getByRole('radio', { name: 'All' })).toBeChecked();
     await filter.getByRole('radio', { name: 'This page' }).click();
@@ -125,35 +127,32 @@ test.describe('epub', () => {
 
   test('notes follow the EPUB, stay with their page after a larger text size, and the reference returns to it', async ({ page, api }) => {
     await openReader(page);
-    await page.getByRole('button', { name: /^Notes/ }).click();
-    // A note on the first page, then one two pages on.
-    await book(page).focus();
-    await page.keyboard.press('n');
-    await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
-    await page.keyboard.type('First page');
-    await panel(page).getByRole('button', { name: 'Done' }).click();
-    await expect.poll(() => api.notes.length).toBe(1);
+    const notebook = page.getByRole('dialog', { name: 'Notebook' });
+    const newPage = async (n) => { // C37.3: a notebook page at the place shown
+      await page.getByRole('button', { name: /^Notes/ }).click();
+      await notebook.getByRole('button', { name: 'New page' }).first().click();
+      await expect.poll(() => api.notes.length).toBe(n);
+      await notebook.getByRole('button', { name: 'Close notebook' }).click();
+      await expect(notebook).toHaveCount(0);
+    };
+    // A page on the first page, then one two pages on.
+    await newPage(1);
     const first = await settled(page);
     await turn(page);
     await turn(page);
-    await expect(here(page)).toHaveCount(0);
-    await book(page).focus();
-    await page.keyboard.press('n');
-    await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
-    await page.keyboard.type('Later page');
-    await panel(page).getByRole('button', { name: 'Done' }).click();
-    await expect.poll(() => api.notes.length).toBe(2);
+    await newPage(2);
+    await openNotepad(page);
     await expect(here(page)).toHaveCount(1);
-    await expect(here(page)).toContainText('Later page');
+    await expect(here(page)).toHaveAttribute('data-id', api.notes[1].id);
 
     await page.getByRole('button', { name: 'Larger text' }).click();
     await page.waitForTimeout(800);
-    await expect(here(page)).toContainText('Later page'); // the page shown still holds the note's characters
+    await expect(here(page)).toHaveAttribute('data-id', api.notes[1].id); // the page shown still holds the note's characters
 
-    await panel(page).locator('.rf-note', { hasText: 'First page' }).getByRole('button', { name: /^Go to / }).click();
+    await panel(page).locator(`.rf-note[data-id="${api.notes[0].id}"]`).getByRole('button', { name: /^Go to / }).click();
     await expect.poll(async () => (await settled(page)).start.split(':')[0]).toBe(first.start.split(':')[0]);
     await expect(page.locator('.rf-passage-pulse').first()).toBeVisible();
-    await expect(here(page)).toContainText('First page');
+    await expect(here(page)).toHaveAttribute('data-id', api.notes[0].id);
   });
 });
 
@@ -163,7 +162,7 @@ test.describe('reduced motion', () => {
   test('the notepad jumps without a smooth scroll and the pulse only fades', async ({ page, api }) => {
     seedPdf(api);
     await openReader(page);
-    await page.getByRole('button', { name: /^Notes/ }).click();
+    await openNotepad(page);
     await turn(page);
     await turn(page); // pages 4-5, at once: no smooth scroll to wait for
     await expect.poll(() => inView(page, 'n4a'), { timeout: 600 }).toBe(true);

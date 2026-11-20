@@ -5597,3 +5597,38 @@ in-memory database capped at 1000 rows per select). Failed before the fix (`git 
 
 ### Commit
 fix(ingest): read every page's text of a book over 1,000 pages
+
+## 2026-11-20 C37.7 — four note tests measure the book while it is still coming forward
+
+**Status:** fixed (in the tests; the motion is meant)
+
+### Symptom
+The full e2e run with C37.7's rack focus: 358 passed, 4 failed. `notes.spec.js` "Add note writes the passage…" (pdf,
+epub): the second passage written was "sm", not "small". `notes-anchor.spec.js` "Add note starts a page…" (pdf):
+the marker was not "outside the page"; "phone › the marker is a smaller circle…": its width was 21 px, not 22.
+
+### Repro
+`npx playwright test e2e/notes.spec.js e2e/notes-anchor.spec.js` (frontend): the same 4 fail every run.
+
+### Hypotheses
+1. The book now recedes (scale 0.97) while the notebook is open and comes forward over about 450 ms after it
+   closes; these tests select words or measure the marker right after the close, while it still moves. Evidence:
+   22 x 0.97 = 21.3; "sm" is a drag that ended where "small" was a moment before. Ruled out if: waiting for the book
+   at rest still fails. Result: confirmed (12 of 12 pass with the wait).
+2. The notebook's leaving layer still catches the drag. Ruled out: it has `pointer-events: none` and the first
+   letters of the drag landed in the book.
+
+### Root cause
+The tests' `select` (`notes.spec.js`) and `expectBeside` (`notes-anchor.spec.js`) read word and marker boxes
+before the book's return transform had finished.
+
+### Fix
+`fixtures.js` `bookAtRest(page)`: polls until `.rf-reading-area` has no transform, no filter and full opacity;
+`select` in `notes.spec.js` and `expectBeside` in `notes-anchor.spec.js` wait for it first.
+
+### Regression test
+The 4 tests themselves, which failed before the wait and pass after; the C37.7 tests in `notes-drawing.spec.js`
+check the book has no transform or filter once the notebook has gone.
+
+### Commit
+feat(ui): rack-focus the book as the notebook opens and closes

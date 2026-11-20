@@ -214,15 +214,14 @@ def test_a_technical_book_has_a_fifth_of_its_regions_math_or_code(db):
 
 # --- notes, Steve and the reading place ------------------------------------------------------------------------------
 
-def test_notes_earn_first_note_and_first_drawing_by_kind(db):
+def test_notes_earn_first_drawing_by_kind_and_first_note_by_notebook_words(db):
     db.tables["note_blocks"].append({"id": "n1", "user_id": USER, "kind": "equation"})
     assert badge_award.evaluate_badges(USER, "note") == []
     db.tables["note_blocks"].append({"id": "n2", "user_id": USER, "kind": "drawing"})
     assert badge_award.evaluate_badges(USER, "note") == ["first_drawing"]
-    db.tables["note_blocks"].append({"id": "n3", "user_id": OTHER, "kind": "text"})
+    db.tables["note_blocks"].append({"id": "n3", "user_id": USER, "kind": "text"})  # C37.1: a typed note no longer
     assert badge_award.evaluate_badges(USER, "note") == []
-    db.tables["note_blocks"].append({"id": "n4", "user_id": USER, "kind": "text"})
-    assert badge_award.evaluate_badges(USER, "note") == ["first_note"]
+    assert badge_award.evaluate_badges(USER, "note", words=True) == ["first_note"]  # words on a notebook page
 
 
 def test_an_answered_ask_steve_earns_first_steve(db):

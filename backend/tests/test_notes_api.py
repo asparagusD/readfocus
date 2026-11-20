@@ -2,7 +2,8 @@
 in-memory database. Owner only: another reader's book, note or file is 404 and never listed (migration 027's SELECT
 policies are the second wall; RLS itself is checked statically in test_migrations.py, as pytest has no database).
 Updates carry If-Match with the version they were made on; a stale one is 409 and changes nothing. Deleting sets
-deleted_at; deleted notes are not listed and cannot be changed."""
+deleted_at; deleted notes are not listed and cannot be changed. Since C37.1 no new typed (text) note is made; the
+ones readers have can still be edited and deleted until the notebook moves them."""
 
 import base64
 
@@ -20,13 +21,15 @@ PAGE_44 = {"kind": "pdf", "page": 44, "quads": [[72.5, 140.2, 500, 152]], "text"
 PAGE_45 = {"kind": "pdf", "page": 45, "quads": [[72, 60.3, 200, 72.8]], "text": "how much"}
 SECTION = {"kind": "epub", "cfi": "epubcfi(/6/14!/4/2,/1:0,/3:25)", "text": "A range in section six"}
 DOC = {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Fourier"}]}]}
+SCENE = {"elements": [{"type": "rectangle", "id": "r1"}], "appState": {"paper": "ruled"}, "files": {}}
+WORDS = {"elements": [{"type": "text", "id": "t1", "text": "Fourier"}], "appState": {}, "files": {}}
 PNG = b"\x89PNG\r\n\x1a\n" + b"\0" * 32
 WEBP = b"RIFF\x24\0\0\0WEBPVP8 " + b"\0" * 32
 
 
 def note(anchors=(PAGE_44,), start=44_014_014, end=44_015_299, **change):
-    body = {"kind": "text", "scope": "selection", "anchors": list(anchors), "position_start": start,
-            "position_end": end, "content": DOC}
+    body = {"kind": "drawing", "scope": "selection", "anchors": list(anchors), "position_start": start,
+            "position_end": end, "content": SCENE}
     return {**body, **change}
 
 
@@ -75,15 +78,29 @@ def listed(client, book=BOOK, **params):
     return response.json()["notes"]
 
 
-def test_a_text_note_on_a_two_page_selection_is_stored_at_version_1(client, db):
+def test_a_note_on_a_two_page_selection_is_stored_at_version_1(client, db):
     response = post(client, note(anchors=[PAGE_44, PAGE_45], end=45_007_299))
     assert response.status_code == 201
     saved = response.json()
     assert saved["version"] == 1 and response.headers["ETag"] == '"1"'
     assert saved["anchors"][0]["text"] == "the coefficients measure" and saved["anchors"][1]["page"] == 45
-    assert saved["content"] == DOC and saved["scope"] == "selection" and saved["deleted_at"] is None
+    assert saved["content"] == SCENE and saved["scope"] == "selection" and saved["deleted_at"] is None
     (row,) = db.tables["note_blocks"]
     assert row["user_id"] == USER and row["book_id"] == BOOK and row["orphaned"] is False
+
+
+def test_no_new_typed_note_is_made(client, db):
+    response = post(client, note(kind="text", content=DOC))
+    assert response.status_code == 422 and "notebook" in response.text
+    assert db.tables.get("note_blocks", []) == []
+
+
+def test_a_typed_note_a_reader_has_can_still_be_edited_and_deleted(client, db):
+    db.tables["note_blocks"] = [{"id": "old", "user_id": USER, "book_id": BOOK, "kind": "text", "content": DOC,
+                                 "version": 1, "deleted_at": None}]
+    edited = {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Edited"}]}]}
+    assert patch(client, "old", {"content": edited}, 1).status_code == 200
+    assert client.delete("/notes/old").status_code == 204
 
 
 def test_a_view_note_and_an_epub_note_are_stored(client):
@@ -137,16 +154,16 @@ def test_notes_are_listed_in_reading_order_then_creation_and_by_range(client, db
 
 def test_an_update_needs_the_current_version_and_bumps_it(client, db):
     saved = post(client, note()).json()
-    edited = {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Edited"}]}]}
+    edited = WORDS
     assert patch(client, saved["id"], {"content": edited}, None).status_code == 428
     first = patch(client, saved["id"], {"content": edited}, 1)
     assert first.status_code == 200 and first.json()["version"] == 2 and first.headers["ETag"] == '"2"'
-    stale = patch(client, saved["id"], {"content": DOC}, 1)  # another tab, still on version 1
+    stale = patch(client, saved["id"], {"content": SCENE}, 1)  # another tab, still on version 1
     assert stale.status_code == 409
     assert stale.json()["detail"] == {"message": "This note changed since you opened it", "version": 2}
     (row,) = db.tables["note_blocks"]
     assert row["content"] == edited and row["version"] == 2
-    assert patch(client, saved["id"], {"content": DOC}, "W/2").status_code == 412  # not a version
+    assert patch(client, saved["id"], {"content": SCENE}, "W/2").status_code == 412  # not a version
     assert patch(client, saved["id"], {}, 2).status_code == 422
 
 
@@ -167,7 +184,7 @@ def test_delete_is_soft_hides_the_note_and_freezes_it(client, db):
     (row,) = db.tables["note_blocks"]
     assert row["deleted_at"] is not None and row["version"] == 2  # kept, so it can be restored
     assert listed(client) == []
-    assert patch(client, saved["id"], {"content": DOC}, 2).status_code == 404
+    assert patch(client, saved["id"], {"content": SCENE}, 2).status_code == 404
     assert client.delete(f"/notes/{saved['id']}").status_code == 404
 
 
@@ -176,7 +193,7 @@ def test_another_reader_sees_and_changes_nothing(client, db, as_user):
     as_user(OTHER)
     assert client.get(f"/books/{BOOK}/notes").status_code == 404
     assert post(client, note()).status_code == 404
-    assert patch(client, saved["id"], {"content": DOC}, 1).status_code == 404
+    assert patch(client, saved["id"], {"content": SCENE}, 1).status_code == 404
     assert client.delete(f"/notes/{saved['id']}").status_code == 404
     assert client.post(f"/books/{BOOK}/note-files", json={"content_type": "image/png", "data": base64.b64encode(PNG).decode()}).status_code == 404
     assert listed(client, "theirs") == []
@@ -217,9 +234,20 @@ def badge_calls(monkeypatch):
     return calls
 
 
-def test_a_new_note_asks_for_the_note_badges(client, badge_calls):
+def test_a_new_note_asks_for_the_note_badges_saying_whether_it_has_words(client, badge_calls):
     assert post(client, note()).status_code == 201
-    assert badge_calls == [((USER, "note"), {})]
+    assert post(client, note(content=WORDS)).status_code == 201
+    assert badge_calls == [((USER, "note"), {"words": False}), ((USER, "note"), {"words": True})]
+
+
+def test_a_saved_page_asks_for_the_note_badges_only_once_it_has_words(client, badge_calls):
+    saved = post(client, note()).json()
+    badge_calls.clear()
+    assert patch(client, saved["id"], {"content": SCENE}, 1).status_code == 200
+    assert patch(client, saved["id"], {"orphaned": True}, 2).status_code == 200
+    assert badge_calls == []
+    assert patch(client, saved["id"], {"content": WORDS}, 3).status_code == 200
+    assert badge_calls == [((USER, "note"), {"words": True})]
 
 
 def test_a_badge_failure_never_fails_the_note(client, db, monkeypatch, caplog):

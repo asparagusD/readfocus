@@ -75,8 +75,8 @@ export function FocusBar({
         </div>
         <div className="rf-focus-actions">
           {onNotes && (
-            <button type="button" className="rf-focus-button" ref={notesRef} onClick={onNotes} aria-expanded={notesOpen}
-              aria-controls={notesOpen ? 'rf-side-panel' : undefined} aria-label={notesCount ? `Notes, ${notesCount}` : 'Notes'}>
+            <button type="button" className="rf-focus-button" ref={notesRef} onClick={onNotes} aria-haspopup="dialog" aria-expanded={notesOpen}
+              aria-controls={notesOpen ? 'rf-notebook' : undefined} aria-label={notesCount ? `Notes, ${notesCount}` : 'Notes'}>
               <NotebookPen size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Notes</span>
             </button>
           )}

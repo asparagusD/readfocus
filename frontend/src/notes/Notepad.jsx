@@ -1,10 +1,9 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Bookmark, Code2, Image, Link2, PenLine, Plus, Sigma, Trash2, Type } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Bookmark, Code2, Image, Link2, NotebookPen, PenLine, Sigma, Trash2, Type } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NoteDoc } from './NoteDoc';
-import { DrawingFrame, DrawingThumb } from './DrawingNote';
+import { DrawingThumb } from './DrawingNote';
 import { BlockNote } from './BlockNote';
-import { NOTE_DRAG, useNotesActions } from './NotesContext';
 import { reference } from './place';
 import { overallStatus } from './status';
 import { followAction, notesFor, overlapping } from './sync';
@@ -19,7 +18,7 @@ const KINDS = {
   figure: { label: 'Figure', Icon: Image },
 };
 
-function NoteState({ status, onRetry, onKeepMine, onTakeTheirs }) {
+export function NoteState({ status, onRetry, onKeepMine, onTakeTheirs }) {
   if (status === 'conflict') {
     return (
       <div className="rf-note-alert" role="alert">
@@ -43,20 +42,17 @@ function NoteState({ status, onRetry, onKeepMine, onTakeTheirs }) {
   return null;
 }
 
-const TextEditor = lazy(() => import('./TextEditor'));
-
 /**
  * The notepad (C22.2, handoff screen 19): the reader's note blocks in book order, each under a reference to its
- * passage ("p. 45 · Fourier series", a button that goes there) and its kind. Text notes are drawn by NoteDoc and
- * edited in TipTap, loaded the first time one is opened (C22.2b): a click, or Enter on a focused note, opens it;
- * Escape or Done closes it. "Text" adds a note at the selection or the pages shown and opens it. C22.3: drawings
- * show their thumbnail and open in Excalidraw (DrawingNote.jsx); "Drawing" adds one. Loading, error and empty
- * states; one save line, announced politely; a conflict or a refused save on its note. C22.4: `request` from the
- * book ({ type: 'edit', key } for a new note by N or the selection toolbar, { type: 'focus', ids } from a margin
- * marker) opens or focuses notes; each note's link button moves its anchor to the selection (`onRelink`).
+ * passage ("p. 45 · Fourier series", a button that goes there) and its kind. C22.3: drawings show their thumbnail;
+ * since C37.2 they are notebook pages and open in the notebook (`onOpenPage`), and "Notebook" opens it
+ * (`onNotebook`). C37.4: a typed note not yet moved into the notebook is drawn by NoteDoc, read-only; a click opens
+ * the notebook, which moves it (TipTap is gone). Loading, error and empty states; one save line, announced
+ * politely; a conflict or a refused save on its note. C22.4: `request` from the book ({ type: 'focus', ids } from a
+ * margin marker) focuses notes; each note's link button moves its anchor to the selection (`onRelink`).
  * C22.5: `range` is the A4 range the book shows (sync.js). The notes on it are marked; when it changes the list
- * scrolls to the first of them, or, while a note is open or just after the reader scrolled the list, offers "Jump
- * to notes for this page"; a move the notepad asked for (a reference) does not scroll it. A filter shows this
+ * scrolls to the first of them, or, just after the reader scrolled the list, offers "Jump to notes for this
+ * page"; a move the notepad asked for (a reference) does not scroll it. A filter shows this
  * page, this chapter (`contents()`, the book's entries) or all.
  */
 const FILTERS = [{ id: 'page', label: 'This page' }, { id: 'chapter', label: 'This chapter' }, { id: 'all', label: 'All' }];
@@ -82,13 +78,11 @@ function NotesFilter({ value, onChange }) {
     </div>
   );
 }
-export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onAdd, onThumbnail, onDrawing, onRelink, request = null, range = null, contents = () => [] }) {
-  const [editing, setEditing] = useState(null); // a note's key (or id)
+export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, onReload, onRetry, onKeepMine, onTakeTheirs, onChange, onOpenPage, onNotebook, onRelink, request = null, range = null, contents = () => [] }) {
   const [focused, setFocused] = useState(null); // { ids } opened from a margin marker
   const [seen, setSeen] = useState(null); // the last request taken, so each is taken once, when the list is ready
   if (request && state === 'ready' && seen !== request.n) {
     setSeen(request.n);
-    setEditing(request.type === 'edit' ? request.key : null);
     setFocused(request.type === 'focus' ? { ids: request.ids, n: request.n } : null);
   }
   useEffect(() => {
@@ -124,7 +118,7 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
   }, []);
   const latest = useRef({});
   const busy = Boolean(focused) || Boolean(request && seen !== request.n);
-  useEffect(() => { latest.current = { target, typing: editing !== null, busy }; });
+  useEffect(() => { latest.current = { target, typing: false, busy }; });
   useEffect(() => {
     if (state !== 'ready' || !rangeKey) return undefined;
     const frame = requestAnimationFrame(() => {
@@ -139,40 +133,11 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
     });
     return () => cancelAnimationFrame(frame);
   }, [rangeKey, state, scrollTo]);
-  // C22.6: an equation or listing dragged from the book is added where it is dropped.
-  const notesActions = useNotesActions();
-  const [dropping, setDropping] = useState(false);
-  const canDrop = (event) => Boolean(notesActions) && [...(event.dataTransfer?.types ?? [])].includes(NOTE_DRAG);
-  const onDragOver = (event) => {
-    if (!canDrop(event)) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'copy';
-    setDropping(true);
-  };
-  const onDrop = (event) => {
-    if (!canDrop(event)) return;
-    event.preventDefault();
-    setDropping(false);
-    notesActions.drop();
-  };
   const byHand = useCallback(() => { handAt.current = Date.now(); }, []);
   const goTo = useCallback((note) => { jumpAt.current = Date.now(); setPill(null); onGoTo(note); }, [onGoTo]);
-  const drawingOpen = notes.some((n) => (n.key ?? n.id) === editing && n.kind === 'drawing');
-  useEffect(() => { onDrawing?.(drawingOpen); }, [drawingOpen, onDrawing]); // the side panel widens for it
-  useEffect(() => () => onDrawing?.(false), [onDrawing]);
   const status = overallStatus(statuses, notes.filter((n) => !n.pending).map((n) => n.id));
-  const add = async (kind) => {
-    const key = await onAdd(kind);
-    if (key) setEditing(key);
-  };
-  const stop = (note) => {
-    setEditing(null);
-    if (!note.pending) onRetry(note.id); // save now rather than in 800 ms
-    requestAnimationFrame(() => document.querySelector(`.rf-note[data-key="${note.key ?? note.id}"] .rf-note-read`)?.focus());
-  };
   return (
-    <div className="rf-notes" ref={root} onWheel={byHand} onTouchMove={byHand} data-drop={dropping || undefined}
-      onDragOver={onDragOver} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropping(false); }} onDrop={onDrop}
+    <div className="rf-notes" ref={root} onWheel={byHand} onTouchMove={byHand}
       onKeyDown={(event) => { if (['PageUp', 'PageDown', 'ArrowUp', 'ArrowDown'].includes(event.key) && !event.target.closest('[contenteditable="true"]')) byHand(); }}>
       <div className="rf-notes-head">
         <p className="rf-notes-count">{shown.length === 1 ? '1 note' : `${shown.length} notes`}</p>
@@ -196,7 +161,7 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
       {state === 'ready' && !notes.length && (
         <div className="rf-notes-empty">
           <p className="rf-notes-empty-title">No notes in this book yet</p>
-          <p className="rf-note-small">A note sits beside the passage it is about: select a sentence first, or write about the pages you are on.</p>
+          <p className="rf-note-small">Your notes go into the notebook, each page beside the place in the book where you started it.</p>
         </div>
       )}
       {state === 'ready' && notes.length > 0 && !shown.length && (
@@ -209,17 +174,15 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
             const where = describe(note);
             const ref = reference(where.page, where.chapter);
             const key = note.key ?? note.id;
-            const open = editing === key && (note.kind === 'text' || note.kind === 'drawing');
             return (
               <li key={key} className="rf-note" data-kind={note.kind} data-id={note.id} data-key={key}
-                data-new={note.key ? 'true' : undefined} data-editing={open || undefined}
+                data-new={note.key ? 'true' : undefined}
                 data-focused={focused?.ids.some((x) => x === note.id || x === note.key) || undefined} data-here={hereIds.has(note.id) || undefined}>
                 <div className="rf-note-head">
                   <button type="button" className="rf-note-ref" onClick={() => goTo(note)} aria-label={`Go to ${ref}`}>
                     <Bookmark size={14} strokeWidth={1.75} aria-hidden="true" />
                     <span>{ref}</span>
                   </button>
-                  {open && note.kind === 'text' && <button type="button" className="rf-note-done" onClick={() => stop(note)}>Done</button>}
                   <span className="rf-note-kind" title={label}>
                     <Icon size={15} strokeWidth={1.75} aria-hidden="true" />
                     <span className="rf-note-hidden">{label} note</span>
@@ -238,21 +201,11 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
                   </button>
                 </div>
                 <div className="rf-note-body">
-                  {open && note.kind === 'drawing' && (
-                    <DrawingFrame note={note} reference={ref} onChange={(content) => onChange(note.id, { content })}
-                      onDone={(blob) => { onThumbnail(note, blob); stop(note); }} />
-                  )}
-                  {!open && note.kind === 'drawing' && <DrawingThumb note={note} reference={ref} onOpen={() => setEditing(key)} />}
-                  {open && note.kind === 'text' && (
-                    <Suspense fallback={<NoteDoc doc={note.content} />}>
-                      <TextEditor content={note.content} label={`Note at ${ref}`}
-                        onChange={(content) => onChange(note.id, { content })} onDone={() => stop(note)} />
-                    </Suspense>
-                  )}
-                  {!open && note.kind === 'text' && (
-                    <div className="rf-note-read" role="button" tabIndex={0} aria-label={`Edit note at ${ref}`}
-                      onClick={() => setEditing(key)}
-                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setEditing(key); } }}>
+                  {note.kind === 'drawing' && <DrawingThumb note={note} reference={ref} onOpen={() => onOpenPage(note)} />}
+                  {note.kind === 'text' && (
+                    <div className="rf-note-read" role="button" tabIndex={0} aria-label={`Move note at ${ref} into the notebook`}
+                      onClick={onNotebook} title="Open the notebook to move this typed note onto a page"
+                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onNotebook(); } }}>
                       <NoteDoc doc={note.content} />
                     </div>
                   )}
@@ -269,13 +222,10 @@ export function Notepad({ notes, state, statuses, describe, onGoTo, onRemove, on
       )}
       {state === 'ready' && (
         <div className="rf-notes-add">
-          <button type="button" className="rf-notes-pill" onClick={() => add('text')}>
-            <Plus size={15} strokeWidth={1.75} aria-hidden="true" />Text
+          <button type="button" className="rf-notes-pill" onClick={onNotebook}>
+            <NotebookPen size={15} strokeWidth={1.75} aria-hidden="true" />Notebook
           </button>
-          <button type="button" className="rf-notes-pill" onClick={() => add('drawing')}>
-            <Plus size={15} strokeWidth={1.75} aria-hidden="true" />Drawing
-          </button>
-          <p className="rf-note-small">At your selection, or the pages you are on</p>
+          <p className="rf-note-small">New notes go into the notebook</p>
         </div>
       )}
     </div>

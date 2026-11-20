@@ -59,7 +59,7 @@ the pass mark (FOCUS_RULES F12).
 | 7-day streak | a streak of 7 (G7) |
 | 30-day streak | a streak of 30 |
 | 100-day streak | a streak of 100 |
-| First note | the first typed note saved |
+| First note | the first words written in a notebook (a saved page with a text element; C37.1, was the first typed note) |
 | First drawing | the first drawing saved |
 | First Ask Steve | the first answered Ask Steve request |
 | Finished a book | the reader's bookmark or reading position reaches the book's last body page (PDF) or last spine item's end (EPUB) |
@@ -164,8 +164,9 @@ the pass mark (FOCUS_RULES F12).
   (the entry at the body start); "finished a book" is a PDF's last page by
   `page_count` (back matter counts as body) or an EPUB's last spine item
   with text (being in it, not its last character); "passed" is a scored
-  session with points (or the one being scored); a typed note is kind
-  `text`; "First Ask Steve" is a saved Steve answer.
+  session with points (or the one being scored); notebook words are a live,
+  non-blank text element on a saved drawing page (C37.1; until then a typed
+  note of kind `text`); "First Ask Steve" is a saved Steve answer.
 
 ## Open questions
 

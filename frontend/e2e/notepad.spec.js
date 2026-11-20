@@ -1,8 +1,9 @@
-// The notepad in the side panel (C22.2): Notes and Steve share the panel as tabs beside the book (a sheet on a
+// The notepad in the side panel (C22.2; since C37.3 the notebook's "All notes" opens it, as the toolbar's Notes opens
+// the notebook): Notes and Steve share the panel as tabs beside the book (a sheet on a
 // phone); notes are listed in book order under their passage's reference and drawn without loading an editor;
 // changes left from an earlier visit (IndexedDB) are sent on load, a stale one shows the conflict and Keep mine
 // resends it on the saved version. Every /notes call is mocked in fixtures.js.
-import { test, expect, openReader, shown, settled } from './fixtures.js';
+import { test, expect, openNotepad, openReader, shown, settled } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 const side = (page, name) => page.getByRole('complementary', { name });
@@ -30,8 +31,7 @@ const seeded = () => [
 
 async function openNotes(page) {
   await openReader(page);
-  await page.getByRole('button', { name: /^Notes/ }).click();
-  await expect(side(page, 'Notes')).toBeVisible();
+  await openNotepad(page);
 }
 
 test('Notes opens beside the book with its notes in book order, drawn without an editor', async ({ page, api }) => {
@@ -40,7 +40,7 @@ test('Notes opens beside the book with its notes in book order, drawn without an
   page.on('request', (r) => { if (r.resourceType() === 'script') scripts.push(r.url()); });
   await openReader(page);
   await expect(page.getByRole('button', { name: 'Notes, 2' })).toBeVisible();
-  await page.getByRole('button', { name: 'Notes, 2' }).click();
+  await openNotepad(page);
   const panel = side(page, 'Notes');
   await expect(panel.getByRole('tab', { name: /Notes/ })).toHaveAttribute('aria-selected', 'true');
   await expect(panel.getByRole('tab', { name: /Notes/ })).toBeFocused();
@@ -77,8 +77,7 @@ test('tabs: arrows move between Notes and Steve, Esc closes and focus returns to
   api.steve.consented = true;
   await openReader(page);
   const notes = page.getByRole('button', { name: 'Notes' });
-  await notes.focus();
-  await page.keyboard.press('Enter');
+  await openNotepad(page);
   await expect(side(page, 'Notes').getByRole('tab', { name: 'Notes' })).toBeFocused();
   await page.keyboard.press('ArrowRight');
   await expect(side(page, 'Steve').getByRole('tab', { name: 'Steve' })).toBeFocused();
@@ -90,7 +89,8 @@ test('tabs: arrows move between Notes and Steve, Esc closes and focus returns to
   await expect(side(page, 'Notes').getByRole('button', { name: 'Close notes' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.locator('#rf-side-panel')).toHaveCount(0);
-  await expect(notes).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Ask Steve' })).toBeFocused(); // the button that opened the panel
+  await expect(notes).toBeVisible();
 });
 
 test('empty, failed load and Try again', async ({ page, api }) => {
@@ -102,10 +102,13 @@ test('empty, failed load and Try again', async ({ page, api }) => {
     : route.fallback()));
   await page.reload();
   await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor();
-  await page.getByRole('button', { name: /^Notes/ }).click();
-  await expect(side(page, 'Notes').getByText('Your notes could not be loaded.')).toBeVisible();
+  await page.getByRole('button', { name: /^Notes/ }).click(); // C37.3: the notebook says it, and tries again
+  const notebook = page.getByRole('dialog', { name: 'Notebook' });
+  await expect(notebook.getByText('Your notebook could not be opened.')).toBeVisible();
   api.notes = seeded();
-  await side(page, 'Notes').getByRole('button', { name: 'Try again' }).click();
+  await notebook.getByRole('button', { name: 'Try again' }).click();
+  await expect(notebook.getByText('No pages yet')).toBeVisible(); // two typed notes, no pages
+  await notebook.getByRole('button', { name: /^All notes/ }).click();
   await expect(side(page, 'Notes').locator('.rf-note')).toHaveCount(2);
 });
 
@@ -151,7 +154,7 @@ test('a change left offline on an earlier visit is sent on load and leaves the q
   await expect.poll(() => api.notePatches.length).toBe(1);
   expect(api.notePatches[0]).toEqual({ id: 'n-late', version: 1, content });
   await expect.poll(() => queued(page)).toEqual([]);
-  await page.getByRole('button', { name: /^Notes/ }).click();
+  await openNotepad(page);
   await expect(side(page, 'Notes').locator('.rf-note[data-id="n-late"]')).toContainText('On page two.'); // the list as loaded
   await expect(side(page, 'Notes').getByRole('status').filter({ hasText: 'All notes saved' })).toBeAttached();
 });
@@ -164,7 +167,7 @@ test('a stale change is a conflict on its note; Keep mine sends it on the saved 
   await queueChange(page, { id: 'n-late', change: { content }, version: 1 });
   await page.reload();
   await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor();
-  await page.getByRole('button', { name: /^Notes/ }).click();
+  await openNotepad(page);
   const card = side(page, 'Notes').locator('.rf-note[data-id="n-late"]');
   await expect(card.getByRole('alert')).toContainText('This note changed in another tab.');
   await expect(side(page, 'Notes').getByRole('status').filter({ hasText: 'Some notes are not saved' })).toBeAttached();
@@ -200,7 +203,7 @@ test.describe('phone', () => {
     api.notes = seeded();
     await openReader(page);
     expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe('lamplight');
-    await page.getByRole('button', { name: /^Notes/ }).click();
+    await openNotepad(page);
     const panel = side(page, 'Notes');
     const box = await panel.boundingBox();
     expect(Math.round(box.x)).toBe(0);

@@ -2596,6 +2596,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/notebook-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/notepad.spec.js",
       "type": "file",
       "role": "config",
@@ -2615,12 +2621,6 @@
     },
     {
       "id": "file:frontend/e2e/notes-drawing.spec.js",
-      "type": "file",
-      "role": "config",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/e2e/notes-editor.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -3838,6 +3838,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/notes/Notebook.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/notes/Notebook.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/notes/Notepad.css",
       "type": "file",
       "role": "asset",
@@ -3863,18 +3875,6 @@
     },
     {
       "id": "file:frontend/src/notes/SidePanel.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/notes/TextEditor.css",
-      "type": "file",
-      "role": "asset",
-      "language": "css"
-    },
-    {
-      "id": "file:frontend/src/notes/TextEditor.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -3940,25 +3940,61 @@
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/notes/mathNodes.js",
+      "id": "file:frontend/src/notes/moveTyped.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/notes/mathRules.js",
+      "id": "file:frontend/src/notes/moveTyped.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/notes/mathRules.test.js",
+      "id": "file:frontend/src/notes/notebookItems.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookItems.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookPages.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/notebookPages.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
       "id": "file:frontend/src/notes/notesApi.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/pageImages.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/pageImages.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/pageText.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4643,12 +4679,6 @@
     },
     {
       "id": "file:frontend/src/steve/LatexDialog.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
-      "id": "file:frontend/src/steve/NoteGrip.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -11159,6 +11189,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/notebook-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notebook-frame-rate.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/notepad.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11175,11 +11215,6 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/notes-drawing.spec.js",
-      "to": "file:frontend/e2e/fixtures.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/e2e/notes-editor.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -12339,13 +12374,13 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/DrawingNote.jsx",
-      "to": "file:frontend/src/notes/drawing.js"
+      "from": "file:frontend/src/notes/DrawingEditor.jsx",
+      "to": "file:frontend/src/notes/pageImages.js"
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/DrawingNote.jsx",
-      "to": "file:frontend/src/notes/excalidrawFonts.js"
+      "from": "file:frontend/src/notes/DrawingEditor.jsx",
+      "to": "file:frontend/src/notes/pageText.js"
     },
     {
       "type": "imports",
@@ -12361,6 +12396,46 @@
       "type": "imports",
       "from": "file:frontend/src/notes/NoteDoc.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/components/ui/Button.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/Notebook.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/Notepad.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/notebookPages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/notes/place.js"
     },
     {
       "type": "imports",
@@ -12395,11 +12470,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/notes/Notepad.jsx",
-      "to": "file:frontend/src/notes/NotesContext.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/Notepad.jsx",
       "to": "file:frontend/src/notes/place.js"
     },
     {
@@ -12416,16 +12486,6 @@
       "type": "imports",
       "from": "file:frontend/src/notes/SidePanel.jsx",
       "to": "file:frontend/src/notes/SidePanel.css"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/TextEditor.jsx",
-      "to": "file:frontend/src/notes/TextEditor.css"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/TextEditor.jsx",
-      "to": "file:frontend/src/notes/mathNodes.js"
     },
     {
       "type": "imports",
@@ -12454,11 +12514,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/fromBook.js",
-      "to": "file:frontend/src/steve/answer.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/notes/fromBook.test.js",
       "to": "file:frontend/src/notes/fromBook.js"
     },
@@ -12474,23 +12529,43 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/mathNodes.js",
-      "to": "file:frontend/src/notes/mathRules.js"
+      "from": "file:frontend/src/notes/moveTyped.test.js",
+      "to": "file:frontend/src/notes/moveTyped.js"
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/mathNodes.js",
-      "to": "file:frontend/src/steve/math.js"
+      "from": "file:frontend/src/notes/notebookItems.js",
+      "to": "file:frontend/src/notes/drawing.js"
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/mathRules.test.js",
-      "to": "file:frontend/src/notes/mathRules.js"
+      "from": "file:frontend/src/notes/notebookItems.js",
+      "to": "file:frontend/src/steve/answer.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookItems.test.js",
+      "to": "file:frontend/src/notes/notebookItems.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookPages.js",
+      "to": "file:frontend/src/notes/sync.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/notebookPages.test.js",
+      "to": "file:frontend/src/notes/notebookPages.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/notes/notesApi.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/pageImages.test.js",
+      "to": "file:frontend/src/notes/pageImages.js"
     },
     {
       "type": "imports",
@@ -13365,6 +13440,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/Notebook.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/notes/Notepad.jsx"
     },
     {
@@ -13380,7 +13465,32 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/notes/fromBook.js"
+      "to": "file:frontend/src/notes/drawing.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/moveTyped.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/notebookItems.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/notebookPages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/notesApi.js"
     },
     {
       "type": "imports",
@@ -13790,11 +13900,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/steve/EpubBlockActions.jsx",
-      "to": "file:frontend/src/steve/NoteGrip.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/EpubBlockActions.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
     },
     {
@@ -13831,11 +13936,6 @@
       "type": "imports",
       "from": "file:frontend/src/steve/LatexDialog.jsx",
       "to": "file:frontend/src/steve/SteveMath.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/NoteGrip.jsx",
-      "to": "file:frontend/src/notes/NotesContext.js"
     },
     {
       "type": "imports",
@@ -13901,11 +14001,6 @@
       "type": "imports",
       "from": "file:frontend/src/steve/PdfBlockActions.jsx",
       "to": "file:frontend/src/steve/LatexDialog.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/steve/PdfBlockActions.jsx",
-      "to": "file:frontend/src/steve/NoteGrip.jsx"
     },
     {
       "type": "imports",

@@ -67,9 +67,9 @@ export function ReaderToolbar({
         </button>
       )}
       {onNotes && (
-        // C22.2: the notepad, in the side panel beside the book, with its count (handoff screen 19).
-        <button type="button" className="rf-tool" ref={notesRef} onClick={onNotes} aria-expanded={notesOpen}
-          aria-controls={notesOpen ? 'rf-side-panel' : undefined} aria-label={notesCount ? `Notes, ${notesCount}` : 'Notes'}>
+        // C22.2: the notes, with their count (handoff screen 19); since C37.3 the button opens the notebook.
+        <button type="button" className="rf-tool" ref={notesRef} onClick={onNotes} aria-haspopup="dialog" aria-expanded={notesOpen}
+          aria-controls={notesOpen ? 'rf-notebook' : undefined} aria-label={notesCount ? `Notes, ${notesCount}` : 'Notes'}>
           <NotebookPen size={18} strokeWidth={1.75} aria-hidden="true" />
           <span className="rf-tool-label">Notes</span>
           {notesCount > 0 && <span className="rf-tool-count" aria-hidden="true">{notesCount}</span>}

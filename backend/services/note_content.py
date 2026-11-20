@@ -33,7 +33,7 @@ _NODES = {
 }
 _LEAVES = {"hardBreak", "inlineMath", "blockMath"}
 _MARKS = {"bold", "italic", "strike", "code"}
-_APP_STATE = {"viewBackgroundColor", "gridSize", "gridModeEnabled"}
+_APP_STATE = {"viewBackgroundColor", "gridSize", "gridModeEnabled", "paper"}  # paper: a notebook page's (C37.1)
 
 
 def owned_path(path, user_id: str, book_id: str) -> bool:
@@ -87,6 +87,8 @@ def _drawing(content: dict, user_id: str, book_id: str) -> dict:
     app_state = content.get("appState", {})
     if not isinstance(app_state, dict) or set(app_state) - _APP_STATE:
         raise ContentError(f"a drawing keeps only {sorted(_APP_STATE)} of its app state")
+    if "paper" in app_state and app_state["paper"] not in policy.NOTE_PAPERS:
+        raise ContentError(f"a page's paper is one of {policy.NOTE_PAPERS}")
     files = content.get("files", {})
     if not isinstance(files, dict) or len(files) > policy.NOTE_DRAWING_FILES_MAX:
         raise ContentError(f"a drawing has at most {policy.NOTE_DRAWING_FILES_MAX} images")
@@ -147,6 +149,14 @@ def _fields(kind: str):
 
 _KINDS = {"text": _text, "drawing": _drawing, "equation": _fields("equation"), "code": _fields("code"),
           "figure": _fields("figure")}
+
+
+def has_words(kind: str, content: dict) -> bool:
+    """C37.1: a notebook page (a drawing) with words written on it: a live text element whose text is not blank."""
+    if kind != "drawing":
+        return False
+    return any(isinstance(e, dict) and e.get("type") == "text" and not e.get("isDeleted")
+               and isinstance(e.get("text"), str) and e["text"].strip() for e in content.get("elements", []))
 
 
 def check_content(kind: str, content, *, user_id: str, book_id: str) -> dict:

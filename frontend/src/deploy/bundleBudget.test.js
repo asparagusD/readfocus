@@ -22,9 +22,9 @@ test('a heavy library pulled into the initial route fails, and so does one missi
   const holders = lazyHolders();
   holders[0].packages = [];
   const chunks = [chunk('index.js', { isEntry: true, imports: ['shared.js'] }),
-    chunk('shared.js', { packages: ['@tiptap/core'] }), ...holders];
+    chunk('shared.js', { packages: ['tesseract.js'] }), ...holders];
   const found = failures(chunks, sizes(chunks));
-  assert.ok(found.some((line) => line.startsWith('@tiptap/core is in shared.js, part of the initial route')));
+  assert.ok(found.some((line) => line.startsWith('tesseract.js is in shared.js, part of the initial route')));
   assert.ok(found.some((line) => line.startsWith(`${LAZY_PACKAGES[0]} is in no chunk`)));
 });
 

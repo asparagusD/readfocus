@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, ClipboardPaste, LocateFixed, NotebookPen, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NoteState } from './Notepad';
-import { passageOf } from './drawing';
+import { pagePaper, PAPERS, passageOf } from './drawing';
 import { serveOwnFonts } from './excalidrawFonts';
 import { reference } from './place';
 import { openingPage, pageHere, pageKey, pageStatus } from './notebookPages';
@@ -13,6 +13,35 @@ const DrawingEditor = lazy(() => {
   serveOwnFonts();
   return import('./DrawingEditor');
 });
+
+const PAPER_LABEL = { ruled: 'Ruled', squared: 'Squared', plain: 'Plain' };
+
+/** C37.5: the page's paper as one radio group: one tab stop, arrows, Home and End pick. */
+function PaperPicker({ value, onPick }) {
+  const onKeyDown = (event) => {
+    const i = PAPERS.indexOf(value);
+    const to = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: PAPERS.length - 1 }[event.key];
+    if (to === undefined) return;
+    event.preventDefault();
+    const next = PAPERS[(to + PAPERS.length) % PAPERS.length];
+    onPick(next);
+    event.currentTarget.querySelector(`[data-paper="${next}"]`)?.focus();
+  };
+  return (
+    <div className="rf-notebook-paper" role="radiogroup" aria-label="Paper" onKeyDown={onKeyDown}>
+      {PAPERS.map((p) => (
+        <button key={p} type="button" role="radio" data-paper={p} aria-checked={value === p} tabIndex={value === p ? 0 : -1}
+          onClick={() => onPick(p)}>{PAPER_LABEL[p]}</button>
+      ))}
+    </div>
+  );
+}
+
+/** A page's date at its foot, from when it was started. */
+const started = (page) => {
+  const at = new Date(page?.created_at ?? '');
+  return Number.isNaN(at.getTime()) ? '' : at.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+};
 
 /** "Page 1 | Page 2 | …" as one tablist: one tab stop, arrows, Home and End turn to a page. */
 function PageTabs({ pages, current, onPick }) {
@@ -50,6 +79,9 @@ function PageTabs({ pages, current, onPick }) {
  * C37.3: `incoming` ({ key, lines, n }) is something from the book for the page `key`: the notebook turns there and
  * the editor adds the lines (notebookItems.js), once, then `onIncoming(n)`. "All notes" opens the notepad's list.
  * C37.4: `moving` says typed notes are becoming pages; a page asked for that is gone shows the opening page.
+ * C37.5 (issue 26): it looks like a notebook: the book's title on a cover tab, a stitched binding, the page on its
+ * paper (ruled, squared or plain, chosen per page and saved with it) with a sheet behind it, and its number and
+ * date at its foot, in Paper or Lamplight.
  */
 export function Notebook({ title, pages, state, statuses, range, describe, current, onPage, onNew, onChange, onThumbnail,
   onRemove, onGoTo, onRetry, onKeepMine, onTakeTheirs, onReload, onClose, returnTo, beside = false, total = 0, onAll,
@@ -136,6 +168,12 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
     setEpoch((n) => n + 1);
   };
   const status = page && !page.pending ? statuses[page.id]?.status : null;
+  const paper = page ? pagePaper(page.content) : 'ruled';
+  const choosePaper = (next) => { // saved with the page's scene (C37.1 lets its app state keep `paper`)
+    if (!page || next === paper) return;
+    const content = page.content ?? { elements: [] };
+    onChange(page.id, { content: { ...content, appState: { ...(content.appState ?? {}), viewBackgroundColor: '#ffffff', paper: next } } });
+  };
 
   return (
     <div className="rf-notebook-layer" ref={layer} data-beside={beside || undefined}>
@@ -144,7 +182,7 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
         <header className="rf-notebook-head">
           <div className="rf-notebook-name">
             <h2 id="rf-notebook-title" className="rf-notebook-title">Notebook</h2>
-            <p className="rf-notebook-book">{title}</p>
+            <p className="rf-notebook-book" title={title}>{title}</p>
           </div>
           {page && (
             <button type="button" className="rf-notebook-ref" onClick={() => { close(); onGoTo(page); }}
@@ -201,7 +239,7 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
           )}
           {state === 'ready' && page && (
             <Suspense fallback={<p className="rf-notebook-note" role="status">Opening the page…</p>}>
-              <DrawingEditor key={`${pageKey(page)}:${epoch}`} content={page.content} passage={passage}
+              <DrawingEditor key={`${pageKey(page)}:${epoch}`} content={page.content} passage={passage} paper={paper}
                 dark={document.documentElement.dataset.theme === 'lamplight'}
                 focus={grab} onChange={(content) => { dirty.current = pageKey(page); onChange(page.id, { content }); }}
                 register={register} />
@@ -222,6 +260,12 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
                 <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
               </button>
             </div>
+          )}
+          {page && (
+            <>
+              <p className="rf-notebook-folio">{[`Page ${index + 1} of ${pages.length}`, started(page)].filter(Boolean).join(' · ')}</p>
+              <PaperPicker value={paper} onPick={choosePaper} />
+            </>
           )}
           <p className="rf-notebook-status" role="status" aria-live="polite">
             {moving ? 'Moving your typed notes into the notebook…' : page ? pageStatus(status, page.pending) : ''}

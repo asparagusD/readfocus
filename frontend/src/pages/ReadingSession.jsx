@@ -35,6 +35,7 @@ import { notesApi } from '../notes/notesApi';
 import { moveTyped, movedStore, typedNotes } from '../notes/moveTyped';
 import { serveOwnFonts } from '../notes/excalidrawFonts';
 import { chapterOf, reference } from '../notes/place';
+import { newPageContent } from '../notes/drawing';
 import { shownRange } from '../notes/sync';
 import { NotesContext } from '../notes/NotesContext';
 import { useBodyStart } from '../focus/useBodyStart';
@@ -320,7 +321,7 @@ export function ReadingSession() {
     const place = await reader.current?.notePlace();
     if (!place) { tooEarly(); return null; }
     return notepad.create({ kind: 'drawing', scope: place.scope, anchors: place.anchors, position_start: place.start,
-      position_end: place.end, content: { elements: [] } });
+      position_end: place.end, content: newPageContent() });
   };
   // A margin marker of typed or block notes, and the notebook's "All notes", open the notepad's list.
   const [noteRequest, setNoteRequest] = useState(null);
@@ -371,7 +372,7 @@ export function ReadingSession() {
   const toNotebook = (place, lines, { annotationId = null, regionId = null } = {}) => {
     if (!place) { tooEarly(); return null; }
     const key = pageFor(pages, place.start, reader.current?.toc() ?? []) ?? notepad.create({ kind: 'drawing', scope: place.scope,
-      anchors: place.anchors, position_start: place.start, position_end: place.end, content: { elements: [] },
+      anchors: place.anchors, position_start: place.start, position_end: place.end, content: newPageContent(),
       ...(annotationId ? { annotation_id: annotationId } : {}), ...(regionId ? { region_id: regionId } : {}) });
     if (lines.length) setIncoming({ key, lines, n: Date.now() });
     openNotebook(key);

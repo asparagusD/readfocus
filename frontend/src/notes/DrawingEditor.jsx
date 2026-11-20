@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, exportToBlob, hashElementsVersion, MainMenu } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
-import { drawingScene, passageLines } from './drawing';
+import { drawingScene, paperView, passageLines } from './drawing';
 import { BREAK, facesFor, textElements, TOP_LEFT } from './pageText';
 
 const UI = {
@@ -30,26 +30,31 @@ async function thumbnail(elements) {
  * being typed, no shape being drawn, the selection tool, no menu or dialog open), so the notebook may close on it.
  * `focus` false leaves the focus where it is (a page turned by the notebook's arrows or tabs). C37.3: `add(lines)`
  * puts notebookItems.js lines on the page as text elements, below what it holds (or at the top of the view on an
- * empty page), scrolls to them and saves the scene at once.
+ * empty page), scrolls to them and saves the scene at once. C37.5: the canvas is transparent over the page's
+ * `paper` (ruled, squared or plain), whose lines follow Excalidraw's scroll and zoom; every save keeps the paper.
  */
-export default function DrawingEditor({ content, dark, passage, register, onChange, focus = true }) {
+export default function DrawingEditor({ content, dark, passage, register, onChange, focus = true, paper = null }) {
   const api = useRef(null);
   const [ready] = useState(() => { let open; const promise = new Promise((resolve) => { open = resolve; }); return { promise, open }; });
   const seen = useRef(null);
   const changed = useRef(onChange);
   useEffect(() => { changed.current = onChange; }, [onChange]);
+  const kept = useRef(paper); // the page's paper, kept in every save
+  useEffect(() => { kept.current = paper; }, [paper]);
+  const box = useRef(null);
 
-  const onScene = useCallback((elements) => {
+  const onScene = useCallback((elements, appState) => {
+    const view = paperView(appState); // the paper's lines follow the view, set straight on the box (no render)
+    for (const [name, value] of Object.entries(view)) box.current?.style.setProperty(`--paper-${name}`, value);
     const version = hashElementsVersion(elements);
     if (seen.current === null) { seen.current = version; ready.open(api.current); return; } // the scene as it opened: add() may go now
     if (version === seen.current) return;
     seen.current = version;
-    changed.current(drawingScene(elements));
+    changed.current(drawingScene(elements, kept.current));
   }, [ready]);
 
   // The panel widens once the drawing is open (and a window can resize): Excalidraw keeps its canvas offsets
   // until told, so a stroke right after would land in the wrong place.
-  const box = useRef(null);
   useEffect(() => {
     const el = box.current;
     if (!el || typeof ResizeObserver === 'undefined') return undefined;
@@ -78,7 +83,7 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
       if (before.length) editor.scrollToContent(made, { fitToViewport: false }); // an empty page: already in view
       const all = editor.getSceneElements();
       seen.current = hashElementsVersion(all);
-      changed.current(drawingScene(all));
+      changed.current(drawingScene(all, kept.current));
     },
     finish: () => thumbnail(drawingScene(api.current?.getSceneElements() ?? []).elements),
     paste: () => {
@@ -93,10 +98,11 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
   }), [register, passage, ready]);
 
   return (
-    <div className="rf-drawing-canvas" data-own-escape="true" ref={box}>
+    <div className="rf-drawing-canvas" data-own-escape="true" data-paper={paper || undefined} ref={box}>
+      {paper && <div className="rf-paper" aria-hidden="true" />}
       <Excalidraw
         excalidrawAPI={(made) => { api.current = made; }}
-        initialData={{ elements: content?.elements ?? [], appState: { viewBackgroundColor: '#ffffff' }, scrollToContent: true }}
+        initialData={{ elements: content?.elements ?? [], appState: { viewBackgroundColor: paper ? 'transparent' : '#ffffff' }, scrollToContent: true }}
         theme={dark ? 'dark' : 'light'}
         aiEnabled={false}
         UIOptions={UI}

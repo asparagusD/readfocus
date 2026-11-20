@@ -91,7 +91,7 @@ test('Notes opens the notebook over 70 % with the book blurred and inert; a new 
   await newPage(page);
   expect(scripts.some((u) => u.includes('DrawingEditor'))).toBe(true);
   await expect.poll(() => api.notePosts.length).toBe(1);
-  expect(api.notePosts[0]).toMatchObject({ kind: 'drawing', scope: 'view', content: { elements: [] } });
+  expect(api.notePosts[0]).toMatchObject({ kind: 'drawing', scope: 'view', content: { elements: [], appState: { paper: 'ruled' } } });
   await expect(notebook(page).getByRole('tab', { name: 'Page 1' })).toHaveAttribute('aria-selected', 'true');
   await notebook(page).getByTitle(/^Rectangle —/).click();
   await drag(page, 40, 140, 140, 200);
@@ -108,7 +108,7 @@ test('Notes opens the notebook over 70 % with the book blurred and inert; a new 
   await expect.poll(() => (lastScene(api)?.elements ?? []).map((e) => e.type).sort(), { timeout: 5000 })
     .toEqual(['arrow', 'freedraw', 'rectangle', 'text']);
   expect(lastScene(api).elements.find((e) => e.type === 'text').text).toBe('never shrinks');
-  expect(Object.keys(lastScene(api).appState ?? {})).toEqual(['viewBackgroundColor']);
+  expect(lastScene(api).appState).toEqual({ viewBackgroundColor: '#ffffff', paper: 'ruled' }); // C37.5: a new page is ruled
   await expect(notebook(page).getByRole('status').filter({ hasText: /^Saved$/ })).toBeVisible({ timeout: 5000 });
   for (const absent of ['Text to diagram', 'Export', 'Open', 'Save to', 'Excalidraw+', 'Live collaboration']) {
     await expect(notebook(page).getByText(absent, { exact: false })).toHaveCount(0);
@@ -189,6 +189,38 @@ test('pages turn by arrows and tabs, "Go to this place" finds the page made here
   await notebook(page).getByRole('button', { name: /^Go to p\. .* in the book$/ }).click();
   await expect(notebook(page)).toHaveCount(0);
   await expect.poll(async () => (await settled(page)).start).toBe(first.start);
+});
+
+test('each page keeps its own paper: a new page is ruled, an older drawing plain, a choice saved with it', async ({ page, api }) => {
+  // A drawing from before pages had paper, on page 2 of the book.
+  api.notes = [{ id: 'old', kind: 'drawing', scope: 'view', version: 1, orphaned: false, deleted_at: null, urls: {},
+    anchors: [{ kind: 'pdf', page: 2, quads: [[0, 0, 612, 792]], text: '' }], position_start: 2e6, position_end: 2e6 + 79_299,
+    content: { elements: [], appState: { viewBackgroundColor: '#ffffff' } }, created_at: '2026-11-14T10:00:00Z' }];
+  await openReader(page);
+  await openNotebook(page);
+  const paper = notebook(page).getByRole('radiogroup', { name: 'Paper' });
+  await expect(paper.getByRole('radio', { name: 'Plain' })).toHaveAttribute('aria-checked', 'true');
+  await newPage(page);
+  await expect.poll(() => api.notePosts.length).toBe(1);
+  expect(api.notePosts[0].content.appState.paper).toBe('ruled');
+  await expect(paper.getByRole('radio', { name: 'Ruled' })).toHaveAttribute('aria-checked', 'true');
+  await expect(notebook(page).locator('.rf-drawing-canvas[data-paper="ruled"] .rf-paper')).toBeVisible();
+  await expect(notebook(page).locator('.rf-notebook-folio')).toHaveText(/^Page 1 of 2 · \S+/);
+  if (shots) { await page.waitForTimeout(400); await page.screenshot({ path: `${shots}/notebook-ruled-1440.png` }); }
+  await paper.getByRole('radio', { name: 'Ruled' }).focus();
+  await page.keyboard.press('ArrowRight'); // the radio group's arrows pick the next paper
+  await expect(paper.getByRole('radio', { name: 'Squared' })).toBeFocused();
+  await expect.poll(() => lastScene(api)?.appState.paper).toBe('squared');
+  await expect(notebook(page).locator('.rf-drawing-canvas[data-paper="squared"]')).toBeVisible();
+  await notebook(page).getByTitle(/^Rectangle —/).click();
+  await drag(page, 40, 140, 140, 200);
+  await expect.poll(() => (lastScene(api)?.elements ?? []).length, { timeout: 5000 }).toBe(1);
+  expect(lastScene(api).appState.paper).toBe('squared'); // a stroke keeps the page's paper
+  if (shots) { await page.waitForTimeout(400); await page.screenshot({ path: `${shots}/notebook-squared-1440.png` }); }
+  await notebook(page).getByRole('button', { name: 'Next page' }).click(); // the older drawing keeps its plain paper
+  await expect(paper.getByRole('radio', { name: 'Plain' })).toHaveAttribute('aria-checked', 'true');
+  await notebook(page).getByRole('button', { name: 'Previous page' }).click();
+  await expect(paper.getByRole('radio', { name: 'Squared' })).toHaveAttribute('aria-checked', 'true');
 });
 
 test('a page can be deleted, with Undo', async ({ page, api }) => {

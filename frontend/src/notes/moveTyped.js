@@ -16,7 +16,7 @@ export const typedNotes = (notes) => (notes ?? []).filter((n) => n.kind === 'tex
 export function pageBody(note, elements) {
   return {
     kind: 'drawing', scope: note.scope, anchors: note.anchors, position_start: note.position_start,
-    position_end: note.position_end, content: { elements, appState: { viewBackgroundColor: '#ffffff' } },
+    position_end: note.position_end, content: { elements, appState: { viewBackgroundColor: '#ffffff', paper: 'ruled' } }, // C37.5: ruled, as a new page
     ...(note.annotation_id ? { annotation_id: note.annotation_id } : {}), ...(note.region_id ? { region_id: note.region_id } : {}),
   };
 }

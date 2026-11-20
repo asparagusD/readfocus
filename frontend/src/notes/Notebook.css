@@ -1,6 +1,9 @@
 /* The notebook (C37.2, issue 26): 70 % of the screen on the right, the book in soft focus in the other 30 %
    (ReadingSession.css blurs it). Full screen below 760 px. Tokens only; only transform and opacity move here.
-   The paper, binding and page details are C37.5's; the rack-focus motion is C37.7's. */
+   C37.5: it looks like a notebook: a warm cover (the sheet), the book's title on a cover tab, a stitched binding,
+   the page on its paper (ruled with a margin line, squared or plain) with a second sheet behind it, its number
+   and date at its foot. Every colour comes from the theme's tokens, so Lamplight follows. The rack-focus motion
+   is C37.7's. */
 .rf-notebook-layer {
   position: fixed;
   inset: 0;
@@ -24,10 +27,13 @@
   min-width: 0;
   border-left: var(--border-hair) solid var(--line-2);
   border-radius: var(--radius-panel) 0 0 var(--radius-panel);
-  background-color: var(--surface);
+  background-color: var(--paper-2); /* the cover the pages sit on */
   color: var(--ink);
   box-shadow: var(--elevation-page);
   animation: rf-notebook-in var(--dur-4) var(--ease-arrive) both;
+  --nb-paper: var(--surface);
+  --nb-rule: color-mix(in srgb, var(--ink) 11%, transparent);
+  --nb-margin: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .rf-notebook:focus { outline: none; }
@@ -65,7 +71,19 @@
   color: var(--ink-2);
 }
 
-.rf-notebook-book { overflow: hidden; max-width: 32ch; white-space: nowrap; text-overflow: ellipsis; }
+/* The cover tab: the book's title on a tab of the page's paper. */
+.rf-notebook-book {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 32ch;
+  margin-top: var(--space-1);
+  padding: 0 var(--space-2);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-hair) var(--radius-hair) 0 0;
+  background-color: var(--nb-paper);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
 .rf-notebook-ref {
   min-height: 44px;
@@ -121,22 +139,71 @@
   outline-offset: var(--focus-ring-offset);
 }
 
-/* The page: Excalidraw fills it. */
+/* The page: Excalidraw fills it, over its paper; a stitched binding to its left, a second sheet behind it. */
 .rf-notebook-page {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex: 1;
   min-height: 0;
-  margin: var(--space-4) var(--space-5) 0;
+  margin: var(--space-4) var(--space-6) 0 var(--space-7);
+}
+
+.rf-notebook-page::before { /* the binding's stitches */
+  content: '';
+  position: absolute;
+  top: var(--space-3);
+  bottom: var(--space-3);
+  left: calc(-1 * var(--space-5));
+  border-left: var(--border-strong) dashed var(--line-2);
+}
+
+.rf-notebook-page:has(.rf-drawing-canvas)::after { /* the next sheet, just showing */
+  content: '';
+  position: absolute;
+  inset: var(--space-2) calc(-1 * var(--space-2)) calc(-1 * var(--space-1)) var(--space-2);
+  z-index: -1;
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-page);
+  background-color: var(--nb-paper);
 }
 
 .rf-notebook-page .rf-drawing-canvas {
+  position: relative;
   flex: 1;
   height: auto;
   min-height: 0;
   overflow: hidden;
   border: var(--border-hair) solid var(--line);
   border-radius: var(--radius-page);
+  background-color: var(--nb-paper);
+  box-shadow: var(--elevation-lift);
+}
+
+/* The paper (DrawingEditor sets --paper-step, -x, -y and -margin from Excalidraw's view, so it pans and zooms). */
+.rf-paper { position: absolute; inset: 0; pointer-events: none; }
+.rf-drawing-canvas[data-paper] .excalidraw { background-color: transparent; }
+
+.rf-drawing-canvas[data-paper="ruled"] .rf-paper {
+  background-image: linear-gradient(to bottom, var(--nb-rule) 1px, transparent 1px);
+  background-size: 100% var(--paper-step, 32px);
+  background-position: 0 var(--paper-y, 0);
+}
+
+.rf-drawing-canvas[data-paper="ruled"] .rf-paper::after { /* the margin line */
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--paper-margin, 40px);
+  width: var(--border-strong);
+  background-color: var(--nb-margin);
+}
+
+.rf-drawing-canvas[data-paper="squared"] .rf-paper {
+  background-image: linear-gradient(to right, var(--nb-rule) 1px, transparent 1px), linear-gradient(to bottom, var(--nb-rule) 1px, transparent 1px);
+  background-size: var(--paper-step, 32px) var(--paper-step, 32px);
+  background-position: var(--paper-x, 0) var(--paper-y, 0);
 }
 
 .rf-notebook-page > .rf-notebook-note { margin: auto; }
@@ -190,6 +257,43 @@
 
 .rf-notebook-tab[aria-selected="true"] { background-color: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
 
+.rf-notebook-folio {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-folio);
+  line-height: var(--text-folio--line-height);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The page's paper: ruled, squared or plain. */
+.rf-notebook-paper {
+  display: inline-flex;
+  padding: 2px;
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-pill);
+  background-color: var(--nb-paper);
+}
+
+.rf-notebook-paper button {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-settle), color var(--dur-1) var(--ease-settle);
+}
+
+.rf-notebook-paper button:hover { color: var(--ink); }
+.rf-notebook-paper button[aria-checked="true"] { background-color: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+.rf-notebook-paper button:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
 .rf-notebook-status { flex: 1; text-align: right; }
 .rf-notebook-others { padding: 0 var(--space-3); color: var(--accent-text); }
 
@@ -204,7 +308,10 @@
   .rf-notebook-ref span { max-width: none; }
   .rf-notebook-tool span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .rf-notebook-tool { width: 44px; padding: 0; }
-  .rf-notebook-page { margin: var(--space-2) var(--space-2) 0; }
+  .rf-notebook-page { margin: var(--space-2) var(--space-3) 0 var(--space-5); }
+  .rf-notebook-page::before { left: calc(-1 * var(--space-3)); }
+  .rf-notebook-paper button { min-height: 44px; }
+  .rf-notebook-folio { order: 3; }
   .rf-notebook-foot { flex-wrap: wrap; gap: var(--space-2); padding: var(--space-1) var(--space-2); }
   .rf-notebook-tabs { max-width: 50vw; }
   .rf-notebook-status { flex-basis: 100%; order: 3; text-align: left; }

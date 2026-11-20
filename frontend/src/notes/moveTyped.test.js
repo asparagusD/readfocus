@@ -30,7 +30,7 @@ test('only saved typed notes move', () => {
 test('a page keeps the note\'s place and links and holds its words', () => {
   const body = pageBody(typed('a', 'w', { annotation_id: 'hl-1', region_id: 'rg-1', version: 4 }), [{ type: 'text' }]);
   assert.deepEqual(body, { kind: 'drawing', scope: 'selection', anchors: [{ kind: 'pdf', page: 3 }], position_start: 3e6,
-    position_end: 3e6 + 10, content: { elements: [{ type: 'text' }], appState: { viewBackgroundColor: '#ffffff' } },
+    position_end: 3e6 + 10, content: { elements: [{ type: 'text' }], appState: { viewBackgroundColor: '#ffffff', paper: 'ruled' } },
     annotation_id: 'hl-1', region_id: 'rg-1' });
 });
 

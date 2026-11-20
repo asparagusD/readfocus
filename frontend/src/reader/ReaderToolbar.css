@@ -32,7 +32,7 @@
 }
 
 .rf-toolbar-title {
-  max-width: 32ch;
+  max-width: 24ch; /* C38.4a: the page box and Page view too, on one row at 1440 */
   margin: 0;
   overflow: hidden;
   color: var(--ink-2);
@@ -97,6 +97,42 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* C38.4a (issue 22): Edge's page box, "n of N": the page shown, which the reader can type over. */
+.rf-page-box {
+  display: inline-flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding-inline: var(--space-2);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.rf-page-input {
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+}
+
+.rf-page-input:focus-visible,
+.rf-select:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
+/* C38.4a: Edge's Page view, a plain menu of the three layouts. */
+.rf-select {
+  appearance: auto;
+  padding-inline: var(--space-2);
+  color: var(--ink);
+  font-size: var(--text-label);
+}
+
 /* Narrow screens: icons only, the title goes (the running head names the
    chapter). C13.9: the tools sit on one row as in the handoff's 375 frame
    (back, text size, Contents, Look up, theme: 44 px targets, no gaps), and
@@ -115,6 +151,7 @@
   }
 
   .rf-switch { padding-inline: 6px; }
+  .rf-select { display: none; } /* C38.4a: two pages side by side do not fit a phone; one page a row */
 
   .rf-toolbar-session {
     flex-basis: 100%;

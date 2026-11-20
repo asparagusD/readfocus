@@ -82,8 +82,10 @@ test('a zoom keeps the words at the top of the view where they were', () => {
   assert.deepEqual(held, { page: 4, fraction: 0.25 });
   const big = layoutPages(book(10, { width: 900, height: 1200 }), { width: 1000, gap: 16 });
   assert.equal(scrollForHold(big, held, 900), pageBox(big, 4).top + 300);
-  // in the gap between pages: the next page's top
-  assert.deepEqual(holdOf(small, pageBox(small, 4).top - 8), { page: 4, fraction: 0 });
+  // in the gap above a page (C38.4a): just above the next page, kept through the change
+  assert.deepEqual(holdOf(small, pageBox(small, 4).top - 8), { page: 4, fraction: -0.01 });
+  assert.deepEqual(holdOf(small, 0), { page: 1, fraction: -16 / 800 });
+  assert.equal(scrollForHold(big, holdOf(small, 0), 900), 0); // the top of the book stays the top
 });
 
 test('a step goes to the next page top, and back to this page top before the one above', () => {

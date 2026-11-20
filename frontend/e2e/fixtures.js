@@ -469,7 +469,7 @@ export async function twoPagesInView(page) {
   await settled(page);
   await page.locator('.rf-pdf-book').evaluate((el) => {
     const slots = [...el.querySelectorAll('.rf-pdf-slot')].map((s) => ({ top: s.offsetTop, height: s.offsetHeight }));
-    const next = slots.find((s) => s.top > el.scrollTop + 1) ?? slots.at(-1);
+    const next = slots.find((s) => s.top > el.scrollTop + 32) ?? slots.at(-1); // the page below the one at the top
     el.scrollTop = next.top - el.clientHeight / 2;
   });
   await expect.poll(async () => { const { start, end } = await shown(page); return Number(end) - Number(start); }).toBe(1);

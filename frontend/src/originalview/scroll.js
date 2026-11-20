@@ -96,7 +96,8 @@ const clamp = (layout, top, view) => Math.max(0, Math.min(top, layout.height - v
 
 /**
  * The point held while the zoom, the window or Page view changes: the page at the top of the view and how far down
- * it the view's top is (0 at its top, 1 at its bottom), so the same words stay at the top after the layout changes.
+ * it the view's top is (0 at its top, 1 at its bottom; below 0 in the gap above it, C38.4a), so the same words stay
+ * at the top after the layout changes, and a view resting on the gap above a page keeps it.
  */
 export function holdOf(layout, top) {
   if (!layout.rows.length) return { page: 1, fraction: 0 };
@@ -105,7 +106,7 @@ export function holdOf(layout, top) {
   const below = top > row.top + row.height ? layout.rows[i + 1] : null; // in the gap: the next row
   const at = below ?? row;
   const p = at.pages[0];
-  return { page: p.page, fraction: below ? 0 : Math.max(0, Math.min(1, (top - p.top) / p.height)) };
+  return { page: p.page, fraction: Math.min(1, (top - p.top) / p.height) };
 }
 
 /** The scroll that puts a held point back at the top of the view in a new layout. */

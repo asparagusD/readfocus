@@ -50,8 +50,10 @@ const sameView = (a, b) => Boolean(a && b) && a.main === b.main && a.atStart ===
  * where they were. `end` (the closing page's words) sits below the last page. `ref` gets the renderer interface the
  * frame uses (Reader.jsx); onRelocate(place) fires on every change with { pages, main, folio, entry, atStart, atEnd }.
  * C34.2: `startPage` is the page it opens at; `contents` (books.toc) stands in for the outline when it has pages.
+ * C38.4a: `view` is Edge's Page view: 'one' page a row, 'two' side by side, or 'cover' (two, page 1 alone first); the
+ * place also carries `page` (the main page's number) and `total`, for the toolbar's page box.
  */
-export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, ocr = null, annotations = null, contents = null, startPage = 1, end = null, ref }) {
+export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one', onRelocate, onError, ocr = null, annotations = null, contents = null, startPage = 1, end = null, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
   useEffect(() => { if (ocr && doc) ocr.attach(doc); }, [ocr, doc]); // C19.4: scanned pages read with the open PDF
   const box = useRef(null);
@@ -62,6 +64,7 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, 
   const [view, setView] = useState(null); // { pages, main, atStart, atEnd }
   const top = useRef(0); // the scroll last seen or set, for the hold through a layout change
   const laid = useRef(null); // the layout the scroll was last held against
+  const bottom = useRef(false); // scrolled to the very end (the closing words): a new layout keeps it there
   const relocate = useRef(onRelocate);
   useEffect(() => { relocate.current = onRelocate; });
 
@@ -88,7 +91,10 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, 
     return () => { gone = true; };
   }, [doc, stored, known]);
 
-  const scale = base && frame ? pdfScale(zoom, base, { width: frame.width - GAP * 2, height: frame.height - GAP * 2 }) : null;
+  const columns = pageView === 'one' ? 1 : 2;
+  const cover = pageView === 'cover';
+  const across = { width: frame ? frame.width - GAP * (columns + 1) : 0, height: frame ? frame.height - GAP * 2 : 0 };
+  const scale = base && frame ? pdfScale(zoom, base, across, columns) : null;
   const width = frame?.width ?? 0;
   const layout = useMemo(() => {
     if (!scale || !numPages) return null;
@@ -96,14 +102,15 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, 
       const size = measured.get(i + 1) ?? base;
       return { width: Math.floor(size.width * scale), height: Math.floor(size.height * scale) };
     });
-    return layoutPages(sizes, { width, gap: GAP });
-  }, [scale, numPages, measured, base, width]);
+    return layoutPages(sizes, { width, gap: GAP, columns, cover });
+  }, [scale, numPages, measured, base, width, columns, cover]);
 
   const look = useCallback(() => {
     const el = box.current;
     if (!el || !laid.current) return;
     const seen = pagesInView(laid.current, el.scrollTop, el.clientHeight);
-    seen.atEnd = seen.atEnd && el.scrollTop >= el.scrollHeight - el.clientHeight - 2; // the end below it read too
+    bottom.current = el.scrollTop >= el.scrollHeight - el.clientHeight - 2;
+    seen.atEnd = seen.atEnd && bottom.current; // the end below it read too
     setView((prev) => (sameView(prev, seen) ? prev : seen));
   }, []);
   // A new layout keeps the words at the view's top (a zoom, a resize, a page measured late); the first one opens
@@ -113,8 +120,9 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, 
     if (!el || !layout) return;
     const before = laid.current;
     laid.current = layout;
-    el.scrollTop = before ? scrollForHold(layout, holdOf(before, top.current), el.clientHeight)
-      : scrollToPage(layout, opening, el.clientHeight);
+    el.scrollTop = !before ? scrollToPage(layout, opening, el.clientHeight)
+      : bottom.current ? el.scrollHeight // C38.4a: at the end it stays at the end
+        : scrollForHold(layout, holdOf(before, top.current), el.clientHeight);
     top.current = el.scrollTop;
     look();
   }, [layout]); // eslint-disable-line react-hooks/exhaustive-deps -- once per layout
@@ -162,6 +170,7 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, 
     if (!doc || !view) return;
     relocate.current?.({
       kind: 'pdf', pages: view.pages.length ? view.pages : [view.main ?? opening], main: view.main ?? opening,
+      page: view.main ?? opening, total: numPages,
       folio: pdfFolio([view.main ?? opening], numPages, meta.labels),
       entry: entryForPage(meta.outline, view.main ?? opening)?.title ?? null, atStart: view.atStart, atEnd: view.atEnd,
     });
@@ -253,7 +262,9 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, 
       const y = pdfNoteTop(anchor, at.top, pageScale);
       if (y < within.top || y > within.bottom) return [];
       const [, y0 = 0, , y1 = 0] = anchor.quads?.[0] ?? [];
-      return [{ id: note.id, top: y, height: (y1 - y0) * pageScale, side: 'right', edge: at.right }];
+      // C38.4a: the left page of two side by side has its markers on its left, not in the gutter
+      const left = laid.current?.rows.some((r) => r.pages.length === 2 && r.pages[0].page === anchor.page);
+      return [{ id: note.id, top: y, height: (y1 - y0) * pageScale, side: left ? 'left' : 'right', edge: left ? at.left : at.right }];
     }),
     // C22.5: a note's passage on the pages drawn, as screen rects (one per quad), to pulse it.
     passageRects: (note) => (note.anchors ?? []).flatMap((anchor) => {
@@ -282,10 +293,10 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, 
     toc: () => meta.outline.map((entry) => ({ title: entry.title, target: { page: entry.page }, loc: { kind: 'pdf', page: entry.page } })),
   });
 
-  const across = layout ? Math.max(...layout.rows.map((r) => r.pages.at(-1).left + r.pages.at(-1).width)) + GAP : 0;
+  const wide = layout ? Math.max(...layout.rows.map((r) => r.pages.at(-1).left + r.pages.at(-1).width)) + GAP : 0;
   return (
     <div ref={box} className="rf-pdf-book" data-zoom={typeof zoom === 'number' ? 'percent' : zoom} onScroll={onScroll}>
-      <div className="rf-pdf-pages" style={layout ? { height: layout.height, width: across } : undefined}>
+      <div className="rf-pdf-pages" style={layout ? { height: layout.height, width: wide } : undefined}>
         {cache && layout && near.map((n) => {
           const at = pageBox(layout, n);
           return at && (

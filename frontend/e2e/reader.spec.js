@@ -248,6 +248,53 @@ test('the contents list the PDF outline, and an entry opens its page', async ({ 
   await expect.poll(() => shown(page)).toEqual({ start: '5', end: '5' }); // C38.2: page 5 at the top of the view
 });
 
+// C38.4a (issue 22): Edge's page box: the page in view, and a typed page number goes there.
+test('the page box shows the page in view, goes to a typed page, and puts back one the book does not have', async ({ page }) => {
+  await openReader(page);
+  await wake(page);
+  const box = page.getByRole('textbox', { name: /^Page number/ });
+  await expect(box).toHaveValue('1');
+  await expect(page.getByRole('toolbar', { name: 'Reading controls' })).toContainText('of 6');
+  await book(page).focus();
+  await page.keyboard.press('PageDown');
+  await expect(box).toHaveValue('2');
+  await box.fill('4');
+  await box.press('Enter');
+  await expect.poll(async () => (await shown(page)).start).toBe('4');
+  await expect(box).toHaveValue('4');
+  await box.fill('99');
+  await box.press('Enter');
+  await expect(box).toHaveValue('4'); // not a page of this book: the page shown comes back
+  expect((await shown(page)).start).toBe('4');
+  await box.fill('2');
+  await box.press('Escape');
+  await expect(box).toHaveValue('4');
+});
+
+// C38.4a: Edge's Page view: one page, two side by side, or two with the cover alone; kept on this device.
+test('Page view lays two pages side by side, or the cover alone first, and is kept after a reload', async ({ page }) => {
+  await openReader(page);
+  await wake(page);
+  const view = page.getByRole('combobox', { name: 'Page view' });
+  await expect(view).toHaveValue('one');
+  await view.selectOption('two');
+  await expect.poll(() => shown(page)).toEqual({ start: '1', end: '2' });
+  const [a, b] = await Promise.all([1, 2].map((n) => page.locator(`.rf-pdf-page[data-page="${n}"]`).boundingBox()));
+  expect(b.x).toBeGreaterThan(a.x + a.width); // side by side
+  expect(Math.abs(b.y - a.y)).toBeLessThan(2);
+  await book(page).focus();
+  await page.keyboard.press('PageDown'); // a row at a time
+  await expect.poll(() => shown(page)).toEqual({ start: '3', end: '4' });
+  await view.selectOption('cover');
+  await expect.poll(() => shown(page)).toEqual({ start: '2', end: '3' }); // the words in view are kept: page 3's row
+  await book(page).focus();
+  await page.keyboard.press('Home');
+  await expect.poll(() => shown(page)).toEqual({ start: '1', end: '1' }); // the cover alone
+  await page.reload();
+  await openReader(page);
+  await expect(page.getByRole('combobox', { name: 'Page view' })).toHaveValue('cover');
+});
+
 test('a proper noun shows a Wikipedia summary with a link', async ({ page, api }) => {
   await openReader(page);
   await book(page).focus();

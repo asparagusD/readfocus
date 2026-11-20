@@ -5663,3 +5663,41 @@ None.
 
 ### Commit
 feat(frontend): add the place model for a scrolled book (C38.1)
+
+## 2026-11-20 C38.4a — the end of a PDF slips back to its last page; the two-page helper picks page 1
+
+**Status:** fixed
+
+### Symptom
+The full e2e run for C38.4a: 361 passed, 5 failed. `reading.spec.js` (pdf) "the last page…" and "a theme change or
+resize on the closing page…": after End the live region said "p. 4 of 6" (the last page's label), not "End of the
+book". `focus-end.spec.js` (3 tests): `twoPagesInView` never saw two pages in view.
+
+### Repro
+`npx playwright test e2e/focus-end.spec.js e2e/reading.spec.js`: 4 of the 5 every run (the fifth in the full run).
+A trace after End: the scroll box's height went from 746 to 698 px and the view stopped at the last page's top.
+
+### Hypotheses
+1. End changes the chapter to "Chapter 2 Noise"; the toolbar's title grows, and with the new page box and Page view
+   the pill no longer fits one row at 1440 and wraps; the book area loses 48 px, fit-page lays the pages out again,
+   and the hold keeps the last page's top, not the closing words below it. Evidence: the trace's 746 to 698 and the
+   slots' heights 714 to 666. Result: confirmed.
+2. The helper looks for the first page below the view's top + 1 px; since C38.4a's hold keeps the top of the book at
+   0 (the gap above page 1), that is page 1 itself. Evidence: the helper's log, `top: 0`, `next.top: 16`. Result:
+   confirmed.
+
+### Root cause
+`PdfBook.jsx` held only the words at the top of the view through a new layout, so a reader at the very end was moved
+off it; the toolbar title's 32ch let the pill wrap. `fixtures.js` `twoPagesInView` assumed the view rests on page 1's
+top.
+
+### Fix
+`PdfBook.jsx`: a view scrolled to the very end stays at the end through a new layout. `ReaderToolbar.css`: the title is
+at most 24ch. `fixtures.js`: the page below the one at the top (more than 32 px below the view's top).
+
+### Regression test
+`reading.spec.js` (pdf, both closing-page tests: the theme change and the resize relayout the pages at the end) and
+the three `focus-end.spec.js` tests; 48 of 48 in `focus-end`, `reading` and `reader` after the fix.
+
+### Commit
+feat(ui): add Edge's page box and Page view for a PDF

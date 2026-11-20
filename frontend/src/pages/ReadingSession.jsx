@@ -80,6 +80,7 @@ export function ReadingSession() {
   useDocumentTitle(sessionData?.book?.title ? `${sessionData.book.title} · Reading` : 'Reading');
 
   const [zoom, setZoom] = useStored('rf-pdf-zoom', 'fit-page');
+  const [pageView, setPageView] = useStored('rf-pdf-view', 'one'); // C38.4a: Edge's Page view, on this device
   const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
   // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
@@ -527,7 +528,8 @@ export function ReadingSession() {
           visible={chromeVisible}
           onFocusChange={setToolbarFocused}
           controls={(
-            <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings} />
+            <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
+              place={place} onGoToPage={(page) => reader.current?.goTo({ kind: 'pdf', page })} pageView={pageView} onPageView={setPageView} />
           )}
           onContents={openContents}
           contentsOpen={contentsOpen}
@@ -579,6 +581,7 @@ export function ReadingSession() {
           load={loadFile}
           title={bookTitle}
           zoom={zoom}
+          pageView={pageView}
           settings={settings}
           onReady={locate}
           onRelocate={onRelocate}

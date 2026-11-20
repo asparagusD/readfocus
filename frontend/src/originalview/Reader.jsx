@@ -97,7 +97,7 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * `contents` (the stored books.toc) when that has pages.
  * C38.2 (issue 22): a PDF scrolls, as in Edge (PdfBook): no running header, leaf, edge zones or closing page over
  * it; Previous, Next and the page keys move a page at a time, Up and Down scroll a little, and the closing words sit
- * below its last page. An EPUB keeps the frame until C38.7.
+ * below its last page. An EPUB keeps the frame until C38.7. C38.4a: `pageView` is a PDF's Page view (PdfBook).
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
@@ -106,7 +106,7 @@ export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
-  placing = null, contents = null, start = null,
+  placing = null, contents = null, start = null, pageView = 'one',
 }) {
   const wide = useWide();
   const book = useRef(null);
@@ -361,7 +361,7 @@ export function Reader({
         onPointerCancel={() => { swipe.current = null; }}>
         <div className="rf-ov-book" data-spread={wide} ref={setBookBox}>
           {kind === 'pdf'
-            ? <PdfBook key={attempt} {...shared} zoom={zoom} ocr={ocr} contents={contents} startPage={startPage(start)}
+            ? <PdfBook key={attempt} {...shared} zoom={zoom} view={pageView} ocr={ocr} contents={contents} startPage={startPage(start)}
               end={closing && <div className="rf-end">{closing}</div>} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} />}
           {turn && (

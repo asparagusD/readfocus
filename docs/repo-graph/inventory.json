@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 975,
-    "inventoried": 832,
+    "tracked": 977,
+    "inventoried": 834,
     "excluded": 143
   },
   "files": [
@@ -2265,8 +2265,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5703,
-      "size_bytes": 268799,
+      "lines": 5732,
+      "size_bytes": 269793,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6369,
-      "size_bytes": 1189278,
+      "lines": 6370,
+      "size_bytes": 1190530,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -4711,6 +4711,22 @@
       "purpose": "Node test (npm run test:unit): allowed and refused URLs (http, protocol-relative, javascript with tabs, data:text, file, vbscript), CSS imports and url() kept or removed, expression(), srcset."
     },
     {
+      "path": "frontend/src/originalview/find.js",
+      "language": "javascript",
+      "lines": 80,
+      "size_bytes": 3378,
+      "role": "asset",
+      "purpose": "Find in the book (C38.5a, issue 22), pure: a query as a case-blind literal pattern whose spaces match any white space or none, the matches in a page's text, the pages' search order from the one in view round the book, next and previous round the ends, where a match sits among a page's text items (spotOf) and in its text layer's nodes (locate), and the find bar's words."
+    },
+    {
+      "path": "frontend/src/originalview/find.test.js",
+      "language": "javascript",
+      "lines": 58,
+      "size_bytes": 2928,
+      "role": "asset",
+      "purpose": "Unit tests for find.js (C38.5a): case and spacing, a literal query, the search order, stepping round the book, a match's spot and text nodes, the bar's words."
+    },
+    {
       "path": "frontend/src/originalview/frame.css",
       "language": "css",
       "lines": 442,
@@ -4737,10 +4753,10 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 312,
-      "size_bytes": 17478,
+      "lines": 408,
+      "size_bytes": 22298,
       "role": "asset",
-      "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor. C23.6b: shownPlaces(): a point at the bottom of each page shown, with its printed label. C34.2: startPage is the first page rendered; contents (books.toc) stand in for the outline when it has pages, else the outline is read once the first page is measured. C38.2 (issue 22): read as in Edge: pages one under another on the desk, scrolled and laid out from their sizes (an unmeasured page takes the opening page's; pages near the view measured), only the pages in view and two either side drawn; the place is the pages in view and the main one (scroll.js), a zoom, resize or late page size holds the words at the view's top; Previous, Next and the page keys step a page; goTo scrolls to a passage's first quad; the closing words below the last page; spreads and mouse-drag panning gone. C38.4a: Page view (`view`: one, two, cover alone) in the layout and fit scales; the place carries page and total; a left page's markers on its left. A view scrolled to the very end stays at the end through a new layout."
+      "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor. C23.6b: shownPlaces(): a point at the bottom of each page shown, with its printed label. C34.2: startPage is the first page rendered; contents (books.toc) stand in for the outline when it has pages, else the outline is read once the first page is measured. C38.2 (issue 22): read as in Edge: pages one under another on the desk, scrolled and laid out from their sizes (an unmeasured page takes the opening page's; pages near the view measured), only the pages in view and two either side drawn; the place is the pages in view and the main one (scroll.js), a zoom, resize or late page size holds the words at the view's top; Previous, Next and the page keys step a page; goTo scrolls to a passage's first quad; the closing words below the last page; spreads and mouse-drag panning gone. C38.4a: Page view (`view`: one, two, cover alone) in the layout and fit scales; the place carries page and total; a left page's markers on its left. A view scrolled to the very end stays at the end through a new layout. C38.5a: find over every page's text: each page's text read once with its items' places (also today's chunks' text), search(query, onUpdate) in book order from the main page round the book, showMatch scrolls a match into view when it is not, and `found` highlighted on the pages drawn (CSS Custom Highlight API, rf-find and rf-find-current)."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
@@ -4817,10 +4833,10 @@
     {
       "path": "frontend/src/originalview/pdf/pdf.css",
       "language": "css",
-      "lines": 129,
-      "size_bytes": 4145,
+      "lines": 133,
+      "size_bytes": 4430,
       "role": "asset",
-      "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour. C17.4: the page paper follows --rf-pdf-paper (lamplight)."
+      "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour. C17.4: the page paper follows --rf-pdf-paper (lamplight). C38.5a: find's matches (::highlight rf-find, rf-find-current), see-through over the published page."
     },
     {
       "path": "frontend/src/originalview/pdf/pdfjs.js",
@@ -5641,10 +5657,10 @@
     {
       "path": "frontend/src/styles/tokens.css",
       "language": "css",
-      "lines": 284,
-      "size_bytes": 9465,
+      "lines": 288,
+      "size_bytes": 9716,
       "role": "asset",
-      "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (and a swatch of each accent for the accent setting) (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping."
+      "purpose": "Design tokens from the Claude Design handoff: Paper and Lamplight colours for terracotta and sage (and a swatch of each accent for the accent setting) (data-theme, data-accent on <html>), covers, type roles, spacing, radii, borders, shadows, z-index, durations and easings; Tailwind v4 @theme mapping. C38.5a: --find-match and --find-current, see-through honey and amber over a white page in either theme."
     },
     {
       "path": "frontend/src/theme/ThemeProvider.jsx",
@@ -6601,8 +6617,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 834,
-      "size_bytes": 291153,
+      "lines": 836,
+      "size_bytes": 292318,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

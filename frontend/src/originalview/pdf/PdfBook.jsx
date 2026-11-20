@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { entryForPage, pdfFolio, pdfScale } from '../frame';
+import { findPattern, locate, matchesIn, searchOrder, spotOf } from '../find';
 import { squeeze } from '../place';
 import { holdOf, layoutPages, pageBox, pagesInView, scrollForHold, scrollToPage, stepScroll } from '../scroll';
 import { pdfAnchor, pdfPositions, quadsFromRects, rectsFromQuads } from '../../anchors';
@@ -36,6 +37,17 @@ function selectionAnchors(range, box, widths = []) {
   return out;
 }
 
+/** The text nodes of a page's text layer in order, the words OCR added left out (they are not the PDF's text). */
+function layerTexts(layer) {
+  const out = [];
+  if (!layer) return out;
+  const walker = document.createTreeWalker(layer, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.parentElement?.closest('.rf-ocr-word')) out.push(node);
+  }
+  return out;
+}
+
 const GAP = 16; // px between pages and around them, as Edge leaves
 const NEAR = 2; // pages drawn either side of those in view (the page cache's radius)
 const sameView = (a, b) => Boolean(a && b) && a.main === b.main && a.atStart === b.atStart && a.atEnd === b.atEnd
@@ -52,8 +64,12 @@ const sameView = (a, b) => Boolean(a && b) && a.main === b.main && a.atStart ===
  * C34.2: `startPage` is the page it opens at; `contents` (books.toc) stands in for the outline when it has pages.
  * C38.4a: `view` is Edge's Page view: 'one' page a row, 'two' side by side, or 'cover' (two, page 1 alone first); the
  * place also carries `page` (the main page's number) and `total`, for the toolbar's page box.
+ * C38.5: find (Ctrl+F) over every page's text, drawn or not: `search(query, onUpdate)` reports the matches in book
+ * order as the pages are read (from the main page round the book), `showMatch` scrolls one into view when it is not,
+ * and `found` ({ matches, current }) is highlighted on the pages drawn (the CSS Custom Highlight API: rf-find and
+ * rf-find-current; a browser without it shows the count and moves the view, unhighlighted).
  */
-export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one', onRelocate, onError, ocr = null, annotations = null, contents = null, startPage = 1, end = null, ref }) {
+export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one', onRelocate, onError, ocr = null, annotations = null, contents = null, startPage = 1, end = null, found = null, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
   useEffect(() => { if (ocr && doc) ocr.attach(doc); }, [ocr, doc]); // C19.4: scanned pages read with the open PDF
   const box = useRef(null);
@@ -176,16 +192,92 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
     });
   }, [doc, view, numPages, meta]); // eslint-disable-line react-hooks/exhaustive-deps -- opening is the fallback only
 
-  // Today's chunks are found by their text (C17.5): each page's text layer, squeezed, read once.
+  // Each page's text, read once (C17.5: today's chunks found by it; C38.5: find), with where each item of it sits
+  // (spots: [at, x, y, width] per item, in points at scale 1, y its top), so a match can be scrolled to undrawn.
   const texts = useRef(new Map());
   useEffect(() => { texts.current = new Map(); }, [doc]);
-  const pageText = (n) => {
+  const pageFind = (n) => {
     if (!texts.current.has(n)) {
-      texts.current.set(n, doc.getPage(n).then((p) => p.getTextContent())
-        .then((content) => squeeze(content.items.map((item) => item.str ?? '').join(''))).catch(() => ''));
+      texts.current.set(n, doc.getPage(n).then(async (p) => {
+        const at = p.getViewport({ scale: 1 });
+        const items = (await p.getTextContent()).items.filter((item) => item.str);
+        let text = '';
+        const spots = new Float32Array(items.length * 4);
+        items.forEach((item, i) => {
+          const [x, y] = at.convertToViewportPoint(item.transform[4], item.transform[5]);
+          spots.set([text.length, x, y - Math.hypot(item.transform[2], item.transform[3]), item.width], i * 4);
+          text += item.str;
+        });
+        return { text, spots };
+      }).catch(() => ({ text: '', spots: new Float32Array(0) })));
     }
     return texts.current.get(n);
   };
+  const pageText = (n) => pageFind(n).then(({ text }) => squeeze(text));
+  const searching = useRef(null);
+  useEffect(() => () => { searching.current = null; }, []);
+  /** Every match of `query`, page by page from the main page round the book; onUpdate({ matches, first, done }). */
+  const search = async (query, onUpdate) => {
+    const run = {};
+    searching.current = run;
+    const pattern = findPattern(query);
+    const order = pattern ? searchOrder(numPages, main) : [];
+    const after = []; // from the main page on, then the pages before it: book order when joined
+    const before = [];
+    let told = 0;
+    for (const [i, n] of order.entries()) {
+      const { text, spots } = await pageFind(n);
+      if (searching.current !== run) return;
+      for (const [start, stop] of matchesIn(text, pattern)) {
+        (n >= main ? after : before).push({ page: n, start, end: stop, ...spotOf(spots, text.length, start) });
+      }
+      const done = i === order.length - 1;
+      if (done || performance.now() - told > 120) {
+        told = performance.now();
+        onUpdate({ matches: before.concat(after), first: after[0] ?? before[0] ?? null, done });
+      }
+    }
+    if (!order.length) onUpdate({ matches: [], first: null, done: true });
+  };
+  /** A match scrolled to a third of the way down the view, unless it is well in view already. */
+  const showMatch = (match) => {
+    const el = box.current;
+    const at = laid.current && pageBox(laid.current, match.page);
+    if (!el || !at || !scale) return;
+    const y = at.top + match.y * scale;
+    const x = at.left + match.x * scale;
+    if (y < el.scrollTop + 72 || y > el.scrollTop + el.clientHeight - 96) scrollTo(y - el.clientHeight / 3);
+    if (x < el.scrollLeft || x > el.scrollLeft + el.clientWidth - 96) el.scrollLeft = x - el.clientWidth / 3;
+  };
+  const [drawnPages, setDrawnPages] = useState(0); // a page drawn: its matches can be highlighted
+  const onShown = useCallback(() => setDrawnPages((n) => n + 1), []);
+  useEffect(() => {
+    const marks = globalThis.CSS?.highlights;
+    if (!marks || !globalThis.Highlight || !found?.matches.length) return undefined;
+    const all = [];
+    const current = [];
+    for (const el of box.current?.querySelectorAll('.rf-pdf-page[data-scale]') ?? []) {
+      const n = Number(el.dataset.page);
+      const here = found.matches.filter((m) => m.page === n);
+      if (!here.length) continue;
+      const nodes = layerTexts(el.querySelector('.textLayer'));
+      const lengths = nodes.map((node) => node.length);
+      for (const match of here) {
+        const spot = locate(lengths, match.start, match.end);
+        if (!spot) continue;
+        const range = document.createRange();
+        range.setStart(nodes[spot.from[0]], spot.from[1]);
+        range.setEnd(nodes[spot.to[0]], spot.to[1]);
+        (match === found.current ? current : all).push(range);
+      }
+    }
+    marks.set('rf-find', new Highlight(...all));
+    marks.set('rf-find-current', new Highlight(...current));
+    return () => {
+      marks.delete('rf-find');
+      marks.delete('rf-find-current');
+    };
+  }, [found, drawnPages, nearKey]);
   /** { kind: 'pdf', page } for the first page holding a snippet (longest first), from page `from` on, then before it. */
   const find = async (snippets, from = 1) => {
     const order = [...Array(numPages).keys()].map((i) => ((i + from - 1) % numPages) + 1);
@@ -290,6 +382,9 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
     },
     panning: () => true, // C38.2: a swipe scrolls the pages; it never turns one
     find,
+    search, // C38.5
+    stopSearch: () => { searching.current = null; },
+    showMatch,
     toc: () => meta.outline.map((entry) => ({ title: entry.title, target: { page: entry.page }, loc: { kind: 'pdf', page: entry.page } })),
   });
 
@@ -301,7 +396,8 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
           const at = pageBox(layout, n);
           return at && (
             <div key={n} className="rf-pdf-slot" style={{ left: at.left, top: at.top, width: at.width, height: at.height }}>
-              <PdfPage cache={cache} pageNumber={n} label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} annotations={drawn} />
+              <PdfPage cache={cache} pageNumber={n} label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} annotations={drawn}
+                onShown={onShown} />
             </div>
           );
         })}

@@ -4138,6 +4138,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/find.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/find.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/frame.css",
       "type": "file",
       "role": "asset",
@@ -12843,6 +12855,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/find.test.js",
+      "to": "file:frontend/src/originalview/find.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/frame.test.js",
       "to": "file:frontend/src/originalview/frame.js"
     },
@@ -12870,6 +12887,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/notes/markers.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/find.js"
     },
     {
       "type": "imports",

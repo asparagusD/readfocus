@@ -3970,6 +3970,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/notes/moveTyped.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/moveTyped.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/notes/notebookItems.js",
       "type": "file",
       "role": "asset",
@@ -3995,6 +4007,12 @@
     },
     {
       "id": "file:frontend/src/notes/notesApi.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/notes/pageText.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -12369,6 +12387,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/notes/DrawingEditor.jsx",
+      "to": "file:frontend/src/notes/pageText.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/notes/MarginMarkers.jsx",
       "to": "file:frontend/src/notes/MarginMarkers.css"
     },
@@ -12536,6 +12559,11 @@
       "type": "imports",
       "from": "file:frontend/src/notes/mathRules.test.js",
       "to": "file:frontend/src/notes/mathRules.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/moveTyped.test.js",
+      "to": "file:frontend/src/notes/moveTyped.js"
     },
     {
       "type": "imports",
@@ -13460,12 +13488,27 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/excalidrawFonts.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/moveTyped.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/notes/notebookItems.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/notes/notebookPages.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/notes/notesApi.js"
     },
     {
       "type": "imports",

@@ -1,26 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, exportToBlob, FONT_FAMILY, hashElementsVersion, MainMenu } from '@excalidraw/excalidraw';
+import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, exportToBlob, hashElementsVersion, MainMenu } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
 import { drawingScene, passageLines } from './drawing';
+import { BREAK, facesFor, textElements, TOP_LEFT } from './pageText';
 
 const UI = {
   canvasActions: { export: false, loadScene: false, saveToActiveFile: false, saveAsImage: false, toggleTheme: null, changeViewBackgroundColor: false, clearCanvas: true },
   tools: { image: false }, // no pictures: a scene holds only what the server keeps (note_content.py)
 };
 const THUMB_SIDES = [480, 360, 240];
-const FACES = { hand: FONT_FAMILY.Excalifont, code: FONT_FAMILY['Comic Shanns'] ?? FONT_FAMILY.Cascadia };
-const MUTED = '#868e96'; // Excalidraw's own grey, which its dark theme inverts with the rest
-const GAP = 12; // between the lines of one thing
-const BREAK = 32; // between what the page held and what is added
-const FACE_NAMES = { hand: 'Excalifont', code: 'Comic Shanns' };
-const TOP_LEFT = { x: 64, y: 112 }; // on an empty page: below Excalidraw's menu, toolbar and hint
-
-/** The faces the lines use, loaded before Excalidraw measures them (a box measured in a fallback face clips). */
-async function facesFor(lines) {
-  const wanted = [...new Set(lines.map((l) => `${l.size}px "${FACE_NAMES[l.font] ?? FACE_NAMES.hand}"`))];
-  const loading = Promise.all(wanted.map((font) => document.fonts?.load(font)));
-  await Promise.race([loading, new Promise((resolve) => { setTimeout(resolve, 3000); })]).catch(() => {});
-}
 const THUMB_MAX = 250_000; // under the bucket's 256 KB
 
 async function thumbnail(elements) {
@@ -83,15 +71,8 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
       const before = editor.getSceneElements();
       const { scrollX, scrollY, zoom } = editor.getAppState();
       const x = before.length ? Math.min(...before.map((e) => e.x)) : -scrollX + TOP_LEFT.x / zoom.value;
-      let y = before.length ? Math.max(...before.map((e) => e.y + e.height)) + BREAK : -scrollY + TOP_LEFT.y / zoom.value;
-      const made = [];
-      for (const piece of lines) {
-        if (!piece.text) continue;
-        const [text] = convertToExcalidrawElements([{ type: 'text', text: piece.text, x, y, fontSize: piece.size,
-          fontFamily: FACES[piece.font] ?? FACES.hand, ...(piece.muted ? { strokeColor: MUTED } : {}) }]);
-        made.push(text);
-        y = text.y + text.height + GAP;
-      }
+      const y = before.length ? Math.max(...before.map((e) => e.y + e.height)) + BREAK : -scrollY + TOP_LEFT.y / zoom.value;
+      const made = textElements(lines, { x, y });
       if (!made.length) return;
       editor.updateScene({ elements: [...before, ...made], captureUpdate: CaptureUpdateAction.IMMEDIATELY });
       if (before.length) editor.scrollToContent(made, { fitToViewport: false }); // an empty page: already in view

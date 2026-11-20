@@ -5,7 +5,7 @@ import { NoteState } from './Notepad';
 import { passageOf } from './drawing';
 import { serveOwnFonts } from './excalidrawFonts';
 import { reference } from './place';
-import { pageHere, pageKey, pageStatus } from './notebookPages';
+import { openingPage, pageHere, pageKey, pageStatus } from './notebookPages';
 import './Notebook.css';
 
 // Excalidraw's fonts from our own origin, set up before its chunk runs (DEBUG_LOG 2026-11-14 C22.3).
@@ -49,10 +49,11 @@ function PageTabs({ pages, current, onPick }) {
  * it changes; leaving it (a turn or closing) makes its thumbnail when it changed. Full screen below 760 px.
  * C37.3: `incoming` ({ key, lines, n }) is something from the book for the page `key`: the notebook turns there and
  * the editor adds the lines (notebookItems.js), once, then `onIncoming(n)`. "All notes" opens the notepad's list.
+ * C37.4: `moving` says typed notes are becoming pages; a page asked for that is gone shows the opening page.
  */
 export function Notebook({ title, pages, state, statuses, range, describe, current, onPage, onNew, onChange, onThumbnail,
   onRemove, onGoTo, onRetry, onKeepMine, onTakeTheirs, onReload, onClose, returnTo, beside = false, total = 0, onAll,
-  incoming = null, onIncoming }) {
+  incoming = null, onIncoming, moving = false }) {
   const tools = useRef(null);
   const dirty = useRef(null); // the key of the page changed since it was opened
   const layer = useRef(null);
@@ -61,7 +62,10 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
   const [grab, setGrab] = useState(true);
   const [toolsFor, setToolsFor] = useState(null); // the editor whose tools are in hand
   const delivered = useRef(null); // the page opened with the notebook, or a new one, takes the focus; a turned page does not
-  const index = pages.findIndex((p) => pageKey(p) === current || p.id === current);
+  // The page asked for, else (gone, or none yet when pages arrive) the one the notebook would open at.
+  const byId = pages.find((p) => p.id === current);
+  const shown = openingPage(pages, range, byId ? pageKey(byId) : current);
+  const index = pages.findIndex((p) => pageKey(p) === shown);
   const page = index >= 0 ? pages[index] : null;
   const here = pageHere(pages, range);
   const where = page ? describe(page) : null;
@@ -220,7 +224,7 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
             </div>
           )}
           <p className="rf-notebook-status" role="status" aria-live="polite">
-            {page ? pageStatus(status, page.pending) : ''}
+            {moving ? 'Moving your typed notes into the notebook…' : page ? pageStatus(status, page.pending) : ''}
           </p>
           {onAll && (
             <button type="button" className="rf-notebook-others" onClick={() => { close(); onAll(); }}

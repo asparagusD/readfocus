@@ -53,3 +53,41 @@ export const codeItems = (code, ref = '') => [...(ref ? [small(ref)] : []), line
 
 /** An equation as its LaTeX, in the code face. */
 export const latexItems = (latex, ref = '') => [...(ref ? [small(ref)] : []), line(`$$${String(latex ?? '').trim()}$$`, { size: SMALL, font: 'code' })];
+
+/** A TipTap inline run as plain text: marks dropped, inline math as $…$, a break as a new line. */
+function inlineText(nodes = []) {
+  return nodes.map((n) => {
+    if (n.type === 'text') return n.text ?? '';
+    if (n.type === 'inlineMath') return `$${n.attrs?.latex ?? ''}$`;
+    if (n.type === 'hardBreak') return '\n';
+    return '';
+  }).join('');
+}
+
+const wrapKeep = (text) => text.split('\n').map((part) => wrap(part)).join('\n');
+
+/** One TipTap block as lines; lists and quotes keep their marks as text. */
+function blockLines(node) {
+  const inner = node.content ?? [];
+  if (node.type === 'paragraph') {
+    const t = inlineText(inner).trim();
+    return t ? [line(wrapKeep(t))] : [];
+  }
+  if (node.type === 'blockMath') return [line(`$$${node.attrs?.latex ?? ''}$$`, { size: SMALL, font: 'code' })];
+  if (node.type === 'blockquote') return inner.flatMap(blockLines).map((l) => ({ ...l, text: l.text.split('\n').map((t) => `“${t}”`).join('\n') }));
+  if (['bulletList', 'orderedList', 'taskList'].includes(node.type)) {
+    const start = node.attrs?.start ?? 1;
+    const items = inner.map((item, i) => {
+      const mark = node.type === 'orderedList' ? `${start + i}.` : node.type === 'taskList' ? (item.attrs?.checked ? '☑' : '☐') : '•';
+      return `${mark} ${(item.content ?? []).flatMap(blockLines).map((l) => l.text).join(' ')}`;
+    });
+    return items.length ? [line(items.join('\n'))] : [];
+  }
+  return inner.flatMap(blockLines);
+}
+
+/** C37.4: a typed note (TipTap JSON) as lines for its notebook page: its reference, then its blocks. Empty: []. */
+export function typedLines(doc, ref = '') {
+  const body = (doc?.content ?? []).flatMap(blockLines);
+  return body.length ? [...(ref ? [small(ref)] : []), ...body] : [];
+}

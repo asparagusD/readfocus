@@ -29,8 +29,11 @@ import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
 import { Notebook } from '../notes/Notebook';
 import { openingPage, pageFor, pageKey, pagesOf } from '../notes/notebookPages';
-import { answerItems, codeItems, latexItems, passageItems } from '../notes/notebookItems';
+import { answerItems, codeItems, latexItems, passageItems, typedLines } from '../notes/notebookItems';
 import { useNotes } from '../notes/useNotes';
+import { notesApi } from '../notes/notesApi';
+import { moveTyped, movedStore, typedNotes } from '../notes/moveTyped';
+import { serveOwnFonts } from '../notes/excalidrawFonts';
 import { chapterOf, reference } from '../notes/place';
 import { shownRange } from '../notes/sync';
 import { NotesContext } from '../notes/NotesContext';
@@ -323,7 +326,34 @@ export function ReadingSession() {
   const [noteRequest, setNoteRequest] = useState(null);
   const openNotes = () => setSide((now) => { if (!now) opener.current = notesButton.current; return 'notes'; });
   const pages = useMemo(() => pagesOf(notepad.notes), [notepad.notes]);
+  // C37.4 (issue 25, D1 A): the first time the notebook opens, typed notes become pages at their places (each note
+  // deleted only once its page is saved); what fails stays in All notes and is tried at the next opening.
+  const [moving, setMoving] = useState(false);
+  const movingNow = useRef(false);
+  const moveTypedNotes = async () => {
+    if (movingNow.current || notepad.state !== 'ready' || !typedNotes(notepad.notes).length) return;
+    movingNow.current = true;
+    setMoving(true);
+    let result = { moved: 0, failed: 1 };
+    try {
+      serveOwnFonts(); // Excalidraw's fonts from our own origin, before its chunk runs
+      const { facesFor, textElements, TOP_LEFT } = await import('../notes/pageText');
+      result = await moveTyped(notepad.notes, {
+        lines: (note) => { const at = describeNote(note); return typedLines(note.content, reference(at.page, at.chapter)); },
+        elements: async (lines) => { await facesFor(lines); return textElements(lines, TOP_LEFT); },
+        create: (body) => notesApi.create(bookId, body),
+        remove: (id) => notesApi.remove(id),
+        moved: movedStore(),
+      });
+    } catch { /* the editor's chunk did not load: nothing moved, nothing deleted */ }
+    movingNow.current = false;
+    setMoving(false);
+    notepad.reload();
+    if (result.failed) toast({ kind: 'warning', message: "Some typed notes weren't moved yet. They stay in All notes and move the next time you open the notebook." });
+    else if (result.moved) toast({ kind: 'neutral', message: result.moved === 1 ? 'Your typed note is now a page in the notebook.' : `Your ${result.moved} typed notes are now pages in the notebook.` });
+  };
   const openNotebook = (key = null) => {
+    moveTypedNotes();
     // The notepad gives way to the notebook (it would cover the book's 30 %); Steve stays, over that 30 %.
     if (!notebookOpen) notebookOpener.current = side === 'notes' ? notesButton.current : document.activeElement;
     setSide((now) => (now === 'notes' ? null : now));
@@ -600,7 +630,7 @@ export function ReadingSession() {
           onChange={notepad.edit} onThumbnail={notepad.attachThumbnail} onRemove={notepad.remove} onGoTo={goToNote}
           onRetry={notepad.flush} onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onReload={notepad.reload}
           onClose={closeNotebook} returnTo={notebookOpener} beside={Boolean(shownSide)}
-          total={notepad.notes.length} onAll={openNotes} incoming={incoming} onIncoming={doneIncoming} />
+          total={notepad.notes.length} onAll={openNotes} incoming={incoming} onIncoming={doneIncoming} moving={moving} />
       )}
       </NotesContext.Provider>
       </SteveContext.Provider>

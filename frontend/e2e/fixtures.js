@@ -415,12 +415,13 @@ export async function openReader(page) {
 }
 
 /**
- * C37.3: the notepad's list of every note. The toolbar's Notes opens the notebook; its "All notes" opens the list
- * beside the book.
+ * C37.3: the notepad's list of every note, beside the book. The toolbar's Notes opens the notebook (whose "All
+ * notes" opens the list); since C37.4 opening the notebook moves typed notes into it, so a test of the list opens
+ * it from Steve's panel, the side area's other tab, and seeded typed notes stay as they are.
  */
 export async function openNotepad(page) {
-  await page.getByRole('button', { name: /^Notes/ }).click();
-  await page.getByRole('dialog', { name: 'Notebook' }).getByRole('button', { name: /^All notes/ }).click();
+  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await page.getByRole('complementary').getByRole('tab', { name: /^Notes/ }).click();
   await expect(page.getByRole('complementary', { name: 'Notes' })).toBeVisible();
 }
 

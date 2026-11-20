@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { answerItems, codeItems, latexItems, passageItems } from './notebookItems.js';
+import { answerItems, codeItems, latexItems, passageItems, typedLines } from './notebookItems.js';
 
 test('a passage is its reference, small and muted, then its words wrapped', () => {
   const items = passageItems('The cost of a thing is the amount of what I will call life which is required to be exchanged for it', 'p. 31 · Economy');
@@ -34,4 +34,32 @@ test('code keeps its lines and LaTeX is fenced, both in the code face', () => {
     { text: 'def f():\n    return 1', size: 14, font: 'code', muted: false },
   ]);
   assert.deepEqual(latexItems(' a^2 + b^2 '), [{ text: '$$a^2 + b^2$$', size: 14, font: 'code', muted: false }]);
+});
+
+test('a typed note becomes its reference and its blocks as text; an empty one nothing', () => {
+  const doc = { type: 'doc', content: [
+    { type: 'paragraph', content: [{ type: 'text', text: 'The ' }, { type: 'text', text: 'coefficients', marks: [{ type: 'bold' }] },
+      { type: 'text', text: ' say how much: ' }, { type: 'inlineMath', attrs: { latex: 'a_n' } }] },
+    { type: 'blockquote', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'the lamp' }] }] },
+    { type: 'taskList', content: [
+      { type: 'taskItem', attrs: { checked: true }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'read 4.2' }] }] },
+      { type: 'taskItem', attrs: { checked: false }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'work 4.4' }] }] }] },
+    { type: 'orderedList', attrs: { start: 3 }, content: [{ type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'third' }] }] }] },
+    { type: 'blockMath', attrs: { latex: '\\sum k' } },
+    { type: 'paragraph' },
+    { type: 'paragraph', content: [{ type: 'text', text: 'one' }, { type: 'hardBreak' }, { type: 'text', text: 'two' }] },
+  ] };
+  const items = typedLines(doc, 'p. 1 · Economy');
+  assert.deepEqual(items.map((i) => i.text), [
+    'p. 1 · Economy',
+    'The coefficients say how much: $a_n$',
+    '“the lamp”',
+    '☑ read 4.2\n☐ work 4.4',
+    '3. third',
+    '$$\\sum k$$',
+    'one\ntwo',
+  ]);
+  assert.deepEqual(items.map((i) => i.font), ['hand', 'hand', 'hand', 'hand', 'hand', 'code', 'hand']);
+  assert.deepEqual(typedLines({ type: 'doc', content: [{ type: 'paragraph' }] }, 'p. 1'), []);
+  assert.deepEqual(typedLines(null), []);
 });

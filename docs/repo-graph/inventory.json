@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 976,
-    "inventoried": 833,
+    "tracked": 979,
+    "inventoried": 836,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18625,
+      "size_bytes": 18643,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6310,
-      "size_bytes": 1161936,
+      "lines": 6311,
+      "size_bytes": 1163890,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2473,10 +2473,10 @@
     {
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
-      "lines": 525,
-      "size_bytes": 33987,
+      "lines": 526,
+      "size_bytes": 34154,
       "role": "config",
-      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed; C37.3: openNotepad opens the notes list through the notebook's All notes."
+      "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed; C37.3: openNotepad opens the notes list (since C37.4 from Steve's panel, so typed notes are not moved)."
     },
     {
       "path": "frontend/e2e/fixtures/books/converted-md.epub",
@@ -2657,8 +2657,8 @@
     {
       "path": "frontend/e2e/notepad.spec.js",
       "language": "javascript",
-      "lines": 218,
-      "size_bytes": 11858,
+      "lines": 219,
+      "size_bytes": 11973,
       "role": "config",
       "purpose": "E2E for the notepad (C22.2): Notes beside the book in book order without loading an editor, references go to their passage (PDF and EPUB), tabs and keyboard, empty and failed load, delete and Undo, a queued offline change sent on load, a stale one as a conflict with Keep mine, the phone sheet in Lamplight; C37.3: opened by the notebook's All notes, and the failed load shown by the notebook."
     },
@@ -2681,10 +2681,10 @@
     {
       "path": "frontend/e2e/notes-drawing.spec.js",
       "language": "javascript",
-      "lines": 304,
-      "size_bytes": 17137,
+      "lines": 350,
+      "size_bytes": 20033,
       "role": "config",
-      "purpose": "E2E for the notebook (C37.2; drawing notes since C22.3): 70 % with the book blurred and inert; Excalidraw loads only for a page and asks no other host; shapes, arrows, freehand and text saved as scene JSON; leaving a page uploads its thumbnail, which the list shows and opens; pages turn by arrows and tabs, Go to this place, reopens where left, reference back to the book; delete with Undo; Paste passage; Mermaid; Steve over the 30 %; Lamplight and Escape; full screen on a phone."
+      "purpose": "E2E for the notebook (C37.2; drawing notes since C22.3): 70 % with the book blurred and inert; Excalidraw loads only for a page and asks no other host; shapes, arrows, freehand and text saved as scene JSON; leaving a page uploads its thumbnail, which the list shows and opens; pages turn by arrows and tabs, Go to this place, reopens where left, reference back to the book; delete with Undo; Paste passage; Mermaid; Steve over the 30 %; Lamplight and Escape; full screen on a phone; C37.4: typed notes become pages on the first opening, each deleted after its page, an empty one with no page, a failed save kept and moved next time."
     },
     {
       "path": "frontend/e2e/notes-editor.spec.js",
@@ -4273,10 +4273,10 @@
     {
       "path": "frontend/src/notes/DrawingEditor.jsx",
       "language": "jsx",
-      "lines": 131,
-      "size_bytes": 7052,
+      "lines": 112,
+      "size_bytes": 5848,
       "role": "asset",
-      "purpose": "A notebook page's editor (C22.3; C37.2), lazy: Excalidraw 0.18 with AI, export, file and image tools off, our light or dark theme, scene changes to onChange, a ResizeObserver that refreshes its offsets, autofocus only when asked; register hands over finish (a PNG thumbnail), paste (the passage as a text element) and idle (Escape has nothing left to do); C37.3: add(lines) writes notebookItems lines as text elements below the page's content (its faces loaded first), once the opening scene is in, and saves at once."
+      "purpose": "A notebook page's editor (C22.3; C37.2), lazy: Excalidraw 0.18 with AI, export, file and image tools off, our light or dark theme, scene changes to onChange, a ResizeObserver that refreshes its offsets, autofocus only when asked; register hands over finish (a PNG thumbnail), paste (the passage as a text element) and idle (Escape has nothing left to do); C37.3: add(lines) writes notebookItems lines as text elements below the page's content (pageText.js, its faces loaded first), once the opening scene is in, and saves at once."
     },
     {
       "path": "frontend/src/notes/DrawingNote.jsx",
@@ -4321,10 +4321,10 @@
     {
       "path": "frontend/src/notes/Notebook.jsx",
       "language": "jsx",
-      "lines": 238,
-      "size_bytes": 12456,
+      "lines": 242,
+      "size_bytes": 12862,
       "role": "asset",
-      "purpose": "The notebook (C37.2, issue 26): one per book, its pages the drawing notes in book order, a dialog over 70 % of the screen (full screen under 760 px) while the book is blurred and inert; arrows and a page tablist, Go to this place, New page, Paste passage, delete with Undo, the page's reference back to the book; Escape (once Excalidraw is idle), the close button or a click on the blurred book tuck it away and focus goes back; leaving a changed page makes its thumbnail; save line and conflict actions. C37.3: takes something from the book for a page (turns there, the editor adds its lines once); All notes opens the notepad's list."
+      "purpose": "The notebook (C37.2, issue 26): one per book, its pages the drawing notes in book order, a dialog over 70 % of the screen (full screen under 760 px) while the book is blurred and inert; arrows and a page tablist, Go to this place, New page, Paste passage, delete with Undo, the page's reference back to the book; Escape (once Excalidraw is idle), the close button or a click on the blurred book tuck it away and focus goes back; leaving a changed page makes its thumbnail; save line and conflict actions. C37.3: takes something from the book for a page (turns there, the editor adds its lines once); All notes opens the notepad's list; C37.4: says when typed notes are being moved, and a page asked for that is gone shows the opening page."
     },
     {
       "path": "frontend/src/notes/Notepad.css",
@@ -4487,20 +4487,36 @@
       "purpose": "Unit tests for the math input rules: inline math, prices and escaped dollars left as text, display math only alone in its paragraph."
     },
     {
+      "path": "frontend/src/notes/moveTyped.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 2806,
+      "role": "asset",
+      "purpose": "Typed notes into the notebook (C37.4, issue 25 D1 A), pure orchestration: the saved typed notes, each with words made a page at its place (anchors, highlight and region kept) and deleted only after that page is saved, an empty one deleted alone; a page whose note's delete failed remembered on this device so the next try only deletes."
+    },
+    {
+      "path": "frontend/src/notes/moveTyped.test.js",
+      "language": "javascript",
+      "lines": 66,
+      "size_bytes": 3271,
+      "role": "asset",
+      "purpose": "Unit tests for moveTyped.js: which notes move, the page body, create before delete, a failed save keeps the note, a failed delete is retried without a second page, a storage that throws."
+    },
+    {
       "path": "frontend/src/notes/notebookItems.js",
       "language": "javascript",
-      "lines": 55,
-      "size_bytes": 2791,
+      "lines": 93,
+      "size_bytes": 4551,
       "role": "asset",
-      "purpose": "What goes onto a notebook page from the book, pure (C37.3, issue 25): a passage (its reference, then its words wrapped), a Steve answer (heading, paragraphs, lists, math and code as text, sources), a code listing and an equation's LaTeX in the code face, as lines of text for the editor."
+      "purpose": "What goes onto a notebook page from the book, pure (C37.3, issue 25): a passage (its reference, then its words wrapped), a Steve answer (heading, paragraphs, lists, math and code as text, sources), a code listing and an equation's LaTeX in the code face, as lines of text for the editor; C37.4: a typed note's TipTap document as lines (marks dropped, math as $…$, lists, checklists and quotes as text)."
     },
     {
       "path": "frontend/src/notes/notebookItems.test.js",
       "language": "javascript",
-      "lines": 37,
-      "size_bytes": 2191,
+      "lines": 65,
+      "size_bytes": 3891,
       "role": "asset",
-      "purpose": "Unit tests for notebookItems.js: a passage and its reference, a Steve answer's parts and faces, code and LaTeX lines."
+      "purpose": "Unit tests for notebookItems.js: a passage and its reference, a Steve answer's parts and faces, code and LaTeX lines; a typed note's blocks."
     },
     {
       "path": "frontend/src/notes/notebookPages.js",
@@ -4525,6 +4541,14 @@
       "size_bytes": 911,
       "role": "asset",
       "purpose": "Client for the note blocks API (C22.1/C22.2): list, create, save with If-Match, delete."
+    },
+    {
+      "path": "frontend/src/notes/pageText.js",
+      "language": "javascript",
+      "lines": 34,
+      "size_bytes": 1897,
+      "role": "asset",
+      "purpose": "Words on a notebook page with Excalidraw (C37.3; shared in C37.4): the faces loaded before measuring, notebookItems lines as stacked text elements in its hand or code face and grey; only loaded with Excalidraw."
     },
     {
       "path": "frontend/src/notes/place.js",
@@ -5049,10 +5073,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 647,
-      "size_bytes": 34297,
+      "lines": 677,
+      "size_bytes": 36198,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown. C36.7b: opening Quiz me sends the place to /focus/quiz-me/prepare (openQuizMe). C36.7c: Quiz me hands the built questions to the quiz page; C37.2: the notebook over 70 % with the book blurred and inert, opened from the notepad or a page's margin marker, kept on its page between openings; C37.3: the toolbar's and focus bar's Notes open the notebook, and N, the selection's and a highlight's Note, Steve's Save to notes and code or LaTeX from a block write onto the page for the place's chapter (else a new page there)."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown. C36.7b: opening Quiz me sends the place to /focus/quiz-me/prepare (openQuizMe). C36.7c: Quiz me hands the built questions to the quiz page; C37.2: the notebook over 70 % with the book blurred and inert, opened from the notepad or a page's margin marker, kept on its page between openings; C37.3: the toolbar's and focus bar's Notes open the notebook, and N, the selection's and a highlight's Note, Steve's Save to notes and code or LaTeX from a block write onto the page for the place's chapter (else a new page there); C37.4: opening the notebook moves typed notes into it (moveTyped.js, pageText.js loaded then), reloads the notes and says how it went."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -6609,8 +6633,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 835,
-      "size_bytes": 284090,
+      "lines": 838,
+      "size_bytes": 285520,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

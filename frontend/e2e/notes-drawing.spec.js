@@ -262,6 +262,52 @@ test('Steve sits over the book\'s 30 % while the notebook is open', async ({ pag
   if (shots) { await page.waitForTimeout(400); await page.screenshot({ path: `${shots}/notebook-steve-1440.png` }); }
 });
 
+/** A typed note from before C37.3, as the server keeps it. */
+const typed = (id, page, content, extra = {}) => ({ id, kind: 'text', scope: 'view', version: 1, orphaned: false, deleted_at: null,
+  urls: {}, anchors: [{ kind: 'pdf', page, quads: [[0, 0, 612, 792]], text: '' }], position_start: page * 1e6,
+  position_end: page * 1e6 + 79_299, content, created_at: '2026-11-14T10:00:00Z', ...extra });
+const doc = (...inline) => ({ type: 'doc', content: [{ type: 'paragraph', content: inline }] });
+
+test('typed notes become notebook pages the first time it opens; each is deleted only after its page is saved', async ({ page, api }) => {
+  api.notes = [
+    typed('t-words', 1, doc({ type: 'text', text: 'The ' }, { type: 'text', text: 'coefficients', marks: [{ type: 'bold' }] },
+      { type: 'text', text: ' say how much: ' }, { type: 'inlineMath', attrs: { latex: 'a_n' } }), { region_id: 'rg-1' }),
+    typed('t-empty', 2, { type: 'doc', content: [{ type: 'paragraph' }] }),
+  ];
+  await openReader(page);
+  await openNotebook(page);
+  await expect.poll(() => api.noteDeletes.slice().sort()).toEqual(['t-empty', 't-words']);
+  expect(api.notePosts).toHaveLength(1); // the empty note leaves no page
+  const [post] = api.notePosts;
+  expect(post).toMatchObject({ kind: 'drawing', scope: 'view', anchors: api.notes[0].anchors, position_start: 1e6,
+    position_end: 1e6 + 79_299, region_id: 'rg-1' });
+  const texts = post.content.elements.filter((e) => e.type === 'text').map((e) => e.text);
+  expect(texts[0]).toMatch(/^p\. /); // its reference, then its words
+  expect(texts[1]).toBe('The coefficients say how much: $a_n$');
+  await expect(page.getByText('Your typed note is now a page in the notebook.')).toBeVisible();
+  await expect(notebook(page).getByRole('tab', { name: 'Page 1' })).toHaveAttribute('aria-selected', 'true');
+  await expect(canvas(page)).toBeVisible({ timeout: 15_000 });
+  await notebook(page).getByRole('button', { name: 'Close notebook' }).click();
+  await openNotebook(page); // nothing left to move
+  await page.waitForTimeout(500);
+  expect(api.notePosts).toHaveLength(1);
+});
+
+test('a typed note whose page cannot be saved stays, and moves at the next opening', async ({ page, api }) => {
+  api.notes = [typed('t-words', 1, doc({ type: 'text', text: 'Kept safe' }))];
+  api.noteFail = 500;
+  await openReader(page);
+  await openNotebook(page);
+  await expect(page.getByText(/^Some typed notes weren't moved yet/)).toBeVisible();
+  expect(api.noteDeletes).toEqual([]);
+  expect(api.notes.find((n) => n.id === 't-words').deleted_at).toBeNull();
+  api.noteFail = null;
+  await notebook(page).getByRole('button', { name: 'Close notebook' }).click();
+  await openNotebook(page);
+  await expect.poll(() => api.noteDeletes).toEqual(['t-words']);
+  expect(api.notePosts.at(-1).content.elements.some((e) => e.type === 'text' && e.text === 'Kept safe')).toBe(true);
+});
+
 test.describe('lamplight', () => {
   test.use({ colorScheme: 'dark' });
   test('the page follows the dark theme; Escape ends typing first, then closes the notebook', async ({ page }) => {

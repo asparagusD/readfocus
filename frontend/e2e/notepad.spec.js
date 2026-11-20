@@ -89,7 +89,8 @@ test('tabs: arrows move between Notes and Steve, Esc closes and focus returns to
   await expect(side(page, 'Notes').getByRole('button', { name: 'Close notes' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.locator('#rf-side-panel')).toHaveCount(0);
-  await expect(notes).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Ask Steve' })).toBeFocused(); // the button that opened the panel
+  await expect(notes).toBeVisible();
 });
 
 test('empty, failed load and Try again', async ({ page, api }) => {

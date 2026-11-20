@@ -2458,6 +2458,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/find.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/fixtures.js",
       "type": "file",
       "role": "config",
@@ -4054,6 +4060,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/originalview/FindBar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/originalview/Reader.jsx",
       "type": "file",
       "role": "asset",
@@ -4295,6 +4307,12 @@
     },
     {
       "id": "file:frontend/src/originalview/useBoxSize.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/useFind.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -11120,6 +11138,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/find.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/focus-end.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -12701,6 +12724,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/FindBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/epub/EpubBook.jsx"
     },
     {
@@ -12732,6 +12760,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/useFind.js"
     },
     {
       "type": "imports",
@@ -13022,6 +13055,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/scroll.test.js",
       "to": "file:frontend/src/originalview/scroll.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/useFind.js",
+      "to": "file:frontend/src/originalview/find.js"
     },
     {
       "type": "imports",

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoveHorizontal, MoveVertical, Type, ZoomIn, ZoomOut } from 'lucide-react';
+import { MoveHorizontal, MoveVertical, Search, Type, ZoomIn, ZoomOut } from 'lucide-react';
 import { zoomLabel, zoomStep } from './frame';
 
 const SIZES = [14, 16, 18, 20, 22, 24];
@@ -42,9 +42,9 @@ function PageBox({ page, total, onGo }) {
  * (fit page, fit width, 125-200 %; click to cycle the fits) and zoom in for a PDF;
  * smaller and larger text, line spacing and margins for an EPUB. C38.3: the "Original
  * colours" switch is gone: a book is never recoloured. C38.4a (issue 22): a PDF also has Edge's page box (`place`,
- * `onGoToPage`) and Page view (`pageView`, `onPageView`).
+ * `onGoToPage`) and Page view (`pageView`, `onPageView`). C38.5: Find (`onFind`, also Ctrl+F) for a PDF.
  */
-export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place = null, onGoToPage = null, pageView = 'one', onPageView = null }) {
+export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place = null, onGoToPage = null, pageView = 'one', onPageView = null, onFind = null }) {
   const set = (patch) => onSettings({ ...settings, ...patch });
   const size = settings?.fontSize ?? 18;
   return (
@@ -66,6 +66,12 @@ export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place
             <select className="rf-tool rf-select" aria-label="Page view" value={pageView} onChange={(event) => onPageView(event.target.value)}>
               {PAGE_VIEWS.map(([value, name]) => <option key={value} value={value}>{name}</option>)}
             </select>
+          )}
+          {onFind && (
+            <button type="button" className="rf-tool" onClick={onFind} aria-label="Find in the book" aria-keyshortcuts="Control+F"
+              title="Find (Ctrl+F)">
+              <Search size={18} strokeWidth={1.75} aria-hidden="true" />
+            </button>
           )}
         </div>
       ) : (

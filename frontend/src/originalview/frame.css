@@ -138,6 +138,58 @@
   pointer-events: none;
 }
 
+/* C38.5: Edge's find bar over the book's top right, left of the ribbon (across the top on a phone, the ribbon
+   below it). */
+.rf-find {
+  position: absolute;
+  top: var(--space-2);
+  right: calc(var(--space-6) + 44px + var(--space-2));
+  z-index: var(--z-popover);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--elevation-lift);
+}
+
+.rf-find-icon { flex: none; color: var(--ink-2); }
+
+.rf-find-input {
+  width: 14rem;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+}
+
+.rf-find-input::placeholder { color: var(--ink-3); }
+.rf-find-input:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
+.rf-find-count {
+  min-width: 6rem;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (width < 640px) {
+  .rf-find { left: var(--space-2); right: var(--space-2); gap: var(--space-1); }
+  .rf-find-input { flex: 1; width: auto; margin-right: var(--space-1); }
+  .rf-find-count { min-width: 0; }
+  .rf-ov[data-kind="pdf"][data-finding] .rf-ov-ribbon { top: calc(var(--space-2) + 64px); }
+}
+
 /* The end of the book: its closing words below the last page, quiet, not a page over the book. */
 .rf-pdf-end { display: flex; justify-content: center; padding: var(--space-6) var(--space-5) var(--space-8); }
 .rf-pdf-end .rf-end { align-items: center; width: min(100%, 36rem); padding: var(--space-5); border: 0; background: none; box-shadow: none; text-align: center; }

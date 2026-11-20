@@ -532,7 +532,8 @@ export function ReadingSession() {
           onFocusChange={setToolbarFocused}
           controls={(
             <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
-              place={place} onGoToPage={(page) => reader.current?.goTo({ kind: 'pdf', page })} pageView={pageView} onPageView={setPageView} />
+              place={place} onGoToPage={(page) => reader.current?.goTo({ kind: 'pdf', page })} pageView={pageView} onPageView={setPageView}
+              onFind={kind === 'pdf' ? () => reader.current?.openFind?.() : null} />
           )}
           onContents={openContents}
           contentsOpen={contentsOpen}

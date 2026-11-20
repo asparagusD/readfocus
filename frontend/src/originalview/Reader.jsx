@@ -13,6 +13,8 @@ import { EpubBlockActions } from '../steve/EpubBlockActions';
 import { MarginMarkers } from '../notes/MarginMarkers';
 import { RibbonPlacer } from '../focus/RibbonPlacer';
 import { EpubBook } from './epub/EpubBook';
+import { FindBar } from './FindBar';
+import { useFind } from './useFind';
 import { startPage } from './pdf/contents';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
@@ -100,6 +102,9 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * below its last page. An EPUB keeps the frame until C38.7. C38.4a: `pageView` is a PDF's Page view (PdfBook).
  * C38.4c: a PDF has no footer: the toolbar's page box names the page, `status` is a quiet note on the desk, and the
  * live region still says the page or the end.
+ * C38.5: a PDF's find bar (FindBar, useFind): Ctrl+F (or `openFind()` on the ref, the toolbar's Find) opens it with
+ * the query selected, F3 and Shift+F3 step through the matches while it is open, and Escape in it closes it, focus
+ * back on the book. Not in a dialog over the book (the notebook has its own).
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
@@ -136,6 +141,27 @@ export function Reader({
   const selectionDocs = useMemo(() => (kind === 'pdf' ? [document] : sections.filter((doc) => doc.defaultView)), [kind, sections]);
   const skipAt = useMemo(() => (kind === 'pdf' && regions ? (x, y) => skipPdfPoint(regions, x, y) : undefined), [kind, regions]);
   const toolbar = useRef(null);
+  const finder = useFind(book); // C38.5
+  const { openFind, close: closeFind } = finder;
+  const finding = kind === 'pdf' && finder.open;
+  const findNext = finder.next;
+  const findPrev = finder.prev;
+  useEffect(() => {
+    if (kind !== 'pdf') return undefined;
+    const onFindKey = (event) => {
+      if (event.defaultPrevented || event.altKey || event.target?.closest?.('[role="dialog"]')) return;
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        openFind();
+      } else if (finding && event.key === 'F3') {
+        event.preventDefault();
+        if (event.shiftKey) findPrev();
+        else findNext();
+      }
+    };
+    document.addEventListener('keydown', onFindKey);
+    return () => document.removeEventListener('keydown', onFindKey);
+  }, [kind, openFind, finding, findNext, findPrev]);
   useEffect(() => { // C18.6d: the boxes of the pages shown are asked for before a word is hovered
     if (regions && shownPages) shownPages.split(',').forEach((n) => regions.load(Number(n)));
   }, [regions, shownPages]);
@@ -340,7 +366,8 @@ export function Reader({
     notePlace: () => book.current?.notePlace?.() ?? Promise.resolve(null),
     shownPlaces, // C23.6b
     flash, // C22.5
-  }), [move, flash, shownPlaces]);
+    openFind, // C38.5
+  }), [move, flash, shownPlaces, openFind]);
 
   const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
   const atClose = kind === 'pdf' ? Boolean(closing && place?.atEnd) : ending; // C38.2: a PDF's end is scrolled to
@@ -349,6 +376,7 @@ export function Reader({
       data-loading={(!place || opening) && !failure}
       data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
       data-ending={ending || undefined} data-annotations={annotations ? annotations.length : undefined}
+      data-finding={finding || undefined}
       >
       {kind !== 'pdf' && (
         <header className="rf-ov-head" aria-hidden="true" data-empty={!place?.entry}>
@@ -364,7 +392,7 @@ export function Reader({
         <div className="rf-ov-book" data-spread={wide} ref={setBookBox}>
           {kind === 'pdf'
             ? <PdfBook key={attempt} {...shared} zoom={zoom} view={pageView} ocr={ocr} contents={contents} startPage={startPage(start)}
-              end={closing && <div className="rf-end">{closing}</div>} />
+              end={closing && <div className="rf-end">{closing}</div>} found={finding ? finder.found : null} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} />}
           {turn && (
             <TurnLeaf key={turn.id} turn={turn} wide={wide}
@@ -412,6 +440,9 @@ export function Reader({
           )}
         </div>
         {kind === 'pdf' && status && !opening && <p className="rf-ov-status">{status}</p>}
+        {finding && place && !failure && (
+          <FindBar finder={{ ...finder, close: () => { closeFind(); stage.current?.focus(); } }} />
+        )}
         {failure && (
           <div className="rf-ov-error" role="alert">
             <h2>This book could not be opened</h2>

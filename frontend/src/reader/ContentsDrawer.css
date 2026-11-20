@@ -142,7 +142,8 @@
 }
 .rf-contents-tab {
   min-height: 44px;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2); /* C38.6b: three tabs on one line in the pane */
+  white-space: nowrap;
   border: 0;
   border-bottom: var(--border-strong) solid transparent;
   background: transparent;
@@ -227,6 +228,51 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
 }
+
+/* C38.6b: the Pages tab: two thumbnails across, each the page as published with its printed label. */
+.rf-pages-list {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-2) var(--space-3) var(--space-5);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  list-style: none;
+}
+
+.rf-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-2) var(--space-1);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  cursor: pointer;
+}
+
+.rf-thumb:hover { background: var(--paper-2); }
+.rf-thumb[aria-current="true"] { background: var(--accent-soft); color: var(--ink); }
+
+.rf-thumb-sheet {
+  display: block;
+  width: 100%;
+  max-width: 112px;
+  aspect-ratio: 612 / 792; /* a letter page until it is drawn */
+  border: var(--border-hair) solid var(--line);
+  background: #fff; /* the publisher's page, in either theme (C38.3) */
+}
+
+.rf-thumb[data-drawn] .rf-thumb-sheet { aspect-ratio: auto; }
+.rf-thumb-sheet canvas { display: block; width: 100%; height: auto; }
+.rf-thumb[aria-current="true"] .rf-thumb-sheet { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* C38.6a (issue 22): Edge's left pane: a column of the reading body, the pages narrowing beside it. */
 .rf-contents[data-docked] {

@@ -369,6 +369,8 @@ export function Reader({
     shownPlaces, // C23.6b
     flash, // C22.5
     openFind, // C38.5
+    thumbnail: (n, width) => book.current?.thumbnail?.(n, width) ?? Promise.resolve(null), // C38.6b: a PDF's Pages tab
+    pageLabelOf: (n) => book.current?.pageLabelOf?.(n) ?? String(n),
   }), [move, flash, shownPlaces, openFind]);
 
   const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn

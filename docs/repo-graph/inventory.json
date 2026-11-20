@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 982,
-    "inventoried": 839,
+    "tracked": 984,
+    "inventoried": 841,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 19046,
+      "size_bytes": 19064,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6375,
-      "size_bytes": 1195438,
+      "lines": 6376,
+      "size_bytes": 1196908,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2749,6 +2749,14 @@
       "size_bytes": 4378,
       "role": "config",
       "purpose": "C35.5b-c (issue 20): back on the Library or the Dashboard the last data shows before its request answers and is asked again; League's settings use the header's /me/progress, asking nothing more."
+    },
+    {
+      "path": "frontend/e2e/pages-tab.spec.js",
+      "language": "javascript",
+      "lines": 60,
+      "size_bytes": 3602,
+      "role": "config",
+      "purpose": "Playwright e2e for the Pages tab (C38.6b): six thumbnails with printed labels, the page in view marked, a pick goes to its page with the pane kept; over a 300-page PDF served like Storage fewer than 20 drawn, the last drawn and the first freed after scrolling, a pick goes to page 299."
     },
     {
       "path": "frontend/e2e/pdf-open.spec.js",
@@ -4625,10 +4633,10 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 499,
-      "size_bytes": 28080,
+      "lines": 501,
+      "size_bytes": 28269,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions. C23.6b: shownPlaces() (the pages shown as ribbon places) and a `placing` prop that swaps the resting ribbon for RibbonPlacer. C23.G: Next on the closing page reads on into the book (it no longer ends there); once passed it does not come back until Home or a jump. C26.5a: the closing page is announced as \"End of the book\". C26.5b: no bounds, note or read-on: the closing page covers the book only past its last page, Home goes to the first page and End to the last. C34.2: contents and start (the saved anchor) passed to the PDF renderer. C38.2: a PDF scrolls: no running header, leaf, edge zones or closing page over it; Up and Down scroll it a little; 'End of the book' when its end is scrolled to; an EPUB keeps the frame. C38.4c: a PDF has no footer (Previous, folio, Next): the toolbar's page box names the page, the status is a quiet note on the desk, the live region still speaks. C38.5b: a PDF's find bar (FindBar, useFind): Ctrl+F or openFind() on the ref opens it with the query selected, F3 and Shift+F3 step while it is open, Escape in it closes it with focus back on the book; not inside a dialog; data-finding while open. C38.5c: the find bar for an EPUB too; Ctrl+F and F3 heard inside its sections."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions. C23.6b: shownPlaces() (the pages shown as ribbon places) and a `placing` prop that swaps the resting ribbon for RibbonPlacer. C23.G: Next on the closing page reads on into the book (it no longer ends there); once passed it does not come back until Home or a jump. C26.5a: the closing page is announced as \"End of the book\". C26.5b: no bounds, note or read-on: the closing page covers the book only past its last page, Home goes to the first page and End to the last. C34.2: contents and start (the saved anchor) passed to the PDF renderer. C38.2: a PDF scrolls: no running header, leaf, edge zones or closing page over it; Up and Down scroll it a little; 'End of the book' when its end is scrolled to; an EPUB keeps the frame. C38.4c: a PDF has no footer (Previous, folio, Next): the toolbar's page box names the page, the status is a quiet note on the desk, the live region still speaks. C38.5b: a PDF's find bar (FindBar, useFind): Ctrl+F or openFind() on the ref opens it with the query selected, F3 and Shift+F3 step while it is open, Escape in it closes it with focus back on the book; not inside a dialog; data-finding while open. C38.5c: the find bar for an EPUB too; Ctrl+F and F3 heard inside its sections. C38.6b: thumbnail(page, width) and pageLabelOf(page) on the ref, from a PDF's renderer."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -4777,10 +4785,10 @@
     {
       "path": "frontend/src/originalview/pdf/PdfBook.jsx",
       "language": "jsx",
-      "lines": 408,
-      "size_bytes": 22298,
+      "lines": 411,
+      "size_bytes": 22566,
       "role": "asset",
-      "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor. C23.6b: shownPlaces(): a point at the bottom of each page shown, with its printed label. C34.2: startPage is the first page rendered; contents (books.toc) stand in for the outline when it has pages, else the outline is read once the first page is measured. C38.2 (issue 22): read as in Edge: pages one under another on the desk, scrolled and laid out from their sizes (an unmeasured page takes the opening page's; pages near the view measured), only the pages in view and two either side drawn; the place is the pages in view and the main one (scroll.js), a zoom, resize or late page size holds the words at the view's top; Previous, Next and the page keys step a page; goTo scrolls to a passage's first quad; the closing words below the last page; spreads and mouse-drag panning gone. C38.4a: Page view (`view`: one, two, cover alone) in the layout and fit scales; the place carries page and total; a left page's markers on its left. A view scrolled to the very end stays at the end through a new layout. C38.5a: find over every page's text: each page's text read once with its items' places (also today's chunks' text), search(query, onUpdate) in book order from the main page round the book, showMatch scrolls a match into view when it is not, and `found` highlighted on the pages drawn (CSS Custom Highlight API, rf-find and rf-find-current)."
+      "purpose": "A PDF in the book frame (C17.4): one page or a spread, fit-page, fit-width or 125-200 % with mouse-drag panning, lamplight colours, page labels and outline entry, folio and relocate, the spread's measured size for the frame, and the renderer interface the frame calls. C17.5: find(snippets, from) over each page's text layer (squeezed, read once per page, from a hint page round the book) and toc() from the outline. C17.6: selectionAnchors() (one PDF anchor per page a selection touches, quads in points) and the reading position as a point anchor. C23.6b: shownPlaces(): a point at the bottom of each page shown, with its printed label. C34.2: startPage is the first page rendered; contents (books.toc) stand in for the outline when it has pages, else the outline is read once the first page is measured. C38.2 (issue 22): read as in Edge: pages one under another on the desk, scrolled and laid out from their sizes (an unmeasured page takes the opening page's; pages near the view measured), only the pages in view and two either side drawn; the place is the pages in view and the main one (scroll.js), a zoom, resize or late page size holds the words at the view's top; Previous, Next and the page keys step a page; goTo scrolls to a passage's first quad; the closing words below the last page; spreads and mouse-drag panning gone. C38.4a: Page view (`view`: one, two, cover alone) in the layout and fit scales; the place carries page and total; a left page's markers on its left. A view scrolled to the very end stays at the end through a new layout. C38.5a: find over every page's text: each page's text read once with its items' places (also today's chunks' text), search(query, onUpdate) in book order from the main page round the book, showMatch scrolls a match into view when it is not, and `found` highlighted on the pages drawn (CSS Custom Highlight API, rf-find and rf-find-current). C38.6b: thumbnail(page, width) and pageLabelOf(page) for the Pages tab."
     },
     {
       "path": "frontend/src/originalview/pdf/PdfPage.jsx",
@@ -4865,10 +4873,10 @@
     {
       "path": "frontend/src/originalview/pdf/pdfjs.js",
       "language": "javascript",
-      "lines": 91,
-      "size_bytes": 3725,
+      "lines": 104,
+      "size_bytes": 4525,
       "role": "asset",
-      "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed). C17.4: renderPage recolours for lamplight (an alpha context, recorded image positions) and pdfOutline flattens the outline to pages. C34.1b: openPdf reads a { url } source in byte ranges through rangeSource.js. C38.3: renderPage draws a page as published only (no recolouring)."
+      "purpose": "PDF.js loaded lazily (C17.2): loadPdfjs (library and worker chunks, one shared promise), openPdf (fonts, wasm decoders and ICC profiles from /pdfjs/ on our origin, XFA off), renderPage (canvas at the device pixel ratio plus the page's text content), releasePage (canvas pixels and page objects freed). C17.4: renderPage recolours for lamplight (an alpha context, recorded image positions) and pdfOutline flattens the outline to pages. C34.1b: openPdf reads a { url } source in byte ranges through rangeSource.js. C38.3: renderPage draws a page as published only (no recolouring). C38.6b: renderThumbnail(doc, page, width): a page drawn small, its text not read."
     },
     {
       "path": "frontend/src/originalview/pdf/rangeSource.js",
@@ -5089,10 +5097,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 702,
-      "size_bytes": 37656,
+      "lines": 711,
+      "size_bytes": 38222,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown. C36.7b: opening Quiz me sends the place to /focus/quiz-me/prepare (openQuizMe). C36.7c: Quiz me hands the built questions to the quiz page; C37.2: the notebook over 70 % with the book blurred and inert, opened from the notepad or a page's margin marker, kept on its page between openings; C37.3: the toolbar's and focus bar's Notes open the notebook, and N, the selection's and a highlight's Note, Steve's Save to notes and code or LaTeX from a block write onto the page for the place's chapter (else a new page there); C37.4: opening the notebook moves typed notes into it (moveTyped.js, pageText.js loaded then), reloads the notes and says how it went; C37.6: uploads a page's pictures and says when one is refused; C37.6: a figure or an equation with no LaTeX goes onto the page as its uploaded crop and caption, so no block notes are made. C37.7: the book recedes as the notebook slides in (scale 0.97, blur 8 px, a dim; blur and dim only under reduced motion) and the notebook leaves inside AnimatePresence. C38.4a: the PDF's Page view kept on this device (rf-pdf-view); the page box goes to a page. C38.4b: the toolbar pinned or not, kept on this device (rf-toolbar-pinned, pinned by default). C38.4c: the focus bar is given a PDF's folio. C38.5b: the toolbar's Find opens the reader's find bar for a PDF. C38.6a: from 1024 px (useMedia) the contents pane is docked in the reading body before the book (inert under the notebook) and a pick leaves it open; below, the drawer as before."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown. C36.7b: opening Quiz me sends the place to /focus/quiz-me/prepare (openQuizMe). C36.7c: Quiz me hands the built questions to the quiz page; C37.2: the notebook over 70 % with the book blurred and inert, opened from the notepad or a page's margin marker, kept on its page between openings; C37.3: the toolbar's and focus bar's Notes open the notebook, and N, the selection's and a highlight's Note, Steve's Save to notes and code or LaTeX from a block write onto the page for the place's chapter (else a new page there); C37.4: opening the notebook moves typed notes into it (moveTyped.js, pageText.js loaded then), reloads the notes and says how it went; C37.6: uploads a page's pictures and says when one is refused; C37.6: a figure or an equation with no LaTeX goes onto the page as its uploaded crop and caption, so no block notes are made. C37.7: the book recedes as the notebook slides in (scale 0.97, blur 8 px, a dim; blur and dim only under reduced motion) and the notebook leaves inside AnimatePresence. C38.4a: the PDF's Page view kept on this device (rf-pdf-view); the page box goes to a page. C38.4b: the toolbar pinned or not, kept on this device (rf-toolbar-pinned, pinned by default). C38.4c: the focus bar is given a PDF's folio. C38.5b: the toolbar's Find opens the reader's find bar for a PDF. C38.6a: from 1024 px (useMedia) the contents pane is docked in the reading body before the book (inert under the notebook) and a pick leaves it open; below, the drawer as before. C38.6b: the Pages tab for a PDF: its pages, the main page, labels and thumbnails from the reader; a pick goes to the page."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -5209,18 +5217,26 @@
     {
       "path": "frontend/src/reader/ContentsDrawer.css",
       "language": "css",
-      "lines": 244,
-      "size_bytes": 7645,
+      "lines": 290,
+      "size_bytes": 9049,
       "role": "asset",
-      "purpose": "Contents drawer styles: a surface panel with a lift shadow, the bottom-sheet variant, Playfair heading, 44 px chapter rows in Lora, the current one on the accent wash, the 'today' label. C38.6a: the docked pane, a 300 px column of the reading body with a hairline and rounded edge."
+      "purpose": "Contents drawer styles: a surface panel with a lift shadow, the bottom-sheet variant, Playfair heading, 44 px chapter rows in Lora, the current one on the accent wash, the 'today' label. C38.6a: the docked pane, a 300 px column of the reading body with a hairline and rounded edge. C38.6b: the Pages tab's two-column thumbnails (white sheets, the page in view outlined in the accent), the tabs on one line."
     },
     {
       "path": "frontend/src/reader/ContentsDrawer.jsx",
       "language": "jsx",
-      "lines": 177,
-      "size_bytes": 9073,
+      "lines": 184,
+      "size_bytes": 9635,
       "role": "asset",
-      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform. C23.1: the body-start entry labelled 'focus starts'; a footer saying where focus mode starts (printed page) with 'The book starts here'. C26.5b: no \"today\" label. C38.6a (issue 22): `docked` (from 1024 px) makes it Edge's left pane beside the pages: not a dialog, open through picks and reading, no close on a press outside, Escape only from inside it; it fades rather than slides."
+      "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform. C23.1: the body-start entry labelled 'focus starts'; a footer saying where focus mode starts (printed page) with 'The book starts here'. C26.5b: no \"today\" label. C38.6a (issue 22): `docked` (from 1024 px) makes it Edge's left pane beside the pages: not a dialog, open through picks and reading, no close on a press outside, Escape only from inside it; it fades rather than slides. C38.6b: `pages` (a PDF's) adds the Pages tab (PagesPanel) between Contents and Annotations; a tab the book lacks falls back to Contents."
+    },
+    {
+      "path": "frontend/src/reader/PagesPanel.jsx",
+      "language": "jsx",
+      "lines": 78,
+      "size_bytes": 3113,
+      "role": "asset",
+      "purpose": "The contents pane's Pages tab (C38.6b, issue 22): every page of a PDF as a thumbnail with its printed label, the page in view marked and scrolled to as the tab opens, a pick goes there; a thumbnail is drawn only within 240 px of the list's view (IntersectionObserver) and freed once it leaves."
     },
     {
       "path": "frontend/src/reader/PhraseChip.jsx",
@@ -6657,8 +6673,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 841,
-      "size_bytes": 295822,
+      "lines": 843,
+      "size_bytes": 297111,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

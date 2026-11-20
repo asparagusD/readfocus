@@ -11,7 +11,7 @@ import { pdfPageEnd } from '../../focus/bookmark';
 import { useBoxSize } from '../useBoxSize';
 import { storedOutline } from './contents';
 import { PdfPage } from './PdfPage';
-import { pdfOutline } from './pdfjs';
+import { pdfOutline, renderThumbnail } from './pdfjs';
 import { usePageCache, usePdfDocument } from './usePdfDocument';
 
 /**
@@ -68,6 +68,7 @@ const sameView = (a, b) => Boolean(a && b) && a.main === b.main && a.atStart ===
  * order as the pages are read (from the main page round the book), `showMatch` scrolls one into view when it is not,
  * and `found` ({ matches, current }) is highlighted on the pages drawn (the CSS Custom Highlight API: rf-find and
  * rf-find-current; a browser without it shows the count and moves the view, unhighlighted).
+ * C38.6b: `thumbnail(page, width)` (a canvas) and `pageLabelOf(page)` for the contents pane's Pages tab.
  */
 export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one', onRelocate, onError, ocr = null, annotations = null, contents = null, startPage = 1, end = null, found = null, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
@@ -383,6 +384,8 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
     panning: () => true, // C38.2: a swipe scrolls the pages; it never turns one
     find,
     search, // C38.5
+    thumbnail: (n, width) => renderThumbnail(doc, n, width), // C38.6b: the Pages tab
+    pageLabelOf: (n) => meta.labels?.[n - 1] ?? String(n),
     stopSearch: () => { searching.current = null; },
     showMatch,
     toc: () => meta.outline.map((entry) => ({ title: entry.title, target: { page: entry.page }, loc: { kind: 'pdf', page: entry.page } })),

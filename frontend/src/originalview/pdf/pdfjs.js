@@ -66,6 +66,19 @@ export async function renderPage(doc, pageNumber, scale, pixelRatio = globalThis
   return { page, canvas, viewport, textContent };
 }
 
+/** C38.6b: page `pageNumber` drawn `width` CSS px wide, as published, for the Pages tab (its text is not read). */
+export async function renderThumbnail(doc, pageNumber, width, pixelRatio = globalThis.devicePixelRatio || 1) {
+  const page = await doc.getPage(pageNumber);
+  const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.floor(viewport.width * pixelRatio);
+  canvas.height = Math.floor(viewport.height * pixelRatio);
+  canvas.style.width = `${Math.floor(viewport.width)}px`;
+  canvas.style.height = `${Math.floor(viewport.height)}px`;
+  await page.render({ canvas, viewport, transform: pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0] }).promise;
+  return canvas;
+}
+
 /** The outline flattened to [{ title, page }] (1-based), in order; entries without a page are left out. */
 export async function pdfOutline(doc) {
   const out = [];

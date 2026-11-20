@@ -2668,6 +2668,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/pages-tab.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/pdf-open.spec.js",
       "type": "file",
       "role": "config",
@@ -4517,6 +4523,12 @@
     },
     {
       "id": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/PagesPanel.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -11290,6 +11302,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/pages-tab.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/pages-tab.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/pdf-open.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -13817,6 +13839,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/ContentsDrawer.jsx",
       "to": "file:frontend/src/reader/ContentsDrawer.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/reader/PagesPanel.jsx"
     },
     {
       "type": "imports",

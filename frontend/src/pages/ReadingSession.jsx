@@ -220,6 +220,12 @@ export function ReadingSession() {
     const [anchor] = annotation.anchors;
     reader.current?.goTo(anchor.kind === 'epub' ? { cfi: anchor.cfi } : anchor);
   }, [docked]);
+  // C38.6b: the Pages tab (a PDF): thumbnails drawn by the reader, a pick goes to the page.
+  const thumbnail = useCallback((n, width) => reader.current?.thumbnail?.(n, width) ?? Promise.resolve(null), []);
+  const onPickPage = useCallback((page) => {
+    if (!docked) setContentsOpen(false);
+    reader.current?.goTo({ kind: 'pdf', page });
+  }, [docked]);
   const onPick = useCallback((entry) => {
     if (!docked) setContentsOpen(false);
     reader.current?.goTo(entry.target);
@@ -527,6 +533,9 @@ export function ReadingSession() {
       startPage={startPage}
       onStartHere={pagesOnly ? null : startHere}
       docked={docked}
+      pages={kind === 'pdf' && place?.total ? {
+        total: place.total, current: place.page, labelOf: (n) => reader.current?.pageLabelOf?.(n) ?? String(n), thumbnail, onPick: onPickPage,
+      } : null}
     />
   );
 

@@ -13,7 +13,8 @@ for (const kind of ['pdf', 'epub']) {
   test.describe(`${kind}: pages and turns`, () => {
     test.use({ book: kind });
 
-    test('arrow keys, the turn buttons and the page edge turn the page', async ({ page, api }) => {
+    // C38.2: a PDF scrolls, so the wheel stands in for an EPUB's page edge.
+    test('arrow keys, the turn buttons and the page edge (a PDF: the wheel) move through the book', async ({ page, api }) => {
       await openReader(page);
       const first = await settled(page);
       await book(page).focus();
@@ -25,8 +26,15 @@ for (const kind of ['pdf', 'epub']) {
       await book(page).focus(); // the arrow keys belong to the book; the button keeps focus after a click
       await page.keyboard.press('ArrowLeft');
       expect(await settled(page, third)).toEqual(second);
-      await page.locator('.rf-ov-edge[data-edge="forward"]').click({ force: true }); // a pointer-only target
-      expect(await settled(page, second)).toEqual(third);
+      if (kind === 'pdf') {
+        const area = await page.locator('.rf-pdf-book').boundingBox();
+        await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+        await page.mouse.wheel(0, 900);
+        expect(before(at(second.start), at((await settled(page, second)).start))).toBe(true);
+      } else {
+        await page.locator('.rf-ov-edge[data-edge="forward"]').click({ force: true }); // a pointer-only target
+        expect(await settled(page, second)).toEqual(third);
+      }
       expect(api.opens).toBe(1); // C26.5: GET /books/{id}/open, no session
       expect(api.starts).toBe(0);
       expect(api.fileLoads).toBe(1);
@@ -95,12 +103,23 @@ for (const kind of ['pdf', 'epub']) {
         leaf: document.querySelectorAll('.rf-ov-leaf').length,
         animations: document.getAnimations().filter((a) => a.playState === 'running').length,
       }));
-      expect(during).toEqual({ leaf: 0, animations: 0 });
+      expect(during.leaf).toBe(0);
+      if (kind === 'epub') expect(during.animations).toBe(0); // C38.2: a PDF has no leaf to animate at all
     });
 
     test("turning past the book's last page shows the closing page, and Previous comes back", async ({ page }) => {
       await openReader(page);
       await book(page).focus();
+      if (kind === 'pdf') { // C38.2: the closing words sit below the last page; End scrolls to them, Home back
+        await page.keyboard.press('End');
+        await expect(page.locator('.rf-pdf-end .rf-end')).toBeInViewport();
+        await expect(spoken(page)).toHaveText('End of the book');
+        await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeDisabled();
+        await page.keyboard.press('Home');
+        await expect(spoken(page)).toHaveText(/^p\. i of 6/);
+        expect(await shown(page)).toEqual({ start: '1', end: '1' });
+        return;
+      }
       for (let i = 0; i < 12 && !(await page.locator('.rf-end').count()); i += 1) {
         await page.keyboard.press('ArrowRight');
         await page.waitForTimeout(700);
@@ -226,13 +245,14 @@ test('the contents list the PDF outline, and an entry opens its page', async ({ 
   const items = page.getByRole('dialog', { name: 'Contents' }).locator('.rf-contents-item');
   await expect(items).toHaveText(['Chapter 1 Signals', 'Chapter 2 Noise']); // C26.5: no "today" any more
   await items.nth(1).click();
-  await expect.poll(() => shown(page)).toEqual({ start: '4', end: '5' }); // page 5 on the 4-5 spread
+  await expect.poll(() => shown(page)).toEqual({ start: '5', end: '5' }); // C38.2: page 5 at the top of the view
 });
 
 test('a proper noun shows a Wikipedia summary with a link', async ({ page, api }) => {
   await openReader(page);
   await book(page).focus();
-  await page.keyboard.press('ArrowRight'); // pages 2-3: "Chapter 1 Signals"
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight'); // C38.2: page 3 at the top, "Chapter 1 Signals"
   await page.waitForTimeout(800);
   const signals = await wordPoint(page, 'Signals');
   await page.mouse.move(5, 5);

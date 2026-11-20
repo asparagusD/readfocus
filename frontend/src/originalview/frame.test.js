@@ -1,27 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildLocations, entryForPage, epubThemeCss, keyAction, locationAt, pdfFolio, pdfScale, spreadPages, stepSpread, timeAtProgress, zoomStep,
+  buildLocations, entryForPage, epubThemeCss, keyAction, locationAt, pdfFolio, pdfScale, timeAtProgress, zoomStep,
 } from './frame.js';
-
-test('PDF spreads: the first page alone on the right, then even pages on the left', () => {
-  assert.deepEqual(spreadPages(1, 10, true), [1]);
-  assert.deepEqual(spreadPages(2, 10, true), [2, 3]);
-  assert.deepEqual(spreadPages(3, 10, true), [2, 3]);
-  assert.deepEqual(spreadPages(10, 10, true), [10]);
-  assert.deepEqual(spreadPages(7, 10, false), [7]);
-  assert.deepEqual(spreadPages(44, 380, true), [44, 45]);
-});
-
-test('turning moves by a spread or a page and stops at the ends', () => {
-  assert.equal(stepSpread(1, 10, true, 1), 2);
-  assert.equal(stepSpread(2, 10, true, 1), 4);
-  assert.equal(stepSpread(3, 10, true, -1), 1);
-  assert.equal(stepSpread(10, 10, true, 1), 10);
-  assert.equal(stepSpread(1, 10, true, -1), 1);
-  assert.equal(stepSpread(5, 10, false, 1), 6);
-  assert.equal(stepSpread(10, 10, false, 1), 10);
-});
 
 test('zoom: fit-page and fit-width from the frame; percentages are of the printed size', () => {
   const page = { width: 612, height: 792 }; // US Letter in points

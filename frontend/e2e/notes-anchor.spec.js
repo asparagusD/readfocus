@@ -48,8 +48,10 @@ async function expectBeside(page, kind, line) {
   const view = page.viewportSize();
   expect(marker.x).toBeGreaterThanOrEqual(0);
   expect(marker.x + marker.width).toBeLessThanOrEqual(view.width);
-  if (kind === 'pdf' && view.width >= 760) {
+  if (kind === 'pdf' && view.width >= 760 && paper.right + 40 < view.width) {
     expect(marker.x >= paper.right || marker.x + marker.width <= paper.left, 'outside the page').toBe(true);
+  } else if (kind === 'pdf' && view.width >= 760) { // C38.2: the page fills the width (fit-width): at the screen's edge
+    expect(view.width - (marker.x + marker.width), 'at the screen edge').toBeLessThanOrEqual(24);
   } else {
     const fromEdge = Math.min(Math.abs(marker.x - paper.x), Math.abs(paper.x + paper.width - (marker.x + marker.width)));
     expect(fromEdge, 'at the page edge').toBeLessThanOrEqual(24);

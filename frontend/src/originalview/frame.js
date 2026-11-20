@@ -1,23 +1,9 @@
 // The book frame's rules (C17.4), shared by the PDF and EPUB renderers and kept
-// free of the DOM so they run under node --test: spreads, zoom, folios, EPUB
-// location numbers, keys, the contents entry for a page, and lamplight CSS.
+// free of the DOM so they run under node --test: zoom, folios, EPUB location
+// numbers, keys, the contents entry for a page, and lamplight CSS. C38.2: a PDF
+// scrolls (scroll.js), so its spreads are gone; an EPUB keeps SPREAD_MIN_WIDTH.
 
 export const SPREAD_MIN_WIDTH = 1024; // two pages side by side from here up (C12, handoff)
-
-/** The PDF pages shown with `page`: a spread opens with page 1 alone on the right, then 2-3, 4-5... */
-export function spreadPages(page, numPages, wide) {
-  if (!wide || page === 1) return [page];
-  const left = page % 2 === 0 ? page : page - 1;
-  return left + 1 <= numPages ? [left, left + 1] : [left];
-}
-
-/** The first page shown after turning by `dir` (+1 or -1) from the view holding `page`. */
-export function stepSpread(page, numPages, wide, dir) {
-  if (!wide) return Math.min(numPages, Math.max(1, page + dir));
-  const [first] = spreadPages(page, numPages, true);
-  if (dir > 0) return first === 1 ? Math.min(2, numPages) : first + 2 <= numPages ? first + 2 : first;
-  return first <= 2 ? 1 : first - 2;
-}
 
 export const ZOOMS = ['fit-page', 'fit-width', 1.25, 1.5, 1.75, 2];
 const CSS_PX_PER_POINT = 96 / 72; // 100 % is the page at its printed size

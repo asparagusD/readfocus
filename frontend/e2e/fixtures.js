@@ -462,6 +462,21 @@ export async function settled(page, away = null) {
 }
 
 /**
+ * C38.2: a PDF scrolled so the view straddles the main page and the next one (half of each), as a two-page spread
+ * used to show; returns the place once it has settled.
+ */
+export async function twoPagesInView(page) {
+  await settled(page);
+  await page.locator('.rf-pdf-book').evaluate((el) => {
+    const slots = [...el.querySelectorAll('.rf-pdf-slot')].map((s) => ({ top: s.offsetTop, height: s.offsetHeight }));
+    const next = slots.find((s) => s.top > el.scrollTop + 1) ?? slots.at(-1);
+    el.scrollTop = next.top - el.clientHeight / 2;
+  });
+  await expect.poll(async () => { const { start, end } = await shown(page); return Number(end) - Number(start); }).toBe(1);
+  return settled(page);
+}
+
+/**
  * C37.7: the book back at rest once the notebook has gone: it recedes (scale, blur, dim) while the notebook is open
  * and comes forward over about 450 ms, so a word or a marker measured sooner is still moving.
  */
@@ -472,9 +487,9 @@ export async function bookAtRest(page) {
   })).toBe('none none 1');
 }
 
-/** The boxes of every whole-word occurrence of `w` in a document's book text (the PDF's spread, or a section's body). */
+/** The boxes of every whole-word occurrence of `w` in a document's book text (the PDF's pages, or a section's body). */
 function wordBoxes(w) {
-  const root = document.querySelector('.rf-pdf-spread') ?? (document.querySelector('.rf-ov') ? null : document.body);
+  const root = document.querySelector('.rf-pdf-pages') ?? (document.querySelector('.rf-ov') ? null : document.body);
   if (!root) return [];
   const boxes = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);

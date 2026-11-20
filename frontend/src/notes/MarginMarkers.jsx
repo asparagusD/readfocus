@@ -5,6 +5,7 @@ import './MarginMarkers.css';
 const NARROW = 760; // the side panel becomes a sheet below this too
 const GAP = 6; // px between a PDF page's edge and its marker, in the frame margin: inside the ribbon's tail
 const INSET = 10; // px from an EPUB page's edge, in the page margin
+const EDGE = 20; // px kept clear at the view's right edge (a scrolled PDF's scrollbar)
 
 /**
  * Margin markers (C22.4, handoff screen 19): a count circle beside each passage with notes on the pages shown,
@@ -25,7 +26,8 @@ export function MarginMarkers({ book, box, notes, hidden, wide, layout, onOpen }
       if (narrow) return { id: spot.id, side: 'right', x: within.width - size - 4, top };
       if (spot.edge !== undefined) {
         const x = spot.side === 'left' ? spot.edge - within.left - GAP - size : spot.edge - within.left + GAP;
-        return { id: spot.id, side: spot.side, x, top };
+        // C38.2: a page as wide as the view leaves no margin: the marker stays on screen, clear of the scrollbar
+        return { id: spot.id, side: spot.side, x: Math.max(4, Math.min(x, within.width - size - EDGE)), top };
       }
       const side = spot.side ?? 'right';
       return { id: spot.id, side, x: side === 'left' ? INSET : within.width - INSET - size, top };

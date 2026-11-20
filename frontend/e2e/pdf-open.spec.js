@@ -13,7 +13,7 @@ test('the contents come from the stored outline when it has pages', async ({ pag
   const items = page.getByRole('dialog', { name: 'Contents' }).locator('.rf-contents-item');
   await expect(items).toHaveText(['Stored: the opening', 'Stored: the noise']);
   await items.nth(1).click();
-  await expect.poll(() => shown(page)).toEqual({ start: '4', end: '5' }); // page 5 on the 4-5 spread
+  await expect.poll(() => shown(page)).toEqual({ start: '5', end: '5' }); // C38.2: page 5 at the top of the view
 });
 
 test('a book opens at its saved page without drawing page 1 first', async ({ page, api }) => {
@@ -25,7 +25,7 @@ test('a book opens at its saved page without drawing page 1 first', async ({ pag
     }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-page'] });
   });
   await openReader(page);
-  await expect.poll(() => shown(page)).toEqual({ start: '4', end: '5' });
+  await expect.poll(() => shown(page)).toEqual({ start: '5', end: '5' });
   const drawn = await page.evaluate(() => [...window.__drawnPages]);
   expect(drawn).not.toContain('1');
 });

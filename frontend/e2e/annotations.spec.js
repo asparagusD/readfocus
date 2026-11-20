@@ -66,7 +66,7 @@ test.describe('pdf', () => {
     expect(await pdfCovers(page, 'threw')).toBe(true);
     await page.reload();
     await openReader(page);
-    await expect(page.locator('.rf-anno')).toHaveCount(1); // page 1's highlight, back from the server
+    await expect(page.locator('.rf-pdf-page[data-page="1"] .rf-anno')).toHaveCount(1); // page 1's highlight, back from the server
 
     await openList(page);
     await expect(items(page)).toHaveCount(2);
@@ -78,7 +78,7 @@ test.describe('pdf', () => {
     await items(page).getByRole('button').click(); // jump to page 2
     await expect(drawer(page)).toHaveCount(0);
     await expect.poll(async () => (await shown(page)).start).toBe('2');
-    await expect(page.locator('.rf-anno')).toHaveCount(1);
+    await expect(page.locator('.rf-pdf-page[data-page="2"] .rf-anno')).toHaveCount(1); // C38.2: the pages near are drawn too
 
     await lookupSwitch(page).click(); // lookup off: the chip
     const small = await wordPoint(page, 'small');
@@ -93,7 +93,7 @@ test.describe('pdf', () => {
     await page.mouse.move(5, 5);
     await page.mouse.move(small.x, small.y, { steps: 4 });
     await chip(page).getByRole('button', { name: 'Delete' }).click();
-    await expect(page.locator('.rf-anno')).toHaveCount(0);
+    await expect(page.locator('.rf-pdf-page[data-page="2"] .rf-anno')).toHaveCount(0);
     await expect.poll(() => api.annotations.length).toBe(1);
     await openList(page);
     await expect(drawer(page).getByRole('tabpanel', { name: 'Annotations' })).toContainText('No honey highlights'); // the filter is kept

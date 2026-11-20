@@ -96,68 +96,33 @@
 
 .rf-ov[data-kind="pdf"] .rf-ov-book[data-spread="true"]::after { display: none; } /* the PDF spread shades its own gutter */
 
-/* The PDF: scrolls when zoomed past the frame; the spread is the paper. */
+/* C38.2 (issue 22): a PDF is read as in Edge: its pages one under another on the desk, scrolled, each with a
+   hairline and a soft lift; no spine, header or edges. PdfBook places each page (scroll.js). */
+.rf-ov[data-kind="pdf"] .rf-ov-stage { padding: 0; }
+.rf-ov[data-kind="pdf"] .rf-ov-book { max-width: none; background: var(--paper-2); perspective: none; }
+
 .rf-pdf-book {
   position: absolute;
   inset: 0;
-  display: flex;
   overflow: auto;
-  padding: var(--space-4);
   overscroll-behavior: contain;
 }
 
-.rf-pdf-book:not([data-zoom="fit-page"]) { cursor: grab; }
-.rf-pdf-book:active:not([data-zoom="fit-page"]) { cursor: grabbing; }
+.rf-pdf-pages { position: relative; min-width: 100%; }
 
-.rf-pdf-spread {
-  position: relative;
-  display: flex;
-  flex: none;
-  margin: auto; /* centred while it fits, scrollable to every edge when it does not */
-  border-radius: var(--radius-page);
-  box-shadow: var(--elevation-page);
-}
-
-.rf-pdf-spread .rf-pdf-page[data-side="left"] { border-radius: var(--radius-page) 0 0 var(--radius-page); overflow: hidden; }
-.rf-pdf-spread .rf-pdf-page[data-side="right"] { border-radius: 0 var(--radius-page) var(--radius-page) 0; overflow: hidden; }
-.rf-pdf-spread .rf-pdf-page[data-side="single"] { border-radius: var(--radius-page); overflow: hidden; }
-
-.rf-pdf-spread[data-pages="2"]::after {
+.rf-pdf-slot {
   position: absolute;
-  inset-block: 0;
-  left: calc(50% - var(--space-6));
-  width: calc(var(--space-6) * 2);
-  content: "";
-  background: linear-gradient(to right, transparent, var(--spine-shade) 50%, transparent);
-  opacity: 0.45;
-  pointer-events: none;
+  overflow: hidden;
+  border-radius: var(--radius-hair);
+  background: var(--rf-pdf-paper, #fff); /* the publisher's white until the page is drawn */
+  box-shadow: 0 0 0 var(--border-hair) var(--line), var(--elevation-lift);
 }
 
-/* A turning leaf: paper hinged at the spine. Transform and opacity only. */
-.rf-ov-leaf {
-  position: absolute;
-  inset-block: 0;
-  z-index: 5;
-  width: 50%;
-  border-radius: var(--radius-page);
-  background: var(--rf-leaf-paper, var(--page)); /* a PDF's leaf is its own paper: white, or the lamplight page */
-  box-shadow: var(--elevation-page);
-  pointer-events: none;
-  transform-style: preserve-3d;
-}
-
-.rf-ov-leaf[data-side="right"] { left: 50%; transform-origin: left center; }
-.rf-ov-leaf[data-side="left"] { left: 0; transform-origin: right center; }
-.rf-ov-leaf[data-side="single"] { left: 0; width: 100%; transform-origin: left center; }
-.rf-ov-leaf[data-side="single-back"] { left: 0; width: 100%; transform-origin: right center; }
-
-.rf-ov-shade {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  opacity: 0;
-  pointer-events: none;
-}
+/* The end of the book: its closing words below the last page, quiet, not a page over the book. */
+.rf-pdf-end { display: flex; justify-content: center; padding: var(--space-6) var(--space-5) var(--space-8); }
+.rf-pdf-end .rf-end { align-items: center; width: min(100%, 36rem); padding: var(--space-5); border: 0; background: none; box-shadow: none; text-align: center; }
+.rf-pdf-end .rf-end-lamp { --illustration-size: 56px; }
+.rf-ov[data-kind="pdf"] .rf-ov-ribbon { top: var(--space-3); right: var(--space-6); } /* over the desk, by the scrollbar */
 
 .rf-ov-shade:is([data-side="right"], [data-side="single"]) { background: linear-gradient(to right, var(--spine-shade), transparent 75%); }
 .rf-ov-shade:is([data-side="left"], [data-side="single-back"]) { background: linear-gradient(to left, var(--spine-shade), transparent 75%); }
@@ -316,7 +281,6 @@
   .rf-ov-stage { padding: 0; }
   .rf-ov[data-kind="epub"] .rf-ov-book { border-inline: 0; border-radius: 0; box-shadow: none; }
   .rf-ov-foot { padding-inline: var(--space-3); }
-  .rf-pdf-book { padding: var(--space-2); }
 }
 
 @media (prefers-reduced-motion: reduce) {

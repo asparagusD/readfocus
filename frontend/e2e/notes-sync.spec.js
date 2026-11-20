@@ -30,6 +30,13 @@ const inView = (page, id) => page.evaluate((noteId) => {
   return card.top >= box.top - 1 && card.top <= box.top + box.height / 2;
 }, id);
 
+/** C38.2: the marks the notepad should show: two seeded notes for each PDF page in view (a scrolled view shows one, two
+    or a sliver of the next, as the panel's width sets the page size). */
+async function shownMarks(page) {
+  const { start, end } = await settled(page);
+  return Array.from({ length: Number(end) - Number(start) + 1 }, (_, i) => Number(start) + i).flatMap((p) => [p, p]);
+}
+
 async function turn(page) {
   const before = await settled(page);
   await page.getByRole('button', { name: 'Next' }).click();
@@ -44,14 +51,17 @@ test.describe('pdf', () => {
     await openReader(page);
     await openNotepad(page);
     await expect(panel(page).locator('.rf-note')).toHaveCount(12);
-    await expect.poll(() => markedPages(page)).toEqual([1, 1]);
+    await expect.poll(async () => markedPages(page)).toEqual(await shownMarks(page));
+    expect((await markedPages(page))[0]).toBe(1);
     await page.waitForTimeout(300);
     expect(await list(page).evaluate((el) => el.scrollTop)).toBe(0); // already in view: the filter stays on screen
     await expect(panel(page).getByRole('radiogroup', { name: 'Show notes' })).toBeInViewport();
-    await turn(page); // pages 2-3
-    await expect.poll(() => markedPages(page)).toEqual([2, 2, 3, 3]);
-    await turn(page); // pages 4-5
-    await expect.poll(() => markedPages(page)).toEqual([4, 4, 5, 5]);
+    await turn(page);
+    await turn(page); // C38.2: a page at a time, page 3 at the top
+    await expect.poll(async () => markedPages(page)).toEqual(await shownMarks(page));
+    expect((await markedPages(page))[0]).toBe(3);
+    await turn(page); // page 4 at the top, its notes below the fold of the list
+    await expect.poll(async () => markedPages(page)).toEqual(await shownMarks(page));
     await expect.poll(() => inView(page, 'n4a')).toBe(true);
     expect(await list(page).evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
     await expect(panel(page).getByRole('button', { name: 'Jump to notes for this page' })).toHaveCount(0);
@@ -95,7 +105,8 @@ test.describe('pdf', () => {
     expect(Math.abs(box.width - sheet.width)).toBeLessThan(3);
     await expect(pulse).toHaveCount(0, { timeout: 4000 }); // it fades out
     expect(Math.abs((await list(page).evaluate((el) => el.scrollTop)) - top)).toBeLessThan(2);
-    await expect.poll(() => markedPages(page)).toEqual([4, 4, 5, 5]);
+    await expect.poll(async () => markedPages(page)).toEqual(await shownMarks(page)); // C38.2: page 5 at the top
+    expect((await markedPages(page))[0]).toBe(5);
   });
 
   test('the filter shows this page, this chapter or all', async ({ page, api }) => {
@@ -105,9 +116,9 @@ test.describe('pdf', () => {
     const filter = panel(page).getByRole('radiogroup', { name: 'Show notes' });
     await expect(filter.getByRole('radio', { name: 'All' })).toBeChecked();
     await filter.getByRole('radio', { name: 'This page' }).click();
-    await expect(panel(page).locator('.rf-note')).toHaveCount(2);
+    await expect(panel(page).locator('.rf-note')).toHaveCount((await shownMarks(page)).length); // C38.2: the pages in view
     await turn(page);
-    await expect(panel(page).locator('.rf-note')).toHaveCount(4);
+    await expect(panel(page).locator('.rf-note')).toHaveCount((await shownMarks(page)).length);
     await filter.getByRole('radio', { name: 'This chapter' }).click();
     const inChapter = await panel(page).locator('.rf-note').count();
     expect(inChapter).toBeGreaterThanOrEqual(4);

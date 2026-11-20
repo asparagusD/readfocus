@@ -47,11 +47,14 @@ async function hide(page, hidden) {
   }, hidden);
 }
 
-async function toChapter1(page) {
-  const before = await settled(page);
+async function toChapter1(page) { // C38.2: a page at a time, from the preface (p. 1) to chapter 1 (p. 3)
+  let before = await settled(page);
   await book(page).focus();
-  await page.keyboard.press('ArrowRight');
-  return settled(page, before);
+  for (let i = 0; i < 2; i += 1) {
+    await page.keyboard.press('ArrowRight');
+    before = await settled(page, before);
+  }
+  return before;
 }
 
 async function startAtChapter1(page, api) {

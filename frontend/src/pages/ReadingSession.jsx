@@ -81,6 +81,7 @@ export function ReadingSession() {
 
   const [zoom, setZoom] = useStored('rf-pdf-zoom', 'fit-page');
   const [pageView, setPageView] = useStored('rf-pdf-view', 'one'); // C38.4a: Edge's Page view, on this device
+  const [pinned, setPinned] = useStored('rf-toolbar-pinned', true); // C38.4b: Edge's toolbar is pinned until unpinned
   const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
   // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
@@ -108,7 +109,7 @@ export function ReadingSession() {
   const [entries, setEntries] = useState([]);
   const [quizMeOpen, setQuizMeOpen] = useState(false); // C23.7b
   const [quizMeBusy, setQuizMeBusy] = useState(false);
-  const chromeVisible = useChromeVisible(toolbarFocused || contentsOpen || quizMeOpen);
+  const chromeVisible = useChromeVisible(pinned || toolbarFocused || contentsOpen || quizMeOpen);
   const contentsButton = useRef(null);
   const reader = useRef(null);
   const { toast } = useToast();
@@ -526,6 +527,8 @@ export function ReadingSession() {
           chapter={chapter}
           onBack={() => navigate('/')}
           visible={chromeVisible}
+          pinned={pinned}
+          onPin={() => setPinned(!pinned)}
           onFocusChange={setToolbarFocused}
           controls={(
             <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}

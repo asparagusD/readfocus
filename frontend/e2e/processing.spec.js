@@ -1,7 +1,7 @@
 // C26.3: a book opens before it is processed. The reader opens it through GET /books/{id}/open with no session,
 // saves every turn on the book and comes back to it, and says "Preparing the book… n%" until its ingest is
 // done (C36: what is read is quizzed meanwhile); Quiz me and a focus session's questions say they are being prepared, and the session is kept. Mocked API.
-import { book, expect, openReader, settled, shown, test } from './fixtures.js';
+import { book, expect, openReader, reveal, settled, shown, test } from './fixtures.js';
 
 const PROCESSING = { status: 'processing', total_chunks: null, ingestion: { status: 'running', progress: 0.4, cursor: 0, attempts: 1, error: null } };
 const shots = process.env.E2E_SHOTS;
@@ -96,7 +96,7 @@ test('at 375 the preparing notice fits the screen with no sideways scroll', asyn
   await page.setViewportSize({ width: 375, height: 812 });
   api.processing = PROCESSING;
   await openReader(page);
-  const notice = page.getByRole('status').filter({ hasText: 'Preparing the book… 40%' });
+  const notice = await reveal(page, page.getByRole('status').filter({ hasText: 'Preparing the book… 40%' })); // C38.4b
   await expect(notice).toBeVisible();
   const box = await notice.boundingBox();
   expect(box.x).toBeGreaterThanOrEqual(0);

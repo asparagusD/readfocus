@@ -2,7 +2,7 @@
 // page, dragging the ribbon, or the arrow keys and Enter), turning pages first if need be; then "Ready for your
 // questions?", and the quiz on the test's own screen with no clock and no Steve, then the results. The 3-hour
 // stop and leaving focus mode take the same path. Mocked API.
-import { expect, openReader, test, twoPagesInView } from './fixtures';
+import { clickTool, expect, openReader, test, twoPagesInView } from './fixtures';
 
 const bar = (page) => page.getByRole('region', { name: 'Focus mode' });
 const placing = (page) => page.getByRole('group', { name: 'Place the ribbon' });
@@ -12,7 +12,7 @@ const pdfStart = { source: 'outline', body_start: { kind: 'pdf', page: 1, title:
 
 async function startFocus(page, api) {
   await openReader(page);
-  await page.getByRole('switch', { name: 'Focus mode' }).click();
+  await clickTool(page, page.getByRole('switch', { name: 'Focus mode' })); // C38.4b: in More tools on a phone
   await bar(page).getByRole('button', { name: 'Start' }).click();
   await expect.poll(() => api.focus.events.length).toBeGreaterThan(0);
   api.focus.active = 1500; // 25 minutes on the server: 250 points so far

@@ -2,7 +2,7 @@
 // Annotations tab in the contents drawer (reading order, colour, snippet, page, a colour filter, a jump to the
 // passage); with word lookup off the chip's Ask Steve opens the panel (Steve mocked), with it on the word card;
 // delete. Every call is mocked (fixtures.js).
-import { book, expect, openReader, shown, test, wordPoint } from './fixtures';
+import { book, clickTool, expect, openReader, shown, test, wordPoint } from './fixtures';
 
 const toolbar = (page) => page.getByRole('toolbar', { name: 'Highlight the selection' });
 const chip = (page) => page.getByRole('toolbar', { name: /^(Honey|Sage|Sky|Rose|Lilac) (highlight|underline):/ });
@@ -80,7 +80,7 @@ test.describe('pdf', () => {
     await expect.poll(async () => (await shown(page)).start).toBe('2');
     await expect(page.locator('.rf-pdf-page[data-page="2"] .rf-anno')).toHaveCount(1); // C38.2: the pages near are drawn too
 
-    await lookupSwitch(page).click(); // lookup off: the chip
+    await clickTool(page, lookupSwitch(page)); // lookup off: the chip
     const small = await wordPoint(page, 'small');
     await page.mouse.move(small.x, small.y - 40);
     await page.mouse.move(small.x, small.y, { steps: 4 });
@@ -143,7 +143,7 @@ test.describe('epub', () => {
     await expect.poll(async () => (await shown(page)).start).not.toBe(away.start);
     await expect.poll(() => epubMarks(page)).toEqual([text]);
 
-    await lookupSwitch(page).click();
+    await clickTool(page, lookupSwitch(page));
     const small = await wordPoint(page, 'small');
     await page.mouse.move(small.x, small.y - 40);
     await page.mouse.move(small.x, small.y, { steps: 4 });

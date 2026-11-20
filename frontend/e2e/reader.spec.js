@@ -295,6 +295,64 @@ test('Page view lays two pages side by side, or the cover alone first, and is ke
   await expect(page.getByRole('combobox', { name: 'Page view' })).toHaveValue('cover');
 });
 
+// C38.4b (issue 22): Edge's toolbar: pinned by default, unpinned it fades while reading; full screen; More tools.
+const more = (page) => page.getByRole('button', { name: 'More tools' });
+const bar = (page) => page.locator('.rf-toolbar');
+
+test('the toolbar stays pinned; unpinned it fades while reading and comes back on a move, and the choice is kept', async ({ page }) => {
+  await openReader(page);
+  await page.waitForTimeout(3000); // past the 2.6 s a reader's stillness takes
+  await expect(bar(page)).toHaveAttribute('data-visible', 'true');
+  await more(page).click();
+  const pin = page.getByRole('button', { name: 'Keep the toolbar shown' });
+  await expect(pin).toHaveAttribute('aria-pressed', 'true');
+  await pin.click();
+  await expect(pin).toHaveAttribute('aria-pressed', 'false');
+  await page.keyboard.press('Escape');
+  await expect(more(page)).toBeFocused();
+  await book(page).focus(); // reading: focus leaves the bar
+  await page.mouse.move(700, 500);
+  await expect(bar(page)).toHaveAttribute('data-visible', 'false', { timeout: 6000 });
+  await page.mouse.move(720, 520, { steps: 3 });
+  await expect(bar(page)).toHaveAttribute('data-visible', 'true');
+  await page.reload();
+  await openReader(page);
+  await more(page).click();
+  await expect(page.getByRole('button', { name: 'Keep the toolbar shown' })).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('Full screen fills the screen with the reading page and leaves it again', async ({ page }) => {
+  await openReader(page);
+  await more(page).click();
+  const full = page.getByRole('button', { name: 'Full screen' });
+  await full.click();
+  await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true);
+  await expect(full).toHaveAttribute('aria-pressed', 'true'); // the panel stays open
+  await full.click();
+  await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(false);
+});
+
+test.describe('the toolbar at 1024', () => {
+  test.use({ viewport: { width: 1024, height: 768 } });
+
+  test('Look up, Steve, Focus and Quiz me move into More tools; Escape and a press outside close it', async ({ page }) => {
+    await openReader(page);
+    await expect(bar(page).getByRole('switch', { name: 'Focus mode' })).toBeHidden();
+    expect(await bar(page).evaluate((el) => el.offsetHeight)).toBeLessThan(70); // one row
+    await more(page).click();
+    await expect(more(page)).toHaveAttribute('aria-expanded', 'true');
+    for (const tool of [page.getByRole('switch', { name: 'Look up words on hover' }), page.getByRole('button', { name: 'Ask Steve' }),
+      page.getByRole('switch', { name: 'Focus mode' }), page.getByRole('button', { name: 'Quiz me' })]) await expect(tool).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(more(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(more(page)).toBeFocused();
+    await more(page).click();
+    await page.mouse.click(600, 500); // the book
+    await expect(more(page)).toHaveAttribute('aria-expanded', 'false');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(1024);
+  });
+});
+
 test('a proper noun shows a Wikipedia summary with a link', async ({ page, api }) => {
   await openReader(page);
   await book(page).focus();

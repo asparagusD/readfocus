@@ -415,12 +415,30 @@ export async function openReader(page) {
 }
 
 /**
+ * C38.4b: a tool of the reader's toolbar, clicked: from "More tools" when the bar has no room for it there (below
+ * 1280 px: Look up, Steve, Focus, Quiz me; at any width: the theme, pin, full screen), the panel closed again after.
+ */
+export async function clickTool(page, tool) {
+  const more = page.getByRole('button', { name: 'More tools' });
+  const tucked = !(await tool.isVisible());
+  if (tucked) await more.click();
+  await tool.click();
+  if (tucked && (await more.count()) && (await more.getAttribute('aria-expanded')) === 'true') await more.click();
+}
+
+/** C38.4b: "More tools" opened when `tool` is in it, so a test can look at it there. */
+export async function reveal(page, tool) {
+  if (!(await tool.isVisible())) await page.getByRole('button', { name: 'More tools' }).click();
+  return tool;
+}
+
+/**
  * C37.3: the notepad's list of every note, beside the book. The toolbar's Notes opens the notebook (whose "All
  * notes" opens the list); since C37.4 opening the notebook moves typed notes into it, so a test of the list opens
  * it from Steve's panel, the side area's other tab, and seeded typed notes stay as they are.
  */
 export async function openNotepad(page) {
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' }));
   await page.getByRole('complementary').getByRole('tab', { name: /^Notes/ }).click();
   await expect(page.getByRole('complementary', { name: 'Notes' })).toBeVisible();
 }

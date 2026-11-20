@@ -1,7 +1,7 @@
 // C23.7b: Quiz me outside focus mode. The toolbar's Quiz me asks which stretch (this chapter, or since the last
 // quiz), POST /focus/quiz-me builds it to the end of the page shown, the questions have no clock, submit-answers
 // grades them, and the results say Quiz me never earns points. Mocked API.
-import { expect, openReader, test } from './fixtures';
+import { expect, openReader, reveal, test } from './fixtures';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
 const QUESTIONS = [
@@ -74,7 +74,7 @@ test('Quiz me: this chapter; nothing to ask yet is said kindly and the book stay
 test('at 375 the Quiz me button and its dialog fit the screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await openReader(page);
-  const button = page.getByRole('button', { name: 'Quiz me' });
+  const button = await reveal(page, page.getByRole('button', { name: 'Quiz me' })); // C38.4b: in More tools
   await expect(button).toBeVisible();
   const box = await button.boundingBox();
   expect(box.x + box.width).toBeLessThanOrEqual(375);

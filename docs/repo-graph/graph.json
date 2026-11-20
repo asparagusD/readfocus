@@ -2596,6 +2596,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/notebook-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/notepad.spec.js",
       "type": "file",
       "role": "config",
@@ -11179,6 +11185,16 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/no-blank.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notebook-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/notebook-frame-rate.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {

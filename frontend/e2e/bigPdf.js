@@ -1,11 +1,15 @@
 // A real PDF over 50 MB for C26.7's e2e: `pages` pages of text (Helvetica, one line each) and one unused stream
 // of `padBytes` spaces that makes it big. pdf.js reads objects lazily through the cross-reference table, so the
-// padding is never parsed. Built in memory: nothing is written to disk.
+// padding is never parsed. Built in memory: nothing is written to disk. C37.8: `lines` fills a page with text (the
+// first line as before, then `bigPdfFill`) for the notebook's frame-rate bench.
 
 /** The text on page `n` (1-based), as the e2e expects to receive it. */
 export const bigPdfLine = (n) => `Page ${n}: the lamp threw a small circle of light.`;
 
-export function bigPdf({ pages = 12, padBytes = 60 * 1024 * 1024 } = {}) {
+/** A filler line, so a page looks like a page of a book. */
+export const bigPdfFill = (n, line) => `${n}.${line} Walden pond lay below the house, still and clear in the early light.`;
+
+export function bigPdf({ pages = 12, padBytes = 60 * 1024 * 1024, lines = 1 } = {}) {
   const parts = [];
   const offsets = [];
   let size = 0;
@@ -29,7 +33,8 @@ export function bigPdf({ pages = 12, padBytes = 60 * 1024 * 1024 } = {}) {
   object(4, [`<< /Length ${padBytes} >>\nstream\n`, Buffer.alloc(padBytes, 0x20), '\nendstream']);
   for (let n = 1; n <= pages; n += 1) {
     const id = firstPage + 2 * (n - 1);
-    const content = `BT /F1 12 Tf 72 720 Td (${bigPdfLine(n)}) Tj ET`;
+    const rest = Array.from({ length: lines - 1 }, (_, i) => ` T* (${bigPdfFill(n, i + 2)}) Tj`).join('');
+    const content = `BT /F1 12 Tf 14 TL 72 720 Td (${bigPdfLine(n)}) Tj${rest} ET`;
     object(id, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents ${id + 1} 0 R >>`);
     object(id + 1, [`<< /Length ${content.length} >>\nstream\n`, content, '\nendstream']);
   }

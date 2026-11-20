@@ -353,7 +353,7 @@ points hide while he is switched off, and a question waits for consent.
 
 ## Notes
 
-The notepad beside the book (C22; `docs/ANCHORS.md` A11). One `note_blocks`
+The notebook (C37, issues 25 and 26) and the notepad's list (C22; `docs/ANCHORS.md` A11). One `note_blocks`
 row (migration 027) per block: `kind` (text, drawing, equation, code,
 figure), `anchors` + A4 `position_start` / `position_end`, `scope`
 (selection or view), `content` checked per kind by
@@ -361,21 +361,32 @@ figure), `anchors` + A4 `position_start` / `position_end`, `scope`
 Excalidraw scene, fixed fields), optional `annotation_id` / `region_id`,
 `version` for If-Match, soft `deleted_at`. Images (crops, drawing thumbnails)
 live in the private `notes` bucket under `<user>/<book>/`, served by signed
-URLs.
+URLs. Since C37 a new note is always a `drawing`: one notebook per book, its
+pages the book's drawing rows in book order (no migration); `POST` refuses
+`text` (old text rows are still edited and deleted), and a page's app state
+keeps its `paper` (ruled, squared, plain). Typed notes become pages the first
+time the notebook opens, in the browser, each soft-deleted only after its
+page saves (`notes/moveTyped.js`).
 
 ```
-new note: Text / Drawing pills, N, selection toolbar Note ─► Reader.notePlace(): selection, else the pages shown
-from the book: block actions Add to notes (PDF crop + LaTeX, code, figure; EPUB on the device), highlight chip
-  Note (quote + annotation_id), Steve Save to notes (citations as text), a dragged equation or listing
-   └─► NotesContext.add ─► crop to POST /books/{id}/note-files ─► useNotes.create (shown at once) ─► POST /books/{id}/notes
+new page: Notes, N, selection toolbar Note ─► Reader.notePlace(): selection, else the pages shown
+from the book: N / selection Note (the passage), highlight chip Note (passage + annotation_id), Steve Save to
+  notes (his answer and sources), block actions (code, an equation's LaTeX as text; a figure, or an equation with
+  no LaTeX, as its crop uploaded to note-files)
+   └─► toNotebook: pageFor (the page started last in the place's chapter) else a new page there
+       ─► the notebook opens on it ─► DrawingEditor.add(lines) ─► saved like any edit
+the notebook: 70 % on the right, the book behind it scaled 0.97, blurred 8 px, dimmed and inert (a Motion spring,
+  interruptible; a crossfade under reduced motion; C37.8: the static blur costs one frame on the first opening)
 edits ─► autosave (800 ms, If-Match; 409 = "changed in another tab"; offline queue in IndexedDB, sent on reconnect)
 book ─► notepad: relocate ─► shownRange (A4) ─► sync.js: marks the notes on it, scrolls to the first,
   or offers "Jump to notes for this page" while writing; filter This page / This chapter / All
 notepad ─► book: a reference ─► Reader.goTo + flash (the passage pulses); margin markers (noteSpots) open notes
 ```
 
-TipTap and Excalidraw are lazy chunks loaded only when a note is edited or a
-drawing opened; the list draws notes with our own renderer (NoteDoc, KaTeX).
+Excalidraw is a lazy chunk loaded only when a page opens (its fonts from our
+own origin, AI off); pictures go to the `notes` bucket as WebP or PNG under
+256 KB. TipTap is gone (C37.4b): typed notes not yet moved and old block notes
+are drawn read-only in the list by our own renderer (NoteDoc, KaTeX).
 Nothing in the notepad calls Gemini; a PDF equation's LaTeX comes from
 `/steve/latex` only while Steve is on (a cached result costs no call).
 

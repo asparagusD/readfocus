@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 // E2E for the reader and word lookup (C12.10). Runs on the installed Microsoft Edge (no browser
 // download) against a production build under `vite preview`, with every backend and Supabase call
 // answered by e2e/fixtures.js: offline, $0, no account. Not a standard check yet.
-const FRAME_RATE = /page-turn frame rate/;
+const FRAME_RATE = /frame rate/; // the page-turn bench (C12.10) and the notebook's (C37.8)
 
 export default defineConfig({
   testDir: './e2e',

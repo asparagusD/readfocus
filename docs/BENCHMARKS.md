@@ -1864,3 +1864,46 @@ Command: `docker run --rm --network none --memory=512m --memory-swap=512m --cpus
 -e PYTHONPATH=/repo -e SUPABASE_URL=http://127.0.0.1:9 -e SUPABASE_SERVICE_KEY=offline -e EMBED_PRELOAD=0
 -e INGEST_SWEEP=0 readfocus-c25-measure python scripts/dev/measure_c36.py --book
 samples/technical/interactive-linear-algebra.pdf --page 1|200`.
+
+## C37: the notebook over a long book (2026-11-20, issue 26)
+
+`e2e/notebook-frame-rate.spec.js` (the `frame-rate` Playwright project, no trace recorder), headless Microsoft Edge
+on this machine against the production build (`vite preview`), 1440 x 900, API mocked. The book is a 300-page PDF
+built in memory (`bigPdf.js`, 46 lines of Helvetica text a page, 1.2 MB) served the way Storage does (206 ranges,
+no Accept-Ranges). Frames sampled with requestAnimationFrame while the notebook opens (800 ms), while a freehand
+stroke is drawn on a new page (60 moves over about 2 s) with the book blurred behind it, while the same stroke is
+drawn with the blur taken off (the control), and while it closes (800 ms); then all of it again under CDP
+`Emulation.setCPUThrottlingRate` 4 (the second opening). JS heap from CDP `Performance.getMetrics` after
+`HeapProfiler.collectGarbage`. Three runs; the ranges cover all three.
+
+| Measure | 1x CPU | 4x CPU |
+|---|---|---|
+| Opening: fps, worst frame (frames over 33 ms) | 64.6-65.8 fps, 80.1-93.4 ms (1) | 70.5-71.6 fps, 39.8-40.0 ms (1) |
+| Drawing over the blurred book | 75 fps, 13.6 ms (0) | 75 fps, 13.6-13.7 ms (0) |
+| Drawing with the blur off (control) | 75 fps, 13.6 ms (0) | 75 fps, 13.6-13.7 ms (0) |
+| Closing | 73.7-73.8 fps, 26.7-26.8 ms (0) | 72.7-72.8 fps, 39.9-40.1 ms (1) |
+
+| JS heap (DOM nodes) | Value |
+|---|---|
+| Book open, notebook never opened | 5.4 MB (405) |
+| Notebook open on a page (Excalidraw loaded) | 9.5 MB (757) |
+| Notebook closed again | 9.6 MB (449) |
+
+Where the long frame on the first opening comes from: the same bench with the book's filter forced to `none` by
+a stylesheet (a throwaway copy of the spec, two runs) gives a worst opening frame of 40.0-53.2 ms at 1x (40 ms at
+4x) and a worst closing frame of 13.6 ms at 1x. So the notebook's first mount costs about 40 ms, the blur's first
+rasterisation of the book about 40 ms more, once, at the start of the first opening; later openings are 40 ms at
+worst even at 4x CPU. Once the blur is in place it costs nothing measurable: a stroke draws at the browser's 75 fps
+pace with and without it (Chromium keeps the filtered book as a layer while it does not change).
+
+Decision (C37.8): the static blur stays. A pre-blurred snapshot would have to rasterise the book into an image
+first, which costs more than the one frame it would save.
+
+The heap stays 4.2 MB higher after the notebook closes: Excalidraw's code stays loaded once used; the DOM goes back
+to 449 nodes (44 more than before, with one new page in the book; not traced further). PDF.js parses in its
+worker, whose heap is not in these numbers, and canvas backing stores (the book's pages, Excalidraw's canvases) are
+not in the JS heap either. Headless Edge paces frames at about 75 a second here, so 75 fps is the ceiling, not a
+measured limit. Not measured: a real GPU in a headed browser, a phone, Firefox, Safari.
+
+Command: `npx playwright test e2e/notebook-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
+standard `npm run test:e2e` too); results in `frontend/test-results/notebook-benchmarks.json` (ignored).

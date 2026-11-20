@@ -4240,18 +4240,6 @@
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/pdf/recolour.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/originalview/pdf/recolour.test.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
       "id": "file:frontend/src/originalview/pdf/regions.js",
       "type": "file",
       "role": "asset",
@@ -4295,12 +4283,6 @@
     },
     {
       "id": "file:frontend/src/originalview/useBoxSize.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/originalview/useLamplight.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -11967,11 +11949,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/gallery/BookGallery.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/gallery/BookGallery.jsx",
       "to": "file:frontend/src/reader/ReaderToolbar.jsx"
     },
     {
@@ -12747,11 +12724,6 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/steve/EpubBlockActions.jsx"
     },
     {
@@ -12986,18 +12958,8 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/originalview/pdf/pdfjs.js",
-      "to": "file:frontend/src/originalview/pdf/recolour.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/originalview/pdf/rangeSource.test.js",
       "to": "file:frontend/src/originalview/pdf/rangeSource.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/originalview/pdf/recolour.test.js",
-      "to": "file:frontend/src/originalview/pdf/recolour.js"
     },
     {
       "type": "imports",
@@ -13563,11 +13525,6 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/place.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
     },
     {
       "type": "imports",

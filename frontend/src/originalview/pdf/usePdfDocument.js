@@ -36,16 +36,14 @@ const LOADING = Object.freeze({ status: 'loading', doc: null, numPages: 0, error
 
 /**
  * Rendered pages of `doc` at `scale` around `current` (two either side), released as the
- * reader moves on. A new scale, pixel ratio or lamplight colours start a new cache, so zoomed
- * pages are crisp and recoloured pages are never mixed with plain ones.
+ * reader moves on. A new scale or pixel ratio starts a new cache, so zoomed pages are crisp.
  */
-export function usePageCache(doc, scale, current, colours = null) {
+export function usePageCache(doc, scale, current) {
   const pixelRatio = globalThis.devicePixelRatio || 1;
-  const key = colours && `${colours.foreground}/${colours.background}`; // new colours: render afresh
   const cache = useMemo(() => doc && createPageCache({
-    render: (n) => renderPage(doc, n, scale, pixelRatio, key ? colours : null),
+    render: (n) => renderPage(doc, n, scale, pixelRatio),
     release: releasePage,
-  }), [doc, scale, pixelRatio, key]); // eslint-disable-line react-hooks/exhaustive-deps -- colours by value
+  }), [doc, scale, pixelRatio]);
   useEffect(() => () => cache?.clear(), [cache]);
   useEffect(() => { if (cache) cache.focus(current, doc.numPages); }, [cache, current, doc]);
   return cache;

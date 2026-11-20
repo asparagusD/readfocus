@@ -1,6 +1,6 @@
 // The book frame's rules (C17.4), shared by the PDF and EPUB renderers and kept
 // free of the DOM so they run under node --test: zoom, folios, EPUB location
-// numbers, keys, the contents entry for a page, and lamplight CSS. C38.2: a PDF
+// numbers, keys and the contents entry for a page (C38.3: no lamplight CSS). C38.2: a PDF
 // scrolls (scroll.js), so its spreads are gone; an EPUB keeps SPREAD_MIN_WIDTH.
 
 export const SPREAD_MIN_WIDTH = 1024; // two pages side by side from here up (C12, handoff)
@@ -70,21 +70,6 @@ export function entryForPage(entries, page) {
   let found = null;
   for (const entry of entries ?? []) if (entry.page <= page && (!found || entry.page >= found.page)) found = entry;
   return found;
-}
-
-/**
- * Lamplight for an EPUB section: text and backgrounds take the theme's colours;
- * images, SVG drawings (and everything inside them), video and canvas keep the
- * publisher's colours. No filter is ever applied, so nothing is inverted.
- */
-export function epubThemeCss({ background, foreground, link, code }) {
-  const text = ':not(img):not(svg):not(svg *):not(video):not(canvas):not(picture)';
-  return `
-html, body { background-color: ${background} !important; color: ${foreground} !important; }
-body *${text} { color: inherit !important; background-color: transparent !important; border-color: color-mix(in srgb, ${foreground} 25%, transparent) !important; }
-body a${text}, body a${text} * { color: ${link} !important; }
-body pre, body pre *${text} { background-color: ${code} !important; }
-`;
 }
 
 /** The fraction of an animation's time at which a cubic-bezier easing reaches `progress`. */

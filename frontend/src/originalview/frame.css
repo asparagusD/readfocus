@@ -15,7 +15,7 @@
   color: var(--ink);
 }
 
-[data-theme="lamplight"] .rf-ov { --spine-shade: color-mix(in oklab, #000 45%, transparent); }
+/* C38.3: the spine shade is Paper's in Lamplight too: the page under it is the publisher's white in either theme. */
 .rf-ov[data-wide="false"] { --ov-book-max: 720px; }
 
 /* Running header: book title on the left, the contents entry on the right, above the page. */
@@ -79,9 +79,9 @@
 
 .rf-ov[data-kind="epub"] .rf-epub { background: transparent; }
 
-/* Lamplight with "Original colours" on: the book's own colours need the page they were
-   set on, so the EPUB page is the publisher's white, not the lamplight page. */
-.rf-ov[data-original="true"][data-kind="epub"] .rf-ov-book { background: #fff; }
+/* C38.3 (issue 22, D2): a book is never recoloured, so in Lamplight an EPUB's page is the publisher's white
+   (its text keeps the publisher's colours), on the dark desk, as Edge shows a book in its dark mode. */
+[data-theme="lamplight"] .rf-ov[data-kind="epub"] .rf-ov-book { background: #fff; }
 
 .rf-ov-book[data-spread="true"]::after {
   position: absolute;
@@ -114,7 +114,7 @@
   position: absolute;
   overflow: hidden;
   border-radius: var(--radius-hair);
-  background: var(--rf-pdf-paper, #fff); /* the publisher's white until the page is drawn */
+  background: #fff; /* the publisher's white, before the page is drawn too */
   box-shadow: 0 0 0 var(--border-hair) var(--line), var(--elevation-lift);
 }
 

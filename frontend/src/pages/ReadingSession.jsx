@@ -10,7 +10,6 @@ import { Button } from '../components/ui/Button';
 import { Reader } from '../originalview/Reader';
 import { fromOpenedBook } from '../originalview/bookFile';
 import { ReaderControls } from '../originalview/ReaderControls';
-import { useLamplight } from '../originalview/useLamplight';
 import { createRegionSource } from '../originalview/pdf/regions';
 import { createOcrSource } from '../originalview/pdf/ocr';
 import { folioShort } from '../originalview/place';
@@ -116,7 +115,6 @@ export function ReadingSession() {
   const kind = sessionData?.book?.format === 'epub' ? 'epub' : 'pdf';
   // C18.6d: a PDF's math, code and figure boxes, so lookup skips them (an EPUB's markup already says).
   const regions = useMemo(() => (kind === 'pdf' ? createRegionSource(fetchApi, bookId) : null), [kind, bookId]);
-  const { theme, original, toggleOriginal } = useLamplight(bookId);
   // C19.4: scanned pages get a text layer read by OCR in this browser. A fully scanned book with no chunks
   // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
   const pagesOnly = Boolean(sessionData?.pages_only);
@@ -529,8 +527,7 @@ export function ReadingSession() {
           visible={chromeVisible}
           onFocusChange={setToolbarFocused}
           controls={(
-            <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
-              lamplight={theme === 'lamplight'} original={original} onOriginal={toggleOriginal} />
+            <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings} />
           )}
           onContents={openContents}
           contentsOpen={contentsOpen}

@@ -7,7 +7,7 @@
   position: relative;
   --scale-round-x: 1px;
   --scale-round-y: 1px;
-  background: var(--rf-pdf-paper, #fff); /* the page's own paper: white, or the lamplight page (C17.4) */
+  background: #fff; /* the publisher's page (C38.3: in either theme) */
 }
 
 .rf-pdf-page__canvas,
@@ -104,8 +104,8 @@
 }
 
 /* C21.3: highlights and underlines, between the canvas and the text layer (the lookup mark and the selection
-   stay above). Blending keeps ink its own colour: darken on a light page (the highlight shows on paper, dark
-   ink stays dark), lighten on a recoloured dark page (light ink stays light). */
+   stay above). Blending keeps ink its own colour: darken on the page (the highlight shows on paper, dark ink
+   stays dark). C38.3: pages are never recoloured, so there is no dark page to lighten. */
 .rf-pdf-annos {
   position: absolute;
   inset: 0;
@@ -115,7 +115,6 @@
   position: absolute;
   mix-blend-mode: darken;
 }
-.rf-pdf-annos[data-dark] .rf-anno { mix-blend-mode: lighten; }
 .rf-anno[data-style="highlight"] { border-radius: var(--radius-hair); }
 .rf-anno[data-style="highlight"][data-colour="honey"] { background-color: var(--hl-honey); }
 .rf-anno[data-style="highlight"][data-colour="sage"] { background-color: var(--hl-sage); }

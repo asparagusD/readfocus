@@ -1,4 +1,4 @@
-import { MoveHorizontal, MoveVertical, Palette, Type, ZoomIn, ZoomOut } from 'lucide-react';
+import { MoveHorizontal, MoveVertical, Type, ZoomIn, ZoomOut } from 'lucide-react';
 import { zoomLabel, zoomStep } from './frame';
 
 const SIZES = [14, 16, 18, 20, 22, 24];
@@ -9,10 +9,10 @@ const next = (list, value) => list[(list.indexOf(value) + 1) % list.length];
 /**
  * The original view's controls for the reader toolbar (C17.4): zoom out, zoom level
  * (fit page, fit width, 125-200 %; click to cycle the fits) and zoom in for a PDF;
- * smaller and larger text, line spacing and margins for an EPUB; and in lamplight a
- * per-book "Original colours" switch.
+ * smaller and larger text, line spacing and margins for an EPUB. C38.3: the "Original
+ * colours" switch is gone: a book is never recoloured.
  */
-export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, lamplight, original, onOriginal }) {
+export function ReaderControls({ kind, zoom, onZoom, settings, onSettings }) {
   const set = (patch) => onSettings({ ...settings, ...patch });
   const size = settings?.fontSize ?? 18;
   return (
@@ -53,14 +53,6 @@ export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, lampl
             <span className="rf-tool-value" aria-hidden="true">{settings.style === 'readfocus' ? 'ReadFocus' : 'Publisher'}</span>
           </button>
         </div>
-      )}
-      {lamplight && (
-        <button type="button" role="switch" aria-checked={original} className="rf-tool rf-switch" onClick={onOriginal}
-          aria-label="Show this book in its original colours">
-          <Palette size={18} strokeWidth={1.75} aria-hidden="true" />
-          <span className="rf-tool-label" aria-hidden="true">Original colours</span>
-          <span className="rf-switch-track" aria-hidden="true"><span className="rf-switch-knob" /></span>
-        </button>
       )}
     </>
   );

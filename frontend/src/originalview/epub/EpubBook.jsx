@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { epubThemeCss, locationAt } from '../frame';
+import { locationAt } from '../frame';
 import { EpubView } from './EpubView';
 import { epubAnchor, epubPositions } from '../../anchors';
 import { epubEndPoint } from '../../focus/bookmark';
@@ -25,7 +25,7 @@ function deferred() {
 
 /**
  * An EPUB in the book frame (C17.4): EpubView with the frame's spread (`wide`), its own
- * page turns (foliate's slide off), the reader's type settings, lamplight colours, and
+ * page turns (foliate's slide off), the reader's type settings (C38.3: never recoloured), and
  * stable location numbers counted once per book. `ref` gets the renderer interface the
  * frame uses (Reader.jsx); onRelocate(place) fires on every move with
  * { folio, entry, atStart, atEnd, cfi, index, charStart, charEnd }; onDocument(doc) for
@@ -33,7 +33,7 @@ function deferred() {
  * { index, char }; both wait for the engine, which can report a first place before it
  * is handed over.
  */
-export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, onDocument, onError, annotations = null, ref }) {
+export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument, onError, annotations = null, ref }) {
   const [locations, setLocations] = useState(null);
   const [opened] = useState(deferred);
   const engine = useRef(null);
@@ -66,13 +66,14 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
   }, [send, locations]);
 
   // C21.3: highlights and underlines in each shown section's document (CSS Custom Highlights; epubPaint.js),
-  // again when one loads, the list changes or the colours do. A new text size keeps the document: the marks follow.
+  // again when one loads or the list changes. A new text size keeps the document: the marks follow. C38.3: the page is
+  // as published, light, so Paper's highlight colours in either theme.
   useEffect(() => {
     const made = engine.current;
     if (!made || !annotations) return;
-    const palette = readPalette(Boolean(colours));
+    const palette = readPalette(false);
     for (const { doc, index } of made.contents()) paintSection(doc, index, annotations, made.rangeFor, palette);
-  }, [annotations, colours, loads]);
+  }, [annotations, loads]);
 
   useImperativeHandle(ref, () => {
     const now = () => engine.current;
@@ -236,7 +237,6 @@ export function EpubBook({ bookId, load, wide, settings, colours, onRelocate, on
   return (
     <EpubView bookId={bookId} load={load} animated={false} wide={wide}
       style={settings.style} fontSize={settings.fontSize} lineHeight={settings.lineHeight} margins={settings.margins}
-      themeCss={colours ? epubThemeCss(colours) : ''}
       onReady={onReady} onRelocate={relocate} onLoad={({ doc }) => { onDocument?.(doc); setLoads((n) => n + 1); }} onError={onError} label="Book pages" />
   );
 }

@@ -14,7 +14,7 @@ export const MARGINS = { narrow: '4%', normal: '7%', wide: '11%' }; // the pagin
 /**
  * The extra CSS for a style mode: the publisher's own, or ours (Lora). Text size and
  * line height apply in both (C17.4): the root font size scales a book set in em or rem,
- * and ReadFocus style also sets the body. `themeCss` recolours for lamplight.
+ * and ReadFocus style also sets the body. `themeCss` is added last (nothing passes it since C38.3: no recolouring).
  */
 export function styleFor(mode, { fontSize = 18, lineHeight = null, themeCss = '' } = {}) {
   const sizing = `html { font-size: ${Math.round((fontSize / 18) * 100)}% !important; }

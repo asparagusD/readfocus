@@ -43,7 +43,7 @@ const sameView = (a, b) => Boolean(a && b) && a.main === b.main && a.atStart ===
 
 /**
  * A PDF read as Edge shows one (C38.2, issue 22): its pages one under another on the desk, scrolled, at `zoom`
- * ('fit-page', 'fit-width' or 1.25-2), recoloured with `colours` in lamplight. Every page is laid out from its size (a
+ * ('fit-page', 'fit-width' or 1.25-2), as published in either theme (C38.3). Every page is laid out from its size (a
  * page not measured yet takes the opening page's, as PDF.js's own viewer does, so a long book opens without reading
  * every page), and only the pages in view and two either side are drawn. The place is the pages in view and the main
  * one, the most in view (scroll.js); a zoom, a resize or a page measured late keeps the words at the top of the view
@@ -51,7 +51,7 @@ const sameView = (a, b) => Boolean(a && b) && a.main === b.main && a.atStart ===
  * frame uses (Reader.jsx); onRelocate(place) fires on every change with { pages, main, folio, entry, atStart, atEnd }.
  * C34.2: `startPage` is the page it opens at; `contents` (books.toc) stands in for the outline when it has pages.
  */
-export function PdfBook({ bookId, load, zoom = 'fit-page', colours = null, onRelocate, onError, ocr = null, annotations = null, contents = null, startPage = 1, end = null, ref }) {
+export function PdfBook({ bookId, load, zoom = 'fit-page', onRelocate, onError, ocr = null, annotations = null, contents = null, startPage = 1, end = null, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
   useEffect(() => { if (ocr && doc) ocr.attach(doc); }, [ocr, doc]); // C19.4: scanned pages read with the open PDF
   const box = useRef(null);
@@ -142,7 +142,7 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', colours = null, onRel
   const last = Math.min(numPages, (shown.at(-1) ?? main) + NEAR);
   const near = numPages ? Array.from({ length: Math.max(0, last - first + 1) }, (_, i) => first + i) : [];
   const nearKey = near.join();
-  const cache = usePageCache(doc, scale, main, colours);
+  const cache = usePageCache(doc, scale, main);
   const drawn = annotations ? forPages(annotations, near) : null; // C21.3
   useEffect(() => { // a page drawn near the view is measured, and laid out at its own size when that differs
     if (!doc || !base) return undefined;
@@ -284,14 +284,13 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', colours = null, onRel
 
   const across = layout ? Math.max(...layout.rows.map((r) => r.pages.at(-1).left + r.pages.at(-1).width)) + GAP : 0;
   return (
-    <div ref={box} className="rf-pdf-book" data-zoom={typeof zoom === 'number' ? 'percent' : zoom} onScroll={onScroll}
-      style={colours ? { '--rf-pdf-paper': colours.background } : undefined}>
+    <div ref={box} className="rf-pdf-book" data-zoom={typeof zoom === 'number' ? 'percent' : zoom} onScroll={onScroll}>
       <div className="rf-pdf-pages" style={layout ? { height: layout.height, width: across } : undefined}>
         {cache && layout && near.map((n) => {
           const at = pageBox(layout, n);
           return at && (
             <div key={n} className="rf-pdf-slot" style={{ left: at.left, top: at.top, width: at.width, height: at.height }}>
-              <PdfPage cache={cache} pageNumber={n} label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} annotations={drawn} dark={Boolean(colours)} />
+              <PdfPage cache={cache} pageNumber={n} label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} annotations={drawn} />
             </div>
           );
         })}

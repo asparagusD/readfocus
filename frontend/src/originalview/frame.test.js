@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildLocations, entryForPage, epubThemeCss, keyAction, locationAt, pdfFolio, pdfScale, timeAtProgress, zoomStep,
+  buildLocations, entryForPage, keyAction, locationAt, pdfFolio, pdfScale, timeAtProgress, zoomStep,
 } from './frame.js';
 
 test('zoom: fit-page and fit-width from the frame; percentages are of the printed size', () => {
@@ -66,16 +66,6 @@ test('the contents entry for a page is the last one that starts on or before it'
   assert.equal(entryForPage(entries, 9)?.title, '1 Signals');
   assert.equal(entryForPage(entries, 30)?.title, '1.1 Noise');
   assert.equal(entryForPage([], 4), null);
-});
-
-test('lamplight CSS recolours text and backgrounds but never images, figures drawn in SVG, or video', () => {
-  const css = epubThemeCss({ background: '#231e19', foreground: '#eee5d5', link: '#eda77b', code: '#1a1612' });
-  assert.match(css, /background(-color)?:\s*#231e19 !important/);
-  assert.match(css, /color:\s*#eee5d5 !important/);
-  assert.match(css, /:not\(img\)/);
-  assert.match(css, /:not\(svg\)/);
-  assert.match(css, /:not\(svg \*\)/);
-  assert.doesNotMatch(css, /filter|invert/);
 });
 
 test('the turn happens when the leaf stands on edge: the time at half the rotation', () => {

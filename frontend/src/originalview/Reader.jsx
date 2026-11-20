@@ -21,7 +21,6 @@ import { placeEnd, placeStart } from './place';
 
 /** "5" for a PDF page, "2:340" for an EPUB section and character: the place's ends, for tests and tools. */
 const spot = (loc) => (loc.kind === 'pdf' ? String(loc.page) : `${loc.index}:${loc.char}`);
-import { useLamplight } from './useLamplight';
 import './frame.css';
 
 const SWIPE_PX = 48;
@@ -86,7 +85,7 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * A book shown as published, PDF or EPUB, in one frame (C17.4): a spread from
  * 1024 px and one page below, the running header (title, contents entry) and the
  * ribbon outside the page, a folio under it, page turns by keys, edge clicks and
- * swipes, and lamplight colours that never touch images. `ref` gets
+ * swipes (C38.3: the book as published in either theme). `ref` gets
  * { goTo(anchor), next(), prev(), visibleRange(), getSelection(), documents() }.
  * onRelocate(place) on every move; onBookmark(anchor) from the ribbon or B.
  *
@@ -110,7 +109,6 @@ export function Reader({
   placing = null, contents = null, start = null,
 }) {
   const wide = useWide();
-  const { colours, theme, original } = useLamplight(bookId);
   const book = useRef(null);
   const [place, setPlace] = useState(null);
   const [turn, setTurn] = useState(null);
@@ -342,11 +340,11 @@ export function Reader({
     flash, // C22.5
   }), [move, flash, shownPlaces]);
 
-  const shared = { bookId, load, wide, colours, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
+  const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
   const atClose = kind === 'pdf' ? Boolean(closing && place?.atEnd) : ending; // C38.2: a PDF's end is scrolled to
   return (
     <section className="rf-ov" aria-label={label ?? title} data-wide={wide} data-kind={kind}
-      data-original={theme === 'lamplight' && original ? 'true' : undefined} data-loading={(!place || opening) && !failure}
+      data-loading={(!place || opening) && !failure}
       data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
       data-ending={ending || undefined} data-annotations={annotations ? annotations.length : undefined}
       >

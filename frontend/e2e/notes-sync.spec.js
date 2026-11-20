@@ -57,21 +57,23 @@ test.describe('pdf', () => {
     await expect(panel(page).getByRole('button', { name: 'Jump to notes for this page' })).toHaveCount(0);
   });
 
-  test('while a note is being written the notepad stays put and offers the jump instead', async ({ page, api }) => {
+  test('just after the reader scrolled the list the notepad stays put and offers the jump instead', async ({ page, api }) => {
     seedPdf(api);
     await openReader(page);
     // Scroll anchoring would hide a jump measured before the pill above the notes goes (DEBUG_LOG 2026-11-17 C25.5).
     await page.addStyleTag({ content: '.rf-notes, .rf-notes * { overflow-anchor: none !important; }' });
     await openNotepad(page);
-    await panel(page).getByRole('button', { name: /^Edit note at / }).first().click();
-    await expect(panel(page).getByRole('textbox', { name: /^Note at / })).toBeFocused();
+    await turn(page); // pages 2-3
+    await page.waitForTimeout(400);
+    const box = await list(page).boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 40); // by hand, just before the turn (C37.4: no typed note to write in any more)
+    await page.waitForTimeout(200);
     const top = await list(page).evaluate((el) => el.scrollTop);
-    await turn(page);
-    await turn(page); // pages 4-5
+    await turn(page); // pages 4-5, within the 2 s the notepad holds still after a hand scroll
     const jump = panel(page).getByRole('button', { name: 'Jump to notes for this page' });
     await expect(jump).toBeVisible();
     expect(await list(page).evaluate((el) => el.scrollTop)).toBe(top);
-    await expect(panel(page).locator('.rf-note[data-editing]')).toHaveCount(1); // still writing
     await jump.click();
     await expect.poll(() => inView(page, 'n4a')).toBe(true);
     await expect(jump).toHaveCount(0);

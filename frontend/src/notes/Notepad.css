@@ -60,7 +60,6 @@
 
 /* C22.2b: a note added on this visit rises in with an accent edge (handoff); the one being edited keeps it. */
 .rf-note[data-new] { animation: rf-note-in var(--dur-5) var(--ease-arrive) both; }
-.rf-note[data-editing] { border-color: var(--accent); }
 /* C22.5: notes on the pages shown carry a soft accent edge. */
 .rf-note[data-here] { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
 .rf-note[data-focused] { border-color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); } /* C22.4: opened from a margin marker */
@@ -138,25 +137,6 @@
 .rf-note-ref svg { flex: none; color: var(--ink-2); }
 .rf-note-ref:hover { background-color: var(--paper-2); }
 
-.rf-note-done {
-  min-height: 32px;
-  margin-left: auto;
-  padding: 0 var(--space-3);
-  border: 0;
-  border-radius: var(--radius-input);
-  background: none;
-  color: var(--accent-text);
-  font-family: var(--font-ui);
-  font-size: var(--text-label);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-settle);
-}
-
-.rf-note-done:hover { background-color: var(--paper-2); }
-.rf-note-done:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
-.rf-note-done + .rf-note-kind { margin-left: 0; }
-
 .rf-note-kind { display: inline-grid; place-items: center; margin-left: auto; width: 28px; height: 28px; color: var(--ink-2); }
 
 .rf-note-delete, .rf-note-link {
@@ -224,7 +204,7 @@
 @media (max-width: 759px) {
   .rf-notes { padding: var(--space-3) var(--space-3) var(--space-5); }
   .rf-note { padding: var(--space-2) var(--space-3) var(--space-3); }
-  .rf-note-delete, .rf-note-ref, .rf-note-done { min-height: 44px; }
+  .rf-note-delete, .rf-note-ref { min-height: 44px; }
   .rf-note-delete, .rf-note-link { width: 44px; height: 44px; }
   .rf-notes-pill { min-height: 44px; }
   .rf-note-read { min-height: 44px; }

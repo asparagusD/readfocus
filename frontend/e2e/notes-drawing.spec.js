@@ -308,6 +308,21 @@ test('a typed note whose page cannot be saved stays, and moves at the next openi
   expect(api.notePosts.at(-1).content.elements.some((e) => e.type === 'text' && e.text === 'Kept safe')).toBe(true);
 });
 
+test('a typed note left in the list is read-only; a click opens the notebook, which moves it', async ({ page, api }) => {
+  api.steve.consented = true;
+  api.notes = [typed('t-left', 1, doc({ type: 'text', text: 'Left behind' }))];
+  await openReader(page);
+  await page.getByRole('button', { name: 'Ask Steve' }).click(); // the list without the notebook
+  await page.getByRole('tab', { name: /^Notes/ }).click();
+  const left = panel(page).getByRole('button', { name: /^Move note at .* into the notebook$/ });
+  await expect(left).toContainText('Left behind');
+  await expect(panel(page).getByRole('textbox')).toHaveCount(0); // C37.4: no editor for typed notes
+  await left.click();
+  await expect(notebook(page)).toBeVisible();
+  await expect.poll(() => api.noteDeletes).toEqual(['t-left']);
+  expect(api.notePosts[0].content.elements.some((e) => e.type === 'text' && e.text === 'Left behind')).toBe(true);
+});
+
 test.describe('lamplight', () => {
   test.use({ colorScheme: 'dark' });
   test('the page follows the dark theme; Escape ends typing first, then closes the notebook', async ({ page }) => {

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 979,
-    "inventoried": 836,
+    "tracked": 973,
+    "inventoried": 830,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 18643,
+      "size_bytes": 18679,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6311,
-      "size_bytes": 1163890,
+      "lines": 6312,
+      "size_bytes": 1165384,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2681,34 +2681,26 @@
     {
       "path": "frontend/e2e/notes-drawing.spec.js",
       "language": "javascript",
-      "lines": 350,
-      "size_bytes": 20033,
+      "lines": 365,
+      "size_bytes": 20949,
       "role": "config",
-      "purpose": "E2E for the notebook (C37.2; drawing notes since C22.3): 70 % with the book blurred and inert; Excalidraw loads only for a page and asks no other host; shapes, arrows, freehand and text saved as scene JSON; leaving a page uploads its thumbnail, which the list shows and opens; pages turn by arrows and tabs, Go to this place, reopens where left, reference back to the book; delete with Undo; Paste passage; Mermaid; Steve over the 30 %; Lamplight and Escape; full screen on a phone; C37.4: typed notes become pages on the first opening, each deleted after its page, an empty one with no page, a failed save kept and moved next time."
-    },
-    {
-      "path": "frontend/e2e/notes-editor.spec.js",
-      "language": "javascript",
-      "lines": 172,
-      "size_bytes": 10075,
-      "role": "config",
-      "purpose": "E2E for typed notes a reader already has (C22.2b; none made since C37.3): one opens from the notepad's list in the lazy editor; rich text, checklist and math autosave after 800 ms and draw as written; editing an equation; offline edits queued in IndexedDB and saved on online; keyboard; EPUB; the phone sheet."
+      "purpose": "E2E for the notebook (C37.2; drawing notes since C22.3): 70 % with the book blurred and inert; Excalidraw loads only for a page and asks no other host; shapes, arrows, freehand and text saved as scene JSON; leaving a page uploads its thumbnail, which the list shows and opens; pages turn by arrows and tabs, Go to this place, reopens where left, reference back to the book; delete with Undo; Paste passage; Mermaid; Steve over the 30 %; Lamplight and Escape; full screen on a phone; C37.4: typed notes become pages on the first opening, each deleted after its page, an empty one with no page, a failed save kept and moved next time; a typed note left in the list is read-only and its click moves it."
     },
     {
       "path": "frontend/e2e/notes-sync.spec.js",
       "language": "javascript",
-      "lines": 172,
-      "size_bytes": 9302,
+      "lines": 174,
+      "size_bytes": 9418,
       "role": "config",
-      "purpose": "E2E for two-way sync (C22.5): page turns scroll the notepad to that spread's notes and mark them; while writing, a Jump to notes pill instead; a reference moves the book and pulses the passage with the list held; the filter with keys; EPUB notes stay with their page after larger text; reduced motion; C37.3: the list opened by All notes, the EPUB's pages made with New page."
+      "purpose": "E2E for two-way sync (C22.5): page turns scroll the notepad to that spread's notes and mark them; while writing, a Jump to notes pill instead; a reference moves the book and pulses the passage with the list held; the filter with keys; EPUB notes stay with their page after larger text; reduced motion; C37.3: the list opened by All notes, the EPUB's pages made with New page; C37.4: the jump pill after a hand scroll of the list."
     },
     {
       "path": "frontend/e2e/notes.spec.js",
       "language": "javascript",
-      "lines": 102,
-      "size_bytes": 5709,
+      "lines": 108,
+      "size_bytes": 5853,
       "role": "config",
-      "purpose": "E2E journey of the notes (C22.6; C37.3) in a PDF and an EPUB: Add note writes the passage on the notebook page for this place and a second passage on the same page joins it, the notepad's list follows the book and a reference jumps back with a pulse; a typed note's offline edit saved on reconnect and the merge prompt for an edit another tab saved first."
+      "purpose": "E2E journey of the notes (C22.6; C37.3) in a PDF and an EPUB: Add note writes the passage on the notebook page for this place and a second passage on the same page joins it, the notepad's list follows the book and a reference jumps back with a pulse; C37.4: a page changed offline saved on reconnect, and the merge prompt for a page another tab saved first."
     },
     {
       "path": "frontend/e2e/ocr.spec.js",
@@ -2913,8 +2905,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 79,
-      "size_bytes": 2662,
+      "lines": 73,
+      "size_bytes": 2460,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation; C25.3: test:live:phase2 and test:phase2-isolation."
     },
@@ -2962,9 +2954,9 @@
       "path": "frontend/scripts/check-bundle.mjs",
       "language": "text",
       "lines": 72,
-      "size_bytes": 3787,
+      "size_bytes": 3811,
       "role": "config",
-      "purpose": "Bundle budgets (C25.2), npm run check:bundle after a build, a standard check and CI step: reads .bundle-stats.json (vite.config.js bundleStats); the initial route (the entry chunk and its static imports) within INITIAL_JS_GZIP_BUDGET gzipped; pdfjs-dist, vendored foliate-js, Excalidraw, TipTap and tesseract.js each bundled and only in chunks loaded on demand."
+      "purpose": "Bundle budgets (C25.2), npm run check:bundle after a build, a standard check and CI step: reads .bundle-stats.json (vite.config.js bundleStats); the initial route (the entry chunk and its static imports) within INITIAL_JS_GZIP_BUDGET gzipped; pdfjs-dist, vendored foliate-js, Excalidraw, TipTap and tesseract.js each bundled and only in chunks loaded on demand; C37.4: TipTap left the app and the list."
     },
     {
       "path": "frontend/scripts/check-contrast.mjs",
@@ -3596,7 +3588,7 @@
       "lines": 34,
       "size_bytes": 2191,
       "role": "asset",
-      "purpose": "node --test (C25.2) for scripts/check-bundle.mjs on made-up chunks: the initial route is the entry and its static imports, not its dynamic ones; lazy libraries in lazy chunks pass; a heavy library in the initial route, or in no chunk, fails; over the gzip budget fails."
+      "purpose": "node --test (C25.2) for scripts/check-bundle.mjs on made-up chunks: the initial route is the entry and its static imports, not its dynamic ones; lazy libraries in lazy chunks pass; a heavy library in the initial route, or in no chunk, fails; over the gzip budget fails; C37.4: its example heavy library is tesseract.js."
     },
     {
       "path": "frontend/src/deploy/csp.js",
@@ -4329,18 +4321,18 @@
     {
       "path": "frontend/src/notes/Notepad.css",
       "language": "css",
-      "lines": 356,
-      "size_bytes": 11760,
+      "lines": 336,
+      "size_bytes": 11097,
       "role": "asset",
       "purpose": "Styles for the notepad's list and note cards (C22.2): reference, kind, delete, the drawn TipTap document, checklists, math, alerts and 44 px targets on phones."
     },
     {
       "path": "frontend/src/notes/Notepad.jsx",
       "language": "jsx",
-      "lines": 252,
-      "size_bytes": 14450,
+      "lines": 233,
+      "size_bytes": 13222,
       "role": "asset",
-      "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note; C22.2b: a note opens in the lazy editor on click or Enter, Done in its header, and Text adds a note at the selection or the pages shown; C37.2: drawings are notebook pages that open the notebook, and Notebook opens it; C37.3: no Text pill and no drop target, new notes go into the notebook."
+      "purpose": "The notepad (C22.2, handoff screen 19): note blocks in book order with a reference button to the passage, kind icon and delete; loading, error and empty states; one polite save line; conflict and refused-save actions per note; C22.2b: a note opens in the lazy editor on click or Enter, Done in its header, and Text adds a note at the selection or the pages shown; C37.2: drawings are notebook pages that open the notebook, and Notebook opens it; C37.3: no Text pill and no drop target, new notes go into the notebook; C37.4: a typed note not yet moved is read-only (NoteDoc), and a click opens the notebook, which moves it; TipTap gone."
     },
     {
       "path": "frontend/src/notes/NotesContext.js",
@@ -4365,22 +4357,6 @@
       "size_bytes": 3278,
       "role": "asset",
       "purpose": "The side area beside the book (C22.2): tabs Notes | Steve as a WAI-ARIA tablist over one panel, 380 px column or pull-up sheet under 760 px; focuses the chosen tab on open, Esc or close returns focus to the opener; named after its tab; C37.2: beside the notebook it sits over the book's 30 %."
-    },
-    {
-      "path": "frontend/src/notes/TextEditor.css",
-      "language": "css",
-      "lines": 92,
-      "size_bytes": 3714,
-      "role": "asset",
-      "purpose": "Styles for the note editor (C22.2b): the format bar (one row of 44 px tools on phones), the editable text, checklists, placeholder and math nodes with their LaTeX field."
-    },
-    {
-      "path": "frontend/src/notes/TextEditor.jsx",
-      "language": "jsx",
-      "lines": 81,
-      "size_bytes": 4141,
-      "role": "asset",
-      "purpose": "A text note's editor (C22.2b), lazy: TipTap with StarterKit trimmed to the server's allow-list, checklists, placeholder and our math nodes; a format bar as one tab stop; changes to onChange as TipTap JSON; Escape returns to the drawn note."
     },
     {
       "path": "frontend/src/notes/autosave.js",
@@ -4433,18 +4409,18 @@
     {
       "path": "frontend/src/notes/fromBook.js",
       "language": "javascript",
-      "lines": 86,
-      "size_bytes": 4675,
+      "lines": 32,
+      "size_bytes": 1763,
       "role": "asset",
-      "purpose": "Notes made from the book (C22.6, pure): a highlight as a quote, a Steve answer as a TipTap note with its citations kept as text and a Sources line, a PDF region's place as one quad with its text, and a code language the notes API accepts."
+      "purpose": "Notes made from the book's regions (C22.6), pure: a region's place as an anchor (its box as one quad, its text capped) and a code language the notes API accepts; C37.4: the typed-note builders (a highlight's quote, a Steve answer) are gone with typed notes."
     },
     {
       "path": "frontend/src/notes/fromBook.test.js",
       "language": "javascript",
-      "lines": 75,
-      "size_bytes": 4538,
+      "lines": 34,
+      "size_bytes": 1917,
       "role": "asset",
-      "purpose": "Unit tests for notes from the book: the quote, an answer's text, math, lists, code lines and citations within the server's node types, languages and aliases, region places with and without text, Add to notes in each region kind's actions."
+      "purpose": "Unit tests for fromBook.js: code languages, a PDF region's place, every region kind can go to the notes with or without Steve."
     },
     {
       "path": "frontend/src/notes/markers.js",
@@ -4461,30 +4437,6 @@
       "size_bytes": 2682,
       "role": "asset",
       "purpose": "Unit tests for margin markers: grouping by line, spacing on each side of a spread, the ribbon obstacle, labels, PDF note tops for selection and view notes."
-    },
-    {
-      "path": "frontend/src/notes/mathNodes.js",
-      "language": "javascript",
-      "lines": 123,
-      "size_bytes": 5286,
-      "role": "asset",
-      "purpose": "TipTap nodes inlineMath and blockMath (C22.2b): atoms with LaTeX drawn as KaTeX MathML, input rules for $...$ and $$...$$ replacing the whole match, click or Enter opens the LaTeX field, insert commands."
-    },
-    {
-      "path": "frontend/src/notes/mathRules.js",
-      "language": "javascript",
-      "lines": 7,
-      "size_bytes": 388,
-      "role": "asset",
-      "purpose": "The input-rule patterns for math in notes (C22.2b): inline $x$ (no space inside the ends, not escaped) and display $$x$$ alone in a paragraph."
-    },
-    {
-      "path": "frontend/src/notes/mathRules.test.js",
-      "language": "javascript",
-      "lines": 19,
-      "size_bytes": 965,
-      "role": "asset",
-      "purpose": "Unit tests for the math input rules: inline math, prices and escaped dollars left as text, display math only alone in its paragraph."
     },
     {
       "path": "frontend/src/notes/moveTyped.js",
@@ -6633,8 +6585,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 838,
-      "size_bytes": 285520,
+      "lines": 832,
+      "size_bytes": 284309,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

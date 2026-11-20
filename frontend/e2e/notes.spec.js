@@ -1,13 +1,11 @@
 // The notes as one journey (C22; since C37.3 every note goes into the notebook), in a PDF and an EPUB: Add note writes
 // the selected passage on the notebook page for this place, a second passage on the same page of the book joins it,
-// the notepad's list follows the book and a page's reference jumps back to its passage. A typed note a reader
-// already has still saves: an edit made offline is saved on reconnect, and an edit another tab saved first shows
-// the merge prompt. Mocked API (fixtures.js).
+// the notepad's list follows the book and a page's reference jumps back to its passage. A page changed offline is
+// saved on reconnect, and a change another tab saved first shows the merge prompt. Mocked API (fixtures.js).
 import { test, expect, openNotepad, openReader, settled, wordPoint } from './fixtures.js';
 
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const notebook = (page) => page.getByRole('dialog', { name: 'Notebook' });
-const editor = (page) => panel(page).getByRole('textbox', { name: /^Note at / });
 const written = (api) => api.notePatches.filter((p) => p.content?.elements).at(-1)?.content.elements
   .filter((e) => e.type === 'text').map((e) => e.text) ?? [];
 
@@ -64,39 +62,47 @@ for (const kind of ['pdf', 'epub']) {
   });
 }
 
-/** A typed note from before C37.3 on page 1, empty, at version 1. */
-const typed = () => ({ id: 'note-1', kind: 'text', scope: 'view', version: 1, orphaned: false, deleted_at: null, urls: {},
-  anchors: [{ kind: 'pdf', page: 1, quads: [[0, 0, 612, 792]], text: '' }], position_start: 1e6, position_end: 1e6 + 79_299,
-  content: { type: 'doc', content: [{ type: 'paragraph' }] }, created_at: '2026-11-14T10:00:00Z' });
-
-async function openTyped(page, api) {
-  api.notes = [typed()];
+/** A new notebook page at the first pages, its canvas ready to draw on. */
+async function openPage(page, api) {
   await openReader(page);
-  await openNotepad(page);
-  await panel(page).getByRole('button', { name: /^Edit note at / }).click();
-  await expect(editor(page)).toBeFocused();
+  await page.getByRole('button', { name: /^Notes/ }).click();
+  await notebook(page).getByRole('button', { name: 'New page' }).first().click();
+  await expect(notebook(page).locator('canvas.interactive')).toBeVisible({ timeout: 15_000 });
+  await expect.poll(() => api.notes.length).toBe(1);
+  await page.waitForTimeout(500);
 }
 
-test('an edit made offline is saved when the browser is back online', async ({ page, api }) => {
-  await openTyped(page, api);
+/** A rectangle on the page, right of Excalidraw's shape properties panel. */
+async function rectangle(page) {
+  await notebook(page).getByTitle(/^Rectangle —/).click();
+  const at = await notebook(page).locator('canvas.interactive').boundingBox();
+  await page.mouse.move(at.x + 360, at.y + 160);
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i += 1) await page.mouse.move(at.x + 360 + 20 * i, at.y + 160 + 10 * i);
+  await page.mouse.up();
+}
+
+test('a page changed offline is saved when the browser is back online', async ({ page, api }) => {
+  await openPage(page, api);
   api.noteFail = 'abort';
-  await page.keyboard.type('Written on the train.');
-  await expect(panel(page).locator('.rf-note').getByText('Waiting to save')).toBeVisible({ timeout: 4000 });
+  await rectangle(page);
+  await expect(notebook(page).getByRole('status').filter({ hasText: /^Offline/ })).toBeVisible({ timeout: 4000 });
+  await expect(notebook(page).getByText('Waiting to save')).toBeVisible();
   api.noteFail = null;
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await expect(panel(page).getByRole('status').filter({ hasText: 'All notes saved' })).toBeAttached();
-  expect(JSON.stringify(api.notes[0].content)).toContain('Written on the train.');
+  await expect(notebook(page).getByRole('status').filter({ hasText: /^Saved$/ })).toBeVisible();
+  expect(api.notes[0].content.elements.map((e) => e.type)).toEqual(['rectangle']);
 });
 
-test('an edit another tab saved first shows the merge prompt; Keep mine wins on the saved version', async ({ page, api }) => {
-  await openTyped(page, api);
+test('a page another tab saved first shows the merge prompt; Keep mine wins on the saved version', async ({ page, api }) => {
+  await openPage(page, api);
   api.notes[0].version = 5; // another tab saved since
-  await page.keyboard.type('Mine.');
-  const card = panel(page).locator('.rf-note').first();
-  await expect(card.getByRole('alert')).toContainText('This note changed in another tab.', { timeout: 4000 });
-  await expect(card.getByRole('button', { name: 'Use the saved one' })).toBeVisible();
-  await card.getByRole('button', { name: 'Keep mine' }).click();
-  await expect(card.getByRole('alert')).toHaveCount(0);
+  await rectangle(page);
+  const alert = notebook(page).getByRole('alert');
+  await expect(alert).toContainText('This note changed in another tab.', { timeout: 4000 });
+  await expect(alert.getByRole('button', { name: 'Use the saved one' })).toBeVisible();
+  await alert.getByRole('button', { name: 'Keep mine' }).click();
+  await expect(alert).toHaveCount(0);
   await expect.poll(() => api.notes[0].version).toBe(6);
-  expect(JSON.stringify(api.notes[0].content)).toContain('Mine.');
+  expect(api.notes[0].content.elements.map((e) => e.type)).toEqual(['rectangle']);
 });

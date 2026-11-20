@@ -2620,12 +2620,6 @@
       "language": "javascript"
     },
     {
-      "id": "file:frontend/e2e/notes-editor.spec.js",
-      "type": "file",
-      "role": "config",
-      "language": "javascript"
-    },
-    {
       "id": "file:frontend/e2e/notes-sync.spec.js",
       "type": "file",
       "role": "config",
@@ -3880,18 +3874,6 @@
       "language": "jsx"
     },
     {
-      "id": "file:frontend/src/notes/TextEditor.css",
-      "type": "file",
-      "role": "asset",
-      "language": "css"
-    },
-    {
-      "id": "file:frontend/src/notes/TextEditor.jsx",
-      "type": "file",
-      "role": "asset",
-      "language": "jsx"
-    },
-    {
       "id": "file:frontend/src/notes/autosave.js",
       "type": "file",
       "role": "asset",
@@ -3947,24 +3929,6 @@
     },
     {
       "id": "file:frontend/src/notes/markers.test.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/notes/mathNodes.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/notes/mathRules.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/notes/mathRules.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -11227,11 +11191,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/e2e/notes-editor.spec.js",
-      "to": "file:frontend/e2e/fixtures.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/e2e/notes-sync.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -12492,16 +12451,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/TextEditor.jsx",
-      "to": "file:frontend/src/notes/TextEditor.css"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/TextEditor.jsx",
-      "to": "file:frontend/src/notes/mathNodes.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/notes/autosave.test.js",
       "to": "file:frontend/src/notes/autosave.js"
     },
@@ -12527,11 +12476,6 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/notes/fromBook.js",
-      "to": "file:frontend/src/steve/answer.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/notes/fromBook.test.js",
       "to": "file:frontend/src/notes/fromBook.js"
     },
@@ -12544,21 +12488,6 @@
       "type": "imports",
       "from": "file:frontend/src/notes/markers.test.js",
       "to": "file:frontend/src/notes/markers.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/mathNodes.js",
-      "to": "file:frontend/src/notes/mathRules.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/mathNodes.js",
-      "to": "file:frontend/src/steve/math.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/notes/mathRules.test.js",
-      "to": "file:frontend/src/notes/mathRules.js"
     },
     {
       "type": "imports",

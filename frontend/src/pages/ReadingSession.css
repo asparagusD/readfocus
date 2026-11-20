@@ -68,9 +68,7 @@
 /* C23.6: three choices read best as one column, the main one first. */
 .rf-leave-actions--stack { flex-direction: column; align-items: stretch; }
 
-/* C37.2 (issue 26): with the notebook open the book sits in soft focus behind it, like a shallow depth of field:
-   a static blur and a light dim on the reader layer (inert meanwhile). Only filter and opacity move. */
-.rf-reading-chrome,
-.rf-reading-area { transition: filter var(--dur-4) var(--ease-settle), opacity var(--dur-4) var(--ease-settle); }
-.rf-reading-page[data-notebook] .rf-reading-chrome,
-.rf-reading-page[data-notebook] .rf-reading-area { filter: blur(8px); opacity: 0.82; }
+/* C37.2 (issue 26): with the notebook open the book sits in soft focus behind it, like a shallow depth of field.
+   C37.7: Motion moves it (presets.js bookRecede: scale 0.97, blur 8 px, a light dim; the toolbar blurs and dims
+   only); the book shrinks toward the 30 % still in view. */
+.rf-reading-area { transform-origin: 15% 50%; }

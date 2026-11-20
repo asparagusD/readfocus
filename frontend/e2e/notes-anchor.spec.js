@@ -3,7 +3,7 @@
 // CFI range (EPUB). "Link to current selection" moves a note's anchor. Passages with notes get a marker in the
 // margin beside them (PDF: the frame margin outside the page; EPUB: the page margin); it stays beside them after a
 // zoom, a larger text size or a narrower window, and clicking a page's marker opens the notebook at it. Mocked API.
-import { book, expect, openNotepad, openReader, test, wordPoint } from './fixtures';
+import { book, bookAtRest, expect, openNotepad, openReader, test, wordPoint } from './fixtures';
 
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const toolbar = (page) => page.getByRole('toolbar', { name: 'Highlight the selection' });
@@ -40,6 +40,7 @@ async function paperAt(page, kind, y) {
 
 /** The marker is level with `line` (its top within 14 px) and in the margin: outside a PDF page, inside an EPUB page's edge. */
 async function expectBeside(page, kind, line) {
+  await bookAtRest(page); // C37.7: the book comes forward after the notebook closes
   await expect(markers(page)).toHaveCount(1);
   const marker = await markers(page).boundingBox();
   expect(Math.abs(marker.y - line.top), `marker at ${marker.y}, line at ${line.top}`).toBeLessThanOrEqual(14);

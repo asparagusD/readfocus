@@ -110,6 +110,7 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
   }, []);
 
   useEffect(() => register?.({
+    refresh: () => api.current?.refresh(), // C37.7: the notebook has settled where it slid to
     idle: () => {
       const state = api.current?.getAppState();
       if (!state) return true;

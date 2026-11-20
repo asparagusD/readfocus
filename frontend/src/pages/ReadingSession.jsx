@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { AnimatePresence, m, useReducedMotion } from 'motion/react';
+import { bookRecede } from '../motion/presets';
 import { fetchApi } from '../lib/api';
 import { takeOpened } from '../reader/openAhead';
 import { pollWithBackoff } from '../lib/backoff';
@@ -100,6 +102,9 @@ export function ReadingSession() {
   const [notebookOpen, setNotebookOpen] = useState(false);
   const [notebookPage, setNotebookPage] = useState(null);
   const notebookOpener = useRef(null);
+  // C37.7: the book recedes as the notebook slides in (rack focus); under reduced motion it blurs in place.
+  const reduced = useReducedMotion();
+  const recede = !notebookOpen ? 'sharp' : reduced ? 'blurred' : 'receded';
   const [entries, setEntries] = useState([]);
   const [quizMeOpen, setQuizMeOpen] = useState(false); // C23.7b
   const [quizMeBusy, setQuizMeBusy] = useState(false);
@@ -506,7 +511,7 @@ export function ReadingSession() {
 
   return (
     <div className="rf-reading-page" data-focus={inFocus} data-notebook={notebookOpen || undefined}>
-      <div className="rf-reading-chrome" inert={notebookOpen}>
+      <m.div className="rf-reading-chrome" inert={notebookOpen} variants={bookRecede} initial={false} animate={recede === 'receded' ? 'blurred' : recede}>
         {inFocus ? (
           <FocusBar session={focus.session} readAt={focus.readAt} locked={focusLocked}
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
@@ -562,12 +567,12 @@ export function ReadingSession() {
           ) : null}
         </ReaderToolbar>
         )}
-      </div>
+      </m.div>
 
       <SteveContext.Provider value={steveHere ? steveActions : null}>
       <NotesContext.Provider value={notesActions}>
       <div className="rf-reading-body">
-      <main className="rf-reading-area" inert={notebookOpen}>
+      <m.main className="rf-reading-area" inert={notebookOpen} variants={bookRecede} initial={false} animate={recede}>
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
         <h1 className="sr-only">{bookTitle}</h1>
         <Reader
@@ -602,7 +607,7 @@ export function ReadingSession() {
           contents={sessionData.book?.toc}
           start={sessionData.position?.anchor}
         />
-      </main>
+      </m.main>
       {shownSide && (
         <SidePanel
           tabs={[
@@ -627,8 +632,9 @@ export function ReadingSession() {
         </SidePanel>
       )}
       </div>
+      <AnimatePresence>
       {notebookOpen && (
-        <Notebook title={bookTitle} pages={pages} state={notepad.state} statuses={notepad.statuses} range={shown}
+        <Notebook key="notebook" title={bookTitle} pages={pages} state={notepad.state} statuses={notepad.statuses} range={shown}
           describe={describeNote} current={notebookPage} onPage={setNotebookPage} onNew={newPage}
           onChange={notepad.edit} onThumbnail={notepad.attachThumbnail} onRemove={notepad.remove} onGoTo={goToNote}
           onRetry={notepad.flush} onKeepMine={notepad.keepMine} onTakeTheirs={notepad.takeTheirs} onReload={notepad.reload}
@@ -636,6 +642,7 @@ export function ReadingSession() {
           total={notepad.notes.length} onAll={openNotes} incoming={incoming} onIncoming={doneIncoming} moving={moving}
           onUpload={uploadPicture} />
       )}
+      </AnimatePresence>
       </NotesContext.Provider>
       </SteveContext.Provider>
 

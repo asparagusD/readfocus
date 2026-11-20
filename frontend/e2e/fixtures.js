@@ -461,6 +461,17 @@ export async function settled(page, away = null) {
   return JSON.parse(last);
 }
 
+/**
+ * C37.7: the book back at rest once the notebook has gone: it recedes (scale, blur, dim) while the notebook is open
+ * and comes forward over about 450 ms, so a word or a marker measured sooner is still moving.
+ */
+export async function bookAtRest(page) {
+  await expect.poll(() => page.locator('.rf-reading-area').evaluate((el) => {
+    const look = getComputedStyle(el);
+    return [look.transform, look.filter, look.opacity].join(' ');
+  })).toBe('none none 1');
+}
+
 /** The boxes of every whole-word occurrence of `w` in a document's book text (the PDF's spread, or a section's body). */
 function wordBoxes(w) {
   const root = document.querySelector('.rf-pdf-spread') ?? (document.querySelector('.rf-ov') ? null : document.body);

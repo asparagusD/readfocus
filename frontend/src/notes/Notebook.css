@@ -2,13 +2,15 @@
    (ReadingSession.css blurs it). Full screen below 760 px. Tokens only; only transform and opacity move here.
    C37.5: it looks like a notebook: a warm cover (the sheet), the book's title on a cover tab, a stitched binding,
    the page on its paper (ruled with a margin line, squared or plain) with a second sheet behind it, its number
-   and date at its foot. Every colour comes from the theme's tokens, so Lamplight follows. The rack-focus motion
-   is C37.7's. */
+   and date at its foot. Every colour comes from the theme's tokens, so Lamplight follows.
+   C37.7: Motion moves it (presets.js notebookSlide, notebookFade); leaving, clicks go through to the book. */
 .rf-notebook-layer {
   position: fixed;
   inset: 0;
   z-index: var(--z-overlay);
 }
+
+.rf-notebook-layer[data-leaving] { pointer-events: none; }
 
 /* The 30 % where the blurred book shows: a click brings the book back into focus. */
 .rf-notebook-scrim {
@@ -16,7 +18,6 @@
   inset: 0 70% 0 0;
   background-color: color-mix(in srgb, var(--ink) 8%, transparent);
   cursor: pointer;
-  animation: rf-notebook-fade var(--dur-4) var(--ease-settle) both;
 }
 
 .rf-notebook {
@@ -30,7 +31,6 @@
   background-color: var(--paper-2); /* the cover the pages sit on */
   color: var(--ink);
   box-shadow: var(--elevation-page);
-  animation: rf-notebook-in var(--dur-4) var(--ease-arrive) both;
   --nb-paper: var(--surface);
   --nb-rule: color-mix(in srgb, var(--ink) 11%, transparent);
   --nb-margin: color-mix(in srgb, var(--accent) 45%, transparent);
@@ -38,9 +38,6 @@
 
 .rf-notebook:focus { outline: none; }
 .rf-notebook:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: calc(-1 * var(--focus-ring-width)); }
-
-@keyframes rf-notebook-in { from { opacity: 0; transform: translateX(32px); } }
-@keyframes rf-notebook-fade { from { opacity: 0; } }
 
 .rf-notebook-head {
   display: flex;
@@ -315,8 +312,4 @@
   .rf-notebook-foot { flex-wrap: wrap; gap: var(--space-2); padding: var(--space-1) var(--space-2); }
   .rf-notebook-tabs { max-width: 50vw; }
   .rf-notebook-status { flex-basis: 100%; order: 3; text-align: left; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rf-notebook { animation-name: rf-notebook-fade; }
 }

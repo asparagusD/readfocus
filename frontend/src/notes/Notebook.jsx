@@ -1,6 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { m, useIsPresent, useReducedMotion } from 'motion/react';
 import { ChevronLeft, ChevronRight, ClipboardPaste, LocateFixed, NotebookPen, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { fadeIn, notebookFade, notebookSlide } from '../motion/presets';
 import { NoteState } from './Notepad';
 import { pagePaper, PAPERS, passageOf } from './drawing';
 import { serveOwnFonts } from './excalidrawFonts';
@@ -82,6 +84,9 @@ function PageTabs({ pages, current, onPick }) {
  * C37.5 (issue 26): it looks like a notebook: the book's title on a cover tab, a stitched binding, the page on its
  * paper (ruled, squared or plain, chosen per page and saved with it) with a sheet behind it, and its number and
  * date at its foot, in Paper or Lamplight.
+ * C37.7: it slides in on a spring while the book recedes (ReadingSession), inside the reader's AnimatePresence; a
+ * close midway reverses from where it is, and reopening while it leaves brings it back as it was. Leaving, it is
+ * inert and lets clicks through, and focus goes back at once; once it has settled, the editor re-reads its offsets.
  */
 export function Notebook({ title, pages, state, statuses, range, describe, current, onPage, onNew, onChange, onThumbnail,
   onRemove, onGoTo, onRetry, onKeepMine, onTakeTheirs, onReload, onClose, returnTo, beside = false, total = 0, onAll,
@@ -94,6 +99,8 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
   const [grab, setGrab] = useState(true);
   const [toolsFor, setToolsFor] = useState(null); // the editor whose tools are in hand
   const delivered = useRef(null); // the page opened with the notebook, or a new one, takes the focus; a turned page does not
+  const present = useIsPresent(); // false while it slides away
+  const reduced = useReducedMotion();
   // The page asked for, else (gone, or none yet when pages arrive) the one the notebook would open at.
   const byId = pages.find((p) => p.id === current);
   const shown = openingPage(pages, range, byId ? pageKey(byId) : current);
@@ -122,16 +129,15 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
   };
   const close = useCallback(() => { leave(); onClose(); }, [leave, onClose]);
 
-  useEffect(() => {
-    layer.current?.querySelector('.rf-notebook')?.focus({ preventScroll: true });
-    const back = returnTo;
-    return () => back?.current?.focus?.();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- once: focus on open, give it back on close
+  useEffect(() => { // focus in on opening (and on coming back mid-close), back to the opener as it starts to leave
+    if (present) layer.current?.querySelector('.rf-notebook')?.focus({ preventScroll: true });
+    else returnTo?.current?.focus?.();
+  }, [present]); // eslint-disable-line react-hooks/exhaustive-deps -- returnTo is a ref
 
   useEffect(() => {
     // Capture runs before Excalidraw's own handlers, so its state still says whether Escape is its to use.
     const onKey = (event) => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      if (!present || event.key !== 'Escape' || event.defaultPrevented) return;
       const at = document.activeElement;
       if (at && at !== document.body && !layer.current?.contains(at)) return; // Steve's panel, say
       if (layer.current?.querySelector('.rf-drawing-canvas')?.contains(event.target) && tools.current?.idle?.() === false) return;
@@ -140,7 +146,7 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [close]);
+  }, [close, present]);
 
   useEffect(() => { // C37.3: something from the book, once its page is open and its editor ready
     if (!incoming || delivered.current === incoming.n || !page || toolsFor !== editorKey) return;
@@ -176,9 +182,13 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
   };
 
   return (
-    <div className="rf-notebook-layer" ref={layer} data-beside={beside || undefined}>
-      <div className="rf-notebook-scrim" aria-hidden="true" onClick={close} />
-      <section id="rf-notebook" className="rf-notebook" role="dialog" aria-modal={!beside} aria-labelledby="rf-notebook-title" tabIndex={-1}>
+    <div className="rf-notebook-layer" ref={layer} data-beside={beside || undefined} data-leaving={!present || undefined}
+      inert={!present} aria-hidden={!present || undefined}>
+      <m.div className="rf-notebook-scrim" aria-hidden="true" onClick={close}
+        variants={fadeIn} initial="hidden" animate="visible" exit="hidden" />
+      <m.section id="rf-notebook" className="rf-notebook" role="dialog" aria-modal={!beside} aria-labelledby="rf-notebook-title" tabIndex={-1}
+        variants={reduced ? notebookFade : notebookSlide} initial="away" animate="here" exit="away"
+        onAnimationComplete={(at) => { if (at === 'here') tools.current?.refresh?.(); }}>
         <header className="rf-notebook-head">
           <div className="rf-notebook-name">
             <h2 id="rf-notebook-title" className="rf-notebook-title">Notebook</h2>
@@ -281,7 +291,7 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
         {page && (
           <NoteState status={status} onRetry={() => onRetry(page.id)} onKeepMine={() => onKeepMine(page.id)} onTakeTheirs={takeTheirs} />
         )}
-      </section>
+      </m.section>
     </div>
   );
 }

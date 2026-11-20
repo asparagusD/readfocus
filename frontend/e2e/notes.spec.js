@@ -2,7 +2,7 @@
 // the selected passage on the notebook page for this place, a second passage on the same page of the book joins it,
 // the notepad's list follows the book and a page's reference jumps back to its passage. A page changed offline is
 // saved on reconnect, and a change another tab saved first shows the merge prompt. Mocked API (fixtures.js).
-import { test, expect, openNotepad, openReader, settled, wordPoint } from './fixtures.js';
+import { test, expect, bookAtRest, openNotepad, openReader, settled, wordPoint } from './fixtures.js';
 
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const notebook = (page) => page.getByRole('dialog', { name: 'Notebook' });
@@ -15,8 +15,9 @@ async function turn(page) {
   return settled(page, before);
 }
 
-/** Drag the mouse over a passage, from the start of `from` to the end of `to`. */
+/** Drag the mouse over a passage, from the start of `from` to the end of `to` (the book at rest: C37.7). */
 async function select(page, from, to) {
+  await bookAtRest(page);
   const a = await wordPoint(page, from);
   const b = await wordPoint(page, to);
   await page.mouse.move(a.left + 1, a.y);

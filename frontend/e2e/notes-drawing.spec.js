@@ -4,7 +4,8 @@
 // it changes and leaving it exports a PNG thumbnail to the notes bucket, which the notepad's list shows without
 // Excalidraw. Pages turn by arrows or tabs; "Go to this place" turns to the page made where the book is; a click on the
 // blurred book or Escape (once Excalidraw has nothing left to do) tucks it away and it reopens where it was left.
-// Lamplight draws dark; a phone opens it full screen. Mocked API (fixtures.js).
+// Lamplight draws dark; a phone opens it full screen. C37.7: it slides in on a spring as the book recedes, a close
+// midway reverses, and under reduced motion it crossfades with no transform. Mocked API (fixtures.js).
 import { test, expect, openReader, settled } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
@@ -115,6 +116,88 @@ test('Notes opens the notebook over 70 % with the book blurred and inert; a new 
   }
   if (shots) { await page.waitForTimeout(400); await page.screenshot({ path: `${shots}/notebook-page-1440.png` }); }
   expect(far).toEqual([]);
+});
+
+/**
+ * C37.7: clicks Notes (`open`) or presses Escape (`close`) in the page and samples every frame for `ms`: the
+ * notebook's slide (px) and opacity, the book's transform, scale, blur and dim, and whether the notebook is the one
+ * that was there before (`same`, keyed by `window.rfNotebook`). In one evaluate, so no round trip falls between.
+ */
+const rack = async (page, steps) => {
+  await page.getByRole('button', { name: /^Notes/ }).evaluate((el) => { window.rfNotes = el; });
+  return page.evaluate(async (steps) => {
+  const frame = () => new Promise(requestAnimationFrame);
+  const sample = () => {
+    const nb = document.querySelector('#rf-notebook');
+    const area = getComputedStyle(document.querySelector('.rf-reading-area'));
+    const look = nb ? getComputedStyle(nb) : null;
+    return { x: look ? new DOMMatrix(look.transform).m41 : null, nbTransform: look?.transform ?? null,
+      opacity: look ? Number(look.opacity) : null, same: Boolean(nb) && nb === window.rfNotebook,
+      areaTransform: area.transform, scale: new DOMMatrix(area.transform).a, filter: area.filter, dim: Number(area.opacity) };
+  };
+  const out = [];
+  for (const [act, ms] of steps) {
+    if (act === 'open') { window.rfNotes.focus(); window.rfNotes.click(); } // as a real click would
+    else (document.activeElement ?? document.body).dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    const runs = [];
+    const until = performance.now() + ms;
+    await frame();
+    while (performance.now() < until) { runs.push(sample()); await frame(); }
+    window.rfNotebook = document.querySelector('#rf-notebook');
+    out.push(runs);
+  }
+  return out;
+  }, steps);
+};
+
+test('C37.7: the notebook slides in on a spring as the book recedes; a close midway reverses, and reopening brings it back', async ({ page }) => {
+  await openReader(page);
+  await settled(page);
+  const [opening, closing, back] = await rack(page, [['open', 140], ['close', 120], ['open', 900]]);
+  const travel = opening[0].x;
+  expect(travel).toBeGreaterThan(40); // it starts out to the right (12 % of its width)
+  const mid = opening.at(-1);
+  expect(mid.x).toBeGreaterThan(2); // still on its way when Escape came
+  expect(mid.x).toBeLessThan(travel);
+  expect(mid.scale).toBeLessThan(1); // the book is receding meanwhile
+  expect(mid.filter).toMatch(/blur\(/);
+  // The close starts from where it was, not from the end or the start, and heads back out; the book comes forward.
+  expect(Math.abs(closing[0].x - mid.x)).toBeLessThan(travel * 0.25);
+  expect(closing.at(-1).x).toBeGreaterThan(closing[0].x);
+  // the book's scale carries its momentum a frame or two, then turns back toward 1
+  expect(closing.at(-1).scale).toBeGreaterThan(Math.min(...closing.map((c) => c.scale)));
+  // Reopened while it was leaving: the same notebook turns round and settles, the book at 0.97, blurred and dimmed.
+  expect(back.every((s) => s.same)).toBe(true);
+  expect(Math.abs(back.at(-1).x)).toBeLessThan(0.5);
+  expect(back.at(-1).scale).toBeCloseTo(0.97, 3);
+  expect(back.at(-1).filter).toBe('blur(8px)');
+  expect(back.at(-1).dim).toBeCloseTo(0.82, 2);
+  await expect(notebook(page)).toBeVisible();
+  await expect(notebook(page)).toBeFocused();
+  if (shots) await page.screenshot({ path: `${shots}/notebook-rack-1440.png` });
+  // A full close: once it has gone the book has no transform or filter left (nothing fixed in it is re-parented).
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: /^Notes/ })).toBeFocused(); // at once, not after the slide
+  await expect(notebook(page)).toHaveCount(0);
+  await expect(page.locator('.rf-notebook-layer')).toHaveCount(0);
+  const area = page.locator('.rf-reading-area');
+  await expect.poll(() => area.evaluate((el) => [getComputedStyle(el).transform, getComputedStyle(el).filter, getComputedStyle(el).opacity])).toEqual(['none', 'none', '1']);
+});
+
+test('C37.7: under reduced motion the notebook crossfades and the book blurs where it is, with no transform', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openReader(page);
+  await settled(page);
+  const [opening] = await rack(page, [['open', 600]]);
+  expect(opening.every((s) => s.nbTransform === 'none' && s.areaTransform === 'none')).toBe(true);
+  expect(opening.some((s) => s.opacity > 0.05 && s.opacity < 0.95)).toBe(true); // a crossfade, not a cut
+  expect(opening.some((s) => s.dim > 0.83 && s.dim < 0.99)).toBe(true); // the book dims over time too
+  expect(opening.at(-1).filter).toBe('blur(8px)'); // the blur is kept
+  expect(opening.at(-1).opacity).toBe(1);
+  if (shots) await page.screenshot({ path: `${shots}/notebook-reduced-1440.png` });
+  await page.keyboard.press('Escape');
+  await expect(notebook(page)).toHaveCount(0);
+  await expect.poll(() => page.locator('.rf-reading-area').evaluate((el) => getComputedStyle(el).filter)).toBe('none');
 });
 
 test('leaving a page exports its thumbnail; the list shows it and opens the notebook at that page', async ({ page, api }) => {

@@ -140,6 +140,7 @@
   --dur-4: 400ms; /* question slide, chip stagger */
   --dur-5: 600ms; /* page turn, book arrives, library to reading */
   --dur-6: 800ms; /* score count-up, chart draw */
+  --dur-rack: 450ms; /* C37.7: the notebook's rack focus (a spring's visual duration) */
   --duration-micro: var(--dur-1);
   --duration-base: var(--dur-3);
   --duration-signature: var(--dur-5);

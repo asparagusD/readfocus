@@ -12389,6 +12389,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/notes/Notebook.jsx",
+      "to": "file:frontend/src/motion/presets.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/notes/Notebook.jsx",
       "to": "file:frontend/src/notes/Notebook.css"
     },
     {
@@ -13415,6 +13420,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/lib/useDocumentTitle.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/motion/presets.js"
     },
     {
       "type": "imports",

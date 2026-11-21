@@ -3032,6 +3032,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/annotations/markup.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/markup.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/annotations/paint.js",
       "type": "file",
       "role": "asset",
@@ -4593,6 +4605,12 @@
     },
     {
       "id": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/reader/MarkupTools.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -11752,6 +11770,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/annotations/markup.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/markup.test.js",
+      "to": "file:frontend/src/annotations/markup.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/annotations/paint.js",
       "to": "file:frontend/src/anchors/index.js"
     },
@@ -14059,6 +14087,26 @@
       "type": "imports",
       "from": "file:frontend/src/reader/ContentsDrawer.jsx",
       "to": "file:frontend/src/reader/PagesPanel.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/markup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/roving.js"
     },
     {
       "type": "imports",

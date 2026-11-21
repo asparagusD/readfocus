@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 992,
-    "inventoried": 849,
+    "tracked": 995,
+    "inventoried": 852,
     "excluded": 143
   },
   "files": [
@@ -3199,6 +3199,22 @@
       "purpose": "Unit tests for list.js: reading order and the colour filter without changing the input, PDF page labels and ranges, snippets."
     },
     {
+      "path": "frontend/src/annotations/markup.js",
+      "language": "javascript",
+      "lines": 23,
+      "size_bytes": 1303,
+      "role": "asset",
+      "purpose": "Edge's markup tools, pure (C39.3, issue 23): the tools in Edge's order with which are PDF only (D2), the tools a book of a kind offers, a press toggling a tool (a second press turns it off), and the status a screen reader hears."
+    },
+    {
+      "path": "frontend/src/annotations/markup.test.js",
+      "language": "javascript",
+      "lines": 20,
+      "size_bytes": 905,
+      "role": "asset",
+      "purpose": "Unit tests for markup.js: the highlighter for both kinds, toggling and switching tools, the status said."
+    },
+    {
       "path": "frontend/src/annotations/paint.js",
       "language": "javascript",
       "lines": 51,
@@ -5287,6 +5303,14 @@
       "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform. C23.1: the body-start entry labelled 'focus starts'; a footer saying where focus mode starts (printed page) with 'The book starts here'. C26.5b: no \"today\" label. C38.6a (issue 22): `docked` (from 1024 px) makes it Edge's left pane beside the pages: not a dialog, open through picks and reading, no close on a press outside, Escape only from inside it; it fades rather than slides. C38.6b: `pages` (a PDF's) adds the Pages tab (PagesPanel) between Contents and Annotations; a tab the book lacks falls back to Contents."
     },
     {
+      "path": "frontend/src/reader/MarkupTools.jsx",
+      "language": "jsx",
+      "lines": 87,
+      "size_bytes": 3928,
+      "role": "asset",
+      "purpose": "Edge's markup tools as a group in the reader's toolbar (C39.3): each tool a toggle (pressed while on, its colour a bar under the icon) and a menu button opening its options under it (Highlight: Edge's ten colours as a radio group, arrows move, Escape or a press outside closes, focus back); picking a colour turns the tool on; a live status; data-keeps-more keeps More tools open."
+    },
+    {
       "path": "frontend/src/reader/PagesPanel.jsx",
       "language": "jsx",
       "lines": 78,
@@ -5305,18 +5329,18 @@
     {
       "path": "frontend/src/reader/ReaderToolbar.css",
       "language": "css",
-      "lines": 243,
-      "size_bytes": 7729,
+      "lines": 273,
+      "size_bytes": 9271,
       "role": "asset",
       "purpose": "Toolbar styles: a fit-content surface pill with a lift shadow, hairline dividers, 44 px tools, the small and large A in Lora, the fade and 8 px lift over --dur-3, and an icon-only wrapped layout under 640 px. C17.4: .rf-tool-value and .rf-zoom-level, values hidden under 640 px. C38.4a: the page box and the Page view menu (hidden below 640 px). C38.4b: the bar across the top in three groups, the More tools panel, two rows below 640 px (the book's controls under the rest). C38.7b: the page box's \"of N\" hidden below 640 px, so an EPUB's controls fit one row. C38.7b: .rf-toolbar-reading, those tools' row in the bar or column in More tools."
     },
     {
       "path": "frontend/src/reader/ReaderToolbar.jsx",
       "language": "jsx",
-      "lines": 227,
-      "size_bytes": 12470,
+      "lines": 242,
+      "size_bytes": 13791,
       "role": "asset",
-      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place. C23.6a: a Focus mode switch (onFocusMode). C38.4b (issue 22): Edge's bar in three groups (the book and Contents; the book's own controls; Notes, Look up, Steve, Focus, the session's tools), More tools (a panel: the theme, pin, full screen, and below 1280 px Look up, Steve, Focus and the session's tools; Escape or a press outside closes it), pinned by default (unpinned it fades while reading), full screen. C38.6a: useMedia from useMedia.js; `contentsDocked`: Contents is no dialog's opener then (no aria-haspopup). C38.7b: useFits: Look up, Steve, Focus and the session's tools sit in the bar only while they fit on one row with 40 px to spare (measured with a ResizeObserver over the bar and its groups, their width kept from when last in the bar), else in More tools; was a 1280 px breakpoint, which wrapped the bar at 1280 and with an EPUB's controls. A tool used from More tools (not a switch or a pressed toggle) closes the panel, focus back on More. C38.8b: onBookmark: Save my place (B), before Notes, always in the bar."
+      "purpose": "The reader's toolbar (handoff screen 06): back to the library, book and chapter in Lora italic, smaller and larger text, Contents (aria-expanded), the theme toggle, and the caller's session controls; a floating pill that fades and lifts while reading (data-visible), reports focus inside so it stays shown; icons only on narrow screens; a 'Look up' switch (role=switch) when the page passes onLookupToggle (C12.8). C17.4: without onSize the text-size pair is left out and `controls` take its place. C23.6a: a Focus mode switch (onFocusMode). C38.4b (issue 22): Edge's bar in three groups (the book and Contents; the book's own controls; Notes, Look up, Steve, Focus, the session's tools), More tools (a panel: the theme, pin, full screen, and below 1280 px Look up, Steve, Focus and the session's tools; Escape or a press outside closes it), pinned by default (unpinned it fades while reading), full screen. C38.6a: useMedia from useMedia.js; `contentsDocked`: Contents is no dialog's opener then (no aria-haspopup). C38.7b: useFits: Look up, Steve, Focus and the session's tools sit in the bar only while they fit on one row with 40 px to spare (measured with a ResizeObserver over the bar and its groups, their width kept from when last in the bar), else in More tools; was a 1280 px breakpoint, which wrapped the bar at 1280 and with an EPUB's controls. A tool used from More tools (not a switch or a pressed toggle) closes the panel, focus back on More. C38.8b: onBookmark: Save my place (B), before Notes, always in the bar. C39.3: `markup` (MarkupTools) first in the end group while it fits; useFits measures several boxes (the markup tools leave the bar after Look up and the rest), else at the top of More tools, which a markup tool's menu keeps open."
     },
     {
       "path": "frontend/src/reader/WordCard.css",
@@ -6737,8 +6761,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 851,
-      "size_bytes": 304278,
+      "lines": 854,
+      "size_bytes": 305358,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

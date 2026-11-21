@@ -156,15 +156,16 @@ test.describe('epub', () => {
   });
 });
 
-test('the Annotations tab says when there are none, or none in a colour', async ({ page }) => {
+test('the Annotations tab says when there are none; its filter offers the colours in use', async ({ page }) => {
   await openReader(page);
   await openList(page);
   await expect(drawer(page).getByRole('tabpanel', { name: 'Annotations' })).toContainText('No highlights yet');
   await page.keyboard.press('Escape');
   await highlight(page, 'lamp', 'circle', 'Sky highlight');
   await openList(page);
-  await drawer(page).getByRole('radio', { name: 'Sage' }).click();
-  await expect(drawer(page).getByRole('tabpanel', { name: 'Annotations' })).toContainText('No sage highlights');
+  await expect(drawer(page).getByRole('radio', { name: 'Sage' })).toHaveCount(0); // C39.2: only colours in use
+  await drawer(page).getByRole('radio', { name: 'Sky' }).click();
+  await expect(items(page)).toHaveCount(1);
   await drawer(page).getByRole('radio', { name: 'All' }).click();
   await expect(items(page)).toHaveCount(1);
 });

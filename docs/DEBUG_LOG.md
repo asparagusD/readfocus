@@ -5806,3 +5806,32 @@ epub passes; the C38.4b More tools tests at 1024 and 375 pass.
 
 ### Commit
 feat(ui): give an EPUB the page box; keep the toolbar on one row
+
+## 2026-11-21 C39.2b — More colours was a 28 px button, under the toolbar's 36 px
+
+### Failure
+`npm --prefix frontend run test:e2e`: 389 passed, 1 failed: `annotations-toolbar.spec.js` "on a phone, in lamplight
+› the toolbar fits the screen and stays clear of the selection": `expect(Math.min(box.width, box.height))
+.toBeGreaterThanOrEqual(36)`, received 28.
+
+### Reproduce
+`npx playwright test e2e/annotations-toolbar.spec.js`: the same assertion, every run.
+
+### Hypotheses
+1. C39.2b's new More colours button set `min-inline-size: 28px` (a narrow chevron beside the dots) on a mouse, under
+   the handoff's 36 px for every toolbar button. Evidence: the failing button is the only 28 px one; the 375 px phone
+   test in that spec runs without touch emulation, so the 44 px touch rule did not apply. Result: confirmed.
+
+### Root cause
+`SelectionToolbar.css` gave `.rf-seltool-more` its own width (28 px, 44 px by touch) instead of the bar's button size.
+
+### Fix
+`SelectionToolbar.css`: the override removed; More colours takes the bar's 36 px (44 px by touch) like every button.
+
+### Regression test
+The failing test itself (`annotations-toolbar.spec.js`, every button at least 36 px) and `colours.spec.js` "on a
+phone" (44 px targets by touch) pass: `npx playwright test e2e/annotations-toolbar.spec.js e2e/colours.spec.js
+e2e/annotations-hover.spec.js`: 23 passed.
+
+### Commit
+feat(ui): offer Edge's colours with More colours in the toolbar and chip

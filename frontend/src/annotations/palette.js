@@ -1,8 +1,14 @@
-// The highlight palette (C21.2, handoff screen 18; docs/ANCHORS.md A8): five named colours, never hex. The
+// The highlight palette (C21.2, handoff screen 18; docs/ANCHORS.md A8): named colours, never hex. The
 // colours themselves are tokens in styles/tokens.css: --hl-<name> behind text, --ul-<name> for a 2 px
 // underline, --dot-<name> in the toolbar. Pure, so it runs under node --test.
+// C39.2 (issue 23, D3): Edge's set. The handoff's five come first and are always shown; the other five (Edge's
+// red and the deeper yellow, green, blue and pink) open with More colours. The server checks the same list.
 
-export const COLOURS = ['honey', 'sage', 'sky', 'rose', 'lilac'];
+export const COLOURS = ['honey', 'sage', 'sky', 'rose', 'lilac', 'poppy', 'amber', 'fern', 'ocean', 'berry'];
+export const FIRST_COLOURS = COLOURS.slice(0, 5);
+export const MORE_COLOURS = COLOURS.slice(5);
+/** C39.2: ink and text-box colours (tokens --mark-<name>), for C39.4's Draw and C39.6's Add text. */
+export const MARK_COLOURS = ['ink', 'poppy', 'amber', 'fern', 'ocean', 'berry', 'plum'];
 const KEY = 'rf-highlight-colour';
 
 export const colourName = (colour) => colour.charAt(0).toUpperCase() + colour.slice(1);
@@ -25,3 +31,6 @@ export function storeLastColour(colour, store = globalThis.localStorage) {
 export const newAnnotation = (place, colour, style) => ({
   anchors: place.anchors, style, color: colour, position_start: place.start, position_end: place.end,
 });
+
+/** The colours a book's annotations use, in palette order (the Annotations tab filters by these). */
+export const coloursUsed = (annotations) => COLOURS.filter((c) => annotations.some((a) => a.color === c));

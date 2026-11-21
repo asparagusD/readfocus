@@ -2468,6 +2468,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/colours.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/contents-pane.spec.js",
       "type": "file",
       "role": "config",
@@ -2973,6 +2979,12 @@
     },
     {
       "id": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/ColourDots.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -11290,6 +11302,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/colours.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/contents-pane.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11656,6 +11673,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/annotations/AnnotationChip.jsx",
+      "to": "file:frontend/src/annotations/ColourDots.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/AnnotationChip.jsx",
       "to": "file:frontend/src/annotations/SelectionToolbar.css"
     },
     {
@@ -11672,6 +11694,16 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/AnnotationChip.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/ColourDots.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/SelectionToolbar.jsx",
+      "to": "file:frontend/src/annotations/ColourDots.jsx"
     },
     {
       "type": "imports",

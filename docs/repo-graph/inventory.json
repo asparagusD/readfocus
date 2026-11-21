@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 990,
-    "inventoried": 847,
+    "tracked": 992,
+    "inventoried": 849,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 224,
-      "size_bytes": 19288,
+      "size_bytes": 19342,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2281,8 +2281,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5808,
-      "size_bytes": 274026,
+      "lines": 5837,
+      "size_bytes": 275486,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2345,8 +2345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6429,
-      "size_bytes": 1216542,
+      "lines": 6431,
+      "size_bytes": 1219497,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2409,8 +2409,8 @@
     {
       "path": "frontend/e2e/annotations.spec.js",
       "language": "javascript",
-      "lines": 170,
-      "size_bytes": 8717,
+      "lines": 171,
+      "size_bytes": 8776,
       "role": "config",
       "purpose": "E2E for C21 end to end: PDF and EPUB highlights through zoom, a resize, a text-size change and a reload; the Annotations tab's order, snippets, pages, colour filter and jump; the chip's Ask Steve (mocked) with lookup off and the word card with it on; delete; the empty states."
     },
@@ -2445,6 +2445,14 @@
       "size_bytes": 1297,
       "role": "config",
       "purpose": "E2E: an uncalibrated reader gets the pace check (intro, passage, one POST with a clamped wpm, then today's reading); a failed save shows a toast and no native dialog; 375 without sideways scroll. C26.5a: replaced: a reader with no measured pace opens the book with no pace check."
+    },
+    {
+      "path": "frontend/e2e/colours.spec.js",
+      "language": "javascript",
+      "lines": 126,
+      "size_bytes": 7306,
+      "role": "config",
+      "purpose": "E2e for C39.2's colours: More colours opens the deeper five lined up under the first, a deeper colour saves and is drawn in Paper's colour on a PDF and in an EPUB section's highlights, H then uses it, the chip shows it pressed and restyles, the Annotations filter lists the colours in use, the bar wraps inside 375 px with 44 px targets."
     },
     {
       "path": "frontend/e2e/contents-pane.spec.js",
@@ -3121,24 +3129,32 @@
     {
       "path": "frontend/src/annotations/AnnotationChip.jsx",
       "language": "jsx",
-      "lines": 111,
-      "size_bytes": 5595,
+      "lines": 107,
+      "size_bytes": 5413,
       "role": "asset",
       "purpose": "The chip on a highlight (C21.4): Ask Steve (explain_highlight with the first anchor), the five colours (current pressed), Underline and Delete, above the end of the last line; a toolbar with A / Shift+A to the next or previous highlight and Escape back to the book."
     },
     {
+      "path": "frontend/src/annotations/ColourDots.jsx",
+      "language": "jsx",
+      "lines": 32,
+      "size_bytes": 1940,
+      "role": "asset",
+      "purpose": "The colour dots of the selection toolbar and the highlight chip (C39.2, issue 23 D3): the handoff's five, then More colours, which opens Edge's red and the deeper five in a second row of one grid; open by itself when the colour in use is one of them; aria-pressed in the chip."
+    },
+    {
       "path": "frontend/src/annotations/SelectionToolbar.css",
       "language": "css",
-      "lines": 81,
-      "size_bytes": 3225,
+      "lines": 100,
+      "size_bytes": 4230,
       "role": "asset",
       "purpose": "Styles for the selection toolbar: surface, hairline and lift; 28 px dots in --dot-* with a --line-field ring, the last colour ringed; 36 px buttons (44 px on touch); rises 8 px, fade only under reduced motion; the Ask Steve word hidden under 480 px."
     },
     {
       "path": "frontend/src/annotations/SelectionToolbar.jsx",
       "language": "jsx",
-      "lines": 136,
-      "size_bytes": 6471,
+      "lines": 133,
+      "size_bytes": 6351,
       "role": "asset",
       "purpose": "The selection toolbar (C21.2, handoff screen 18): five colour dots, an Underline toggle and Ask Steve (explain_highlight) above a mouse selection or below a touch one, never on it; a colour saves at once and clears the selection; H and U from the book, Tab into the bar, arrows along it, Escape back; a polite status line."
     },
@@ -3201,18 +3217,18 @@
     {
       "path": "frontend/src/annotations/palette.js",
       "language": "javascript",
-      "lines": 27,
-      "size_bytes": 1210,
+      "lines": 36,
+      "size_bytes": 1967,
       "role": "asset",
-      "purpose": "The highlight palette (C21.2): the five handoff colour names, their spoken names, the last colour picked on this device (honey by default, storage errors ignored) and the POST body for a selection."
+      "purpose": "The highlight palette (C21.2; C39.2 Edge's set): ten colour names, the first five always shown and the other five behind More colours, the page-mark colours, their spoken names, the colours a book uses, the last colour picked on this device (honey by default, storage errors ignored) and the POST body for a selection."
     },
     {
       "path": "frontend/src/annotations/palette.test.js",
       "language": "javascript",
-      "lines": 32,
-      "size_bytes": 1491,
+      "lines": 45,
+      "size_bytes": 2231,
       "role": "asset",
-      "purpose": "Unit tests for palette.js: the five colours in order, the remembered last colour with fallbacks, the API body."
+      "purpose": "Unit tests for palette.js: the ten colours and the mark colours in order, the colours in use, the remembered last colour (a deeper one too) with fallbacks, the API body."
     },
     {
       "path": "frontend/src/annotations/roving.js",
@@ -5265,8 +5281,8 @@
     {
       "path": "frontend/src/reader/ContentsDrawer.jsx",
       "language": "jsx",
-      "lines": 184,
-      "size_bytes": 9635,
+      "lines": 187,
+      "size_bytes": 9914,
       "role": "asset",
       "purpose": "The book's contents (C12.5b, D4): a drawer from the left starting below the toolbar (a bottom sheet under 640 px), entries {key, title, today} (since C17.5 the PDF outline or EPUB nav) with a 'today' label and the current one marked; picking one calls onPick; Esc, the close button or a click outside closes it and focus returns to the Contents button; slides by transform. C23.1: the body-start entry labelled 'focus starts'; a footer saying where focus mode starts (printed page) with 'The book starts here'. C26.5b: no \"today\" label. C38.6a (issue 22): `docked` (from 1024 px) makes it Edge's left pane beside the pages: not a dialog, open through picks and reading, no close on a press outside, Escape only from inside it; it fades rather than slides. C38.6b: `pages` (a PDF's) adds the Pages tab (PagesPanel) between Contents and Annotations; a tab the book lacks falls back to Contents."
     },
@@ -6721,8 +6737,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 849,
-      "size_bytes": 303398,
+      "lines": 851,
+      "size_bytes": 304278,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -59,6 +59,22 @@
 .rf-seltool-dot:hover > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-3); }
 .rf-seltool-dot[data-last] > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-2); } /* what H and U use */
 
+/* C39.2 (issue 23, D3): the dots as one grid, the first five and More colours, the other five lined up under them
+   when it is open; the rest of the bar stays centred beside the grid. */
+.rf-seltool-colours {
+  display: grid;
+  grid-template-columns: repeat(5, auto) auto;
+  align-items: center;
+  gap: var(--space-1);
+}
+.rf-seltool .rf-seltool-more { color: var(--ink-2); } /* the bar's 36 px (44 px by touch), as every button */
+.rf-seltool-more:hover { background: var(--paper-2); }
+.rf-seltool-more > svg { transition: transform var(--dur-2) var(--ease-settle); }
+.rf-seltool-more[aria-expanded="true"] > svg { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) {
+  .rf-seltool-more > svg { transition: none; }
+}
+
 .rf-seltool .rf-seltool-btn { gap: var(--space-2); padding-inline: var(--space-2); font-size: var(--text-ui); font-weight: 500; }
 .rf-seltool-btn:hover:not(:disabled) { background: var(--paper-2); }
 .rf-seltool-btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); }
@@ -74,6 +90,9 @@
 /* Narrow screens: Ask Steve keeps its name for screen readers and drops the word, so the bar fits 375 px. */
 @media (max-width: 480px) {
   .rf-seltool-label { display: none; }
+  /* C39.2: a bar wider than the screen wraps (the colours, then the tools), inside the 16 px gutters. */
+  .rf-seltool { flex-wrap: wrap; max-inline-size: calc(100vw - 2 * var(--space-4)); }
+  .rf-seltool-sep { display: none; } /* a rule would lead a wrapped row */
 }
 /* Touch: 44 px targets. */
 @media (pointer: coarse) {

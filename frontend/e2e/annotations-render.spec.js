@@ -102,7 +102,7 @@ test.describe('epub in lamplight', () => {
   test('the page is the publisher\'s white and its text keeps the publisher\'s colours', async ({ page }) => {
     await openReader(page);
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'lamplight');
-    expect(await page.locator('.rf-ov-book').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)');
+    expect(await page.locator('.rf-epub').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)'); // C38.7a: the column
     const frame = page.frames().find((f) => f !== page.mainFrame() && !f.isDetached());
     const ink = await frame.evaluate(() => getComputedStyle(document.querySelector('p')).color);
     const [r, g, b] = ink.match(/\d+/g).map(Number);

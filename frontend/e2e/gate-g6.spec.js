@@ -38,10 +38,10 @@ for (const [key, want] of Object.entries(GATE)) {
           const found = await frame.evaluate(drawn).catch(() => null);
           if (found && found.key !== '|0') seen.set(found.key, found);
         }
+        if (await page.locator('.rf-end').count()) break; // C38.7a: the end card, its last section looked at
         const before = await page.locator('.rf-ov').getAttribute('data-end');
         await page.keyboard.press('ArrowRight');
         await page.waitForTimeout(250);
-        if (await page.locator('.rf-end').count()) break;
         await expect.poll(() => page.locator('.rf-ov').getAttribute('data-end'), { timeout: 3000 }).not.toBe(before).catch(() => {});
         if (await page.locator('.rf-ov').getAttribute('data-end') === before) break;
       }

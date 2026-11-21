@@ -5730,3 +5730,43 @@ None.
 
 ### Commit
 feat(ui): retire a PDF's footer; its page in the toolbar and the focus bar
+
+## 2026-11-21 C38.7a — a scrolled EPUB's place went stale after a jump and moved on a line at every relayout
+
+**Status:** fixed
+
+### Symptom
+With foliate's scrolled flow: after End (or any jump that left the view where it was), the reader's next scroll was
+not reported, so the place, the end of the book and its closing card stayed stale (`data-ending` never set). A resize,
+a text-size change or the side panel opening moved the place on a line each time (1:1266 to 1:1360 at 1100 px), so a
+note on the first line was no longer "here" and a reload came back a line later.
+
+### Repro
+A probe spec (scratch): open reflow.epub, End, wheel down, read `.rf-ov[data-start]`; and ArrowRight, then three
+viewport sizes, reading the start after each.
+
+### Hypotheses
+1. foliate's paginator marks the scroll after an anchoring as its own (`#justAnchored`) and skips reporting it; when
+   the anchoring did not move the view, no scroll event consumes the mark, so the reader's first scroll is skipped.
+   Evidence: `#scrollTo` calls `#afterScroll(reason)` on an unchanged position. Result: confirmed (fixed by clearing
+   the mark there).
+2. foliate's default 48 px margin offsets anchoring and the visible range. Result: part of it (margin 0 alone left the
+   drift).
+3. `getVisibleRange` counts a line as in view only when its top is below the view's top (`q.left > start`), and
+   `#scrollToRect` scrolls a line's top exactly to that edge, so the anchored line drops out. Result: confirmed.
+
+### Root cause
+Two edge cases in foliate's scrolled flow (`paginator.js`): an unmoved anchoring left the skip mark set, and anchoring
+put the line exactly on the edge the visible range excludes.
+
+### Fix
+`paginator.js` (three lines marked "ReadFocus change", recorded in the vendor README): clear the mark when the view
+did not move; scroll a pixel above the anchor's line. `engine.js`: margin 0.
+
+### Regression test
+`reader.spec.js` epub: a resize keeps the place, a text-size change and a reload keep the saved anchor, End shows the
+closing card; `notes.spec.js` epub: the note stays "here" after the side panel opens; `reading.spec.js` epub: a resize
+at the end keeps the closing card.
+
+### Commit
+feat(ui): scroll an EPUB on the desk, as a PDF; retire its paged frame

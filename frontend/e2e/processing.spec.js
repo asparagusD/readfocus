@@ -29,7 +29,13 @@ for (const kind of ['pdf', 'epub']) {
       expect(api.position.chunk_index).toBeUndefined();
       await page.reload();
       await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor({ timeout: 15_000 });
-      await expect.poll(async () => (await shown(page)).start).toBe(after.start);
+      // C38.7a: a scrolled EPUB reopens at the saved point a little inside the view (C17.6): its line, a few characters on
+      const spot = (s) => s.split(':').map(Number);
+      await expect.poll(async () => {
+        const [index, char] = spot((await shown(page)).start);
+        const [was, at] = spot(after.start);
+        return kind === 'pdf' ? index === was : index === was && char >= at && char - at <= 160;
+      }).toBe(true);
     });
   });
 }

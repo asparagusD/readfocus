@@ -8,34 +8,35 @@ const at = (spot) => (spot.includes(':') ? spot.split(':').map(Number) : Number(
 const before = (a, b) => (Array.isArray(a) ? a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]) : a < b);
 /** True when the place `spot` lies between the shown start and end. */
 const holds = ({ start, end }, spot) => !before(at(spot), at(start)) && !before(at(end), at(spot));
+/**
+ * C38.7a: the same place in view: `spot` shown, or (a scrolled EPUB re-anchored to the line at its top, which a
+ * fraction of a pixel can push out of view) a start in the same section at most two lines (160 characters) on.
+ */
+const keeps = (place, spot) => holds(place, spot) || (Array.isArray(at(spot)) && at(place.start)[0] === at(spot)[0]
+  && at(place.start)[1] >= at(spot)[1] && at(place.start)[1] - at(spot)[1] <= 160);
 
 for (const kind of ['pdf', 'epub']) {
   test.describe(`${kind}: pages and turns`, () => {
     test.use({ book: kind });
 
-    // C38.2: a PDF scrolls, so the wheel stands in for an EPUB's page edge.
-    test('arrow keys, the turn buttons and the page edge (a PDF: the wheel) move through the book', async ({ page, api }) => {
+    // C38.2: a PDF scrolls; C38.7a: an EPUB too (a screen at a time by key, the next section past a section's end).
+    test('arrow keys, Page Down and the wheel move through the book', async ({ page, api }) => {
       await openReader(page);
       const first = await settled(page);
       await book(page).focus();
       await page.keyboard.press('ArrowRight');
       const second = await settled(page, first); // each place read once its turn has landed (DEBUG_LOG C17.6)
       expect(before(at(first.start), at(second.start))).toBe(true);
-      if (kind === 'pdf') await page.keyboard.press('PageDown'); // C38.4c: the toolbar's page box, no Next button
-      else await page.getByRole('button', { name: 'Next', exact: true }).click();
+      await page.keyboard.press('PageDown'); // C38.4c, C38.7a: no Next button
       const third = await settled(page, second);
-      await book(page).focus(); // the arrow keys belong to the book; the button keeps focus after a click
       await page.keyboard.press('ArrowLeft');
-      expect(await settled(page, third)).toEqual(second);
-      if (kind === 'pdf') {
-        const area = await page.locator('.rf-pdf-book').boundingBox();
-        await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
-        await page.mouse.wheel(0, 900);
-        expect(before(at(second.start), at((await settled(page, second)).start))).toBe(true);
-      } else {
-        await page.locator('.rf-ov-edge[data-edge="forward"]').click({ force: true }); // a pointer-only target
-        expect(await settled(page, second)).toEqual(third);
-      }
+      const back = await settled(page, third);
+      if (kind === 'pdf') expect(back).toEqual(second);
+      else expect(keeps(back, second.start) || holds(back, second.end)).toBe(true); // the first section's end again
+      const area = await page.locator(kind === 'pdf' ? '.rf-pdf-book' : '.rf-epub').boundingBox();
+      await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+      await page.mouse.wheel(0, 900); // an EPUB at its first section's end: on into the next
+      expect(before(at(second.start), at((await settled(page, second)).start))).toBe(true);
       expect(api.opens).toBe(1); // C26.5: GET /books/{id}/open, no session
       expect(api.starts).toBe(0);
       expect(api.fileLoads).toBe(1);
@@ -58,7 +59,8 @@ for (const kind of ['pdf', 'epub']) {
       await page.reload();
       await openReader(page);
       expect(api.opens).toBe(2);
-      expect(holds(await shown(page), place.start)).toBe(true);
+      const back = await shown(page);
+      expect(keeps(back, place.start), `${place.start} in ${JSON.stringify(back)}`).toBe(true);
     });
 
     test('a resize keeps the same place in view', async ({ page }) => {
@@ -70,7 +72,7 @@ for (const kind of ['pdf', 'epub']) {
       for (const size of [{ width: 1100, height: 760 }, { width: 800, height: 1000 }, { width: 1440, height: 900 }]) {
         await page.setViewportSize(size);
         await page.waitForTimeout(700);
-        expect(holds(await shown(page), start), `${start} in view at ${size.width}x${size.height}`).toBe(true);
+        expect(keeps(await shown(page), start), `${start} in view at ${size.width}x${size.height}`).toBe(true);
       }
     });
 
@@ -108,28 +110,22 @@ for (const kind of ['pdf', 'epub']) {
       if (kind === 'epub') expect(during.animations).toBe(0); // C38.2: a PDF has no leaf to animate at all
     });
 
-    test("turning past the book's last page shows the closing page, and Previous comes back", async ({ page }) => {
+    test("the book's end shows its closing words, and Home goes back to the start", async ({ page }) => {
       await openReader(page);
       await book(page).focus();
-      if (kind === 'pdf') { // C38.2: the closing words sit below the last page; End scrolls to them, Home back
-        await page.keyboard.press('End');
-        await expect(page.locator('.rf-pdf-end .rf-end')).toBeInViewport();
-        await expect(spoken(page)).toHaveText('End of the book');
-        await expect(page.locator('.rf-ov-foot')).toHaveCount(0); // C38.4c: no footer on a PDF
-        await page.keyboard.press('Home');
-        await expect(spoken(page)).toHaveText(/^p\. i of 6/);
-        expect(await shown(page)).toEqual({ start: '1', end: '1' });
-        return;
+      // C38.2: a PDF's closing words sit below its last page; C38.7a: an EPUB's are a card once its end is scrolled to.
+      await page.keyboard.press('End');
+      for (let i = 0; i < 8 && kind === 'epub' && !(await page.locator('.rf-ov[data-ending]').count()); i += 1) {
+        await page.keyboard.press('PageDown'); // End opens the last section; Page Down reads to its foot
+        await page.waitForTimeout(400);
       }
-      for (let i = 0; i < 12 && !(await page.locator('.rf-end').count()); i += 1) {
-        await page.keyboard.press('ArrowRight');
-        await page.waitForTimeout(700);
-      }
+      await expect(page.locator(kind === 'pdf' ? '.rf-pdf-end .rf-end' : '.rf-epub-end .rf-end')).toBeInViewport();
       await expect(spoken(page)).toHaveText('End of the book');
-      const last = await shown(page);
-      await page.keyboard.press('ArrowLeft');
-      await expect(page.locator('.rf-end')).toHaveCount(0);
-      expect(await shown(page)).toEqual(last); // the closing page lay over the book; the book did not move
+      await expect(page.locator('.rf-ov-foot')).toHaveCount(0); // C38.4c, C38.7a: no footer
+      await page.keyboard.press('Home');
+      await expect(spoken(page)).toHaveText(kind === 'pdf' ? /^p\. i of 6/ : /^p\. 1 /);
+      if (kind === 'pdf') expect(await shown(page)).toEqual({ start: '1', end: '1' }); // its end strip stays below the last page
+      else await expect(page.locator('.rf-end')).toHaveCount(0);
     });
 
     test('a known word shows its card within 600 ms once cached, beside the word, and Esc closes it', async ({ page, api }) => {
@@ -434,12 +430,12 @@ test.describe('anchors across re-layout', () => {
       await page.getByRole('button', { name: 'Larger text' }).click();
       await page.getByRole('button', { name: 'Larger text' }).click();
       await page.waitForTimeout(800);
-      expect(holds(await shown(page), start), 'the same place after the new size').toBe(true);
+      expect(keeps(await shown(page), start), 'the same place after the new size').toBe(true);
       await expect.poll(() => api.saves, { timeout: 4000 }).toBeGreaterThan(0);
       const cfi = api.position.anchor.cfi;
       await page.reload();
       await openReader(page);
-      expect(holds(await shown(page), start), 'the same place after a reload at the new size').toBe(true);
+      expect(keeps(await shown(page), start), 'the same place after a reload at the new size').toBe(true);
       expect(api.position.anchor.cfi).toBe(cfi);
     });
   });

@@ -193,7 +193,7 @@ test.describe('epub', () => {
     const before = await shown(page);
     await ref.click();
     await settled(page, before);
-    await expect(page.locator('.rf-ov-head-entry')).toContainText('Chapter 2');
+    await expect(page.locator('.rf-toolbar-title')).toContainText('Chapter 2'); // C38.7a: no running head; the toolbar's
   });
 });
 

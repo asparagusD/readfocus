@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { easing, prefersReducedMotion, seconds } from '../motion/presets';
+import { prefersReducedMotion } from '../motion/presets';
 import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
 import { SelectionToolbar } from '../annotations/SelectionToolbar';
@@ -18,7 +17,7 @@ import { useFind } from './useFind';
 import { startPage } from './pdf/contents';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
-import { keyAction, SPREAD_MIN_WIDTH, timeAtProgress } from './frame';
+import { keyAction, SPREAD_MIN_WIDTH } from './frame';
 import { placeEnd, placeStart } from './place';
 
 /** "5" for a PDF page, "2:340" for an EPUB section and character: the place's ends, for tests and tools. */
@@ -51,39 +50,6 @@ function useWide() {
 }
 
 /**
- * One leaf turning over the page (C17.4), the same for both renderers: a sheet of
- * paper hinged at the spine fades in over the outgoing page, swings across, and
- * fades onto the other side. The renderer moves at the halfway point, under the
- * leaf, so neither renderer has to draw the next page early. Only transform and
- * opacity move, with the --dur-5 and --ease-settle tokens, through the Web
- * Animations API (an m.div leaf jumped to its end state here; DEBUG_LOG C17.4).
- */
-function TurnLeaf({ turn, wide, onMiddle, onDone }) {
-  const leaf = useRef(null);
-  const shade = useRef(null);
-  const side = wide ? (turn.dir > 0 ? 'right' : 'left') : (turn.dir > 0 ? 'single' : 'single-back');
-  useEffect(() => {
-    const duration = seconds('--dur-5') * 1000;
-    const curve = easing('--ease-settle');
-    const edge = timeAtProgress(curve, 0.5); // the leaf stands on edge: the page changes under it
-    const to = turn.dir > 0 ? -180 : 180;
-    const swing = leaf.current?.animate([{ transform: 'rotateY(0deg)' }, { transform: `rotateY(${to}deg)` }],
-      { duration, easing: `cubic-bezier(${curve.join(', ')})`, fill: 'forwards' });
-    const fade = leaf.current?.animate([{ opacity: 0 }, { opacity: 1, offset: edge * 0.6 }, { opacity: 1, offset: edge * 1.6 }, { opacity: 0 }],
-      { duration, easing: 'linear', fill: 'forwards' });
-    shade.current?.animate([{ opacity: 0 }, { opacity: 0.6, offset: edge }, { opacity: 0 }], { duration, easing: 'linear' });
-    const middle = setTimeout(onMiddle, duration * edge);
-    const done = setTimeout(onDone, duration + 60); // ends the turn even if the animation is cut short
-    return () => { clearTimeout(middle); clearTimeout(done); swing?.cancel(); fade?.cancel(); };
-  }, [turn.id]); // eslint-disable-line react-hooks/exhaustive-deps -- one leaf per turn
-  return (
-    <div ref={leaf} className="rf-ov-leaf" data-side={side} aria-hidden="true">
-      <div ref={shade} className="rf-ov-shade" data-side={side} />
-    </div>
-  );
-}
-
-/**
  * A book shown as published, PDF or EPUB, in one frame (C17.4): a spread from
  * 1024 px and one page below, the running header (title, contents entry) and the
  * ribbon outside the page, a folio under it, page turns by keys, edge clicks and
@@ -99,7 +65,9 @@ function TurnLeaf({ turn, wide, onMiddle, onDone }) {
  * `contents` (the stored books.toc) when that has pages.
  * C38.2 (issue 22): a PDF scrolls, as in Edge (PdfBook): no running header, leaf, edge zones or closing page over
  * it; Previous, Next and the page keys move a page at a time, Up and Down scroll a little, and the closing words sit
- * below its last page. An EPUB keeps the frame until C38.7. C38.4a: `pageView` is a PDF's Page view (PdfBook).
+ * below its last page. C38.7a: an EPUB scrolls too (EpubBook, foliate's scrolled flow): the running header, the leaf,
+ * the edge zones, its footer and the closing page over it are gone, and its closing words are a card at the bottom
+ * once its end is scrolled to. C38.4a: `pageView` is a PDF's Page view (PdfBook).
  * C38.4c: a PDF has no footer: the toolbar's page box names the page, `status` is a quiet note on the desk, and the
  * live region still says the page or the end.
  * C38.5: the find bar (FindBar, useFind): Ctrl+F (or `openFind()` on the ref, the toolbar's Find) opens it with
@@ -119,15 +87,10 @@ export function Reader({
   const wide = useWide();
   const book = useRef(null);
   const [place, setPlace] = useState(null);
-  const [turn, setTurn] = useState(null);
   const [failure, setFailure] = useState(null);
   const [attempt, setAttempt] = useState(0); // Try again remounts the renderer
   const swipe = useRef(null);
   const stage = useRef(null);
-  const busy = useRef(false);
-  const queued = useRef(0); // a turn asked for mid-turn runs when the leaf lands (C12)
-  const moveRef = useRef(null);
-  const [ending, setEnding] = useState(false); // the closing page is shown
   const [pulse, setPulse] = useState(null); // C22.5: { id, rects, whole } a note's passage, pulsed after a jump
   // Lookup (C17.5): where the book is drawn. A PDF is drawn in this page (its text layers in the
   // book box); an EPUB in one iframe per section shown, added as each loads.
@@ -175,14 +138,14 @@ export function Reader({
   useEffect(() => { if (place) onReady?.(); }, [Boolean(place)]); // eslint-disable-line react-hooks/exhaustive-deps -- first place only
 
   const { place: selected, dismiss: dismissSelection } = useSelection({
-    book, docs: selectionDocs, skipAt, paused: !onAnnotate || !place || opening || ending || Boolean(turn) || Boolean(failure),
+    book, docs: selectionDocs, skipAt, paused: !onAnnotate || !place || opening || Boolean(failure),
   });
 
   // C21.4: with word lookup off, a drawn annotation's chip on hover, a tap or A (Ask Steve, colour, underline, delete).
   const chipEl = useRef(null);
   const entries = useCallback(() => book.current?.annotationEntries?.() ?? [], []);
   const rectsOf = useCallback((id) => entries().find((e) => e.id === id)?.rects ?? [], [entries]);
-  const chipActive = Boolean(onAnnotate) && !hoverLookup && Boolean(place) && !opening && !ending && !turn && !failure;
+  const chipActive = Boolean(onAnnotate) && !hoverLookup && Boolean(place) && !opening && !failure;
   const { open: chipOpen, show: showChip, close: closeChip } = useAnnotationChip({
     entries, chip: chipEl, active: chipActive, blocked: Boolean(selected),
   });
@@ -204,45 +167,21 @@ export function Reader({
     if (book) stage.current?.focus();
   };
 
-  const move = useCallback(async (dir) => {
+  const move = useCallback(async (dir) => { // C38.7a: both renderers scroll (a fixed-layout EPUB turns), no leaf
     const renderer = book.current;
     if (!renderer) return false;
-    if (kind === 'pdf') return dir > 0 ? renderer.next() : renderer.prev(); // C38.2: it scrolls, no leaf
-    if (busy.current) {
-      queued.current = dir;
-      return true;
-    }
-    if (ending) {
-      if (dir > 0) return false; // the end of the book
-      setEnding(false);
-      return true; // back to the last page, which lay under it
-    }
-    if (dir > 0 && closing && place?.atEnd) {
-      setEnding(true);
-      return true;
-    }
-    if ((dir > 0 && place?.atEnd) || (dir < 0 && place?.atStart)) return false;
-    if (prefersReducedMotion()) return dir > 0 ? renderer.next() : renderer.prev();
-    busy.current = true;
-    setTurn({ id: Date.now(), dir });
-    return true;
-  }, [place, ending, closing, kind]);
-  useEffect(() => { moveRef.current = move; });
+    return dir > 0 ? renderer.next() : renderer.prev();
+  }, []);
 
   const act = useCallback((action) => {
     const renderer = book.current;
     if (!renderer) return;
     if (action === 'next') move(1);
     else if (action === 'prev') move(-1);
-    else if (action === 'first') {
-      setEnding(false);
-      renderer.first();
-    } else if (action === 'last') {
-      renderer.last();
-      if (closing && kind !== 'pdf') setEnding(true);
-    }
+    else if (action === 'first') renderer.first();
+    else if (action === 'last') renderer.last();
     else if (action === 'ribbon' && onBookmark) onBookmark(renderer.anchor());
-  }, [move, onBookmark, closing, kind]);
+  }, [move, onBookmark]);
 
   const onKey = useCallback((event) => {
     if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
@@ -265,9 +204,11 @@ export function Reader({
       event.preventDefault(); // the card opens with focus
       return;
     }
-    if (kind === 'pdf' && (event.key === 'ArrowDown' || event.key === 'ArrowUp') && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      event.preventDefault(); // C38.2: a little scroll, as in Edge
-      bookBox?.querySelector('.rf-pdf-book')?.scrollBy({ top: event.key === 'ArrowDown' ? 48 : -48 });
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault(); // C38.2: a little scroll, as in Edge (C38.7a: an EPUB too)
+      const by = event.key === 'ArrowDown' ? 48 : -48;
+      if (kind === 'pdf') bookBox?.querySelector('.rf-pdf-book')?.scrollBy({ top: by });
+      else book.current?.scrollBy?.(by);
       return;
     }
     if (event.key === 'Escape') {
@@ -352,7 +293,7 @@ export function Reader({
   const shownPlaces = useCallback(async () => (await (book.current?.shownPlaces?.() ?? [])).map((p) => ({
     ...p, label: p.label ?? (folio ? folio.split(' of ')[0] : 'this page') })), [folio]);
   useImperativeHandle(ref, () => ({
-    goTo: (anchor) => { setEnding(false); return book.current?.goTo(anchor); },
+    goTo: (anchor) => book.current?.goTo(anchor),
     find: (snippets, from) => book.current?.find(snippets, from) ?? Promise.resolve(null),
     toc: () => book.current?.toc() ?? [],
     next: () => move(1),
@@ -374,52 +315,25 @@ export function Reader({
   }), [move, flash, shownPlaces, openFind]);
 
   const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
-  const atClose = kind === 'pdf' ? Boolean(closing && place?.atEnd) : ending; // C38.2: a PDF's end is scrolled to
+  const atClose = Boolean(closing && place?.atEnd); // C38.2: the end is scrolled to (C38.7a: an EPUB's too)
   return (
     <section className="rf-ov" aria-label={label ?? title} data-wide={wide} data-kind={kind}
       data-loading={(!place || opening) && !failure}
       data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
-      data-ending={ending || undefined} data-annotations={annotations ? annotations.length : undefined}
+      data-ending={atClose || undefined} data-annotations={annotations ? annotations.length : undefined}
       data-finding={finding || undefined}
       >
-      {kind !== 'pdf' && (
-        <header className="rf-ov-head" aria-hidden="true" data-empty={!place?.entry}>
-          <span className="rf-ov-head-title">{title}</span>
-          <span className="rf-ov-head-entry">{place?.entry ?? ''}</span>
-        </header>
-      )}
       <div className="rf-ov-stage" ref={stage} tabIndex={0} onKeyDown={onKey} aria-roledescription="book"
         aria-label={kind === 'pdf' ? `${title}. Scroll, or use Page Up and Page Down to move a page at a time.`
-          : `${title}. Arrow keys, Page Up and Page Down, or Space turn the page.`}
+          : `${title}. Scroll, or use Page Up and Page Down to move a screen at a time.`}
         onPointerDown={(e) => swipeStart.current?.(e)} onPointerUp={(e) => swipeEnd.current?.(e)}
         onPointerCancel={() => { swipe.current = null; }}>
-        <div className="rf-ov-book" data-spread={wide} ref={setBookBox}>
+        <div className="rf-ov-book" ref={setBookBox}>
           {kind === 'pdf'
             ? <PdfBook key={attempt} {...shared} zoom={zoom} view={pageView} ocr={ocr} contents={contents} startPage={startPage(start)}
               end={closing && <div className="rf-end">{closing}</div>} found={finding ? finder.found : null} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} found={finding ? finder.found : null} />}
-          {turn && (
-            <TurnLeaf key={turn.id} turn={turn} wide={wide}
-              onMiddle={() => (turn.dir > 0 ? book.current?.next() : book.current?.prev())}
-              onDone={() => {
-                busy.current = false;
-                setTurn(null);
-                const next = queued.current;
-                queued.current = 0;
-                if (next) setTimeout(() => moveRef.current?.(next), 0); // after the renderer has reported its new place
-              }} />
-          )}
-          {/* The outer page edges turn an EPUB's page for a pointer; keyboard users have the keys and buttons. */}
-          {kind !== 'pdf' && (
-            <>
-              <button type="button" className="rf-ov-edge" data-edge="back" tabIndex={-1} aria-hidden="true"
-                onClick={() => move(-1)} disabled={place?.atStart} />
-              <button type="button" className="rf-ov-edge" data-edge="forward" tabIndex={-1} aria-hidden="true"
-                onClick={() => move(1)} disabled={place?.atEnd && (ending || !closing)} />
-            </>
-          )}
-          {ending && <div className="rf-ov-end" data-no-lookup><div className="rf-end">{closing}</div></div>}
-          {pulse && !turn && (
+          {pulse && (
             <div key={pulse.id} className="rf-passage-pulses" data-whole={pulse.whole || undefined} aria-hidden="true">
               {pulse.rects.map((r, i) => (
                 <span key={i} className="rf-passage-pulse" style={{ left: r.left, top: r.top, width: r.width, height: r.height }} />
@@ -430,20 +344,21 @@ export function Reader({
             // C22.4: a count circle in the margin beside each passage with notes; it opens them.
             <MarginMarkers book={book} box={bookBox} notes={notes} wide={wide} onOpen={onOpenNotes}
               layout={`${zoom}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`}
-              hidden={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
+              hidden={!place || opening || Boolean(failure)} />
           )}
-          {placing && place && !failure && !ending && (
+          {placing && place && !failure && (
             <RibbonPlacer load={shownPlaces} placeKey={`${place.start ?? ''}|${place.pages ?? ''}|${place.cfi ?? ''}`}
               onSet={placing.onSet} onCancel={placing.onCancel} />
           )}
-          {!placing && onBookmark && place && !failure && !ending && (
+          {!placing && onBookmark && place && !failure && (
             <button type="button" className="rf-ov-ribbon" onClick={() => act('ribbon')} aria-label="Save my place"
               aria-keyshortcuts="B" title="Save my place (B)">
               <span className="rf-ov-ribbon-tail" aria-hidden="true" />
             </button>
           )}
         </div>
-        {kind === 'pdf' && status && !opening && <p className="rf-ov-status">{status}</p>}
+        {status && !opening && <p className="rf-ov-status">{status}</p>}
+        {kind !== 'pdf' && atClose && <div className="rf-epub-end" data-no-lookup><div className="rf-end">{closing}</div></div>}
         {finding && place && !failure && (
           <FindBar finder={{ ...finder, close: () => { closeFind(); stage.current?.focus(); } }} />
         )}
@@ -458,22 +373,9 @@ export function Reader({
           </div>
         )}
       </div>
-      {kind !== 'pdf' && (
-      <footer className="rf-ov-foot">
-        <button type="button" className="rf-ov-turn" onClick={() => move(-1)} disabled={!place || (place.atStart && !ending)}>
-          <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" /><span>Previous</span>
-        </button>
-        <p className="rf-ov-folio">{atClose ? 'End of the book'
-          : place && !opening ? [place.folio, place.entry, status].filter(Boolean).join(' · ') : failure ? 'Not opened' : 'Opening the book…'}</p>
-        <button type="button" className="rf-ov-turn" onClick={() => move(1)}
-          disabled={!place || (place.atEnd && (kind === 'pdf' || ending || !closing))}>
-          <span>Next</span><ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
-        </button>
-      </footer>
-      )}
       {lookupClient && (
         <BookLookup ref={lookup} surfaces={surfaces} client={lookupClient} hover={hoverLookup} returnFocusTo={stage}
-          paused={!place || opening || ending || Boolean(turn) || Boolean(failure)}
+          paused={!place || opening || Boolean(failure)}
           page={place ? `${spot(placeStart(place))}-${spot(placeEnd(place))}` : ''} />
       )}
       {onAnnotate && (
@@ -487,13 +389,13 @@ export function Reader({
       {kind === 'pdf' && regions && bookBox && (
         // C20.8b: equations, code and figures offer Explain, Copy code and Copy as LaTeX.
         <PdfBlockActions box={bookBox} regions={regions} bookId={bookId} pages={shownPages}
-          paused={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
+          paused={!place || opening || Boolean(failure)} />
       )}
       {kind === 'epub' && (
         // C20.8c: the same actions in an EPUB's sections; Copy as LaTeX and Copy code stay on the device.
         <EpubBlockActions sections={sections} spineOf={(doc) => book.current?.sectionIndex?.(doc) ?? null} bookId={bookId}
           placeOf={(doc, el, text) => book.current?.elementPlace?.(doc, el, text) ?? null}
-          paused={!place || opening || ending || Boolean(turn) || Boolean(failure)} />
+          paused={!place || opening || Boolean(failure)} />
       )}
       <p className="rf-ov-live" aria-live="polite" aria-atomic="true">{atClose ? 'End of the book' : opening ? '' : place?.folio ?? ''}</p>
     </section>

@@ -883,7 +883,9 @@ export class Paginator extends HTMLElement {
     async #scrollToRect(rect, reason) {
         if (this.scrolled) {
             const offset = this.#getRectMapper()(rect).left - this.#margin
-            return this.#scrollTo(offset, reason)
+            // ReadFocus change (C38.7a): a pixel above the anchor's line, which getVisibleRange counts as in view only
+            // below the view's top edge; at the edge exactly, every relayout moved the place on a line
+            return this.#scrollTo(Math.max(0, offset - 1), reason)
         }
         const offset = this.#getRectMapper()(rect).left
         return this.#scrollToPage(Math.floor(offset / this.size) + (this.#rtl ? -1 : 1), reason)
@@ -894,6 +896,8 @@ export class Paginator extends HTMLElement {
         if (element[scrollProp] === offset) {
             this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
             this.#afterScroll(reason)
+            // ReadFocus change (C38.7a): the view did not move, so no scroll event follows to be skipped
+            this.#justAnchored = false
             return
         }
         // FIXME: vertical-rl only, not -lr
@@ -906,9 +910,12 @@ export class Paginator extends HTMLElement {
             this.#afterScroll(reason)
         })
         else {
+            const before = element[scrollProp]
             element[scrollProp] = offset
             this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
             this.#afterScroll(reason)
+            // ReadFocus change (C38.7a): clamped to where it was, the view did not move: no scroll event follows
+            if (element[scrollProp] === before) this.#justAnchored = false
         }
     }
     async #scrollToPage(page, reason, smooth) {

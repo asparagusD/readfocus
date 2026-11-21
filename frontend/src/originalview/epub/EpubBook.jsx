@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { locationAt } from '../frame';
 import { findPattern, matchesIn, searchOrder } from '../find';
+import { epubMain } from '../scroll';
 import { EpubView } from './EpubView';
 import { epubAnchor, epubPositions } from '../../anchors';
 import { epubEndPoint } from '../../focus/bookmark';
@@ -36,6 +37,8 @@ function deferred() {
  * C38.5c: find (Ctrl+F) through every section's text as packaged: `search(query, onUpdate)` in book order from the
  * section shown round the book, `showMatch` turns to the page holding a match, and `found` ({ matches, current })
  * is highlighted in each shown section's document (CSS Custom Highlights rf-find and rf-find-current, as a PDF's).
+ * C38.7a (issue 22): scrolled (engine.js): one column, so no spread and every margin marker on the right; a swipe
+ * scrolls; `scrollBy(px)` for Up and Down; the place's `main` is the location page most in view.
  */
 export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument, onError, annotations = null, found = null, ref }) {
   const [locations, setLocations] = useState(null);
@@ -48,7 +51,9 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
       kind: 'epub', cfi: place.cfi, entry: place.tocItem?.label?.trim() || null,
       index: place.index, charStart: place.charStart, charEnd: place.charEnd,
       folio: epubFolio(locs, place) ?? 'Counting pages…',
-      atStart: (place.fraction ?? 0) <= 0, atEnd: (place.fraction ?? 0) >= 0.9999,
+      // C38.7a: scrolled, the book's first section's top and last section's bottom (engine.js); paged, the fraction
+      atStart: place.atStart ?? (place.fraction ?? 0) <= 0, atEnd: place.atEnd ?? (place.fraction ?? 0) >= 0.9999,
+      main: epubMain(locs, place.index, place.charStart, place.charEnd), // the location page most in view (focus F7)
     });
   }, [onRelocate]);
 
@@ -122,8 +127,9 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
       kind: 'epub',
       next: () => later((e) => e.next()),
       prev: () => later((e) => e.prev()),
+      scrollBy: (px) => later((e) => e.scrollBy(px)), // C38.7a
       first: () => later((e) => e.goToFraction(0)),
-      last: () => later((e) => e.goToFraction(1)),
+      last: () => later((e) => e.goToEnd()), // C38.7a: the last section's foot
       // A located chunk start { index, char } (C17.5), a saved anchor { cfi }, a CFI or an href.
       goTo: (target) => later((e) => {
         if (target?.char !== undefined) return e.goToChar(target);
@@ -267,7 +273,7 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
             const line = [...range.getClientRects()].map((r) => ({ x: r.x + frame.x, y: r.y + frame.y, height: r.height, width: r.width }))
               .find((r) => r.height > 0 && r.x + r.width > within.left && r.x < within.right && r.y + r.height > within.top && r.y < within.bottom);
             if (!line) continue;
-            const side = wide && line.x + line.width / 2 < within.left + within.width / 2 ? 'left' : 'right';
+            const side = wide && !now().scrolled && line.x + line.width / 2 < within.left + within.width / 2 ? 'left' : 'right';
             out.push({ id: note.id, top: line.y, height: line.height, side });
           }
         }
@@ -291,7 +297,7 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
       },
       // C20.8c: a shown section's spine index, for the region map's EPUB places.
       sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
-      panning: () => false,
+      panning: () => Boolean(now()?.scrolled), // C38.7a: a swipe scrolls a scrolled book; a fixed layout's turns
       // The nav as one list, each entry with its section, for the contents drawer.
       toc: () => flatten(now()?.book.toc ?? []).map((item) => ({
         title: item.label?.trim() || 'Untitled', target: item.href, loc: { kind: 'epub', index: now().sectionOf(item.href) ?? 0, char: 0 },

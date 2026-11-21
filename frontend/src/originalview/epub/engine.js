@@ -9,7 +9,13 @@ import { cleanCss } from './urls';
 
 export const SPREAD_MIN_WIDTH = 1024; // two pages side by side from here up (as the C12 reader)
 const DOCUMENT_TYPES = new Set(['application/xhtml+xml', 'text/html', 'image/svg+xml']);
-export const MARGINS = { narrow: '4%', normal: '7%', wide: '11%' }; // the paginator's gap: page edges and gutter
+export const MARGINS = { narrow: '4%', normal: '7%', wide: '11%' }; // the paginator's gap: the column's side margins
+const OVERSCROLL_PX = 240; // C38.7a: wheel past a section's end (or start) this far and the next (or previous) opens
+const SWIPE_PX = 80; // the same for a swipe up (or down) at a section's end (or start)
+// C38.7a: room above a section's first line and below its last; under the book's last section enough for the end
+// of the book's card to sit under no text.
+const FLOW_CSS = 'body { padding-block: 48px 64px !important; }';
+const LAST_CSS = 'body { padding-bottom: 176px !important; }';
 
 /**
  * The extra CSS for a style mode: the publisher's own, or ours (Lora). Text size and
@@ -141,12 +147,56 @@ function guard(book, track) {
 }
 
 /**
+ * C38.7a (issue 22, D1): a scrolled section opens the next one when the reader keeps scrolling past its end (and the
+ * previous one past its start), by wheel or by swipe, so the book reads on as one scroll. `at()` says whether the
+ * view is at the section's top and bottom.
+ */
+function overscroll(renderer, at) {
+  let push = 0;
+  let calm = null;
+  let touch = null;
+  const go = (dir) => {
+    push = 0;
+    return dir > 0 ? renderer.next() : renderer.prev();
+  };
+  const onWheel = (event) => {
+    const { top, bottom } = at();
+    if (!((event.deltaY > 0 && bottom) || (event.deltaY < 0 && top))) {
+      push = 0;
+      return;
+    }
+    push += event.deltaY;
+    clearTimeout(calm);
+    calm = setTimeout(() => { push = 0; }, 400);
+    if (Math.abs(push) >= OVERSCROLL_PX) go(Math.sign(push));
+  };
+  const onTouchStart = (event) => { touch = event.touches[0]?.clientY ?? null; };
+  const onTouchEnd = (event) => {
+    const end = event.changedTouches[0]?.clientY;
+    if (touch === null || end === undefined) return;
+    const dy = touch - end; // up is forward
+    touch = null;
+    const { top, bottom } = at();
+    if ((dy > SWIPE_PX && bottom) || (dy < -SWIPE_PX && top)) go(Math.sign(dy));
+  };
+  return (target) => {
+    target.addEventListener('wheel', onWheel, { passive: true });
+    target.addEventListener('touchstart', onTouchStart, { passive: true });
+    target.addEventListener('touchend', onTouchEnd, { passive: true });
+  };
+}
+
+/**
  * Open an EPUB ({ data } or { url }) into `container`. Resolves an engine:
  * { book, isFixedLayout, next, prev, goTo, setWide, setStyle, setMargins, locations, contents, close }.
  * onRelocate(location) fires on every page change with foliate's location ({ cfi, tocItem,
  * section, ... }) plus `index` and the visible text's `charStart` and `charEnd` in that
  * section; onLoad({ doc, index }) when a section renders. `animated: false` leaves page
  * turns to the book frame; `wide` (true, false) fixes the spread instead of the box's width.
+ * C38.7a (issue 22): a reflowable book is scrolled (foliate's scrolled flow, a column at most 640 px wide), section by
+ * section, one opening the next as the reader scrolls on (overscroll); the location says `atStart` and `atEnd` (the
+ * book's first section's top, its last section's bottom), and `scrollBy(px)` moves it a little. A fixed-layout book
+ * still turns page by page.
  */
 export async function openEpub(source, container, { onRelocate, onLoad, style = 'publisher', fontSize, animated = true, wide } = {}) {
   const { makeBook } = await import('../../vendor/foliate-js/view.js'); // also defines <foliate-view>
@@ -156,14 +206,26 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
   guard(book, (url) => urls.push(url));
 
   const view = document.createElement('foliate-view');
+  const linear = book.sections.map((section, i) => (section.linear !== 'no' ? i : -1)).filter((i) => i >= 0);
   view.style.cssText = 'display:block;width:100%;height:100%';
   container.append(view);
+  let scrolled = false;
+  let shown = { index: 0, textEnd: false }; // C38.7a: the section in view, and whether its last words are
+  /** The scrolled view at its section's top and bottom (C38.7a). */
+  const edges = () => {
+    const r = view.renderer;
+    return { top: (r?.start ?? 0) <= 2, bottom: (r?.viewSize ?? 0) - (r?.end ?? 0) <= 2 };
+  };
   if (onRelocate) {
     view.addEventListener('relocate', ({ detail }) => {
       const { range } = detail;
       const body = range?.startContainer?.ownerDocument?.body;
+      const index = detail.section?.current ?? 0;
+      const { top, bottom } = scrolled ? edges() : {};
+      shown = { index, textEnd: Boolean(range) && charOffset(body, range.endContainer, range.endOffset) >= (body?.textContent.length ?? 0) };
       onRelocate({
         ...detail,
+        ...(scrolled ? { atStart: index <= linear[0] && top, atEnd: index >= linear.at(-1) && bottom } : {}),
         index: detail.section?.current ?? 0,
         charStart: range ? charOffset(body, range.startContainer, range.startOffset) : 0,
         charEnd: range ? charOffset(body, range.endContainer, range.endOffset) : 0,
@@ -176,15 +238,33 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
   const { renderer } = view;
   const paginated = !view.isFixedLayout;
   const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  if (paginated) {
-    renderer.setAttribute('flow', 'paginated');
-    renderer.setAttribute('margin', '40px');
+  if (paginated) { // C38.7a: scrolled, not paged
+    scrolled = true;
+    renderer.setAttribute('flow', 'scrolled');
+    renderer.setAttribute('margin', '0px'); // no running head: the view's top is the text's (anchors and ranges exact)
     renderer.setAttribute('gap', MARGINS.normal);
     renderer.setAttribute('max-inline-size', '640px');
-    if (animated && !reduced) renderer.setAttribute('animated', '');
-  }
-  const setWide = (wide) => paginated && renderer.setAttribute('max-column-count', wide ? '2' : '1');
-  const setStyle = (mode, options) => renderer.setStyles?.(styleFor(mode, options));
+    const watch = overscroll(renderer, edges);
+    watch(renderer);
+    // At the book's very end (its closing card in view), a relayout (a resize, a new text size) keeps it there, as a
+    // PDF's does (C38.4a); foliate would hold the line at the top instead, leaving the end below the view.
+    let atBookEnd = false;
+    renderer.addEventListener('relocate', ({ detail }) => {
+      const end = detail.index >= linear.at(-1) && edges().bottom;
+      if (atBookEnd && !end && detail.reason === 'anchor' && detail.index === linear.at(-1)) renderer.goTo({ index: detail.index, anchor: 1 });
+      else atBookEnd = end;
+    });
+    view.addEventListener('load', ({ detail }) => {
+      watch(detail.doc);
+      if (detail.index === linear.at(-1)) { // room under the book's last words for its closing card
+        const style = detail.doc.createElement('style');
+        style.textContent = LAST_CSS;
+        detail.doc.head?.append(style);
+      }
+    });
+  } else if (animated && !reduced) renderer.setAttribute('animated', '');
+  const setWide = (wide) => !scrolled && paginated && renderer.setAttribute('max-column-count', wide ? '2' : '1');
+  const setStyle = (mode, options) => renderer.setStyles?.(`${styleFor(mode, options)}${scrolled ? FLOW_CSS : ''}`);
   const setMargins = (name) => paginated && renderer.setAttribute('gap', MARGINS[name] ?? MARGINS.normal);
   setStyle(style, { fontSize });
   // `wide` from the book frame decides the spread (C17.4); without it, the box's own width does.
@@ -279,10 +359,16 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
     /** [start, end]: characters of the section's text before each end of `range` (C21.2, ANCHORS A4). */
     charsOf: (doc, range) => [charOffset(doc.body, range.startContainer, range.startOffset),
       charOffset(doc.body, range.endContainer, range.endOffset)],
-    next: () => view.next(),
+    // C38.7a: once a section's last words are in view, Next opens the next section (not the blank space below them)
+    next: () => (scrolled && shown.textEnd && shown.index < linear.at(-1)
+      ? renderer.goTo({ index: linear.find((i) => i > shown.index), anchor: 0 }) : view.next()),
     prev: () => view.prev(),
+    scrollBy: (px) => (px > 0 ? renderer.next(px) : renderer.prev(-px)), // C38.7a: a little, as Up and Down do
+    scrolled,
     goTo: (target) => view.goTo(target),
     goToFraction: (fraction) => view.goToFraction(fraction),
+    /** C38.7a: the book's last words (scrolled: the last section's foot, where its closing card shows). */
+    goToEnd: () => (scrolled ? renderer.goTo({ index: linear.at(-1), anchor: 1 }) : view.goToFraction(1)),
     lastLocation: () => view.lastLocation,
     setWide,
     setStyle,

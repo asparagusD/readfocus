@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 19064,
+      "size_bytes": 19082,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6376,
-      "size_bytes": 1196908,
+      "lines": 6377,
+      "size_bytes": 1198402,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2378,7 +2378,7 @@
       "path": "frontend/e2e/annotations-render.spec.js",
       "language": "javascript",
       "lines": 159,
-      "size_bytes": 8942,
+      "size_bytes": 8961,
       "role": "config",
       "purpose": "E2E for drawn annotations (C21.3): a PDF highlight on its words at fit and after zooming and a reload, darken in Paper and lighten in Lamplight with the token colour, a 2 px underline, nothing off the shown pages; an EPUB highlight's range through a text-size change, a resize and a reload; the lookup mark above it."
     },
@@ -2442,7 +2442,7 @@
       "path": "frontend/e2e/converted.spec.js",
       "language": "javascript",
       "lines": 60,
-      "size_bytes": 3320,
+      "size_bytes": 3372,
       "role": "config",
       "purpose": "E2E for the shared EPUB 3 builder (C19.1b): converted.epub opens in the original view's EPUB renderer with the API mocked; the contents are the builder's nav from the headings, both images load with the builder's width, height and alt ('Figure 2'), display MathML gets a box, and code keeps every space."
     },
@@ -2602,7 +2602,7 @@
       "path": "frontend/e2e/gate-g6.spec.js",
       "language": "javascript",
       "lines": 59,
-      "size_bytes": 3299,
+      "size_bytes": 3351,
       "role": "config",
       "purpose": "Gate G6 renderer walk (C19.G, a standard e2e): converted-md.epub (sample.md zipped with its figures) and converted-nb.epub (sample.ipynb), made through the upload converter by tools/make_converted_fixture.py, paged end to end in the EPUB renderer: every image loaded with alt text, every MathML equation drawn, the notebook's 'Output of cell N' captions."
     },
@@ -2682,7 +2682,7 @@
       "path": "frontend/e2e/notepad.spec.js",
       "language": "javascript",
       "lines": 219,
-      "size_bytes": 11973,
+      "size_bytes": 12015,
       "role": "config",
       "purpose": "E2E for the notepad (C22.2): Notes beside the book in book order without loading an editor, references go to their passage (PDF and EPUB), tabs and keyboard, empty and failed load, delete and Undo, a queued offline change sent on load, a stale one as a conflict with Keep mine, the phone sheet in Lamplight; C37.3: opened by the notebook's All notes, and the failed load shown by the notebook."
     },
@@ -2793,8 +2793,8 @@
     {
       "path": "frontend/e2e/processing.spec.js",
       "language": "javascript",
-      "lines": 106,
-      "size_bytes": 6576,
+      "lines": 112,
+      "size_bytes": 6934,
       "role": "config",
       "purpose": "Playwright, mocked API (C26.3): a book still being processed opens at once with no session start (PDF and EPUB), shows \"Preparing quizzes (C36.4: “Preparing the book”)… 40%\" and no Suggested next, saves its place on the book and resumes there after a reload; the notice goes once processing is done; Quiz me says the questions are being prepared and the book stays open; a focus session ended while they are prepared is kept and its questions appear when ready; at 375 the notice fits with no sideways scroll. C36.4: Quiz me on the pages read opens its quiz while the book is still prepared."
     },
@@ -2809,8 +2809,8 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 477,
-      "size_bytes": 24997,
+      "lines": 473,
+      "size_bytes": 25232,
       "role": "config",
       "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books. C24.G: the read-on test reads each place with settled(), after the turn has landed. C26.5a: opens through /open (no session), the place saved without a chunk, the closing page at the end of the book, contents with no \"today\"; the read-on-past-today test removed."
     },
@@ -4633,10 +4633,10 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 501,
-      "size_bytes": 28269,
+      "lines": 403,
+      "size_bytes": 23045,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions. C23.6b: shownPlaces() (the pages shown as ribbon places) and a `placing` prop that swaps the resting ribbon for RibbonPlacer. C23.G: Next on the closing page reads on into the book (it no longer ends there); once passed it does not come back until Home or a jump. C26.5a: the closing page is announced as \"End of the book\". C26.5b: no bounds, note or read-on: the closing page covers the book only past its last page, Home goes to the first page and End to the last. C34.2: contents and start (the saved anchor) passed to the PDF renderer. C38.2: a PDF scrolls: no running header, leaf, edge zones or closing page over it; Up and Down scroll it a little; 'End of the book' when its end is scrolled to; an EPUB keeps the frame. C38.4c: a PDF has no footer (Previous, folio, Next): the toolbar's page box names the page, the status is a quiet note on the desk, the live region still speaks. C38.5b: a PDF's find bar (FindBar, useFind): Ctrl+F or openFind() on the ref opens it with the query selected, F3 and Shift+F3 step while it is open, Escape in it closes it with focus back on the book; not inside a dialog; data-finding while open. C38.5c: the find bar for an EPUB too; Ctrl+F and F3 heard inside its sections. C38.6b: thumbnail(page, width) and pageLabelOf(page) on the ref, from a PDF's renderer."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions. C23.6b: shownPlaces() (the pages shown as ribbon places) and a `placing` prop that swaps the resting ribbon for RibbonPlacer. C23.G: Next on the closing page reads on into the book (it no longer ends there); once passed it does not come back until Home or a jump. C26.5a: the closing page is announced as \"End of the book\". C26.5b: no bounds, note or read-on: the closing page covers the book only past its last page, Home goes to the first page and End to the last. C34.2: contents and start (the saved anchor) passed to the PDF renderer. C38.2: a PDF scrolls: no running header, leaf, edge zones or closing page over it; Up and Down scroll it a little; 'End of the book' when its end is scrolled to; an EPUB keeps the frame. C38.4c: a PDF has no footer (Previous, folio, Next): the toolbar's page box names the page, the status is a quiet note on the desk, the live region still speaks. C38.5b: a PDF's find bar (FindBar, useFind): Ctrl+F or openFind() on the ref opens it with the query selected, F3 and Shift+F3 step while it is open, Escape in it closes it with focus back on the book; not inside a dialog; data-finding while open. C38.5c: the find bar for an EPUB too; Ctrl+F and F3 heard inside its sections. C38.6b: thumbnail(page, width) and pageLabelOf(page) on the ref, from a PDF's renderer. C38.7a: an EPUB scrolls too: the running header, the turning leaf (TurnLeaf), the edge zones, the footer and the closing page over the book are gone for both kinds; Next and Previous go straight to the renderer; Up and Down scroll an EPUB a little; an EPUB's closing words are a card at the foot once its end is in view; the status note for both."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -4673,10 +4673,10 @@
     {
       "path": "frontend/src/originalview/epub/EpubBook.jsx",
       "language": "jsx",
-      "lines": 307,
-      "size_bytes": 16246,
+      "lines": 313,
+      "size_bytes": 16962,
       "role": "asset",
-      "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places. C23.6b: shownPlaces(): the end of the page shown as a point CFI. C38.3: never recoloured; Paper's highlight palette in either theme. C38.5c: find: search(query, onUpdate) through each section's packaged text from the section shown round the book, showMatch turns to the page holding a match, `found` painted in each shown section's own highlight registry (rf-find, rf-find-current) in the page's find colours."
+      "purpose": "An EPUB in the book frame (C17.4): EpubView with the frame's spread, no foliate slide, type settings, lamplight CSS, locations counted once per book, folios 'p. 34 of ~210', and the renderer interface the frame calls. C17.5: index, charStart and charEnd on relocate; find(snippets) and goTo a located {index, char}, a saved {cfi}, a CFI or an href, both waiting for the engine (which can report a first place before EpubView hands it over); a collapsed point CFI as the anchor; the nav flattened as toc() with each entry's section. C17.6: selectionAnchors() (a range CFI), the reading position as a point a little inside the text shown, a saved point reopened through goToPoint. C20.8c: sectionIndex(doc) for the region map's EPUB places. C23.6b: shownPlaces(): the end of the page shown as a point CFI. C38.3: never recoloured; Paper's highlight palette in either theme. C38.5c: find: search(query, onUpdate) through each section's packaged text from the section shown round the book, showMatch turns to the page holding a match, `found` painted in each shown section's own highlight registry (rf-find, rf-find-current) in the page's find colours. C38.7a: scrolled: atStart and atEnd from the engine, `main` (the location page most in view, epubMain) for focus, a swipe scrolls, scrollBy for Up and Down, End to the last section's foot, every margin marker on the right."
     },
     {
       "path": "frontend/src/originalview/epub/EpubView.jsx",
@@ -4689,10 +4689,10 @@
     {
       "path": "frontend/src/originalview/epub/engine.js",
       "language": "javascript",
-      "lines": 299,
-      "size_bytes": 13640,
+      "lines": 385,
+      "size_bytes": 18526,
       "role": "asset",
-      "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made). C17.4: text size and line height in both styles, margins, theme CSS, animated off for the frame, wide from the frame, goToFraction, locations (character counts, cached per book), charStart and charEnd on relocate. C17.5: find(snippets) over each section's packaged text (squeezed, cached), goToChar({index, char}) in the shown section, sectionOf(href), pointCfi (a collapsed CFI); rangeAtChar exported. C17.6: cfiFor(doc, range), pointAt(index, char), goToPoint(cfi) aimed at the point's character. C38.5c: rangesOf (ranges over spans of a root's characters, one walk), sectionPlain (a section's text as packaged, read once), sectionCount and goToMatch for find."
+      "purpose": "The only importer of vendored foliate-js (C17.3), lazy: openEpub makes the book, cleans every section, SVG and stylesheet before it becomes a blob (sanitize.js, urls.js; book scripts emptied), sets paginator margin, gap, column width and one or two columns by width, applies the Publisher or ReadFocus style (Lora inside the section), and returns next, prev, goTo, setWide, setStyle, contents and close (revokes the blob URLs it made). C17.4: text size and line height in both styles, margins, theme CSS, animated off for the frame, wide from the frame, goToFraction, locations (character counts, cached per book), charStart and charEnd on relocate. C17.5: find(snippets) over each section's packaged text (squeezed, cached), goToChar({index, char}) in the shown section, sectionOf(href), pointCfi (a collapsed CFI); rangeAtChar exported. C17.6: cfiFor(doc, range), pointAt(index, char), goToPoint(cfi) aimed at the point's character. C38.5c: rangesOf (ranges over spans of a root's characters, one walk), sectionPlain (a section's text as packaged, read once), sectionCount and goToMatch for find. C38.7a (issue 22, D1): a reflowable book in foliate's scrolled flow (margin 0, a 640 px column, 48 px above and 64 px below each section, 176 px under the last for its closing card): overscroll (wheel past 240 px, a swipe past 80 px) opens the next or previous section; once a section's last words are in view Next opens the next; atStart and atEnd from the first section's top and the last's foot; a view at the book's end stays there through a relayout; scrollBy(px) and goToEnd()."
     },
     {
       "path": "frontend/src/originalview/epub/epub.css",
@@ -4761,10 +4761,10 @@
     {
       "path": "frontend/src/originalview/frame.css",
       "language": "css",
-      "lines": 497,
-      "size_bytes": 15850,
+      "lines": 399,
+      "size_bytes": 12372,
       "role": "asset",
-      "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion. C17.5: the note card over the foot of today's first page, the closing page over the book with its lamp's single pulse, and the blank page over the renderer while a session opens. C17.5: the lookup mark (::highlight rf-lookup) and no iOS callout on a held word. C38.2: a PDF on the desk (paper-2) with each page's hairline and lift, the closing words below the last page, its ribbon over the desk; the spread, gutter and pan cursors gone. C38.3: in Lamplight an EPUB's page is the publisher's white, and the spine shade Paper's. C38.4c: a PDF's status note at the desk's lower left. C38.5b: the find bar over the book's top right, left of the ribbon; across the top on a phone, the ribbon moved below it. C38.5c: an EPUB's ribbon drops below the find bar while it is open."
+      "purpose": "The original view's frame (C17.4, handoff 11-12): running header above the page, the stage and book box (EPUB paper; a PDF spread is its own paper with a gutter shade), the turning leaf and its shade, edge zones, the ribbon outside the paper's right edge (following a PDF's measured spread), the footer with Previous, folio and Next, error and loading pages, 1023 and 640 px layouts, reduced motion. C17.5: the note card over the foot of today's first page, the closing page over the book with its lamp's single pulse, and the blank page over the renderer while a session opens. C17.5: the lookup mark (::highlight rf-lookup) and no iOS callout on a held word. C38.2: a PDF on the desk (paper-2) with each page's hairline and lift, the closing words below the last page, its ribbon over the desk; the spread, gutter and pan cursors gone. C38.3: in Lamplight an EPUB's page is the publisher's white, and the spine shade Paper's. C38.4c: a PDF's status note at the desk's lower left. C38.5b: the find bar over the book's top right, left of the ribbon; across the top on a phone, the ribbon moved below it. C38.5c: an EPUB's ribbon drops below the find bar while it is open. C38.7a: an EPUB on the desk as one scrolled column of paper (48rem, hairlines, the publisher's white in Lamplight), its closing card; the running header, spine shade, edge zones, footer, turn buttons and closing page's rules gone; the ribbon over the desk for both kinds."
     },
     {
       "path": "frontend/src/originalview/frame.js",
@@ -5753,8 +5753,8 @@
     {
       "path": "frontend/src/vendor/foliate-js/README.md",
       "language": "markdown",
-      "lines": 23,
-      "size_bytes": 1032,
+      "lines": 34,
+      "size_bytes": 1639,
       "role": "asset",
       "purpose": "Vendored foliate-js: source, commit 78914aef4466, licences (MIT; zip.js BSD-3-Clause), the files copied unchanged and the ReadFocus stubs, the one importer (engine.js), how to update."
     },
@@ -5817,8 +5817,8 @@
     {
       "path": "frontend/src/vendor/foliate-js/paginator.js",
       "language": "javascript",
-      "lines": 1130,
-      "size_bytes": 44222,
+      "lines": 1137,
+      "size_bytes": 44844,
       "role": "asset",
       "purpose": "Vendored foliate-js (MIT, commit 78914aef4466, unchanged; see the folder README): the reflowable renderer: one section per iframe in CSS columns, margins, gap, column count, image fitting, animation."
     },
@@ -6674,7 +6674,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 843,
-      "size_bytes": 297111,
+      "size_bytes": 298437,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

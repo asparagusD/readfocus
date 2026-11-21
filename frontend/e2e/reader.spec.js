@@ -1,6 +1,5 @@
 // The reader end to end (C12.10; on the original view since C17.5), on the real /read page with the
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
-import { writeFileSync, mkdirSync } from 'node:fs';
 import { book, contentsPane, expect, openReader, settled, shown, spoken, test, timeToCard, wake, wordPoint } from './fixtures.js';
 
 /** "5" -> 5; "2:340" -> [2, 340]. */
@@ -189,31 +188,6 @@ for (const kind of ['pdf', 'epub']) {
         expect(box.y >= lamp.bottom || box.y + box.height <= lamp.top, 'the sheet leaves the word uncovered').toBe(true);
         expect(await shown(page)).toEqual(before); // no page turn
       });
-    });
-
-    test('page-turn frame rate (recorded in docs/BENCHMARKS.md)', async ({ page }, info) => {
-      await openReader(page);
-      await book(page).focus();
-      await page.evaluate(() => {
-        window.__frames = [];
-        const tick = (t) => { window.__frames.push(t); window.__raf = requestAnimationFrame(tick); };
-        window.__raf = requestAnimationFrame(tick);
-      });
-      const from = await page.evaluate(() => performance.now());
-      for (let i = 0; i < 4; i += 1) {
-        await page.keyboard.press(i < 2 ? 'ArrowRight' : 'ArrowLeft');
-        await page.waitForTimeout(800);
-      }
-      const frames = await page.evaluate((t0) => { cancelAnimationFrame(window.__raf); return window.__frames.filter((t) => t >= t0); }, from);
-      const gaps = frames.slice(1).map((t, i) => t - frames[i]);
-      const seconds = (frames.at(-1) - frames[0]) / 1000;
-      const turn = { frames: frames.length, seconds: +seconds.toFixed(2), fps: +(gaps.length / seconds).toFixed(1),
-        worstFrameMs: +Math.max(...gaps).toFixed(1), over33ms: gaps.filter((g) => g > 33.4).length };
-      const result = { date: new Date().toISOString(), browser: info.project.use.channel ?? 'chromium', book: kind, turn };
-      mkdirSync('test-results', { recursive: true });
-      writeFileSync(`test-results/reader-benchmarks-${kind}.json`, JSON.stringify(result, null, 2));
-      console.log(JSON.stringify(result));
-      expect(turn.fps).toBeGreaterThan(30);
     });
   });
 }

@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 // E2E for the reader and word lookup (C12.10). Runs on the installed Microsoft Edge (no browser
 // download) against a production build under `vite preview`, with every backend and Supabase call
 // answered by e2e/fixtures.js: offline, $0, no account. Not a standard check yet.
-const FRAME_RATE = /frame rate/; // the page-turn bench (C12.10) and the notebook's (C37.8)
+const FRAME_RATE = /frame rate/; // the scroll bench (C38.10, once the page-turn bench of C12.10) and the notebook's (C37.8)
 
 export default defineConfig({
   testDir: './e2e',
@@ -21,7 +21,7 @@ export default defineConfig({
     trace: process.env.CI ? 'retain-on-failure' : 'off',
     screenshot: process.env.CI ? 'only-on-failure' : 'off',
   },
-  // The page-turn frame-rate benchmark runs with no recorder: a trace's screencast takes frames from the page it
+  // The frame-rate benchmarks run with no recorder: a trace's screencast takes frames from the page it
   // measures (on a 2-CPU Linux runner, 60 fps fell to 20.7; DEBUG_LOG 2026-11-17 C25.5). Recording settings
   // cannot change inside a spec file, so the benchmark is its own project.
   projects: [

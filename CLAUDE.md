@@ -11,7 +11,9 @@ sessions).
   the reader.
 - **Blazing fast**: reading, tests and grading never wait on a remote model.
 - **$0 API cost**: algorithmic or local; Steve uses Gemini's free tier or a reader's key.
-- **Cozy and sophisticated UI** that feels like reading a real book.
+- **Cozy and sophisticated UI**; the book reads as in Edge's PDF viewer (C38,
+  issue 22): as published, scrolled on a desk, with Edge's toolbar, find, pane
+  and keys, and our bookmark.
 - Built in a **27-hour sprint**, split into chunks (C0, C1, ...) and
   subchunks (C1.1, C1.2, ...).
 

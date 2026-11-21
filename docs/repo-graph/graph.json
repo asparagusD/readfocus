@@ -2728,6 +2728,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/shell.spec.js",
       "type": "file",
       "role": "config",
@@ -11381,6 +11387,16 @@
       "type": "imports",
       "from": "file:frontend/e2e/results.spec.js",
       "to": "file:frontend/e2e/testSession.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",

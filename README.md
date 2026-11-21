@@ -64,12 +64,17 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    cover comes from Open Library. A scanned PDF's pages are read with
    text recognition (tesseract.js) in your browser.
 3. **Open.** A book opens at your last place, or its first page if it is
-   new, and every page turn saves the place. There is no session to start,
+   new, and the place is saved as you read. There is no session to start,
    no plan for the day and no pace check (removed in C26; the planner's
    code is kept but no longer runs).
 4. **Read.** The book opens as published (PDF.js for PDFs, foliate-js for
-   EPUBs: images, figures, math and code as printed), two pages on a wide
-   screen, one on a phone. Hover or select a
+   EPUBs: images, figures, math and code as printed) and reads as in Microsoft
+   Edge's PDF viewer (C38): its pages scrolled on a desk (an EPUB as one column,
+   chapter after chapter), white in either theme, with Edge's toolbar (zoom, the
+   page box, one or two pages across, Find with Ctrl+F, full screen, pin), a
+   pane beside the pages for the contents, page thumbnails and your highlights,
+   and Edge's keys (Ctrl+G, Ctrl+Alt+G, Ctrl+\\, Ctrl+= and Ctrl+-); Save my place
+   (or B) keeps a small ribbon by the place. Hover or select a
    word for a card with its definition (Free Dictionary API) or a
    Wikipedia summary. Highlight or underline a passage, and write and
    draw in the book's notebook (Excalidraw pages over 70 % of the screen,

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 986,
-    "inventoried": 843,
+    "tracked": 987,
+    "inventoried": 844,
     "excluded": 143
   },
   "files": [
@@ -97,8 +97,8 @@
     {
       "path": "CLAUDE.md",
       "language": "markdown",
-      "lines": 222,
-      "size_bytes": 19136,
+      "lines": 224,
+      "size_bytes": 19288,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -121,8 +121,8 @@
     {
       "path": "README.md",
       "language": "markdown",
-      "lines": 303,
-      "size_bytes": 15332,
+      "lines": 308,
+      "size_bytes": 15756,
       "role": "doc",
       "purpose": "Product overview (C15.4, phase 2 in C25.1): the honest positioning (algorithmic quizzes, grading, planning and scoring on our servers; Steve alone uses Google's Gemini, opt-in, free tier or the reader's key), live URL, how it works in nine steps (upload and conversion, plan, the original view, focus, Steve, test, grade, adapt, progress), the architecture in brief, local setup, the standard and live checks, and limitations."
     },
@@ -2241,8 +2241,8 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "language": "markdown",
-      "lines": 487,
-      "size_bytes": 32219,
+      "lines": 506,
+      "size_bytes": 33747,
       "role": "doc",
       "purpose": "Architecture (C15.4, phase 2 in C25.1): the system with Gemini for Steve only, the five agents' pure decide() contracts, the LangGraph diagram, event flows per endpoint, ingestion, conversions to EPUB, the region map, the data model through migration 033, the original view (PDF.js, foliate-js, OCR; the book view retired), word lookup, annotations, notes, Steve, focus mode, XP and leagues, and the security layers."
     },
@@ -2257,8 +2257,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 1909,
-      "size_bytes": 111132,
+      "lines": 1944,
+      "size_bytes": 113670,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6381,
-      "size_bytes": 1205109,
+      "lines": 6382,
+      "size_bytes": 1206401,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2809,10 +2809,10 @@
     {
       "path": "frontend/e2e/reader.spec.js",
       "language": "javascript",
-      "lines": 518,
-      "size_bytes": 27851,
+      "lines": 492,
+      "size_bytes": 26332,
       "role": "config",
-      "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books. C24.G: the read-on test reads each place with settled(), after the turn has landed. C26.5a: opens through /open (no session), the place saved without a chunk, the closing page at the end of the book, contents with no \"today\"; the read-on-past-today test removed. C38.7b: an EPUB's page box (of ~5, a typed page goes to its start, one the book lacks puts it back)."
+      "purpose": "Playwright e2e for the reader (C12.10; on the original view since C17.5), each on sample.pdf and the illustrated reflow.epub: page turns by keys, button and edge (a turn asked for mid-turn queued); the place saved as a PDF or EPUB anchor and restored after a reload; the same place in view across resizes; no animated leaf under reduced motion; End to today's closing page and a mouse click on its Start test; turning past today's end and back; page-turn frame rate written to test-results; once: the session row at 375, the clock's Start and Resume, one h1, the PDF outline in the contents with today labelled. Lookup (C17.5), on both: a cached word's card within 600 ms beside the word, closed by Esc and by moving off it; a 2-5 word phrase; the compact sheet from a long-press at 375; once: a proper noun's Wikipedia summary (PDF), words in an EPUB figure not looked up, hover off with Enter on a selection still opening a focused card. C17.6: an EPUB's saved anchor reopens the same place after a larger text size and a reload; a PDF zoomed to 200% and back keeps its page and anchor. C17 close: the ribbon and B save the place at once with a toast, on both books. C24.G: the read-on test reads each place with settled(), after the turn has landed. C26.5a: opens through /open (no session), the place saved without a chunk, the closing page at the end of the book, contents with no \"today\"; the read-on-past-today test removed. C38.7b: an EPUB's page box (of ~5, a typed page goes to its start, one the book lacks puts it back). C38.10: the page-turn frame-rate bench removed (scroll-frame-rate.spec.js replaces it)."
     },
     {
       "path": "frontend/e2e/reading.spec.js",
@@ -2829,6 +2829,14 @@
       "size_bytes": 10066,
       "role": "config",
       "purpose": "Playwright e2e for results (C13.6): from the test (score, summary, verdict, outcomes, answer without the letter, feedback and quote, chips, next session and Start next session), a low-confidence grade, opened fresh (rebuilt from GET /sessions/{id} and GET /books/{id}, in that order), not graded yet, a failed load with Try again, and 375 px; with and without reduced motion, the count-up and the chips."
+    },
+    {
+      "path": "frontend/e2e/scroll-frame-rate.spec.js",
+      "language": "javascript",
+      "lines": 120,
+      "size_bytes": 6092,
+      "role": "config",
+      "purpose": "The scroll bench (C38.10, the frame-rate project; replaces the page-turn bench): a 300-page PDF served like Storage scrolled by the wheel and by Page Down at 1x and 4x CPU, the pages drawn, the JS heap when opened, after 60 pages and at the end; the EPUB fixture scrolled through its sections. Recorded in docs/BENCHMARKS.md."
     },
     {
       "path": "frontend/e2e/shell.spec.js",
@@ -2954,7 +2962,7 @@
       "path": "frontend/playwright.config.js",
       "language": "javascript",
       "lines": 37,
-      "size_bytes": 1709,
+      "size_bytes": 1732,
       "role": "config",
       "purpose": "Playwright config (C12.10): e2e/ on the installed Microsoft Edge (channel msedge, no browser download), headless at 1440x900, against a production build served by vite preview on port 4174; one worker; ignores journey.spec.js (live, opt-in, C15.1); ignores phase2_journey.spec.js (live, C25.3). C37.8: the frame-rate project takes the notebook bench too."
     },
@@ -6689,8 +6697,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 845,
-      "size_bytes": 301809,
+      "lines": 846,
+      "size_bytes": 302270,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

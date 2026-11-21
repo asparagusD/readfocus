@@ -18,6 +18,7 @@ import { FindBar } from './FindBar';
 import { useFind } from './useFind';
 import { startPage } from './pdf/contents';
 import { PdfBook } from './pdf/PdfBook';
+import { ADD_TEXT_EVENT } from '../annotations/textbox';
 import { skipPdfPoint } from './pdf/regions';
 import { keyAction, readerShortcut, SPREAD_MIN_WIDTH } from './frame';
 import { placeEnd, placeStart } from './place';
@@ -85,7 +86,7 @@ function useWide() {
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, eraser = null, annotations = null,
+  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, eraser = null, textBoxes = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
   placing = null, contents = null, start = null, pageView = 'one', mark = null,
 }) {
@@ -220,6 +221,11 @@ export function Reader({
       event.preventDefault();
       return;
     }
+    if (markup?.tool === 'text' && textBoxes && event.key === 'Enter' && kind === 'pdf' && place?.main) {
+      event.preventDefault(); // C39.6: Add text by keyboard: a box in the middle of the page most in view
+      window.dispatchEvent(new CustomEvent(ADD_TEXT_EVENT, { detail: { page: place.main } }));
+      return;
+    }
     if (lookupClient && (event.key === 'Enter' || event.key === '?') && lookup.current?.lookUpSelection()) {
       event.preventDefault(); // the card opens with focus
       return;
@@ -240,7 +246,7 @@ export function Reader({
     if (!action || (action === 'ribbon' && !onBookmark)) return;
     event.preventDefault();
     act(action);
-  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip, onNewNote, kind, bookBox]);
+  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip, onNewNote, kind, bookBox, markup, textBoxes, place]);
 
   const onKeyRef = useRef(null);
   const swipeStart = useRef(null);
@@ -363,6 +369,7 @@ export function Reader({
             ? <PdfBook key={attempt} {...shared} zoom={zoom} view={pageView} ocr={ocr} contents={contents} startPage={startPage(start)}
               marks={marks} ink={markup?.tool === 'draw' && onStroke ? { ...markup.ink, onStroke } : null}
               eraser={eraser && ['draw', 'erase'].includes(markup?.tool) ? { ...eraser, on: markup.tool === 'erase' } : null}
+              textBoxes={markup?.tool === 'text' ? textBoxes : null}
               end={closing && <div className="rf-end">{closing}</div>} found={finding ? finder.found : null} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} found={finding ? finder.found : null} />}
           {pulse && (

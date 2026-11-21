@@ -3,6 +3,7 @@ import { spansFor } from './ocr';
 import { loadPdfjs } from './pdfjs';
 import { pdfBoxes } from '../../annotations/paint';
 import { InkLayer } from './InkLayer';
+import { TextBoxes } from './TextBoxes';
 import './pdf.css';
 
 /**
@@ -16,7 +17,7 @@ import './pdf.css';
  * C39.4: `marks` (ink strokes near the view) are drawn over the text layer by InkLayer, which takes the pointer while
  * Draw is on (`ink`).
  */
-export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null, annotations = null, marks = null, ink = null, eraser = null }) {
+export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null, annotations = null, marks = null, ink = null, eraser = null, textBoxes = null }) {
   const [reading, setReading] = useState(false);
   const root = useRef(null);
   const sheet = useRef(null);
@@ -93,6 +94,11 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', oc
         <InkLayer page={pageNumber} size={size} ink={ink} eraser={eraser}
           marks={(marks ?? []).filter((m) => m.page === pageNumber && m.kind === 'ink')}
           highlights={(annotations ?? []).filter((a) => a.anchors?.some((x) => x.kind === 'pdf' && x.page === pageNumber))} />
+      )}
+      {size && (marks || textBoxes) && (
+        // C39.6: text boxes over the ink, taking the pointer while Add text is on.
+        <TextBoxes page={pageNumber} size={size} text={textBoxes}
+          boxes={(marks ?? []).filter((m) => m.page === pageNumber && m.kind === 'text')} />
       )}
       {reading && <p className="rf-pdf-ocr" role="status">Making this page selectable…</p>}
     </div>

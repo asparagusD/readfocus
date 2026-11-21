@@ -78,15 +78,16 @@ test('the menu picks a colour and turns the highlighter on; keys move through it
 });
 
 test.describe('fit', () => {
-  test('at 1280 the tools sit in the bar, Look up and the rest in More tools, on one row; at 1024 in More tools', async ({ page }) => {
-    // Your decision at C39.3 (2026-11-21): when room runs short the markup tools keep their place, as in Edge.
-    await page.setViewportSize({ width: 1280, height: 800 });
+  test('at 1366 the tools sit in the bar, Look up and the rest in More tools, on one row; at 1280 in More tools', async ({ page }) => {
+    // Your decision at C39.3 (2026-11-21): when room runs short the markup tools keep their place, as in Edge. With
+    // four tools (C39.6) the group is 260 px: in the bar from 1366, in More tools at 1280 and below.
+    await page.setViewportSize({ width: 1366, height: 800 });
     await openReader(page);
     const bar = page.getByRole('toolbar', { name: 'Reading controls' });
     await expect(bar.locator('.rf-toolbar-end > .rf-toolbar-markup')).toHaveCount(1);
     await expect(bar.locator('.rf-toolbar-end > .rf-toolbar-reading')).toHaveCount(0);
     expect((await bar.boundingBox()).height).toBeLessThan(64); // one row
-    await page.setViewportSize({ width: 1024, height: 800 });
+    await page.setViewportSize({ width: 1280, height: 800 });
     await expect(bar.locator('.rf-toolbar-end > .rf-toolbar-markup')).toHaveCount(0);
     await expect(highlighter(page)).toBeHidden(); // in More tools
     expect((await bar.boundingBox()).height).toBeLessThan(64);

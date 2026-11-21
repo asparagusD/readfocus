@@ -5901,3 +5901,31 @@ The spec read the status in the bar at a width where it now sits in More tools.
 
 ### Commit
 feat(ui): draw ink on PDF pages with Edge's Draw tool
+
+## 2026-11-22 C39.6b — with Add text the markup tools left the bar at 1280
+
+### Failure
+`npx playwright test e2e/markup-tools.spec.js`: "fit › at 1280 the tools sit in the bar…":
+`.rf-toolbar-end > .rf-toolbar-markup` expected 1, received 0.
+
+### Reproduce
+That test, every run; a probe at 1280, 1366 and 1440 (a PDF): the group 260 px wide, in More tools at 1280, in the bar
+at 1366 and 1440, the bar one row at each.
+
+### Hypotheses
+1. Add text is the fourth tool, so the group (260 px) no longer fits beside the book's controls at 1280 even with Look
+   up and the rest in More tools; useFits moves it, by design (your decision at C39.3: the markup tools keep their place
+   while they fit). Result: confirmed by the probe.
+
+### Root cause
+The test's width (1280) was chosen for two tools; with four the group fits from 1366.
+
+### Fix
+`markup-tools.spec.js`: the group in the bar at 1366 and in More tools at 1280. No product change (the 44 px targets
+stay).
+
+### Regression test
+`npx playwright test e2e/markup-tools.spec.js`: 5 passed.
+
+### Commit
+feat(ui): add text boxes to PDF pages with Edge's Add text tool

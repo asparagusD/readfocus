@@ -2846,6 +2846,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/textbox.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/time-zone.spec.js",
       "type": "file",
       "role": "config",
@@ -4341,6 +4347,12 @@
     },
     {
       "id": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/TextBoxes.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -11705,6 +11717,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/textbox.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/time-zone.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -13101,6 +13118,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/textbox.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/annotations/useAnnotationChip.js"
     },
     {
@@ -13411,6 +13433,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/TextBoxes.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
     {
@@ -13422,6 +13449,16 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/originalview/pdf/pdfjs.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/TextBoxes.jsx",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/TextBoxes.jsx",
+      "to": "file:frontend/src/annotations/textbox.js"
     },
     {
       "type": "imports",
@@ -13861,6 +13898,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/textbox.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/annotations/useAnnotations.js"
     },
     {
@@ -14287,6 +14329,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/MarkupTools.jsx",
       "to": "file:frontend/src/annotations/roving.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/textbox.js"
     },
     {
       "type": "imports",

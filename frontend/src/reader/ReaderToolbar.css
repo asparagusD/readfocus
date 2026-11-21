@@ -76,7 +76,8 @@
   border-radius: var(--radius-pill);
   background: var(--c-dot);
 }
-.rf-markup-swatch[data-mark-colour] { background: var(--c-mark); } /* C39.4: Draw's ink */
+.rf-markup-swatch[data-mark-colour] { background: var(--c-mark); box-shadow: 0 0 0 1px var(--line-2); } /* C39.4: Draw's
+   ink; the hairline keeps the near-black ink seen on Lamplight's dark bar (C39.6) */
 .rf-markup .rf-markup-menu-button { min-width: 24px; padding: 0 2px; color: var(--ink-2); }
 .rf-markup-menu {
   position: absolute;

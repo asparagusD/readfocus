@@ -31,6 +31,7 @@ import { useAnnotations } from '../annotations/useAnnotations';
 import { useMarkupTool } from '../annotations/useMarkupTool';
 import { usePageMarks } from '../annotations/usePageMarks';
 import { erasedSummary, newStroke } from '../annotations/ink';
+import { newTextBox } from '../annotations/textbox';
 import { MarkupTools } from '../reader/MarkupTools';
 import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
@@ -197,6 +198,21 @@ export function ReadingSession() {
   const inFocus = !pagesOnly && focus.enabled;
   const markup = useMarkupTool(kind, !inFocus); // C39.3: Edge's markup tools; off while focus mode has the toolbar
   const pageMarks = usePageMarks(bookId, kind, place?.kind === 'pdf' ? place.pages : null); // C39.4: ink near the view
+  // C39.6: Add text's boxes: a new one saved and selected, one retyped saved, one emptied deleted with an Undo.
+  const [selectedBox, setSelectedBox] = useState(null);
+  const textBoxes = {
+    style: markup.textStyle,
+    selected: selectedBox,
+    onSelect: setSelectedBox,
+    onPlace: (page, at, value) => pageMarks.create(newTextBox(page, at, value, markup.textStyle))
+      .then((saved) => saved && setSelectedBox(saved.id)),
+    onEdit: (id, data) => pageMarks.change(id, { data }),
+    onRemove: (id) => {
+      const gone = pageMarks.erase([id]);
+      setSelectedBox(null);
+      if (gone.length) toast({ kind: 'neutral', message: 'Text box deleted.', action: { label: 'Undo', onClick: () => pageMarks.restore(gone) } });
+    },
+  };
   // C39.5: the eraser takes strokes and highlights away as it passes; when the drag ends one toast offers one Undo.
   const erased = useRef({ marks: [], annotations: [] });
   const eraser = {
@@ -625,7 +641,8 @@ export function ReadingSession() {
           onBookmark={() => reader.current?.saveMark?.()}
           markup={(
             <MarkupTools tools={markup.tools} tool={markup.tool} onTool={markup.choose} colour={markup.colour}
-              onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} status={markup.status} />
+              onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} text={markup.textStyle}
+              onText={markup.setTextStyle} status={markup.status} />
           )}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
@@ -697,6 +714,7 @@ export function ReadingSession() {
           marks={pageMarks.marks}
           onStroke={(page, points) => pageMarks.create(newStroke(page, points, markup.ink))}
           eraser={eraser}
+          textBoxes={textBoxes}
           annotations={notes.annotations}
           onAnnotationChange={notes.update}
           onAnnotationDelete={notes.remove}

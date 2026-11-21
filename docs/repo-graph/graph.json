@@ -3104,6 +3104,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/annotations/textbox.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/textbox.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/annotations/useAnnotationChip.js",
       "type": "file",
       "role": "asset",
@@ -6112,6 +6124,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/annotations/usePageMarks.js",
       "to": "endpoint:GET /books/{book_id}/marks"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
+      "to": "endpoint:PATCH /marks/{mark_id}"
     },
     {
       "type": "calls_endpoint",
@@ -11883,6 +11900,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/annotations/textbox.test.js",
+      "to": "file:frontend/src/annotations/textbox.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/annotations/useAnnotationChip.js",
       "to": "file:frontend/src/annotations/hover.js"
     },
@@ -11910,6 +11932,11 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/useMarkupTool.js",
       "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useMarkupTool.js",
+      "to": "file:frontend/src/annotations/textbox.js"
     },
     {
       "type": "imports",

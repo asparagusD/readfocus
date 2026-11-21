@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toolStatus, toolsFor } from './markup';
 import { readInk, storeInk } from './ink';
+import { readTextStyle, storeTextStyle } from './textbox';
 import { COLOUR_EVENT, lastColour, MARK_COLOURS, storeLastColour } from './palette';
 
 /**
@@ -9,6 +10,7 @@ import { COLOUR_EVENT, lastColour, MARK_COLOURS, storeLastColour } from './palet
  * selection toolbar, and kept in step with them), and what a screen reader is told. Escape anywhere outside a field
  * or a dialog turns the tool off, as does `active` going false (focus mode takes the toolbar's place).
  * C39.4: Draw's ink colour and thickness (`ink`, `setInk`), kept on this device.
+ * C39.6: Add text's colour, size and width (`textStyle`, `setTextStyle`), kept on this device.
  */
 export function useMarkupTool(kind, active = true) {
   const tools = useMemo(() => toolsFor(kind), [kind]);
@@ -16,14 +18,20 @@ export function useMarkupTool(kind, active = true) {
   const [colour, setColourNow] = useState(lastColour);
   const [status, setStatus] = useState('');
   const [ink, setInkNow] = useState(() => readInk(MARK_COLOURS));
+  const [textStyle, setTextStyleNow] = useState(() => readTextStyle(MARK_COLOURS));
 
   const choose = useCallback((next) => {
     setTool(next);
-    setStatus(toolStatus(next, { colour: lastColour(), ink: readInk(MARK_COLOURS) }));
+    setStatus(toolStatus(next, { colour: lastColour(), ink: readInk(MARK_COLOURS), text: readTextStyle(MARK_COLOURS) }));
   }, []);
   const setInk = useCallback((change) => setInkNow((now) => {
     const next = { ...now, ...change };
     storeInk(next);
+    return next;
+  }), []);
+  const setTextStyle = useCallback((change) => setTextStyleNow((now) => {
+    const next = { ...now, ...change };
+    storeTextStyle(next);
     return next;
   }), []);
   const setColour = useCallback((next) => storeLastColour(next), []); // COLOUR_EVENT brings it back here
@@ -51,5 +59,5 @@ export function useMarkupTool(kind, active = true) {
     if (!active) setTool(null);
   }
 
-  return { tools, tool, choose, colour, setColour, ink, setInk, status };
+  return { tools, tool, choose, colour, setColour, ink, setInk, textStyle, setTextStyle, status };
 }

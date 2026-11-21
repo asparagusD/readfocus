@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { locationAt } from '../frame';
+import { locationAt, locationPlace } from '../frame';
 import { findPattern, matchesIn, searchOrder } from '../find';
 import { epubMain } from '../scroll';
 import { EpubView } from './EpubView';
@@ -39,6 +39,8 @@ function deferred() {
  * is highlighted in each shown section's document (CSS Custom Highlights rf-find and rf-find-current, as a PDF's).
  * C38.7a (issue 22): scrolled (engine.js): one column, so no spread and every margin marker on the right; a swipe
  * scrolls; `scrollBy(px)` for Up and Down; the place's `main` is the location page most in view.
+ * C38.7b: the place also carries `page` (that page), `total` and `approx` for the toolbar's page box, and
+ * goTo({ location }) goes to the start of a counted page.
  */
 export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument, onError, annotations = null, found = null, ref }) {
   const [locations, setLocations] = useState(null);
@@ -54,6 +56,8 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
       // C38.7a: scrolled, the book's first section's top and last section's bottom (engine.js); paged, the fraction
       atStart: place.atStart ?? (place.fraction ?? 0) <= 0, atEnd: place.atEnd ?? (place.fraction ?? 0) >= 0.9999,
       main: epubMain(locs, place.index, place.charStart, place.charEnd), // the location page most in view (focus F7)
+      // C38.7b: the toolbar's page box: that page of the counted ones (approximate: they count characters)
+      ...(locs ? { page: epubMain(locs, place.index, place.charStart, place.charEnd), total: locs.total, approx: true } : {}),
     });
   }, [onRelocate]);
 
@@ -132,6 +136,10 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
       last: () => later((e) => e.goToEnd()), // C38.7a: the last section's foot
       // A located chunk start { index, char } (C17.5), a saved anchor { cfi }, a CFI or an href.
       goTo: (target) => later((e) => {
+        if (target?.location !== undefined) { // C38.7b: a typed page of the page box
+          const at = locationPlace(counted.current, target.location);
+          return at ? e.goToChar(at) : null;
+        }
         if (target?.char !== undefined) return e.goToChar(target);
         if (target?.cfi && !target.cfi.includes(',')) return e.goToPoint(target.cfi); // a saved point
         return e.goTo(target?.cfi ?? target);

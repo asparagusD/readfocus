@@ -471,3 +471,44 @@ test('leaving a PDF for the library shows the library, with no page error', asyn
   expect(errors.filter((e) => /destroy|failed to render/.test(e))).toEqual([]);
   await expect(page.getByText('A page failed to render')).toHaveCount(0);
 });
+
+// C38.7b (issue 22): an EPUB's page box: its counted pages ("of ~5": reflow.epub's 6,085 characters at 1,500 a page),
+// the page most in view, a typed page goes to its start; one the book does not have puts the page back.
+test.describe('epub page box', () => {
+  test.use({ book: 'epub' });
+
+  test('shows the counted page in view and goes to a typed one', async ({ page }) => {
+    await openReader(page);
+    const box = page.getByRole('textbox', { name: 'Page number, of about 5' });
+    await expect(box).toHaveValue('1');
+    await expect(page.getByRole('toolbar', { name: 'Reading controls' })).toContainText('of ~5');
+    await box.fill('3');
+    await box.press('Enter');
+    await expect.poll(async () => (await shown(page)).start.split(':')[0]).toBe('2'); // chapter 2 holds page 3's start
+    await expect(box).toHaveValue('3');
+    await box.fill('99');
+    await box.press('Enter');
+    await expect(box).toHaveValue('3');
+  });
+});
+
+// C38.7b: the toolbar stays one row on a wide screen: Look up, Steve, Focus and Quiz me go into More tools when they
+// do not fit (at 1280 they wrapped the bar; with an EPUB's text controls and page box, at 1440 too), and nothing moves
+// once the book is open.
+for (const kind of ['pdf', 'epub']) {
+  test.describe(`${kind} toolbar on one row`, () => {
+    test.use({ book: kind });
+    test('at 1280 and 1440 the bar is one row, the tools that do not fit in More tools', async ({ page }) => {
+      for (const width of [1280, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        await openReader(page);
+        const bar = page.getByRole('toolbar', { name: 'Reading controls' });
+        await expect.poll(async () => (await bar.boundingBox()).height, `${kind} at ${width}`).toBeLessThan(70);
+        const lookUp = page.getByRole('switch', { name: 'Look up words on hover' });
+        if (!(await lookUp.isVisible())) await expect(page.getByRole('button', { name: 'More tools' })).toBeVisible();
+        await page.waitForTimeout(600);
+        expect((await bar.boundingBox()).height, `${kind} at ${width}, settled`).toBeLessThan(70);
+      }
+    });
+  });
+}

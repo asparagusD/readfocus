@@ -5,6 +5,47 @@ import { SIZES } from './textSize';
 import { useMedia } from './useMedia';
 import './ReaderToolbar.css';
 
+/** The width a group's laid-out children take (those in the flow, not `skip`), with the gaps between them. */
+function contentWidth(group, skip = null) {
+  if (!group) return 0;
+  const kids = [...group.children].filter((el) => el !== skip && el.offsetWidth > 0 && getComputedStyle(el).position !== 'absolute');
+  const gap = parseFloat(getComputedStyle(group).columnGap) || 0;
+  return kids.reduce((sum, el) => sum + el.offsetWidth, 0) + gap * Math.max(0, kids.length - 1);
+}
+
+/**
+ * C38.7b: whether Look up, Steve, Focus and the session's tools fit in the bar on one row beside everything else,
+ * measured (the book's title, its controls and the notes count all change what fits), not guessed from the width.
+ * `reading` is their box; its width is kept from when it was last in the bar, so the answer does not flip once they
+ * move into More tools.
+ */
+const SPARE = 40; // px kept free, so a notes count or a longer chapter name moves the tools before the bar wraps
+
+function useFits(bar, reading) {
+  const [fits, setFits] = useState(true);
+  const width = useRef(0);
+  useEffect(() => {
+    const el = bar.current;
+    if (!el || typeof ResizeObserver !== 'function') return undefined;
+    const measure = () => {
+      const [start, middle, end] = ['.rf-toolbar-start', '.rf-toolbar-middle', '.rf-toolbar-end'].map((s) => el.querySelector(s));
+      const inBar = reading.current?.parentElement === end; // not in More tools, which sits inside the end group
+      if (inBar) width.current = reading.current.offsetWidth;
+      const style = getComputedStyle(el);
+      const gap = parseFloat(style.columnGap) || 0;
+      const room = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 2 * gap;
+      const endGap = parseFloat(getComputedStyle(end).columnGap) || 0;
+      const need = contentWidth(start) + contentWidth(middle) + contentWidth(end, inBar ? reading.current : null) + width.current + endGap;
+      setFits(need + SPARE <= room);
+    };
+    const watch = new ResizeObserver(measure);
+    watch.observe(el);
+    for (const group of el.children) watch.observe(group);
+    return () => watch.disconnect();
+  }, [bar, reading]);
+  return fits;
+}
+
 /** Full screen for the whole page (C38.4b): whether it is on, kept current, and a toggle; null where it is not allowed. */
 function useFullScreen() {
   const [on, setOn] = useState(() => Boolean(globalThis.document?.fullscreenElement));
@@ -29,7 +70,8 @@ function useFullScreen() {
  * own. Pinned (`pinned`, `onPin`; the default) it stays shown; unpinned it fades and lifts 8 px while the reader reads
  * (`visible`), and focus inside keeps it shown, so it is always reachable by keyboard. Without `onSize` the
  * text-size pair is left out and `controls` (the original view's, C17.4) take its place. `onSteve` adds Steve (C20.7b).
- * C38.6a: `contentsDocked`: Contents opens a pane beside the pages, not a dialog.
+ * C38.6a: `contentsDocked`: Contents opens a pane beside the pages, not a dialog. C38.7b: Look up, Steve, Focus and the
+ * session's tools sit in the bar only when they fit on one row (useFits), else in More tools (was: from 1280 px).
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
@@ -38,7 +80,10 @@ export function ReaderToolbar({
 }) {
   const index = SIZES.indexOf(size);
   const full = useFullScreen();
-  const roomy = useMedia('(min-width: 1280px)'); // room in the bar for Look up, Steve, Focus and the session's tools
+  const bar = useRef(null);
+  const readingBox = useRef(null);
+  const fits = useFits(bar, readingBox);
+  const roomy = useMedia('(min-width: 640px)') && fits; // room in the bar for Look up, Steve, Focus and the session's tools
   const [more, setMore] = useState(false);
   const moreButton = useRef(null);
   const panel = useRef(null);
@@ -59,7 +104,7 @@ export function ReaderToolbar({
 
   // Look up, Steve, Focus and the session's own controls: in the bar when there is room, else in More tools.
   const reading = (
-    <>
+    <div className="rf-toolbar-reading" ref={readingBox}>
       {onLookupToggle && (
         // Handoff: a "Look up" switch. Off stops hover lookup; a selection with Enter or ? still works.
         <button type="button" role="switch" aria-checked={lookupOn} className="rf-tool rf-switch"
@@ -85,11 +130,12 @@ export function ReaderToolbar({
         </button>
       )}
       {children}
-    </>
+    </div>
   );
 
   return (
     <div
+      ref={bar}
       className="rf-toolbar"
       role="toolbar"
       aria-label="Reading controls"
@@ -144,7 +190,13 @@ export function ReaderToolbar({
           aria-expanded={more} aria-controls="rf-toolbar-more" aria-label="More tools">
           <Ellipsis size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
-        <div id="rf-toolbar-more" className="rf-toolbar-more" ref={panel} data-open={more || undefined}>
+        <div id="rf-toolbar-more" className="rf-toolbar-more" ref={panel} data-open={more || undefined}
+          onClick={(event) => { // C38.7b: a tool used from the panel (not a switch or toggle) closes it; focus on More
+            const tool = event.target.closest('button');
+            if (!tool || tool.hasAttribute('aria-pressed') || tool.getAttribute('role') === 'switch') return;
+            setMore(false);
+            moreButton.current?.focus(); // a dialog the tool opens takes focus after this
+          }}>
           {!roomy && reading}
           <ThemeToggle />
           {onPin && (

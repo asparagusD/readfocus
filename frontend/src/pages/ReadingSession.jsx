@@ -547,7 +547,7 @@ export function ReadingSession() {
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
             onStart={startFocus} onPause={() => focusDo(focus.pause, '')} onResume={() => focusDo(focus.resume, '')}
             onEnd={endFocus} onLeave={focus.readOnly ? () => navigate('/') : leaveFocus} onAnswerIdle={focus.answerIdle}
-            placing={placingRibbon} readOnly={focus.readOnly} folio={kind === 'pdf' ? place?.folio : null}
+            placing={placingRibbon} readOnly={focus.readOnly} folio={place?.folio ?? null}
             onNotes={() => openNotebook()} notesOpen={notebookOpen} notesRef={notesButton}
             notesCount={notepad.notes.length} onSteve={steveHere ? () => toggleSide('steve', steveButton) : undefined}
             steveOpen={steveOpen} steveRef={steveButton} />
@@ -562,7 +562,8 @@ export function ReadingSession() {
           onFocusChange={setToolbarFocused}
           controls={(
             <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
-              place={place} onGoToPage={(page) => reader.current?.goTo({ kind: 'pdf', page })} pageView={pageView} onPageView={setPageView}
+              place={place} onGoToPage={(page) => reader.current?.goTo(kind === 'pdf' ? { kind: 'pdf', page } : { location: page })}
+              pageView={pageView} onPageView={setPageView}
               onFind={() => reader.current?.openFind?.()} />
           )}
           onContents={openContents}

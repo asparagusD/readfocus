@@ -5770,3 +5770,39 @@ at the end keeps the closing card.
 
 ### Commit
 feat(ui): scroll an EPUB on the desk, as a PDF; retire its paged frame
+
+## 2026-11-21 C38.7b — an EPUB's margin marker sat 44 px below its passage after the notebook closed
+
+**Status:** fixed
+
+### Symptom
+The full e2e run for C38.7b: 379 passed, 1 failed. `notes-anchor.spec.js` (epub) "Add note starts a page at the
+selection…": "marker at 177.2, line at 132.7", 44.5 px apart, on every run.
+
+### Repro
+`npx playwright test e2e/notes-anchor.spec.js:65` (3 of 3), and a probe logging the first line's top, the place and
+the toolbar's height while the notebook opens.
+
+### Hypotheses
+1. The new page box (C38.7b) widened the EPUB's toolbar until, at 1440 px, the Notes count badge wrapped it onto two
+   rows; the book lost 48 px, foliate re-anchored and the text moved. Evidence: removing the page box made the probe
+   steady; the toolbar 54 to 102 px tall as the notebook opened. Result: confirmed (also: at 1280 the bar wrapped for
+   both kinds already, missed by C38.4b's 1440 and 1024 review).
+2. A fit check would move the tools out, but its first version flipped every frame: More tools sits inside the end
+   group, so "in the bar" was true for the closed panel and cached a width of 0. Evidence: logged need and room
+   alternating 1351 and 962. Result: confirmed.
+
+### Root cause
+`ReaderToolbar.jsx` put Look up, Steve, Focus and the session's tools in the bar from a fixed 1280 px, whatever the
+title, the book's controls or the notes count left room for, so the bar wrapped and every wrap re-laid out the book.
+
+### Fix
+`ReaderToolbar.jsx` `useFits`: the tools sit in the bar only while they fit on one row with 40 px to spare (a
+ResizeObserver over the bar and its groups; their width kept from when they were last directly in the end group).
+
+### Regression test
+`reader.spec.js` "toolbar on one row" (pdf, epub, at 1280 and 1440, still one row once settled); `notes-anchor.spec.js`
+epub passes; the C38.4b More tools tests at 1024 and 375 pass.
+
+### Commit
+feat(ui): give an EPUB the page box; keep the toolbar on one row

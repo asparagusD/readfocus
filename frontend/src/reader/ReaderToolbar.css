@@ -31,6 +31,9 @@
 
 .rf-toolbar-end { justify-content: flex-end; }
 .rf-toolbar-middle { display: flex; align-items: center; gap: var(--space-1); }
+/* C38.7b: Look up, Steve, Focus and the session's tools, in the bar while they fit, else a column in More tools. */
+.rf-toolbar-reading { display: flex; align-items: center; gap: var(--space-1) var(--space-2); }
+.rf-toolbar-more .rf-toolbar-reading { flex-direction: column; align-items: stretch; gap: var(--space-1); }
 
 /* "More tools": a panel under the bar, at the right; its tools with their names. */
 .rf-toolbar-more { display: none; }
@@ -178,6 +181,7 @@
    the session's own controls take one row under them, instead of the pill
    wrapping into three rows over the page. */
 @media (width < 640px) {
+  .rf-page-total, /* C38.7b: the page box's "of N" (its label still says it), so an EPUB's controls fit one row */
   .rf-tool-label,
   .rf-tool-value,
   .rf-toolbar-title,

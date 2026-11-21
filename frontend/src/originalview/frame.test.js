@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildLocations, entryForPage, keyAction, locationAt, pdfFolio, pdfScale, timeAtProgress, zoomStep,
+  buildLocations, entryForPage, keyAction, locationAt, locationPlace, pdfFolio, pdfScale, timeAtProgress, zoomStep,
 } from './frame.js';
 
 test('zoom: fit-page and fit-width from the frame; percentages are of the printed size', () => {
@@ -41,6 +41,18 @@ test('EPUB locations: stable page numbers from character counts, computed once',
   assert.equal(locationAt(locs, 3, 99999), 7); // never past the last
   assert.equal(locationAt(null, 2, 10), null);
   assert.deepEqual(buildLocations([], 1500), { starts: [], chars: [], total: 1, perPage: 1500 });
+});
+
+test('C38.7b: a location page back to its section and character, for the page box', () => {
+  const locs = buildLocations([0, 3000, 1500, 4600], 1500);
+  assert.deepEqual(locationPlace(locs, 1), { index: 1, char: 0 }); // the empty first section is skipped
+  assert.deepEqual(locationPlace(locs, 2), { index: 1, char: 1500 });
+  assert.deepEqual(locationPlace(locs, 3), { index: 2, char: 0 });
+  assert.deepEqual(locationPlace(locs, 4), { index: 3, char: 0 });
+  assert.deepEqual(locationPlace(locs, 7), { index: 3, char: 4500 });
+  assert.deepEqual(locationPlace(locs, 99), { index: 3, char: 4500 }); // clamped to the last page
+  assert.equal(locationAt(locs, ...Object.values(locationPlace(locs, 5))), 5); // and back again
+  assert.equal(locationPlace(null, 2), null);
 });
 
 test('keys: arrows, Page Up/Down, Space and Shift+Space turn; Home, End and B', () => {

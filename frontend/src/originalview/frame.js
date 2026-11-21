@@ -53,6 +53,24 @@ export function locationAt(locations, index, charsBefore) {
   return Math.min(locations.total, page);
 }
 
+/**
+ * C38.7b: where location page `page` (1-based, as locationAt counts) begins: { index, char } in the section holding
+ * its first character (empty sections skipped), the page clamped to the book; null before locations exist.
+ */
+export function locationPlace(locations, page) {
+  if (!locations?.chars?.length) return null;
+  const offset = (Math.min(Math.max(1, Math.round(page)), locations.total) - 1) * locations.perPage;
+  let last = null;
+  for (let index = 0; index < locations.chars.length; index += 1) {
+    const size = locations.chars[index];
+    if (!size) continue;
+    const start = locations.starts[index];
+    if (offset < start + size) return { index, char: Math.max(0, offset - start) };
+    last = { index, char: size - 1 };
+  }
+  return last;
+}
+
 /** What a key does in the book; null leaves it to the browser (modifier shortcuts, typing). */
 export function keyAction({ key, shiftKey = false, ctrlKey = false, metaKey = false, altKey = false }) {
   if (ctrlKey || metaKey || altKey) return null;

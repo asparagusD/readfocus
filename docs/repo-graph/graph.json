@@ -2734,6 +2734,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/shortcuts.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/steve-blocks.spec.js",
       "type": "file",
       "role": "config",
@@ -11383,6 +11389,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/shortcuts.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/steve-blocks.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -13630,6 +13641,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/bookFile.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
     },
     {
       "type": "imports",

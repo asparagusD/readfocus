@@ -22,6 +22,32 @@ export function zoomStep(zoom, dir) {
   return ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, at + dir))];
 }
 
+/** C38.9: an EPUB's text sizes, and the next one in or out (Ctrl+= and Ctrl+-, the toolbar's A and A), stopping at the ends. */
+export const FONT_SIZES = [14, 16, 18, 20, 22, 24];
+export function fontStep(size, dir) {
+  const at = FONT_SIZES.indexOf(size);
+  return FONT_SIZES[Math.min(FONT_SIZES.length - 1, Math.max(0, (at < 0 ? FONT_SIZES.indexOf(18) : at) + dir))];
+}
+
+/**
+ * C38.9 (issue 22): Edge's reader shortcuts, from a keydown: 'find' (Ctrl+F), 'find-next' and 'find-prev' (Ctrl+G,
+ * Ctrl+Shift+G), 'go-to-page' (Ctrl+Alt+G), 'fit' (Ctrl+\), 'zoom-in' and 'zoom-out' (Ctrl+= or Ctrl++, Ctrl+-); Cmd
+ * for Ctrl on a Mac. Null for anything else, Ctrl+0 and the wheel too: the browser's own zoom is left alone.
+ */
+export function readerShortcut({ key = '', code = '', ctrlKey = false, metaKey = false, shiftKey = false, altKey = false }) {
+  if (!ctrlKey && !metaKey) return null;
+  if (code === 'KeyG' || key.toLowerCase() === 'g') {
+    if (altKey) return shiftKey ? null : 'go-to-page';
+    return shiftKey ? 'find-prev' : 'find-next';
+  }
+  if (altKey) return null;
+  if ((code === 'KeyF' || key.toLowerCase() === 'f') && !shiftKey) return 'find';
+  if ((code === 'Backslash' || key === '\\') && !shiftKey) return 'fit';
+  if (code === 'Equal' || code === 'NumpadAdd' || key === '=' || key === '+') return 'zoom-in';
+  if (code === 'Minus' || code === 'NumpadSubtract' || key === '-' || key === '_') return 'zoom-out';
+  return null;
+}
+
 export const zoomLabel = (zoom) => (zoom === 'fit-page' ? 'Fit page' : zoom === 'fit-width' ? 'Fit width' : `${Math.round(zoom * 100)}%`);
 
 /** "p. 5 of 300" or "pp. 44–45 of 380", using the PDF's own page labels when it has them. */

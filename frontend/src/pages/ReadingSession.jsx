@@ -10,6 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Reader } from '../originalview/Reader';
 import { fromOpenedBook } from '../originalview/bookFile';
 import { ReaderControls } from '../originalview/ReaderControls';
+import { fontStep, readerShortcut, zoomStep } from '../originalview/frame';
 import { createRegionSource } from '../originalview/pdf/regions';
 import { createOcrSource } from '../originalview/pdf/ocr';
 import { folioShort } from '../originalview/place';
@@ -204,6 +205,30 @@ export function ReadingSession() {
     saveNow({ anchor });
     toast({ kind: 'neutral', message: `Place saved at ${folioShort(place?.folio) || 'this page'}.` });
   }, [saveNow, toast, place]);
+
+  // C38.9 (issue 22): Edge's keys for the book's view: Ctrl+Alt+G the page box, Ctrl+\ fit page or width, Ctrl+= and
+  // Ctrl+- zoom a PDF (an EPUB's text size); the browser's own zoom (Ctrl+0, the wheel) is left alone.
+  const pageInput = useRef(null);
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.defaultPrevented || event.target?.closest?.('[role="dialog"], textarea, [contenteditable="true"]')) return;
+      const shortcut = readerShortcut(event);
+      if (shortcut === 'go-to-page' && pageInput.current) {
+        event.preventDefault();
+        pageInput.current.focus();
+      } else if (shortcut === 'fit' && kind === 'pdf') {
+        event.preventDefault();
+        setZoom(zoom === 'fit-page' ? 'fit-width' : 'fit-page');
+      } else if (shortcut === 'zoom-in' || shortcut === 'zoom-out') {
+        event.preventDefault();
+        const dir = shortcut === 'zoom-in' ? 1 : -1;
+        if (kind === 'pdf') setZoom(zoomStep(zoom, dir));
+        else setSettings({ ...settings, fontSize: fontStep(settings.fontSize ?? 18, dir) });
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [kind, zoom, settings, setZoom, setSettings]);
 
   // C38.6a (issue 22): from 1024 px the contents are Edge's left pane, beside the pages; below, the drawer.
   const docked = useMedia('(min-width: 1024px)');
@@ -566,7 +591,7 @@ export function ReadingSession() {
             <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
               place={place} onGoToPage={(page) => reader.current?.goTo(kind === 'pdf' ? { kind: 'pdf', page } : { location: page })}
               pageView={pageView} onPageView={setPageView}
-              onFind={() => reader.current?.openFind?.()} />
+              onFind={() => reader.current?.openFind?.()} pageInput={pageInput} />
           )}
           onContents={openContents}
           contentsOpen={contentsOpen}

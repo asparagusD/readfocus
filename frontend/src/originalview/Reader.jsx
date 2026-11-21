@@ -18,7 +18,7 @@ import { useFind } from './useFind';
 import { startPage } from './pdf/contents';
 import { PdfBook } from './pdf/PdfBook';
 import { skipPdfPoint } from './pdf/regions';
-import { keyAction, SPREAD_MIN_WIDTH } from './frame';
+import { keyAction, readerShortcut, SPREAD_MIN_WIDTH } from './frame';
 import { placeEnd, placeStart } from './place';
 
 /** "5" for a PDF page, "2:340" for an EPUB section and character: the place's ends, for tests and tools. */
@@ -76,7 +76,8 @@ function useWide() {
  * C38.5: the find bar (FindBar, useFind): Ctrl+F (or `openFind()` on the ref, the toolbar's Find) opens it with
  * the query selected, F3 and Shift+F3 step through the matches while it is open, and Escape in it closes it, focus
  * back on the book. Not in a dialog over the book (the notebook has its own). C38.5c: an EPUB's too, its keys heard
- * inside its sections.
+ * inside its sections. C38.9: Ctrl+G and Ctrl+Shift+G step through the matches (or open the bar), as Edge's; the other
+ * shortcuts pressed inside an EPUB's section (Ctrl+Alt+G, Ctrl+\, Ctrl+= and Ctrl+-) reach the page.
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
@@ -116,11 +117,17 @@ export function Reader({
   const findKeyRef = useRef(null);
   useEffect(() => {
     const onFindKey = (event) => {
-      if (event.defaultPrevented || event.altKey || event.target?.closest?.('[role="dialog"]')) return;
-      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'f') {
+      if (event.defaultPrevented || event.target?.closest?.('[role="dialog"]')) return;
+      const shortcut = readerShortcut(event);
+      if (shortcut === 'find') {
         event.preventDefault();
         openFind();
-      } else if (finding && event.key === 'F3') {
+      } else if (shortcut === 'find-next' || shortcut === 'find-prev') { // C38.9: Ctrl+G, Ctrl+Shift+G
+        event.preventDefault();
+        if (!finding) openFind();
+        else if (shortcut === 'find-prev') findPrev();
+        else findNext();
+      } else if (finding && event.key === 'F3' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         if (event.shiftKey) findPrev();
         else findNext();
@@ -248,7 +255,16 @@ export function Reader({
   const onDocument = useCallback((doc) => {
     if (watched.current.has(doc)) return;
     watched.current.add(doc);
-    doc.addEventListener('keydown', (e) => { findKeyRef.current?.(e); if (!e.defaultPrevented) onKeyRef.current?.(e); });
+    doc.addEventListener('keydown', (e) => {
+      findKeyRef.current?.(e);
+      if (!e.defaultPrevented && readerShortcut(e)) { // C38.9: the page's shortcuts, pressed in the section
+        e.preventDefault();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: e.key, code: e.code, ctrlKey: e.ctrlKey, metaKey: e.metaKey,
+          shiftKey: e.shiftKey, altKey: e.altKey, bubbles: true, cancelable: true }));
+        return;
+      }
+      if (!e.defaultPrevented) onKeyRef.current?.(e);
+    });
     doc.addEventListener('pointerdown', (e) => swipeStart.current?.(e));
     // The page hears what happens in the section too, in its own coordinates: the word card closes
     // on a press or when the pointer leaves the word, Esc closes it, and the toolbar wakes on movement.

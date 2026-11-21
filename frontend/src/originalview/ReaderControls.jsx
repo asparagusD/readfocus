@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { MoveHorizontal, MoveVertical, Search, Type, ZoomIn, ZoomOut } from 'lucide-react';
-import { zoomLabel, zoomStep } from './frame';
+import { FONT_SIZES, fontStep, zoomLabel, zoomStep } from './frame';
 
-const SIZES = [14, 16, 18, 20, 22, 24];
 const LINE_HEIGHTS = [null, 1.45, 1.65, 1.85]; // null: the publisher's own
 const MARGINS = ['narrow', 'normal', 'wide'];
 const next = (list, value) => list[(list.indexOf(value) + 1) % list.length];
@@ -14,7 +13,7 @@ const PAGE_VIEWS = [['one', 'One page'], ['two', 'Two pages'], ['cover', 'Cover 
  * Edge's page box (C38.4a): the main page's number, which a reader can type over; Enter goes there (a number
  * outside the book or not a number goes back to the page shown), Escape or leaving the box puts the page back.
  */
-function PageBox({ page, total, onGo, approx = false }) {
+function PageBox({ page, total, onGo, approx = false, inputRef = null }) {
   const [draft, setDraft] = useState(null); // null: show the page
   const go = () => {
     const n = Number.parseInt(draft ?? '', 10);
@@ -23,7 +22,7 @@ function PageBox({ page, total, onGo, approx = false }) {
   };
   return (
     <div className="rf-page-box">
-      <input type="text" inputMode="numeric" className="rf-page-input" aria-label={`Page number, of ${approx ? 'about ' : ''}${total}`}
+      <input ref={inputRef} type="text" inputMode="numeric" className="rf-page-input" aria-label={`Page number, of ${approx ? 'about ' : ''}${total}`}
         size={Math.max(2, String(total).length)} value={draft ?? String(page)}
         onFocus={(event) => { setDraft(String(page)); event.target.select(); }}
         onChange={(event) => setDraft(event.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -43,9 +42,9 @@ function PageBox({ page, total, onGo, approx = false }) {
  * smaller and larger text, line spacing and margins for an EPUB. C38.3: the "Original
  * colours" switch is gone: a book is never recoloured. C38.4a (issue 22): a PDF also has Edge's page box (`place`,
  * `onGoToPage`) and Page view (`pageView`, `onPageView`). C38.7b: an EPUB has the page box too, its counted pages ("of
- * ~210": they count characters). C38.5: Find (`onFind`, also Ctrl+F); C38.5c: for an EPUB too.
+ * ~210": they count characters). C38.9: `pageInput` is the page box's input, for Ctrl+Alt+G. C38.5: Find (`onFind`, also Ctrl+F); C38.5c: for an EPUB too.
  */
-export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place = null, onGoToPage = null, pageView = 'one', onPageView = null, onFind = null }) {
+export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place = null, onGoToPage = null, pageView = 'one', onPageView = null, onFind = null, pageInput = null }) {
   const set = (patch) => onSettings({ ...settings, ...patch });
   const size = settings?.fontSize ?? 18;
   return (
@@ -62,7 +61,7 @@ export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place
           <button type="button" className="rf-tool" onClick={() => onZoom(zoomStep(zoom, 1))} disabled={zoom === 2} aria-label="Zoom in">
             <ZoomIn size={18} strokeWidth={1.75} aria-hidden="true" />
           </button>
-          {place?.total > 0 && onGoToPage && <PageBox page={place.page} total={place.total} onGo={onGoToPage} />}
+          {place?.total > 0 && onGoToPage && <PageBox page={place.page} total={place.total} onGo={onGoToPage} inputRef={pageInput} />}
           {onPageView && (
             <select className="rf-tool rf-select" aria-label="Page view" value={pageView} onChange={(event) => onPageView(event.target.value)}>
               {PAGE_VIEWS.map(([value, name]) => <option key={value} value={value}>{name}</option>)}
@@ -71,11 +70,11 @@ export function ReaderControls({ kind, zoom, onZoom, settings, onSettings, place
         </div>
       ) : (
         <div className="rf-toolbar-group" role="group" aria-label="Text">
-          {place?.total > 0 && onGoToPage && <PageBox page={place.page} total={place.total} onGo={onGoToPage} approx={place.approx} />}
+          {place?.total > 0 && onGoToPage && <PageBox page={place.page} total={place.total} onGo={onGoToPage} approx={place.approx} inputRef={pageInput} />}
           <button type="button" className="rf-tool rf-size rf-size--small" aria-label="Smaller text"
-            onClick={() => set({ fontSize: SIZES[Math.max(0, SIZES.indexOf(size) - 1)] })} disabled={size <= SIZES[0]}>A</button>
+            onClick={() => set({ fontSize: fontStep(size, -1) })} disabled={size <= FONT_SIZES[0]}>A</button>
           <button type="button" className="rf-tool rf-size rf-size--large" aria-label="Larger text"
-            onClick={() => set({ fontSize: SIZES[Math.min(SIZES.length - 1, SIZES.indexOf(size) + 1)] })} disabled={size >= SIZES.at(-1)}>A</button>
+            onClick={() => set({ fontSize: fontStep(size, 1) })} disabled={size >= FONT_SIZES.at(-1)}>A</button>
           <button type="button" className="rf-tool" onClick={() => set({ lineHeight: next(LINE_HEIGHTS, settings.lineHeight ?? null) })}
             aria-label={`Line spacing: ${settings.lineHeight ?? 'as published'}. Change`}>
             <MoveVertical size={18} strokeWidth={1.75} aria-hidden="true" />

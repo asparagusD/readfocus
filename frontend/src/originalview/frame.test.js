@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildLocations, entryForPage, keyAction, locationAt, locationPlace, pdfFolio, pdfScale, timeAtProgress, zoomStep,
+  buildLocations, entryForPage, fontStep, keyAction, locationAt, locationPlace, pdfFolio, readerShortcut, pdfScale, timeAtProgress, zoomStep,
 } from './frame.js';
 
 test('zoom: fit-page and fit-width from the frame; percentages are of the printed size', () => {
@@ -41,6 +41,30 @@ test('EPUB locations: stable page numbers from character counts, computed once',
   assert.equal(locationAt(locs, 3, 99999), 7); // never past the last
   assert.equal(locationAt(null, 2, 10), null);
   assert.deepEqual(buildLocations([], 1500), { starts: [], chars: [], total: 1, perPage: 1500 });
+});
+
+test("C38.9: Edge's shortcuts: find, next and previous, go to page, fit, zoom; the browser's zoom left alone", () => {
+  assert.equal(readerShortcut({ key: 'f', code: 'KeyF', ctrlKey: true }), 'find');
+  assert.equal(readerShortcut({ key: 'g', code: 'KeyG', ctrlKey: true }), 'find-next');
+  assert.equal(readerShortcut({ key: 'G', code: 'KeyG', ctrlKey: true, shiftKey: true }), 'find-prev');
+  assert.equal(readerShortcut({ key: 'g', code: 'KeyG', ctrlKey: true, altKey: true }), 'go-to-page');
+  assert.equal(readerShortcut({ key: '\\', code: 'Backslash', ctrlKey: true }), 'fit');
+  assert.equal(readerShortcut({ key: '=', code: 'Equal', ctrlKey: true }), 'zoom-in');
+  assert.equal(readerShortcut({ key: '+', code: 'Equal', ctrlKey: true, shiftKey: true }), 'zoom-in');
+  assert.equal(readerShortcut({ key: '+', code: 'NumpadAdd', metaKey: true }), 'zoom-in'); // Cmd on a Mac
+  assert.equal(readerShortcut({ key: '-', code: 'Minus', ctrlKey: true }), 'zoom-out');
+  assert.equal(readerShortcut({ key: '0', code: 'Digit0', ctrlKey: true }), null); // the browser's reset
+  assert.equal(readerShortcut({ key: 'g', code: 'KeyG' }), null); // no Ctrl: a plain key
+  assert.equal(readerShortcut({ key: 'f', code: 'KeyF', ctrlKey: true, altKey: true }), null);
+  assert.equal(readerShortcut({}), null);
+});
+
+test("C38.9: an EPUB's text size steps through its sizes and stops at the ends", () => {
+  assert.equal(fontStep(18, 1), 20);
+  assert.equal(fontStep(18, -1), 16);
+  assert.equal(fontStep(24, 1), 24);
+  assert.equal(fontStep(14, -1), 14);
+  assert.equal(fontStep(17, 1), 20); // a size not in the list steps from the default
 });
 
 test('C38.7b: a location page back to its section and character, for the page box', () => {

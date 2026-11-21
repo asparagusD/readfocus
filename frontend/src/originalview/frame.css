@@ -104,7 +104,7 @@
 .rf-find {
   position: absolute;
   top: var(--space-2);
-  right: calc(var(--space-6) + 44px + var(--space-2));
+  right: var(--space-4); /* C38.8b: no ribbon over the desk to keep clear of */
   z-index: var(--z-popover);
   display: flex;
   align-items: center;
@@ -149,7 +149,6 @@
   .rf-find { left: var(--space-2); right: var(--space-2); gap: var(--space-1); }
   .rf-find-input { flex: 1; width: auto; margin-right: var(--space-1); }
   .rf-find-count { min-width: 0; }
-  .rf-ov[data-finding] .rf-ov-ribbon { top: calc(var(--space-2) + 64px); }
 }
 
 /* The end of the book: its closing words below the last page, quiet, not a page over the book. */
@@ -179,32 +178,17 @@
 
 .rf-epub-end .rf-end-lamp { --illustration-size: 48px; }
 
-/* The ribbon: outside the right page, at its top edge (handoff 11). */
-.rf-ov-ribbon {
+/* C38.8b: the saved place's ribbon, small, on the desk beside its page's top or its line (PlaceMark). The toolbar's
+   Save my place took the old ribbon's place over the desk. */
+.rf-ov-mark {
   position: absolute;
-  top: var(--space-3); /* C38.7a: over the desk, by the scrollbar, for both kinds */
-  right: var(--space-6);
   z-index: 6;
-  display: flex;
-  justify-content: center;
-  width: 44px;
-  height: 120px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.rf-ov-ribbon-tail {
-  display: block;
-  width: 18px;
-  height: 100%;
+  width: 12px;
+  height: 32px;
   background: var(--accent);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%);
-  transition: transform var(--dur-2) var(--ease-arrive);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  pointer-events: none;
 }
-
-.rf-ov-ribbon:hover .rf-ov-ribbon-tail { transform: translateY(4px); }
 
 /* The error is a page of its own: what happened, try again, or go back. */
 .rf-ov-error {
@@ -258,20 +242,14 @@
   white-space: nowrap;
 }
 
-/* One page: the page is the screen (handoff, 375 px); the ribbon hangs inside its corner. */
+/* One page: the page is the screen (handoff, 375 px). */
 @media (max-width: 1023px) {
   .rf-ov-stage { padding: var(--space-2) var(--space-4); }
-  .rf-ov-ribbon { height: 72px; }
-  .rf-ov-ribbon-tail { width: 14px; }
 }
 
 @media (max-width: 640px) {
   .rf-ov-stage { padding: 0; }
   .rf-ov[data-kind="epub"] .rf-epub { border-inline: 0; box-shadow: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rf-ov-ribbon-tail { transition: none; }
 }
 
 /* A reading session (C17.5). The planner's note lies over the foot of the first page of

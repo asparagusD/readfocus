@@ -4078,6 +4078,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/originalview/PlaceMark.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/originalview/Reader.jsx",
       "type": "file",
       "role": "asset",
@@ -12764,6 +12770,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/FindBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/PlaceMark.jsx"
     },
     {
       "type": "imports",

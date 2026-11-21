@@ -197,8 +197,10 @@ export function ReadingSession() {
     const anchor = reader.current?.anchor();
     if (anchor) save({ anchor });
   }, [save]);
+  const [mark, setMark] = useState(null); // C38.8b: the place saved this visit, a small ribbon beside it
   const onBookmark = useCallback((anchor) => {
     if (!anchor) return;
+    setMark(anchor);
     saveNow({ anchor });
     toast({ kind: 'neutral', message: `Place saved at ${folioShort(place?.folio) || 'this page'}.` });
   }, [saveNow, toast, place]);
@@ -569,6 +571,7 @@ export function ReadingSession() {
           onContents={openContents}
           contentsOpen={contentsOpen}
           contentsDocked={docked}
+          onBookmark={() => reader.current?.saveMark?.()}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -623,6 +626,7 @@ export function ReadingSession() {
           onReady={locate}
           onRelocate={onRelocate}
           onBookmark={onBookmark}
+          mark={mark}
           onBack={() => navigate('/')}
           opening={!standing}
           placing={placingRibbon && inFocus ? { onSet: setRibbon, onCancel: () => setPlacingRibbon(false) } : null}

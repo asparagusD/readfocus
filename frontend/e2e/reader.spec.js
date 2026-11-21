@@ -84,8 +84,12 @@ for (const kind of ['pdf', 'epub']) {
       await expect.poll(() => api.saves, { timeout: 4000 }).toBeGreaterThan(0); // the turn's own debounced save
       await page.waitForTimeout(1200); // and nothing else pending
       const before = api.saves;
-      await page.getByRole('button', { name: 'Save my place' }).click();
+      await expect(page.locator('.rf-ov-mark')).toHaveCount(0); // C38.8b: no mark before a place is saved
+      await page.getByRole('button', { name: 'Save my place' }).click(); // C38.8b: in the toolbar
       await expect(page.getByText(/^Place saved at p+\. /)).toBeVisible();
+      const mark = await page.locator('.rf-ov-mark').boundingBox(); // a small ribbon beside the place, on the desk
+      const paper = await page.locator(kind === 'pdf' ? '.rf-pdf-page[data-scale]' : '.rf-epub').first().boundingBox();
+      expect(mark.x >= paper.x + paper.width || mark.x + mark.width <= paper.x, 'beside the paper').toBe(true);
       await expect.poll(() => api.saves, { timeout: 900 }).toBeGreaterThan(before); // no 1 s debounce for the ribbon
       expect(api.position.anchor.kind).toBe(kind);
       const saved = api.saves;

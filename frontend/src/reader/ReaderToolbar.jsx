@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff } from 'lucide-react';
+import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
 import { useMedia } from './useMedia';
@@ -72,11 +72,12 @@ function useFullScreen() {
  * text-size pair is left out and `controls` (the original view's, C17.4) take its place. `onSteve` adds Steve (C20.7b).
  * C38.6a: `contentsDocked`: Contents opens a pane beside the pages, not a dialog. C38.7b: Look up, Steve, Focus and the
  * session's tools sit in the bar only when they fit on one row (useFits), else in More tools (was: from 1280 px).
+ * C38.8b: `onBookmark`: Save my place (B), before Notes, always in the bar (the desk's ribbon is gone).
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
   lookupOn, onLookupToggle, controls, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef, onFocusMode,
-  pinned = false, onPin = null, contentsDocked = false, children,
+  pinned = false, onPin = null, contentsDocked = false, onBookmark = null, children,
 }) {
   const index = SIZES.indexOf(size);
   const full = useFullScreen();
@@ -176,6 +177,12 @@ export function ReaderToolbar({
       </div>
 
       <div className="rf-toolbar-end">
+        {onBookmark && (
+          <button type="button" className="rf-tool" onClick={onBookmark} aria-label="Save my place" aria-keyshortcuts="B"
+            title="Save my place (B)">
+            <Bookmark size={18} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        )}
         {onNotes && (
           // C22.2: the notes, with their count (handoff screen 19); since C37.3 the button opens the notebook.
           <button type="button" className="rf-tool" ref={notesRef} onClick={onNotes} aria-haspopup="dialog" aria-expanded={notesOpen}

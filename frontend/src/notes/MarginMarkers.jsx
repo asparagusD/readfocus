@@ -32,7 +32,7 @@ export function MarginMarkers({ book, box, notes, hidden, wide, layout, onOpen }
       const side = spot.side ?? 'right';
       return { id: spot.id, side, x: side === 'left' ? INSET : within.width - INSET - size, top };
     });
-    const tail = box.querySelector('.rf-ov-ribbon-tail')?.getBoundingClientRect();
+    const tail = box.querySelector('.rf-ov-mark')?.getBoundingClientRect(); // C38.8b: the saved place's ribbon
     const obstacles = tail ? [{ side: 'right', top: tail.top - within.top, bottom: tail.bottom - within.top,
       left: tail.left - within.left, right: tail.right - within.left }] : [];
     const laid = layoutMarkers(spots, { size, obstacles }).filter((m) => m.top >= 0 && m.top + size <= within.height);

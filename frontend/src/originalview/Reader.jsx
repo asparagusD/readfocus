@@ -11,6 +11,7 @@ import { PdfBlockActions } from '../steve/PdfBlockActions';
 import { EpubBlockActions } from '../steve/EpubBlockActions';
 import { MarginMarkers } from '../notes/MarginMarkers';
 import { RibbonPlacer } from '../focus/RibbonPlacer';
+import { PlaceMark } from './PlaceMark';
 import { EpubBook } from './epub/EpubBook';
 import { FindBar } from './FindBar';
 import { useFind } from './useFind';
@@ -70,6 +71,8 @@ function useWide() {
  * once its end is scrolled to. C38.4a: `pageView` is a PDF's Page view (PdfBook).
  * C38.4c: a PDF has no footer: the toolbar's page box names the page, `status` is a quiet note on the desk, and the
  * live region still says the page or the end.
+ * C38.8b: no ribbon over the desk: the toolbar's Save my place (`saveMark()` on the ref) and B save the place, and
+ * `mark` (the anchor saved) is a small ribbon beside it (PlaceMark).
  * C38.5: the find bar (FindBar, useFind): Ctrl+F (or `openFind()` on the ref, the toolbar's Find) opens it with
  * the query selected, F3 and Shift+F3 step through the matches while it is open, and Escape in it closes it, focus
  * back on the book. Not in a dialog over the book (the notebook has its own). C38.5c: an EPUB's too, its keys heard
@@ -82,7 +85,7 @@ export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
-  placing = null, contents = null, start = null, pageView = 'one',
+  placing = null, contents = null, start = null, pageView = 'one', mark = null,
 }) {
   const wide = useWide();
   const book = useRef(null);
@@ -310,9 +313,10 @@ export function Reader({
     shownPlaces, // C23.6b
     flash, // C22.5
     openFind, // C38.5
+    saveMark: () => act('ribbon'), // C38.8b: the toolbar's Save my place
     thumbnail: (n, width) => book.current?.thumbnail?.(n, width) ?? Promise.resolve(null), // C38.6b: a PDF's Pages tab
     pageLabelOf: (n) => book.current?.pageLabelOf?.(n) ?? String(n),
-  }), [move, flash, shownPlaces, openFind]);
+  }), [move, flash, shownPlaces, openFind, act]);
 
   const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
   const atClose = Boolean(closing && place?.atEnd); // C38.2: the end is scrolled to (C38.7a: an EPUB's too)
@@ -350,12 +354,8 @@ export function Reader({
             <RibbonPlacer load={shownPlaces} placeKey={`${place.start ?? ''}|${place.pages ?? ''}|${place.cfi ?? ''}`}
               onSet={placing.onSet} onCancel={placing.onCancel} />
           )}
-          {!placing && onBookmark && place && !failure && (
-            <button type="button" className="rf-ov-ribbon" onClick={() => act('ribbon')} aria-label="Save my place"
-              aria-keyshortcuts="B" title="Save my place (B)">
-              <span className="rf-ov-ribbon-tail" aria-hidden="true" />
-            </button>
-          )}
+          <PlaceMark book={book} box={bookBox} mark={mark} hidden={!place || opening || Boolean(failure) || Boolean(placing)}
+            layout={`${zoom}|${pageView}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`} />
         </div>
         {status && !opening && <p className="rf-ov-status">{status}</p>}
         {kind !== 'pdf' && atClose && <div className="rf-epub-end" data-no-lookup><div className="rf-end">{closing}</div></div>}

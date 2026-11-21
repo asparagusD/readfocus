@@ -282,7 +282,9 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
               .find((r) => r.height > 0 && r.x + r.width > within.left && r.x < within.right && r.y + r.height > within.top && r.y < within.bottom);
             if (!line) continue;
             const side = wide && !now().scrolled && line.x + line.width / 2 < within.left + within.width / 2 ? 'left' : 'right';
-            out.push({ id: note.id, top: line.y, height: line.height, side });
+            // C38.8b: scrolled, the column is on the desk: the marker beside its edge (the section's frame), as a PDF's
+            const edge = now().scrolled ? (side === 'left' ? frame.left : frame.right) : undefined;
+            out.push({ id: note.id, top: line.y, height: line.height, side, edge });
           }
         }
         return out;

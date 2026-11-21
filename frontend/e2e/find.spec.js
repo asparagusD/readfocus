@@ -10,7 +10,7 @@ const bar = (page) => page.getByRole('search', { name: 'Find in the book' });
 const input = (page) => bar(page).getByRole('textbox', { name: 'Find in the book' });
 const count = (page) => bar(page).locator('.rf-find-count');
 const pageBox = (page) => page.getByRole('textbox', { name: /^Page number/ });
-/** The find bar and the ribbon (Save my place) do not overlap. */
+/** The find bar and Save my place (C38.8b: in the toolbar, once the desk's ribbon) do not overlap. */
 async function besideRibbon(page) {
   const [a, b] = [await bar(page).boundingBox(), await page.getByRole('button', { name: 'Save my place' }).boundingBox()];
   expect(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y).toBe(true);

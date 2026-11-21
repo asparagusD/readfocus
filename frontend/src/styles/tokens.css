@@ -203,6 +203,10 @@
   --ul-sky: #68869f;
   --ul-rose: #af746a;
   --ul-lilac: #8d7ba6;
+  /* C38.5: find's matches over a published (white) page in either theme, see-through so the ink shows: honey for
+     every match, a deeper amber for the one shown. */
+  --find-match: rgb(240 200 80 / 0.45);
+  --find-current: rgb(230 130 30 / 0.55);
 
   --accent: #a64b2a;
   --accent-hover: #904428; /* A8: 18% toward --ink */

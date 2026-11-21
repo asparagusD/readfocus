@@ -1,7 +1,7 @@
 // C21.4: with word lookup off, hovering (or tapping, or A from the keyboard) a highlight shows a small chip at its
 // end: Ask Steve (explain_highlight with the annotation's anchor; the consent notice first when needed), the five
 // colours, Underline and Delete. With lookup on, hovering keeps the word card and shows no chip.
-import { book, expect, openReader, test, wordPoint } from './fixtures';
+import { book, clickTool, expect, openReader, test, wordPoint } from './fixtures';
 
 const toolbar = (page) => page.getByRole('toolbar', { name: 'Highlight the selection' });
 const chip = (page) => page.getByRole('toolbar', { name: /^(Honey|Sage|Sky|Rose|Lilac) (highlight|underline):/ });
@@ -19,8 +19,8 @@ async function highlight(page, from, to, button) {
 }
 
 async function lookupOff(page) {
-  await lookupSwitch(page).click();
-  await expect(lookupSwitch(page)).toHaveAttribute('aria-checked', 'false');
+  await clickTool(page, lookupSwitch(page));
+  await expect(page.locator('[role="switch"][aria-label="Look up words on hover"]')).toHaveAttribute('aria-checked', 'false'); // C38.4b: maybe in the closed More tools
 }
 
 async function hover(page, word) {

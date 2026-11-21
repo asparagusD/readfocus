@@ -10,7 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Reader } from '../originalview/Reader';
 import { fromOpenedBook } from '../originalview/bookFile';
 import { ReaderControls } from '../originalview/ReaderControls';
-import { useLamplight } from '../originalview/useLamplight';
+import { fontStep, readerShortcut, zoomStep } from '../originalview/frame';
 import { createRegionSource } from '../originalview/pdf/regions';
 import { createOcrSource } from '../originalview/pdf/ocr';
 import { folioShort } from '../originalview/place';
@@ -18,6 +18,7 @@ import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
 import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
+import { useMedia } from '../reader/useMedia';
 import { useToast } from '../components/ui/toastContext';
 import { createLookupClient, readLookupOn, storeLookupOn } from '../reader/lookup';
 import { useAuth } from '../hooks/useAuth';
@@ -81,6 +82,8 @@ export function ReadingSession() {
   useDocumentTitle(sessionData?.book?.title ? `${sessionData.book.title} · Reading` : 'Reading');
 
   const [zoom, setZoom] = useStored('rf-pdf-zoom', 'fit-page');
+  const [pageView, setPageView] = useStored('rf-pdf-view', 'one'); // C38.4a: Edge's Page view, on this device
+  const [pinned, setPinned] = useStored('rf-toolbar-pinned', true); // C38.4b: Edge's toolbar is pinned until unpinned
   const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
   // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
@@ -108,7 +111,7 @@ export function ReadingSession() {
   const [entries, setEntries] = useState([]);
   const [quizMeOpen, setQuizMeOpen] = useState(false); // C23.7b
   const [quizMeBusy, setQuizMeBusy] = useState(false);
-  const chromeVisible = useChromeVisible(toolbarFocused || contentsOpen || quizMeOpen);
+  const chromeVisible = useChromeVisible(pinned || toolbarFocused || contentsOpen || quizMeOpen);
   const contentsButton = useRef(null);
   const reader = useRef(null);
   const { toast } = useToast();
@@ -116,7 +119,6 @@ export function ReadingSession() {
   const kind = sessionData?.book?.format === 'epub' ? 'epub' : 'pdf';
   // C18.6d: a PDF's math, code and figure boxes, so lookup skips them (an EPUB's markup already says).
   const regions = useMemo(() => (kind === 'pdf' ? createRegionSource(fetchApi, bookId) : null), [kind, bookId]);
-  const { theme, original, toggleOriginal } = useLamplight(bookId);
   // C19.4: scanned pages get a text layer read by OCR in this browser. A fully scanned book with no chunks
   // opens pages-only (no session, no test) and has every scanned page read in turn; then it is read again.
   const pagesOnly = Boolean(sessionData?.pages_only);
@@ -196,12 +198,40 @@ export function ReadingSession() {
     const anchor = reader.current?.anchor();
     if (anchor) save({ anchor });
   }, [save]);
+  const [mark, setMark] = useState(null); // C38.8b: the place saved this visit, a small ribbon beside it
   const onBookmark = useCallback((anchor) => {
     if (!anchor) return;
+    setMark(anchor);
     saveNow({ anchor });
     toast({ kind: 'neutral', message: `Place saved at ${folioShort(place?.folio) || 'this page'}.` });
   }, [saveNow, toast, place]);
 
+  // C38.9 (issue 22): Edge's keys for the book's view: Ctrl+Alt+G the page box, Ctrl+\ fit page or width, Ctrl+= and
+  // Ctrl+- zoom a PDF (an EPUB's text size); the browser's own zoom (Ctrl+0, the wheel) is left alone.
+  const pageInput = useRef(null);
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.defaultPrevented || event.target?.closest?.('[role="dialog"], textarea, [contenteditable="true"]')) return;
+      const shortcut = readerShortcut(event);
+      if (shortcut === 'go-to-page' && pageInput.current) {
+        event.preventDefault();
+        pageInput.current.focus();
+      } else if (shortcut === 'fit' && kind === 'pdf') {
+        event.preventDefault();
+        setZoom(zoom === 'fit-page' ? 'fit-width' : 'fit-page');
+      } else if (shortcut === 'zoom-in' || shortcut === 'zoom-out') {
+        event.preventDefault();
+        const dir = shortcut === 'zoom-in' ? 1 : -1;
+        if (kind === 'pdf') setZoom(zoomStep(zoom, dir));
+        else setSettings({ ...settings, fontSize: fontStep(settings.fontSize ?? 18, dir) });
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [kind, zoom, settings, setZoom, setSettings]);
+
+  // C38.6a (issue 22): from 1024 px the contents are Edge's left pane, beside the pages; below, the drawer.
+  const docked = useMedia('(min-width: 1024px)');
   // The contents (D4): the book's own outline or nav.
   const closeContents = useCallback(() => setContentsOpen(false), []);
   const openContents = () => {
@@ -213,14 +243,20 @@ export function ReadingSession() {
     setContentsOpen((open) => !open);
   };
   const onPickAnnotation = useCallback((annotation) => {
-    setContentsOpen(false);
+    if (!docked) setContentsOpen(false); // C38.6a: the pane stays beside the pages
     const [anchor] = annotation.anchors;
     reader.current?.goTo(anchor.kind === 'epub' ? { cfi: anchor.cfi } : anchor);
-  }, []);
+  }, [docked]);
+  // C38.6b: the Pages tab (a PDF): thumbnails drawn by the reader, a pick goes to the page.
+  const thumbnail = useCallback((n, width) => reader.current?.thumbnail?.(n, width) ?? Promise.resolve(null), []);
+  const onPickPage = useCallback((page) => {
+    if (!docked) setContentsOpen(false);
+    reader.current?.goTo({ kind: 'pdf', page });
+  }, [docked]);
   const onPick = useCallback((entry) => {
-    setContentsOpen(false);
+    if (!docked) setContentsOpen(false);
     reader.current?.goTo(entry.target);
-  }, []);
+  }, [docked]);
   // C23.1: "The book starts here": the page or section shown becomes the body start (the reader's choice wins).
   const { choose } = body;
   const [startPage, setStartPage] = useState('');
@@ -509,6 +545,27 @@ export function ReadingSession() {
 
   const bookTitle = sessionData.book?.title || 'Your book';
 
+  const contents = (
+    <ContentsDrawer
+      open={contentsOpen}
+      onClose={closeContents}
+      entries={entries}
+      current={chapter}
+      onPick={onPick}
+      returnTo={contentsButton}
+      annotations={pagesOnly ? null : notes.annotations}
+      pageOf={(a) => annotationPages.get(a.id) ?? ''}
+      onPickAnnotation={onPickAnnotation}
+      bodyStart={body.bodyStart}
+      startPage={startPage}
+      onStartHere={pagesOnly ? null : startHere}
+      docked={docked}
+      pages={kind === 'pdf' && place?.total ? {
+        total: place.total, current: place.page, labelOf: (n) => reader.current?.pageLabelOf?.(n) ?? String(n), thumbnail, onPick: onPickPage,
+      } : null}
+    />
+  );
+
   return (
     <div className="rf-reading-page" data-focus={inFocus} data-notebook={notebookOpen || undefined}>
       <m.div className="rf-reading-chrome" inert={notebookOpen} variants={bookRecede} initial={false} animate={recede === 'receded' ? 'blurred' : recede}>
@@ -517,7 +574,7 @@ export function ReadingSession() {
             startLabel={startLabel(body.bodyStart)} idle={focus.idle} idleLapsed={focus.idleLapsed} busy={focusBusy}
             onStart={startFocus} onPause={() => focusDo(focus.pause, '')} onResume={() => focusDo(focus.resume, '')}
             onEnd={endFocus} onLeave={focus.readOnly ? () => navigate('/') : leaveFocus} onAnswerIdle={focus.answerIdle}
-            placing={placingRibbon} readOnly={focus.readOnly}
+            placing={placingRibbon} readOnly={focus.readOnly} folio={place?.folio ?? null}
             onNotes={() => openNotebook()} notesOpen={notebookOpen} notesRef={notesButton}
             notesCount={notepad.notes.length} onSteve={steveHere ? () => toggleSide('steve', steveButton) : undefined}
             steveOpen={steveOpen} steveRef={steveButton} />
@@ -527,13 +584,19 @@ export function ReadingSession() {
           chapter={chapter}
           onBack={() => navigate('/')}
           visible={chromeVisible}
+          pinned={pinned}
+          onPin={() => setPinned(!pinned)}
           onFocusChange={setToolbarFocused}
           controls={(
             <ReaderControls kind={kind} zoom={zoom} onZoom={setZoom} settings={settings} onSettings={setSettings}
-              lamplight={theme === 'lamplight'} original={original} onOriginal={toggleOriginal} />
+              place={place} onGoToPage={(page) => reader.current?.goTo(kind === 'pdf' ? { kind: 'pdf', page } : { location: page })}
+              pageView={pageView} onPageView={setPageView}
+              onFind={() => reader.current?.openFind?.()} pageInput={pageInput} />
           )}
           onContents={openContents}
           contentsOpen={contentsOpen}
+          contentsDocked={docked}
+          onBookmark={() => reader.current?.saveMark?.()}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -572,6 +635,7 @@ export function ReadingSession() {
       <SteveContext.Provider value={steveHere ? steveActions : null}>
       <NotesContext.Provider value={notesActions}>
       <div className="rf-reading-body">
+      {docked && <div className="rf-reading-pane" inert={notebookOpen}>{contents}</div>}
       <m.main className="rf-reading-area" inert={notebookOpen} variants={bookRecede} initial={false} animate={recede}>
         {/* C13.9: the page's one h1 for assistive tech; the book's own headings are the publisher's. */}
         <h1 className="sr-only">{bookTitle}</h1>
@@ -582,10 +646,12 @@ export function ReadingSession() {
           load={loadFile}
           title={bookTitle}
           zoom={zoom}
+          pageView={pageView}
           settings={settings}
           onReady={locate}
           onRelocate={onRelocate}
           onBookmark={onBookmark}
+          mark={mark}
           onBack={() => navigate('/')}
           opening={!standing}
           placing={placingRibbon && inFocus ? { onSet: setRibbon, onCancel: () => setPlacingRibbon(false) } : null}
@@ -646,20 +712,7 @@ export function ReadingSession() {
       </NotesContext.Provider>
       </SteveContext.Provider>
 
-      <ContentsDrawer
-        open={contentsOpen}
-        onClose={closeContents}
-        entries={entries}
-        current={chapter}
-        onPick={onPick}
-        returnTo={contentsButton}
-        annotations={pagesOnly ? null : notes.annotations}
-        pageOf={(a) => annotationPages.get(a.id) ?? ''}
-        onPickAnnotation={onPickAnnotation}
-        bodyStart={body.bodyStart}
-        startPage={startPage}
-        onStartHere={pagesOnly ? null : startHere}
-      />
+      {!docked && contents}
 
       <ReadyModal open={Boolean(focusReady)} sessionId={focus.session?.id} label={focusReady?.label}
         points={focus.session?.points_time ?? 0} onLater={() => setFocusReady(null)}

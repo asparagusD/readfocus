@@ -230,7 +230,7 @@ def _lines(counted: int, points_time: int, reasons: dict[str, int], quiz, passed
     """What each number came from, in plain words, for the results page."""
     page_min, cap_h = policy.PAGE_CAP_S // 60, policy.SESSION_CAP_S // 3600
     labels = {
-        "page_cap": f"Time on one page beyond {page_min} minutes without turning it",
+        "page_cap": f"Time on one page beyond {page_min} minutes without moving to another page",  # C38.8: scrolled
         "session_cap": f"Beyond the {cap_h}-hour session limit",
         "hidden": "The book's tab was in the background",
         "paused": "Focus mode was off",

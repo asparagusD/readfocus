@@ -24,7 +24,7 @@ container numbers are Docker at 0.1 CPU and 512 MB, the Render Free size.
 | `GET /dashboard` | 193 ms p50 | C9.5 |
 | Word lookup, cached in process / in `term_lookups` | 2.7 ms / 96 ms p50 | C12.6 |
 | Hover to word card, cached | 356-366 ms (350 ms of it is the hover intent) | C12.10 |
-| Page turns | 75 fps, worst frame 13.7-14.0 ms; 74.3 fps at 4x CPU slowdown | C12.10 |
+| Scrolling a 300-page PDF (wheel, Page Down) | 75 fps, worst frame 13.5-13.7 ms; 69.3-72.3 fps at 4x CPU slowdown; at most 5 pages drawn | C38.10 (page turns until then: C12.10) |
 | Lighthouse, mobile performance | 81-90 across eight pages; accessibility 95-100 | C13 close |
 | Grader agreement with 34 labelled answers | 26 of 34 (76.5%) within 0.25; leave-one-out after a 3,060-setting search: 26 | C15.3 |
 | Full reading journey in a browser, local stack | 30.0 s end to end | C15 |
@@ -1907,3 +1907,38 @@ measured limit. Not measured: a real GPU in a headed browser, a phone, Firefox, 
 
 Command: `npx playwright test e2e/notebook-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
 standard `npm run test:e2e` too); results in `frontend/test-results/notebook-benchmarks.json` (ignored).
+
+## C38: scrolling, as Edge reads (2026-11-21, issue 22)
+
+`e2e/scroll-frame-rate.spec.js` (the `frame-rate` Playwright project, no trace recorder), headless Microsoft Edge on
+this machine against the production build (`vite preview`), 1440 x 900, fit page, API mocked. It replaces the
+page-turn bench of C12.10 (a book no longer turns). The PDF is the 300-page book of C37 (`bigPdf.js`, 46 lines of
+text a page, 1.2 MB) served the way Storage does. Frames sampled with requestAnimationFrame while the wheel scrolls
+180 notches of 100 px a frame apart (about 20 pages), and while Page Down is pressed ten times 150 ms apart; then both
+again under CDP `Emulation.setCPUThrottlingRate` 4. The pages drawn are the canvases in the book; the JS heap from
+CDP `Performance.getMetrics` after `HeapProfiler.collectGarbage`, when the book opens, after about 60 pages
+scrolled (page 65 in view), and after End. Then the EPUB fixture (`reflow.epub`) scrolled by 120 notches through its
+sections (overscroll opens the next). Three runs; the ranges cover all three.
+
+| Measure | 1x CPU | 4x CPU |
+|---|---|---|
+| PDF, wheel: fps, worst frame (frames over 33 ms) | 75 fps, 13.6-13.7 ms (0) | 71.9-72.3 fps, 26.8-26.9 ms (0) |
+| PDF, Page Down a page at a time | 75 fps, 13.5-13.6 ms (0) | 69.3 fps, 26.8-26.9 ms (0) |
+| EPUB, wheel through three sections | 75 fps, 13.6-13.8 ms (0) | not run |
+
+| PDF | Value |
+|---|---|
+| Pages drawn after 60 pages scrolled / at the end | 5 / 3 (the pages in view and two either side; the last page has none after it) |
+| JS heap (DOM nodes): opened | 5.6 MB (742) |
+| after 60 pages scrolled | 7.3 MB (1,035) |
+| at the end | 7.3 MB (751) |
+
+Scrolling 300 pages costs nothing that grows with the book: only the pages near the view are drawn (C38.2's ±2 page
+cache), and the heap stays at 7.3 MB from page 65 to the end (each page's text, kept once read, is in it; canvas
+backing stores and PDF.js's worker are not). As for C37, headless Edge paces frames at about 75 a second here, so
+75 fps is the ceiling, not a measured limit. Not measured: a real GPU in a headed browser, a phone, Firefox, Safari,
+find's search over all 300 pages (C38.5a reads each page's text once, in the worker).
+
+Command: `npx playwright test e2e/scroll-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
+standard `npm run test:e2e` too); results in `frontend/test-results/scroll-benchmarks-pdf.json` and `-epub.json`
+(ignored).

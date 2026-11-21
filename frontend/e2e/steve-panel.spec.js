@@ -1,14 +1,14 @@
 // Steve's panel in the reader (C20.7b, handoff screens 13-17): consent, suggestions, a streamed answer with
 // math, code and citation chips that move the book, resting, errors, settings, the sheet on a phone, keyboard
 // and reduced motion. Every /steve call is mocked in fixtures.js.
-import { test, expect, openReader, settled, shown, steveStream, STEVE_NOTICE } from './fixtures.js';
+import { clickTool, expect, openReader, settled, shown, STEVE_NOTICE, steveStream, test } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 const panel = (page) => page.getByRole('complementary', { name: 'Steve' });
 
 async function openSteve(page) {
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // C38.4b: in More tools on a phone
   await expect(panel(page)).toBeVisible();
 }
 

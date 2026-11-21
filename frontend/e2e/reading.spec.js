@@ -48,7 +48,8 @@ for (const kind of ['pdf', 'epub']) {
       await expect(page.locator('.rf-end').getByRole('heading', { name: "That's the end of the book." })).toBeVisible();
       await book(page).focus();
       await page.keyboard.press('Home');
-      await expect(page.locator('.rf-end')).toHaveCount(0);
+      if (kind === 'pdf') await expect(page.locator('.rf-end')).not.toBeInViewport(); // C38.2: below the last page
+      else await expect(page.locator('.rf-end')).toHaveCount(0);
       await expect.poll(async () => (await shown(page)).start).not.toBe(last.start); // back towards the start
     });
   });

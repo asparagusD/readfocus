@@ -2428,6 +2428,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/contents-pane.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/converted.spec.js",
       "type": "file",
       "role": "config",
@@ -2453,6 +2459,12 @@
     },
     {
       "id": "file:frontend/e2e/errors.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/find.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2656,6 +2668,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/pages-tab.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/pdf-open.spec.js",
       "type": "file",
       "role": "config",
@@ -2710,7 +2728,19 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/shell.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/shortcuts.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -4054,6 +4084,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/originalview/FindBar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/originalview/PlaceMark.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/originalview/Reader.jsx",
       "type": "file",
       "role": "asset",
@@ -4133,6 +4175,18 @@
     },
     {
       "id": "file:frontend/src/originalview/epub/urls.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/find.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/find.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4240,18 +4294,6 @@
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/pdf/recolour.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
-      "id": "file:frontend/src/originalview/pdf/recolour.test.js",
-      "type": "file",
-      "role": "asset",
-      "language": "javascript"
-    },
-    {
       "id": "file:frontend/src/originalview/pdf/regions.js",
       "type": "file",
       "role": "asset",
@@ -4282,13 +4324,25 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/originalview/scroll.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/scroll.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/originalview/useBoxSize.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
     },
     {
-      "id": "file:frontend/src/originalview/useLamplight.js",
+      "id": "file:frontend/src/originalview/useFind.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4492,6 +4546,12 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/PagesPanel.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/reader/PhraseChip.jsx",
       "type": "file",
       "role": "asset",
@@ -4613,6 +4673,12 @@
     },
     {
       "id": "file:frontend/src/reader/useChromeVisible.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useMedia.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -11089,6 +11155,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/contents-pane.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/converted.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11110,6 +11181,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/errors.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/find.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11244,6 +11320,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/pages-tab.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/pages-tab.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/pdf-open.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11304,7 +11390,22 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/scroll-frame-rate.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/shell.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/shortcuts.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11951,11 +12052,6 @@
       "type": "imports",
       "from": "file:frontend/src/gallery/BookGallery.jsx",
       "to": "file:frontend/src/originalview/ReaderControls.jsx"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/gallery/BookGallery.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
     },
     {
       "type": "imports",
@@ -12700,6 +12796,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/FindBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/originalview/PlaceMark.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/originalview/epub/EpubBook.jsx"
     },
     {
@@ -12735,7 +12841,7 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
+      "to": "file:frontend/src/originalview/useFind.js"
     },
     {
       "type": "imports",
@@ -12800,7 +12906,17 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/originalview/find.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
       "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/originalview/scroll.js"
     },
     {
       "type": "imports",
@@ -12859,6 +12975,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/find.test.js",
+      "to": "file:frontend/src/originalview/find.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/frame.test.js",
       "to": "file:frontend/src/originalview/frame.js"
     },
@@ -12890,6 +13011,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/find.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/frame.js"
     },
     {
@@ -12916,6 +13042,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/originalview/scroll.js"
     },
     {
       "type": "imports",
@@ -12969,18 +13100,8 @@
     },
     {
       "type": "imports",
-      "from": "file:frontend/src/originalview/pdf/pdfjs.js",
-      "to": "file:frontend/src/originalview/pdf/recolour.js"
-    },
-    {
-      "type": "imports",
       "from": "file:frontend/src/originalview/pdf/rangeSource.test.js",
       "to": "file:frontend/src/originalview/pdf/rangeSource.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/originalview/pdf/recolour.test.js",
-      "to": "file:frontend/src/originalview/pdf/recolour.js"
     },
     {
       "type": "imports",
@@ -13011,6 +13132,21 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/place.test.js",
       "to": "file:frontend/src/originalview/place.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/scroll.test.js",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/scroll.test.js",
+      "to": "file:frontend/src/originalview/scroll.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/useFind.js",
+      "to": "file:frontend/src/originalview/find.js"
     },
     {
       "type": "imports",
@@ -13525,6 +13661,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/originalview/frame.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/pdf/ocr.js"
     },
     {
@@ -13536,11 +13677,6 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/originalview/place.js"
-    },
-    {
-      "type": "imports",
-      "from": "file:frontend/src/pages/ReadingSession.jsx",
-      "to": "file:frontend/src/originalview/useLamplight.js"
     },
     {
       "type": "imports",
@@ -13571,6 +13707,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/useChromeVisible.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useMedia.js"
     },
     {
       "type": "imports",
@@ -13749,6 +13890,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/ContentsDrawer.jsx",
+      "to": "file:frontend/src/reader/PagesPanel.jsx"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/PhraseChip.jsx",
       "to": "file:frontend/src/reader/WordCard.css"
     },
@@ -13771,6 +13917,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/ReaderToolbar.jsx",
       "to": "file:frontend/src/reader/textSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReaderToolbar.jsx",
+      "to": "file:frontend/src/reader/useMedia.js"
     },
     {
       "type": "imports",

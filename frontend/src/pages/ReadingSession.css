@@ -21,6 +21,9 @@
   min-height: 0;
 }
 
+/* C38.6a: the docked contents pane's column (display: contents, so the pane is the flex item). */
+.rf-reading-pane { display: contents; }
+
 .rf-reading-area {
   flex: 1;
   min-width: 0;

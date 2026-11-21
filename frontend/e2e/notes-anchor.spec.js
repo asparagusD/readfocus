@@ -33,7 +33,7 @@ async function select(page, from, to) {
 
 /** The paper the marker belongs beside: the PDF page under a point, or the EPUB book box. */
 async function paperAt(page, kind, y) {
-  if (kind === 'epub') return page.locator('.rf-ov-book').boundingBox();
+  if (kind === 'epub') return page.locator('.rf-epub').boundingBox(); // C38.7a: the column on the desk
   const boxes = await page.locator('.rf-pdf-page').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON()));
   return boxes.find((b) => y >= b.top && y <= b.bottom) ?? boxes[0];
 }
@@ -48,8 +48,11 @@ async function expectBeside(page, kind, line) {
   const view = page.viewportSize();
   expect(marker.x).toBeGreaterThanOrEqual(0);
   expect(marker.x + marker.width).toBeLessThanOrEqual(view.width);
-  if (kind === 'pdf' && view.width >= 760) {
-    expect(marker.x >= paper.right || marker.x + marker.width <= paper.left, 'outside the page').toBe(true);
+  const right = paper.right ?? paper.x + paper.width;
+  if (view.width >= 760 && right + 40 < view.width) { // C38.8b: an EPUB's beside its column, as a PDF's beside its page
+    expect(marker.x >= right || marker.x + marker.width <= (paper.left ?? paper.x), 'outside the page').toBe(true);
+  } else if (kind === 'pdf' && view.width >= 760) { // C38.2: the page fills the width (fit-width): at the screen's edge
+    expect(view.width - (marker.x + marker.width), 'at the screen edge').toBeLessThanOrEqual(24);
   } else {
     const fromEdge = Math.min(Math.abs(marker.x - paper.x), Math.abs(paper.x + paper.width - (marker.x + marker.width)));
     expect(fromEdge, 'at the page edge').toBeLessThanOrEqual(24);

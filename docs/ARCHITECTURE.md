@@ -297,23 +297,42 @@ re-set the text in our own pages, is retired; `frontend/src/reader/` keeps
 only the parts the original view still uses (word cards, the contents
 drawer, the toolbar, the device file store and the place saver).
 
+C38 (issue 22) reads a book as Edge's PDF viewer does: scrolled on a desk, never
+recoloured (white in either theme), with no book frame (running head, turning leaf,
+edge zones, footer, closing page). `originalview/scroll.js` (pure) lays pages out from
+their sizes and gives the place: the pages in view and the main one, the page with
+most of the view, which the toolbar's page box shows and focus's F7 counts
+(`docs/FOCUS_RULES.md`, version 2026-11-21). The toolbar (`reader/ReaderToolbar.jsx`)
+keeps Edge's three groups and moves the tools that do not fit on one row into More
+tools (measured). Find (`originalview/find.js`, `useFind.js`, `FindBar.jsx`) searches
+every page's or section's text, not only what is drawn, and highlights with the CSS
+Custom Highlight API. The contents pane (`reader/ContentsDrawer.jsx`) docks beside the
+pages from 1024 px with Contents, Pages (`PagesPanel.jsx`, thumbnails drawn only near
+its view) and Annotations. Save my place (B) draws a small ribbon by the place
+(`PlaceMark.jsx`); focus mode's ribbon placer sets its bookmark on a page in view.
+
 - **PDF** (`originalview/pdf/`): PDF.js, loaded only when a PDF opens, with
-  its worker, fonts and decoders served from our origin (`pdfjs.js`); a
-  canvas and a text layer per page, a page cache, Lamplight recolouring,
-  and the region map's boxes for block actions. Scanned pages get a text
+  its worker, fonts and decoders served from our origin (`pdfjs.js`); the pages
+  laid out from their sizes and drawn only near the view (a ±2 page cache, a
+  canvas and a text layer each), one or two across (Page view), zoom kept on the
+  words at the top, and the region map's boxes for block actions. Scanned pages get a text
   layer from tesseract.js (English) running in the browser (`ocr.js`):
   math, code, table and figure boxes are painted out first, and the words
   go to the server once per page.
 - **EPUB** (`originalview/epub/`): foliate-js, vendored and reached only
-  through `engine.js`; sections sanitised (`sanitize.js`) and paginated two
-  pages from 1024 px, one below.
+  through `engine.js`; sections sanitised (`sanitize.js`) and scrolled (foliate's
+  scrolled flow, one 640 px column), a section opening the next as the reader
+  scrolls on past its end; its pages are counted from its characters (1,500 a
+  page) for the page box. `paginator.js` carries three marked ReadFocus changes
+  (its README); a fixed-layout EPUB still turns page by page.
 - **The file** comes from a short-lived signed URL (`GET /books/{id}/file`)
   or, for a book kept on this device, from IndexedDB (`reader/fileStore.js`).
 - **The place** (C26.5): the book opens with `GET /books/{id}/open` at the
-  saved anchor (a new book at its first page), and every turn is saved with
-  `PUT /books/{id}/position` (`reader/usePlaceSaver.js`, one a second);
-  `originalview/place.js` compares places. The closing page is the end of
-  the book; today's reading and its range are gone.
+  saved anchor (a new book at its first page), and the place is saved as it
+  changes with `PUT /books/{id}/position` (`reader/usePlaceSaver.js`, one a
+  second); `originalview/place.js` compares places. The book's closing words sit
+  below a PDF's last page, or in a card at an EPUB's foot; today's reading and
+  its range are gone.
 
 ## Word lookup
 

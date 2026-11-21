@@ -3,7 +3,7 @@
 // hidden and visible, pause and resume, "Still with the book?" after ten quiet minutes, the 2 h 45 notice, the
 // 3-hour stop, and leaving with a session open (end or discard). Mocked API; the page's clock is Playwright's.
 // The end flow (ribbon, ready, quiz) is focus-end.spec.js (C23.6b).
-import { book, expect, openReader, settled, test } from './fixtures';
+import { book, clickTool, expect, openReader, settled, test } from './fixtures';
 
 const bar = (page) => page.getByRole('region', { name: 'Focus mode' });
 const kinds = (api) => api.focus.events.map((e) => e.kind);
@@ -12,7 +12,7 @@ const start = (page) => ({ source: 'outline', body_start: { kind: 'pdf', page, t
   anchor: { kind: 'pdf', page, quads: [[0, 0, 0, 0]], text: '' } } });
 
 async function focusOn(page) {
-  await page.getByRole('switch', { name: 'Focus mode' }).click();
+  await clickTool(page, page.getByRole('switch', { name: 'Focus mode' })); // C38.4b: in More tools on a phone
   await expect(bar(page)).toBeVisible();
 }
 

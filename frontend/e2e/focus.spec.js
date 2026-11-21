@@ -31,7 +31,7 @@ async function serveQuiz(page, api) {
     const passed = right / 5 >= 0.4;
     const time = Math.floor(api.focus.counted / 6);
     const lines = [{ code: 'counted', label: 'Focused reading', seconds: api.focus.counted, points: time },
-      ...(api.focus.voided ? [{ code: 'page_cap', label: 'Time on one page beyond 30 minutes without turning it', seconds: api.focus.voided, points: 0 }] : []),
+      ...(api.focus.voided ? [{ code: 'page_cap', label: 'Time on one page beyond 30 minutes without moving to another page', seconds: api.focus.voided, points: 0 }] : []),
       { code: 'quiz_bonus', label: `Quiz: ${right} of 5 correct`, points: passed ? right * 20 : 0 }];
     return reply(route, { id: 'focus-1', status: 'scored', passed, quiz_correct: right, quiz_total: 5,
       points_time: passed ? time : 0, points_bonus: passed ? right * 20 : 0, points_total: passed ? time + right * 20 : 0,
@@ -47,11 +47,14 @@ async function hide(page, hidden) {
   }, hidden);
 }
 
-async function toChapter1(page) {
-  const before = await settled(page);
+async function toChapter1(page) { // C38.2: a page at a time, from the preface (p. 1) to chapter 1 (p. 3)
+  let before = await settled(page);
   await book(page).focus();
-  await page.keyboard.press('ArrowRight');
-  return settled(page, before);
+  for (let i = 0; i < 2; i += 1) {
+    await page.keyboard.press('ArrowRight');
+    before = await settled(page, before);
+  }
+  return before;
 }
 
 async function startAtChapter1(page, api) {
@@ -160,6 +163,24 @@ test('a 31-minute stall on one page: beats all along with no turn; the extra min
     await expect(rows.nth(1)).toContainText('Not counted');
     await expect(rows.nth(1)).toContainText('· 1 minute');
   });
+
+// C38.8 (issue 22, D3): F7 counts on the page most in view: a scroll within it is no page turn; a scroll that leaves
+// the next page most in view is one, keyed by that page.
+test('a scroll within the page most in view is no page turn; one that leaves the next page most in view is', async ({ page, api }) => {
+  await startAtChapter1(page, api);
+  const area = await page.locator('.rf-pdf-book').boundingBox();
+  await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+  const top = () => page.locator('.rf-pdf-book').evaluate((el) => el.scrollTop);
+  const before = await top();
+  await page.mouse.wheel(0, 160); // page 3 still most in view
+  await page.clock.runFor(1000);
+  await expect.poll(top).toBeGreaterThan(before + 100);
+  await page.clock.runFor(1000);
+  expect(kinds(api)).not.toContain('page_turn');
+  await page.mouse.wheel(0, 560); // now page 4 has most of the view
+  await page.clock.runFor(1000);
+  await expect.poll(() => api.focus.events.filter((e) => e.kind === 'page_turn').map((e) => e.page_key)).toEqual(['p4']);
+});
 
 test('under 40% (1 of 5): no points, said kindly', async ({ page, api }) => {
   await serveQuiz(page, api);

@@ -6,6 +6,7 @@ import { COLOURS, colourName } from '../annotations/palette';
 import { listed, snippetOf } from '../annotations/list';
 import { rove } from '../annotations/roving';
 import { isStartEntry, startLabel } from '../focus/bodyStart';
+import { PagesPanel } from './PagesPanel';
 import './ContentsDrawer.css';
 
 const narrow = () => typeof window !== 'undefined' && window.matchMedia('(width < 640px)').matches;
@@ -21,23 +22,30 @@ const narrow = () => typeof window !== 'undefined' && window.matchMedia('(width 
  * its colour, snippet and page (`pageOf(annotation)`), a colour filter, and a jump to the passage (`onPickAnnotation`).
  * C23.1: the entry where the book's body starts (`bodyStart`) is labelled "focus starts", and with `onStartHere`
  * a footer says where focus mode starts (at `startPage`, its printed page) and offers "The book starts here" (the page shown becomes the start).
+ * C38.6a (issue 22): `docked` (from 1024 px) makes it Edge's left pane: beside the pages, which narrow to make room,
+ * not a dialog; it stays open while the reader reads and picks, a press outside leaves it, and Escape closes it only
+ * from inside it. C38.6b: `pages` ({ total, current, labelOf, thumbnail, onPick }; a PDF's) adds the Pages tab.
  */
 export function ContentsDrawer({ open, onClose, entries, current, onPick, returnTo, annotations = null, pageOf, onPickAnnotation,
-  bodyStart = null, startPage = '', onStartHere = null }) {
+  bodyStart = null, startPage = '', onStartHere = null, docked = false, pages = null }) {
   const panel = useRef(null);
   const [tab, setTab] = useState('contents');
   const [colour, setColour] = useState(null);
-  const sheet = narrow();
+  const sheet = !docked && narrow();
   useEffect(() => {
     if (!open) return undefined;
     // D4: the toolbar stays visible while Contents is open, so the side drawer starts below its row.
     const toolbar = returnTo.current?.closest('.rf-toolbar')?.getBoundingClientRect();
-    if (!sheet && toolbar && panel.current) panel.current.style.top = `${Math.round(toolbar.bottom + 8)}px`;
+    if (!sheet && !docked && toolbar && panel.current) panel.current.style.top = `${Math.round(toolbar.bottom + 8)}px`;
     const first = panel.current?.querySelector('[role="tabpanel"] [aria-current="true"]') || panel.current?.querySelector('[role="tab"][aria-selected="true"]');
     first?.focus();
-    const onKey = (event) => { if (event.key === 'Escape') { event.preventDefault(); onClose(); } };
+    const onKey = (event) => {
+      if (event.key !== 'Escape' || (docked && !panel.current?.contains(event.target))) return;
+      event.preventDefault();
+      onClose();
+    };
     const onDown = (event) => {
-      if (!panel.current?.contains(event.target) && !returnTo.current?.contains(event.target)) onClose();
+      if (!docked && !panel.current?.contains(event.target) && !returnTo.current?.contains(event.target)) onClose();
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('pointerdown', onDown);
@@ -47,10 +55,12 @@ export function ContentsDrawer({ open, onClose, entries, current, onPick, return
       document.removeEventListener('pointerdown', onDown);
       button?.focus();
     };
-  }, [open, onClose, returnTo, sheet]);
+  }, [open, onClose, returnTo, sheet, docked]);
 
   const transition = { duration: seconds('--dur-3'), ease: easing('--ease-settle') };
-  const away = sheet ? { y: '100%' } : { x: '-100%' };
+  const tabs = [['contents', 'Contents'], ...(pages ? [['pages', 'Pages']] : []), ...(annotations ? [['annotations', 'Annotations']] : [])];
+  const shown = tabs.some(([id]) => id === tab) ? tab : 'contents'; // a tab the book has (an EPUB has no Pages)
+  const away = docked ? { opacity: 0 } : sheet ? { y: '100%' } : { x: '-100%' }; // docked: it fades, the pages make room
 
   return (
     <AnimatePresence>
@@ -60,10 +70,11 @@ export function ContentsDrawer({ open, onClose, entries, current, onPick, return
           ref={panel}
           className="rf-contents"
           data-sheet={sheet}
-          role="dialog"
+          data-docked={docked || undefined}
+          role={docked ? undefined : 'dialog'}
           aria-label="Contents"
           initial={away}
-          animate={{ x: 0, y: 0 }}
+          animate={{ x: 0, y: 0, opacity: 1 }}
           exit={away}
           transition={transition}
         >
@@ -73,9 +84,9 @@ export function ContentsDrawer({ open, onClose, entries, current, onPick, return
               <X size={18} strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
-          {annotations && (
+          {tabs.length > 1 && (
             <div className="rf-contents-tabs" role="tablist" aria-label="Show" onKeyDown={(event) => rove(event, event.currentTarget)}>
-              {[['contents', 'Contents'], ['annotations', 'Annotations']].map(([id, name]) => (
+              {tabs.map(([id, name]) => (
                 <button key={id} type="button" role="tab" id={`rf-tab-${id}`} aria-controls={`rf-tabpanel-${id}`}
                   aria-selected={tab === id} tabIndex={tab === id ? 0 : -1} className="rf-contents-tab" onClick={() => setTab(id)}>
                   {name}{id === 'annotations' && <> <span className="rf-contents-count">{annotations.length}</span></>}
@@ -83,9 +94,13 @@ export function ContentsDrawer({ open, onClose, entries, current, onPick, return
               ))}
             </div>
           )}
-          {tab === 'contents' || !annotations ? (
-            <div className="rf-contents-panel" role={annotations ? 'tabpanel' : undefined} id="rf-tabpanel-contents"
-              aria-labelledby={annotations ? 'rf-tab-contents' : undefined}>
+          {shown === 'pages' ? (
+            <div className="rf-contents-panel" role="tabpanel" id="rf-tabpanel-pages" aria-labelledby="rf-tab-pages">
+              <PagesPanel {...pages} />
+            </div>
+          ) : shown === 'contents' ? (
+            <div className="rf-contents-panel" role={tabs.length > 1 ? 'tabpanel' : undefined} id="rf-tabpanel-contents"
+              aria-labelledby={tabs.length > 1 ? 'rf-tab-contents' : undefined}>
             {entries.length ? (
               <ol className="rf-contents-list">
                 {entries.map((entry, n) => {

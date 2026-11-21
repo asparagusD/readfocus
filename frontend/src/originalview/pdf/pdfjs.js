@@ -5,7 +5,6 @@
 // without a third-party request.
 
 import { rangeSource } from './rangeSource';
-import { recolourCanvas } from './recolour';
 
 const ASSETS = '/pdfjs/';
 export const RANGE_BYTES = 256 * 1024; // C35.4: each range PDF.js asks for (its own default is 64 KB)
@@ -50,11 +49,10 @@ export async function openPdf(source) {
 }
 
 /**
- * Render page `pageNumber` of `doc` at `scale` CSS px per PDF point into a new canvas.
- * With `colours` ({ foreground, background }) the page is recoloured for lamplight,
- * images and coloured figures kept as published (recolour.js, C17.4).
+ * Render page `pageNumber` of `doc` at `scale` CSS px per PDF point into a new canvas, as published (C38.3, issue 22
+ * D2: no Lamplight recolouring any more).
  */
-export async function renderPage(doc, pageNumber, scale, pixelRatio = globalThis.devicePixelRatio || 1, colours = null) {
+export async function renderPage(doc, pageNumber, scale, pixelRatio = globalThis.devicePixelRatio || 1) {
   const page = await doc.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
@@ -63,15 +61,22 @@ export async function renderPage(doc, pageNumber, scale, pixelRatio = globalThis
   canvas.style.width = `${Math.floor(viewport.width)}px`;
   canvas.style.height = `${Math.floor(viewport.height)}px`;
   const transform = pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0];
-  // Lamplight: a context with alpha, so text is antialiased in grey, not in LCD colour
-  // fringes that the recolouring would take for coloured ink.
-  const canvasContext = colours ? canvas.getContext('2d', { alpha: true, willReadFrequently: true }) : undefined;
-  const task = page.render({ canvas, canvasContext, viewport, transform, recordImages: Boolean(colours) });
+  const task = page.render({ canvas, viewport, transform });
   const [, textContent] = await Promise.all([task.promise, page.getTextContent({ includeMarkedContent: true })]);
-  // PDF.js 6 keeps the coordinates on the page (recorded on its first render, as fractions,
-  // so they hold at every scale); the task's own getter stays empty.
-  if (colours) recolourCanvas(canvas, page.imageCoordinates ?? task.imageCoordinates, colours);
   return { page, canvas, viewport, textContent };
+}
+
+/** C38.6b: page `pageNumber` drawn `width` CSS px wide, as published, for the Pages tab (its text is not read). */
+export async function renderThumbnail(doc, pageNumber, width, pixelRatio = globalThis.devicePixelRatio || 1) {
+  const page = await doc.getPage(pageNumber);
+  const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.floor(viewport.width * pixelRatio);
+  canvas.height = Math.floor(viewport.height * pixelRatio);
+  canvas.style.width = `${Math.floor(viewport.width)}px`;
+  canvas.style.height = `${Math.floor(viewport.height)}px`;
+  await page.render({ canvas, viewport, transform: pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0] }).promise;
+  return canvas;
 }
 
 /** The outline flattened to [{ title, page }] (1-based), in order; entries without a page are left out. */

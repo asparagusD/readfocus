@@ -1,6 +1,6 @@
 // Block actions in an EPUB (C20.8c): the converted fixture's equation (with its TeX annotation), its Python
 // listing and its plot. Copy as LaTeX and Copy code never leave the device; Explain asks Steve.
-import { test, expect, BOOKS, book, openReader, settled } from './fixtures.js';
+import { test, expect, BOOKS, book, clickTool, openReader, settled } from './fixtures.js';
 
 BOOKS.converted = { file: 'converted.epub', format: 'epub', type: 'application/epub+zip', today: [0],
   chunks: ['Converted text that no book holds, so today runs from the start to the end of the book.'] };
@@ -116,7 +116,7 @@ test('keyboard: a block takes focus, Enter moves to its actions, Esc puts them a
 test('with Steve switched off, an equation keeps Copy as LaTeX and loses Explain', async ({ page, api }) => {
   api.steve.enabled = false; // C21.4 follow-up (steve-guardrails S2)
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // C38.7b: in More tools when the bar is full
   await expect(page.getByPlaceholder('Turn on Steve to ask')).toBeVisible();
   await page.keyboard.press('Escape');
   await hover(page, await find(page, 'math'));

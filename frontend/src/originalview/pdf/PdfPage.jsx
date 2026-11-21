@@ -11,9 +11,9 @@ import './pdf.css';
  * C19.4: on a scanned page `ocr` (pdf/ocr.js) gives the words read by OCR, added to the same
  * text layer; while the page is first read a quiet note says so.
  * C21.3: `annotations` (this page and its neighbours') are drawn as boxes between the canvas and the text layer,
- * blended so ink keeps its colour: `darken` on a light page, `lighten` on a recoloured dark one (`dark`).
+ * blended (`darken`) so ink keeps its colour. C38.3: the page is always as published, so in Paper's colours.
  */
-export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null, annotations = null, dark = false }) {
+export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null, annotations = null }) {
   const [reading, setReading] = useState(false);
   const root = useRef(null);
   const sheet = useRef(null);
@@ -77,8 +77,8 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', oc
       style={size ? { width: size.width, height: size.height } : undefined}>
       <div ref={sheet} className="rf-pdf-page__canvas" />
       {size && annotations?.length > 0 && (
-        // A light page takes Paper's colours even in Lamplight (original colours): the layer says which.
-        <div className="rf-pdf-annos" data-theme={dark ? undefined : 'paper'} data-dark={dark || undefined} aria-hidden="true">
+        // The page is as published, light, so it takes Paper's highlight colours in Lamplight too.
+        <div className="rf-pdf-annos" data-theme="paper" aria-hidden="true">
           {pdfBoxes(annotations, pageNumber, size.scale).map((box) => (
             <span key={box.key} className="rf-anno" data-id={box.id} data-style={box.style} data-colour={box.color}
               style={{ left: box.left, top: box.top, width: box.width, height: box.height }} />

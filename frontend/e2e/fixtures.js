@@ -349,7 +349,7 @@ function focusRoute(route, request, focus, path) {
     const pts = Math.floor(focus.active / 6);
     const passed = focus.passed !== false; // C23.7: a test can fail the quiz (1 of 3)
     const lines = [{ code: 'counted', label: 'Focused reading', seconds: focus.active, points: pts },
-      { code: 'page_cap', label: 'Time on one page beyond 30 minutes without turning it', seconds: 600, points: 0 },
+      { code: 'page_cap', label: 'Time on one page beyond 30 minutes without moving to another page', seconds: 600, points: 0 },
       { code: 'quiz_bonus', label: `Quiz: ${passed ? 2 : 1} of 3 correct`, points: passed ? 40 : 0 },
       ...(passed ? [] : [{ code: 'quiz_failed', label: 'Quiz below 40%: this session earns 0 points', points: 0 }])];
     return json(route, { ...view(), passed, quiz_score: passed ? 2 / 3 : 1 / 3, points_time: passed ? pts : 0,
@@ -415,12 +415,30 @@ export async function openReader(page) {
 }
 
 /**
+ * C38.4b: a tool of the reader's toolbar, clicked: from "More tools" when the bar has no room for it there (below
+ * 1280 px: Look up, Steve, Focus, Quiz me; at any width: the theme, pin, full screen), the panel closed again after.
+ */
+export async function clickTool(page, tool) {
+  const more = page.getByRole('button', { name: 'More tools' });
+  const tucked = !(await tool.isVisible());
+  if (tucked) await more.click();
+  await tool.click();
+  if (tucked && (await more.count()) && (await more.getAttribute('aria-expanded')) === 'true') await more.click();
+}
+
+/** C38.4b: "More tools" opened when `tool` is in it, so a test can look at it there. */
+export async function reveal(page, tool) {
+  if (!(await tool.isVisible())) await page.getByRole('button', { name: 'More tools' }).click();
+  return tool;
+}
+
+/**
  * C37.3: the notepad's list of every note, beside the book. The toolbar's Notes opens the notebook (whose "All
  * notes" opens the list); since C37.4 opening the notebook moves typed notes into it, so a test of the list opens
  * it from Steve's panel, the side area's other tab, and seeded typed notes stay as they are.
  */
 export async function openNotepad(page) {
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' }));
   await page.getByRole('complementary').getByRole('tab', { name: /^Notes/ }).click();
   await expect(page.getByRole('complementary', { name: 'Notes' })).toBeVisible();
 }
@@ -430,6 +448,10 @@ export const spoken = (page) => page.locator('.rf-ov-live');
 
 /** The book on the page: focus it before keys. */
 export const book = (page) => page.locator('.rf-ov-stage');
+
+/** C38.6a: the contents: Edge's left pane beside the pages from 1024 px, else a drawer (a dialog). */
+export const contentsPane = (page) => page.getByRole('complementary', { name: 'Contents' })
+  .or(page.getByRole('dialog', { name: 'Contents' }));
 
 /** The place shown: { start, end } as the frame reports them ("5", or "2:340" for an EPUB). */
 export const shown = (page) => page.locator('.rf-ov').evaluate((el) => ({ start: el.dataset.start, end: el.dataset.end }));
@@ -462,6 +484,21 @@ export async function settled(page, away = null) {
 }
 
 /**
+ * C38.2: a PDF scrolled so the view straddles the main page and the next one (half of each), as a two-page spread
+ * used to show; returns the place once it has settled.
+ */
+export async function twoPagesInView(page) {
+  await settled(page);
+  await page.locator('.rf-pdf-book').evaluate((el) => {
+    const slots = [...el.querySelectorAll('.rf-pdf-slot')].map((s) => ({ top: s.offsetTop, height: s.offsetHeight }));
+    const next = slots.find((s) => s.top > el.scrollTop + 32) ?? slots.at(-1); // the page below the one at the top
+    el.scrollTop = next.top - el.clientHeight / 2;
+  });
+  await expect.poll(async () => { const { start, end } = await shown(page); return Number(end) - Number(start); }).toBe(1);
+  return settled(page);
+}
+
+/**
  * C37.7: the book back at rest once the notebook has gone: it recedes (scale, blur, dim) while the notebook is open
  * and comes forward over about 450 ms, so a word or a marker measured sooner is still moving.
  */
@@ -472,9 +509,9 @@ export async function bookAtRest(page) {
   })).toBe('none none 1');
 }
 
-/** The boxes of every whole-word occurrence of `w` in a document's book text (the PDF's spread, or a section's body). */
+/** The boxes of every whole-word occurrence of `w` in a document's book text (the PDF's pages, or a section's body). */
 function wordBoxes(w) {
-  const root = document.querySelector('.rf-pdf-spread') ?? (document.querySelector('.rf-ov') ? null : document.body);
+  const root = document.querySelector('.rf-pdf-pages') ?? (document.querySelector('.rf-ov') ? null : document.body);
   if (!root) return [];
   const boxes = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);

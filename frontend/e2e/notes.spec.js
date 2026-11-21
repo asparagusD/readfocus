@@ -2,7 +2,7 @@
 // the selected passage on the notebook page for this place, a second passage on the same page of the book joins it,
 // the notepad's list follows the book and a page's reference jumps back to its passage. A page changed offline is
 // saved on reconnect, and a change another tab saved first shows the merge prompt. Mocked API (fixtures.js).
-import { test, expect, bookAtRest, openNotepad, openReader, settled, wordPoint } from './fixtures.js';
+import { book, bookAtRest, expect, openNotepad, openReader, settled, test, wordPoint } from './fixtures.js';
 
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
 const notebook = (page) => page.getByRole('dialog', { name: 'Notebook' });
@@ -11,18 +11,22 @@ const written = (api) => api.notePatches.filter((p) => p.content?.elements).at(-
 
 async function turn(page) {
   const before = await settled(page);
-  await page.getByRole('button', { name: 'Next' }).click();
+  await book(page).focus();
+  await page.keyboard.press('PageDown'); // C38.4c: a PDF has no Next button
   return settled(page, before);
 }
 
-/** Drag the mouse over a passage, from the start of `from` to the end of `to` (the book at rest: C37.7). */
+/**
+ * Drag the mouse over a passage, from the start of `from` to just past the end of `to` (the book at rest: C37.7). C38.2:
+ * at fit-page a word can be 19 px wide, and a drag ending a pixel inside its last letter stops before that letter.
+ */
 async function select(page, from, to) {
   await bookAtRest(page);
   const a = await wordPoint(page, from);
   const b = await wordPoint(page, to);
   await page.mouse.move(a.left + 1, a.y);
   await page.mouse.down();
-  await page.mouse.move(b.right - 1, b.y, { steps: 8 });
+  await page.mouse.move(b.right + 0.5, b.y, { steps: 8 });
   await page.mouse.up();
   await expect(page.getByRole('toolbar', { name: 'Highlight the selection' })).toBeVisible();
 }

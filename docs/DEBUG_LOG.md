@@ -5632,3 +5632,177 @@ check the book has no transform or filter once the notebook has gone.
 
 ### Commit
 feat(ui): rack-focus the book as the notebook opens and closes
+
+## 2026-11-20 C38.1 — notepad "empty, failed load and Try again" timed out once
+
+**Status:** not reproduced (watch)
+
+### Symptom
+The full e2e run for C38.1: 362 passed, 1 failed. `notepad.spec.js` "empty, failed load and Try again" hit the
+30 s test timeout after `page.reload()`; the log shows the reload's requests up to `PUT /books/e2e-book/position`
+and nothing after. The page snapshot was overwritten by the rerun below before it was read.
+
+### Repro
+Not reproduced: the test alone 5 of 5; `notepad.spec.js` with `--repeat-each=3` 27 of 27; the full suite again
+363 of 363 (14.8 min).
+
+### Hypotheses
+1. C38.1 changed it. Ruled out: `originalview/scroll.js` is imported by nothing yet, and `focus/clock.js`
+   `pageKey` returns what it did for a place without `main` (unit tests), which every place is today.
+2. A slow reload or a held route in a long run (this test reroutes `/notes` to fail twice). Not tested; it has
+   not failed before in this session's six full runs.
+
+### Root cause
+Unknown.
+
+### Fix
+None. If it fails again, keep the trace (`trace: 'retain-on-failure'`) and read `error-context.md` first.
+
+### Regression test
+None.
+
+### Commit
+feat(frontend): add the place model for a scrolled book (C38.1)
+
+## 2026-11-20 C38.4a — the end of a PDF slips back to its last page; the two-page helper picks page 1
+
+**Status:** fixed
+
+### Symptom
+The full e2e run for C38.4a: 361 passed, 5 failed. `reading.spec.js` (pdf) "the last page…" and "a theme change or
+resize on the closing page…": after End the live region said "p. 4 of 6" (the last page's label), not "End of the
+book". `focus-end.spec.js` (3 tests): `twoPagesInView` never saw two pages in view.
+
+### Repro
+`npx playwright test e2e/focus-end.spec.js e2e/reading.spec.js`: 4 of the 5 every run (the fifth in the full run).
+A trace after End: the scroll box's height went from 746 to 698 px and the view stopped at the last page's top.
+
+### Hypotheses
+1. End changes the chapter to "Chapter 2 Noise"; the toolbar's title grows, and with the new page box and Page view
+   the pill no longer fits one row at 1440 and wraps; the book area loses 48 px, fit-page lays the pages out again,
+   and the hold keeps the last page's top, not the closing words below it. Evidence: the trace's 746 to 698 and the
+   slots' heights 714 to 666. Result: confirmed.
+2. The helper looks for the first page below the view's top + 1 px; since C38.4a's hold keeps the top of the book at
+   0 (the gap above page 1), that is page 1 itself. Evidence: the helper's log, `top: 0`, `next.top: 16`. Result:
+   confirmed.
+
+### Root cause
+`PdfBook.jsx` held only the words at the top of the view through a new layout, so a reader at the very end was moved
+off it; the toolbar title's 32ch let the pill wrap. `fixtures.js` `twoPagesInView` assumed the view rests on page 1's
+top.
+
+### Fix
+`PdfBook.jsx`: a view scrolled to the very end stays at the end through a new layout. `ReaderToolbar.css`: the title is
+at most 24ch. `fixtures.js`: the page below the one at the top (more than 32 px below the view's top).
+
+### Regression test
+`reading.spec.js` (pdf, both closing-page tests: the theme change and the resize relayout the pages at the end) and
+the three `focus-end.spec.js` tests; 48 of 48 in `focus-end`, `reading` and `reader` after the fix.
+
+### Commit
+feat(ui): add Edge's page box and Page view for a PDF
+
+## 2026-11-20 C38.4c — the PDF page-turn bench ran at 25.2 fps once
+
+**Status:** not reproduced (watch)
+
+### Symptom
+The full e2e run for C38.4c: 368 passed, 1 failed. `reader.spec.js` "page-turn frame rate" (pdf, the frame-rate
+project): 25.2 fps against its floor of 30.
+
+### Repro
+Not reproduced: `npx playwright test e2e/reader.spec.js --project=frame-rate --repeat-each=3`: 75 fps on every run, PDF
+and EPUB, worst frame 13.5-13.8 ms, none over 33 ms.
+
+### Hypotheses
+1. C38.4c's taller pages (no footer, so fit-page draws them larger) cost frames when a step draws new canvases.
+   Against: the bench alone holds headless Edge's 75 fps ceiling three times.
+2. The machine was loaded near the end of a 15-minute run. Not tested directly.
+
+### Root cause
+Unknown; most likely load on the machine (hypothesis 2).
+
+### Fix
+None. The scroll bench of C38.10 replaces this one.
+
+### Regression test
+None.
+
+### Commit
+feat(ui): retire a PDF's footer; its page in the toolbar and the focus bar
+
+## 2026-11-21 C38.7a — a scrolled EPUB's place went stale after a jump and moved on a line at every relayout
+
+**Status:** fixed
+
+### Symptom
+With foliate's scrolled flow: after End (or any jump that left the view where it was), the reader's next scroll was
+not reported, so the place, the end of the book and its closing card stayed stale (`data-ending` never set). A resize,
+a text-size change or the side panel opening moved the place on a line each time (1:1266 to 1:1360 at 1100 px), so a
+note on the first line was no longer "here" and a reload came back a line later.
+
+### Repro
+A probe spec (scratch): open reflow.epub, End, wheel down, read `.rf-ov[data-start]`; and ArrowRight, then three
+viewport sizes, reading the start after each.
+
+### Hypotheses
+1. foliate's paginator marks the scroll after an anchoring as its own (`#justAnchored`) and skips reporting it; when
+   the anchoring did not move the view, no scroll event consumes the mark, so the reader's first scroll is skipped.
+   Evidence: `#scrollTo` calls `#afterScroll(reason)` on an unchanged position. Result: confirmed (fixed by clearing
+   the mark there).
+2. foliate's default 48 px margin offsets anchoring and the visible range. Result: part of it (margin 0 alone left the
+   drift).
+3. `getVisibleRange` counts a line as in view only when its top is below the view's top (`q.left > start`), and
+   `#scrollToRect` scrolls a line's top exactly to that edge, so the anchored line drops out. Result: confirmed.
+
+### Root cause
+Two edge cases in foliate's scrolled flow (`paginator.js`): an unmoved anchoring left the skip mark set, and anchoring
+put the line exactly on the edge the visible range excludes.
+
+### Fix
+`paginator.js` (three lines marked "ReadFocus change", recorded in the vendor README): clear the mark when the view
+did not move; scroll a pixel above the anchor's line. `engine.js`: margin 0.
+
+### Regression test
+`reader.spec.js` epub: a resize keeps the place, a text-size change and a reload keep the saved anchor, End shows the
+closing card; `notes.spec.js` epub: the note stays "here" after the side panel opens; `reading.spec.js` epub: a resize
+at the end keeps the closing card.
+
+### Commit
+feat(ui): scroll an EPUB on the desk, as a PDF; retire its paged frame
+
+## 2026-11-21 C38.7b — an EPUB's margin marker sat 44 px below its passage after the notebook closed
+
+**Status:** fixed
+
+### Symptom
+The full e2e run for C38.7b: 379 passed, 1 failed. `notes-anchor.spec.js` (epub) "Add note starts a page at the
+selection…": "marker at 177.2, line at 132.7", 44.5 px apart, on every run.
+
+### Repro
+`npx playwright test e2e/notes-anchor.spec.js:65` (3 of 3), and a probe logging the first line's top, the place and
+the toolbar's height while the notebook opens.
+
+### Hypotheses
+1. The new page box (C38.7b) widened the EPUB's toolbar until, at 1440 px, the Notes count badge wrapped it onto two
+   rows; the book lost 48 px, foliate re-anchored and the text moved. Evidence: removing the page box made the probe
+   steady; the toolbar 54 to 102 px tall as the notebook opened. Result: confirmed (also: at 1280 the bar wrapped for
+   both kinds already, missed by C38.4b's 1440 and 1024 review).
+2. A fit check would move the tools out, but its first version flipped every frame: More tools sits inside the end
+   group, so "in the bar" was true for the closed panel and cached a width of 0. Evidence: logged need and room
+   alternating 1351 and 962. Result: confirmed.
+
+### Root cause
+`ReaderToolbar.jsx` put Look up, Steve, Focus and the session's tools in the bar from a fixed 1280 px, whatever the
+title, the book's controls or the notes count left room for, so the bar wrapped and every wrap re-laid out the book.
+
+### Fix
+`ReaderToolbar.jsx` `useFits`: the tools sit in the bar only while they fit on one row with 40 px to spare (a
+ResizeObserver over the bar and its groups; their width kept from when they were last directly in the end group).
+
+### Regression test
+`reader.spec.js` "toolbar on one row" (pdf, epub, at 1280 and 1440, still one row once settled); `notes-anchor.spec.js`
+epub passes; the C38.4b More tools tests at 1024 and 375 pass.
+
+### Commit
+feat(ui): give an EPUB the page box; keep the toolbar on one row

@@ -40,6 +40,10 @@ test('page keys and positions for the events', () => {
   assert.equal(pageKey({ kind: 'pdf', pages: [12, 13] }), 'p12');
   assert.equal(pageKey({ kind: 'epub', index: 3, charStart: 4210 }), 's3:4210');
   assert.equal(pageKey(null), null);
+  // C38.1: a scrolled book's page is the one most in view, not the first with some of it in view
+  assert.equal(pageKey({ kind: 'pdf', pages: [12, 13], main: 13 }), 'p13');
+  assert.equal(pageKey({ kind: 'epub', index: 3, charStart: 4210, main: 42 }), 'l42');
+  assert.equal(pageKey({ kind: 'epub', index: 0, charStart: 0, main: 1 }), 'l1');
   assert.equal(placePosition({ kind: 'pdf', pages: [12, 13] }), 12_000_000);
   assert.equal(placePosition({ kind: 'epub', index: 3, charStart: 4210 }), 3_004_210);
   assert.equal(placePosition({ kind: 'epub', index: 3, charStart: 5_000_000 }), 3_999_999);

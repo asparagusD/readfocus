@@ -67,11 +67,16 @@ stopwatch pauses from the moment the prompt appeared; answering resumes
 it. The prompt never blocks reading.
 
 **F7. Page cap.** Active time on one page beyond `FOCUS_PAGE_CAP_MIN`
-minutes without a page turn earns 0 points (voided); the first
+minutes without moving to another page earns 0 points (voided); the first
 `FOCUS_PAGE_CAP_MIN` minutes still count. Time is active time on that page
 visit, not the clock, so a tab closed on a page and reopened later is not
-voided for the time it was closed. (A page is a PDF page, or an EPUB screen
-page between two turns.) Decided at C23.3 (open question 1).
+voided for the time it was closed. Decided at C23.3 (open question 1).
+
+Since C38.8 (issue 22, D3; rules version 2026-11-21) a book scrolls, so the
+page is the one taking up most of the view: a PDF page, or an EPUB's
+counted page (1,500 characters). Scrolling within it is no page turn; the
+page changes, and a page turn is sent, when another page takes up more of
+the view. Sessions scored before keep their scores and their version.
 
 **F8. Session cap.** At `FOCUS_SESSION_CAP_MIN` minutes of active time
 the stopwatch stops and the bookmark quiz starts (F9-F10); no further

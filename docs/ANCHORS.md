@@ -216,3 +216,26 @@ document.
 - **Not yet built:** re-finding a moved passage (A5) and flagging
   `orphaned`; an EPUB note whose CFI no longer resolves has no marker but
   stays in the notepad.
+
+## A12. Page marks and comments (C39, issue 23)
+
+Storage and API as of C39.1; the tools that draw them come in C39.3-C39.8.
+
+- **Storage** (migration 036): one `page_marks` row per ink stroke or
+  text box on a PDF page (`kind` ink or text; EPUBs take none, D2).
+  `data` is in PDF points from the page's top-left (A1): a stroke's
+  `points` `[x, y, pressure]` (pressure 0-1, a tap is one point) and its
+  `width`; a text box's `x`, `y` (its top-left), `width`, `text` and font
+  `size`. Every coordinate is below 10,000 points (A4).
+- **Position** (A4): set by the server, `page * 1e6 + floor(top) * 1e2`,
+  the top being the stroke's highest point or the box's `y`; no x term
+  (the server has no page width). It follows a moved box.
+- **Colours** (A8): marks take `--mark-*` names (`ink`, `poppy`, `amber`,
+  `fern`, `ocean`, `berry`, `plum`); highlights Edge's set (D3), the five
+  first names kept so older rows stay valid.
+- **Comments** (D1): `annotations.comment`, plain text up to 1,000
+  characters, trimmed; an empty one clears it.
+- **API** (`backend/routers/page_marks.py`): `GET /books/{id}/marks`
+  (`first`, `last` pages), `POST`, `PATCH /marks/{id}` (colour or data;
+  the kind and page stay), `DELETE` (a hard delete, as annotations: Undo
+  re-creates). Owner only, 404 otherwise; an EPUB is 409.

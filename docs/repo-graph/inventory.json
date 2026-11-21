@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 988,
-    "inventoried": 845,
+    "tracked": 990,
+    "inventoried": 847,
     "excluded": 143
   },
   "files": [
@@ -473,8 +473,8 @@
     {
       "path": "backend/main.py",
       "language": "python",
-      "lines": 89,
-      "size_bytes": 3514,
+      "lines": 91,
+      "size_bytes": 3632,
       "role": "entry",
       "purpose": "FastAPI app: CORS through backend/cors.py, the routers and /health (status, model_ready, timestamp; never waits on the model); its lifespan preloads the embedding model on a background thread unless EMBED_PRELOAD=0 and starts the ingestion sweep (backend/services/ingestion_worker.py) unless INGEST_SWEEP=0. Starts no other process. C23.4: the focus router under /focus and the abandoned focus-session sweep at startup (FOCUS_SWEEP). C24.4: the internal router under /internal (scheduled jobs). C24.5: the progress router (/me/progress, /badges, /leagues/current)."
     },
@@ -693,6 +693,14 @@
       "size_bytes": 5037,
       "role": "router",
       "purpose": "OCR endpoints (C19.4): POST /books/{id}/ocr stores one scanned page's tesseract.js words (owner only, flagged pages only, cleaned by ocr_pages) and, when that completes a fully scanned book with no chunks, requeues and runs ingestion from the OCR text; GET /books/{id}/ocr gives scanned_pages, done, and with first..last (at most 20) each page's words for the text layer."
+    },
+    {
+      "path": "backend/routers/page_marks.py",
+      "language": "python",
+      "lines": 169,
+      "size_bytes": 7080,
+      "role": "router",
+      "purpose": "Ink strokes and text boxes on a PDF page (C39.1, issue 23; ANCHORS A12): GET /books/{id}/marks (first/last pages, reading order), POST, PATCH /marks/{id} (colour or data; kind and page fixed; position follows), DELETE; PDF books only (EPUB 409), data in PDF points within limits, owner only, 404 otherwise."
     },
     {
       "path": "backend/routers/progress.py",
@@ -1409,8 +1417,8 @@
     {
       "path": "backend/tests/test_book_deleting_hidden.py",
       "language": "python",
-      "lines": 84,
-      "size_bytes": 3424,
+      "lines": 86,
+      "size_bytes": 3489,
       "role": "test",
       "purpose": "C35.2b (issue 18): a book marked deleting is off the shelf and out of the shelf space, 404 at every endpoint that takes its id (details, file, pages, regions, status, resume, body start, open, OCR, highlights, notes), closed to focus, Steve and device pages, and never marked ready or failed by ingestion."
     },
@@ -1805,6 +1813,14 @@
       "size_bytes": 10471,
       "role": "test",
       "purpose": "Pytest on hand-made scores, sessions and answers: every score band at its boundaries, the re-read queue rules and bound, rolling damping, no growth after a low test, compounding within bounds, abandonment and its window, focus minutes and speed bounds, question-mix moves and their bounds, reason wording, the Results keys, and that decide is pure."
+    },
+    {
+      "path": "backend/tests/test_page_marks_api.py",
+      "language": "python",
+      "lines": 164,
+      "size_bytes": 7914,
+      "role": "test",
+      "purpose": "Pytest for the page marks API: a stroke, a box and a dot stored with server positions; EPUB 409, missing or deleting book 404; bad colours, kinds, pages, points, pressure, widths, sizes, text and fields refused; reading order and page filter; another reader sees and changes nothing; a box moved and restyled; delete."
     },
     {
       "path": "backend/tests/test_pdf_text.py",
@@ -2233,8 +2249,8 @@
     {
       "path": "docs/ANCHORS.md",
       "language": "markdown",
-      "lines": 218,
-      "size_bytes": 10932,
+      "lines": 241,
+      "size_bytes": 12248,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): PDF quad and EPUB CFI anchors, ranges and point anchors, the sortable position, how anchors survive zoom and re-pagination, mapping to chunks, and the C17 migration of C12 reading positions."
     },
@@ -6705,8 +6721,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 847,
-      "size_bytes": 302690,
+      "lines": 849,
+      "size_bytes": 303398,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },
@@ -6737,8 +6753,8 @@
     {
       "path": "tools/repo_graph/tests/test_build.py",
       "language": "python",
-      "lines": 291,
-      "size_bytes": 12453,
+      "lines": 292,
+      "size_bytes": 12500,
       "role": "test",
       "purpose": "Pytest: graph edges on a tiny in-memory fixture repo, and coverage of routers and pages in the real graph."
     },

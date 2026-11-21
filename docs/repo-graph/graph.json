@@ -16,6 +16,13 @@
       "handler": "delete_book"
     },
     {
+      "id": "endpoint:DELETE /marks/{mark_id}",
+      "type": "endpoint",
+      "method": "DELETE",
+      "path": "/marks/{mark_id}",
+      "handler": "delete_mark"
+    },
+    {
       "id": "endpoint:DELETE /notes/{note_id}",
       "type": "endpoint",
       "method": "DELETE",
@@ -77,6 +84,13 @@
       "method": "GET",
       "path": "/books/{book_id}/file",
       "handler": "get_book_file"
+    },
+    {
+      "id": "endpoint:GET /books/{book_id}/marks",
+      "type": "endpoint",
+      "method": "GET",
+      "path": "/books/{book_id}/marks",
+      "handler": "list_marks"
     },
     {
       "id": "endpoint:GET /books/{book_id}/notes",
@@ -247,6 +261,13 @@
       "handler": "restyle_annotation"
     },
     {
+      "id": "endpoint:PATCH /marks/{mark_id}",
+      "type": "endpoint",
+      "method": "PATCH",
+      "path": "/marks/{mark_id}",
+      "handler": "change_mark"
+    },
+    {
       "id": "endpoint:PATCH /notes/{note_id}",
       "type": "endpoint",
       "method": "PATCH",
@@ -287,6 +308,13 @@
       "method": "POST",
       "path": "/books/{book_id}/annotations",
       "handler": "create_annotation"
+    },
+    {
+      "id": "endpoint:POST /books/{book_id}/marks",
+      "type": "endpoint",
+      "method": "POST",
+      "path": "/books/{book_id}/marks",
+      "handler": "create_mark"
     },
     {
       "id": "endpoint:POST /books/{book_id}/note-files",
@@ -1126,6 +1154,12 @@
       "language": "python"
     },
     {
+      "id": "file:backend/routers/page_marks.py",
+      "type": "file",
+      "role": "router",
+      "language": "python"
+    },
+    {
       "id": "file:backend/routers/progress.py",
       "type": "file",
       "role": "router",
@@ -1955,6 +1989,12 @@
     },
     {
       "id": "file:backend/tests/test_optimizer_pace.py",
+      "type": "file",
+      "role": "test",
+      "language": "python"
+    },
+    {
+      "id": "file:backend/tests/test_page_marks_api.py",
       "type": "file",
       "role": "test",
       "language": "python"
@@ -6641,6 +6681,26 @@
     },
     {
       "type": "defines_endpoint",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "endpoint:DELETE /marks/{mark_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "endpoint:GET /books/{book_id}/marks"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "endpoint:PATCH /marks/{mark_id}"
+    },
+    {
+      "type": "defines_endpoint",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "endpoint:POST /books/{book_id}/marks"
+    },
+    {
+      "type": "defines_endpoint",
       "from": "file:backend/routers/progress.py",
       "to": "endpoint:GET /badges"
     },
@@ -7621,6 +7681,11 @@
     {
       "type": "imports",
       "from": "file:backend/main.py",
+      "to": "file:backend/routers/page_marks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/main.py",
       "to": "file:backend/routers/progress.py"
     },
     {
@@ -8036,6 +8101,31 @@
     {
       "type": "imports",
       "from": "file:backend/routers/ocr.py",
+      "to": "file:backend/services/supabase_client.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "file:backend/services/anchor_checks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "file:backend/services/book_purge.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/routers/page_marks.py",
       "to": "file:backend/services/supabase_client.py"
     },
     {
@@ -9461,6 +9551,11 @@
     {
       "type": "imports",
       "from": "file:backend/tests/test_book_deleting_hidden.py",
+      "to": "file:backend/routers/page_marks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_book_deleting_hidden.py",
       "to": "file:backend/routers/reading.py"
     },
     {
@@ -10417,6 +10512,26 @@
       "type": "imports",
       "from": "file:backend/tests/test_optimizer_pace.py",
       "to": "file:backend/agents/policy.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_page_marks_api.py",
+      "to": "file:backend/dependencies.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_page_marks_api.py",
+      "to": "file:backend/main.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_page_marks_api.py",
+      "to": "file:backend/routers/page_marks.py"
+    },
+    {
+      "type": "imports",
+      "from": "file:backend/tests/test_page_marks_api.py",
+      "to": "file:backend/tests/memory_db.py"
     },
     {
       "type": "imports",
@@ -15215,6 +15330,16 @@
     },
     {
       "type": "reads_table",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "table:books"
+    },
+    {
+      "type": "reads_table",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "table:page_marks"
+    },
+    {
+      "type": "reads_table",
       "from": "file:backend/routers/progress.py",
       "to": "table:league_members"
     },
@@ -15807,6 +15932,11 @@
       "type": "writes_table",
       "from": "file:backend/routers/ocr.py",
       "to": "table:books"
+    },
+    {
+      "type": "writes_table",
+      "from": "file:backend/routers/page_marks.py",
+      "to": "table:page_marks"
     },
     {
       "type": "writes_table",

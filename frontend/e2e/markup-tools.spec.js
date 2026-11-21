@@ -65,7 +65,7 @@ test('the menu picks a colour and turns the highlighter on; keys move through it
   await menu.getByRole('radio', { name: 'Fern' }).click();
   await expect(menu).toHaveCount(0);
   await expect(highlighter(page)).toHaveAttribute('aria-pressed', 'true');
-  await expect(markup(page).locator('.rf-markup-swatch')).toHaveAttribute('data-colour', 'fern');
+  await expect(highlighter(page).locator('.rf-markup-swatch')).toHaveAttribute('data-colour', 'fern');
   await drag(page, 'lamp', 'circle');
   await expect.poll(() => api.annotations.map((a) => a.color)).toEqual(['fern']);
 
@@ -74,7 +74,7 @@ test('the menu picks a colour and turns the highlighter on; keys move through it
   await page.mouse.move(5, 5);
   await drag(page, 'threw', 'small');
   await selectionBar(page).getByRole('button', { name: 'Sky highlight' }).click(); // H's colour now: the swatch follows
-  await expect(markup(page).locator('.rf-markup-swatch')).toHaveAttribute('data-colour', 'sky');
+  await expect(highlighter(page).locator('.rf-markup-swatch')).toHaveAttribute('data-colour', 'sky');
 });
 
 test.describe('fit', () => {
@@ -104,6 +104,6 @@ test.describe('fit', () => {
     await menuButton(page).click();
     await page.getByRole('radio', { name: 'Ocean' }).click();
     await expect(more).toHaveAttribute('aria-expanded', 'true');
-    await expect(markup(page).locator('.rf-markup-swatch')).toHaveAttribute('data-colour', 'ocean');
+    await expect(highlighter(page).locator('.rf-markup-swatch')).toHaveAttribute('data-colour', 'ocean');
   });
 });

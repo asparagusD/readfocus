@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { spansFor } from './ocr';
 import { loadPdfjs } from './pdfjs';
 import { pdfBoxes } from '../../annotations/paint';
+import { InkLayer } from './InkLayer';
 import './pdf.css';
 
 /**
@@ -12,8 +13,10 @@ import './pdf.css';
  * text layer; while the page is first read a quiet note says so.
  * C21.3: `annotations` (this page and its neighbours') are drawn as boxes between the canvas and the text layer,
  * blended (`darken`) so ink keeps its colour. C38.3: the page is always as published, so in Paper's colours.
+ * C39.4: `marks` (ink strokes near the view) are drawn over the text layer by InkLayer, which takes the pointer while
+ * Draw is on (`ink`).
  */
-export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null, annotations = null }) {
+export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', ocr = null, annotations = null, marks = null, ink = null }) {
   const [reading, setReading] = useState(false);
   const root = useRef(null);
   const sheet = useRef(null);
@@ -86,6 +89,10 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', oc
         </div>
       )}
       <div ref={text} className="textLayer" />
+      {size && (marks || ink) && (
+        <InkLayer page={pageNumber} size={size} ink={ink}
+          marks={(marks ?? []).filter((m) => m.page === pageNumber && m.kind === 'ink')} />
+      )}
       {reading && <p className="rf-pdf-ocr" role="status">Making this page selectable…</p>}
     </div>
   );

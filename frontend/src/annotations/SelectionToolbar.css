@@ -56,6 +56,7 @@
   box-shadow: 0 0 0 var(--border-hair) var(--line-field);
 }
 .rf-seltool-dot > span { background: var(--c-dot); } /* C39.2: any palette colour (tokens.css) */
+.rf-seltool-dot[data-mark-colour] > span { background: var(--c-mark); } /* C39.4: an ink colour */
 .rf-seltool-dot:hover > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-3); }
 .rf-seltool-dot[data-last] > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-2); } /* what H and U use */
 

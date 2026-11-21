@@ -1,23 +1,31 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toolStatus, toolsFor } from './markup';
-import { COLOUR_EVENT, lastColour, storeLastColour } from './palette';
+import { readInk, storeInk } from './ink';
+import { COLOUR_EVENT, lastColour, MARK_COLOURS, storeLastColour } from './palette';
 
 /**
  * Edge's markup tools in a reading session (C39.3, issue 23): the tools this book offers, the one on (null: the
  * pointer selects text), the highlighter's colour (the last colour picked on this device, shared with H and the
  * selection toolbar, and kept in step with them), and what a screen reader is told. Escape anywhere outside a field
  * or a dialog turns the tool off, as does `active` going false (focus mode takes the toolbar's place).
+ * C39.4: Draw's ink colour and thickness (`ink`, `setInk`), kept on this device.
  */
 export function useMarkupTool(kind, active = true) {
   const tools = useMemo(() => toolsFor(kind), [kind]);
   const [tool, setTool] = useState(null);
   const [colour, setColourNow] = useState(lastColour);
   const [status, setStatus] = useState('');
+  const [ink, setInkNow] = useState(() => readInk(MARK_COLOURS));
 
   const choose = useCallback((next) => {
     setTool(next);
-    setStatus(toolStatus(next, { colour: lastColour() }));
+    setStatus(toolStatus(next, { colour: lastColour(), ink: readInk(MARK_COLOURS) }));
   }, []);
+  const setInk = useCallback((change) => setInkNow((now) => {
+    const next = { ...now, ...change };
+    storeInk(next);
+    return next;
+  }), []);
   const setColour = useCallback((next) => storeLastColour(next), []); // COLOUR_EVENT brings it back here
 
   useEffect(() => {
@@ -43,5 +51,5 @@ export function useMarkupTool(kind, active = true) {
     if (!active) setTool(null);
   }
 
-  return { tools, tool, choose, colour, setColour, status };
+  return { tools, tool, choose, colour, setColour, ink, setInk, status };
 }

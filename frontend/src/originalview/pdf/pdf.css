@@ -123,4 +123,18 @@
 /* C39.2: every palette colour through its data-colour tokens (tokens.css). */
 .rf-anno[data-style="highlight"] { background-color: var(--c-hl); }
 .rf-anno[data-style="underline"] { background-color: var(--c-ul); }
+
+/* C39.4 (issue 23): ink over the text layer, in page points (InkLayer). It lets the pointer through to the words
+   until Draw is on; then it takes it, a finger included (touch-action), with a crosshair. */
+.rf-ink {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.rf-ink path { fill: var(--c-mark); }
+.rf-ink[data-drawing] { pointer-events: auto; cursor: crosshair; touch-action: none; }
 .rf-anno[data-style="underline"] { mix-blend-mode: normal; } /* a line under the text, drawn as it is */

@@ -29,6 +29,8 @@ import { SteveContext } from '../steve/SteveContext';
 import { useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
 import { useMarkupTool } from '../annotations/useMarkupTool';
+import { usePageMarks } from '../annotations/usePageMarks';
+import { newStroke } from '../annotations/ink';
 import { MarkupTools } from '../reader/MarkupTools';
 import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
@@ -194,6 +196,7 @@ export function ReadingSession() {
   const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
   const inFocus = !pagesOnly && focus.enabled;
   const markup = useMarkupTool(kind, !inFocus); // C39.3: Edge's markup tools; off while focus mode has the toolbar
+  const pageMarks = usePageMarks(bookId, kind, place?.kind === 'pdf' ? place.pages : null); // C39.4: ink near the view
   const onRelocate = useCallback((next) => {
     setPlace(next);
     setChapter(next.entry || '');
@@ -604,7 +607,7 @@ export function ReadingSession() {
           onBookmark={() => reader.current?.saveMark?.()}
           markup={(
             <MarkupTools tools={markup.tools} tool={markup.tool} onTool={markup.choose} colour={markup.colour}
-              onColour={markup.setColour} status={markup.status} />
+              onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} status={markup.status} />
           )}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
@@ -672,7 +675,9 @@ export function ReadingSession() {
           regions={regions}
           ocr={ocr}
           onAnnotate={notes.create}
-          markup={markup.tool ? { tool: markup.tool, colour: markup.colour } : null}
+          markup={markup.tool ? { tool: markup.tool, colour: markup.colour, ink: markup.ink } : null}
+          marks={pageMarks.marks}
+          onStroke={(page, points) => pageMarks.create(newStroke(page, points, markup.ink))}
           annotations={notes.annotations}
           onAnnotationChange={notes.update}
           onAnnotationDelete={notes.remove}

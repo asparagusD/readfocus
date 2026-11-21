@@ -5875,3 +5875,29 @@ e2e/reader.spec.js e2e/steve-blocks.spec.js e2e/steve-panel.spec.js e2e/markup-t
 
 ### Commit
 feat(ui): highlight each selection at once with Edge's highlighter tool
+
+## 2026-11-22 C39.4b — a scanned book's "Reading this scan" status was in More tools
+
+### Failure
+`npm --prefix frontend run test:e2e`: 399 passed, 1 failed: `ocr.spec.js` "a fully scanned book › opens pages-only,
+reads every page, then prepares its quizzes": `getByText(/^Reading this scan: [0-2] of 2 pages$/)` not visible.
+
+### Reproduce
+`npx playwright test e2e/ocr.spec.js -g "fully scanned"` at the e2e viewport (1440 x 900).
+
+### Hypotheses
+1. C39.4b's Draw joins Highlight in the bar, which by the C39.3 decision keeps its place, so the session's status
+   (with Look up, Steve and Focus) is in More tools at 1440; the spec looked for it in the bar. C38.7b already moves
+   "Preparing the book…" into More tools on a full bar. Result: confirmed (the status is in the closed panel).
+
+### Root cause
+The spec read the status in the bar at a width where it now sits in More tools.
+
+### Fix
+`ocr.spec.js` reveals More tools when the status is tucked in it (`reveal`). No product change.
+
+### Regression test
+`npx playwright test e2e/ocr.spec.js`, then the full e2e suite.
+
+### Commit
+feat(ui): draw ink on PDF pages with Edge's Draw tool

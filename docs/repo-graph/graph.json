@@ -2606,6 +2606,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/ink.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/journey.spec.js",
       "type": "file",
       "role": "config",
@@ -4302,6 +4308,12 @@
       "type": "file",
       "role": "asset",
       "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/originalview/pdf/InkLayer.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
     },
     {
       "id": "file:frontend/src/originalview/pdf/PdfBook.jsx",
@@ -11435,6 +11447,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/ink.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/journey.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11862,6 +11879,11 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/useAnnotations.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useMarkupTool.js",
+      "to": "file:frontend/src/annotations/ink.js"
     },
     {
       "type": "imports",
@@ -13260,6 +13282,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/InkLayer.jsx",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/anchors/index.js"
     },
@@ -13332,6 +13359,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
       "to": "file:frontend/src/annotations/paint.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfPage.jsx",
+      "to": "file:frontend/src/originalview/pdf/InkLayer.jsx"
     },
     {
       "type": "imports",
@@ -13781,12 +13813,22 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/annotations/useAnnotations.js"
     },
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/annotations/useMarkupTool.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/usePageMarks.js"
     },
     {
       "type": "imports",
@@ -14182,6 +14224,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/MarkupTools.jsx",
       "to": "file:frontend/src/annotations/SelectionToolbar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/MarkupTools.jsx",
+      "to": "file:frontend/src/annotations/ink.js"
     },
     {
       "type": "imports",

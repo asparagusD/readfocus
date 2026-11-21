@@ -55,11 +55,7 @@
   border-radius: var(--radius-pill);
   box-shadow: 0 0 0 var(--border-hair) var(--line-field);
 }
-.rf-seltool-dot[data-colour="honey"] > span { background: var(--dot-honey); }
-.rf-seltool-dot[data-colour="sage"] > span { background: var(--dot-sage); }
-.rf-seltool-dot[data-colour="sky"] > span { background: var(--dot-sky); }
-.rf-seltool-dot[data-colour="rose"] > span { background: var(--dot-rose); }
-.rf-seltool-dot[data-colour="lilac"] > span { background: var(--dot-lilac); }
+.rf-seltool-dot > span { background: var(--c-dot); } /* C39.2: any palette colour (tokens.css) */
 .rf-seltool-dot:hover > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-3); }
 .rf-seltool-dot[data-last] > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-2); } /* what H and U use */
 

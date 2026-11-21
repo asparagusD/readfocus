@@ -41,7 +41,10 @@ const ratio = (a, b) => {
 };
 
 const grounds = ['--paper', '--paper-2', '--surface', '--page'];
-const HUES = ['honey', 'sage', 'sky', 'rose', 'lilac'];
+// C39.2 (issue 23, D3): Edge's set: the handoff's five, then red and the deeper yellow, green, blue and pink.
+const HUES = ['honey', 'sage', 'sky', 'rose', 'lilac', 'poppy', 'amber', 'fern', 'ocean', 'berry'];
+// C39.2: ink and text-box colours, drawn on a published page: white in either theme, so checked in Paper only.
+const MARKS = ['ink', 'poppy', 'amber', 'fern', 'ocean', 'berry', 'plum'];
 const washes = ['--accent-soft', '--warn-soft'];
 const rules = [
   // Text, 4.5:1 on every ground and wash.
@@ -63,13 +66,15 @@ const rules = [
   ...HUES.map((hue) => ['--ink', `--hl-${hue}`, 4.5, 'highlight']),
   ...HUES.flatMap((hue) => grounds.map((bg) => [`--ul-${hue}`, bg, 3, 'underline'])),
 ];
+// Rules for the page as published, which is Paper's in either theme (C38.3): checked once, under Paper.
+const pageRules = MARKS.map((mark) => [`--mark-${mark}`, '--page', 4.5, 'page mark']);
 
 let failures = 0;
 let checked = 0;
 for (const theme of ['paper', 'lamplight']) {
   for (const accent of ['terracotta', 'sage']) {
     const t = resolve({ theme, accent });
-    for (const [fg, bg, min, kind] of rules) {
+    for (const [fg, bg, min, kind] of [...rules, ...(theme === 'paper' && accent === 'terracotta' ? pageRules : [])]) {
       if (!t[fg] || !t[bg]) {
         console.log(`MISSING ${theme}/${accent}: ${fg} or ${bg}`);
         failures++;

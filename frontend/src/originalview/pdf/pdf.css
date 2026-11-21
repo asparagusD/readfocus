@@ -120,14 +120,7 @@
   mix-blend-mode: darken;
 }
 .rf-anno[data-style="highlight"] { border-radius: var(--radius-hair); }
-.rf-anno[data-style="highlight"][data-colour="honey"] { background-color: var(--hl-honey); }
-.rf-anno[data-style="highlight"][data-colour="sage"] { background-color: var(--hl-sage); }
-.rf-anno[data-style="highlight"][data-colour="sky"] { background-color: var(--hl-sky); }
-.rf-anno[data-style="highlight"][data-colour="rose"] { background-color: var(--hl-rose); }
-.rf-anno[data-style="highlight"][data-colour="lilac"] { background-color: var(--hl-lilac); }
-.rf-anno[data-style="underline"][data-colour="honey"] { background-color: var(--ul-honey); }
-.rf-anno[data-style="underline"][data-colour="sage"] { background-color: var(--ul-sage); }
-.rf-anno[data-style="underline"][data-colour="sky"] { background-color: var(--ul-sky); }
-.rf-anno[data-style="underline"][data-colour="rose"] { background-color: var(--ul-rose); }
-.rf-anno[data-style="underline"][data-colour="lilac"] { background-color: var(--ul-lilac); }
+/* C39.2: every palette colour through its data-colour tokens (tokens.css). */
+.rf-anno[data-style="highlight"] { background-color: var(--c-hl); }
+.rf-anno[data-style="underline"] { background-color: var(--c-ul); }
 .rf-anno[data-style="underline"] { mix-blend-mode: normal; } /* a line under the text, drawn as it is */

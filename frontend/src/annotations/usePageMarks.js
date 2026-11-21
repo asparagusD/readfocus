@@ -7,6 +7,8 @@ import { BLOCK, blocksFor } from './ink';
  * A PDF's ink strokes and text boxes (C39.4, issue 23; API from C39.1): loaded a block of 20 pages at a time as the
  * pages near the view (`pages`) reach it, so a long book never loads them all. `create(body)` shows the new mark at
  * once and saves it; if the server refuses it is taken back with a toast. An EPUB has none (D2): `kind` not 'pdf'.
+ * C39.5: `erase(ids)` takes marks away at once and deletes them, returning what it took (for one Undo); a delete
+ * the server refuses puts that mark back with a toast. `restore(rows)` saves them again (new ids), the Undo.
  */
 export function usePageMarks(bookId, kind, pages) {
   const [marks, setMarks] = useState([]);
@@ -45,5 +47,24 @@ export function usePageMarks(bookId, kind, pages) {
     }
   }, [bookId, toast]);
 
-  return { marks, create };
+  const erase = useCallback((ids) => {
+    const gone = [];
+    setMarks((list) => list.filter((m) => {
+      if (!ids.includes(m.id) || m.pending) return true;
+      gone.push(m);
+      return false;
+    }));
+    for (const m of gone) {
+      fetchApi(`/marks/${m.id}`, { method: 'DELETE' }).catch(() => {
+        setMarks((list) => [...list, m]);
+        toast({ kind: 'warning', message: "That drawing wasn't erased. Try again." });
+      });
+    }
+    return gone;
+  }, [toast]);
+
+  const restore = useCallback((rows) => Promise.all(rows.map(({ kind, page, color, data }) => create({ kind, page, color, data }))),
+    [create]);
+
+  return { marks, create, erase, restore };
 }

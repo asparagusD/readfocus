@@ -6100,6 +6100,11 @@
     {
       "type": "calls_endpoint",
       "from": "file:frontend/src/annotations/usePageMarks.js",
+      "to": "endpoint:DELETE /marks/{mark_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/annotations/usePageMarks.js",
       "to": "endpoint:GET /books/{book_id}/marks"
     },
     {

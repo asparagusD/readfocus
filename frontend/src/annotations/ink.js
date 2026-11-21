@@ -99,3 +99,37 @@ export function blocksFor(pages) {
   for (let b = Math.floor((first - 1) / BLOCK); b <= Math.floor((last - 1) / BLOCK); b += 1) out.push(b);
   return out;
 }
+
+// C39.5 (issue 23): Edge's eraser. A drag takes away whole strokes and highlights it passes over, within `r` points
+// (the eraser's radius, constant on screen, so in points it shrinks as the page is zoomed in).
+export const ERASER_PX = 8;
+
+/** The distance from point p to the segment a-b, all [x, y] in points. */
+export function segmentDistance([px, py], [ax, ay], [bx, by]) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const t = dx || dy ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))) : 0;
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+/** The eraser's path from `a` to `b` as points no more than r/2 apart, so a fast drag misses nothing between moves. */
+export function sweep(a, b, r) {
+  const steps = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / (r / 2)));
+  return Array.from({ length: steps + 1 }, (_, i) => [a[0] + ((b[0] - a[0]) * i) / steps, a[1] + ((b[1] - a[1]) * i) / steps]);
+}
+
+/** Whether the eraser at p (radius r) touches an ink stroke `{ points, width }`. */
+export function strokeHit({ points, width }, p, r) {
+  return points.some((q, i) => segmentDistance(p, points[Math.max(0, i - 1)], q) <= r + halfWidth(width, q[2]));
+}
+
+/** What one drag of the eraser took, for its toast: "Erased 2 drawings and a highlight."; '' for nothing. */
+export function erasedSummary(drawings, highlights) {
+  const say = (n, one) => (n === 1 ? `a ${one}` : `${n} ${one}s`);
+  const parts = [drawings && say(drawings, 'drawing'), highlights && say(highlights, 'highlight')].filter(Boolean);
+  return parts.length ? `Erased ${parts.join(' and ')}.` : '';
+}
+
+/** Whether the eraser at p (radius r) touches any quad [x0, y0, x1, y1] of a highlight or underline. */
+export const quadsHit = (quads, [x, y], r) => quads.some(([x0, y0, x1, y1]) =>
+  x >= x0 - r && x <= x1 + r && y >= y0 - r && y <= y1 + r);

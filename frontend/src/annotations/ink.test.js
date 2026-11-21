@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addPoint, blocksFor, halfWidth, MAX_POINTS, newStroke, pagePoint, readInk, storeInk, strokePath } from './ink.js';
+import {
+  addPoint, blocksFor, erasedSummary, halfWidth, MAX_POINTS, newStroke, pagePoint, quadsHit, readInk, segmentDistance, storeInk, strokeHit, strokePath, sweep,
+} from './ink.js';
 
 const box = { left: 100, top: 50, width: 612, height: 792 }; // a Letter page at scale 1
 const memory = () => {
@@ -60,4 +62,29 @@ test('marks load 20 pages at a time: the blocks round the pages near the view', 
   assert.deepEqual(blocksFor([19, 20]), [0, 1]); // two pages past 20 reach the next block
   assert.deepEqual(blocksFor([45]), [2]);
   assert.deepEqual(blocksFor([]), []);
+});
+
+test("the eraser touches a stroke within its radius and the stroke's half-width, not beyond", () => {
+  const stroke = { points: [[10, 10, 0.5], [50, 10, 0.5]], width: 2 }; // half-width 1
+  assert.equal(strokeHit(stroke, [30, 14], 3), true); // 4 from the line: 3 + 1
+  assert.equal(strokeHit(stroke, [30, 14.5], 3), false);
+  assert.equal(strokeHit(stroke, [52, 10], 1), true); // past the end, by its round cap
+  assert.equal(strokeHit({ points: [[5, 5, 0.5]], width: 4 }, [8, 5], 1), true); // a dot
+  assert.equal(segmentDistance([3, 4], [0, 0], [0, 0]), 5);
+});
+
+test("the eraser touches a highlight's quads, and a fast drag is swept with no gaps", () => {
+  assert.equal(quadsHit([[72, 140, 500, 152]], [300, 155], 4), true);
+  assert.equal(quadsHit([[72, 140, 500, 152]], [300, 160], 4), false);
+  const path = sweep([0, 0], [20, 0], 4);
+  assert.deepEqual(path[0], [0, 0]);
+  assert.deepEqual(path.at(-1), [20, 0]);
+  assert.ok(path.every((q, i) => i === 0 || q[0] - path[i - 1][0] <= 2));
+});
+
+test("one drag's toast says what it erased", () => {
+  assert.equal(erasedSummary(2, 1), 'Erased 2 drawings and a highlight.');
+  assert.equal(erasedSummary(1, 0), 'Erased a drawing.');
+  assert.equal(erasedSummary(0, 3), 'Erased 3 highlights.');
+  assert.equal(erasedSummary(0, 0), '');
 });

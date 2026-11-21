@@ -349,7 +349,7 @@ function focusRoute(route, request, focus, path) {
     const pts = Math.floor(focus.active / 6);
     const passed = focus.passed !== false; // C23.7: a test can fail the quiz (1 of 3)
     const lines = [{ code: 'counted', label: 'Focused reading', seconds: focus.active, points: pts },
-      { code: 'page_cap', label: 'Time on one page beyond 30 minutes without turning it', seconds: 600, points: 0 },
+      { code: 'page_cap', label: 'Time on one page beyond 30 minutes without moving to another page', seconds: 600, points: 0 },
       { code: 'quiz_bonus', label: `Quiz: ${passed ? 2 : 1} of 3 correct`, points: passed ? 40 : 0 },
       ...(passed ? [] : [{ code: 'quiz_failed', label: 'Quiz below 40%: this session earns 0 points', points: 0 }])];
     return json(route, { ...view(), passed, quiz_score: passed ? 2 / 3 : 1 / 3, points_time: passed ? pts : 0,

@@ -67,7 +67,7 @@ test('End session: set the ribbon on a page, ready, the questions, the results',
   await expect(rows.nth(0)).toContainText('25 minutes');
   await expect(rows.nth(0)).toContainText('+250');
   await expect(rows.nth(1)).toContainText('Not counted');
-  await expect(rows.nth(1)).toContainText('Time on one page beyond 30 minutes without turning it · 10 minutes');
+  await expect(rows.nth(1)).toContainText('Time on one page beyond 30 minutes without moving to another page · 10 minutes');
   await expect(rows.nth(2)).toContainText('2 of 3 right · 67%');
   await expect(rows.nth(2)).toContainText('+40');
   await expect(rows.nth(3)).toContainText('+290');

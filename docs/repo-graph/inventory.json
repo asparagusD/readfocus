@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 222,
-      "size_bytes": 19082,
+      "size_bytes": 19118,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -257,8 +257,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 457,
-      "size_bytes": 22014,
+      "lines": 458,
+      "size_bytes": 22180,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime). C26.7: MAX_DEVICE_BOOK_FILE_BYTES (300 MB), BROWSER_TEXT_PAGES_PER_BATCH, BROWSER_TEXT_MAX_PAGE_CHARS, BROWSER_TEXT_MAX_PAGES."
     },
@@ -458,9 +458,9 @@
       "path": "backend/focus/scoring.py",
       "language": "python",
       "lines": 255,
-      "size_bytes": 10885,
+      "size_bytes": 10916,
       "role": "lib",
-      "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page. C23.5: quiz correct answers may be halves (low-confidence answers count half). C23.8: the quiz bonus is at most the time points (none without counted time); the quiz line carries capped when it was held."
+      "purpose": "Pure focus scoring (C23.3, FOCUS_RULES F3-F14): server-time events (deduplicated, cut at end, client clock ignored) to active, voided and counted seconds with a reason for every other second (paused, hidden, no heartbeat within 45 s, idle prompt unanswered, page cap beyond 30 active minutes, 3-hour cap); time points, quiz bonus and the 40% pass mark; breakdown lines for the results page. C23.5: quiz correct answers may be halves (low-confidence answers count half). C23.8: the quiz bonus is at most the time points (none without counted time); the quiz line carries capped when it was held. C38.8: the page cap's line says \"without moving to another page\" (a scrolled book)."
     },
     {
       "path": "backend/focus/store.py",
@@ -1218,7 +1218,7 @@
       "path": "backend/tests/test_api_focus_quiz.py",
       "language": "python",
       "lines": 461,
-      "size_bytes": 24613,
+      "size_bytes": 24611,
       "role": "test",
       "purpose": "Pytest for the focus quiz API with the real submit flow: scaled count and spread, public questions, kept once, generated top-up, capped session range, state rules, all correct (points, mastery, test_results), under 40 %, low-confidence half credit, graded once, owner only. C26.3: while the book is processed the quiz is 409 preparing with nothing kept and the session awaiting, then asked once it is done; a quiz already built is still asked."
     },
@@ -1594,7 +1594,7 @@
       "path": "backend/tests/test_focus_policy.py",
       "language": "python",
       "lines": 36,
-      "size_bytes": 1715,
+      "size_bytes": 1727,
       "role": "test",
       "purpose": "Pytest: the focus defaults in policy.py equal docs/FOCUS_RULES.md's Defaults table; focus statuses, open statuses, event kinds and the rules version format."
     },
@@ -2297,8 +2297,8 @@
     {
       "path": "docs/FOCUS_RULES.md",
       "language": "markdown",
-      "lines": 132,
-      "size_bytes": 6946,
+      "lines": 137,
+      "size_bytes": 7255,
       "role": "doc",
       "purpose": "Phase 2 spec (C16.3): focus mode rules F1-F14: body start, server-timed stopwatch, points per active minute, hidden-tab and idle pauses, page and 3-hour caps, the bookmark quiz and its pass mark. C31.1: F15, Notes and Steve in focus mode (the clock runs on; no Steve while a quiz is pending), a departure from the phase-2 handoff."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6378,
-      "size_bytes": 1200564,
+      "lines": 6379,
+      "size_bytes": 1202182,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2490,7 +2490,7 @@
       "path": "frontend/e2e/fixtures.js",
       "language": "javascript",
       "lines": 574,
-      "size_bytes": 36449,
+      "size_bytes": 36461,
       "role": "config",
       "purpose": "E2E fixtures (C12.10; C17.5): an automatic fixture that stores a never-expiring Supabase session (unless a spec sets signedIn: false) and answers every backend call from a fixture book chosen by the `book` option (sample.pdf or the illustrated reflow.epub: session start with today's chunks cut from that book and the saved position, the file's URL and bytes, the next chunk from /pages, position saves, contents, lookup, profile, an empty shelf and dashboard), aborts Supabase and fails on unmocked calls; helpers to open the reader, read the announcement and the place shown, find a word on screen (inside EPUB section frames too) and time hover-to-card inside the page; /health answers ready. settled(page, away) reads the place once a turn has landed (C17.6). C23.1: GET/PUT /books/{id}/body-start (api.bodyStart, bodyStartPuts, bodyStartFail). C23.6a: the focus API as a small fake server (api.focus: session, active seconds, calls, events). C23.8: mockBackend and signIn are exported for a second tab on the same fake server. C23.G: api.today shortens today's reading for a test. C24.6a: GET /me/progress (api.progress, PROGRESS; 503 when null). C24.6b: GET /badges from a copy of the catalogue (badgesBody, api.badgesEarned). C24.6c: GET /leagues/current (LEAGUE, api.league). C24.6d: PUT /me/progress (a name with admin refused). C24.G: the default reader's zone is Europe/London. C26.3: GET /books/{id}/open (api.processing opens a book still being processed), PUT /books/{id}/position (api.bookPosition), /status from api.processing, and focus.preparing makes the focus quiz answer 409 preparing that many times. C26.5a: api.position is the book's place (GET /open gives it, PUT /books/{id}/position sets it); the EPUB starts with a saved place at chapter 1. C26.6c: the /sessions/start and session position mocks removed; C37.3: openNotepad opens the notes list (since C37.4 from Steve's panel, so typed notes are not moved). C38.2: word boxes in .rf-pdf-pages; twoPagesInView() scrolls a PDF to straddle two pages. C38.4a: twoPagesInView picks the page below the one at the top. C38.4b: clickTool() and reveal() reach a toolbar tool in More tools. C38.6a: contentsPane(page), the docked pane or the drawer."
     },
@@ -2554,7 +2554,7 @@
       "path": "frontend/e2e/focus-end.spec.js",
       "language": "javascript",
       "lines": 212,
-      "size_bytes": 12376,
+      "size_bytes": 12388,
       "role": "config",
       "purpose": "E2E for ending a focus session (C23.6b): the ribbon set by page button, by arrows and Enter, by dragging, Escape and Cancel; the ready dialog and Not now; the quiz page without a clock or Steve; answers to the results; the 3-hour stop and leaving taking the same path; the focus cards stepping aside; an EPUB point CFI; 375 px Lamplight."
     },
@@ -2569,10 +2569,10 @@
     {
       "path": "frontend/e2e/focus.spec.js",
       "language": "javascript",
-      "lines": 205,
-      "size_bytes": 12034,
+      "lines": 223,
+      "size_bytes": 13109,
       "role": "config",
-      "purpose": "E2E of focus mode with Playwright's fake clock on the mocked API (C23.8): locked before Chapter 1, start on the spread at Chapter 1 (start anchor p. 3), heartbeats, a page turn, a hidden tab sending nothing, the bookmark and a 5-question quiz (taken in a fresh context on the real clock) with 80% showing time and bonus; a 31-minute stall beating with input and no turn, its extra minute listed; under 40% with no points; two tabs, the second read-only until the first's lease lapses. The numbers are the engine's, tested in test_focus_anticheat.py."
+      "purpose": "E2E of focus mode with Playwright's fake clock on the mocked API (C23.8): locked before Chapter 1, start on the spread at Chapter 1 (start anchor p. 3), heartbeats, a page turn, a hidden tab sending nothing, the bookmark and a 5-question quiz (taken in a fresh context on the real clock) with 80% showing time and bonus; a 31-minute stall beating with input and no turn, its extra minute listed; under 40% with no points; two tabs, the second read-only until the first's lease lapses. The numbers are the engine's, tested in test_focus_anticheat.py. C38.8: a scroll within the page most in view sends no page turn; one that leaves the next page most in view sends p4."
     },
     {
       "path": "frontend/e2e/gamification-header.spec.js",
@@ -3738,7 +3738,7 @@
       "path": "frontend/src/focus/breakdown.test.js",
       "language": "javascript",
       "lines": 51,
-      "size_bytes": 2686,
+      "size_bytes": 2710,
       "role": "asset",
       "purpose": "Unit tests for focus/breakdown.js: minutes in words, a passed quiz's rows, the rows under 40% and an empty breakdown."
     },
@@ -6674,7 +6674,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 843,
-      "size_bytes": 299586,
+      "size_bytes": 299790,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

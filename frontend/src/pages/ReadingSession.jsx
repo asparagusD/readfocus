@@ -213,6 +213,14 @@ export function ReadingSession() {
       if (gone.length) toast({ kind: 'neutral', message: 'Text box deleted.', action: { label: 'Undo', onClick: () => pageMarks.restore(gone) } });
     },
   };
+  // C39.6c: Add text's menu sets the style of new boxes and restyles the selected one.
+  const restyleText = (change) => {
+    markup.setTextStyle(change);
+    const box = pageMarks.marks.find((m) => m.id === selectedBox && m.kind === 'text' && !m.pending);
+    if (!box) return;
+    const data = { ...box.data, ...(change.size && { size: change.size }), ...(change.width && { width: change.width }) };
+    pageMarks.change(box.id, { ...(change.colour && { color: change.colour }), data });
+  };
   // C39.5: the eraser takes strokes and highlights away as it passes; when the drag ends one toast offers one Undo.
   const erased = useRef({ marks: [], annotations: [] });
   const eraser = {
@@ -642,7 +650,7 @@ export function ReadingSession() {
           markup={(
             <MarkupTools tools={markup.tools} tool={markup.tool} onTool={markup.choose} colour={markup.colour}
               onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} text={markup.textStyle}
-              onText={markup.setTextStyle} status={markup.status} />
+              onText={restyleText} status={markup.status} />
           )}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}

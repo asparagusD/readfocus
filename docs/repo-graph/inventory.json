@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 224,
-      "size_bytes": 19486,
+      "size_bytes": 19504,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2281,8 +2281,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 5931,
-      "size_bytes": 280487,
+      "lines": 5995,
+      "size_bytes": 283562,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2345,8 +2345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6439,
-      "size_bytes": 1231507,
+      "lines": 6440,
+      "size_bytes": 1232753,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2953,10 +2953,10 @@
     {
       "path": "frontend/e2e/textbox.spec.js",
       "language": "javascript",
-      "lines": 119,
-      "size_bytes": 6519,
+      "lines": 153,
+      "size_bytes": 8341,
       "role": "config",
-      "purpose": "E2e for C39.6's Add text: a box placed, typed and saved in page points, an empty one dropped, back after a reload and a zoom; retyped by a click or Enter, emptied it is deleted with an Undo; Enter places one by keyboard; the menu's colour and size; with Add text off the words are selectable; an EPUB has none."
+      "purpose": "E2e for C39.6's Add text: a box placed, typed and saved in page points, an empty one dropped, back after a reload and a zoom; retyped by a click or Enter, emptied it is deleted with an Undo; Enter places one by keyboard; the menu's colour and size; with Add text off the words are selectable; an EPUB has none. C39.6c: the selected box moved by its handle and by keys, restyled from the menu."
     },
     {
       "path": "frontend/e2e/time-zone.spec.js",
@@ -4961,10 +4961,10 @@
     {
       "path": "frontend/src/originalview/pdf/TextBoxes.jsx",
       "language": "jsx",
-      "lines": 94,
-      "size_bytes": 4581,
+      "lines": 134,
+      "size_bytes": 6702,
       "role": "asset",
-      "purpose": "Text boxes on one PDF page (C39.6): the page's boxes laid out from their PDF points; with Add text on a press (or Enter, ADD_TEXT_EVENT) starts a box kept inside the page, leaving it saves it or drops it empty, a box is a button that retypes it (emptied, deleted); with Add text off the words under the boxes take the pointer."
+      "purpose": "Text boxes on one PDF page (C39.6): the page's boxes laid out from their PDF points; with Add text on a press (or Enter, ADD_TEXT_EVENT) starts a box kept inside the page, leaving it saves it or drops it empty, a box is a button that retypes it (emptied, deleted); with Add text off the words under the boxes take the pointer. C39.6c: the selected box's move handle (dragged, or arrow keys 4 pt, Shift 16)."
     },
     {
       "path": "frontend/src/originalview/pdf/close.js",
@@ -5033,8 +5033,8 @@
     {
       "path": "frontend/src/originalview/pdf/pdf.css",
       "language": "css",
-      "lines": 174,
-      "size_bytes": 5744,
+      "lines": 193,
+      "size_bytes": 6450,
       "role": "asset",
       "purpose": "PDF page styles (C17.2): the page box on the PDF's white and the .textLayer rules from PDF.js's viewer (Apache-2.0) cut to selection, with an accent-tinted selection colour. C17.4: the page paper follows --rf-pdf-paper (lamplight). C38.5a: find's matches (::highlight rf-find, rf-find-current), see-through over the published page."
     },
@@ -5265,10 +5265,10 @@
     {
       "path": "frontend/src/pages/ReadingSession.jsx",
       "language": "jsx",
-      "lines": 793,
-      "size_bytes": 42708,
+      "lines": 801,
+      "size_bytes": 43197,
       "role": "page",
-      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown. C36.7b: opening Quiz me sends the place to /focus/quiz-me/prepare (openQuizMe). C36.7c: Quiz me hands the built questions to the quiz page; C37.2: the notebook over 70 % with the book blurred and inert, opened from the notepad or a page's margin marker, kept on its page between openings; C37.3: the toolbar's and focus bar's Notes open the notebook, and N, the selection's and a highlight's Note, Steve's Save to notes and code or LaTeX from a block write onto the page for the place's chapter (else a new page there); C37.4: opening the notebook moves typed notes into it (moveTyped.js, pageText.js loaded then), reloads the notes and says how it went; C37.6: uploads a page's pictures and says when one is refused; C37.6: a figure or an equation with no LaTeX goes onto the page as its uploaded crop and caption, so no block notes are made. C37.7: the book recedes as the notebook slides in (scale 0.97, blur 8 px, a dim; blur and dim only under reduced motion) and the notebook leaves inside AnimatePresence. C38.4a: the PDF's Page view kept on this device (rf-pdf-view); the page box goes to a page. C38.4b: the toolbar pinned or not, kept on this device (rf-toolbar-pinned, pinned by default). C38.4c: the focus bar is given a PDF's folio. C38.5b: the toolbar's Find opens the reader's find bar for a PDF. C38.6a: from 1024 px (useMedia) the contents pane is docked in the reading body before the book (inert under the notebook) and a pick leaves it open; below, the drawer as before. C38.6b: the Pages tab for a PDF: its pages, the main page, labels and thumbnails from the reader; a pick goes to the page. C38.7b: the page box goes to an EPUB's counted page; the focus bar is given any book's folio. C38.8b: the toolbar's Save my place; the place saved this visit is the Reader's `mark`. C38.9: Ctrl+Alt+G focuses the page box, Ctrl+backslash switches fit page and fit width, Ctrl+= and Ctrl+- zoom a PDF or size an EPUB's text. C39.3: useMarkupTool: the MarkupTools group in the toolbar and the tool in use to the Reader; off in focus mode. C39.4: usePageMarks for the pages in view; a finished stroke posted as a mark. C39.5: the eraser's hits taken away from marks and annotations at once; one toast with one Undo per drag. C39.6: Add text's boxes: a new one saved and selected, a retyped one saved, an emptied one deleted with an Undo."
+      "purpose": "Reading page (the original view since C17.5): checks calibration, starts a session and opens the whole book as published (PDF or EPUB, originalview/Reader.jsx) under the fading reader toolbar (back, book and contents entry, the original view's zoom or type controls kept in localStorage, Original colours in lamplight, theme); finds today's chunks and the next one in the book by their text (today.js; the next chunk through readAhead), opens at the saved anchor when it is in today's chunks, else at today's start; the planner's choice as a 'Suggested next: <entry>' note (revisit for a re-read or review) with its reason over that first page and the closing 'That's today's suggested reading' page past today's end; saves {chunk_index, anchor} while inside today's reading and says 'Beyond today's reading' outside it, with a way back; the contents drawer from the PDF outline or EPUB nav with today's entries labelled; the ribbon's 'Place saved at p. N.' toast; one lookup client and the per-user hover lookup switch (C12.8). C23.1: the book's body start (useBodyStart): 'Focus mode starts at Chapter 1' in the folio line before it, and 'The book starts here' from the contents drawer for the page shown. C23.6a: focus mode (useFocusSession): the focus bar in the toolbar's place, notes and Steve tucked away, Start/Pause/Resume, End session at the page shown, and leaving with a session open asks to end with the quiz or discard. C23.6b: End session (and the cap, and leaving with the quiz) places the ribbon (RibbonPlacer through the Reader), then \"Ready for your questions?\" (ReadyModal) and the focus quiz page; the focus cards step aside while placing. C23.7: the fixed reading timer, Start/Pause, Done reading, Start test and the abandon dialog are retired; time is measured only in focus mode. C23.7b: Quiz me in the toolbar outside focus mode (not pages-only): a dialog 'This chapter' / 'Since my last quiz' posts /focus/quiz-me with the end of the page(s) shown and opens /quiz/:id; a 409 or failure is a toast and the book stays open. C26.3: a book still being processed opens through GET /books/{id}/open with no session: its place is saved on the book (PUT /books/{id}/position) and resumed, no Suggested next note, the end of the book closes it, and the toolbar says \"Preparing quizzes (C36.4: “Preparing the book”)… n%\" from /books/{id}/status until its ingestion is done. C26.5a: every book opens with GET /books/{id}/open (no /sessions/start, no plan, no pace check), resumes at the saved anchor or the first page, and saves every turn on the book; no Suggested next note; the closing page is the end of the book (its today code goes in C26.5b). C26.5b: today's range is gone: no bounds, chunk search, read-ahead, back-to-today button, Beyond today's reading status or today in the contents; the place saved is { anchor }; the h1 is the book's title. C26.7: a text-only book (read on the device) says once that its equations, code and figures have no Steve or note tools. C31.1: the side panel opens in focus mode too, from the focus bar; Steve (bar button, panel tab and Ask Steve entry points) is withheld while a focus session awaits its quiz (steveHere), and a Steve panel open then is not shown. C36.7b: opening Quiz me sends the place to /focus/quiz-me/prepare (openQuizMe). C36.7c: Quiz me hands the built questions to the quiz page; C37.2: the notebook over 70 % with the book blurred and inert, opened from the notepad or a page's margin marker, kept on its page between openings; C37.3: the toolbar's and focus bar's Notes open the notebook, and N, the selection's and a highlight's Note, Steve's Save to notes and code or LaTeX from a block write onto the page for the place's chapter (else a new page there); C37.4: opening the notebook moves typed notes into it (moveTyped.js, pageText.js loaded then), reloads the notes and says how it went; C37.6: uploads a page's pictures and says when one is refused; C37.6: a figure or an equation with no LaTeX goes onto the page as its uploaded crop and caption, so no block notes are made. C37.7: the book recedes as the notebook slides in (scale 0.97, blur 8 px, a dim; blur and dim only under reduced motion) and the notebook leaves inside AnimatePresence. C38.4a: the PDF's Page view kept on this device (rf-pdf-view); the page box goes to a page. C38.4b: the toolbar pinned or not, kept on this device (rf-toolbar-pinned, pinned by default). C38.4c: the focus bar is given a PDF's folio. C38.5b: the toolbar's Find opens the reader's find bar for a PDF. C38.6a: from 1024 px (useMedia) the contents pane is docked in the reading body before the book (inert under the notebook) and a pick leaves it open; below, the drawer as before. C38.6b: the Pages tab for a PDF: its pages, the main page, labels and thumbnails from the reader; a pick goes to the page. C38.7b: the page box goes to an EPUB's counted page; the focus bar is given any book's folio. C38.8b: the toolbar's Save my place; the place saved this visit is the Reader's `mark`. C38.9: Ctrl+Alt+G focuses the page box, Ctrl+backslash switches fit page and fit width, Ctrl+= and Ctrl+- zoom a PDF or size an EPUB's text. C39.3: useMarkupTool: the MarkupTools group in the toolbar and the tool in use to the Reader; off in focus mode. C39.4: usePageMarks for the pages in view; a finished stroke posted as a mark. C39.5: the eraser's hits taken away from marks and annotations at once; one toast with one Undo per drag. C39.6: Add text's boxes: a new one saved and selected, a retyped one saved, an emptied one deleted with an Undo. C39.6c: Add text's menu restyles the selected box too."
     },
     {
       "path": "frontend/src/pages/Results.css",
@@ -5401,10 +5401,10 @@
     {
       "path": "frontend/src/reader/MarkupTools.jsx",
       "language": "jsx",
-      "lines": 116,
-      "size_bytes": 6218,
+      "lines": 117,
+      "size_bytes": 6346,
       "role": "asset",
-      "purpose": "Edge's markup tools as a group in the reader's toolbar (C39.3): each tool a toggle (pressed while on, its colour a bar under the icon) and a menu button opening its options under it (Highlight: Edge's ten colours as a radio group, arrows move, Escape or a press outside closes, focus back); picking a colour turns the tool on; a live status; data-keeps-more keeps More tools open. C39.4: each tool's menu by kind: Draw's seven ink colours (data-mark-colour) and a thickness slider, open while choosing. C39.5: a tool with no menu (Erase) has no menu button or swatch. C39.6: menus' sliders by tool (Draw's thickness; Add text's colours and size)."
+      "purpose": "Edge's markup tools as a group in the reader's toolbar (C39.3): each tool a toggle (pressed while on, its colour a bar under the icon) and a menu button opening its options under it (Highlight: Edge's ten colours as a radio group, arrows move, Escape or a press outside closes, focus back); picking a colour turns the tool on; a live status; data-keeps-more keeps More tools open. C39.4: each tool's menu by kind: Draw's seven ink colours (data-mark-colour) and a thickness slider, open while choosing. C39.5: a tool with no menu (Erase) has no menu button or swatch. C39.6: menus' sliders by tool (Draw's thickness; Add text's colours and size). C39.6c: Add text's width slider."
     },
     {
       "path": "frontend/src/reader/PagesPanel.jsx",
@@ -6858,7 +6858,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 866,
-      "size_bytes": 312190,
+      "size_bytes": 312440,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

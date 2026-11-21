@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Eraser, Highlighter, PenLine, Type } from 'lucide-react';
 import { toggleTool } from '../annotations/markup';
 import { WIDTHS } from '../annotations/ink';
-import { TEXT_SIZES } from '../annotations/textbox';
+import { BOX_WIDTHS, TEXT_SIZES } from '../annotations/textbox';
 import { COLOURS, colourName, MARK_COLOURS } from '../annotations/palette';
 import { rove } from '../annotations/roving';
 import '../annotations/SelectionToolbar.css';
@@ -94,7 +94,8 @@ export function MarkupTools({ tools, tool, onTool, colour, onColour, ink, onInk,
   if (!tools.length) return null;
   const options = {
     text: { colours: MARK_COLOURS, attr: 'data-mark-colour', colour: text.colour, onColour: (c) => onText({ colour: c }),
-      sliders: [{ label: 'Size', values: TEXT_SIZES, value: text.size, onChange: (v) => onText({ size: v }) }] },
+      sliders: [{ label: 'Size', values: TEXT_SIZES, value: text.size, onChange: (v) => onText({ size: v }) },
+        { label: 'Width', values: BOX_WIDTHS, value: text.width, onChange: (v) => onText({ width: v }) }] }, // C39.6c
     draw: { colours: MARK_COLOURS, attr: 'data-mark-colour', colour: ink.colour, onColour: (c) => onInk({ colour: c }),
       sliders: [{ label: 'Thickness', values: WIDTHS, value: ink.width, onChange: (w) => onInk({ width: w }) }] },
     highlight: { colours: COLOURS, attr: 'data-colour', colour, onColour },

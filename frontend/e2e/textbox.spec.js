@@ -97,6 +97,40 @@ test("Enter on the book places a box by keyboard; Add text's menu picks its colo
   expect(api.markPosts[0]).toMatchObject({ color: 'poppy', data: { text: 'By keyboard', size: 14 } });
 });
 
+test('the selected box moves by its handle or the arrow keys; the menu restyles it', async ({ page, api }) => {
+  api.marks.push({ id: 'mark-1', kind: 'text', page: 1, color: 'ink', data: { x: 100, y: 400, width: 192, text: 'Move me', size: 12 } });
+  await openReader(page);
+  await addText(page).click();
+  await expect(page.getByRole('button', { name: 'Move text box' })).toHaveCount(0); // only the selected box has one
+  await savedBoxes(page).click();
+  await page.keyboard.press('Escape'); // retyped nothing: still selected
+  const grip = page.getByRole('button', { name: 'Move text box' });
+  await expect(grip).toBeVisible();
+
+  const scale = Number(await pageOne(page).getAttribute('data-scale'));
+  const g = await grip.boundingBox();
+  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(g.x + g.width / 2 + 50 * scale, g.y + g.height / 2 + 20 * scale, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(() => api.markPatches.at(-1)?.data).toMatchObject({ x: 150, y: 420, text: 'Move me' });
+
+  await grip.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(() => api.markPatches.at(-1)?.data?.x).toBe(146);
+  await page.keyboard.press('Shift+ArrowDown');
+  await expect.poll(() => api.markPatches.at(-1)?.data?.y).toBe(436);
+
+  await markup(page).getByRole('button', { name: 'Text options' }).click();
+  await page.getByRole('radio', { name: 'Berry' }).click();
+  await expect.poll(() => api.markPatches.at(-1)?.color).toBe('berry');
+  const width = page.getByRole('slider', { name: 'Width' });
+  await width.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => api.markPatches.at(-1)?.data?.width).toBe(240);
+  await expect(savedBoxes(page)).toHaveAttribute('data-mark-colour', 'berry');
+});
+
 test('with Add text off the words under a box are selectable', async ({ page, api }) => {
   api.marks.push({ id: 'mark-1', kind: 'text', page: 1, color: 'ink', data: { x: 20, y: 40, width: 400, text: 'Over the words', size: 18 } });
   await openReader(page);

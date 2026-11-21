@@ -5929,3 +5929,67 @@ stay).
 
 ### Commit
 feat(ui): add text boxes to PDF pages with Edge's Add text tool
+
+## 2026-11-22 C39.6 — restyling a text box from the menu saved nothing
+
+### Failure
+`npx playwright test e2e/textbox.spec.js`: "the selected box moves by its handle or the arrow keys; the menu restyles
+it": after picking Berry in Text options, `api.markPatches.at(-1)?.color` stayed undefined (no PATCH was sent);
+moving the same box by its handle and keys did send its PATCHes.
+
+### Reproduce
+That test, every run: select a box with Add text on, open Text options, pick a colour.
+
+### Hypotheses
+1. `usePageMarks.change` read the mark's old value inside its `setMarks` updater and returned when it was still
+   null. React runs an updater at once only when no other update is pending on the component; the menu's
+   `restyleText` first calls `setTextStyle`, an update on the same component (ReadingSession), so the updater was
+   deferred and `before` was null. A move has no update before it, so its updater ran at once. Result: confirmed (a
+   ref of the marks drawn fixes it; the move tests pass either way).
+2. The restyle never reached `change` (no selected box). Evidence: the box showed `data-selected` and the handle.
+   Result: ruled out.
+
+### Root cause
+`change` (C39.6a) and `erase` (C39.5a) learned what they changed from inside a state updater, which React may run
+after the call returns.
+
+### Fix
+`usePageMarks.js`: `current`, a ref of the marks as last drawn; `erase` and `change` read the marks there, then
+update the state.
+
+### Regression test
+`textbox.spec.js` "the selected box moves by its handle or the arrow keys; the menu restyles it" (a colour and a width
+PATCH); `erase.spec.js` and `ink.spec.js` pass: `npx playwright test e2e/textbox.spec.js e2e/erase.spec.js
+e2e/ink.spec.js`: 15 passed.
+
+### Commit
+The fix: feat(frontend): add text-box helpers, mark changes and Add text's style (C39.6a, 6176a18); the test:
+feat(ui): move and restyle a text box (C39.6c)
+
+## 2026-11-22 C39.6c — a Dashboard badge test timed out once in the full run
+
+### Failure
+`npm --prefix frontend run test:e2e`: 409 passed, 1 failed: `dashboard-badges.spec.js` "before any badge the shelf
+nudges kindly": `getByRole('region', { name: 'Badge shelf' })` not found within 5 s.
+
+### Reproduce
+Not reproduced: the spec alone three times, 7 of 7 each time; then a second full run (below).
+
+### Hypotheses
+1. A timing failure under load: this machine's full run takes about 16.8 minutes (CLAUDE.md says about 90 s), and the
+   Dashboard's first paint waited past the 5 s expect timeout. Evidence: not reproduced alone; the Dashboard uses
+   nothing C39.6c changed (TextBoxes, MarkupTools, ReadingSession's restyle, pdf.css). Result: most likely; not proven.
+2. C39.6c changed something the Dashboard renders. Evidence: none of its files are imported by the Dashboard (repo
+   graph). Result: ruled out.
+
+### Root cause
+Not found: a one-off timeout under load, as C38.1's (2026-11-20).
+
+### Fix
+None.
+
+### Regression test
+`npx playwright test e2e/dashboard-badges.spec.js` three times: 7 passed each; a second full e2e run.
+
+### Commit
+feat(ui): move and restyle a text box

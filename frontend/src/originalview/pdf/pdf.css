@@ -158,6 +158,25 @@
 .rf-textboxes[data-placing] .rf-textbox:hover { outline-color: var(--line-field); }
 .rf-textbox[data-selected] { outline: 1px dashed var(--accent) !important; }
 .rf-textbox:focus-visible { outline: var(--focus-ring-width) solid var(--accent) !important; }
+/* C39.6c: the selected box's move handle, a small round button by its top-left corner. */
+.rf-textbox-grip {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
+  margin: -28px 0 0 -28px;
+  padding: 0;
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: grab;
+  touch-action: none;
+}
+.rf-textbox-grip:active { cursor: grabbing; }
+.rf-textbox-grip:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
+@media (pointer: coarse) { .rf-textbox-grip { inline-size: 44px; block-size: 44px; margin: -48px 0 0 -48px; } }
 .rf-textbox-edit {
   field-sizing: content;
   min-block-size: 1.25em;

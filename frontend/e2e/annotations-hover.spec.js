@@ -86,7 +86,7 @@ test('with Steve switched off, the chip has no Ask Steve', async ({ page, api })
   api.steve.consented = true;
   api.steve.enabled = false;
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click(); // the reader toolbar's Steve: his settings load
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // the reader toolbar's Steve: his settings load
   await expect(page.getByPlaceholder('Turn on Steve to ask')).toBeVisible();
   await page.keyboard.press('Escape');
   await highlight(page, 'lamp', 'circle', 'Honey highlight');

@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
 import { SelectionToolbar } from '../annotations/SelectionToolbar';
 import { useSelection } from '../annotations/useSelection';
+import { newAnnotation } from '../annotations/palette';
 import { AnnotationChip } from '../annotations/AnnotationChip';
 import { useAnnotationChip } from '../annotations/useAnnotationChip';
 import { cycle } from '../annotations/hover';
@@ -84,7 +85,7 @@ function useWide() {
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
+  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
   placing = null, contents = null, start = null, pageView = 'one', mark = null,
 }) {
@@ -150,6 +151,15 @@ export function Reader({
   const { place: selected, dismiss: dismissSelection } = useSelection({
     book, docs: selectionDocs, skipAt, paused: !onAnnotate || !place || opening || Boolean(failure),
   });
+  // C39.3 (issue 23): with Edge's highlighter on (`markup`), a settled selection is highlighted at once in its colour,
+  // and cleared, so the next drag starts fresh; no selection toolbar.
+  const highlighting = markup?.tool === 'highlight';
+  useEffect(() => {
+    if (!highlighting || !selected) return;
+    onAnnotate(newAnnotation(selected, markup.colour, 'highlight'));
+    selected.doc.getSelection()?.removeAllRanges();
+    dismissSelection(false);
+  }, [highlighting, selected]); // eslint-disable-line react-hooks/exhaustive-deps -- once per settled selection
 
   // C21.4: with word lookup off, a drawn annotation's chip on hover, a tap or A (Ask Steve, colour, underline, delete).
   const chipEl = useRef(null);
@@ -341,7 +351,7 @@ export function Reader({
       data-loading={(!place || opening) && !failure}
       data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
       data-ending={atClose || undefined} data-annotations={annotations ? annotations.length : undefined}
-      data-finding={finding || undefined}
+      data-finding={finding || undefined} data-tool={markup?.tool}
       >
       <div className="rf-ov-stage" ref={stage} tabIndex={0} onKeyDown={onKey} aria-roledescription="book"
         aria-label={kind === 'pdf' ? `${title}. Scroll, or use Page Up and Page Down to move a page at a time.`
@@ -396,7 +406,7 @@ export function Reader({
       )}
       {onAnnotate && (
         // C21.2: colours, underline and Ask Steve over a selection.
-        <SelectionToolbar ref={toolbar} place={selected} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
+        <SelectionToolbar ref={toolbar} place={highlighting ? null : selected} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}

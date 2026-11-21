@@ -23,8 +23,12 @@ export function lastColour(store = globalThis.localStorage) {
   }
 }
 
+/** C39.3: said on the window when the last colour changes, so the toolbar's highlighter shows it at once. */
+export const COLOUR_EVENT = 'rf-highlight-colour';
+
 export function storeLastColour(colour, store = globalThis.localStorage) {
   try { store?.setItem(KEY, colour); } catch { /* private mode: the default comes back next time */ }
+  if (typeof globalThis.dispatchEvent === 'function') globalThis.dispatchEvent(new CustomEvent(COLOUR_EVENT, { detail: colour }));
 }
 
 /** The POST /books/{id}/annotations body for a selection `place` ({anchors, start, end}). */

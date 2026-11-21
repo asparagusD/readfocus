@@ -1,7 +1,7 @@
 // C23.7b: Quiz me outside focus mode. The toolbar's Quiz me asks which stretch (this chapter, or since the last
 // quiz), POST /focus/quiz-me builds it to the end of the page shown, the questions have no clock, submit-answers
 // grades them, and the results say Quiz me never earns points. Mocked API.
-import { expect, openReader, reveal, test } from './fixtures';
+import { clickTool, expect, openReader, reveal, test } from './fixtures';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': '*' };
 const QUESTIONS = [
@@ -36,7 +36,7 @@ async function mockQuizMe(page, { status = 200 } = {}) {
 test('Quiz me: choose since the last quiz, answer with no clock, results with no points', async ({ page }) => {
   const calls = await mockQuizMe(page);
   await openReader(page);
-  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Quiz me' }));
   const dialog = page.getByRole('dialog', { name: 'Quiz me' });
   await expect(dialog).toContainText('No points, and your answers still update what you’ve mastered.');
   await expect(dialog.getByRole('button')).toContainText(['This chapter', 'Since my last quiz']);
@@ -63,7 +63,7 @@ test('Quiz me: choose since the last quiz, answer with no clock, results with no
 test('Quiz me: this chapter; nothing to ask yet is said kindly and the book stays open', async ({ page }) => {
   const calls = await mockQuizMe(page, { status: 409 });
   await openReader(page);
-  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Quiz me' }));
   await page.getByRole('dialog', { name: 'Quiz me' }).getByRole('button', { name: 'This chapter' }).click();
   await expect(page.getByText('There is nothing to ask about yet. Read a little further first.')).toBeVisible();
   expect(calls.built[0].scope).toBe('chapter');
@@ -87,8 +87,8 @@ test('at 375 the Quiz me button and its dialog fit the screen', async ({ page })
 
 test('Quiz me is not offered in focus mode', async ({ page }) => {
   await openReader(page);
-  await expect(page.getByRole('button', { name: 'Quiz me' })).toBeVisible();
-  await page.getByRole('switch', { name: 'Focus mode' }).click();
+  await expect(await reveal(page, page.getByRole('button', { name: 'Quiz me' }))).toBeVisible();
+  await clickTool(page, page.getByRole('switch', { name: 'Focus mode' }));
   await expect(page.getByRole('button', { name: 'Quiz me' })).toHaveCount(0);
 });
 
@@ -102,7 +102,7 @@ test('opening Quiz me asks the server to start the questions at the place shown'
       : route.fulfill({ status: 202, headers: { ...CORS, 'Content-Type': 'application/json' }, body: '{"queued": 2}' });
   });
   await openReader(page);
-  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Quiz me' }));
   await expect(page.getByRole('dialog', { name: 'Quiz me' })).toBeVisible();
   await expect.poll(() => prepared.length).toBe(1);
   expect(prepared[0].book_id).toBe('e2e-book');
@@ -114,7 +114,7 @@ test('the quiz shows the questions Quiz me handed it; opened by its address it r
   const reads = [];
   page.on('request', (r) => { if (r.method() === 'GET' && r.url().endsWith('/sessions/qm-1')) reads.push(r.url()); });
   await openReader(page);
-  await page.getByRole('button', { name: 'Quiz me' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Quiz me' }));
   await page.getByRole('dialog', { name: 'Quiz me' }).getByRole('button', { name: 'This chapter' }).click();
   await expect(page).toHaveURL(/\/quiz\/qm-1$/);
   await expect(page.getByText('What did the lamp throw?')).toBeVisible();

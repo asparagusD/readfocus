@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
@@ -25,7 +25,9 @@ const SPARE = 40; // px kept free, so a notes count or a longer chapter name mov
 function useFits(bar, boxes) {
   const [fits, setFits] = useState(() => boxes.map(() => true));
   const widths = useRef(boxes.map(() => 0));
-  useEffect(() => {
+  // C39.3b: measured once before the first paint too, so a bar mounted afresh (after focus mode) never shows, even for
+  // a frame, tools it has no room for (DEBUG_LOG C39.3b); then on every resize.
+  useLayoutEffect(() => {
     const el = bar.current;
     if (!el || typeof ResizeObserver !== 'function') return undefined;
     const measure = () => {
@@ -44,6 +46,7 @@ function useFits(bar, boxes) {
       }).map((ok, i, all) => ok && all.slice(0, i).every(Boolean));
       setFits((now) => (now.every((v, i) => v === next[i]) ? now : next));
     };
+    measure();
     const watch = new ResizeObserver(measure);
     watch.observe(el);
     for (const group of el.children) watch.observe(group);

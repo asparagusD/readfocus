@@ -2,7 +2,7 @@
 // here (heartbeats, page turns, hidden and visible, the bookmark) and what the results show for the server's
 // answer; the numbers themselves come from the real engine in backend/tests/test_focus_anticheat.py
 // (the 31-minute stall voids one minute, under 40% earns 0, 80% earns time and bonus).
-import { book, expect, mockBackend, openReader, settled, signIn, test } from './fixtures';
+import { book, clickTool, expect, mockBackend, openReader, settled, signIn, test } from './fixtures';
 
 const bar = (page) => page.getByRole('region', { name: 'Focus mode' });
 const kinds = (api) => api.focus.events.map((e) => e.kind);
@@ -60,7 +60,7 @@ async function toChapter1(page) { // C38.2: a page at a time, from the preface (
 async function startAtChapter1(page, api) {
   api.bodyStart = chapter1;
   await openReader(page);
-  await page.getByRole('switch', { name: 'Focus mode' }).click();
+  await clickTool(page, page.getByRole('switch', { name: 'Focus mode' }));
   await expect(bar(page).getByRole('button', { name: 'Unlocks at Chapter 1' })).toBeVisible(); // the preface is locked
   await toChapter1(page);
   await bar(page).getByRole('button', { name: 'Start' }).click();

@@ -2648,6 +2648,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/markup-tools.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/no-blank.spec.js",
       "type": "file",
       "role": "config",
@@ -3081,6 +3087,12 @@
     },
     {
       "id": "file:frontend/src/annotations/useAnnotations.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/annotations/useMarkupTool.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -11430,6 +11442,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/markup-tools.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/no-blank.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11812,6 +11829,16 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/useAnnotations.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useMarkupTool.js",
+      "to": "file:frontend/src/annotations/markup.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/useMarkupTool.js",
+      "to": "file:frontend/src/annotations/palette.js"
     },
     {
       "type": "imports",
@@ -12956,6 +12983,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/annotations/useAnnotationChip.js"
     },
     {
@@ -13706,6 +13738,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/annotations/useMarkupTool.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/components/ui/Button.jsx"
     },
     {
@@ -13882,6 +13919,11 @@
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/reader/ContentsDrawer.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/MarkupTools.jsx"
     },
     {
       "type": "imports",

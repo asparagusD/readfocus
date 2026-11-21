@@ -28,6 +28,8 @@ import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
 import { useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
+import { useMarkupTool } from '../annotations/useMarkupTool';
+import { MarkupTools } from '../reader/MarkupTools';
 import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
 import { Notebook } from '../notes/Notebook';
@@ -191,6 +193,7 @@ export function ReadingSession() {
 
   const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
   const inFocus = !pagesOnly && focus.enabled;
+  const markup = useMarkupTool(kind, !inFocus); // C39.3: Edge's markup tools; off while focus mode has the toolbar
   const onRelocate = useCallback((next) => {
     setPlace(next);
     setChapter(next.entry || '');
@@ -342,7 +345,9 @@ export function ReadingSession() {
   };
   const closeSide = useCallback(() => setSide(null), []);
   const toggleSide = (tab, button) => {
-    if (!side) opener.current = button.current;
+    // C39.3: a tool opened from More tools hides with its panel, so focus comes back to More tools (DEBUG_LOG C39.3b).
+    const el = button.current;
+    if (!side) opener.current = el?.closest('.rf-toolbar-more')?.closest('.rf-toolbar')?.querySelector('.rf-toolbar-more-button') ?? el;
     setSide((now) => (now === tab ? null : tab));
   };
   // A citation chip moves the book to its page or section; the panel stays open.
@@ -597,6 +602,10 @@ export function ReadingSession() {
           contentsOpen={contentsOpen}
           contentsDocked={docked}
           onBookmark={() => reader.current?.saveMark?.()}
+          markup={(
+            <MarkupTools tools={markup.tools} tool={markup.tool} onTool={markup.choose} colour={markup.colour}
+              onColour={markup.setColour} status={markup.status} />
+          )}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -663,6 +672,7 @@ export function ReadingSession() {
           regions={regions}
           ocr={ocr}
           onAnnotate={notes.create}
+          markup={markup.tool ? { tool: markup.tool, colour: markup.colour } : null}
           annotations={notes.annotations}
           onAnnotationChange={notes.update}
           onAnnotationDelete={notes.remove}

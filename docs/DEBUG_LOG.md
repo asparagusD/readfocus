@@ -5835,3 +5835,43 @@ e2e/annotations-hover.spec.js`: 23 passed.
 
 ### Commit
 feat(ui): offer Edge's colours with More colours in the toolbar and chip
+
+## 2026-11-22 C39.3b — 23 e2e tests could not reach Look up, Steve, Focus and Quiz me
+
+### Failure
+`npm --prefix frontend run test:e2e`: 372 passed, 23 failed, in annotations-hover, focus-mode, focus (5), notepad,
+notes-blocks (3), notes-drawing (3), quiz-me (5), reader, steve-blocks and steve-panel (2): `locator.click: Test
+timeout` waiting for `switch "Focus mode"`, `button "Ask Steve"`, `button "Quiz me"` or `switch "Look up words on
+hover"`; two `toBeFocused` on Ask Steve after the panel closed.
+
+### Reproduce
+The same specs alone, every run, at the e2e viewport (1440 x 900).
+
+### Hypotheses
+1. C39.3b put Edge's markup tools in the bar, and by your decision at C39.3 they keep their place, so at 1440 Look up,
+   Steve, Focus and Quiz me now sit in More tools (they did only below about 1400 px); the specs clicked them in the
+   bar. Evidence: before and after probes at 1280, 1440, 1600: the reading tools in the bar at 1440 before, in More
+   tools after. Result: confirmed for 20 of the 23.
+2. Closing the Steve panel gives focus back to the button that opened it, which is hidden in the closed More tools
+   panel when Steve was opened from there, so focus is lost (true below about 1400 px since C38.7b, now at 1440 too).
+   Evidence: `toggleSide` keeps `button.current` as the opener. Result: confirmed (notepad, steve-panel).
+3. focus-mode's `focusOn` already used `clickTool`, yet timed out on its second turn: a toolbar mounted afresh after
+   focus mode starts with every box in the bar, and is measured only by a ResizeObserver, so for a moment Focus is
+   visible in the bar, `clickTool` clicks there, and then it moves into More tools. Result: confirmed.
+
+### Root cause
+The specs reached the reader's tools in the bar at a width where they are now in More tools; two product faults showed
+with them: focus returned to a hidden opener, and a remounted toolbar showed tools it had no room for until measured.
+
+### Fix
+`ReadingSession.jsx` `toggleSide`: an opener inside More tools gives way to the More tools button. `ReaderToolbar.jsx`
+`useFits`: a layout effect measures once before the first paint, then the ResizeObserver as before. The specs reach
+the four tools through `clickTool` and `reveal`, and expect focus on More tools when Steve is tucked in it.
+
+### Regression test
+The 10 spec files and markup-tools.spec.js: `npx playwright test e2e/annotations-hover.spec.js e2e/focus-mode.spec.js
+e2e/focus.spec.js e2e/notepad.spec.js e2e/notes-blocks.spec.js e2e/notes-drawing.spec.js e2e/quiz-me.spec.js
+e2e/reader.spec.js e2e/steve-blocks.spec.js e2e/steve-panel.spec.js e2e/markup-tools.spec.js`: 126 passed.
+
+### Commit
+feat(ui): highlight each selection at once with Edge's highlighter tool

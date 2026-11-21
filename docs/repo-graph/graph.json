@@ -5566,6 +5566,12 @@
       "language": "sql"
     },
     {
+      "id": "file:supabase/migrations/036_page_marks.sql",
+      "type": "file",
+      "role": "migration",
+      "language": "sql"
+    },
+    {
       "id": "file:tools/__init__.py",
       "type": "file",
       "role": "script",
@@ -5796,6 +5802,10 @@
       "type": "table"
     },
     {
+      "id": "table:page_marks",
+      "type": "table"
+    },
+    {
       "id": "table:page_ocr",
       "type": "table"
     },
@@ -5949,6 +5959,11 @@
       "type": "alters_table",
       "from": "file:supabase/migrations/030_focus_ignored_events.sql",
       "to": "table:focus_sessions"
+    },
+    {
+      "type": "alters_table",
+      "from": "file:supabase/migrations/036_page_marks.sql",
+      "to": "table:annotations"
     },
     {
       "type": "calls_endpoint",
@@ -6943,6 +6958,11 @@
       "type": "defines_table",
       "from": "file:supabase/migrations/034_reading_days.sql",
       "to": "table:reading_days"
+    },
+    {
+      "type": "defines_table",
+      "from": "file:supabase/migrations/036_page_marks.sql",
+      "to": "table:page_marks"
     },
     {
       "type": "graph_edge",

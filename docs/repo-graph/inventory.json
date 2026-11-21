@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 987,
-    "inventoried": 844,
+    "tracked": 988,
+    "inventoried": 845,
     "excluded": 143
   },
   "files": [
@@ -257,8 +257,8 @@
     {
       "path": "backend/agents/policy.py",
       "language": "python",
-      "lines": 458,
-      "size_bytes": 22180,
+      "lines": 478,
+      "size_bytes": 23654,
       "role": "agent",
       "purpose": "Policy constants for the agents: every threshold, weight and limit in one place; so far question generation, test assembly, grading, feedback, the knowledge state's mastery update, the reading strategy planner and the learning optimizer; and the original-file limits (per-reader shelf cap, per-file limit, signed URL lifetime). C26.7: MAX_DEVICE_BOOK_FILE_BYTES (300 MB), BROWSER_TEXT_PAGES_PER_BATCH, BROWSER_TEXT_MAX_PAGE_CHARS, BROWSER_TEXT_MAX_PAGES."
     },
@@ -609,10 +609,10 @@
     {
       "path": "backend/routers/annotations.py",
       "language": "python",
-      "lines": 104,
-      "size_bytes": 5105,
+      "lines": 113,
+      "size_bytes": 5904,
       "role": "router",
-      "purpose": "Highlights and underlines (C21.1, docs/ANCHORS.md): GET /books/{id}/annotations (reading order, from/to overlap filter), POST (anchors checked against A1/A2, positions against A4, text snapshot), PATCH /annotations/{id} (style, color), DELETE; owner only, 404 otherwise."
+      "purpose": "Highlights and underlines (C21.1, docs/ANCHORS.md): GET /books/{id}/annotations (reading order, from/to overlap filter), POST (anchors checked against A1/A2, positions against A4, text snapshot), PATCH /annotations/{id} (style, color, C39.1 comment: trimmed, empty clears), DELETE; owner only, 404 otherwise."
     },
     {
       "path": "backend/routers/auth.py",
@@ -1169,10 +1169,10 @@
     {
       "path": "backend/tests/test_annotations_api.py",
       "language": "python",
-      "lines": 148,
-      "size_bytes": 7909,
+      "lines": 176,
+      "size_bytes": 9767,
       "role": "test",
-      "purpose": "Pytest for the annotations API: PDF across two pages and EPUB ranges stored; bad colours, styles, point anchors, quads, page order, mixed kinds and positions that disagree with the anchors refused; reading order and range filter; another reader sees and changes nothing; restyle; delete."
+      "purpose": "Pytest for the annotations API: PDF across two pages and EPUB ranges stored; bad colours, styles, point anchors, quads, page order, mixed kinds and positions that disagree with the anchors refused; reading order and range filter; another reader sees and changes nothing; restyle; delete; C39.1 Edge's colours and comments saved, changed, cleared and capped."
     },
     {
       "path": "backend/tests/test_answer_fixtures.py",
@@ -1745,8 +1745,8 @@
     {
       "path": "backend/tests/test_migrations.py",
       "language": "python",
-      "lines": 992,
-      "size_bytes": 47226,
+      "lines": 1044,
+      "size_bytes": 50153,
       "role": "test",
       "purpose": "Pytest: no migration has a destructive statement, and 005 adds embedding_local vector(384) with an HNSW cosine index and an RLS-respecting match_chunks_local, 006 adds the full-text index and search_chunks_text, 007 adds question_bank, 008 adds concepts and user_concept_mastery with their keys, indexes and own-rows policies, and 009 adds agent_decisions with its columns, indexes and a read-only own-rows policy, and 010 adds processing_jobs with its columns, sweep index, read-only own-rows policy and the unique chunks (book_id, chunk_index) index, and 011 adds only the five per-user read indexes on sessions, test_results and books, and 012 adds books.cover_url and cover_source and a public covers bucket, and 013 adds chunks.blocks and books.toc as nullable jsonb, and 014 adds reading_progress.position as nullable jsonb; 018 and 019 (C18.2b, C18.5b) with their narrow allow-lists for the job-kind check and nullable page and bbox; 027 (C22.1) note_blocks with its columns, kinds and size from policy, owner SELECT policy, range index and the private notes bucket with owner folders."
     },
@@ -2329,8 +2329,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6382,
-      "size_bytes": 1206401,
+      "lines": 6428,
+      "size_bytes": 1215285,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -6615,6 +6615,14 @@
       "purpose": "C35.2 (issue 18): books_status_check replaced in one statement by processing, ready, error and deleting, so DELETE /books/{id} can mark a book and purge it in the background. Applied 2026-11-19 after a dump."
     },
     {
+      "path": "supabase/migrations/036_page_marks.sql",
+      "language": "sql",
+      "lines": 60,
+      "size_bytes": 3092,
+      "role": "migration",
+      "purpose": "C39.1 (issue 23): page_marks (ink strokes and text boxes on a PDF page, A4 position, named colours, RLS select-own), annotations.comment, and annotations' colour CHECK widened to Edge's set (found by definition, as 018). Not applied yet: needs a dump and approval."
+    },
+    {
       "path": "tools/__init__.py",
       "language": "python",
       "lines": 0,
@@ -6697,8 +6705,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 846,
-      "size_bytes": 302270,
+      "lines": 847,
+      "size_bytes": 302690,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

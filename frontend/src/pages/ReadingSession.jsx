@@ -30,7 +30,7 @@ import { useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
 import { useMarkupTool } from '../annotations/useMarkupTool';
 import { usePageMarks } from '../annotations/usePageMarks';
-import { newStroke } from '../annotations/ink';
+import { erasedSummary, newStroke } from '../annotations/ink';
 import { MarkupTools } from '../reader/MarkupTools';
 import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
@@ -197,6 +197,24 @@ export function ReadingSession() {
   const inFocus = !pagesOnly && focus.enabled;
   const markup = useMarkupTool(kind, !inFocus); // C39.3: Edge's markup tools; off while focus mode has the toolbar
   const pageMarks = usePageMarks(bookId, kind, place?.kind === 'pdf' ? place.pages : null); // C39.4: ink near the view
+  // C39.5: the eraser takes strokes and highlights away as it passes; when the drag ends one toast offers one Undo.
+  const erased = useRef({ marks: [], annotations: [] });
+  const eraser = {
+    onHit: ({ marks, annotations }) => {
+      erased.current.marks.push(...pageMarks.erase(marks));
+      erased.current.annotations.push(...notes.erase(annotations));
+    },
+    onDone: () => {
+      const batch = erased.current;
+      erased.current = { marks: [], annotations: [] };
+      const said = erasedSummary(batch.marks.length, batch.annotations.length);
+      if (!said) return;
+      toast({ kind: 'neutral', message: said, action: { label: 'Undo', onClick: () => {
+        pageMarks.restore(batch.marks);
+        notes.restore(batch.annotations);
+      } } });
+    },
+  };
   const onRelocate = useCallback((next) => {
     setPlace(next);
     setChapter(next.entry || '');
@@ -678,6 +696,7 @@ export function ReadingSession() {
           markup={markup.tool ? { tool: markup.tool, colour: markup.colour, ink: markup.ink } : null}
           marks={pageMarks.marks}
           onStroke={(page, points) => pageMarks.create(newStroke(page, points, markup.ink))}
+          eraser={eraser}
           annotations={notes.annotations}
           onAnnotationChange={notes.update}
           onAnnotationDelete={notes.remove}

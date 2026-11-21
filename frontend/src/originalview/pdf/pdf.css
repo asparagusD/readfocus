@@ -137,4 +137,8 @@
 }
 .rf-ink path { fill: var(--c-mark); }
 .rf-ink[data-drawing] { pointer-events: auto; cursor: crosshair; touch-action: none; }
+/* C39.5: the eraser's cursor, a ring the size of what it takes away (8 px round its point). */
+.rf-ink[data-erasing] {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E%3Ccircle cx='9' cy='9' r='8' fill='white' fill-opacity='.6' stroke='%232a2420' stroke-width='1.5'/%3E%3C/svg%3E") 9 9, cell;
+}
 .rf-anno[data-style="underline"] { mix-blend-mode: normal; } /* a line under the text, drawn as it is */

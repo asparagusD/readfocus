@@ -2,6 +2,7 @@
 // one in use. A tool stays on until Escape, a second press on it, or another tool (as in Edge); none on means the
 // pointer selects text as before. Pure, so it runs under node --test.
 // C39.3 builds the group and Highlight; Draw (C39.4), Erase (C39.5) and Add text (C39.6) join it in their steps.
+// C39.5: Erase is for a PDF; an EPUB's highlights go from their chip's Delete, as before.
 
 import { colourName } from './palette.js';
 
@@ -9,6 +10,7 @@ import { colourName } from './palette.js';
 export const TOOLS = [
   { id: 'draw', label: 'Draw', menu: 'Draw options', pdf: true }, // C39.4
   { id: 'highlight', label: 'Highlight', menu: 'Highlight colour', pdf: false },
+  { id: 'erase', label: 'Erase', menu: null, pdf: true }, // C39.5: Edge's eraser has no options
 ];
 
 /** The tools a book of this kind offers. */
@@ -20,6 +22,7 @@ export const toggleTool = (current, pressed) => (current === pressed ? null : pr
 /** What a screen reader hears when a tool turns on or off (`colour` is the highlighter's, `ink` Draw's). */
 export function toolStatus(tool, { colour, ink } = {}) {
   if (tool === 'highlight') return `Highlighter on, ${colourName(colour)}. Select text to highlight it. Escape turns it off.`;
+  if (tool === 'erase') return 'Eraser on. Drag over a drawing or a highlight to erase it. Escape turns it off.';
   if (tool === 'draw') return `Drawing on, ${colourName(ink.colour)}, ${ink.width} ${ink.width === 1 ? 'point' : 'points'}. Draw on the page. Escape turns it off.`;
   return tool ? '' : 'Markup tools off.';
 }

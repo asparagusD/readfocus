@@ -70,7 +70,7 @@ const sameView = (a, b) => Boolean(a && b) && a.main === b.main && a.atStart ===
  * rf-find-current; a browser without it shows the count and moves the view, unhighlighted).
  * C38.6b: `thumbnail(page, width)` (a canvas) and `pageLabelOf(page)` for the contents pane's Pages tab.
  */
-export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one', onRelocate, onError, ocr = null, annotations = null, marks = null, ink = null, contents = null, startPage = 1, end = null, found = null, ref }) {
+export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one', onRelocate, onError, ocr = null, annotations = null, marks = null, ink = null, eraser = null, contents = null, startPage = 1, end = null, found = null, ref }) {
   const { status, doc, numPages, error } = usePdfDocument(bookId, load);
   useEffect(() => { if (ocr && doc) ocr.attach(doc); }, [ocr, doc]); // C19.4: scanned pages read with the open PDF
   const box = useRef(null);
@@ -400,7 +400,7 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
           return at && (
             <div key={n} className="rf-pdf-slot" style={{ left: at.left, top: at.top, width: at.width, height: at.height }}>
               <PdfPage cache={cache} pageNumber={n} label={`Page ${meta.labels?.[n - 1] ?? n}`} ocr={ocr} annotations={drawn}
-                marks={marks} ink={ink} onShown={onShown} />
+                marks={marks} ink={ink} eraser={eraser} onShown={onShown} />
             </div>
           );
         })}

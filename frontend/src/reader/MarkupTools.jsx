@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, Highlighter, PenLine } from 'lucide-react';
+import { ChevronDown, Eraser, Highlighter, PenLine } from 'lucide-react';
 import { toggleTool } from '../annotations/markup';
 import { WIDTHS } from '../annotations/ink';
 import { COLOURS, colourName, MARK_COLOURS } from '../annotations/palette';
 import { rove } from '../annotations/roving';
 import '../annotations/SelectionToolbar.css';
 
-const ICONS = { draw: PenLine, highlight: Highlighter };
+const ICONS = { draw: PenLine, erase: Eraser, highlight: Highlighter };
 
 /**
  * One of Edge's markup tools in the reader's toolbar (C39.3, issue 23): the tool, a toggle (pressed while on; the
@@ -47,14 +47,16 @@ function MarkupTool({ tool, on, colours, attr, colour, onColour, width = null, o
         aria-label={tool.label} title={on ? `${tool.label} (Escape to stop)` : tool.label}>
         <span className="rf-markup-icon" aria-hidden="true">
           <Icon size={18} strokeWidth={1.75} />
-          <span className="rf-markup-swatch" {...{ [attr]: colour }} />
+          {attr && <span className="rf-markup-swatch" {...{ [attr]: colour }} />}
         </span>
         <span className="rf-tool-label">{tool.label}</span>
       </button>
-      <button type="button" className="rf-tool rf-markup-menu-button" ref={menuButton} aria-expanded={open}
-        aria-controls={open ? id : undefined} aria-label={tool.menu} onClick={() => setOpen(!open)}>
-        <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
-      </button>
+      {tool.menu && ( // C39.5: Erase has no menu, as in Edge
+        <button type="button" className="rf-tool rf-markup-menu-button" ref={menuButton} aria-expanded={open}
+          aria-controls={open ? id : undefined} aria-label={tool.menu} onClick={() => setOpen(!open)}>
+          <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      )}
       {open && (
         <div id={id} ref={menu} className="rf-seltool rf-markup-menu" role="group" aria-label={tool.menu} onKeyDown={onMenuKey}>
           <div className="rf-markup-colours" role="radiogroup" aria-label={`${tool.label} colour`}>
@@ -92,6 +94,7 @@ export function MarkupTools({ tools, tool, onTool, colour, onColour, ink, onInk,
     draw: { colours: MARK_COLOURS, attr: 'data-mark-colour', colour: ink.colour, width: ink.width,
       onColour: (c) => onInk({ colour: c }), onWidth: (w) => onInk({ width: w }) },
     highlight: { colours: COLOURS, attr: 'data-colour', colour, onColour },
+    erase: { colours: [], attr: null, colour: null, onColour: () => {} }, // C39.5: no options
   };
   return (
     <div className="rf-toolbar-group rf-markup" role="group" aria-label="Markup">

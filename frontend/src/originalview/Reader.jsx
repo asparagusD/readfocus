@@ -85,7 +85,7 @@ function useWide() {
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, annotations = null,
+  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, eraser = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
   placing = null, contents = null, start = null, pageView = 'one', mark = null,
 }) {
@@ -362,6 +362,7 @@ export function Reader({
           {kind === 'pdf'
             ? <PdfBook key={attempt} {...shared} zoom={zoom} view={pageView} ocr={ocr} contents={contents} startPage={startPage(start)}
               marks={marks} ink={markup?.tool === 'draw' && onStroke ? { ...markup.ink, onStroke } : null}
+              eraser={eraser && ['draw', 'erase'].includes(markup?.tool) ? { ...eraser, on: markup.tool === 'erase' } : null}
               end={closing && <div className="rf-end">{closing}</div>} found={finding ? finder.found : null} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} found={finding ? finder.found : null} />}
           {pulse && (

@@ -90,7 +90,8 @@ function useWide() {
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
  * C40.2 (issue 24): read aloud (useReadAloud, ReadAloudBar): `readAloud()` on the ref starts it from the selection or the
  * first line in view, or stops it; its bar sits over the book; `onReadAloud(on)` hears it open and close. Regions are
- * left unread, as lookup leaves them.
+ * left unread, as lookup leaves them. C40.2c: Ctrl+Shift+U starts or stops it; the selection's menu has Read aloud from
+ * here (the selection's first word).
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
@@ -125,6 +126,15 @@ export function Reader({
   const findNext = finder.next;
   const findPrev = finder.prev;
   const findKeyRef = useRef(null);
+  // C40.2: read aloud over the renderer's pages, a PDF's regions unread.
+  const readSource = useCallback(() => book.current?.readAloud ?? null, []);
+  const skipOf = useCallback((unit) => (kind === 'pdf' && regions
+    ? regions.load(unit).then(() => regions.boxesOf(unit)) : Promise.resolve([])), [kind, regions]);
+  const reading = useReadAloud({ source: readSource, skipOf });
+  const readingRef = useRef(reading);
+  useEffect(() => { readingRef.current = reading; });
+  const readingOpen = reading.open;
+  useEffect(() => { onReadAloud?.(readingOpen); }, [readingOpen, onReadAloud]);
   useEffect(() => {
     const onFindKey = (event) => {
       if (event.defaultPrevented || event.target?.closest?.('[role="dialog"]')) return;
@@ -137,6 +147,9 @@ export function Reader({
         if (!finding) openFind();
         else if (shortcut === 'find-prev') findPrev();
         else findNext();
+      } else if (shortcut === 'read-aloud' && readingRef.current?.supported) { // C40.2c: Ctrl+Shift+U, as Edge's
+        event.preventDefault();
+        readingRef.current.toggle();
       } else if (finding && event.key === 'F3' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         if (event.shiftKey) findPrev();
@@ -147,15 +160,6 @@ export function Reader({
     document.addEventListener('keydown', onFindKey);
     return () => document.removeEventListener('keydown', onFindKey);
   }, [openFind, finding, findNext, findPrev]);
-  // C40.2: read aloud over the renderer's pages, a PDF's regions unread.
-  const readSource = useCallback(() => book.current?.readAloud ?? null, []);
-  const skipOf = useCallback((unit) => (kind === 'pdf' && regions
-    ? regions.load(unit).then(() => regions.boxesOf(unit)) : Promise.resolve([])), [kind, regions]);
-  const reading = useReadAloud({ source: readSource, skipOf });
-  const readingRef = useRef(reading);
-  useEffect(() => { readingRef.current = reading; });
-  const readingOpen = reading.open;
-  useEffect(() => { onReadAloud?.(readingOpen); }, [readingOpen, onReadAloud]);
   useEffect(() => { // C18.6d: the boxes of the pages shown are asked for before a word is hovered
     if (regions && shownPages) shownPages.split(',').forEach((n) => regions.load(Number(n)));
   }, [regions, shownPages]);
@@ -503,7 +507,8 @@ export function Reader({
       )}
       {onAnnotate && (
         <SelectionMenu menu={menu} onClose={closeMenu} onAnnotate={onAnnotate} onNote={onNewNote} onComment={commentOn}
-          onLookUp={lookupClient ? () => lookup.current?.lookUpSelection() : null} />
+          onLookUp={lookupClient ? () => lookup.current?.lookUpSelection() : null}
+          onReadAloud={reading.supported && kind === 'pdf' ? reading.start : null} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}

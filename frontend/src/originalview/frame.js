@@ -33,6 +33,7 @@ export function fontStep(size, dir) {
  * C38.9 (issue 22): Edge's reader shortcuts, from a keydown: 'find' (Ctrl+F), 'find-next' and 'find-prev' (Ctrl+G,
  * Ctrl+Shift+G), 'go-to-page' (Ctrl+Alt+G), 'fit' (Ctrl+\), 'zoom-in' and 'zoom-out' (Ctrl+= or Ctrl++, Ctrl+-); Cmd
  * for Ctrl on a Mac. Null for anything else, Ctrl+0 and the wheel too: the browser's own zoom is left alone.
+ * C40.2c (issue 24): 'read-aloud' (Ctrl+Shift+U), as Edge's.
  */
 export function readerShortcut({ key = '', code = '', ctrlKey = false, metaKey = false, shiftKey = false, altKey = false }) {
   if (!ctrlKey && !metaKey) return null;
@@ -41,6 +42,7 @@ export function readerShortcut({ key = '', code = '', ctrlKey = false, metaKey =
     return shiftKey ? 'find-prev' : 'find-next';
   }
   if (altKey) return null;
+  if ((code === 'KeyU' || key.toLowerCase() === 'u') && shiftKey) return 'read-aloud';
   if ((code === 'KeyF' || key.toLowerCase() === 'f') && !shiftKey) return 'find';
   if ((code === 'Backslash' || key === '\\') && !shiftKey) return 'fit';
   if (code === 'Equal' || code === 'NumpadAdd' || key === '=' || key === '+') return 'zoom-in';

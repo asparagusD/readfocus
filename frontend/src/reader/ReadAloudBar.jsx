@@ -42,7 +42,7 @@ export function ReadAloudBar({ reading, onClose }) {
         <SkipBack {...ICON} />
       </button>
       <button type="button" ref={play} className="rf-tool rf-read-aloud-play" onClick={reading.playing ? reading.pause : reading.resume}
-        aria-label={reading.playing ? 'Pause' : 'Play'}>
+        aria-label={reading.playing ? 'Pause' : 'Play'} title={reading.playing ? 'Pause' : 'Play'}>
         {reading.playing ? <Pause {...ICON} /> : <Play {...ICON} />}
       </button>
       <button type="button" className="rf-tool" onClick={() => reading.skip(1)} disabled={!reading.unit}
@@ -55,7 +55,8 @@ export function ReadAloudBar({ reading, onClose }) {
         <SlidersHorizontal {...ICON} />
         <span className="rf-tool-label">Voice options</span>
       </button>
-      <button type="button" className="rf-tool" onClick={onClose} aria-label="Stop reading aloud">
+      <button type="button" className="rf-tool" onClick={onClose} aria-label="Stop reading aloud" aria-keyshortcuts="Control+Shift+U"
+        title="Stop reading aloud (Ctrl+Shift+U)">
         <X {...ICON} />
       </button>
       {status && <p className="rf-read-aloud-status">{status}</p>}

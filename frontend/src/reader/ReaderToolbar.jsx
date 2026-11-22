@@ -123,7 +123,7 @@ export function ReaderToolbar({
 
   const readAloud = onReadAloud && ( // C40.2: beside the markup tools, as Edge's
     <button type="button" className="rf-tool rf-read-aloud-button" onClick={onReadAloud} aria-pressed={readingAloud}
-      aria-label="Read aloud" title={readingAloud ? 'Stop reading aloud' : 'Read aloud'}>
+      aria-label="Read aloud" aria-keyshortcuts="Control+Shift+U" title={readingAloud ? 'Stop reading aloud (Ctrl+Shift+U)' : 'Read aloud (Ctrl+Shift+U)'}>
       <Speech size={18} strokeWidth={1.75} aria-hidden="true" />
       <span className="rf-tool-label">Read aloud</span>
     </button>

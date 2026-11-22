@@ -1,8 +1,9 @@
 // Read aloud (C40.2, issue 24: Edge's Read aloud) on the sample PDF (e2e/fixtures/books/sample.pdf): six pages, a title
 // and 14 lines each ("Line 3 of page 2: the lamp threw a small circle of light."). Headless Edge has no voices, so a
 // fake speechSynthesis speaks: it keeps every utterance (window.__spoken) and sends a word boundary every
-// window.__wordMs (120 ms unless a test changes it), then the utterance's end.
-import { test, expect, openReader, clickTool, reveal } from './fixtures.js';
+// window.__wordMs (120 ms unless a test changes it), then the utterance's end. C40.2b: Voice options; C40.2c:
+// Ctrl+Shift+U and Read aloud from here.
+import { test, expect, openReader, clickTool, reveal, book, wordPoint } from './fixtures.js';
 
 test.use({ book: 'pdf' });
 
@@ -137,6 +138,35 @@ test('it reads on into the next page, and the view follows the words', async ({ 
   // the page box follows the pages being read (it names the page most in view)
   await expect.poll(async () => Number(await page.getByRole('textbox', { name: /^Page number/ }).inputValue()), { timeout: 20_000 })
     .toBeGreaterThanOrEqual(2);
+});
+
+test('Ctrl+Shift+U starts reading and stops it, as in Edge', async ({ page }) => {
+  await openReader(page);
+  await book(page).focus();
+  await page.keyboard.press('Control+Shift+U');
+  await expect(bar(page)).toBeVisible();
+  await expect.poll(async () => (await lastSaid(page))?.text).toMatch(/page 1|Preface/);
+  await expect(await reveal(page, readAloud(page))).toHaveAttribute('aria-keyshortcuts', 'Control+Shift+U');
+  await page.keyboard.press('Control+Shift+U');
+  await expect(bar(page)).toBeHidden();
+  expect(await word(page)).toBe('');
+});
+
+test("Read aloud from here, on the selection's menu, starts at its first word", async ({ page }) => {
+  await openReader(page);
+  const a = await wordPoint(page, 'threw');
+  const b = await wordPoint(page, 'circle');
+  await page.mouse.move(a.left + 1, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.right - 1, b.y, { steps: 8 });
+  await page.mouse.up();
+  await page.mouse.click(a.x + 4, a.y, { button: 'right' });
+  const item = page.getByRole('menu', { name: 'Selection' }).getByRole('menuitem', { name: /Read aloud from here/ });
+  await item.click();
+  await expect(page.getByRole('menu', { name: 'Selection' })).toHaveCount(0);
+  await expect(bar(page)).toBeVisible();
+  await expect.poll(async () => (await said(page))[0]?.text).toBe('threw a small circle of light.');
+  expect(await page.evaluate(() => document.getSelection().isCollapsed)).toBe(true); // the selection gives way
 });
 
 test.describe('an EPUB', () => {

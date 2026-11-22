@@ -59,6 +59,14 @@ test("C38.9: Edge's shortcuts: find, next and previous, go to page, fit, zoom; t
   assert.equal(readerShortcut({}), null);
 });
 
+test("C40.2c: Ctrl+Shift+U reads aloud, as Edge's; Ctrl+U alone stays the browser's", () => {
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', ctrlKey: true, shiftKey: true }), 'read-aloud');
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', metaKey: true, shiftKey: true }), 'read-aloud');
+  assert.equal(readerShortcut({ key: 'u', code: 'KeyU', ctrlKey: true }), null);
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', shiftKey: true }), null);
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', ctrlKey: true, shiftKey: true, altKey: true }), null);
+});
+
 test("C38.9: an EPUB's text size steps through its sizes and stops at the ends", () => {
   assert.equal(fontStep(18, 1), 20);
   assert.equal(fontStep(18, -1), 16);

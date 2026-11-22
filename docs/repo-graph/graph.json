@@ -2474,6 +2474,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/comments.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/contents-pane.spec.js",
       "type": "file",
       "role": "config",
@@ -3021,6 +3027,12 @@
     },
     {
       "id": "file:frontend/src/annotations/CommentEditor.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
+      "id": "file:frontend/src/annotations/CommentMarkers.jsx",
       "type": "file",
       "role": "asset",
       "language": "jsx"
@@ -11435,6 +11447,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/comments.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/contents-pane.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11862,6 +11879,11 @@
       "type": "imports",
       "from": "file:frontend/src/annotations/CommentEditor.jsx",
       "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/annotations/CommentMarkers.jsx",
+      "to": "file:frontend/src/notes/markers.js"
     },
     {
       "type": "imports",
@@ -13147,6 +13169,16 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/annotations/AnnotationChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/CommentEditor.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/CommentMarkers.jsx"
     },
     {
       "type": "imports",

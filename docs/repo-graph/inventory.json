@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 1010,
-    "inventoried": 867,
+    "tracked": 1012,
+    "inventoried": 869,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 224,
-      "size_bytes": 19540,
+      "size_bytes": 19558,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2345,8 +2345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6444,
-      "size_bytes": 1237232,
+      "lines": 6445,
+      "size_bytes": 1238757,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2453,6 +2453,14 @@
       "size_bytes": 7306,
       "role": "config",
       "purpose": "E2e for C39.2's colours: More colours opens the deeper five lined up under the first, a deeper colour saves and is drawn in Paper's colour on a PDF and in an EPUB section's highlights, H then uses it, the chip shows it pressed and restyles, the Annotations filter lists the colours in use, the bar wraps inside 375 px with 44 px targets."
+    },
+    {
+      "path": "frontend/e2e/comments.spec.js",
+      "language": "javascript",
+      "lines": 113,
+      "size_bytes": 6097,
+      "role": "config",
+      "purpose": "E2e for C39.8's comments: from the right-click menu (saved with its highlight, previewed on hover and focus, edited by a click and Ctrl+Enter, Escape back to the book, listed in the pane); from the selection toolbar (Cancel and Escape save nothing); the chip adds, edits and deletes one; an EPUB highlight's comment and marker."
     },
     {
       "path": "frontend/e2e/contents-pane.spec.js",
@@ -3169,10 +3177,10 @@
     {
       "path": "frontend/src/annotations/AnnotationChip.jsx",
       "language": "jsx",
-      "lines": 107,
-      "size_bytes": 5413,
+      "lines": 115,
+      "size_bytes": 5952,
       "role": "asset",
-      "purpose": "The chip on a highlight (C21.4): Ask Steve (explain_highlight with the first anchor), the five colours (current pressed), Underline and Delete, above the end of the last line; a toolbar with A / Shift+A to the next or previous highlight and Escape back to the book."
+      "purpose": "The chip on a highlight (C21.4): Ask Steve (explain_highlight with the first anchor), the five colours (current pressed), Underline and Delete, above the end of the last line; a toolbar with A / Shift+A to the next or previous highlight and Escape back to the book. C39.8: Add or Edit comment (onComment)."
     },
     {
       "path": "frontend/src/annotations/ColourDots.jsx",
@@ -3191,28 +3199,36 @@
       "purpose": "Edge's Add comment panel (C39.8, issue 23 D1): under a highlight or the selection it will highlight, the comment in plain text (focused at once), ✓ or Ctrl+Enter saves (empty is none), Cancel or Escape leaves it, Delete comment for an existing one."
     },
     {
+      "path": "frontend/src/annotations/CommentMarkers.jsx",
+      "language": "jsx",
+      "lines": 85,
+      "size_bytes": 4809,
+      "role": "asset",
+      "purpose": "Comment markers (C39.8, issue 23 D1): a comment icon in the margin beside each commented highlight, placed through noteSpots and kept clear of the note markers and the saved place's mark; hover or focus previews the comment (a tooltip), a click or Enter edits it."
+    },
+    {
       "path": "frontend/src/annotations/SelectionMenu.jsx",
       "language": "jsx",
-      "lines": 113,
-      "size_bytes": 6047,
+      "lines": 118,
+      "size_bytes": 6439,
       "role": "asset",
-      "purpose": "Edge's right-click menu on a selection (C39.7, issue 23): Highlight in the last colour or one of the first five, Underline (running text), Add note, Ask Steve (when on), Look up, Copy; at a point (the pointer or the selection's end), first item focused, arrows, Home, End, Escape or Tab back to the book, a press outside closes it."
+      "purpose": "Edge's right-click menu on a selection (C39.7, issue 23): Highlight in the last colour or one of the first five, Underline (running text), Add note, Ask Steve (when on), Look up, Copy; at a point (the pointer or the selection's end), first item focused, arrows, Home, End, Escape or Tab back to the book, a press outside closes it. C39.8: Add comment."
     },
     {
       "path": "frontend/src/annotations/SelectionToolbar.css",
       "language": "css",
-      "lines": 214,
-      "size_bytes": 9008,
+      "lines": 247,
+      "size_bytes": 10188,
       "role": "asset",
       "purpose": "Styles for the selection toolbar: surface, hairline and lift; 28 px dots in --dot-* with a --line-field ring, the last colour ringed; 36 px buttons (44 px on touch); rises 8 px, fade only under reduced motion; the Ask Steve word hidden under 480 px. C39.7: the right-click menu (.rf-selmenu)."
     },
     {
       "path": "frontend/src/annotations/SelectionToolbar.jsx",
       "language": "jsx",
-      "lines": 133,
-      "size_bytes": 6351,
+      "lines": 140,
+      "size_bytes": 6845,
       "role": "asset",
-      "purpose": "The selection toolbar (C21.2, handoff screen 18): five colour dots, an Underline toggle and Ask Steve (explain_highlight) above a mouse selection or below a touch one, never on it; a colour saves at once and clears the selection; H and U from the book, Tab into the bar, arrows along it, Escape back; a polite status line."
+      "purpose": "The selection toolbar (C21.2, handoff screen 18): five colour dots, an Underline toggle and Ask Steve (explain_highlight) above a mouse selection or below a touch one, never on it; a colour saves at once and clears the selection; H and U from the book, Tab into the bar, arrows along it, Escape back; a polite status line. C39.8: Add comment (onComment)."
     },
     {
       "path": "frontend/src/annotations/epubPaint.js",
@@ -4809,10 +4825,10 @@
     {
       "path": "frontend/src/originalview/Reader.jsx",
       "language": "jsx",
-      "lines": 480,
-      "size_bytes": 27907,
+      "lines": 514,
+      "size_bytes": 30459,
       "role": "asset",
-      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions. C23.6b: shownPlaces() (the pages shown as ribbon places) and a `placing` prop that swaps the resting ribbon for RibbonPlacer. C23.G: Next on the closing page reads on into the book (it no longer ends there); once passed it does not come back until Home or a jump. C26.5a: the closing page is announced as \"End of the book\". C26.5b: no bounds, note or read-on: the closing page covers the book only past its last page, Home goes to the first page and End to the last. C34.2: contents and start (the saved anchor) passed to the PDF renderer. C38.2: a PDF scrolls: no running header, leaf, edge zones or closing page over it; Up and Down scroll it a little; 'End of the book' when its end is scrolled to; an EPUB keeps the frame. C38.4c: a PDF has no footer (Previous, folio, Next): the toolbar's page box names the page, the status is a quiet note on the desk, the live region still speaks. C38.5b: a PDF's find bar (FindBar, useFind): Ctrl+F or openFind() on the ref opens it with the query selected, F3 and Shift+F3 step while it is open, Escape in it closes it with focus back on the book; not inside a dialog; data-finding while open. C38.5c: the find bar for an EPUB too; Ctrl+F and F3 heard inside its sections. C38.6b: thumbnail(page, width) and pageLabelOf(page) on the ref, from a PDF's renderer. C38.7a: an EPUB scrolls too: the running header, the turning leaf (TurnLeaf), the edge zones, the footer and the closing page over the book are gone for both kinds; Next and Previous go straight to the renderer; Up and Down scroll an EPUB a little; an EPUB's closing words are a card at the foot once its end is in view; the status note for both. C38.8b: no ribbon over the desk: saveMark() on the ref (the toolbar's Save my place) and B save the place; `mark` is drawn beside it (PlaceMark). C38.9: Ctrl+G and Ctrl+Shift+G step through find's matches (or open the bar); the page's shortcuts pressed inside an EPUB's section are passed on to the page. C39.3: `markup`: with the highlighter on, a settled selection is highlighted at once in its colour and cleared, no selection toolbar; data-tool on the section. C39.4: `marks` and, with Draw on, `ink` (its colour, width and onStroke) to a PDF. C39.5: the eraser with Draw (a pen's eraser end) or Erase on. C39.6: textBoxes with Add text on; Enter places a box on the page most in view. C39.7: the selection's right-click menu (SelectionMenu): a right-click on selected words (not Shift, touch or a markup tool), the menu key or Shift+F10; the selection toolbar and the word card pause while it is open."
+      "purpose": "The original view's book frame (C17.4) for PDF or EPUB behind one interface (goTo, next, prev, visibleRange, getSelection, documents, anchor): spread from 1024 px, the Web Animations leaf turning at its edge, keys, edge clicks and swipes (also inside EPUB section iframes), ribbon and B, running header, folio and live region, lamplight colours, Try again and Back to the library on failure. C17.5, a reading session: bounds {start, end} (today.js), the planner's note over the page holding the start (hideable), the closing page past the end (Next, Space, End; Previous comes back; Home goes to the start), opening (the blank page while the session finds its place), status in the folio, a turn asked for mid-turn queued, data-start, data-end and data-ending for tests and tools, find(snippets, from) and toc() on the ref. Lookup (C17.5): with a lookupClient, BookLookup over the PDF's book box or each EPUB section's body (added as each loads); Enter or ? on a selection opens the card, Escape clears it; pointer moves and presses and Esc inside a section are relayed to the page in its coordinates, so the card closes and the toolbar wakes. C17.6: selectionAnchors() on the ref. With `regions` (C18.6d) the PDF surface skips points in math, code and figure boxes, asked for as pages are shown. C20.8b: mounts the PDF block actions beside word lookup. C20.8c: mounts the EPUB block actions. C23.6b: shownPlaces() (the pages shown as ribbon places) and a `placing` prop that swaps the resting ribbon for RibbonPlacer. C23.G: Next on the closing page reads on into the book (it no longer ends there); once passed it does not come back until Home or a jump. C26.5a: the closing page is announced as \"End of the book\". C26.5b: no bounds, note or read-on: the closing page covers the book only past its last page, Home goes to the first page and End to the last. C34.2: contents and start (the saved anchor) passed to the PDF renderer. C38.2: a PDF scrolls: no running header, leaf, edge zones or closing page over it; Up and Down scroll it a little; 'End of the book' when its end is scrolled to; an EPUB keeps the frame. C38.4c: a PDF has no footer (Previous, folio, Next): the toolbar's page box names the page, the status is a quiet note on the desk, the live region still speaks. C38.5b: a PDF's find bar (FindBar, useFind): Ctrl+F or openFind() on the ref opens it with the query selected, F3 and Shift+F3 step while it is open, Escape in it closes it with focus back on the book; not inside a dialog; data-finding while open. C38.5c: the find bar for an EPUB too; Ctrl+F and F3 heard inside its sections. C38.6b: thumbnail(page, width) and pageLabelOf(page) on the ref, from a PDF's renderer. C38.7a: an EPUB scrolls too: the running header, the turning leaf (TurnLeaf), the edge zones, the footer and the closing page over the book are gone for both kinds; Next and Previous go straight to the renderer; Up and Down scroll an EPUB a little; an EPUB's closing words are a card at the foot once its end is in view; the status note for both. C38.8b: no ribbon over the desk: saveMark() on the ref (the toolbar's Save my place) and B save the place; `mark` is drawn beside it (PlaceMark). C38.9: Ctrl+G and Ctrl+Shift+G step through find's matches (or open the bar); the page's shortcuts pressed inside an EPUB's section are passed on to the page. C39.3: `markup`: with the highlighter on, a settled selection is highlighted at once in its colour and cleared, no selection toolbar; data-tool on the section. C39.4: `marks` and, with Draw on, `ink` (its colour, width and onStroke) to a PDF. C39.5: the eraser with Draw (a pen's eraser end) or Erase on. C39.6: textBoxes with Add text on; Enter places a box on the page most in view. C39.7: the selection's right-click menu (SelectionMenu): a right-click on selected words (not Shift, touch or a markup tool), the menu key or Shift+F10; the selection toolbar and the word card pause while it is open. C39.8: what is being commented (a selection, saved as a highlight with its comment, or a highlight), the CommentEditor and CommentMarkers; toolbar, menu and lookup wait while it is open."
     },
     {
       "path": "frontend/src/originalview/ReaderControls.jsx",
@@ -6881,8 +6897,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 869,
-      "size_bytes": 314171,
+      "lines": 871,
+      "size_bytes": 315132,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

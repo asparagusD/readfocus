@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react';
-import { MessageCircle, Plus, Trash2, Underline } from 'lucide-react';
+import { MessageCircle, MessageSquareText, Plus, Trash2, Underline } from 'lucide-react';
 import { useSteveActions } from '../steve/SteveContext';
 import { ColourDots } from './ColourDots';
 import { colourName } from './palette';
@@ -18,7 +18,7 @@ const snippet = (text) => (text.length > SNIPPET ? `${text.slice(0, SNIPPET - 1)
  * A moves to the next highlight, Shift+A the previous, Escape returns to the book. `ref` is its element, for the
  * hover rules (useAnnotationChip). A pending (unsaved) annotation can be asked about but not changed yet.
  */
-export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, onCycle, onClose, onNote = null, ref }) {
+export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, onCycle, onClose, onNote = null, onComment = null, ref }) {
   const steve = useSteveActions(); // null while Steve is off: no Ask Steve
   const { refs, floatingStyles, placement } = useFloating({
     placement: 'top-end',
@@ -88,6 +88,14 @@ export function AnnotationChip({ annotation, by, rectsOf, onChange, onDelete, on
           disabled={fixed} onClick={() => onChange(id, { style: style === 'underline' ? 'highlight' : 'underline' })}>
           <Underline size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
+        {onComment && (
+          // C39.8 (issue 23, D1): its comment, added or edited in place.
+          <button type="button" className="rf-seltool-btn" tabIndex={-1} disabled={fixed}
+            aria-label={annotation.comment ? 'Edit comment' : 'Add comment'} title={annotation.comment ? 'Edit comment' : 'Add comment'}
+            onClick={() => { onComment(id); onClose(false); }}>
+            <MessageSquareText size={18} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        )}
         {onNote && (
           // C22.6: a text note quoting this passage, linked to it.
           <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Add note" title="Add note" disabled={fixed}

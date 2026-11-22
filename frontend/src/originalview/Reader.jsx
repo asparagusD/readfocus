@@ -5,7 +5,9 @@ import { BookLookup } from './BookLookup';
 import { SelectionToolbar } from '../annotations/SelectionToolbar';
 import { selectionPlace, useSelection } from '../annotations/useSelection';
 import { SelectionMenu } from '../annotations/SelectionMenu';
-import { newAnnotation } from '../annotations/palette';
+import { CommentEditor } from '../annotations/CommentEditor';
+import { CommentMarkers } from '../annotations/CommentMarkers';
+import { lastColour, newAnnotation } from '../annotations/palette';
 import { AnnotationChip } from '../annotations/AnnotationChip';
 import { useAnnotationChip } from '../annotations/useAnnotationChip';
 import { cycle } from '../annotations/hover';
@@ -205,6 +207,26 @@ export function Reader({
     entries, chip: chipEl, active: chipActive, blocked: Boolean(selected),
   });
   const chipFor = chipOpen && annotations?.find((a) => a.id === chipOpen.id);
+  // C39.8 (issue 23, D1): Edge's Add comment: on a selection ({ place }: saved as a highlight with its comment) or on a
+  // highlight ({ id }: its comment changed; emptied, removed). The selection's toolbar and menu and word lookup wait.
+  const [commenting, setCommenting] = useState(null);
+  const commentAt = useCallback(() => {
+    if (commenting?.id) return rectsOf(commenting.id).at(-1) ?? null;
+    const end = commenting?.place && [...commenting.place.range.getClientRects()].at(-1);
+    if (!end) return null;
+    const frame = commenting.place.doc.defaultView?.frameElement?.getBoundingClientRect();
+    return new DOMRect(end.left + (frame?.left ?? 0), end.top + (frame?.top ?? 0), end.width, end.height);
+  }, [commenting, rectsOf]);
+  const saveComment = (text) => {
+    if (commenting?.place) {
+      if (text) onAnnotate(newAnnotation(commenting.place, lastColour(), 'highlight', text));
+      commenting.place.doc.getSelection()?.removeAllRanges();
+    } else if (commenting?.id) {
+      const before = annotations?.find((a) => a.id === commenting.id)?.comment ?? null;
+      if (text !== before) onAnnotationChange?.(commenting.id, { comment: text ?? '' });
+    }
+  };
+  const commentOn = onAnnotate ? (target) => setCommenting(typeof target === 'string' ? { id: target } : { place: target }) : null;
   /** The next (dir 1) or previous (-1) annotation drawn on the pages shown, in reading order, by key. */
   const cycleChip = useCallback((dir) => {
     const view = stage.current?.getBoundingClientRect();
@@ -423,6 +445,12 @@ export function Reader({
               layout={`${zoom}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`}
               hidden={!place || opening || Boolean(failure)} />
           )}
+          {annotations && commentOn && (
+            // C39.8: a comment icon in the margin beside each commented highlight; it previews and edits it.
+            <CommentMarkers book={book} box={bookBox} annotations={annotations} wide={wide} onEdit={(id) => commentOn(id)}
+              layout={`${zoom}|${pageView}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`}
+              hidden={!place || opening || Boolean(failure)} />
+          )}
           {placing && place && !failure && (
             <RibbonPlacer load={shownPlaces} placeKey={`${place.start ?? ''}|${place.pages ?? ''}|${place.cfi ?? ''}`}
               onSet={placing.onSet} onCancel={placing.onCancel} />
@@ -448,20 +476,26 @@ export function Reader({
       </div>
       {lookupClient && (
         <BookLookup ref={lookup} surfaces={surfaces} client={lookupClient} hover={hoverLookup} returnFocusTo={stage}
-          paused={!place || opening || Boolean(failure) || Boolean(menu)} /* C39.7: no word card over the menu */
+          paused={!place || opening || Boolean(failure) || Boolean(menu) || Boolean(commenting)} /* C39.7, C39.8: none over them */
           page={place ? `${spot(placeStart(place))}-${spot(placeEnd(place))}` : ''} />
       )}
       {onAnnotate && (
         // C21.2: colours, underline and Ask Steve over a selection.
-        <SelectionToolbar ref={toolbar} place={highlighting || menu ? null : selected} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
+        <SelectionToolbar ref={toolbar} place={highlighting || menu || commenting ? null : selected} onComment={commentOn} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
       )}
       {onAnnotate && (
-        <SelectionMenu menu={menu} onClose={closeMenu} onAnnotate={onAnnotate} onNote={onNewNote}
+        <SelectionMenu menu={menu} onClose={closeMenu} onAnnotate={onAnnotate} onNote={onNewNote} onComment={commentOn}
           onLookUp={lookupClient ? () => lookup.current?.lookUpSelection() : null} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}
-          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} onNote={onAnnotationNote} />
+          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} onNote={onAnnotationNote}
+          onComment={onAnnotationChange ? commentOn : null} />
+      )}
+      {commenting && (
+        <CommentEditor key={commenting.id ?? commenting.place.key} at={commentAt} existing={Boolean(commenting.id && annotations?.find((a) => a.id === commenting.id)?.comment)}
+          initial={(commenting.id && annotations?.find((a) => a.id === commenting.id)?.comment) || ''} onSave={saveComment}
+          onClose={(toBook) => { setCommenting(null); if (toBook) stage.current?.focus(); }} />
       )}
       {kind === 'pdf' && regions && bookBox && (
         // C20.8b: equations, code and figures offer Explain, Copy code and Copy as LaTeX.

@@ -8,12 +8,12 @@ const ITEMS = '[role^="menuitem"]:not(:disabled)';
 
 /**
  * Edge's right-click menu on a selection (C39.7, issue 23): Highlight in the last colour (H) or one of the first five,
- * Underline (U, running text only), Add note (N), Ask Steve (when he is on), Look up, Copy. Opened at the pointer by
+ * Underline (U, running text only), Add comment (C39.8), Add note (N), Ask Steve (when he is on), Look up, Copy. Opened at the pointer by
  * a right-click, or by the menu key or Shift+F10 at the selection's end (`menu`: { place, x, y }). Arrow keys, Home
  * and End move through it; Enter or a click runs an item and closes it; Escape or Tab closes it and gives the book
  * focus (`onClose(true)`); a press outside closes it. Read aloud from here comes with C40.
  */
-export function SelectionMenu({ menu, onClose, onAnnotate, onNote = null, onLookUp = null }) {
+export function SelectionMenu({ menu, onClose, onAnnotate, onNote = null, onLookUp = null, onComment = null }) {
   const steve = useSteveActions();
   const box = useRef(null);
   const { refs, floatingStyles } = useFloating({
@@ -85,6 +85,11 @@ export function SelectionMenu({ menu, onClose, onAnnotate, onNote = null, onLook
           <span className="rf-selmenu-swatch rf-selmenu-swatch--line" data-colour={last} aria-hidden="true" />
           <span>Underline</span><kbd aria-hidden="true">U</kbd>
         </button>
+        {onComment && ( // C39.8: the selection is highlighted with its comment when it is saved
+          <button type="button" role="menuitem" className="rf-selmenu-item" onClick={() => { onClose(false); onComment(place); }}>
+            <span className="rf-selmenu-swatch" aria-hidden="true" /><span>Add comment</span>
+          </button>
+        )}
         <span className="rf-selmenu-sep" role="separator" />
         {onNote && (
           <button type="button" role="menuitem" className="rf-selmenu-item" onClick={run(onNote)}>

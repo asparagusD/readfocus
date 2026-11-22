@@ -49,12 +49,37 @@ async function deliver(blob, name, handle) {
  * Save as asks where first (the browser's file picker, where it has one: asked before anything else, while the click
  * still counts). An encrypted PDF downloads as published, with a note. `reader` is the Reader's ref.
  * C40.4d: an EPUB reflows, so its copy is its highlights and comments as Markdown (marksMarkdown.js), chapter by chapter.
+ * C40.5: `print()` too (below).
  */
 export function useSaveCopy({ bookId, kind, title, reader, annotations, pageCount }) {
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const working = useRef(false);
   const canPick = typeof globalThis.showSaveFilePicker === 'function';
+
+  /** The PDF with my marks written in: { out, marked } (an encrypted file is the book as published, with a note). */
+  const pdfCopy = useCallback(async (use) => {
+    const probe = paperColours();
+    try {
+      const marks = [];
+      for (let first = 1; first <= Math.max(1, pageCount); first += MARK_PAGES) {
+        const data = await fetchApi(`/books/${bookId}/marks?first=${first}&last=${first + MARK_PAGES - 1}`);
+        marks.push(...(data?.marks ?? []));
+      }
+      const bytes = await reader.current?.fileBytes();
+      if (!bytes) throw new Error('The book is not open yet.');
+      const { EncryptedPdfError, markedCopy } = await import('./saveCopy.js');
+      try {
+        return { out: await markedCopy(bytes, { annotations: annotations ?? [], marks, colours: probe.colours }), marked: true };
+      } catch (error) {
+        if (!(error instanceof EncryptedPdfError)) throw error;
+        toast({ kind: 'warning', message: `This PDF is locked against changes, so the ${use === 'print' ? 'print' : 'copy'} is the book as published, without your marks.` });
+        return { out: bytes, marked: false };
+      }
+    } finally {
+      probe.done();
+    }
+  }, [bookId, pageCount, reader, annotations, toast]);
 
   const save = useCallback(async (as = false) => {
     if (working.current) return;
@@ -87,35 +112,70 @@ export function useSaveCopy({ bookId, kind, title, reader, annotations, pageCoun
       }
       return;
     }
-    const probe = paperColours();
     try {
-      const marks = [];
-      for (let first = 1; first <= Math.max(1, pageCount); first += MARK_PAGES) {
-        const data = await fetchApi(`/books/${bookId}/marks?first=${first}&last=${first + MARK_PAGES - 1}`);
-        marks.push(...(data?.marks ?? []));
-      }
-      const bytes = await reader.current?.fileBytes();
-      if (!bytes) throw new Error('The book is not open yet.');
-      const { EncryptedPdfError, markedCopy } = await import('./saveCopy.js');
-      let out;
-      try {
-        out = await markedCopy(bytes, { annotations: annotations ?? [], marks, colours: probe.colours });
-      } catch (error) {
-        if (!(error instanceof EncryptedPdfError)) throw error;
-        out = bytes;
-        toast({ kind: 'warning', message: 'This PDF is locked against changes, so the copy is the book as published, without your marks.' });
-      }
+      const { out, marked } = await pdfCopy('copy');
       await deliver(new Blob([out], { type: 'application/pdf' }), name, handle);
-      if (out !== bytes) toast({ kind: 'success', message: handle ? `Saved ${handle.name ?? name}.` : `Saved a copy with your marks: ${name}` });
+      if (marked) toast({ kind: 'success', message: handle ? `Saved ${handle.name ?? name}.` : `Saved a copy with your marks: ${name}` });
     } catch (error) {
       console.warn('save a copy failed', error);
       toast({ kind: 'warning', message: "The copy wasn't saved. Try again." });
     } finally {
-      probe.done();
       working.current = false;
       setBusy(false);
     }
-  }, [kind, title, canPick, bookId, pageCount, reader, annotations, toast]);
+  }, [kind, title, canPick, reader, annotations, toast, pdfCopy]);
 
-  return { save, busy, canPick };
+  /**
+   * C40.5 (issue 24): Print, as Edge's: a PDF prints the copy with my marks from a hidden frame (the browser's own
+   * PDF viewer; where a frame cannot print, the copy opens in a new tab to print from); an EPUB prints the chapter on
+   * screen, its highlights with it.
+   */
+  const print = useCallback(async () => {
+    if (working.current) return;
+    if (kind === 'epub') {
+      const win = reader.current?.documents()?.find((doc) => doc.defaultView)?.defaultView;
+      if (win) win.print();
+      else toast({ kind: 'warning', message: 'The chapter is still opening. Try again in a moment.' });
+      return;
+    }
+    working.current = true;
+    setBusy(true);
+    try {
+      const { out } = await pdfCopy('print');
+      printPdf(new Blob([out], { type: 'application/pdf' }), () => toast({ kind: 'neutral',
+        message: 'The copy with your marks opened in a new tab: print it from there.' }));
+    } catch (error) {
+      console.warn('print failed', error);
+      toast({ kind: 'warning', message: "The book couldn't be printed. Try again." });
+    } finally {
+      working.current = false;
+      setBusy(false);
+    }
+  }, [kind, reader, toast, pdfCopy]);
+
+  return { save, print, busy, canPick };
+}
+
+/**
+ * Prints a PDF `blob` from a hidden frame once the browser's viewer has it; `onTab()` when that is not possible and it
+ * opened in a new tab instead. The frame stays a minute (the print dialog reads from it), then goes.
+ */
+function printPdf(blob, onTab) {
+  const url = URL.createObjectURL(blob);
+  const frame = Object.assign(document.createElement('iframe'), { src: url, title: 'Print', tabIndex: -1 });
+  frame.setAttribute('data-rf-print', '');
+  frame.setAttribute('aria-hidden', 'true');
+  frame.style.cssText = 'position:fixed;inset-inline-start:-10000px;width:1px;height:1px;border:0';
+  const done = () => setTimeout(() => { frame.remove(); URL.revokeObjectURL(url); }, 60_000);
+  frame.addEventListener('load', () => {
+    try {
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+    } catch {
+      window.open(url, '_blank', 'noopener');
+      onTab();
+    }
+    done();
+  }, { once: true });
+  document.body.append(frame);
 }

@@ -665,7 +665,8 @@ export function ReadingSession() {
           onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null}
           readingAloud={readingAloud}
           file={{ onSave: saveCopy.save, busy: saveCopy.busy, canPick: saveCopy.canPick,
-            hint: kind === 'epub' ? 'Save my highlights as Markdown' : 'Save a copy with my marks' }}
+            hint: kind === 'epub' ? 'Save my highlights as Markdown' : 'Save a copy with my marks',
+            onPrint: saveCopy.print, printHint: kind === 'epub' ? 'Print this chapter' : 'Print with my marks' }}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -748,6 +749,7 @@ export function ReadingSession() {
           start={sessionData.position?.anchor}
           onReadAloud={onReadAloud}
           onSaveCopy={saveCopy.save}
+          onPrint={saveCopy.print}
         />
       </m.main>
       {shownSide && (

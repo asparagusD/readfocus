@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff, Save, SaveAll, Speech } from 'lucide-react';
+import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff, Printer, Save, SaveAll, Speech } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
 import { useMedia } from './useMedia';
@@ -87,6 +87,7 @@ function useFullScreen() {
  * C40.2 (issue 24): `onReadAloud`: Edge's Read aloud, right after the markup tools and moving with them; pressed while
  * it reads (`readingAloud`). C40.4c: `file` ({ onSave(as), busy, canPick }): Edge's Save and Save as, a copy with my
  * marks, at the bar's end while they fit, the first tools to move into More tools. C40.4d: `file.hint` names what is saved.
+ * C40.5: `file.onPrint`, Edge's Print, first in the group (`file.printHint` its title).
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
@@ -133,7 +134,14 @@ export function ReaderToolbar({
   );
 
   const fileTools = file && ( // C40.4c: Edge's Save and Save as
-    <div className="rf-toolbar-file" ref={fileBox} role="group" aria-label="Save a copy">
+    <div className="rf-toolbar-file" ref={fileBox} role="group" aria-label="Print and save">
+      {file.onPrint && ( // C40.5: Edge's Print, before Save
+        <button type="button" className="rf-tool" onClick={file.onPrint} disabled={file.busy}
+          aria-label="Print" aria-keyshortcuts="Control+P" title={`${file.printHint ?? 'Print'} (Ctrl+P)`}>
+          <Printer size={18} strokeWidth={1.75} aria-hidden="true" />
+          <span className="rf-tool-label">Print</span>
+        </button>
+      )}
       <button type="button" className="rf-tool" onClick={() => file.onSave(false)} disabled={file.busy}
         aria-label="Save" aria-keyshortcuts="Control+S" title={`${file.hint ?? 'Save a copy with my marks'} (Ctrl+S)`}>
         <Save size={18} strokeWidth={1.75} aria-hidden="true" />

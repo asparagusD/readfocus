@@ -2768,6 +2768,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/print.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/privacy.spec.js",
       "type": "file",
       "role": "config",
@@ -11769,6 +11775,11 @@
       "type": "imports",
       "from": "file:frontend/e2e/phase2_journey.spec.js",
       "to": "file:frontend/e2e/liveSignIn.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/print.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",

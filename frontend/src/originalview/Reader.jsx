@@ -94,12 +94,14 @@ function useWide() {
  * left unread, as lookup leaves them. C40.2c: Ctrl+Shift+U starts or stops it; the selection's menu has Read aloud from
  * here (the selection's first word). C40.3: an EPUB's sections too (EpubBook's readAloud); a change of place tells the
  * hook the reader may have scrolled. C40.4c: `onSaveCopy(as)` hears Ctrl+S and Ctrl+Shift+S; `fileBytes()` on the ref.
+ * C40.5: `onPrint()` hears Ctrl+P.
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, eraser = null, textBoxes = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
   placing = null, contents = null, start = null, pageView = 'one', mark = null, onReadAloud = null, onSaveCopy = null,
+  onPrint = null,
 }) {
   const wide = useWide();
   const book = useRef(null);
@@ -129,7 +131,8 @@ export function Reader({
   const findPrev = finder.prev;
   const findKeyRef = useRef(null);
   const saveRef = useRef(onSaveCopy);
-  useEffect(() => { saveRef.current = onSaveCopy; });
+  const printRef = useRef(onPrint);
+  useEffect(() => { saveRef.current = onSaveCopy; printRef.current = onPrint; });
   // C40.2: read aloud over the renderer's pages, a PDF's regions unread.
   const readSource = useCallback(() => book.current?.readAloud ?? null, []);
   const skipOf = useCallback((unit) => (kind === 'pdf' && regions
@@ -158,6 +161,9 @@ export function Reader({
       } else if ((shortcut === 'save' || shortcut === 'save-as') && saveRef.current) { // C40.4c: Ctrl+S, Ctrl+Shift+S
         event.preventDefault();
         saveRef.current(shortcut === 'save-as');
+      } else if (shortcut === 'print' && printRef.current) { // C40.5: Ctrl+P prints the book, not the app's page
+        event.preventDefault();
+        printRef.current();
       } else if (finding && event.key === 'F3' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         if (event.shiftKey) findPrev();

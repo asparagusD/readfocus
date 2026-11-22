@@ -75,6 +75,13 @@ test("C40.4c: Ctrl+S saves a copy and Ctrl+Shift+S saves it as, as Edge's", () =
   assert.equal(readerShortcut({ key: 's', code: 'KeyS', ctrlKey: true, altKey: true }), null);
 });
 
+test('C40.5: Ctrl+P prints the book', () => {
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP', ctrlKey: true }), 'print');
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP', metaKey: true }), 'print');
+  assert.equal(readerShortcut({ key: 'P', code: 'KeyP', ctrlKey: true, shiftKey: true }), null); // the browser's own
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP' }), null);
+});
+
 test("C38.9: an EPUB's text size steps through its sizes and stops at the ends", () => {
   assert.equal(fontStep(18, 1), 20);
   assert.equal(fontStep(18, -1), 16);

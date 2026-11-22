@@ -18,6 +18,8 @@ import { RibbonPlacer } from '../focus/RibbonPlacer';
 import { PlaceMark } from './PlaceMark';
 import { EpubBook } from './epub/EpubBook';
 import { FindBar } from './FindBar';
+import { ReadAloudBar } from '../reader/ReadAloudBar';
+import { useReadAloud } from '../reader/useReadAloud';
 import { useFind } from './useFind';
 import { startPage } from './pdf/contents';
 import { PdfBook } from './pdf/PdfBook';
@@ -86,12 +88,15 @@ function useWide() {
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
+ * C40.2 (issue 24): read aloud (useReadAloud, ReadAloudBar): `readAloud()` on the ref starts it from the selection or the
+ * first line in view, or stops it; its bar sits over the book; `onReadAloud(on)` hears it open and close. Regions are
+ * left unread, as lookup leaves them.
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, eraser = null, textBoxes = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
-  placing = null, contents = null, start = null, pageView = 'one', mark = null,
+  placing = null, contents = null, start = null, pageView = 'one', mark = null, onReadAloud = null,
 }) {
   const wide = useWide();
   const book = useRef(null);
@@ -142,6 +147,15 @@ export function Reader({
     document.addEventListener('keydown', onFindKey);
     return () => document.removeEventListener('keydown', onFindKey);
   }, [openFind, finding, findNext, findPrev]);
+  // C40.2: read aloud over the renderer's pages, a PDF's regions unread.
+  const readSource = useCallback(() => book.current?.readAloud ?? null, []);
+  const skipOf = useCallback((unit) => (kind === 'pdf' && regions
+    ? regions.load(unit).then(() => regions.boxesOf(unit)) : Promise.resolve([])), [kind, regions]);
+  const reading = useReadAloud({ source: readSource, skipOf });
+  const readingRef = useRef(reading);
+  useEffect(() => { readingRef.current = reading; });
+  const readingOpen = reading.open;
+  useEffect(() => { onReadAloud?.(readingOpen); }, [readingOpen, onReadAloud]);
   useEffect(() => { // C18.6d: the boxes of the pages shown are asked for before a word is hovered
     if (regions && shownPages) shownPages.split(',').forEach((n) => regions.load(Number(n)));
   }, [regions, shownPages]);
@@ -408,6 +422,7 @@ export function Reader({
     saveMark: () => act('ribbon'), // C38.8b: the toolbar's Save my place
     thumbnail: (n, width) => book.current?.thumbnail?.(n, width) ?? Promise.resolve(null), // C38.6b: a PDF's Pages tab
     pageLabelOf: (n) => book.current?.pageLabelOf?.(n) ?? String(n),
+    readAloud: () => readingRef.current.toggle(), // C40.2
   }), [move, flash, shownPlaces, openFind, act]);
 
   const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
@@ -417,7 +432,7 @@ export function Reader({
       data-loading={(!place || opening) && !failure}
       data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
       data-ending={atClose || undefined} data-annotations={annotations ? annotations.length : undefined}
-      data-finding={finding || undefined} data-tool={markup?.tool}
+      data-finding={finding || undefined} data-tool={markup?.tool} data-reading-aloud={reading.open || undefined}
       >
       <div className="rf-ov-stage" ref={stage} tabIndex={0} onKeyDown={onKey} aria-roledescription="book"
         aria-label={kind === 'pdf' ? `${title}. Scroll, or use Page Up and Page Down to move a page at a time.`
@@ -462,6 +477,9 @@ export function Reader({
         {kind !== 'pdf' && atClose && <div className="rf-epub-end" data-no-lookup><div className="rf-end">{closing}</div></div>}
         {finding && place && !failure && (
           <FindBar finder={{ ...finder, close: () => { closeFind(); stage.current?.focus(); } }} />
+        )}
+        {reading.open && place && !failure && (
+          <ReadAloudBar reading={reading} onClose={() => { reading.stop(); stage.current?.focus(); }} />
         )}
         {failure && (
           <div className="rf-ov-error" role="alert">

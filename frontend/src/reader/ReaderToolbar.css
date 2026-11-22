@@ -67,6 +67,10 @@
 .rf-markup .rf-markup-toggle { padding-inline: var(--space-2) var(--space-1); }
 .rf-markup .rf-markup-toggle[aria-pressed="true"] { background: var(--accent-soft); }
 .rf-toolbar-end .rf-markup .rf-tool-label { display: none; } /* in the bar the icon speaks; More tools names it */
+/* C40.2: Read aloud beside the markup tools, in a row with them in the bar */
+.rf-toolbar-end > .rf-toolbar-markup { display: flex; align-items: center; gap: var(--space-1); }
+.rf-toolbar-end .rf-read-aloud-button .rf-tool-label { display: none; }
+.rf-read-aloud-button[aria-pressed="true"] { background: var(--accent-soft); }
 .rf-markup-icon { position: relative; display: inline-flex; }
 .rf-markup-swatch {
   position: absolute;

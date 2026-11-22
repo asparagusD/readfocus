@@ -16,6 +16,7 @@ import { createOcrSource } from '../originalview/pdf/ocr';
 import { folioShort } from '../originalview/place';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
+import { readAloudSupported } from '../reader/useReadAloud';
 import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
 import { useMedia } from '../reader/useMedia';
@@ -89,6 +90,7 @@ export function ReadingSession() {
   const [zoom, setZoom] = useStored('rf-pdf-zoom', 'fit-page');
   const [pageView, setPageView] = useStored('rf-pdf-view', 'one'); // C38.4a: Edge's Page view, on this device
   const [pinned, setPinned] = useStored('rf-toolbar-pinned', true); // C38.4b: Edge's toolbar is pinned until unpinned
+  const [readingAloud, setReadingAloud] = useState(false); // C40.2: the reader is reading aloud
   const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
   // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
@@ -652,6 +654,8 @@ export function ReadingSession() {
               onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} text={markup.textStyle}
               onText={restyleText} status={markup.status} />
           )}
+          onReadAloud={kind === 'pdf' && readAloudSupported() ? () => reader.current?.readAloud?.() : null}
+          readingAloud={readingAloud}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -732,6 +736,7 @@ export function ReadingSession() {
           onAnnotationNote={noteOnHighlight}
           contents={sessionData.book?.toc}
           start={sessionData.position?.anchor}
+          onReadAloud={setReadingAloud}
         />
       </m.main>
       {shownSide && (

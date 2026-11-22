@@ -2786,6 +2786,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/read-aloud.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/reader.spec.js",
       "type": "file",
       "role": "config",
@@ -4736,6 +4742,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/ReadAloudBar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/ReadAloudBar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/reader/ReaderToolbar.css",
       "type": "file",
       "role": "asset",
@@ -4887,6 +4905,12 @@
     },
     {
       "id": "file:frontend/src/reader/usePlaceSaver.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useReadAloud.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -11722,6 +11746,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/read-aloud.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/reader.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -13333,6 +13362,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/reader/ReadAloudBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/reader/useReadAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/steve/EpubBlockActions.jsx"
     },
     {
@@ -13544,6 +13583,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/useBoxSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/reader/readAloud.js"
     },
     {
       "type": "imports",
@@ -14258,6 +14302,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useReadAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
     },
     {
@@ -14472,6 +14521,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/ReadAloudBar.jsx",
+      "to": "file:frontend/src/reader/ReadAloudBar.css"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/ReaderToolbar.jsx",
       "to": "file:frontend/src/components/ThemeToggle.jsx"
     },
@@ -14574,6 +14628,16 @@
       "type": "imports",
       "from": "file:frontend/src/reader/usePlaceSaver.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useReadAloud.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useReadAloud.js",
+      "to": "file:frontend/src/reader/speech.js"
     },
     {
       "type": "imports",

@@ -233,6 +233,9 @@
      every match, a deeper amber for the one shown. */
   --find-match: rgb(240 200 80 / 0.45);
   --find-current: rgb(230 130 30 / 0.55);
+  /* C40.2: read aloud's spoken word over a published page, see-through ocean blue (Edge marks it in blue), apart
+     from find's amber. */
+  --read-word: rgb(76 124 166 / 0.35);
 
   --accent: #a64b2a;
   --accent-hover: #904428; /* A8: 18% toward --ink */

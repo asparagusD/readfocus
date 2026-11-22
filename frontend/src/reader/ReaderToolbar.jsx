@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff } from 'lucide-react';
+import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff, Speech } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
 import { useMedia } from './useMedia';
@@ -84,11 +84,14 @@ function useFullScreen() {
  * C38.8b: `onBookmark`: Save my place (B), before Notes, always in the bar (the desk's ribbon is gone).
  * C39.3: `markup`: Edge's markup tools (MarkupTools), first in the end group while they fit (they leave the bar after
  * Look up and the rest), else at the top of More tools; in More tools on a phone.
+ * C40.2 (issue 24): `onReadAloud`: Edge's Read aloud, right after the markup tools and moving with them; pressed while
+ * it reads (`readingAloud`).
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
   lookupOn, onLookupToggle, controls, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef, onFocusMode,
-  pinned = false, onPin = null, contentsDocked = false, onBookmark = null, markup = null, children,
+  pinned = false, onPin = null, contentsDocked = false, onBookmark = null, markup = null, onReadAloud = null, readingAloud = false,
+  children,
 }) {
   const index = SIZES.indexOf(size);
   const full = useFullScreen();
@@ -117,6 +120,14 @@ export function ReaderToolbar({
     setMore(false);
     moreButton.current?.focus();
   };
+
+  const readAloud = onReadAloud && ( // C40.2: beside the markup tools, as Edge's
+    <button type="button" className="rf-tool rf-read-aloud-button" onClick={onReadAloud} aria-pressed={readingAloud}
+      aria-label="Read aloud" title={readingAloud ? 'Stop reading aloud' : 'Read aloud'}>
+      <Speech size={18} strokeWidth={1.75} aria-hidden="true" />
+      <span className="rf-tool-label">Read aloud</span>
+    </button>
+  );
 
   // Look up, Steve, Focus and the session's own controls: in the bar when there is room, else in More tools.
   const reading = (
@@ -192,7 +203,7 @@ export function ReaderToolbar({
       </div>
 
       <div className="rf-toolbar-end">
-        {markup && markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}</div>}
+        {markup && markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}{readAloud}</div>}
         {onBookmark && (
           <button type="button" className="rf-tool" onClick={onBookmark} aria-label="Save my place" aria-keyshortcuts="B"
             title="Save my place (B)">
@@ -221,7 +232,7 @@ export function ReaderToolbar({
             setMore(false);
             moreButton.current?.focus(); // a dialog the tool opens takes focus after this
           }}>
-          {markup && !markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}</div>}
+          {markup && !markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}{readAloud}</div>}
           {!roomy && reading}
           <ThemeToggle />
           {onPin && (

@@ -1,0 +1,45 @@
+/* C40.2: Edge's read-aloud bar, over the top middle of the book while it reads (find's bar keeps the top right); at
+   the foot of the view on a narrow screen, so the two never meet. */
+.rf-read-aloud {
+  position: absolute;
+  top: var(--space-2);
+  left: 50%;
+  z-index: var(--z-popover);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--elevation-lift);
+  transform: translateX(-50%);
+}
+
+.rf-read-aloud-play[aria-label='Pause'] { color: var(--accent); }
+
+.rf-read-aloud .rf-toolbar-rule { margin: 0 var(--space-1); }
+
+.rf-read-aloud-status {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 50%;
+  width: max-content;
+  max-width: 20rem;
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  box-shadow: var(--elevation-lift);
+  transform: translateX(-50%);
+}
+
+@media (width < 640px) {
+  .rf-read-aloud { top: auto; bottom: var(--space-3); }
+  .rf-read-aloud-status { top: auto; bottom: calc(100% + var(--space-1)); }
+}

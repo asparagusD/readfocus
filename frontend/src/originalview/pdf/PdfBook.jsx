@@ -9,6 +9,7 @@ import { pdfPagesLabel } from '../../annotations/list';
 import { pdfNoteTop, shownAnchor } from '../../notes/markers';
 import { pdfPageEnd } from '../../focus/bookmark';
 import { useBoxSize } from '../useBoxSize';
+import { pdfRuns } from '../../reader/readAloud';
 import { storedOutline } from './contents';
 import { PdfPage } from './PdfPage';
 import { pdfOutline, renderThumbnail } from './pdfjs';
@@ -389,6 +390,47 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
     stopSearch: () => { searching.current = null; },
     showMatch,
     toc: () => meta.outline.map((entry) => ({ title: entry.title, target: { page: entry.page }, loc: { kind: 'pdf', page: entry.page } })),
+    readAloud: { // C40.2 (issue 24): read aloud's pages (useReadAloud)
+      count: numPages,
+      runs: async (n, skip = []) => {
+        const p = await doc.getPage(n);
+        const at = p.getViewport({ scale: 1 });
+        return pdfRuns(n, (await p.getTextContent()).items, (x, y) => at.convertToViewportPoint(x, y), skip);
+      },
+      /** A run's text from `start` to `end` as a range in its page's text layer; null while the page is not drawn. */
+      range: ({ page, item }, start, end) => {
+        const text = box.current?.querySelector(`.rf-pdf-page[data-page="${page}"] .textLayer [data-item="${item}"]`)?.firstChild;
+        if (text?.nodeType !== 3) return null;
+        const range = document.createRange();
+        range.setStart(text, Math.min(start, text.length));
+        range.setEnd(text, Math.min(end, text.length));
+        return range;
+      },
+      /** Where to start: the selection's first word, else the first line in view on the main page. */
+      from: () => {
+        const selection = document.getSelection();
+        const node = selection?.rangeCount ? selection.getRangeAt(0).startContainer : null;
+        const span = (node?.nodeType === 3 ? node.parentElement : node)?.closest?.('.textLayer [data-item]');
+        if (span && box.current?.contains(span)) {
+          const page = Number(span.closest('.rf-pdf-page').dataset.page);
+          return { unit: page, at: { page, item: Number(span.dataset.item) }, offset: node.nodeType === 3 ? selection.getRangeAt(0).startOffset : 0 };
+        }
+        const top = box.current?.getBoundingClientRect().top ?? 0;
+        const spans = box.current?.querySelectorAll(`.rf-pdf-page[data-page="${main}"] .textLayer [data-item]`) ?? [];
+        const first = [...spans].find((el) => el.textContent.trim() && el.getBoundingClientRect().bottom > top + 8);
+        return { unit: main, at: first ? { page: main, item: Number(first.dataset.item) } : null, offset: 0 };
+      },
+      show: (n) => goTo(n),
+      /** A spoken word a third of the way down the view, when it is near an edge or out of it. */
+      follow: (rect) => {
+        const el = box.current;
+        const view = el?.getBoundingClientRect();
+        if (!view || !rect) return;
+        if (rect.top < view.top + 72 || rect.bottom > view.bottom - 96) scrollTo(el.scrollTop + rect.top - view.top - el.clientHeight / 3);
+        if (rect.left < view.left || rect.right > view.right) el.scrollLeft += rect.left - view.left - el.clientWidth / 3;
+      },
+      scroller: () => box.current,
+    },
   });
 
   const wide = layout ? Math.max(...layout.rows.map((r) => r.pages.at(-1).left + r.pages.at(-1).width)) + GAP : 0;

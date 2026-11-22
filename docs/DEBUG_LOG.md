@@ -5806,3 +5806,190 @@ epub passes; the C38.4b More tools tests at 1024 and 375 pass.
 
 ### Commit
 feat(ui): give an EPUB the page box; keep the toolbar on one row
+
+## 2026-11-21 C39.2b — More colours was a 28 px button, under the toolbar's 36 px
+
+### Failure
+`npm --prefix frontend run test:e2e`: 389 passed, 1 failed: `annotations-toolbar.spec.js` "on a phone, in lamplight
+› the toolbar fits the screen and stays clear of the selection": `expect(Math.min(box.width, box.height))
+.toBeGreaterThanOrEqual(36)`, received 28.
+
+### Reproduce
+`npx playwright test e2e/annotations-toolbar.spec.js`: the same assertion, every run.
+
+### Hypotheses
+1. C39.2b's new More colours button set `min-inline-size: 28px` (a narrow chevron beside the dots) on a mouse, under
+   the handoff's 36 px for every toolbar button. Evidence: the failing button is the only 28 px one; the 375 px phone
+   test in that spec runs without touch emulation, so the 44 px touch rule did not apply. Result: confirmed.
+
+### Root cause
+`SelectionToolbar.css` gave `.rf-seltool-more` its own width (28 px, 44 px by touch) instead of the bar's button size.
+
+### Fix
+`SelectionToolbar.css`: the override removed; More colours takes the bar's 36 px (44 px by touch) like every button.
+
+### Regression test
+The failing test itself (`annotations-toolbar.spec.js`, every button at least 36 px) and `colours.spec.js` "on a
+phone" (44 px targets by touch) pass: `npx playwright test e2e/annotations-toolbar.spec.js e2e/colours.spec.js
+e2e/annotations-hover.spec.js`: 23 passed.
+
+### Commit
+feat(ui): offer Edge's colours with More colours in the toolbar and chip
+
+## 2026-11-22 C39.3b — 23 e2e tests could not reach Look up, Steve, Focus and Quiz me
+
+### Failure
+`npm --prefix frontend run test:e2e`: 372 passed, 23 failed, in annotations-hover, focus-mode, focus (5), notepad,
+notes-blocks (3), notes-drawing (3), quiz-me (5), reader, steve-blocks and steve-panel (2): `locator.click: Test
+timeout` waiting for `switch "Focus mode"`, `button "Ask Steve"`, `button "Quiz me"` or `switch "Look up words on
+hover"`; two `toBeFocused` on Ask Steve after the panel closed.
+
+### Reproduce
+The same specs alone, every run, at the e2e viewport (1440 x 900).
+
+### Hypotheses
+1. C39.3b put Edge's markup tools in the bar, and by your decision at C39.3 they keep their place, so at 1440 Look up,
+   Steve, Focus and Quiz me now sit in More tools (they did only below about 1400 px); the specs clicked them in the
+   bar. Evidence: before and after probes at 1280, 1440, 1600: the reading tools in the bar at 1440 before, in More
+   tools after. Result: confirmed for 20 of the 23.
+2. Closing the Steve panel gives focus back to the button that opened it, which is hidden in the closed More tools
+   panel when Steve was opened from there, so focus is lost (true below about 1400 px since C38.7b, now at 1440 too).
+   Evidence: `toggleSide` keeps `button.current` as the opener. Result: confirmed (notepad, steve-panel).
+3. focus-mode's `focusOn` already used `clickTool`, yet timed out on its second turn: a toolbar mounted afresh after
+   focus mode starts with every box in the bar, and is measured only by a ResizeObserver, so for a moment Focus is
+   visible in the bar, `clickTool` clicks there, and then it moves into More tools. Result: confirmed.
+
+### Root cause
+The specs reached the reader's tools in the bar at a width where they are now in More tools; two product faults showed
+with them: focus returned to a hidden opener, and a remounted toolbar showed tools it had no room for until measured.
+
+### Fix
+`ReadingSession.jsx` `toggleSide`: an opener inside More tools gives way to the More tools button. `ReaderToolbar.jsx`
+`useFits`: a layout effect measures once before the first paint, then the ResizeObserver as before. The specs reach
+the four tools through `clickTool` and `reveal`, and expect focus on More tools when Steve is tucked in it.
+
+### Regression test
+The 10 spec files and markup-tools.spec.js: `npx playwright test e2e/annotations-hover.spec.js e2e/focus-mode.spec.js
+e2e/focus.spec.js e2e/notepad.spec.js e2e/notes-blocks.spec.js e2e/notes-drawing.spec.js e2e/quiz-me.spec.js
+e2e/reader.spec.js e2e/steve-blocks.spec.js e2e/steve-panel.spec.js e2e/markup-tools.spec.js`: 126 passed.
+
+### Commit
+feat(ui): highlight each selection at once with Edge's highlighter tool
+
+## 2026-11-22 C39.4b — a scanned book's "Reading this scan" status was in More tools
+
+### Failure
+`npm --prefix frontend run test:e2e`: 399 passed, 1 failed: `ocr.spec.js` "a fully scanned book › opens pages-only,
+reads every page, then prepares its quizzes": `getByText(/^Reading this scan: [0-2] of 2 pages$/)` not visible.
+
+### Reproduce
+`npx playwright test e2e/ocr.spec.js -g "fully scanned"` at the e2e viewport (1440 x 900).
+
+### Hypotheses
+1. C39.4b's Draw joins Highlight in the bar, which by the C39.3 decision keeps its place, so the session's status
+   (with Look up, Steve and Focus) is in More tools at 1440; the spec looked for it in the bar. C38.7b already moves
+   "Preparing the book…" into More tools on a full bar. Result: confirmed (the status is in the closed panel).
+
+### Root cause
+The spec read the status in the bar at a width where it now sits in More tools.
+
+### Fix
+`ocr.spec.js` reveals More tools when the status is tucked in it (`reveal`). No product change.
+
+### Regression test
+`npx playwright test e2e/ocr.spec.js`, then the full e2e suite.
+
+### Commit
+feat(ui): draw ink on PDF pages with Edge's Draw tool
+
+## 2026-11-22 C39.6b — with Add text the markup tools left the bar at 1280
+
+### Failure
+`npx playwright test e2e/markup-tools.spec.js`: "fit › at 1280 the tools sit in the bar…":
+`.rf-toolbar-end > .rf-toolbar-markup` expected 1, received 0.
+
+### Reproduce
+That test, every run; a probe at 1280, 1366 and 1440 (a PDF): the group 260 px wide, in More tools at 1280, in the bar
+at 1366 and 1440, the bar one row at each.
+
+### Hypotheses
+1. Add text is the fourth tool, so the group (260 px) no longer fits beside the book's controls at 1280 even with Look
+   up and the rest in More tools; useFits moves it, by design (your decision at C39.3: the markup tools keep their place
+   while they fit). Result: confirmed by the probe.
+
+### Root cause
+The test's width (1280) was chosen for two tools; with four the group fits from 1366.
+
+### Fix
+`markup-tools.spec.js`: the group in the bar at 1366 and in More tools at 1280. No product change (the 44 px targets
+stay).
+
+### Regression test
+`npx playwright test e2e/markup-tools.spec.js`: 5 passed.
+
+### Commit
+feat(ui): add text boxes to PDF pages with Edge's Add text tool
+
+## 2026-11-22 C39.6 — restyling a text box from the menu saved nothing
+
+### Failure
+`npx playwright test e2e/textbox.spec.js`: "the selected box moves by its handle or the arrow keys; the menu restyles
+it": after picking Berry in Text options, `api.markPatches.at(-1)?.color` stayed undefined (no PATCH was sent);
+moving the same box by its handle and keys did send its PATCHes.
+
+### Reproduce
+That test, every run: select a box with Add text on, open Text options, pick a colour.
+
+### Hypotheses
+1. `usePageMarks.change` read the mark's old value inside its `setMarks` updater and returned when it was still
+   null. React runs an updater at once only when no other update is pending on the component; the menu's
+   `restyleText` first calls `setTextStyle`, an update on the same component (ReadingSession), so the updater was
+   deferred and `before` was null. A move has no update before it, so its updater ran at once. Result: confirmed (a
+   ref of the marks drawn fixes it; the move tests pass either way).
+2. The restyle never reached `change` (no selected box). Evidence: the box showed `data-selected` and the handle.
+   Result: ruled out.
+
+### Root cause
+`change` (C39.6a) and `erase` (C39.5a) learned what they changed from inside a state updater, which React may run
+after the call returns.
+
+### Fix
+`usePageMarks.js`: `current`, a ref of the marks as last drawn; `erase` and `change` read the marks there, then
+update the state.
+
+### Regression test
+`textbox.spec.js` "the selected box moves by its handle or the arrow keys; the menu restyles it" (a colour and a width
+PATCH); `erase.spec.js` and `ink.spec.js` pass: `npx playwright test e2e/textbox.spec.js e2e/erase.spec.js
+e2e/ink.spec.js`: 15 passed.
+
+### Commit
+The fix: feat(frontend): add text-box helpers, mark changes and Add text's style (C39.6a, 6176a18); the test:
+feat(ui): move and restyle a text box (C39.6c)
+
+## 2026-11-22 C39.6c — a Dashboard badge test timed out once in the full run
+
+### Failure
+`npm --prefix frontend run test:e2e`: 409 passed, 1 failed: `dashboard-badges.spec.js` "before any badge the shelf
+nudges kindly": `getByRole('region', { name: 'Badge shelf' })` not found within 5 s.
+
+### Reproduce
+Not reproduced: the spec alone three times, 7 of 7 each time; then a second full run (below).
+
+### Hypotheses
+1. A timing failure under load: this machine's full run takes about 16.8 minutes (CLAUDE.md says about 90 s), and the
+   Dashboard's first paint waited past the 5 s expect timeout. Evidence: not reproduced alone; the Dashboard uses
+   nothing C39.6c changed (TextBoxes, MarkupTools, ReadingSession's restyle, pdf.css). Result: most likely; not proven.
+2. C39.6c changed something the Dashboard renders. Evidence: none of its files are imported by the Dashboard (repo
+   graph). Result: ruled out.
+
+### Root cause
+Not found: a one-off timeout under load, as C38.1's (2026-11-20).
+
+### Fix
+None.
+
+### Regression test
+`npx playwright test e2e/dashboard-badges.spec.js` three times: 7 passed each; a second full e2e run.
+
+### Commit
+feat(ui): move and restyle a text box

@@ -1,9 +1,10 @@
 import { useCallback, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react';
-import { MessageCircle, Plus, Underline } from 'lucide-react';
+import { MessageCircle, MessageSquarePlus, Plus, Underline } from 'lucide-react';
 import { outerBox } from '../reader/highlight';
 import { useSteveActions } from '../steve/SteveContext';
-import { COLOURS, colourName, lastColour, newAnnotation, storeLastColour } from './palette';
+import { ColourDots } from './ColourDots';
+import { colourName, lastColour, newAnnotation, storeLastColour } from './palette';
 import { rove } from './roving';
 import './SelectionToolbar.css';
 
@@ -13,9 +14,10 @@ import './SelectionToolbar.css';
  * above), flipping at the page's edge. A colour saves at once (optimistic, `onAnnotate`) and closes it; the
  * selection is cleared. Keyboard (`ref`): H highlights and U underlines in the last colour, Tab moves into the
  * bar, arrows move along it, Escape puts it away and returns to the book. C22.4: "Note" (or N) adds a note
- * anchored to the selection through `onNote`, which reads the selection before it is cleared.
+ * anchored to the selection through `onNote`, which reads the selection before it is cleared. C39.2: the colours are
+ * ColourDots (the first five, More colours for Edge's other five).
  */
-export function SelectionToolbar({ place, onAnnotate, onNote = null, onDismiss, returnFocusTo, ref }) {
+export function SelectionToolbar({ place, onAnnotate, onNote = null, onComment = null, onDismiss, returnFocusTo, ref }) {
   const steve = useSteveActions(); // null while Steve is off: no Ask Steve
   const [toggled, setToggled] = useState(null); // the selection whose Underline is pressed
   const [said, setSaid] = useState('');
@@ -97,19 +99,21 @@ export function SelectionToolbar({ place, onAnnotate, onNote = null, onDismiss, 
           <div ref={setFloating} className="rf-seltool" style={floatingStyles} data-side={placement.split('-')[0]}
             role="toolbar" aria-label="Highlight the selection" aria-keyshortcuts={onNote ? 'H U N' : 'H U'} onKeyDown={onKeyDown}
             onPointerDown={(event) => event.preventDefault()} /* a press here keeps the selection */>
-            {COLOURS.map((colour, i) => (
-              <button key={colour} type="button" className="rf-seltool-dot" data-colour={colour} tabIndex={i === 0 ? 0 : -1}
-                data-last={colour === last || undefined} aria-label={`${colourName(colour)} ${style}`}
-                title={colour === last ? `${colourName(colour)} (${underline ? 'U' : 'H'})` : colourName(colour)}
-                onClick={() => annotate(colour, style)}>
-                <span aria-hidden="true" />
-              </button>
-            ))}
+            <ColourDots current={last} label={(colour) => `${colourName(colour)} ${style}`}
+              title={(colour) => (colour === last ? `${colourName(colour)} (${underline ? 'U' : 'H'})` : colourName(colour))}
+              onPick={(colour) => annotate(colour, style)} />
             <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Underline" aria-pressed={underline}
               disabled={!place.prose} title={place.prose ? 'Underline (U)' : 'Underline is for running text'}
               onClick={() => setToggled(underline ? null : place.key)}>
               <Underline size={18} strokeWidth={1.75} aria-hidden="true" />
             </button>
+            {onComment && (
+              // C39.8 (issue 23, D1): Edge's Add comment: the selection is highlighted with it when it is saved.
+              <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Add comment" title="Add comment"
+                onClick={() => { onComment(place); onDismiss(); }}>
+                <MessageSquarePlus size={18} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            )}
             {onNote && (
               <>
                 <span className="rf-seltool-sep" aria-hidden="true" />

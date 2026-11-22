@@ -6,7 +6,7 @@
 // blurred book or Escape (once Excalidraw has nothing left to do) tucks it away and it reopens where it was left.
 // Lamplight draws dark; a phone opens it full screen. C37.7: it slides in on a spring as the book recedes, a close
 // midway reverses, and under reduced motion it crossfades with no transform. Mocked API (fixtures.js).
-import { book, expect, openReader, settled, test } from './fixtures.js';
+import { book, clickTool, expect, openReader, settled, test } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 const panel = (page) => page.getByRole('complementary', { name: 'Notes' });
@@ -224,7 +224,7 @@ test('leaving a page exports its thumbnail; the list shows it and opens the note
   await page.reload();
   await page.locator('.rf-ov[data-loading="false"][data-start]').waitFor();
   // The list straight from Steve's panel, so no page is opened on the way: the thumbnail needs no Excalidraw.
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' }));
   await page.getByRole('tab', { name: /^Notes/ }).click();
   const thumb = panel(page).getByRole('img', { name: /^Notebook page at / });
   await expect(thumb).toBeVisible();
@@ -442,7 +442,7 @@ test('Steve sits over the book\'s 30 % while the notebook is open', async ({ pag
   await newPage(page);
   await expect.poll(() => api.notes.length).toBe(1);
   await notebook(page).getByRole('button', { name: 'Close notebook' }).click();
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' }));
   await page.locator('.rf-note-marker').first().click(); // the page's margin marker opens the notebook at it
   await expect(notebook(page)).toBeVisible();
   const steve = page.getByRole('complementary', { name: /Steve/ });
@@ -503,7 +503,7 @@ test('a typed note left in the list is read-only; a click opens the notebook, wh
   api.steve.consented = true;
   api.notes = [typed('t-left', 1, doc({ type: 'text', text: 'Left behind' }))];
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click(); // the list without the notebook
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // the list without the notebook
   await page.getByRole('tab', { name: /^Notes/ }).click();
   const left = panel(page).getByRole('button', { name: /^Move note at .* into the notebook$/ });
   await expect(left).toContainText('Left behind');

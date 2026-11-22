@@ -25,6 +25,7 @@ container numbers are Docker at 0.1 CPU and 512 MB, the Render Free size.
 | Word lookup, cached in process / in `term_lookups` | 2.7 ms / 96 ms p50 | C12.6 |
 | Hover to word card, cached | 356-366 ms (350 ms of it is the hover intent) | C12.10 |
 | Scrolling a 300-page PDF (wheel, Page Down) | 75 fps, worst frame 13.5-13.7 ms; 69.3-72.3 fps at 4x CPU slowdown; at most 5 pages drawn | C38.10 (page turns until then: C12.10) |
+| The same with 1,500 marks and 300 highlights | 75 fps; 67.5-72.4 fps at 4x CPU; at most 20 strokes in the page; heap 10.9-11.0 MB at the end | C39.9 |
 | Lighthouse, mobile performance | 81-90 across eight pages; accessibility 95-100 | C13 close |
 | Grader agreement with 34 labelled answers | 26 of 34 (76.5%) within 0.25; leave-one-out after a 3,060-setting search: 26 | C15.3 |
 | Full reading journey in a browser, local stack | 30.0 s end to end | C15 |
@@ -1942,3 +1943,34 @@ find's search over all 300 pages (C38.5a reads each page's text once, in the wor
 Command: `npx playwright test e2e/scroll-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
 standard `npm run test:e2e` too); results in `frontend/test-results/scroll-benchmarks-pdf.json` and `-epub.json`
 (ignored).
+
+## C39: scrolling a marked-up book (2026-11-22, issue 23)
+
+`e2e/marks-frame-rate.spec.js` (the `frame-rate` project), as C38.10's bench: headless Microsoft Edge on this
+machine, the production build, 1440 x 900, fit page, API mocked, the same 300-page PDF served like Storage. Every
+page carries four ink strokes of 150 points across it and a text box (1,500 marks), and a highlight, with a comment on
+every tenth. The wheel scrolls 180 notches (about 20 pages) and Page Down steps ten pages, at 1x and 4x CPU; the
+strokes and boxes in the page are counted when it opens, after about 60 pages (page 65 in view) and at the end;
+the JS heap from CDP after a collection. Three runs; the ranges cover all three.
+
+| Measure | 1x CPU | 4x CPU |
+|---|---|---|
+| Wheel: fps, worst frame (frames over 33 ms) | 75 fps, 13.6-13.8 ms (0) | 71.7-72.4 fps, 26.8-27.0 ms (0) |
+| Page Down a page at a time | 75 fps, 13.5-13.7 ms (0) | 67.5-70.4 fps, 26.9-40.1 ms (0-2) |
+
+| Marked-up PDF | Value |
+|---|---|
+| Strokes / boxes in the page: opened, after 60 pages, at the end | 12 / 3, 20 / 5, 12 / 3 (the pages drawn only) |
+| 20-page blocks of marks asked for | 6 of 15 (the blocks round the pages passed) |
+| JS heap (DOM nodes): opened | 6.6-6.8 MB (820) |
+| after 60 pages scrolled | 10.6 MB (1,133) |
+| at the end | 10.9-11.0 MB (829) |
+
+The marks cost no frames: scrolling is at the same 75 fps ceiling as C38's unmarked book, and at 4x CPU within a
+frame or two of it (one run's Page Down had two frames of 40 ms at 4x). Only the pages drawn put their strokes and boxes in the page. The heap at the end is 3.6-3.7 MB above C38's
+(7.3 MB): the marks of the blocks loaded are kept for the visit (about 600 strokes of 150 points here); a book marked
+this heavily and read to its end would keep all 1,500. Not measured: drawing a stroke's frame rate, a real pen, a
+phone.
+
+Command: `npx playwright test e2e/marks-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
+standard `npm run test:e2e` too); result in `frontend/test-results/marks-benchmarks.json` (ignored).

@@ -60,6 +60,50 @@
 
 .rf-tool[aria-pressed="true"] { color: var(--accent-text); }
 
+/* C39.3 (issue 23): Edge's markup tools. A tool and its menu button side by side; the tool on is filled with the
+   accent's soft tint; the colour in use is a short bar under the icon, as Edge's. The menu opens under the tool. */
+.rf-markup { display: flex; align-items: center; gap: var(--space-1); }
+.rf-markup-tool { position: relative; display: inline-flex; align-items: center; }
+.rf-markup .rf-markup-toggle { padding-inline: var(--space-2) var(--space-1); }
+.rf-markup .rf-markup-toggle[aria-pressed="true"] { background: var(--accent-soft); }
+.rf-toolbar-end .rf-markup .rf-tool-label { display: none; } /* in the bar the icon speaks; More tools names it */
+.rf-markup-icon { position: relative; display: inline-flex; }
+.rf-markup-swatch {
+  position: absolute;
+  inset-inline: 2px;
+  bottom: -5px;
+  block-size: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--c-dot);
+}
+.rf-markup-swatch[data-mark-colour] { background: var(--c-mark); box-shadow: 0 0 0 1px var(--line-2); } /* C39.4: Draw's
+   ink; the hairline keeps the near-black ink seen on Lamplight's dark bar (C39.6) */
+.rf-markup .rf-markup-menu-button { min-width: 24px; padding: 0 2px; color: var(--ink-2); }
+.rf-markup-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+.rf-markup-colours { display: grid; grid-template-columns: repeat(5, auto); gap: var(--space-1); }
+/* C39.4: Draw's thickness, a slider in points under its colours. */
+.rf-markup-width {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) 0;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+}
+.rf-markup-width input { flex: 1; min-inline-size: 6rem; accent-color: var(--accent); }
+.rf-markup-width output { min-inline-size: 3.5ch; color: var(--ink); font-variant-numeric: tabular-nums; text-align: end; }
+.rf-toolbar-more .rf-markup { flex-direction: column; align-items: stretch; }
+.rf-toolbar-more .rf-markup-toggle { flex: 1; }
+/* In More tools the menu takes its own row under the tool, in the flow, so it hides nothing below it. */
+.rf-toolbar-more .rf-markup-tool { flex-wrap: wrap; }
+.rf-toolbar-more .rf-markup-menu { position: static; flex-basis: 100%; margin-block: var(--space-1); box-shadow: none; }
+
 /* Unpinned, while reading it fades and lifts 8 px; keyboard focus inside brings it back (data-visible). */
 .rf-toolbar[data-visible="false"] {
   opacity: 0;

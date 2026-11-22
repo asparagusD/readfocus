@@ -4,7 +4,7 @@
 // (C37.6); on an EPUB an equation writes its own LaTeX and a listing its text, on the device; a
 // highlight's chip writes the passage on a page linked to it; a Steve answer ("Save to notes") writes his answer
 // and its sources. Mocked API (fixtures.js).
-import { test, expect, BOOKS, book, openReader, settled, wordPoint } from './fixtures.js';
+import { test, expect, BOOKS, book, clickTool, openReader, settled, wordPoint } from './fixtures.js';
 
 const EQ = { id: 'r-eq', page: 1, kind: 'math', bbox: [72, 110, 300, 140], inline: false };
 const CODE = { id: 'r-code', page: 1, kind: 'code', bbox: [72, 160, 300, 200], inline: false };
@@ -86,7 +86,7 @@ test.describe('pdf regions', () => {
   test('with Steve off an equation goes onto the page as its picture, and nothing asks him', async ({ page, api }) => {
     api.steve.enabled = false;
     await openReader(page);
-    await page.getByRole('button', { name: 'Ask Steve' }).click(); // his settings load: he is off
+    await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // his settings load: he is off
     await expect(page.getByRole('complementary', { name: 'Steve' })).toBeVisible();
     await page.getByRole('button', { name: 'Close Steve' }).click();
     await hover(page, EQ);
@@ -168,7 +168,7 @@ test('a highlight\'s Add note writes the passage on a notebook page linked to th
   await page.mouse.up();
   await page.getByRole('toolbar', { name: 'Highlight the selection' }).getByRole('button', { name: 'Sky highlight', exact: true }).click();
   await expect.poll(() => api.annotations.length).toBe(1);
-  await page.getByRole('switch', { name: 'Look up words on hover' }).click();
+  await clickTool(page, page.getByRole('switch', { name: 'Look up words on hover' }));
   const w = await wordPoint(page, 'small');
   await page.mouse.move(w.x - 20, w.y - 40);
   await page.mouse.move(w.x, w.y, { steps: 4 });
@@ -186,7 +186,7 @@ test('a highlight\'s Add note writes the passage on a notebook page linked to th
 test('a Steve answer is written on a notebook page with its sources, Steve beside it', async ({ page, api }) => {
   api.steve.consented = true;
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click();
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' }));
   const steve = page.getByRole('complementary', { name: 'Steve' });
   await steve.getByRole('textbox', { name: 'Your question for Steve' }).fill('Why twice?');
   await page.keyboard.press('Enter');

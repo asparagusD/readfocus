@@ -76,7 +76,10 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    and Edge's keys (Ctrl+G, Ctrl+Alt+G, Ctrl+\\, Ctrl+= and Ctrl+-); Save my place
    (or B) keeps a small ribbon by the place. Hover or select a
    word for a card with its definition (Free Dictionary API) or a
-   Wikipedia summary. Highlight or underline a passage, and write and
+   Wikipedia summary. Mark the page with Edge's tools (C39): Highlight in
+   ten colours (select, or with the highlighter on), Draw and Add text on a
+   PDF's pages, Erase, a right-click menu on selected words, and comments on
+   highlights with an icon in the margin. Highlight or underline a passage, and write and
    draw in the book's notebook (Excalidraw pages over 70 % of the screen,
    the book in soft focus beside them): a passage, a highlight, Steve's
    answer, an equation, code or a figure goes onto the page for its place,

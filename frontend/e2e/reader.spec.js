@@ -1,6 +1,6 @@
 // The reader end to end (C12.10; on the original view since C17.5), on the real /read page with the
 // API mocked, once on a PDF (e2e/fixtures/books/sample.pdf) and once on an illustrated EPUB (reflow.epub).
-import { book, contentsPane, expect, openReader, settled, shown, spoken, test, timeToCard, wake, wordPoint } from './fixtures.js';
+import { book, clickTool, contentsPane, expect, openReader, settled, shown, spoken, test, timeToCard, wake, wordPoint } from './fixtures.js';
 
 /** "5" -> 5; "2:340" -> [2, 340]. */
 const at = (spot) => (spot.includes(':') ? spot.split(':').map(Number) : Number(spot));
@@ -378,8 +378,8 @@ test.describe('epub', () => {
 
 test('with hover lookup off, hovering shows nothing, and Enter on a selected word still opens its card', async ({ page }) => {
   await openReader(page);
-  await page.getByRole('switch', { name: 'Look up words on hover' }).click();
-  await expect(page.getByRole('switch', { name: 'Look up words on hover' })).toHaveAttribute('aria-checked', 'false');
+  await clickTool(page, page.getByRole('switch', { name: 'Look up words on hover' }));
+  await expect(page.getByRole('switch', { name: 'Look up words on hover', includeHidden: true })).toHaveAttribute('aria-checked', 'false');
   const lamp = await wordPoint(page, 'lamp');
   await page.mouse.move(5, 5);
   await page.mouse.move(lamp.x, lamp.y);

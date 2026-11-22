@@ -342,15 +342,35 @@ OCR_FULL_PAGE_FIGURE = 0.8
 
 # --- Annotations (backend/routers/annotations.py, C21.1; docs/ANCHORS.md) -----
 
-# The handoff's highlight palette (tokens --hl-<name>) and the two styles; migration 026 checks the same lists.
-ANNOTATION_COLORS = ("honey", "sage", "sky", "rose", "lilac")
+# The highlight palette (tokens --hl-<name>) and the two styles; migration 026 checks the styles. C39.1 (issue 23,
+# D3): Edge's set, checked by migration 036: the handoff's five (yellow, green, light blue, pink and our lilac) stay
+# first, then red and the deeper shades of yellow, green, blue and pink.
+ANNOTATION_COLORS = ("honey", "sage", "sky", "rose", "lilac", "poppy", "amber", "fern", "ocean", "berry")
 ANNOTATION_STYLES = ("highlight", "underline")
+# C39.1 (D1): a comment on a highlight, plain text, as Edge's "Add comment"; migration 036 checks the same length.
+ANNOTATION_COMMENT_MAX = 1_000
 # Anchors one annotation may hold: one per PDF page or EPUB spine item it crosses (A2).
 ANNOTATION_ANCHORS_MAX = 16
 # Characters of text kept with an annotation (A1 text, whitespace collapsed).
 ANNOTATION_TEXT_MAX = 5_000
 # Annotations one list request returns, in reading order.
 ANNOTATIONS_LIST_MAX = 2_000
+
+# --- Page marks (backend/routers/page_marks.py, C39.1, issue 23; docs/ANCHORS.md A12) ------------
+
+# Ink strokes and text boxes on a PDF page (D2: PDFs only); migration 036 checks the kinds, colours and data size.
+MARK_KINDS = ("ink", "text")
+# Ink and text colours (tokens --mark-<name>, C39.2): a dark ink, then strong shades that read on a white page.
+MARK_COLORS = ("ink", "poppy", "amber", "fern", "ocean", "berry", "plum")
+MARK_DATA_MAX_BYTES = 65_536  # one mark's data as JSON, also a check in 036
+# Every coordinate is in PDF points from the page's top-left (A1); A4's position holds while y < 10,000.
+MARK_COORD_MAX = 10_000
+MARK_STROKE_POINTS_MAX = 2_000  # points in one stroke (a long scribble at 60 Hz is about 30 s)
+MARK_STROKE_WIDTH = (0.5, 24.0)  # an ink stroke's width in points, Edge's slider's range and more
+MARK_TEXT_MAX = 2_000  # characters in one text box
+MARK_TEXT_SIZE = (6.0, 72.0)  # a text box's font size in points
+MARK_TEXT_WIDTH = (24.0, 2_000.0)  # a text box's width in points
+MARKS_LIST_MAX = 5_000  # marks one list request returns, in reading order
 
 # --- Note blocks (backend/routers/notes.py, C22.1; docs/ANCHORS.md) -------------
 

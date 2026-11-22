@@ -3,7 +3,11 @@ import { prefersReducedMotion } from '../motion/presets';
 import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
 import { SelectionToolbar } from '../annotations/SelectionToolbar';
-import { useSelection } from '../annotations/useSelection';
+import { selectionPlace, useSelection } from '../annotations/useSelection';
+import { SelectionMenu } from '../annotations/SelectionMenu';
+import { CommentEditor } from '../annotations/CommentEditor';
+import { CommentMarkers } from '../annotations/CommentMarkers';
+import { lastColour, newAnnotation } from '../annotations/palette';
 import { AnnotationChip } from '../annotations/AnnotationChip';
 import { useAnnotationChip } from '../annotations/useAnnotationChip';
 import { cycle } from '../annotations/hover';
@@ -17,6 +21,7 @@ import { FindBar } from './FindBar';
 import { useFind } from './useFind';
 import { startPage } from './pdf/contents';
 import { PdfBook } from './pdf/PdfBook';
+import { ADD_TEXT_EVENT } from '../annotations/textbox';
 import { skipPdfPoint } from './pdf/regions';
 import { keyAction, readerShortcut, SPREAD_MIN_WIDTH } from './frame';
 import { placeEnd, placeStart } from './place';
@@ -84,7 +89,7 @@ function useWide() {
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
-  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, annotations = null,
+  onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, eraser = null, textBoxes = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
   placing = null, contents = null, start = null, pageView = 'one', mark = null,
 }) {
@@ -150,6 +155,48 @@ export function Reader({
   const { place: selected, dismiss: dismissSelection } = useSelection({
     book, docs: selectionDocs, skipAt, paused: !onAnnotate || !place || opening || Boolean(failure),
   });
+  // C39.3 (issue 23): with Edge's highlighter on (`markup`), a settled selection is highlighted at once in its colour,
+  // and cleared, so the next drag starts fresh; no selection toolbar.
+  // C39.7 (issue 23): Edge's right-click menu on a selection ({ place, x, y }). A right-click on selected words opens it
+  // at the pointer (not with Shift, nor by touch: those keep the platform's menu); the menu key or Shift+F10 opens it at
+  // the selection's end. With no selection the browser's own menu stays.
+  const [menu, setMenu] = useState(null);
+  const openMenu = useCallback((x, y) => {
+    const found = onAnnotate && selectionPlace(book, skipAt);
+    if (!found) return false;
+    if (x == null) {
+      const end = [...found.range.getClientRects()].at(-1);
+      const frame = found.doc.defaultView?.frameElement?.getBoundingClientRect();
+      x = (end?.right ?? 0) + (frame?.left ?? 0);
+      y = (end?.bottom ?? 0) + (frame?.top ?? 0);
+    }
+    lookup.current?.clear(); // a word card open under the pointer gives way to the menu
+    setMenu({ place: found, x, y });
+    return true;
+  }, [onAnnotate, skipAt]);
+  useEffect(() => {
+    const listeners = selectionDocs.map((doc) => {
+      const onMenu = (event) => {
+        if (event.shiftKey || event.pointerType === 'touch' || markup?.tool) return;
+        const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+        if (openMenu(event.clientX + (frame?.left ?? 0), event.clientY + (frame?.top ?? 0))) event.preventDefault();
+      };
+      doc.addEventListener('contextmenu', onMenu);
+      return () => doc.removeEventListener('contextmenu', onMenu);
+    });
+    return () => listeners.forEach((off) => off());
+  }, [selectionDocs, openMenu, markup?.tool]);
+  const closeMenu = useCallback((toBook) => {
+    setMenu(null);
+    if (toBook) stage.current?.focus();
+  }, []);
+  const highlighting = markup?.tool === 'highlight';
+  useEffect(() => {
+    if (!highlighting || !selected) return;
+    onAnnotate(newAnnotation(selected, markup.colour, 'highlight'));
+    selected.doc.getSelection()?.removeAllRanges();
+    dismissSelection(false);
+  }, [highlighting, selected]); // eslint-disable-line react-hooks/exhaustive-deps -- once per settled selection
 
   // C21.4: with word lookup off, a drawn annotation's chip on hover, a tap or A (Ask Steve, colour, underline, delete).
   const chipEl = useRef(null);
@@ -160,6 +207,26 @@ export function Reader({
     entries, chip: chipEl, active: chipActive, blocked: Boolean(selected),
   });
   const chipFor = chipOpen && annotations?.find((a) => a.id === chipOpen.id);
+  // C39.8 (issue 23, D1): Edge's Add comment: on a selection ({ place }: saved as a highlight with its comment) or on a
+  // highlight ({ id }: its comment changed; emptied, removed). The selection's toolbar and menu and word lookup wait.
+  const [commenting, setCommenting] = useState(null);
+  const commentAt = useCallback(() => {
+    if (commenting?.id) return rectsOf(commenting.id).at(-1) ?? null;
+    const end = commenting?.place && [...commenting.place.range.getClientRects()].at(-1);
+    if (!end) return null;
+    const frame = commenting.place.doc.defaultView?.frameElement?.getBoundingClientRect();
+    return new DOMRect(end.left + (frame?.left ?? 0), end.top + (frame?.top ?? 0), end.width, end.height);
+  }, [commenting, rectsOf]);
+  const saveComment = (text) => {
+    if (commenting?.place) {
+      if (text) onAnnotate(newAnnotation(commenting.place, lastColour(), 'highlight', text));
+      commenting.place.doc.getSelection()?.removeAllRanges();
+    } else if (commenting?.id) {
+      const before = annotations?.find((a) => a.id === commenting.id)?.comment ?? null;
+      if (text !== before) onAnnotationChange?.(commenting.id, { comment: text ?? '' });
+    }
+  };
+  const commentOn = onAnnotate ? (target) => setCommenting(typeof target === 'string' ? { id: target } : { place: target }) : null;
   /** The next (dir 1) or previous (-1) annotation drawn on the pages shown, in reading order, by key. */
   const cycleChip = useCallback((dir) => {
     const view = stage.current?.getBoundingClientRect();
@@ -199,6 +266,10 @@ export function Reader({
       event.preventDefault();
       return;
     }
+    if ((event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey)) && !markup?.tool && openMenu()) {
+      event.preventDefault(); // C39.7: the selection's menu by keyboard
+      return;
+    }
     if (onAnnotate && toolbar.current?.onKey(event)) return;
     if (onNewNote && (event.key === 'n' || event.key === 'N') && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault(); // C22.4: a new note at the selection, else the pages shown
@@ -208,6 +279,11 @@ export function Reader({
     if (chipActive && !selected && (event.key === 'a' || event.key === 'A') && !event.ctrlKey && !event.metaKey && !event.altKey
       && cycleChip(event.shiftKey ? -1 : 1)) {
       event.preventDefault();
+      return;
+    }
+    if (markup?.tool === 'text' && textBoxes && event.key === 'Enter' && kind === 'pdf' && place?.main) {
+      event.preventDefault(); // C39.6: Add text by keyboard: a box in the middle of the page most in view
+      window.dispatchEvent(new CustomEvent(ADD_TEXT_EVENT, { detail: { page: place.main } }));
       return;
     }
     if (lookupClient && (event.key === 'Enter' || event.key === '?') && lookup.current?.lookUpSelection()) {
@@ -230,7 +306,7 @@ export function Reader({
     if (!action || (action === 'ribbon' && !onBookmark)) return;
     event.preventDefault();
     act(action);
-  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip, onNewNote, kind, bookBox]);
+  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip, onNewNote, kind, bookBox, markup, textBoxes, place, openMenu]);
 
   const onKeyRef = useRef(null);
   const swipeStart = useRef(null);
@@ -341,7 +417,7 @@ export function Reader({
       data-loading={(!place || opening) && !failure}
       data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
       data-ending={atClose || undefined} data-annotations={annotations ? annotations.length : undefined}
-      data-finding={finding || undefined}
+      data-finding={finding || undefined} data-tool={markup?.tool}
       >
       <div className="rf-ov-stage" ref={stage} tabIndex={0} onKeyDown={onKey} aria-roledescription="book"
         aria-label={kind === 'pdf' ? `${title}. Scroll, or use Page Up and Page Down to move a page at a time.`
@@ -351,6 +427,9 @@ export function Reader({
         <div className="rf-ov-book" ref={setBookBox}>
           {kind === 'pdf'
             ? <PdfBook key={attempt} {...shared} zoom={zoom} view={pageView} ocr={ocr} contents={contents} startPage={startPage(start)}
+              marks={marks} ink={markup?.tool === 'draw' && onStroke ? { ...markup.ink, onStroke } : null}
+              eraser={eraser && ['draw', 'erase'].includes(markup?.tool) ? { ...eraser, on: markup.tool === 'erase' } : null}
+              textBoxes={markup?.tool === 'text' ? textBoxes : null}
               end={closing && <div className="rf-end">{closing}</div>} found={finding ? finder.found : null} />
             : <EpubBook key={attempt} {...shared} settings={settings} onDocument={onDocument} found={finding ? finder.found : null} />}
           {pulse && (
@@ -364,6 +443,12 @@ export function Reader({
             // C22.4: a count circle in the margin beside each passage with notes; it opens them.
             <MarginMarkers book={book} box={bookBox} notes={notes} wide={wide} onOpen={onOpenNotes}
               layout={`${zoom}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`}
+              hidden={!place || opening || Boolean(failure)} />
+          )}
+          {annotations && commentOn && (
+            // C39.8: a comment icon in the margin beside each commented highlight; it previews and edits it.
+            <CommentMarkers book={book} box={bookBox} annotations={annotations} wide={wide} onEdit={(id) => commentOn(id)}
+              layout={`${zoom}|${pageView}|${settings.fontSize}|${settings.lineHeight}|${settings.margins}|${settings.style}|${place?.kind === 'pdf' ? shownPages : place?.cfi}`}
               hidden={!place || opening || Boolean(failure)} />
           )}
           {placing && place && !failure && (
@@ -391,16 +476,26 @@ export function Reader({
       </div>
       {lookupClient && (
         <BookLookup ref={lookup} surfaces={surfaces} client={lookupClient} hover={hoverLookup} returnFocusTo={stage}
-          paused={!place || opening || Boolean(failure)}
+          paused={!place || opening || Boolean(failure) || Boolean(menu) || Boolean(commenting)} /* C39.7, C39.8: none over them */
           page={place ? `${spot(placeStart(place))}-${spot(placeEnd(place))}` : ''} />
       )}
       {onAnnotate && (
         // C21.2: colours, underline and Ask Steve over a selection.
-        <SelectionToolbar ref={toolbar} place={selected} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
+        <SelectionToolbar ref={toolbar} place={highlighting || menu || commenting ? null : selected} onComment={commentOn} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
+      )}
+      {onAnnotate && (
+        <SelectionMenu menu={menu} onClose={closeMenu} onAnnotate={onAnnotate} onNote={onNewNote} onComment={commentOn}
+          onLookUp={lookupClient ? () => lookup.current?.lookUpSelection() : null} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}
-          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} onNote={onAnnotationNote} />
+          onChange={onAnnotationChange} onDelete={onAnnotationDelete} onClose={closeChipTo} onNote={onAnnotationNote}
+          onComment={onAnnotationChange ? commentOn : null} />
+      )}
+      {commenting && (
+        <CommentEditor key={commenting.id ?? commenting.place.key} at={commentAt} existing={Boolean(commenting.id && annotations?.find((a) => a.id === commenting.id)?.comment)}
+          initial={(commenting.id && annotations?.find((a) => a.id === commenting.id)?.comment) || ''} onSave={saveComment}
+          onClose={(toBook) => { setCommenting(null); if (toBook) stage.current?.focus(); }} />
       )}
       {kind === 'pdf' && regions && bookBox && (
         // C20.8b: equations, code and figures offer Explain, Copy code and Copy as LaTeX.

@@ -28,6 +28,11 @@ import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
 import { useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
+import { useMarkupTool } from '../annotations/useMarkupTool';
+import { usePageMarks } from '../annotations/usePageMarks';
+import { erasedSummary, newStroke } from '../annotations/ink';
+import { newTextBox } from '../annotations/textbox';
+import { MarkupTools } from '../reader/MarkupTools';
 import { SidePanel } from '../notes/SidePanel';
 import { Notepad } from '../notes/Notepad';
 import { Notebook } from '../notes/Notebook';
@@ -191,6 +196,49 @@ export function ReadingSession() {
 
   const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
   const inFocus = !pagesOnly && focus.enabled;
+  const markup = useMarkupTool(kind, !inFocus); // C39.3: Edge's markup tools; off while focus mode has the toolbar
+  const pageMarks = usePageMarks(bookId, kind, place?.kind === 'pdf' ? place.pages : null); // C39.4: ink near the view
+  // C39.6: Add text's boxes: a new one saved and selected, one retyped saved, one emptied deleted with an Undo.
+  const [selectedBox, setSelectedBox] = useState(null);
+  const textBoxes = {
+    style: markup.textStyle,
+    selected: selectedBox,
+    onSelect: setSelectedBox,
+    onPlace: (page, at, value) => pageMarks.create(newTextBox(page, at, value, markup.textStyle))
+      .then((saved) => saved && setSelectedBox(saved.id)),
+    onEdit: (id, data) => pageMarks.change(id, { data }),
+    onRemove: (id) => {
+      const gone = pageMarks.erase([id]);
+      setSelectedBox(null);
+      if (gone.length) toast({ kind: 'neutral', message: 'Text box deleted.', action: { label: 'Undo', onClick: () => pageMarks.restore(gone) } });
+    },
+  };
+  // C39.6c: Add text's menu sets the style of new boxes and restyles the selected one.
+  const restyleText = (change) => {
+    markup.setTextStyle(change);
+    const box = pageMarks.marks.find((m) => m.id === selectedBox && m.kind === 'text' && !m.pending);
+    if (!box) return;
+    const data = { ...box.data, ...(change.size && { size: change.size }), ...(change.width && { width: change.width }) };
+    pageMarks.change(box.id, { ...(change.colour && { color: change.colour }), data });
+  };
+  // C39.5: the eraser takes strokes and highlights away as it passes; when the drag ends one toast offers one Undo.
+  const erased = useRef({ marks: [], annotations: [] });
+  const eraser = {
+    onHit: ({ marks, annotations }) => {
+      erased.current.marks.push(...pageMarks.erase(marks));
+      erased.current.annotations.push(...notes.erase(annotations));
+    },
+    onDone: () => {
+      const batch = erased.current;
+      erased.current = { marks: [], annotations: [] };
+      const said = erasedSummary(batch.marks.length, batch.annotations.length);
+      if (!said) return;
+      toast({ kind: 'neutral', message: said, action: { label: 'Undo', onClick: () => {
+        pageMarks.restore(batch.marks);
+        notes.restore(batch.annotations);
+      } } });
+    },
+  };
   const onRelocate = useCallback((next) => {
     setPlace(next);
     setChapter(next.entry || '');
@@ -342,7 +390,9 @@ export function ReadingSession() {
   };
   const closeSide = useCallback(() => setSide(null), []);
   const toggleSide = (tab, button) => {
-    if (!side) opener.current = button.current;
+    // C39.3: a tool opened from More tools hides with its panel, so focus comes back to More tools (DEBUG_LOG C39.3b).
+    const el = button.current;
+    if (!side) opener.current = el?.closest('.rf-toolbar-more')?.closest('.rf-toolbar')?.querySelector('.rf-toolbar-more-button') ?? el;
     setSide((now) => (now === tab ? null : tab));
   };
   // A citation chip moves the book to its page or section; the panel stays open.
@@ -597,6 +647,11 @@ export function ReadingSession() {
           contentsOpen={contentsOpen}
           contentsDocked={docked}
           onBookmark={() => reader.current?.saveMark?.()}
+          markup={(
+            <MarkupTools tools={markup.tools} tool={markup.tool} onTool={markup.choose} colour={markup.colour}
+              onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} text={markup.textStyle}
+              onText={restyleText} status={markup.status} />
+          )}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -663,6 +718,11 @@ export function ReadingSession() {
           regions={regions}
           ocr={ocr}
           onAnnotate={notes.create}
+          markup={markup.tool ? { tool: markup.tool, colour: markup.colour, ink: markup.ink } : null}
+          marks={pageMarks.marks}
+          onStroke={(page, points) => pageMarks.create(newStroke(page, points, markup.ink))}
+          eraser={eraser}
+          textBoxes={textBoxes}
           annotations={notes.annotations}
           onAnnotationChange={notes.update}
           onAnnotationDelete={notes.remove}

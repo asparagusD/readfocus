@@ -1,6 +1,6 @@
 // Block actions on a PDF (C20.8b): an equation, a code listing and a figure from the region map offer Explain,
 // Copy as LaTeX and Copy code on hover or keyboard focus. Every call is mocked (fixtures.js).
-import { test, expect, openReader } from './fixtures.js';
+import { test, clickTool, expect, openReader } from './fixtures.js';
 
 const shots = process.env.E2E_SHOTS;
 const EQ = { id: 'r-eq', page: 1, kind: 'math', bbox: [72, 110, 300, 140], inline: false };
@@ -122,7 +122,7 @@ test('keyboard: an outline takes focus, Tab reaches the actions, Esc puts them a
 test('with Steve switched off, blocks keep only what stays on the device', async ({ page, api }) => {
   api.steve.enabled = false; // C21.4 follow-up: Steve's entry points hide while he is off (steve-guardrails S2)
   await openReader(page);
-  await page.getByRole('button', { name: 'Ask Steve' }).click(); // the toolbar's Steve: his settings load
+  await clickTool(page, page.getByRole('button', { name: 'Ask Steve' })); // the toolbar's Steve: his settings load
   await expect(page.getByPlaceholder('Turn on Steve to ask')).toBeVisible();
   await page.keyboard.press('Escape');
   await hover(page, CODE);

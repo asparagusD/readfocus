@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
 import { X } from 'lucide-react';
 import { easing, seconds } from '../motion/presets';
-import { COLOURS, colourName } from '../annotations/palette';
+import { COLOURS, colourName, coloursUsed } from '../annotations/palette';
 import { listed, snippetOf } from '../annotations/list';
 import { rove } from '../annotations/roving';
 import { isStartEntry, startLabel } from '../focus/bodyStart';
@@ -142,10 +142,13 @@ export function ContentsDrawer({ open, onClose, entries, current, onPick, return
   );
 }
 
-/** The Annotations tab (C21.5): a colour filter, then the list in reading order; a pick jumps to the passage. */
+/** The Annotations tab (C21.5): a colour filter (C39.2: the colours in use), then the list in reading order; a pick jumps to the passage. */
 function AnnotationsPanel({ annotations, colour, onColour, pageOf, onPick }) {
   const shown = listed(annotations, colour);
-  const choices = [[null, 'All'], ...COLOURS.map((c) => [c, colourName(c)])];
+  // C39.2: only the colours this book's annotations use (ten would crowd the pane), and the one picked, even once
+  // its last annotation is gone.
+  const used = coloursUsed(annotations);
+  const choices = [[null, 'All'], ...COLOURS.filter((c) => used.includes(c) || c === colour).map((c) => [c, colourName(c)])];
   return (
     <div className="rf-contents-panel" role="tabpanel" id="rf-tabpanel-annotations" aria-labelledby="rf-tab-annotations">
       <div className="rf-anno-filter" role="radiogroup" aria-label="Colour" onKeyDown={(event) => rove(event, event.currentTarget)}>
@@ -165,9 +168,12 @@ function AnnotationsPanel({ annotations, colour, onColour, pageOf, onPick }) {
             return (
               <li key={a.id}>
                 <button type="button" className="rf-contents-item rf-anno-item" onClick={() => onPick(a)}
-                  aria-label={`${colourName(a.color)} ${a.style}${page ? `, ${page}` : ''}: ${text}`}>
+                  aria-label={`${colourName(a.color)} ${a.style}${page ? `, ${page}` : ''}: ${text}${a.comment ? `. Comment: ${a.comment}` : ''}`}>
                   <span className="rf-anno-mark" data-style={a.style} data-colour={a.color} aria-hidden="true" />
-                  <span className="rf-anno-text">{text}</span>
+                  <span className="rf-anno-body">
+                    <span className="rf-anno-text">{text}</span>
+                    {a.comment && <span className="rf-anno-comment">{a.comment}</span> /* C39.8: its comment under it */}
+                  </span>
                   {page && <span className="rf-contents-today">{page}</span>}
                 </button>
               </li>

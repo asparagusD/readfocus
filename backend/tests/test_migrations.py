@@ -41,6 +41,10 @@ PLACE_NULLABLE = ("ALTER TABLE public.page_regions ALTER COLUMN page DROP NOT NU
 STATUS_CHECK_SWAP = "DROP CONSTRAINT IF EXISTS books_status_check,"
 
 
+# 036 widens annotations' CHECK on color with Edge's set (your decision D3 at C39, 2026-11-21): 018's swap.
+COLOR_CHECK_SWAP = "EXECUTE format('ALTER TABLE public.annotations DROP CONSTRAINT %I', name);"
+
+
 @pytest.mark.parametrize("path", sorted(MIGRATIONS.glob("*.sql")), ids=lambda p: p.name)
 def test_migrations_are_additive(path):
     sql = sql_without_comments(path)
@@ -52,6 +56,8 @@ def test_migrations_are_additive(path):
             sql = sql.replace(statement, "")
     if path.name == "035_book_deleting.sql":
         sql = re.sub(r"\s+", " ", sql).replace(STATUS_CHECK_SWAP, "")
+    if path.name == "036_page_marks.sql":
+        sql = re.sub(r"\s+", " ", sql).replace(COLOR_CHECK_SWAP, "")
     found = DESTRUCTIVE.findall(sql)
     assert not found, f"{path.name} has destructive statements: {found}"
 
@@ -642,7 +648,8 @@ def test_026_creates_annotations_with_the_agreed_columns():
 def test_026_the_palette_and_styles_match_policy():
     from backend.agents import policy
     sql = migration_026()
-    assert "color IN ({})".format(", ".join(f"'{c}'" for c in policy.ANNOTATION_COLORS)) in sql
+    # 026's five lead the palette; 036 widened it with Edge's set (C39.1).
+    assert "color IN ({})".format(", ".join(f"'{c}'" for c in policy.ANNOTATION_COLORS[:5])) in sql
     assert "style IN ({})".format(", ".join(f"'{s}'" for s in policy.ANNOTATION_STYLES)) in sql
 
 
@@ -990,3 +997,48 @@ def test_035_keeps_every_status_and_adds_deleting():
     assert "CHECK (status IN ('processing', 'ready', 'error', 'deleting'))" in sql
     from backend.services import book_purge
     assert book_purge.DELETING == "deleting"
+
+
+# --- 036: page marks, comments and Edge's colours (C39.1, issue 23) -----------------------------------
+
+def migration_036() -> str:
+    return re.sub(r"\s+", " ", sql_without_comments(MIGRATIONS / "036_page_marks.sql"))
+
+
+def test_036_creates_page_marks_with_the_agreed_columns():
+    from backend.agents import policy
+    assert table_definition(migration_036(), "page_marks") == {
+        "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+        "user_id": OWNER,
+        "book_id": BOOK,
+        "kind": "text NOT NULL CHECK (kind IN ({}))".format(", ".join(f"'{k}'" for k in policy.MARK_KINDS)),
+        "page": "integer NOT NULL CHECK (page >= 1)",
+        "position": "float8 NOT NULL CHECK (position >= 0)",
+        "color": "text NOT NULL CHECK (color IN ({}))".format(", ".join(f"'{c}'" for c in policy.MARK_COLORS)),
+        "data": "jsonb NOT NULL CHECK (jsonb_typeof(data) = 'object' AND octet_length(data::text) <= "
+                f"{policy.MARK_DATA_MAX_BYTES})",
+        "created_at": "timestamptz NOT NULL DEFAULT now()",
+        "updated_at": "timestamptz NOT NULL DEFAULT now()",
+    }
+
+
+def test_036_readers_only_read_their_own_marks_and_never_write_them():
+    sql = migration_036()
+    assert "ALTER TABLE public.page_marks ENABLE ROW LEVEL SECURITY" in sql
+    policies = re.findall(r"CREATE POLICY \"[^\"]+\" ON public\.(\w+) FOR (\w+) USING \(auth\.uid\(\) = user_id\)", sql)
+    assert policies == [("page_marks", "SELECT")] and sql.count("CREATE POLICY") == 1
+    assert re.search(r"CREATE INDEX IF NOT EXISTS \w+ ON public\.page_marks \(user_id, book_id, position\)", sql)
+    assert not re.search(r"\bINSERT INTO\b|\bUPDATE public\.|SECURITY DEFINER", sql)
+    assert sorted(set(re.findall(r"(?:ALTER|CREATE) TABLE (?:IF NOT EXISTS )?public\.(\w+)", sql))) == [
+        "annotations", "page_marks"]
+
+
+def test_036_adds_a_nullable_comment_and_keeps_every_colour():
+    from backend.agents import policy
+    sql = migration_036()
+    assert ("ALTER TABLE public.annotations ADD COLUMN IF NOT EXISTS comment text CHECK (comment IS NULL OR "
+            f"char_length(comment) BETWEEN 1 AND {policy.ANNOTATION_COMMENT_MAX})") in sql
+    assert "AND pg_get_constraintdef(oid) LIKE '%color%'" in sql  # only the colour check is swapped
+    assert ("ADD CONSTRAINT annotations_color_check CHECK (color IN ({}))".format(
+        ", ".join(f"'{c}'" for c in policy.ANNOTATION_COLORS))) in sql
+    assert policy.ANNOTATION_COLORS[:5] == ("honey", "sage", "sky", "rose", "lilac")  # 026's rows stay valid

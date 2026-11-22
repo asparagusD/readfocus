@@ -191,6 +191,34 @@ export async function mockBackend(page, api, book) {
       }
       return json(route, { annotations: api.annotations });
     }
+    if (path === `/books/${BOOK}/marks`) { // C39.4: ink and text boxes, kept like the server keeps them
+      if (request.method() === 'POST') {
+        const body = request.postDataJSON();
+        api.markPosts.push(body);
+        if (api.markFail) return json(route, { detail: 'Not saved' }, api.markFail);
+        const row = { id: `mark-${api.marks.length + 1}`, ...body };
+        api.marks.push(row);
+        return json(route, row, 201);
+      }
+      const first = Number(url.searchParams.get('first') ?? 1);
+      const last = Number(url.searchParams.get('last') ?? 1e9);
+      api.markLoads.push(`${first}-${last}`);
+      return json(route, { marks: api.marks.filter((m) => m.page >= first && m.page <= last) });
+    }
+    if (path.startsWith('/marks/')) { // C39.5: delete one (C39.6: change one)
+      const id = path.split('/').pop();
+      const row = api.marks.find((m) => m.id === id);
+      if (request.method() === 'DELETE') api.markDeletes.push(id);
+      if (request.method() === 'PATCH') api.markPatches.push({ id, ...request.postDataJSON() });
+      if (api.markFail) return json(route, { detail: 'Not saved' }, api.markFail);
+      if (!row) return json(route, { detail: 'Mark not found' }, 404);
+      if (request.method() === 'DELETE') {
+        api.marks = api.marks.filter((m) => m.id !== id);
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      Object.assign(row, request.postDataJSON());
+      return json(route, row);
+    }
     if (path.startsWith('/annotations/')) { // C21.4: restyle or delete one
       const id = path.split('/').pop();
       const row = api.annotations.find((a) => a.id === id);
@@ -386,7 +414,7 @@ export const test = base.extend({
   api: [async ({ page, signedIn, book }, use, info) => {
     const api = { position: structuredClone(BOOKS[book].place ?? null), saves: 0, starts: 0, opens: 0, processing: null, lookups: [], unmocked: [], fileLoads: 0, fileAsks: 0, regions: [], regionAsks: 0, ocr: new Map(), ocrPosts: [], steveKey: null, steveKeyPuts: [],
       steve: { consented: false, enabled: true, puts: [], asks: [], replies: [], latexAsks: [], latexReplies: [] },
-      regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [],
+      regionDetails: {}, regionAt: {}, regionAtAsks: [], annotations: [], annotationPosts: [], annotationFail: null, annotationPatches: [], annotationDeletes: [], marks: [], markPosts: [], markLoads: [], markDeletes: [], markPatches: [], markFail: null,
       notes: [], notePosts: [], notePatches: [], noteDeletes: [], noteFail: null, noteLists: 0, noteFiles: {}, noteFilePosts: [],
       bodyStart: null, bodyStartPuts: [], bodyStartFail: false,
       focus: { session: null, active: 0, calls: [], events: [] },

@@ -82,14 +82,15 @@ test('tabs: arrows move between Notes and Steve, Esc closes and focus returns to
   await page.keyboard.press('ArrowRight');
   await expect(side(page, 'Steve').getByRole('tab', { name: 'Steve' })).toBeFocused();
   await expect(side(page, 'Steve').getByText('Ask Steve about these pages')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Ask Steve' })).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByRole('button', { name: 'Ask Steve', includeHidden: true })).toHaveAttribute('aria-expanded', 'true');
   await page.keyboard.press('Home');
   await expect(side(page, 'Notes').getByRole('tab', { name: 'Notes' })).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('Tab');
   await expect(side(page, 'Notes').getByRole('button', { name: 'Close notes' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.locator('#rf-side-panel')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Ask Steve' })).toBeFocused(); // the button that opened the panel
+  // The button that opened the panel; More tools when that button is tucked in it (C39.3b).
+  await expect((await page.getByRole('button', { name: 'Ask Steve' }).isVisible()) ? page.getByRole('button', { name: 'Ask Steve' }) : page.getByRole('button', { name: 'More tools' })).toBeFocused();
   await expect(notes).toBeVisible();
 });
 

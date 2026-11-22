@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
 import { useMedia } from './useMedia';
 import './ReaderToolbar.css';
 
-/** The width a group's laid-out children take (those in the flow, not `skip`), with the gaps between them. */
-function contentWidth(group, skip = null) {
+/** The width a group's laid-out children take (those in the flow, not in `skip`), with the gaps between them. */
+function contentWidth(group, skip = []) {
   if (!group) return 0;
-  const kids = [...group.children].filter((el) => el !== skip && el.offsetWidth > 0 && getComputedStyle(el).position !== 'absolute');
+  const kids = [...group.children].filter((el) => !skip.includes(el) && el.offsetWidth > 0 && getComputedStyle(el).position !== 'absolute');
   const gap = parseFloat(getComputedStyle(group).columnGap) || 0;
   return kids.reduce((sum, el) => sum + el.offsetWidth, 0) + gap * Math.max(0, kids.length - 1);
 }
@@ -16,33 +16,42 @@ function contentWidth(group, skip = null) {
 /**
  * C38.7b: whether Look up, Steve, Focus and the session's tools fit in the bar on one row beside everything else,
  * measured (the book's title, its controls and the notes count all change what fits), not guessed from the width.
- * `reading` is their box; its width is kept from when it was last in the bar, so the answer does not flip once they
- * move into More tools.
+ * `boxes` are the movable boxes' refs, the last to leave the bar first (C39.3: the markup tools, then those tools);
+ * each box's width is kept from when it was last in the bar, so the answer does not flip once it moves into More
+ * tools. Returns, for each box, whether it fits (a box fits only when every box before it does).
  */
 const SPARE = 40; // px kept free, so a notes count or a longer chapter name moves the tools before the bar wraps
 
-function useFits(bar, reading) {
-  const [fits, setFits] = useState(true);
-  const width = useRef(0);
-  useEffect(() => {
+function useFits(bar, boxes) {
+  const [fits, setFits] = useState(() => boxes.map(() => true));
+  const widths = useRef(boxes.map(() => 0));
+  // C39.3b: measured once before the first paint too, so a bar mounted afresh (after focus mode) never shows, even for
+  // a frame, tools it has no room for (DEBUG_LOG C39.3b); then on every resize.
+  useLayoutEffect(() => {
     const el = bar.current;
     if (!el || typeof ResizeObserver !== 'function') return undefined;
     const measure = () => {
       const [start, middle, end] = ['.rf-toolbar-start', '.rf-toolbar-middle', '.rf-toolbar-end'].map((s) => el.querySelector(s));
-      const inBar = reading.current?.parentElement === end; // not in More tools, which sits inside the end group
-      if (inBar) width.current = reading.current.offsetWidth;
+      const inBar = boxes.map((box) => box.current?.parentElement === end); // not in More tools, inside the end group
+      boxes.forEach((box, i) => { if (inBar[i]) widths.current[i] = box.current.offsetWidth; });
       const style = getComputedStyle(el);
       const gap = parseFloat(style.columnGap) || 0;
       const room = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 2 * gap;
       const endGap = parseFloat(getComputedStyle(end).columnGap) || 0;
-      const need = contentWidth(start) + contentWidth(middle) + contentWidth(end, inBar ? reading.current : null) + width.current + endGap;
-      setFits(need + SPARE <= room);
+      let need = contentWidth(start) + contentWidth(middle) + contentWidth(end, boxes.filter((_, i) => inBar[i]).map((b) => b.current));
+      const next = boxes.map((box, i) => {
+        if (!box.current && !widths.current[i]) return true; // nothing to place
+        need += widths.current[i] + endGap;
+        return need + SPARE <= room;
+      }).map((ok, i, all) => ok && all.slice(0, i).every(Boolean));
+      setFits((now) => (now.every((v, i) => v === next[i]) ? now : next));
     };
+    measure();
     const watch = new ResizeObserver(measure);
     watch.observe(el);
     for (const group of el.children) watch.observe(group);
     return () => watch.disconnect();
-  }, [bar, reading]);
+  }, [bar, boxes]);
   return fits;
 }
 
@@ -73,18 +82,24 @@ function useFullScreen() {
  * C38.6a: `contentsDocked`: Contents opens a pane beside the pages, not a dialog. C38.7b: Look up, Steve, Focus and the
  * session's tools sit in the bar only when they fit on one row (useFits), else in More tools (was: from 1280 px).
  * C38.8b: `onBookmark`: Save my place (B), before Notes, always in the bar (the desk's ribbon is gone).
+ * C39.3: `markup`: Edge's markup tools (MarkupTools), first in the end group while they fit (they leave the bar after
+ * Look up and the rest), else at the top of More tools; in More tools on a phone.
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
   lookupOn, onLookupToggle, controls, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef, onFocusMode,
-  pinned = false, onPin = null, contentsDocked = false, onBookmark = null, children,
+  pinned = false, onPin = null, contentsDocked = false, onBookmark = null, markup = null, children,
 }) {
   const index = SIZES.indexOf(size);
   const full = useFullScreen();
   const bar = useRef(null);
   const readingBox = useRef(null);
-  const fits = useFits(bar, readingBox);
-  const roomy = useMedia('(min-width: 640px)') && fits; // room in the bar for Look up, Steve, Focus and the session's tools
+  const markupBox = useRef(null);
+  const [boxes] = useState(() => [markupBox, readingBox]); // the markup tools leave the bar last
+  const [markupFits, fits] = useFits(bar, boxes);
+  const wide = useMedia('(min-width: 640px)');
+  const roomy = wide && fits; // room in the bar for Look up, Steve, Focus and the session's tools
+  const markupInBar = wide && markupFits;
   const [more, setMore] = useState(false);
   const moreButton = useRef(null);
   const panel = useRef(null);
@@ -177,6 +192,7 @@ export function ReaderToolbar({
       </div>
 
       <div className="rf-toolbar-end">
+        {markup && markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}</div>}
         {onBookmark && (
           <button type="button" className="rf-tool" onClick={onBookmark} aria-label="Save my place" aria-keyshortcuts="B"
             title="Save my place (B)">
@@ -201,9 +217,11 @@ export function ReaderToolbar({
           onClick={(event) => { // C38.7b: a tool used from the panel (not a switch or toggle) closes it; focus on More
             const tool = event.target.closest('button');
             if (!tool || tool.hasAttribute('aria-pressed') || tool.getAttribute('role') === 'switch') return;
+            if (tool.closest('[data-keeps-more]')) return; // C39.3: a markup tool's menu and colours keep it open
             setMore(false);
             moreButton.current?.focus(); // a dialog the tool opens takes focus after this
           }}>
+          {markup && !markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}</div>}
           {!roomy && reading}
           <ThemeToggle />
           {onPin && (

@@ -55,13 +55,26 @@
   border-radius: var(--radius-pill);
   box-shadow: 0 0 0 var(--border-hair) var(--line-field);
 }
-.rf-seltool-dot[data-colour="honey"] > span { background: var(--dot-honey); }
-.rf-seltool-dot[data-colour="sage"] > span { background: var(--dot-sage); }
-.rf-seltool-dot[data-colour="sky"] > span { background: var(--dot-sky); }
-.rf-seltool-dot[data-colour="rose"] > span { background: var(--dot-rose); }
-.rf-seltool-dot[data-colour="lilac"] > span { background: var(--dot-lilac); }
+.rf-seltool-dot > span { background: var(--c-dot); } /* C39.2: any palette colour (tokens.css) */
+.rf-seltool-dot[data-mark-colour] > span { background: var(--c-mark); } /* C39.4: an ink colour */
 .rf-seltool-dot:hover > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-3); }
 .rf-seltool-dot[data-last] > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-2); } /* what H and U use */
+
+/* C39.2 (issue 23, D3): the dots as one grid, the first five and More colours, the other five lined up under them
+   when it is open; the rest of the bar stays centred beside the grid. */
+.rf-seltool-colours {
+  display: grid;
+  grid-template-columns: repeat(5, auto) auto;
+  align-items: center;
+  gap: var(--space-1);
+}
+.rf-seltool .rf-seltool-more { color: var(--ink-2); } /* the bar's 36 px (44 px by touch), as every button */
+.rf-seltool-more:hover { background: var(--paper-2); }
+.rf-seltool-more > svg { transition: transform var(--dur-2) var(--ease-settle); }
+.rf-seltool-more[aria-expanded="true"] > svg { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) {
+  .rf-seltool-more > svg { transition: none; }
+}
 
 .rf-seltool .rf-seltool-btn { gap: var(--space-2); padding-inline: var(--space-2); font-size: var(--text-ui); font-weight: 500; }
 .rf-seltool-btn:hover:not(:disabled) { background: var(--paper-2); }
@@ -78,8 +91,157 @@
 /* Narrow screens: Ask Steve keeps its name for screen readers and drops the word, so the bar fits 375 px. */
 @media (max-width: 480px) {
   .rf-seltool-label { display: none; }
+  /* C39.2: a bar wider than the screen wraps (the colours, then the tools), inside the 16 px gutters. */
+  .rf-seltool { flex-wrap: wrap; max-inline-size: calc(100vw - 2 * var(--space-4)); }
+  .rf-seltool-sep { display: none; } /* a rule would lead a wrapped row */
 }
 /* Touch: 44 px targets. */
 @media (pointer: coarse) {
   .rf-seltool button { min-inline-size: 44px; block-size: 44px; }
 }
+
+/* C39.7 (issue 23): Edge's right-click menu on a selection, on the same surface as the selection toolbar: a column
+   of items (a colour or line mark, the name, its key), the first five colours in a row under Highlight. */
+.rf-selmenu {
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 14rem;
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line-2);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+}
+.rf-selmenu button { font: inherit; cursor: pointer; }
+.rf-selmenu-item {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 36px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--ink);
+  text-align: start;
+}
+.rf-selmenu-item:hover:not(:disabled), .rf-selmenu-item:focus-visible { background: var(--paper-2); }
+.rf-selmenu-item:focus-visible, .rf-selmenu .rf-seltool-dot:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: -1px; }
+.rf-selmenu-item:disabled { cursor: not-allowed; opacity: 0.45; }
+.rf-selmenu-item kbd { color: var(--ink-3); font: inherit; font-size: var(--text-label); }
+.rf-selmenu-swatch { inline-size: 12px; block-size: 12px; border-radius: var(--radius-pill); }
+.rf-selmenu-swatch[data-colour] { background: var(--c-hl); box-shadow: inset 0 0 0 var(--border-hair) var(--c-ul); }
+.rf-selmenu-swatch--line[data-colour] { block-size: 3px; background: var(--c-ul); box-shadow: none; }
+.rf-selmenu-colours { display: flex; gap: var(--space-1); padding: 0 var(--space-1) var(--space-1) calc(var(--space-2) + 14px); }
+.rf-selmenu .rf-seltool-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+}
+.rf-selmenu .rf-seltool-dot > span {
+  inline-size: 22px;
+  block-size: 22px;
+  border: var(--border-strong) solid var(--surface);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 var(--border-hair) var(--line-field);
+}
+.rf-selmenu .rf-seltool-dot[aria-checked="true"] > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-2); }
+.rf-selmenu-sep { block-size: var(--border-hair); margin: var(--space-1) 0; background: var(--line); }
+@media (pointer: coarse) {
+  .rf-selmenu-item { min-block-size: 44px; }
+  .rf-selmenu .rf-seltool-dot { inline-size: 44px; block-size: 44px; }
+}
+
+/* C39.8 (issue 23, D1): Edge's Add comment: a small panel under the highlight, the comment in the UI face, Cancel and
+   a filled ✓ to save; and the comment's marker in the page's margin with its preview. */
+.rf-comment-editor {
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  inline-size: min(20rem, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-2);
+  border: var(--border-hair) solid var(--line-2);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  font-family: var(--font-ui);
+}
+.rf-comment-field {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: var(--space-2);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-input);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-ui);
+  line-height: 1.4;
+  resize: vertical;
+}
+.rf-comment-field:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
+.rf-comment-actions { display: flex; align-items: center; gap: var(--space-1); }
+.rf-comment-count { margin-inline-start: auto; color: var(--ink-3); font-size: var(--text-label); font-variant-numeric: tabular-nums; }
+.rf-comment-btn {
+  min-block-size: 36px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-ui);
+  font-weight: 500;
+  cursor: pointer;
+}
+.rf-comment-btn:hover { background: var(--paper-2); }
+.rf-comment-btn:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: 1px; }
+.rf-comment-btn--quiet { padding-inline: var(--space-2); color: var(--ink-2); }
+.rf-comment-btn--save { display: inline-grid; place-items: center; min-inline-size: 44px; padding: 0; background: var(--accent); color: var(--accent-ink); }
+.rf-comment-btn--save:hover { background: var(--accent-hover); }
+@media (pointer: coarse) { .rf-comment-btn { min-block-size: 44px; } }
+.rf-comment-marker {
+  position: absolute;
+  z-index: 7; /* with the note markers */
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--accent-text);
+  cursor: pointer;
+  animation: rf-seltool-fade var(--dur-2) var(--ease-settle) both;
+}
+.rf-comment-marker::before { position: absolute; inset: -9px; content: ""; } /* a 44 px target round 26 px */
+.rf-comment-marker:hover { border-color: var(--accent); }
+.rf-comment-marker:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+.rf-comment-preview {
+  position: absolute;
+  z-index: 8;
+  box-sizing: border-box;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-hair) solid var(--line-2);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  color: var(--ink);
+  font: 400 var(--text-ui) / 1.45 var(--font-ui);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.rf-comment-preview p { margin: 0; }
+.rf-comment-preview p + p { margin-top: var(--space-2); }

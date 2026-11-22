@@ -14526,6 +14526,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/ReadAloudBar.jsx",
+      "to": "file:frontend/src/reader/speech.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/ReaderToolbar.jsx",
       "to": "file:frontend/src/components/ThemeToggle.jsx"
     },

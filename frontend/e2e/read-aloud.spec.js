@@ -104,6 +104,31 @@ test('pause, play, next and previous paragraph, and stop', async ({ page }) => {
   await expect(await reveal(page, readAloud(page))).toHaveAttribute('aria-pressed', 'false');
 });
 
+test('Voice options: a voice and a speed are used at once and kept for next time', async ({ page }) => {
+  await openReader(page);
+  await clickTool(page, readAloud(page));
+  await expect.poll(async () => (await said(page)).length).toBeGreaterThan(0);
+  expect((await said(page))[0].voice).toBe('aria'); // the natural English voice first
+
+  await bar(page).getByRole('button', { name: 'Voice options' }).click();
+  await bar(page).getByRole('combobox', { name: 'Voice' }).selectOption('david');
+  await expect.poll(async () => (await lastSaid(page)).voice).toBe('david');
+  const speed = bar(page).getByRole('slider', { name: /Speed/ });
+  await speed.focus();
+  await page.keyboard.press('ArrowRight'); // 1x to 1.25x
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(async () => (await lastSaid(page)).rate).toBe(1.5);
+  await expect(bar(page).locator('.rf-read-aloud-rate')).toHaveText('1.5×');
+  await page.keyboard.press('Escape'); // closes Voice options, focus back on its button
+  await expect(bar(page).getByRole('button', { name: 'Voice options' })).toBeFocused();
+  await expect(bar(page).getByRole('combobox', { name: 'Voice' })).toBeHidden();
+
+  await page.reload();
+  await openReader(page);
+  await clickTool(page, readAloud(page));
+  await expect.poll(async () => (await said(page)).at(0)).toMatchObject({ voice: 'david', rate: 1.5 });
+});
+
 test('it reads on into the next page, and the view follows the words', async ({ page }) => {
   await openReader(page);
   await page.evaluate(() => { window.__wordMs = 15; });

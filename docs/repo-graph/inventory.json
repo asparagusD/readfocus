@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 19729,
+      "size_bytes": 19747,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2345,8 +2345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6492,
-      "size_bytes": 1249975,
+      "lines": 6493,
+      "size_bytes": 1252262,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2873,10 +2873,10 @@
     {
       "path": "frontend/e2e/read-aloud.spec.js",
       "language": "javascript",
-      "lines": 124,
-      "size_bytes": 5914,
+      "lines": 149,
+      "size_bytes": 7286,
       "role": "config",
-      "purpose": "Playwright, mocked API, a fake speechSynthesis (C40.2): Read aloud from the toolbar reads the page in view sentence by sentence and marks each word; pause, play from the word, next and previous paragraph, stop; reads on into the next page with the view following; no Read aloud for an EPUB yet."
+      "purpose": "Playwright, mocked API, a fake speechSynthesis (C40.2): Read aloud from the toolbar reads the page in view sentence by sentence and marks each word; pause, play from the word, next and previous paragraph, stop; reads on into the next page with the view following; no Read aloud for an EPUB yet. C40.2b: Voice options: a voice and a speed used at once and kept after a reload."
     },
     {
       "path": "frontend/e2e/reader.spec.js",
@@ -5481,18 +5481,18 @@
     {
       "path": "frontend/src/reader/ReadAloudBar.css",
       "language": "css",
-      "lines": 45,
-      "size_bytes": 1344,
+      "lines": 87,
+      "size_bytes": 2872,
       "role": "asset",
-      "purpose": "C40.2: the read-aloud bar over the top middle of the book (at the foot of the view below 640 px) and its note."
+      "purpose": "C40.2: the read-aloud bar over the top middle of the book (at the foot of the view below 640 px) and its note. C40.2b: Voice options' panel (above the bar on a phone)."
     },
     {
       "path": "frontend/src/reader/ReadAloudBar.jsx",
       "language": "jsx",
-      "lines": 38,
-      "size_bytes": 1832,
+      "lines": 80,
+      "size_bytes": 4113,
       "role": "asset",
-      "purpose": "C40.2 (issue 24): Edge's read-aloud bar over the book: previous paragraph, play or pause, next paragraph, stop; focus on play when it opens; a note when the voice fails or the book ends."
+      "purpose": "C40.2 (issue 24): Edge's read-aloud bar over the book: previous paragraph, play or pause, next paragraph, stop; focus on play when it opens; a note when the voice fails or the book ends. C40.2b: Voice options, a panel under the bar: the system's voices (natural English first) and the speed, 0.5x to 2x; Escape or a press outside closes it."
     },
     {
       "path": "frontend/src/reader/ReaderToolbar.css",
@@ -6970,7 +6970,7 @@
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
       "lines": 880,
-      "size_bytes": 318750,
+      "size_bytes": 319042,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

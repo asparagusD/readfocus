@@ -4928,6 +4928,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/saveCopy.worker.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/saveCopy.worker.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/speech.js",
       "type": "file",
       "role": "asset",
@@ -14737,6 +14749,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.worker.js",
+      "to": "file:frontend/src/reader/saveCopy.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.worker.test.js",
+      "to": "file:frontend/src/reader/saveCopy.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/speech.js",
       "to": "file:frontend/src/reader/readAloud.js"
     },
@@ -14784,6 +14806,11 @@
       "type": "imports",
       "from": "file:frontend/src/reader/useSaveCopy.js",
       "to": "file:frontend/src/reader/marksMarkdown.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/reader/saveCopy.js"
     },
     {
       "type": "imports",

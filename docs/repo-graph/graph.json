@@ -2804,6 +2804,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/read-aloud.spec.js",
       "type": "file",
       "role": "config",
@@ -11812,6 +11818,16 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/quiz-me.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {

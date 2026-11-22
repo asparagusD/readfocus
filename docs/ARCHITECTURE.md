@@ -325,6 +325,21 @@ its view) and Annotations. Save my place (B) draws a small ribbon by the place
   scrolls on past its end; its pages are counted from its characters (1,500 a
   page) for the page box. `paginator.js` carries three marked ReadFocus changes
   (its README); a fixed-layout EPUB still turns page by page.
+- **Read aloud** (C40, issue 24): the system's voices through the Web Speech API, nothing sent anywhere.
+  `reader/readAloud.js` turns a PDF page's text items (`pdfRuns`, region boxes unread) or an EPUB section's text
+  nodes (`epubRuns`, code, math, figures and tables unread) into sentences that map every spoken character back to
+  its text; `reader/speech.js` speaks one sentence at a time (pause cancels and resumes from the last word);
+  `reader/useReadAloud.js` reads page after page (an EPUB's next section is opened), marks the word with the CSS
+  highlight `rf-read-aloud` in its own document and keeps it in view unless the reader has just scrolled;
+  `ReadAloudBar` is Edge's bar. Ctrl+Shift+U, the toolbar, the focus bar and "Read aloud from here" start it. In
+  focus mode a speaking voice counts as input (FOCUS_RULES F6, 2026-11-22).
+- **Print, Save, Save as** (C40): `reader/saveCopy.js` writes the reader's highlights, underlines and comments
+  (Highlight, Underline with a Popup) and page marks (Ink, FreeText) into a copy of the PDF with pdf-lib, loaded only
+  then, each with its own appearance stream, placed through the inverse of PDF.js's viewport (crop box and
+  /Rotate). `reader/useSaveCopy.js` downloads it (Save, Ctrl+S), writes it where the file picker says (Save as,
+  Ctrl+Shift+S) or prints it from a hidden frame through the browser's PDF viewer (Print, Ctrl+P). An encrypted PDF
+  saves and prints as published; an EPUB saves its highlights as Markdown (`marksMarkdown.js`) and prints the
+  chapter on screen.
 - **The file** comes from a short-lived signed URL (`GET /books/{id}/file`)
   or, for a book kept on this device, from IndexedDB (`reader/fileStore.js`).
 - **The place** (C26.5): the book opens with `GET /books/{id}/open` at the
@@ -432,7 +447,8 @@ that reaches Gemini is `backend/steve/provider.py`; the browser never calls
 Google.
 
 ```
-Ask Steve (panel question, a selection, Explain this equation / code / figure)
+Ask Steve (panel question, a selection, Explain this equation / code / figure; C40: Explain or Summarize a selection,
+Summarize this page)
    └─► POST /steve/ask (routers/steve_ask.py)
          consent at the current notice version? Steve on? no open test or quiz on the book (409)?
          └─► service.ask: cache (book, normalised question, context hash, model) ─► hit: no call
@@ -459,6 +475,9 @@ Ask Steve (panel question, a selection, Explain this equation / code / figure)
   while Steve is on and consented): one Gemini call with a crop of the
   page, cached by file, page and box in `equation_latex` (025), so each
   equation costs at most one call ever.
+- **Summarize** (C40, Copilot's place): `summarize_selection` on a selection; `summarize_page` sends the page's
+  own words (`page_text`, at most 6,000 characters: the server's text is in chunks that span pages), which the one
+  context builder bounds and marks as the selection.
 - Steve never writes a question, grades an answer or scores a session.
 
 ## Focus mode

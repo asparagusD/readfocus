@@ -115,5 +115,6 @@ test('wordAt maps a boundary to the word, with or without its length, from mid-s
   assert.deepEqual(wordAt(sentence, 5, 4), [{ run: 1, start: 0, end: 4 }]);
   assert.deepEqual(wordAt(sentence, 5), [{ run: 1, start: 0, end: 4 }]); // no charLength: to the next space
   assert.deepEqual(wordAt(sentence, 0, 4, 10), [{ run: 2, start: 1, end: 5 }]); // spoken from "now."
+  assert.deepEqual(wordAt(sentence, 0, 0, 10), [{ run: 2, start: 1, end: 4 }]); // no length: "now", its full stop left out, as a voice gives it
   assert.deepEqual(wordAt(sentence, 50), []);
 });

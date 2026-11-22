@@ -92,6 +92,9 @@ export function createSpeaker({ synth, Utterance, onWord = () => {}, onSentence 
     };
     playing = true;
     onSentence({ p: at.p, s: at.s });
+    // The first word is named as the utterance starts, not at its first boundary (a voice sends that a beat later):
+    // a pause in between resumes here, and the mark must say so (DEBUG_LOG C40.4d).
+    onWord({ p: at.p, s: at.s, ranges: wordAt(current, 0, 0, at.from) });
     synth.speak(u);
   }
 

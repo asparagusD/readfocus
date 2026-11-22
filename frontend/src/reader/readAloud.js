@@ -189,6 +189,7 @@ export function wordAt(sentence, charIndex, charLength = 0, from = 0) {
   if (start >= sentence.text.length) return [];
   let end = charLength > 0 ? start + charLength : sentence.text.indexOf(' ', start);
   if (end < 0 || end > sentence.text.length) end = sentence.text.length;
+  if (!(charLength > 0)) while (end > start + 1 && /[.,;:!?"'’”)\]]/.test(sentence.text[end - 1])) end -= 1; // as a voice's own length
   const ranges = [];
   for (let i = start; i < end; i += 1) {
     if (sentence.text[i] === ' ') continue;

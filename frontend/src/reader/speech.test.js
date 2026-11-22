@@ -94,7 +94,20 @@ test('each word boundary names the word in its runs, from a mid-sentence start t
   assert.equal(last().text, 'four.');
   last().onboundary({ name: 'word', charIndex: 0, charLength: 4 });
   last().onboundary({ name: 'sentence', charIndex: 0 }); // not a word: ignored
-  assert.deepEqual(words, [{ p: 0, s: 1, ranges: [{ run: 0, start: 15, end: 19 }] }]);
+  const four = { p: 0, s: 1, ranges: [{ run: 0, start: 15, end: 19 }] };
+  assert.deepEqual(words, [four, four]); // named as the utterance starts, then at its boundary
+});
+
+test('a pause before the next sentence\'s first boundary resumes from the word that is marked (DEBUG_LOG C40.4d)', () => {
+  const { s, words, last } = speaker();
+  s.play(script);
+  last().onboundary({ name: 'word', charIndex: 4, charLength: 4 }); // "two."
+  last().onend(); // "Three four." starts; its voice has not reached its first boundary
+  s.pause();
+  const marked = words.at(-1).ranges[0];
+  s.resume();
+  assert.deepEqual(marked, { run: 0, start: 9, end: 14 }); // "Three", not "two."
+  assert.equal(last().text, 'Three four.');
 });
 
 test('pause remembers the word, resume speaks from it, and a cancelled utterance is ignored', () => {

@@ -2030,3 +2030,17 @@ real print dialog.
 
 Command: `npx playwright test e2e/read-aloud-save-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in
 the standard `npm run test:e2e` too); result in `frontend/test-results/read-aloud-save-benchmarks.json` (ignored).
+
+### C40.8: Save in a worker (2026-11-22)
+
+pdf-lib writes the copy in a module worker (`reader/saveCopy.worker.js`): the same bench, three runs.
+
+| Save a copy | C40.7 (main thread) | C40.8 (worker) |
+|---|---|---|
+| Click to download | 2.41-2.42 s | 2.40 s |
+| Frames meanwhile: fps, worst frame (over 33 ms) | 48.7-49.3 fps, 760-774 ms (2) | 75 fps, 13.6-13.7 ms (0) |
+| The page's JS heap: before, peak, after | 6.8-7.0, 170.1-179.8, 9.8 MB | 7.0, 16.6-19.4, 7.6 MB |
+
+The page no longer stands still while a copy is written. Its heap peak falls because pdf-lib's objects now live in the
+worker, which this CDP measure does not count: the machine still needs about the same memory while saving, for the
+2.4 s it takes, and gives it back when the worker is closed. Print uses the same copy, so it gains the same.

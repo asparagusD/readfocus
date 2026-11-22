@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { useToast } from '../components/ui/toastContext';
 import { chapterFor, marksMarkdown } from './marksMarkdown';
+import { colourTables } from './saveCopy';
 
 const MARK_PAGES = 100; // pages of marks asked for at a time (the API returns at most 5,000 a request)
 
@@ -27,6 +28,43 @@ export function paperColours(doc = document) {
   return { colours, done: () => probe.remove() };
 }
 
+/**
+ * C40.8: saveCopy.markedCopy in a module worker, so the page keeps drawing while pdf-lib writes ({ out, encrypted }).
+ * `bytes` is transferred to it, and an encrypted file comes back untouched. Where the browser has no workers, or the
+ * worker cannot start, it runs here as before, on the file read again (`again()`: the first bytes went to the worker).
+ */
+async function writeCopy(bytes, payload, again) {
+  if (typeof Worker === 'function') {
+    let worker;
+    try {
+      worker = new Worker(new URL('./saveCopy.worker.js', import.meta.url), { type: 'module' });
+      const reply = await new Promise((resolve, reject) => {
+        worker.onmessage = ({ data }) => resolve(data);
+        worker.onerror = (event) => { event.preventDefault?.(); reject(new Error(event.message || 'worker failed')); };
+        worker.postMessage({ bytes, ...payload }, [bytes.buffer]);
+      });
+      if (reply.ok) return { out: reply.out, encrypted: false };
+      if (reply.code === 'encrypted') return { out: reply.bytes, encrypted: true };
+      throw new Error(reply.message);
+    } catch (error) {
+      if (!worker || error?.message !== 'worker failed') throw error; // the copy failed, not the worker
+      console.warn('save a copy: the worker did not start; writing it on the page');
+      bytes = await again();
+    } finally {
+      worker?.terminate();
+    }
+  }
+  const { EncryptedPdfError, markedCopy } = await import('./saveCopy.js');
+  const lookup = (table) => (name) => table[name] ?? '';
+  const { highlight, underline, mark } = payload.colours;
+  try {
+    return { out: await markedCopy(bytes, { ...payload, colours: { highlight: lookup(highlight), underline: lookup(underline), mark: lookup(mark) } }), encrypted: false };
+  } catch (error) {
+    if (error instanceof EncryptedPdfError) return { out: bytes, encrypted: true };
+    throw error;
+  }
+}
+
 /** Hands `blob` to the reader: into the file chosen with Save as, else as a download. */
 async function deliver(blob, name, handle) {
   if (handle) {
@@ -49,7 +87,7 @@ async function deliver(blob, name, handle) {
  * Save as asks where first (the browser's file picker, where it has one: asked before anything else, while the click
  * still counts). An encrypted PDF downloads as published, with a note. `reader` is the Reader's ref.
  * C40.4d: an EPUB reflows, so its copy is its highlights and comments as Markdown (marksMarkdown.js), chapter by chapter.
- * C40.5: `print()` too (below).
+ * C40.5: `print()` too (below). C40.8: pdf-lib writes the copy in a worker (writeCopy), so the page keeps drawing.
  */
 export function useSaveCopy({ bookId, kind, title, reader, annotations, pageCount }) {
   const { toast } = useToast();
@@ -66,16 +104,17 @@ export function useSaveCopy({ bookId, kind, title, reader, annotations, pageCoun
         const data = await fetchApi(`/books/${bookId}/marks?first=${first}&last=${first + MARK_PAGES - 1}`);
         marks.push(...(data?.marks ?? []));
       }
-      const bytes = await reader.current?.fileBytes();
-      if (!bytes) throw new Error('The book is not open yet.');
-      const { EncryptedPdfError, markedCopy } = await import('./saveCopy.js');
-      try {
-        return { out: await markedCopy(bytes, { annotations: annotations ?? [], marks, colours: probe.colours }), marked: true };
-      } catch (error) {
-        if (!(error instanceof EncryptedPdfError)) throw error;
-        toast({ kind: 'warning', message: `This PDF is locked against changes, so the ${use === 'print' ? 'print' : 'copy'} is the book as published, without your marks.` });
-        return { out: bytes, marked: false };
-      }
+      const read = async () => {
+        const bytes = await reader.current?.fileBytes();
+        if (!bytes) throw new Error('The book is not open yet.');
+        return bytes;
+      };
+      const list = annotations ?? [];
+      const { out, encrypted } = await writeCopy(await read(), { annotations: list, marks,
+        colours: colourTables(probe.colours, list, marks) }, read);
+      if (!encrypted) return { out, marked: true };
+      toast({ kind: 'warning', message: `This PDF is locked against changes, so the ${use === 'print' ? 'print' : 'copy'} is the book as published, without your marks.` });
+      return { out, marked: false };
     } finally {
       probe.done();
     }

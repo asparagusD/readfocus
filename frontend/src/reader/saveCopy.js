@@ -52,6 +52,20 @@ export function rgbOf(colour) {
   return [0.5, 0.5, 0.5];
 }
 
+/**
+ * C40.8: the colours the marks use as plain tables { highlight, underline, mark } (name -> CSS colour), resolved on the
+ * page through `colours` (it reads CSS tokens) for the worker, which has no CSS.
+ */
+export function colourTables(colours, annotations, marks) {
+  const table = (names, of) => Object.fromEntries([...new Set(names)].map((name) => [name, of(name)]));
+  const used = (annotations ?? []).map((a) => a.color).filter(Boolean);
+  return {
+    highlight: table(used, colours.highlight),
+    underline: table(used, colours.underline),
+    mark: table((marks ?? []).map((m) => m.color).filter(Boolean), colours.mark),
+  };
+}
+
 /** The PDF anchors of the annotations, page by page: [{ annotation, anchor, first }] (`first`: carries the comment). */
 export function pdfMarks(annotations, pageCount) {
   return (annotations ?? []).flatMap((annotation) => (annotation.anchors ?? [])

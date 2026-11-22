@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 1032,
-    "inventoried": 889,
+    "tracked": 1034,
+    "inventoried": 891,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 20067,
+      "size_bytes": 20084,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2289,8 +2289,8 @@
     {
       "path": "docs/BENCHMARKS.md",
       "language": "markdown",
-      "lines": 2032,
-      "size_bytes": 119377,
+      "lines": 2046,
+      "size_bytes": 120212,
       "role": "doc",
       "purpose": "Measured numbers with the command, machine and date for each, headed by an end-of-sprint summary and the C15 live journey and isolation runs (C15.4); measured numbers with the command, machine and date for each: backend idle memory before and after C3.4, the C4.1 embedding model memory and latency with Gate G2, the C4.4 yake and rapidfuzz memory, the C4.6 ingestion and backfill times, and the C3.5 API baseline with its caveats; C25.2: the phase-2 deployment check (image size, idle and peak memory at 512 MB with Steve, the arena fix, the import breakdown, bundle sizes)."
     },
@@ -2361,8 +2361,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6505,
-      "size_bytes": 1269894,
+      "lines": 6507,
+      "size_bytes": 1272343,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2898,9 +2898,9 @@
       "path": "frontend/e2e/read-aloud-save-frame-rate.spec.js",
       "language": "javascript",
       "lines": 165,
-      "size_bytes": 7966,
+      "size_bytes": 8010,
       "role": "config",
-      "purpose": "Playwright frame-rate project (C40.7): on C39.9's marked 300-page PDF, read aloud's frame rate at 1x and 4x CPU while the view follows a fake voice, the page it reads on to and the heap; Save's time, frames, heap peak and copy size; results in test-results/read-aloud-save-benchmarks.json (docs/BENCHMARKS.md)."
+      "purpose": "Playwright frame-rate project (C40.7): on C39.9's marked 300-page PDF, read aloud's frame rate at 1x and 4x CPU while the view follows a fake voice, the page it reads on to and the heap; Save's time, frames, heap peak and copy size; results in test-results/read-aloud-save-benchmarks.json (docs/BENCHMARKS.md). C40.8: Save's frames with pdf-lib in a worker."
     },
     {
       "path": "frontend/e2e/read-aloud.spec.js",
@@ -5713,10 +5713,10 @@
     {
       "path": "frontend/src/reader/saveCopy.js",
       "language": "javascript",
-      "lines": 193,
-      "size_bytes": 10414,
+      "lines": 207,
+      "size_bytes": 11056,
       "role": "asset",
-      "purpose": "C40.4 (issue 24, D2): a copy of a PDF with the reader's highlights, underlines and comments as real annotations (pdf-lib, imported only when a copy is made): userMatrix inverts PDF.js's viewport (crop box and /Rotate), quadPoints and rectAround in user space, rgbOf, pdfMarks; markedCopy writes Highlight and Underline annotations with their own appearance streams (a highlight multiplies), a comment as Contents with a Popup, keeps the file's own annotations, refuses an encrypted file (EncryptedPdfError). C40.4b: page marks too: ink strokes as Ink annotations drawn as the reader drew them (ink.strokePath's outline), text boxes as FreeText in Helvetica (wrapLines; characters it cannot draw shown as ?, the text kept whole in Contents); drawnMarks."
+      "purpose": "C40.4 (issue 24, D2): a copy of a PDF with the reader's highlights, underlines and comments as real annotations (pdf-lib, imported only when a copy is made): userMatrix inverts PDF.js's viewport (crop box and /Rotate), quadPoints and rectAround in user space, rgbOf, pdfMarks; markedCopy writes Highlight and Underline annotations with their own appearance streams (a highlight multiplies), a comment as Contents with a Popup, keeps the file's own annotations, refuses an encrypted file (EncryptedPdfError). C40.4b: page marks too: ink strokes as Ink annotations drawn as the reader drew them (ink.strokePath's outline), text boxes as FreeText in Helvetica (wrapLines; characters it cannot draw shown as ?, the text kept whole in Contents); drawnMarks. C40.8: colourTables (the colours the marks use, as plain tables for the worker)."
     },
     {
       "path": "frontend/src/reader/saveCopy.test.js",
@@ -5725,6 +5725,22 @@
       "size_bytes": 8859,
       "role": "asset",
       "purpose": "Unit tests for saveCopy: userMatrix against PDF.js's own viewport at every rotation of a cropped page, QuadPoints order, colours, which anchors are written, the annotations read back through pdf-lib and PDF.js (a comment's popup, a turned page), existing annotations kept, an encrypted file refused. C40.4b: wrapping, which marks are drawn, Ink and FreeText read back through PDF.js."
+    },
+    {
+      "path": "frontend/src/reader/saveCopy.worker.js",
+      "language": "javascript",
+      "lines": 24,
+      "size_bytes": 1319,
+      "role": "asset",
+      "purpose": "C40.8: the module worker that writes a copy with my marks (saveCopy.markedCopy) off the page: bytes in and the copy out transferred, colours as plain tables; answers ok with the copy, encrypted with the file untouched, or failed with why."
+    },
+    {
+      "path": "frontend/src/reader/saveCopy.worker.test.js",
+      "language": "javascript",
+      "lines": 51,
+      "size_bytes": 2964,
+      "role": "asset",
+      "purpose": "Unit tests for the save worker under Node (a stand-in `self`): the colour tables, the copy written and transferred back, an encrypted file handed back untouched, a failure reported."
     },
     {
       "path": "frontend/src/reader/speech.js",
@@ -5793,10 +5809,10 @@
     {
       "path": "frontend/src/reader/useSaveCopy.js",
       "language": "javascript",
-      "lines": 181,
-      "size_bytes": 8287,
+      "lines": 220,
+      "size_bytes": 10271,
       "role": "asset",
-      "purpose": "C40.4c (issue 24, D2): Save and Save as a copy with my marks: the file picker asked first for Save as (while the click counts), every page mark fetched 100 pages at a time, the PDF's bytes from the reader, Paper's colours read from the tokens (paperColours), saveCopy.markedCopy imported only now, the copy downloaded or written to the file chosen; an encrypted PDF downloads as published with a note; a toast says what was saved. copyName. C40.4d: an EPUB's copy is its highlights and comments as Markdown (marksMarkdown, chapters from the contents, page labels from the reader), saved as \"<title> (my highlights).md\". C40.5: print(): a PDF prints the copy with my marks from a hidden frame (the browser's PDF viewer; else it opens in a new tab), an EPUB prints the chapter on screen; the marked copy is built once for Save and Print (pdfCopy)."
+      "purpose": "C40.4c (issue 24, D2): Save and Save as a copy with my marks: the file picker asked first for Save as (while the click counts), every page mark fetched 100 pages at a time, the PDF's bytes from the reader, Paper's colours read from the tokens (paperColours), saveCopy.markedCopy imported only now, the copy downloaded or written to the file chosen; an encrypted PDF downloads as published with a note; a toast says what was saved. copyName. C40.4d: an EPUB's copy is its highlights and comments as Markdown (marksMarkdown, chapters from the contents, page labels from the reader), saved as \"<title> (my highlights).md\". C40.5: print(): a PDF prints the copy with my marks from a hidden frame (the browser's PDF viewer; else it opens in a new tab), an EPUB prints the chapter on screen; the marked copy is built once for Save and Print (pdfCopy). C40.8: writeCopy runs saveCopy.markedCopy in a module worker (bytes transferred, colours resolved here by colourTables), on the page only where a worker cannot start."
     },
     {
       "path": "frontend/src/reader/useWordAtPoint.js",
@@ -7057,8 +7073,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 891,
-      "size_bytes": 326927,
+      "lines": 893,
+      "size_bytes": 327742,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

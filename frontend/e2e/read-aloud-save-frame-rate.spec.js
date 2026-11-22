@@ -1,8 +1,8 @@
 // C40.7 (issue 24): read aloud and Save on C39.9's marked book (a 300-page PDF from bigPdf.js, 1,500 marks: four
 // 150-point strokes and a text box a page; 300 highlights, a comment on every tenth). Read aloud: a fake voice speaks
 // a word every 5 ms while the view follows it; the frame rate at 1x and 4x CPU, the pages it read on into, the JS
-// heap. Save: click to download, the frames the page drew meanwhile (pdf-lib works on the main thread), the heap's
-// peak and the copy's size. Results in test-results/read-aloud-save-benchmarks.json (recorded in docs/BENCHMARKS.md).
+// heap. Save: click to download, the frames the page drew meanwhile (pdf-lib works in a worker since C40.8), the page's
+// heap peak (the worker's own is not counted) and the copy's size. Results in test-results/read-aloud-save-benchmarks.json (recorded in docs/BENCHMARKS.md).
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { test, expect, openReader, clickTool } from './fixtures.js';

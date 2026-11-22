@@ -2798,6 +2798,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/selection-menu.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/shell.spec.js",
       "type": "file",
       "role": "config",
@@ -11683,6 +11689,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/selection-menu.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/shell.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -13120,6 +13131,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/annotations/AnnotationChip.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/annotations/SelectionMenu.jsx"
     },
     {
       "type": "imports",

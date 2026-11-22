@@ -3,7 +3,8 @@ import { prefersReducedMotion } from '../motion/presets';
 import { Button } from '../components/ui/Button';
 import { BookLookup } from './BookLookup';
 import { SelectionToolbar } from '../annotations/SelectionToolbar';
-import { useSelection } from '../annotations/useSelection';
+import { selectionPlace, useSelection } from '../annotations/useSelection';
+import { SelectionMenu } from '../annotations/SelectionMenu';
 import { newAnnotation } from '../annotations/palette';
 import { AnnotationChip } from '../annotations/AnnotationChip';
 import { useAnnotationChip } from '../annotations/useAnnotationChip';
@@ -154,6 +155,39 @@ export function Reader({
   });
   // C39.3 (issue 23): with Edge's highlighter on (`markup`), a settled selection is highlighted at once in its colour,
   // and cleared, so the next drag starts fresh; no selection toolbar.
+  // C39.7 (issue 23): Edge's right-click menu on a selection ({ place, x, y }). A right-click on selected words opens it
+  // at the pointer (not with Shift, nor by touch: those keep the platform's menu); the menu key or Shift+F10 opens it at
+  // the selection's end. With no selection the browser's own menu stays.
+  const [menu, setMenu] = useState(null);
+  const openMenu = useCallback((x, y) => {
+    const found = onAnnotate && selectionPlace(book, skipAt);
+    if (!found) return false;
+    if (x == null) {
+      const end = [...found.range.getClientRects()].at(-1);
+      const frame = found.doc.defaultView?.frameElement?.getBoundingClientRect();
+      x = (end?.right ?? 0) + (frame?.left ?? 0);
+      y = (end?.bottom ?? 0) + (frame?.top ?? 0);
+    }
+    lookup.current?.clear(); // a word card open under the pointer gives way to the menu
+    setMenu({ place: found, x, y });
+    return true;
+  }, [onAnnotate, skipAt]);
+  useEffect(() => {
+    const listeners = selectionDocs.map((doc) => {
+      const onMenu = (event) => {
+        if (event.shiftKey || event.pointerType === 'touch' || markup?.tool) return;
+        const frame = doc.defaultView?.frameElement?.getBoundingClientRect();
+        if (openMenu(event.clientX + (frame?.left ?? 0), event.clientY + (frame?.top ?? 0))) event.preventDefault();
+      };
+      doc.addEventListener('contextmenu', onMenu);
+      return () => doc.removeEventListener('contextmenu', onMenu);
+    });
+    return () => listeners.forEach((off) => off());
+  }, [selectionDocs, openMenu, markup?.tool]);
+  const closeMenu = useCallback((toBook) => {
+    setMenu(null);
+    if (toBook) stage.current?.focus();
+  }, []);
   const highlighting = markup?.tool === 'highlight';
   useEffect(() => {
     if (!highlighting || !selected) return;
@@ -210,6 +244,10 @@ export function Reader({
       event.preventDefault();
       return;
     }
+    if ((event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey)) && !markup?.tool && openMenu()) {
+      event.preventDefault(); // C39.7: the selection's menu by keyboard
+      return;
+    }
     if (onAnnotate && toolbar.current?.onKey(event)) return;
     if (onNewNote && (event.key === 'n' || event.key === 'N') && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault(); // C22.4: a new note at the selection, else the pages shown
@@ -246,7 +284,7 @@ export function Reader({
     if (!action || (action === 'ribbon' && !onBookmark)) return;
     event.preventDefault();
     act(action);
-  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip, onNewNote, kind, bookBox, markup, textBoxes, place]);
+  }, [act, onBookmark, lookupClient, onAnnotate, dismissSelection, chipActive, selected, cycleChip, closeChip, onNewNote, kind, bookBox, markup, textBoxes, place, openMenu]);
 
   const onKeyRef = useRef(null);
   const swipeStart = useRef(null);
@@ -410,12 +448,16 @@ export function Reader({
       </div>
       {lookupClient && (
         <BookLookup ref={lookup} surfaces={surfaces} client={lookupClient} hover={hoverLookup} returnFocusTo={stage}
-          paused={!place || opening || Boolean(failure)}
+          paused={!place || opening || Boolean(failure) || Boolean(menu)} /* C39.7: no word card over the menu */
           page={place ? `${spot(placeStart(place))}-${spot(placeEnd(place))}` : ''} />
       )}
       {onAnnotate && (
         // C21.2: colours, underline and Ask Steve over a selection.
-        <SelectionToolbar ref={toolbar} place={highlighting ? null : selected} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
+        <SelectionToolbar ref={toolbar} place={highlighting || menu ? null : selected} onAnnotate={onAnnotate} onNote={onNewNote} onDismiss={dismissSelection} returnFocusTo={stage} />
+      )}
+      {onAnnotate && (
+        <SelectionMenu menu={menu} onClose={closeMenu} onAnnotate={onAnnotate} onNote={onNewNote}
+          onLookUp={lookupClient ? () => lookup.current?.lookUpSelection() : null} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}

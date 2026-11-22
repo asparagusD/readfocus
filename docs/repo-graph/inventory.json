@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 20084,
+      "size_bytes": 20101,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2362,7 +2362,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 6507,
-      "size_bytes": 1272343,
+      "size_bytes": 1272571,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },

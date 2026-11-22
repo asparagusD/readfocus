@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 1021,
-    "inventoried": 878,
+    "tracked": 1023,
+    "inventoried": 880,
     "excluded": 143
   },
   "files": [
@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 19819,
+      "size_bytes": 19837,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2345,8 +2345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6496,
-      "size_bytes": 1256706,
+      "lines": 6497,
+      "size_bytes": 1258481,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3041,8 +3041,8 @@
     {
       "path": "frontend/package.json",
       "language": "json",
-      "lines": 73,
-      "size_bytes": 2460,
+      "lines": 74,
+      "size_bytes": 2485,
       "role": "config",
       "purpose": "Frontend dependencies and scripts (dev, build, lint, preview, check:contrast, check:images, test:unit with Node's built-in test runner over src/**/*.test.js); Tailwind v4 through @tailwindcss/vite; Playfair Display, Lora and DM Sans through @fontsource-variable; Motion (motion/react) for animation; C25.3: test:live:phase2 and test:phase2-isolation."
     },
@@ -5647,6 +5647,22 @@
       "purpose": "Unit tests for readAloud: line joining, paragraph starts, hyphen joins, region and element skips, whitespace, sentence and long-sentence cuts, the character map, locate and wordAt."
     },
     {
+      "path": "frontend/src/reader/saveCopy.js",
+      "language": "javascript",
+      "lines": 118,
+      "size_bytes": 6242,
+      "role": "asset",
+      "purpose": "C40.4 (issue 24, D2): a copy of a PDF with the reader's highlights, underlines and comments as real annotations (pdf-lib, imported only when a copy is made): userMatrix inverts PDF.js's viewport (crop box and /Rotate), quadPoints and rectAround in user space, rgbOf, pdfMarks; markedCopy writes Highlight and Underline annotations with their own appearance streams (a highlight multiplies), a comment as Contents with a Popup, keeps the file's own annotations, refuses an encrypted file (EncryptedPdfError)."
+    },
+    {
+      "path": "frontend/src/reader/saveCopy.test.js",
+      "language": "javascript",
+      "lines": 108,
+      "size_bytes": 6286,
+      "role": "asset",
+      "purpose": "Unit tests for saveCopy: userMatrix against PDF.js's own viewport at every rotation of a cropped page, QuadPoints order, colours, which anchors are written, the annotations read back through pdf-lib and PDF.js (a comment's popup, a turned page), existing annotations kept, an encrypted file refused."
+    },
+    {
       "path": "frontend/src/reader/speech.js",
       "language": "javascript",
       "lines": 123,
@@ -6969,8 +6985,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 880,
-      "size_bytes": 320713,
+      "lines": 882,
+      "size_bytes": 321606,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

@@ -13,6 +13,10 @@ citations map {label: anchor} for every page or section that was sent, so the pa
 4. the top-k passages from the whole book through the hybrid retriever, minus the chunks 2 and 3 already hold;
 5. an optional region (an equation's source, exact code, a figure's caption) and image.
 
+C40.6 (issue 24): "Summarize this page" sends the page's own words (`page_text`, the reader's view of it, as a
+selection is): they stand in for the selection, cut to policy.PAGE_SELECTION_MAX_TOKENS, labelled and cited by the
+anchor's page or section, and marked verified when their opening is found in the book's text there.
+
 Everything is trimmed to policy.CONTEXT_MAX_TOKENS with a conservative token estimate; retrieved passages go
 first, then the reading text's older part; the question, the selection and the region are never cut. Never the whole
 book, never another reader's book, no user id or email. Book text cannot close the section it sits in.
@@ -306,6 +310,22 @@ def _highlight(book_id: str, anchor: dict) -> Highlight:
     return Highlight(label, _safe(_fit(selection, 300)), _safe(paragraph), True, cites)
 
 
+def _page(book_id: str, anchor: dict, page_text: str) -> Highlight:
+    """C40.6: a page's words as the selection (no surrounding paragraph: the page is its own context)."""
+    text = _norm(page_text)
+    opening = text[:120]
+    chunk = _chunk_for_anchor(_chunks_near(book_id, anchor), {**anchor, "text": opening})
+    if anchor.get("kind") == "pdf" and anchor.get("page"):
+        label, cites = f"p. {anchor['page']}", {f"p. {anchor['page']}": {"kind": "pdf", "page": anchor["page"]}}
+    elif anchor.get("kind") == "epub" and _spine_of_cfi(anchor.get("cfi", "")) is not None:
+        spine = _spine_of_cfi(anchor["cfi"])
+        label, cites = f"sec. {spine + 1}", {f"sec. {spine + 1}": {"kind": "epub", "spine_index": spine, "cfi": anchor["cfi"]}}
+    else:
+        label, cites = "the reader's page", {}
+    verified = chunk is not None and _find(_prose(chunk), opening) >= 0
+    return Highlight(label, _safe(_fit(text, policy.PAGE_SELECTION_MAX_TOKENS)), "", verified, cites)
+
+
 async def _retrieved(book_id: str, query: str, skip: set, budget: int) -> list[Passage]:
     found = await retriever.search(query, book_id, k=policy.RETRIEVE_CANDIDATES)
     order = [r["chunk_index"] for r in found if r["chunk_index"] not in skip][:policy.RETRIEVE_K]
@@ -407,7 +427,7 @@ def _image(image: dict | None) -> dict | None:
 
 
 async def build_context(*, user_id: str, book_id: str, question: str, anchor: dict | None = None,
-                        image: dict | None = None, region_id: str | None = None) -> Context:
+                        image: dict | None = None, region_id: str | None = None, page_text: str | None = None) -> Context:
     """Steve's grounded context for one question (see the module docstring). Raises ContextError."""
     question = _norm(question)
     if not question:
@@ -419,7 +439,10 @@ async def build_context(*, user_id: str, book_id: str, question: str, anchor: di
     question_part = f"<question>\n{_safe(question)}\n</question>"
     card = _book_card(loaded["book"])
     region = await asyncio.to_thread(_region, loaded["region"], book_id) if loaded["region"] else None
-    highlight = await asyncio.to_thread(_highlight, book_id, anchor) if anchor else None
+    if anchor and page_text:
+        highlight = await asyncio.to_thread(_page, book_id, anchor, page_text)
+    else:
+        highlight = await asyncio.to_thread(_highlight, book_id, anchor) if anchor else None
     image_tokens = policy.IMAGE_TOKENS if image_part else 0
     fixed = (estimate_tokens(_render(card, [], highlight, [], region)) + estimate_tokens(question_part)
              + image_tokens)

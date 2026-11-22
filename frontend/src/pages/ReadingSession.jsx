@@ -16,6 +16,8 @@ import { createOcrSource } from '../originalview/pdf/ocr';
 import { folioShort } from '../originalview/place';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
+import { readAloudSupported } from '../reader/useReadAloud';
+import { useSaveCopy } from '../reader/useSaveCopy';
 import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
 import { useMedia } from '../reader/useMedia';
@@ -26,7 +28,7 @@ import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { ReadingLamp } from '../illustrations';
 import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
-import { useSteve } from '../steve/useSteve';
+import { PAGE_TEXT_MAX, useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
 import { useMarkupTool } from '../annotations/useMarkupTool';
 import { usePageMarks } from '../annotations/usePageMarks';
@@ -89,6 +91,9 @@ export function ReadingSession() {
   const [zoom, setZoom] = useStored('rf-pdf-zoom', 'fit-page');
   const [pageView, setPageView] = useStored('rf-pdf-view', 'one'); // C38.4a: Edge's Page view, on this device
   const [pinned, setPinned] = useStored('rf-toolbar-pinned', true); // C38.4b: Edge's toolbar is pinned until unpinned
+  const [readingAloud, setReadingAloud] = useState(false); // C40.2: the reader is reading aloud
+  const [listening, setListening] = useState(false); // C40.3b: the voice is speaking (focus mode counts it as reading)
+  const onReadAloud = useCallback((open, speaking) => { setReadingAloud(open); setListening(Boolean(open && speaking)); }, []);
   const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
   // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
@@ -194,7 +199,7 @@ export function ReadingSession() {
     setStanding(true);
   }, [sessionData, kind]);
 
-  const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
+  const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly, listening });
   const inFocus = !pagesOnly && focus.enabled;
   const markup = useMarkupTool(kind, !inFocus); // C39.3: Edge's markup tools; off while focus mode has the toolbar
   const pageMarks = usePageMarks(bookId, kind, place?.kind === 'pdf' ? place.pages : null); // C39.4: ink near the view
@@ -550,6 +555,18 @@ export function ReadingSession() {
     },
     enabled: steveOn,
   }), [askSteve, steveOn]);
+  // C40.6 (issue 24): Copilot's "Summarize this page": the page most in view (an EPUB's words in view), its words sent as
+  // the selection is, at most PAGE_TEXT_MAX characters.
+  const summarizePage = async () => {
+    const page = await reader.current?.pageWords();
+    const text = (page?.text ?? '').replace(/\s+/g, ' ').trim().slice(0, PAGE_TEXT_MAX);
+    if (!text) {
+      toast({ kind: 'neutral', message: 'This page has no words for Steve to summarize.' });
+      return;
+    }
+    steveActions.askAbout({ question: 'Summarize this page.', mode: 'summarize_page', anchor: page.anchor, pageText: text,
+      label: `Summarize ${page.label}` });
+  };
   const onLookupToggle = () => {
     storeLookupOn(user?.id, !hoverLookup);
     setSwitched({ userId: user?.id, on: !hoverLookup });
@@ -591,6 +608,10 @@ export function ReadingSession() {
     </div>
   );
 
+  // C40.4c: Save and Save as a copy with my marks (a PDF; C40.4d: an EPUB's highlights as Markdown), from the toolbar
+  // or Ctrl+S and Ctrl+Shift+S.
+  const saveCopy = useSaveCopy({ bookId, kind, title: sessionData?.book?.title, reader, annotations: notes.annotations, pageCount: place?.total ?? 0 });
+
   if (loading) return preparing;
 
   const bookTitle = sessionData.book?.title || 'Your book';
@@ -627,7 +648,8 @@ export function ReadingSession() {
             placing={placingRibbon} readOnly={focus.readOnly} folio={place?.folio ?? null}
             onNotes={() => openNotebook()} notesOpen={notebookOpen} notesRef={notesButton}
             notesCount={notepad.notes.length} onSteve={steveHere ? () => toggleSide('steve', steveButton) : undefined}
-            steveOpen={steveOpen} steveRef={steveButton} />
+            steveOpen={steveOpen} steveRef={steveButton}
+            onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null} readingAloud={readingAloud} />
         ) : (
         <ReaderToolbar
           bookTitle={bookTitle}
@@ -652,6 +674,11 @@ export function ReadingSession() {
               onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} text={markup.textStyle}
               onText={restyleText} status={markup.status} />
           )}
+          onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null}
+          readingAloud={readingAloud}
+          file={{ onSave: saveCopy.save, busy: saveCopy.busy, canPick: saveCopy.canPick,
+            hint: kind === 'epub' ? 'Save my highlights as Markdown' : 'Save a copy with my marks',
+            onPrint: saveCopy.print, printHint: kind === 'epub' ? 'Print this chapter' : 'Print with my marks' }}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -732,6 +759,9 @@ export function ReadingSession() {
           onAnnotationNote={noteOnHighlight}
           contents={sessionData.book?.toc}
           start={sessionData.position?.anchor}
+          onReadAloud={onReadAloud}
+          onSaveCopy={saveCopy.save}
+          onPrint={saveCopy.print}
         />
       </m.main>
       {shownSide && (
@@ -747,7 +777,8 @@ export function ReadingSession() {
           beside={notebookOpen}
         >
           {shownSide === 'steve' ? (
-            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer} />
+            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer}
+              onSummarizePage={summarizePage} />
           ) : (
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
               onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}

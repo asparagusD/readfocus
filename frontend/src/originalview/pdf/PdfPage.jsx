@@ -38,7 +38,11 @@ export function PdfPage({ cache, pageNumber, label, onShown, side = 'single', oc
       sheet.current.replaceChildren(canvas);
       text.current.replaceChildren();
       layer = new pdfjs.TextLayer({ textContentSource: textContent, container: text.current, viewport });
-      return layer.render().then(() => !gone && shown.current?.(pageNumber));
+      return layer.render().then(() => {
+        if (gone) return;
+        layer.textDivs.forEach((el, i) => { el.dataset.item = i; }); // C40.2: read aloud finds a word's span by its item
+        shown.current?.(pageNumber);
+      });
     }).catch((error) => {
       if (!gone && error?.name !== 'AbortException') console.warn(`PDF page ${pageNumber} failed`, error);
     });

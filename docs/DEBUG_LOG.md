@@ -5993,3 +5993,78 @@ None.
 
 ### Commit
 feat(ui): move and restyle a text box
+
+## 2026-11-22 C40.4d — read aloud's pause test resumes from another word, once in a full run
+
+**Status:** fixed
+
+### Symptom
+The full e2e run for C40.4d (`npm --prefix frontend run test:e2e`, 436 tests, 18.2 min) failed one test that passed in
+every run since C40.2a; nothing in C40.4d touches read aloud. Playing again after a pause did not start from the
+word marked when it paused:
+
+      1) [e2e] › e2eead-aloud.spec.js:79:1 › pause, play, next and previous paragraph, and stop
+
+        Error: expect(received).toBe(expected) // Object.is equality
+
+        Expected: true
+        Received: false
+
+        Call Log:
+        - Timeout 5000ms exceeded while waiting on the predicate
+
+          90 |
+          91 |   await bar(page).getByRole('button', { name: 'Play' }).click();
+        > 92 |   await expect.poll(async () => (await lastSaid(page)).text.startsWith(held)).toBe(true); // again from the word it stopped on
+             |                                                                               ^
+          93 |
+          94 |   const before = (await lastSaid(page)).text;
+          95 |   await bar(page).getByRole('button', { name: 'Next paragraph' }).click();
+            at I:\readfocus\frontend\e2e\read-aloud.spec.js:92:79
+
+      1 failed
+      435 passed (18.2m)
+
+### Repro
+Not every time: `npx playwright test e2e/read-aloud.spec.js -g "pause, play" --repeat-each=30` in `frontend/`: 30
+passed (1.6 min). Once in four full runs (C40.2b-C40.4d). A deterministic repro at the speaker's level is step 5's.
+
+### Hypotheses
+1. The pause lands between two sentences: the last sentence ended and the next one's utterance began, but its first
+   word boundary has not come yet. The mark still shows the last word of the sentence before (`held`), while play
+   resumes from the new sentence's start (`speech.js` resumes from `from + spoken`, and `spoken` is 0). Evidence: the
+   fake voice sends a sentence's first boundary a timer tick after `speak`; a real voice also starts a beat before
+   its first boundary. Ruled out if: a pause in that gap resumes from the marked word. Result: (below)
+2. A boundary of the cancelled utterance lands after the pause and moves the mark. Evidence: none; the speaker
+   ignores a cancelled utterance's events by token. Ruled out if: the speaker test "a cancelled utterance is ignored"
+   holds. Result: (below)
+3. Load on the machine during the full run (18 min, 436 tests) slows the page so the click lands late. Evidence: it
+   passes alone. Ruled out if: hypothesis 1 reproduces deterministically.
+
+### Hypothesis results (step 5)
+1. Confirmed, deterministically, with a throwaway script over `speech.js` (no code changed): play "One two. Three
+   four.", a boundary on "two.", the first sentence's end (the second begins, no boundary yet), pause, resume. The
+   last word named was "two."; the utterance resumed was "Three four.".
+2. Not needed: 1 explains it. 3: the gap is a timer tick in the fake voice, so it is hit only now and then, more often
+   under the load of a full run.
+
+### Root cause
+`frontend/src/reader/speech.js` (`speak`) named a word only when the voice sent its boundary, never as an utterance
+started. Between one sentence's end and the next one's first boundary the mark stayed on the old sentence's last word,
+while a pause there resumes from the new sentence's start. The reader would see the wrong word marked, and play
+"resume" somewhere else.
+
+### Fix
+`speak` names the utterance's first word as it starts (then its boundary names it again). `readAloud.wordAt` without a
+voice's length now stops before trailing punctuation, as voices' own lengths do, so both name the same word ("four",
+not "four."). The test is unchanged.
+
+### Regression test
+`frontend/src/reader/speech.test.js`: "a pause before the next sentence's first boundary resumes from the word that is
+marked"; with "each word boundary names the word..." (now two names: at the start and at the boundary) and
+`readAloud.test.js` "wordAt maps a boundary..." (+1 case without a length). With `speech.js` and `readAloud.js`
+stashed: 3 failed, 19 passed. With the fix: 22 passed. The e2e test that showed it passes 30 of 30 alone before and
+after (it cannot hit the gap on demand).
+
+### Commit
+fix(ui): mark a sentence's first word as it starts to be read

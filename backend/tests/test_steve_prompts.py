@@ -50,6 +50,8 @@ MODES = {
     "latex_equation": {"region": MATH},
     "explain_code": {"region": CODE},
     "explain_figure": {"region": FIGURE},
+    "summarize_selection": {"highlight": HIGHLIGHT},  # C40.6
+    "summarize_page": {"highlight": HIGHLIGHT},
 }
 
 
@@ -96,6 +98,8 @@ def test_an_injected_question_is_also_data():
     ("latex_equation", {}, "needs_equation"),
     ("explain_code", {"region": MATH}, "needs_code"),
     ("explain_figure", {}, "needs_figure"),
+    ("summarize_selection", {}, "needs_highlight"),  # C40.6
+    ("summarize_page", {}, "needs_page"),
     ("write_poem", {}, "unknown_mode"),
 ])
 def test_a_mode_without_what_it_needs_is_refused(mode, kwargs, reason):

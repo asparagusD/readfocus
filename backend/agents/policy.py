@@ -452,7 +452,8 @@ FOCUS_PAGE_KEY_MAX = 64  # focus_events.page_key: "p12" (a PDF page), "l42" (an 
 # Stored on each session at its start and again when it is scored, so the row names the rules that scored it.
 # A date, with ".n" for a later revision the same day. 2026-11-15.2: the quiz bonus is capped at the time points.
 # 2026-11-21: F7's page is the page most in view of a scrolled book (C38.8, issue 22 D3); the scoring is unchanged.
-FOCUS_RULES_VERSION = "2026-11-21"
+# 2026-11-22: F6: listening to read aloud is input (C40.3, issue 24): heartbeats carry had_input while it speaks.
+FOCUS_RULES_VERSION = "2026-11-22"
 
 # --- XP, the daily goal and streaks (C24.1, docs/GAMIFICATION.md G4-G9) ---
 XP_SOURCES = ("focus", "badge", "adjustment")  # xp_events.source (031 checks the same values); only focus earns in C24

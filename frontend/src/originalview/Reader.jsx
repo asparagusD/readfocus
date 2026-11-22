@@ -18,6 +18,8 @@ import { RibbonPlacer } from '../focus/RibbonPlacer';
 import { PlaceMark } from './PlaceMark';
 import { EpubBook } from './epub/EpubBook';
 import { FindBar } from './FindBar';
+import { ReadAloudBar } from '../reader/ReadAloudBar';
+import { useReadAloud } from '../reader/useReadAloud';
 import { useFind } from './useFind';
 import { startPage } from './pdf/contents';
 import { PdfBook } from './pdf/PdfBook';
@@ -86,12 +88,20 @@ function useWide() {
  * With a `lookupClient`, words are looked up in place in both renderers (BookLookup;
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
+ * C40.2 (issue 24): read aloud (useReadAloud, ReadAloudBar): `readAloud()` on the ref starts it from the selection or the
+ * first line in view, or stops it; its bar sits over the book; `onReadAloud(on, speaking)` hears it open and close (C40.3b:
+ * and whether the voice is speaking, for focus mode). Regions are
+ * left unread, as lookup leaves them. C40.2c: Ctrl+Shift+U starts or stops it; the selection's menu has Read aloud from
+ * here (the selection's first word). C40.3: an EPUB's sections too (EpubBook's readAloud); a change of place tells the
+ * hook the reader may have scrolled. C40.4c: `onSaveCopy(as)` hears Ctrl+S and Ctrl+Shift+S; `fileBytes()` on the ref.
+ * C40.5: `onPrint()` hears Ctrl+P.
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, eraser = null, textBoxes = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
-  placing = null, contents = null, start = null, pageView = 'one', mark = null,
+  placing = null, contents = null, start = null, pageView = 'one', mark = null, onReadAloud = null, onSaveCopy = null,
+  onPrint = null,
 }) {
   const wide = useWide();
   const book = useRef(null);
@@ -120,6 +130,19 @@ export function Reader({
   const findNext = finder.next;
   const findPrev = finder.prev;
   const findKeyRef = useRef(null);
+  const saveRef = useRef(onSaveCopy);
+  const printRef = useRef(onPrint);
+  useEffect(() => { saveRef.current = onSaveCopy; printRef.current = onPrint; });
+  // C40.2: read aloud over the renderer's pages, a PDF's regions unread.
+  const readSource = useCallback(() => book.current?.readAloud ?? null, []);
+  const skipOf = useCallback((unit) => (kind === 'pdf' && regions
+    ? regions.load(unit).then(() => regions.boxesOf(unit)) : Promise.resolve([])), [kind, regions]);
+  const reading = useReadAloud({ source: readSource, skipOf });
+  const readingRef = useRef(reading);
+  useEffect(() => { readingRef.current = reading; });
+  const readingOpen = reading.open;
+  const speaking = reading.open && reading.playing;
+  useEffect(() => { onReadAloud?.(readingOpen, speaking); }, [readingOpen, speaking, onReadAloud]);
   useEffect(() => {
     const onFindKey = (event) => {
       if (event.defaultPrevented || event.target?.closest?.('[role="dialog"]')) return;
@@ -132,6 +155,15 @@ export function Reader({
         if (!finding) openFind();
         else if (shortcut === 'find-prev') findPrev();
         else findNext();
+      } else if (shortcut === 'read-aloud' && readingRef.current?.supported) { // C40.2c: Ctrl+Shift+U, as Edge's
+        event.preventDefault();
+        readingRef.current.toggle();
+      } else if ((shortcut === 'save' || shortcut === 'save-as') && saveRef.current) { // C40.4c: Ctrl+S, Ctrl+Shift+S
+        event.preventDefault();
+        saveRef.current(shortcut === 'save-as');
+      } else if (shortcut === 'print' && printRef.current) { // C40.5: Ctrl+P prints the book, not the app's page
+        event.preventDefault();
+        printRef.current();
       } else if (finding && event.key === 'F3' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         if (event.shiftKey) findPrev();
@@ -147,6 +179,7 @@ export function Reader({
   }, [regions, shownPages]);
 
   const relocate = useCallback((next) => {
+    if (readingRef.current?.open) readingRef.current.moved(); // C40.3: the reader scrolling, unless read aloud moved it
     setPlace(next);
     onRelocate?.(next);
   }, [onRelocate]);
@@ -408,6 +441,9 @@ export function Reader({
     saveMark: () => act('ribbon'), // C38.8b: the toolbar's Save my place
     thumbnail: (n, width) => book.current?.thumbnail?.(n, width) ?? Promise.resolve(null), // C38.6b: a PDF's Pages tab
     pageLabelOf: (n) => book.current?.pageLabelOf?.(n) ?? String(n),
+    readAloud: () => readingRef.current.toggle(), // C40.2
+    fileBytes: () => book.current?.fileBytes?.() ?? Promise.resolve(null), // C40.4c: a PDF's bytes, for a copy
+    pageWords: () => book.current?.pageWords?.() ?? Promise.resolve(null), // C40.6: Summarize this page
   }), [move, flash, shownPlaces, openFind, act]);
 
   const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn
@@ -417,7 +453,7 @@ export function Reader({
       data-loading={(!place || opening) && !failure}
       data-start={place ? spot(placeStart(place)) : undefined} data-end={place ? spot(placeEnd(place)) : undefined}
       data-ending={atClose || undefined} data-annotations={annotations ? annotations.length : undefined}
-      data-finding={finding || undefined} data-tool={markup?.tool}
+      data-finding={finding || undefined} data-tool={markup?.tool} data-reading-aloud={reading.open || undefined}
       >
       <div className="rf-ov-stage" ref={stage} tabIndex={0} onKeyDown={onKey} aria-roledescription="book"
         aria-label={kind === 'pdf' ? `${title}. Scroll, or use Page Up and Page Down to move a page at a time.`
@@ -463,6 +499,9 @@ export function Reader({
         {finding && place && !failure && (
           <FindBar finder={{ ...finder, close: () => { closeFind(); stage.current?.focus(); } }} />
         )}
+        {reading.open && place && !failure && (
+          <ReadAloudBar reading={reading} onClose={() => { reading.stop(); stage.current?.focus(); }} />
+        )}
         {failure && (
           <div className="rf-ov-error" role="alert">
             <h2>This book could not be opened</h2>
@@ -485,7 +524,8 @@ export function Reader({
       )}
       {onAnnotate && (
         <SelectionMenu menu={menu} onClose={closeMenu} onAnnotate={onAnnotate} onNote={onNewNote} onComment={commentOn}
-          onLookUp={lookupClient ? () => lookup.current?.lookUpSelection() : null} />
+          onLookUp={lookupClient ? () => lookup.current?.lookUpSelection() : null}
+          onReadAloud={reading.supported ? reading.start : null} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}

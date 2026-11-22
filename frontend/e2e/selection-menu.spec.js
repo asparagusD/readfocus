@@ -86,7 +86,7 @@ test('Look up opens the word card; Ask Steve asks him about the passage', async 
 
   ({ a } = await select(page, 'lamp', 'circle'));
   await page.mouse.click(a.x + 4, a.y, { button: 'right' });
-  await menu(page).getByRole('menuitem', { name: 'Ask Steve' }).click();
+  await menu(page).getByRole('menuitem', { name: 'Explain with Steve' }).click(); // C40.6: was Ask Steve
   await expect.poll(() => api.steve.asks.length).toBe(1);
   expect(api.steve.asks[0]).toMatchObject({ mode: 'explain_highlight', anchor: { kind: 'pdf', page: 1 } });
 });

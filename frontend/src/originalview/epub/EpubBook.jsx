@@ -6,6 +6,7 @@ import { EpubView } from './EpubView';
 import { epubAnchor, epubPositions } from '../../anchors';
 import { epubEndPoint } from '../../focus/bookmark';
 import { paintedIn, paintSection, readPalette } from '../../annotations/epubPaint';
+import { epubRuns } from '../../reader/readAloud';
 
 /** "p. 34 of ~210" or "pp. 34–35 of ~210"; "~" because the numbers count characters, not printed pages. */
 function epubFolio(locations, place) {
@@ -17,6 +18,8 @@ function epubFolio(locations, place) {
 }
 
 const flatten = (items) => items.flatMap((item) => [item, ...flatten(item.subitems ?? [])]);
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const FOLLOWING = 4; // Node.DOCUMENT_POSITION_FOLLOWING
 
 /** A promise for the engine, settled once EpubView has opened the book. */
 function deferred() {
@@ -41,6 +44,9 @@ function deferred() {
  * scrolls; `scrollBy(px)` for Up and Down; the place's `main` is the location page most in view.
  * C38.7b: the place also carries `page` (that page), `total` and `approx` for the toolbar's page box, and
  * goTo({ location }) goes to the start of a counted page.
+ * C40.3 (issue 24): `readAloud` (useReadAloud): its units are the sections (unit = spine index + 1); a section not
+ * shown is opened to be read, its text nodes are the runs (readAloud.epubRuns), and it starts from the selection or
+ * the first words in view.
  */
 export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument, onError, annotations = null, found = null, ref }) {
   const [locations, setLocations] = useState(null);
@@ -309,6 +315,63 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
       sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
       panning: () => Boolean(now()?.scrolled), // C38.7a: a swipe scrolls a scrolled book; a fixed layout's turns
       // The nav as one list, each entry with its section, for the contents drawer.
+      // C40.6: the words in view for Steve's Summarize this page, with the place's range as its anchor
+      pageWords: async () => {
+        const place = last.current;
+        const made = now();
+        const doc = place && made?.contents().find((c) => c.index === place.index)?.doc;
+        const range = doc && made.rangesOf(doc.body, [[place.charStart, place.charEnd]])[0];
+        if (!range || !place.cfi) return null;
+        return { anchor: { kind: 'epub', cfi: place.cfi, text: '' }, text: range.toString(), label: 'this page' };
+      },
+      readAloud: { // C40.3
+        get count() { return now()?.sectionCount() ?? 0; },
+        runs: async (unit) => {
+          const made = await opened.promise;
+          const shownDoc = () => made.contents() // loaded: not the blank document a frame starts with, its body filled
+            .find((c) => c.index === unit - 1 && c.doc?.URL !== 'about:blank' && c.doc?.body?.childNodes.length)?.doc;
+          if (!shownDoc()) {
+            await made.goToChar({ index: unit - 1, char: 0 });
+            for (let tries = 0; tries < 50 && !shownDoc(); tries += 1) await pause(100); // the section loads
+          }
+          const doc = shownDoc();
+          return doc ? epubRuns(doc.body) : [];
+        },
+        range: (node, start, end) => {
+          if (!node?.isConnected || !node.ownerDocument?.defaultView) return null; // its section has been unloaded
+          const range = node.ownerDocument.createRange();
+          range.setStart(node, Math.min(start, node.length));
+          range.setEnd(node, Math.min(end, node.length));
+          return range;
+        },
+        /** A start place among the runs: the run holding `at`, else the first one after it. */
+        runOf: (runs, at, offset = 0) => {
+          const run = runs.findIndex((r) => r.ref === at);
+          if (run >= 0 || !at) return { run, offset };
+          return { run: runs.findIndex((r) => at.compareDocumentPosition?.(r.ref) & FOLLOWING), offset: 0 };
+        },
+        from: () => {
+          for (const { doc, index } of now()?.contents() ?? []) {
+            const selection = doc.getSelection();
+            if (!selection?.rangeCount || selection.isCollapsed) continue;
+            const range = selection.getRangeAt(0);
+            return { unit: index + 1, at: range.startContainer, offset: range.startOffset };
+          }
+          const place = last.current;
+          const doc = place && now()?.contents().find((c) => c.index === place.index)?.doc;
+          const range = doc && now().rangesOf(doc.body, [[place.charStart, place.charStart + 1]])[0];
+          return { unit: (place?.index ?? 0) + 1, at: range?.startContainer ?? null, offset: range?.startOffset ?? 0 };
+        },
+        show: (unit) => { now()?.goToChar({ index: unit - 1, char: 0 }); },
+        /** A spoken word (`rect` in its section's frame) a third of the way down the view, when near an edge or out. */
+        follow: (rect, range) => {
+          const frame = range?.startContainer.ownerDocument?.defaultView?.frameElement?.getBoundingClientRect();
+          const view = now()?.viewRect?.();
+          if (!frame || !view || !rect) return;
+          const top = rect.top + frame.top;
+          if (top < view.top + 72 || rect.bottom + frame.top > view.bottom - 96) now().scrollBy(Math.round(top - view.top - view.height / 3));
+        },
+      },
       toc: () => flatten(now()?.book.toc ?? []).map((item) => ({
         title: item.label?.trim() || 'Untitled', target: item.href, loc: { kind: 'epub', index: now().sectionOf(item.href) ?? 0, char: 0 },
       })),

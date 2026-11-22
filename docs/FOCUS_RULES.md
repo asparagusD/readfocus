@@ -66,6 +66,13 @@ appears. If it is not answered within `FOCUS_IDLE_ANSWER_S` seconds, the
 stopwatch pauses from the moment the prompt appeared; answering resumes
 it. The prompt never blocks reading.
 
+Since C40.3 (issue 24; rules version 2026-11-22) listening counts as
+reading: while read aloud is speaking (not paused or stopped) the tab
+counts it as input, so the prompt does not come and heartbeats carry
+`had_input`; ten quiet minutes after it stops, the prompt comes as before.
+The server's scoring is unchanged; sessions scored before keep their
+version.
+
 **F7. Page cap.** Active time on one page beyond `FOCUS_PAGE_CAP_MIN`
 minutes without moving to another page earns 0 points (voided); the first
 `FOCUS_PAGE_CAP_MIN` minutes still count. Time is active time on that page

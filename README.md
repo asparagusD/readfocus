@@ -79,7 +79,12 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    Wikipedia summary. Mark the page with Edge's tools (C39): Highlight in
    ten colours (select, or with the highlighter on), Draw and Add text on a
    PDF's pages, Erase, a right-click menu on selected words, and comments on
-   highlights with an icon in the margin. Highlight or underline a passage, and write and
+   highlights with an icon in the margin. And the rest of Edge's toolbar (C40): Read
+   aloud (Ctrl+Shift+U) in your system's voices, each word marked as it is spoken and the
+   page following it, from the page in view or "Read aloud from here" on a selection
+   (in focus mode, listening counts as reading); Print (Ctrl+P) and Save or Save as
+   (Ctrl+S) a copy of a PDF with your highlights, comments, ink and text written in as
+   real PDF annotations (an EPUB's highlights save as Markdown). Highlight or underline a passage, and write and
    draw in the book's notebook (Excalidraw pages over 70 % of the screen,
    the book in soft focus beside them): a passage, a highlight, Steve's
    answer, an equation, code or a figure goes onto the page for its place,
@@ -91,7 +96,8 @@ What is stored and sent is on the app's Privacy page (`/privacy`).
    a daily goal, a streak with earned freezes, badges, and a weekly league
    you can leave.
 6. **Ask Steve (optional).** After a consent notice, Steve explains a
-   passage, an equation, code or a figure, citing the page or section. He
+   passage, an equation, code or a figure, citing the page or section; in
+   Copilot's place (C40) he also summarizes a selection or the page you are on. He
    is off during a test or quiz, rests when his daily limit or Google's
    free tier runs out, and can be switched off.
 7. **Quiz me.** About five questions from the bank on this chapter, or on

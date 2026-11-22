@@ -1974,3 +1974,59 @@ phone.
 
 Command: `npx playwright test e2e/marks-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
 standard `npm run test:e2e` too); result in `frontend/test-results/marks-benchmarks.json` (ignored).
+
+## C40.4: pdf-lib for a copy with marks (2026-11-22, issue 24, D2)
+
+pdf-lib 1.17.1 is a frontend dependency (the backend is untouched, so its RSS on Render is not changed). It is
+loaded only when a copy is made: the build puts it in one lazy chunk, and the initial route stays 182.5 KB gzipped.
+
+| Measure | Value |
+|---|---|
+| pdf-lib's minified build, gzipped (zlib, node) | 201.8 KB |
+| Its lazy chunk in our build, gzipped (`check:bundle`) | 206.2 KB |
+| Initial route JS, gzipped | 182.5 KB (unchanged) |
+| Save on C39.9's 300-page PDF (1.2 MB) with 1,500 marks (1,200 strokes of 150 points, 300 text boxes) and 300 highlights (30 with comments): click to download | 2.5 s |
+| JS heap (CDP): before, peak while saving (sampled every 50 ms), after a collection | 7.0 MB, 176.2 MB, 9.8 MB |
+| The copy | 6.5 MB (the strokes' outlines and their points) |
+
+The peak is pdf-lib holding the whole file as objects while it writes; it is given back once the copy is
+downloaded. A phone with a book this heavily marked may be slow to save. One run, Edge on this machine, 1440 x 900,
+1x CPU. Command: a throwaway Playwright test using `e2e/marks-frame-rate.spec.js`'s book and marks (the Save is
+clicked and the heap sampled through CDP); C40.7 keeps it as a bench.
+
+## C40.7: read aloud and Save on a marked book (2026-11-22, issue 24)
+
+C39.9's book: a 300-page PDF (1.2 MB) with 1,500 marks (four 150-point strokes and a text box a page) and 300
+highlights (a comment on every tenth). Read aloud: a fake voice speaks a word every 5 ms (headless Edge has no voices)
+while the view follows it, 8 s at 1x CPU, then 8 s at 4x. Save: click to download, the frames drawn meanwhile, the
+heap sampled every 50 ms through CDP. Three runs and the full e2e run; the ranges cover all four. Edge on this machine, 1440 x 900.
+
+| Read aloud | 1x CPU | 4x CPU |
+|---|---|---|
+| fps, worst frame (frames over 33 ms) | 75 fps, 13.6-13.8 ms (0) | 74.7 fps, 26.7-26.9 ms (0) |
+
+| Read aloud | Value |
+|---|---|
+| Sentences spoken in 16 s, the page reached | 165-173, page 4 (the view followed) |
+| JS heap: opened, while reading | 6.8 MB, 8.3 MB |
+
+| Save a copy | Value |
+|---|---|
+| Click to download | 2.41-2.42 s |
+| Frames meanwhile: fps, worst frame (over 33 ms) | 48.7-49.3 fps, 760-774 ms (2) |
+| JS heap: before, peak, after a collection | 6.8-7.0 MB, 170.1-179.8 MB, 9.8 MB |
+| The copy | 6.5 MB |
+
+Reading aloud costs no frames: the word mark and the view following it stay at the 75 fps ceiling, and at 4x CPU
+within a frame of it. Saving holds the page still for one frame of about 0.77 s while pdf-lib writes the copy on the
+main thread (the rest of the 2.4 s is fetching the marks and the file); a Web Worker could take that off the page
+later. A real voice was tried by hand (below), not measured.
+
+Checked by hand, 2026-11-22, Edge started by Playwright with a window (its profile has three local voices: David,
+Mark, Zira; the online natural voices come with a reader's own Edge profile, not tried): word boundaries marked
+"Line", "1", "page", "1", "the", "threw" in turn; Pause stopped the voice and kept "threw"; Play went on from "threw".
+Not checked here: Edge's own Read aloud on Ctrl+Shift+U (Playwright's keys reach the page, not the browser), and a
+real print dialog.
+
+Command: `npx playwright test e2e/read-aloud-save-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in
+the standard `npm run test:e2e` too); result in `frontend/test-results/read-aloud-save-benchmarks.json` (ignored).

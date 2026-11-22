@@ -164,11 +164,18 @@ Write math in LaTeX between $...$ (inline) or $$...$$ (display). Put code in a f
 - `latex_equation`: transcribe the equation in <region kind="math"> or in the image into LaTeX. Return ONLY the LaTeX source: no $ signs, no code fence, no explanation and no citations. This task overrides the answer format above.
 - `explain_code`: explain the code in <region kind="code"> exactly as given: what it does, step by step, and how it relates to the passages. Quote code in a fenced block with its language. Do not change the code unless the reader asks.
 - `explain_figure`: explain the figure (the image, and its label and caption in <region kind="figure">) and what it shows in relation to the passages. Describe only what you can see or read, and say if the image is unclear.
+- `summarize_selection` (C40.6, issue 24): summarize the passage in <selection>: its main point in a sentence or two, then at most three key points as a short list, in the passage's own order. Use <surrounding> only to make sense of it, and do not add what the passage does not say.
+- `summarize_page` (C40.6): summarize the page in <selection>, the page the reader is on: its main point in a sentence or two, then at most five key points as a short list, in the order the page makes them. Use the other passages only to make sense of it, and do not add what the page does not say.
 
 A mode asked without what it explains is refused: `explain_highlight`
 needs a highlight, `explain_equation` and `latex_equation` a math region
 or an image, `explain_code` a code region, `explain_figure` a figure
-region or an image.
+region or an image, `summarize_selection` a highlight. `summarize_page` needs
+the page's words (`page_text`, at most `PAGE_TEXT_MAX_CHARS`) and its place (an
+anchor): the context builder sends those words as the selection, cut to
+`PAGE_SELECTION_MAX_TOKENS`, labelled and cited by the anchor's page or
+section, verified when their opening is found in the book there; `page_text`
+with any other mode is refused (`unexpected_page_text`).
 
 ### After the answer
 

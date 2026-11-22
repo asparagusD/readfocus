@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react';
-import { useSteveActions } from '../steve/SteveContext';
+import { passageRequest, useSteveActions } from '../steve/SteveContext';
 import { colourName, FIRST_COLOURS, lastColour, newAnnotation, storeLastColour } from './palette';
 import './SelectionToolbar.css';
 
@@ -8,12 +8,14 @@ const ITEMS = '[role^="menuitem"]:not(:disabled)';
 
 /**
  * Edge's right-click menu on a selection (C39.7, issue 23): Highlight in the last colour (H) or one of the first five,
- * Underline (U, running text only), Add comment (C39.8), Add note (N), Ask Steve (when he is on), Look up, Copy. Opened at the pointer by
+ * Underline (U, running text only), Add comment (C39.8), Add note (N), Explain and Summarize with Steve (C40.6; when he
+ * is on), Look up, Copy. Opened at the pointer by
  * a right-click, or by the menu key or Shift+F10 at the selection's end (`menu`: { place, x, y }). Arrow keys, Home
  * and End move through it; Enter or a click runs an item and closes it; Escape or Tab closes it and gives the book
- * focus (`onClose(true)`); a press outside closes it. Read aloud from here comes with C40.
+ * focus (`onClose(true)`); a press outside closes it. C40.2c (issue 24): Read aloud from here (`onReadAloud`), from the
+ * selection's first word.
  */
-export function SelectionMenu({ menu, onClose, onAnnotate, onNote = null, onLookUp = null, onComment = null }) {
+export function SelectionMenu({ menu, onClose, onAnnotate, onNote = null, onLookUp = null, onComment = null, onReadAloud = null }) {
   const steve = useSteveActions();
   const box = useRef(null);
   const { refs, floatingStyles } = useFloating({
@@ -96,16 +98,26 @@ export function SelectionMenu({ menu, onClose, onAnnotate, onNote = null, onLook
             <span className="rf-selmenu-swatch" aria-hidden="true" /><span>Add note</span><kbd aria-hidden="true">N</kbd>
           </button>
         )}
-        {steve && (
-          <button type="button" role="menuitem" className="rf-selmenu-item" onClick={run(() => steve.askAbout({
-            question: 'Explain this passage.', mode: 'explain_highlight', anchor: place.anchors[0], label: 'Explain this passage',
-          }), { keep: true })}>
-            <span className="rf-selmenu-swatch" aria-hidden="true" /><span>Ask Steve</span>
-          </button>
+        {steve && ( // C40.6 (issue 24): Steve in Copilot's place, Explain and Summarize
+          <>
+            <button type="button" role="menuitem" className="rf-selmenu-item"
+              onClick={run(() => steve.askAbout(passageRequest(place.anchors[0], 'explain')), { keep: true })}>
+              <span className="rf-selmenu-swatch" aria-hidden="true" /><span>Explain with Steve</span>
+            </button>
+            <button type="button" role="menuitem" className="rf-selmenu-item"
+              onClick={run(() => steve.askAbout(passageRequest(place.anchors[0], 'summarize')), { keep: true })}>
+              <span className="rf-selmenu-swatch" aria-hidden="true" /><span>Summarize with Steve</span>
+            </button>
+          </>
         )}
         {onLookUp && (
           <button type="button" role="menuitem" className="rf-selmenu-item" onClick={() => { onClose(false); setTimeout(onLookUp, 0); }} /* once the closed menu lets lookup run again */>
             <span className="rf-selmenu-swatch" aria-hidden="true" /><span>Look up</span><kbd aria-hidden="true">Enter</kbd>
+          </button>
+        )}
+        {onReadAloud && ( // C40.2c: started before the selection is cleared, so it starts at its first word
+          <button type="button" role="menuitem" className="rf-selmenu-item" onClick={run(onReadAloud)}>
+            <span className="rf-selmenu-swatch" aria-hidden="true" /><span>Read aloud from here</span><kbd aria-hidden="true">Ctrl+Shift+U</kbd>
           </button>
         )}
         <span className="rf-selmenu-sep" role="separator" />

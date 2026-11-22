@@ -15,8 +15,10 @@ const uuid = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(
  * once the reader's open session in this book (if any) has been looked up, so a reload carries on; `wanted` is the
  * reader's toggle, and a live session keeps focus mode on whatever it says. C23.8: only one tab writes a session's
  * events (writer.js); another tab on it is `readOnly`, showing the server's time, until the writer's lease lapses.
+ * C40.3b (issue 24, FOCUS_RULES F6 since 2026-11-22): `listening`, read aloud speaking, counts as input every few
+ * seconds, so no idle prompt comes and heartbeats carry had_input while it speaks.
  */
-export function useFocusSession({ bookId, place, reader, wanted }) {
+export function useFocusSession({ bookId, place, reader, wanted, listening = false }) {
   const [session, setSession] = useState(null);
   const [readAt, setReadAt] = useState(() => Date.now());
   const [restored, setRestored] = useState(false);
@@ -114,6 +116,15 @@ export function useFocusSession({ bookId, place, reader, wanted }) {
     kinds.forEach((k) => window.addEventListener(k, seen, { capture: true, passive: true }));
     return () => kinds.forEach((k) => window.removeEventListener(k, seen, { capture: true }));
   }, [enabled, answerIdle]);
+
+  // C40.3b: listening is reading: input now and every 5 s while the voice speaks.
+  useEffect(() => {
+    if (!enabled || !listening) return undefined;
+    const heard = () => { input.current = { last: Date.now(), since: true }; };
+    heard();
+    const keep = setInterval(heard, 5_000);
+    return () => clearInterval(keep);
+  }, [enabled, listening]);
 
   // Heartbeats while active, the idle check, and the server's time every minute.
   useEffect(() => {

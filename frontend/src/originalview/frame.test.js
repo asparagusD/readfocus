@@ -59,6 +59,29 @@ test("C38.9: Edge's shortcuts: find, next and previous, go to page, fit, zoom; t
   assert.equal(readerShortcut({}), null);
 });
 
+test("C40.2c: Ctrl+Shift+U reads aloud, as Edge's; Ctrl+U alone stays the browser's", () => {
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', ctrlKey: true, shiftKey: true }), 'read-aloud');
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', metaKey: true, shiftKey: true }), 'read-aloud');
+  assert.equal(readerShortcut({ key: 'u', code: 'KeyU', ctrlKey: true }), null);
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', shiftKey: true }), null);
+  assert.equal(readerShortcut({ key: 'U', code: 'KeyU', ctrlKey: true, shiftKey: true, altKey: true }), null);
+});
+
+test("C40.4c: Ctrl+S saves a copy and Ctrl+Shift+S saves it as, as Edge's", () => {
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', ctrlKey: true }), 'save');
+  assert.equal(readerShortcut({ key: 'S', code: 'KeyS', ctrlKey: true, shiftKey: true }), 'save-as');
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', metaKey: true }), 'save');
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS' }), null);
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', ctrlKey: true, altKey: true }), null);
+});
+
+test('C40.5: Ctrl+P prints the book', () => {
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP', ctrlKey: true }), 'print');
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP', metaKey: true }), 'print');
+  assert.equal(readerShortcut({ key: 'P', code: 'KeyP', ctrlKey: true, shiftKey: true }), null); // the browser's own
+  assert.equal(readerShortcut({ key: 'p', code: 'KeyP' }), null);
+});
+
 test("C38.9: an EPUB's text size steps through its sizes and stops at the ends", () => {
   assert.equal(fontStep(18, 1), 20);
   assert.equal(fontStep(18, -1), 16);

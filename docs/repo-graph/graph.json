@@ -1496,6 +1496,18 @@
       "language": "text"
     },
     {
+      "id": "file:backend/tests/fixtures/steve_prompts/summarize_page.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
+      "id": "file:backend/tests/fixtures/steve_prompts/summarize_selection.txt",
+      "type": "file",
+      "role": "test",
+      "language": "text"
+    },
+    {
       "id": "file:backend/tests/memory_db.py",
       "type": "file",
       "role": "test",
@@ -2768,6 +2780,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/print.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/privacy.spec.js",
       "type": "file",
       "role": "config",
@@ -2786,6 +2804,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/read-aloud.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/reader.spec.js",
       "type": "file",
       "role": "config",
@@ -2799,6 +2829,12 @@
     },
     {
       "id": "file:frontend/e2e/results.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/save-copy.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -2829,6 +2865,12 @@
     },
     {
       "id": "file:frontend/e2e/steve-blocks.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/e2e/steve-copilot.spec.js",
       "type": "file",
       "role": "config",
       "language": "javascript"
@@ -4736,6 +4778,18 @@
       "language": "jsx"
     },
     {
+      "id": "file:frontend/src/reader/ReadAloudBar.css",
+      "type": "file",
+      "role": "asset",
+      "language": "css"
+    },
+    {
+      "id": "file:frontend/src/reader/ReadAloudBar.jsx",
+      "type": "file",
+      "role": "asset",
+      "language": "jsx"
+    },
+    {
       "id": "file:frontend/src/reader/ReaderToolbar.css",
       "type": "file",
       "role": "asset",
@@ -4826,6 +4880,18 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/marksMarkdown.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/marksMarkdown.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/openAhead.js",
       "type": "file",
       "role": "asset",
@@ -4833,6 +4899,42 @@
     },
     {
       "id": "file:frontend/src/reader/openAhead.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAloud.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/readAloud.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/saveCopy.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/saveCopy.test.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/speech.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/speech.test.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -4863,6 +4965,18 @@
     },
     {
       "id": "file:frontend/src/reader/usePlaceSaver.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useReadAloud.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
+      "id": "file:frontend/src/reader/useSaveCopy.js",
       "type": "file",
       "role": "asset",
       "language": "javascript"
@@ -6322,6 +6436,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "endpoint:GET /books/{book_id}/marks"
     },
     {
       "type": "calls_endpoint",
@@ -11683,6 +11802,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/print.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/privacy.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
@@ -11694,6 +11818,21 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/quiz-me.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/read-aloud-save-frame-rate.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/read-aloud.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -11715,6 +11854,11 @@
       "type": "imports",
       "from": "file:frontend/e2e/results.spec.js",
       "to": "file:frontend/e2e/testSession.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/save-copy.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
     },
     {
       "type": "imports",
@@ -11744,6 +11888,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/steve-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/steve-copilot.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {
@@ -13309,6 +13458,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/reader/ReadAloudBar.jsx"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
+      "to": "file:frontend/src/reader/useReadAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/Reader.jsx",
       "to": "file:frontend/src/steve/EpubBlockActions.jsx"
     },
     {
@@ -13380,6 +13539,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
       "to": "file:frontend/src/originalview/scroll.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/reader/readAloud.js"
     },
     {
       "type": "imports",
@@ -13520,6 +13684,11 @@
       "type": "imports",
       "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
       "to": "file:frontend/src/originalview/useBoxSize.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/originalview/pdf/PdfBook.jsx",
+      "to": "file:frontend/src/reader/readAloud.js"
     },
     {
       "type": "imports",
@@ -14234,6 +14403,16 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useReadAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useSaveCopy.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
     },
     {
@@ -14448,6 +14627,16 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/ReadAloudBar.jsx",
+      "to": "file:frontend/src/reader/ReadAloudBar.css"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/ReadAloudBar.jsx",
+      "to": "file:frontend/src/reader/speech.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/ReaderToolbar.jsx",
       "to": "file:frontend/src/components/ThemeToggle.jsx"
     },
@@ -14518,8 +14707,48 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/marksMarkdown.js",
+      "to": "file:frontend/src/annotations/palette.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/marksMarkdown.test.js",
+      "to": "file:frontend/src/reader/marksMarkdown.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/openAhead.test.js",
       "to": "file:frontend/src/reader/openAhead.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/readAloud.test.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.js",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.test.js",
+      "to": "file:frontend/src/reader/saveCopy.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/speech.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/speech.test.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/speech.test.js",
+      "to": "file:frontend/src/reader/speech.js"
     },
     {
       "type": "imports",
@@ -14530,6 +14759,31 @@
       "type": "imports",
       "from": "file:frontend/src/reader/usePlaceSaver.js",
       "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useReadAloud.js",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useReadAloud.js",
+      "to": "file:frontend/src/reader/speech.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/lib/api.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/reader/marksMarkdown.js"
     },
     {
       "type": "imports",

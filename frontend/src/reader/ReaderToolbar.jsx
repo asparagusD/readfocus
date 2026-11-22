@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff } from 'lucide-react';
+import { ArrowLeft, Bookmark, Ellipsis, List, Maximize, MessageSquareText, Minimize, NotebookPen, Pin, PinOff, Printer, Save, SaveAll, Speech } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIZES } from './textSize';
 import { useMedia } from './useMedia';
@@ -84,22 +84,29 @@ function useFullScreen() {
  * C38.8b: `onBookmark`: Save my place (B), before Notes, always in the bar (the desk's ribbon is gone).
  * C39.3: `markup`: Edge's markup tools (MarkupTools), first in the end group while they fit (they leave the bar after
  * Look up and the rest), else at the top of More tools; in More tools on a phone.
+ * C40.2 (issue 24): `onReadAloud`: Edge's Read aloud, right after the markup tools and moving with them; pressed while
+ * it reads (`readingAloud`). C40.4c: `file` ({ onSave(as), busy, canPick }): Edge's Save and Save as, a copy with my
+ * marks, at the bar's end while they fit, the first tools to move into More tools. C40.4d: `file.hint` names what is saved.
+ * C40.5: `file.onPrint`, Edge's Print, first in the group (`file.printHint` its title).
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
   lookupOn, onLookupToggle, controls, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef, onFocusMode,
-  pinned = false, onPin = null, contentsDocked = false, onBookmark = null, markup = null, children,
+  pinned = false, onPin = null, contentsDocked = false, onBookmark = null, markup = null, onReadAloud = null, readingAloud = false,
+  file = null, children,
 }) {
   const index = SIZES.indexOf(size);
   const full = useFullScreen();
   const bar = useRef(null);
   const readingBox = useRef(null);
   const markupBox = useRef(null);
-  const [boxes] = useState(() => [markupBox, readingBox]); // the markup tools leave the bar last
-  const [markupFits, fits] = useFits(bar, boxes);
+  const fileBox = useRef(null);
+  const [boxes] = useState(() => [markupBox, readingBox, fileBox]); // the markup tools leave the bar last, Save first
+  const [markupFits, fits, fileFits] = useFits(bar, boxes);
   const wide = useMedia('(min-width: 640px)');
   const roomy = wide && fits; // room in the bar for Look up, Steve, Focus and the session's tools
   const markupInBar = wide && markupFits;
+  const fileInBar = wide && fileFits;
   const [more, setMore] = useState(false);
   const moreButton = useRef(null);
   const panel = useRef(null);
@@ -117,6 +124,38 @@ export function ReaderToolbar({
     setMore(false);
     moreButton.current?.focus();
   };
+
+  const readAloud = onReadAloud && ( // C40.2: beside the markup tools, as Edge's
+    <button type="button" className="rf-tool rf-read-aloud-button" onClick={onReadAloud} aria-pressed={readingAloud}
+      aria-label="Read aloud" aria-keyshortcuts="Control+Shift+U" title={readingAloud ? 'Stop reading aloud (Ctrl+Shift+U)' : 'Read aloud (Ctrl+Shift+U)'}>
+      <Speech size={18} strokeWidth={1.75} aria-hidden="true" />
+      <span className="rf-tool-label">Read aloud</span>
+    </button>
+  );
+
+  const fileTools = file && ( // C40.4c: Edge's Save and Save as
+    <div className="rf-toolbar-file" ref={fileBox} role="group" aria-label="Print and save">
+      {file.onPrint && ( // C40.5: Edge's Print, before Save
+        <button type="button" className="rf-tool" onClick={file.onPrint} disabled={file.busy}
+          aria-label="Print" aria-keyshortcuts="Control+P" title={`${file.printHint ?? 'Print'} (Ctrl+P)`}>
+          <Printer size={18} strokeWidth={1.75} aria-hidden="true" />
+          <span className="rf-tool-label">Print</span>
+        </button>
+      )}
+      <button type="button" className="rf-tool" onClick={() => file.onSave(false)} disabled={file.busy}
+        aria-label="Save" aria-keyshortcuts="Control+S" title={`${file.hint ?? 'Save a copy with my marks'} (Ctrl+S)`}>
+        <Save size={18} strokeWidth={1.75} aria-hidden="true" />
+        <span className="rf-tool-label">Save</span>
+      </button>
+      {file.canPick && (
+        <button type="button" className="rf-tool" onClick={() => file.onSave(true)} disabled={file.busy}
+          aria-label="Save as" aria-keyshortcuts="Control+Shift+S" title={`${file.hint ?? 'Save a copy with my marks'} as… (Ctrl+Shift+S)`}>
+          <SaveAll size={18} strokeWidth={1.75} aria-hidden="true" />
+          <span className="rf-tool-label">Save as</span>
+        </button>
+      )}
+    </div>
+  );
 
   // Look up, Steve, Focus and the session's own controls: in the bar when there is room, else in More tools.
   const reading = (
@@ -192,7 +231,7 @@ export function ReaderToolbar({
       </div>
 
       <div className="rf-toolbar-end">
-        {markup && markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}</div>}
+        {markup && markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}{readAloud}</div>}
         {onBookmark && (
           <button type="button" className="rf-tool" onClick={onBookmark} aria-label="Save my place" aria-keyshortcuts="B"
             title="Save my place (B)">
@@ -209,6 +248,7 @@ export function ReaderToolbar({
           </button>
         )}
         {roomy && reading}
+        {fileInBar && fileTools}
         <button type="button" className="rf-tool rf-toolbar-more-button" ref={moreButton} onClick={() => setMore((open) => !open)}
           aria-expanded={more} aria-controls="rf-toolbar-more" aria-label="More tools">
           <Ellipsis size={18} strokeWidth={1.75} aria-hidden="true" />
@@ -221,8 +261,9 @@ export function ReaderToolbar({
             setMore(false);
             moreButton.current?.focus(); // a dialog the tool opens takes focus after this
           }}>
-          {markup && !markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}</div>}
+          {markup && !markupInBar && <div className="rf-toolbar-markup" ref={markupBox}>{markup}{readAloud}</div>}
           {!roomy && reading}
+          {!fileInBar && fileTools}
           <ThemeToggle />
           {onPin && (
             <button type="button" className="rf-tool" onClick={onPin} aria-pressed={pinned}

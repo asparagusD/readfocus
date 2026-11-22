@@ -69,6 +69,7 @@
 /* C38.5: find's matches (CSS Custom Highlight API) over the published page, see-through so its ink shows. */
 ::highlight(rf-find) { background-color: var(--find-match); color: transparent; }
 ::highlight(rf-find-current) { background-color: var(--find-current); color: transparent; }
+::highlight(rf-read-aloud) { background-color: var(--read-word); color: transparent; } /* C40.2 */
 
 .rf-pdf-page .textLayer br::selection {
   background: transparent;

@@ -1,0 +1,87 @@
+/* C40.2: Edge's read-aloud bar, over the top middle of the book while it reads (find's bar keeps the top right); at
+   the foot of the view on a narrow screen, so the two never meet. */
+.rf-read-aloud {
+  position: absolute;
+  top: var(--space-2);
+  left: 50%;
+  z-index: var(--z-popover);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--elevation-lift);
+  transform: translateX(-50%);
+}
+
+.rf-read-aloud-play[aria-label='Pause'] { color: var(--accent); }
+
+.rf-read-aloud .rf-toolbar-rule { margin: 0 var(--space-1); }
+
+.rf-read-aloud-status {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 50%;
+  width: max-content;
+  max-width: 20rem;
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  box-shadow: var(--elevation-lift);
+  transform: translateX(-50%);
+}
+
+.rf-read-aloud-options {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  display: grid;
+  gap: var(--space-3);
+  width: 18rem;
+  padding: var(--space-3);
+  border: var(--border-hair) solid var(--line);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  box-shadow: var(--elevation-lift);
+}
+.rf-read-aloud-options[hidden] { display: none; }
+
+.rf-read-aloud-field {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+}
+.rf-read-aloud-field > span { display: flex; justify-content: space-between; }
+.rf-read-aloud-rate { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.rf-read-aloud-field select {
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: var(--border-hair) solid var(--line-field);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+}
+.rf-read-aloud-field input[type='range'] { min-height: 44px; accent-color: var(--accent); }
+.rf-read-aloud-field select:focus-visible,
+.rf-read-aloud-field input:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: var(--focus-ring-offset); }
+
+@media (width < 640px) {
+  .rf-read-aloud { top: auto; bottom: var(--space-3); }
+  .rf-read-aloud .rf-tool-label { display: none; }
+  .rf-read-aloud-options { top: auto; bottom: calc(100% + var(--space-2)); right: 50%; width: min(18rem, calc(100vw - 2 * var(--space-4))); transform: translateX(50%); }
+  .rf-read-aloud-status { top: auto; bottom: calc(100% + var(--space-1)); }
+}

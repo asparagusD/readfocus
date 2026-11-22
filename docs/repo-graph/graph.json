@@ -14628,6 +14628,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/reader/saveCopy.js",
+      "to": "file:frontend/src/annotations/ink.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/reader/saveCopy.test.js",
       "to": "file:frontend/src/reader/saveCopy.js"
     },

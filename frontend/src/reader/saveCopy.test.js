@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { degrees, PDFDocument, PDFName } from 'pdf-lib';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { EncryptedPdfError, markedCopy, pdfMarks, quadPoints, rgbOf, toUser, userMatrix } from './saveCopy.js';
+import {
+  drawnMarks, EncryptedPdfError, markedCopy, pdfMarks, quadPoints, rgbOf, toUser, userMatrix, wrapLines,
+} from './saveCopy.js';
 
 const colours = { highlight: (c) => ({ honey: '#f4e2a8', sky: '#d5e2ec' }[c] ?? '#000000'), underline: () => 'rgb(152 129 55)' };
 const close = (a, b, eps = 0.01) => assert.ok(Math.abs(a - b) <= eps, `${a} vs ${b}`);
@@ -105,4 +107,45 @@ test('the marks already in the file are kept, and an encrypted file is refused',
   const plain = Buffer.from(await (await PDFDocument.load(await book())).save({ useObjectStreams: false })).toString('latin1');
   const locked = Buffer.from(plain.replace('trailer\n<<', 'trailer\n<<\n/Encrypt << /Filter /Standard /V 1 >>'), 'latin1');
   await assert.rejects(markedCopy(locked, { annotations: [highlight], colours }), EncryptedPdfError);
+});
+
+// C40.4b: ink and text boxes (ANCHORS A12).
+const markColours = { ...colours, mark: (c) => ({ ink: '#24201c', poppy: '#c2533f' }[c] ?? '#000000') };
+const stroke = { id: 'k1', kind: 'ink', page: 1, color: 'poppy', data: { points: [[100, 100, 0.5], [150, 120, 0.7], [200, 110, 0.5]], width: 3 } };
+const box = { id: 't1', kind: 'text', page: 2, color: 'ink', data: { x: 72, y: 300, width: 144, size: 12, text: 'A note in the margin, naïve — 🙂' } };
+
+test('a text box wraps as the reader saw it: its own breaks, then words, a long word broken', () => {
+  const measure = (run) => run.length * 6; // 6 points a character
+  assert.deepEqual(wrapLines('one two three', 48, measure), ['one two', 'three']);
+  assert.deepEqual(wrapLines('first\nsecond', 480, measure), ['first', 'second']);
+  assert.deepEqual(wrapLines('abcdefghijkl', 30, measure), ['abcde', 'fghij', 'kl']);
+  assert.deepEqual(wrapLines('', 30, measure), ['']);
+});
+
+test('only marks on pages the book has, with something to draw', () => {
+  const kept = drawnMarks([stroke, box, { ...stroke, id: 'k2', page: 9 }, { ...box, id: 't2', data: { ...box.data, text: '  ' } },
+    { ...stroke, id: 'k3', data: { points: [], width: 2 } }], 2);
+  assert.deepEqual(kept.map((m) => m.id), ['k1', 't1']);
+});
+
+test('ink and text boxes are written as Ink and FreeText annotations PDF.js reads back', async () => {
+  const bytes = await markedCopy(await book(), { marks: [stroke, box], colours: markColours });
+  const one = await pdfjsPage(bytes, 1);
+  const [ink] = await one.getAnnotations();
+  assert.equal(ink.subtype, 'Ink');
+  const view = one.getViewport({ scale: 1 });
+  const drawn = ink.inkLists[0];
+  assert.equal(drawn.length, 6); // three points, x and y
+  const first = view.convertToViewportPoint(drawn[0], drawn[1]).map(Math.round);
+  assert.deepEqual(first, [100, 100]);
+  assert.deepEqual([...ink.color].map(Math.round), [194, 83, 63]);
+  const two = await pdfjsPage(bytes, 2);
+  const [text] = await two.getAnnotations();
+  assert.equal(text.subtype, 'FreeText');
+  assert.equal(text.contentsObj.str, 'A note in the margin, naïve — 🙂'); // the text in full, emoji and all
+  assert.ok(text.rect[0] <= 72 && text.rect[3] >= 792 - 300);
+  const doc = await PDFDocument.load(bytes);
+  const freeText = doc.context.lookup(doc.getPages()[1].node.Annots().get(0));
+  const appearance = doc.context.lookup(doc.context.lookup(freeText.get(PDFName.of('AP'))).get(PDFName.of('N')));
+  assert.ok(appearance.dict.get(PDFName.of('Resources')).toString().includes('/Helv'));
 });

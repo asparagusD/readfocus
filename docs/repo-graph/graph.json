@@ -2864,6 +2864,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/steve-copilot.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/steve-epub-blocks.spec.js",
       "type": "file",
       "role": "config",
@@ -11866,6 +11872,11 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/steve-blocks.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/steve-copilot.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {

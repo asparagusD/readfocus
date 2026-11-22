@@ -9,7 +9,7 @@ import { pdfPagesLabel } from '../../annotations/list';
 import { pdfNoteTop, shownAnchor } from '../../notes/markers';
 import { pdfPageEnd } from '../../focus/bookmark';
 import { useBoxSize } from '../useBoxSize';
-import { pdfRuns } from '../../reader/readAloud';
+import { buildScript, pdfRuns } from '../../reader/readAloud';
 import { storedOutline } from './contents';
 import { PdfPage } from './PdfPage';
 import { pdfOutline, renderThumbnail } from './pdfjs';
@@ -216,6 +216,12 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
     return texts.current.get(n);
   };
   const pageText = (n) => pageFind(n).then(({ text }) => squeeze(text));
+  /** C40.2: a page's text items as read aloud's runs (readAloud.pdfRuns), `skip` its region boxes; C40.6: Steve's page too. */
+  const pageRuns = async (n, skip = []) => {
+    const p = await doc.getPage(n);
+    const at = p.getViewport({ scale: 1 });
+    return pdfRuns(n, (await p.getTextContent()).items, (x, y) => at.convertToViewportPoint(x, y), skip);
+  };
   const searching = useRef(null);
   useEffect(() => () => { searching.current = null; }, []);
   /** Every match of `query`, page by page from the main page round the book; onUpdate({ matches, first, done }). */
@@ -392,11 +398,7 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
     toc: () => meta.outline.map((entry) => ({ title: entry.title, target: { page: entry.page }, loc: { kind: 'pdf', page: entry.page } })),
     readAloud: { // C40.2 (issue 24): read aloud's pages (useReadAloud)
       count: numPages,
-      runs: async (n, skip = []) => {
-        const p = await doc.getPage(n);
-        const at = p.getViewport({ scale: 1 });
-        return pdfRuns(n, (await p.getTextContent()).items, (x, y) => at.convertToViewportPoint(x, y), skip);
-      },
+      runs: (n, skip = []) => pageRuns(n, skip),
       /** A run's text from `start` to `end` as a range in its page's text layer; null while the page is not drawn. */
       range: ({ page, item }, start, end) => {
         const text = box.current?.querySelector(`.rf-pdf-page[data-page="${page}"] .textLayer [data-item="${item}"]`)?.firstChild;
@@ -432,6 +434,14 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
       scroller: () => box.current,
     },
     fileBytes: () => doc.getData(), // C40.4c: the whole file, for a copy with marks (every range read)
+    // C40.6: the page most in view for Steve's Summarize this page: a whole-page anchor, its words, its printed label
+    pageWords: async () => {
+      const p = await doc.getPage(main);
+      const [w, h] = [p.view[2] - p.view[0], p.view[3] - p.view[1]].map((n) => Math.round(n * 100) / 100);
+      const words = buildScript(await pageRuns(main)).paragraphs.map((para) => para.sentences.map((s) => s.text).join(' '));
+      return { anchor: { kind: 'pdf', page: main, quads: [[0, 0, w, h]], text: '' }, text: words.join('\n\n'),
+        label: `p. ${meta.labels?.[main - 1] ?? main}` };
+    },
   });
 
   const wide = layout ? Math.max(...layout.rows.map((r) => r.pages.at(-1).left + r.pages.at(-1).width)) + GAP : 0;

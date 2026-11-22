@@ -315,6 +315,15 @@ export function EpubBook({ bookId, load, wide, settings, onRelocate, onDocument,
       sectionIndex: (doc) => (now()?.contents() ?? []).find((c) => c.doc === doc)?.index ?? null,
       panning: () => Boolean(now()?.scrolled), // C38.7a: a swipe scrolls a scrolled book; a fixed layout's turns
       // The nav as one list, each entry with its section, for the contents drawer.
+      // C40.6: the words in view for Steve's Summarize this page, with the place's range as its anchor
+      pageWords: async () => {
+        const place = last.current;
+        const made = now();
+        const doc = place && made?.contents().find((c) => c.index === place.index)?.doc;
+        const range = doc && made.rangesOf(doc.body, [[place.charStart, place.charEnd]])[0];
+        if (!range || !place.cfi) return null;
+        return { anchor: { kind: 'epub', cfi: place.cfi, text: '' }, text: range.toString(), label: 'this page' };
+      },
       readAloud: { // C40.3
         get count() { return now()?.sectionCount() ?? 0; },
         runs: async (unit) => {

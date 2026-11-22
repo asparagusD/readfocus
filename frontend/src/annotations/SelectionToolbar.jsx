@@ -1,8 +1,8 @@
 import { useCallback, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react';
-import { MessageCircle, MessageSquarePlus, Plus, Underline } from 'lucide-react';
+import { ListCollapse, MessageCircle, MessageSquarePlus, Plus, Underline } from 'lucide-react';
 import { outerBox } from '../reader/highlight';
-import { useSteveActions } from '../steve/SteveContext';
+import { passageRequest, useSteveActions } from '../steve/SteveContext';
 import { ColourDots } from './ColourDots';
 import { colourName, lastColour, newAnnotation, storeLastColour } from './palette';
 import { rove } from './roving';
@@ -58,8 +58,8 @@ export function SelectionToolbar({ place, onAnnotate, onNote = null, onComment =
     onDismiss(false);
   };
 
-  const ask = () => {
-    steve.askAbout({ question: 'Explain this passage.', mode: 'explain_highlight', anchor: place.anchors[0], label: 'Explain this passage' });
+  const ask = (kind) => { // C40.6: Explain or Summarize with Steve, Copilot's two
+    steve.askAbout(passageRequest(place.anchors[0], kind));
     back();
     onDismiss();
   };
@@ -126,9 +126,13 @@ export function SelectionToolbar({ place, onAnnotate, onNote = null, onComment =
             {steve && (
               <>
                 <span className="rf-seltool-sep" aria-hidden="true" />
-                <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Ask Steve" onClick={ask}>
+                <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Explain with Steve" onClick={() => ask('explain')}>
                   <MessageCircle size={18} strokeWidth={1.75} aria-hidden="true" />
-                  <span className="rf-seltool-label">Ask Steve</span>
+                  <span className="rf-seltool-label">Explain</span>
+                </button>
+                <button type="button" className="rf-seltool-btn" tabIndex={-1} aria-label="Summarize with Steve" onClick={() => ask('summarize')}>
+                  <ListCollapse size={18} strokeWidth={1.75} aria-hidden="true" />
+                  <span className="rf-seltool-label">Summarize</span>
                 </button>
               </>
             )}

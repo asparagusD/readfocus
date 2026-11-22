@@ -28,7 +28,7 @@ import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { ReadingLamp } from '../illustrations';
 import { StevePanel } from '../steve/StevePanel';
 import { SteveContext } from '../steve/SteveContext';
-import { useSteve } from '../steve/useSteve';
+import { PAGE_TEXT_MAX, useSteve } from '../steve/useSteve';
 import { useAnnotations } from '../annotations/useAnnotations';
 import { useMarkupTool } from '../annotations/useMarkupTool';
 import { usePageMarks } from '../annotations/usePageMarks';
@@ -555,6 +555,18 @@ export function ReadingSession() {
     },
     enabled: steveOn,
   }), [askSteve, steveOn]);
+  // C40.6 (issue 24): Copilot's "Summarize this page": the page most in view (an EPUB's words in view), its words sent as
+  // the selection is, at most PAGE_TEXT_MAX characters.
+  const summarizePage = async () => {
+    const page = await reader.current?.pageWords();
+    const text = (page?.text ?? '').replace(/\s+/g, ' ').trim().slice(0, PAGE_TEXT_MAX);
+    if (!text) {
+      toast({ kind: 'neutral', message: 'This page has no words for Steve to summarize.' });
+      return;
+    }
+    steveActions.askAbout({ question: 'Summarize this page.', mode: 'summarize_page', anchor: page.anchor, pageText: text,
+      label: `Summarize ${page.label}` });
+  };
   const onLookupToggle = () => {
     storeLookupOn(user?.id, !hoverLookup);
     setSwitched({ userId: user?.id, on: !hoverLookup });
@@ -765,7 +777,8 @@ export function ReadingSession() {
           beside={notebookOpen}
         >
           {shownSide === 'steve' ? (
-            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer} />
+            <StevePanel steve={steve} chapter={chapter} onCite={onCite} onClose={closeSide} onSaveNote={saveAnswer}
+              onSummarizePage={summarizePage} />
           ) : (
             <Notepad notes={notepad.notes} state={notepad.state} statuses={notepad.statuses} describe={describeNote}
               onGoTo={goToNote} onRemove={notepad.remove} onReload={notepad.reload} onRetry={notepad.flush}

@@ -443,6 +443,7 @@ export function Reader({
     pageLabelOf: (n) => book.current?.pageLabelOf?.(n) ?? String(n),
     readAloud: () => readingRef.current.toggle(), // C40.2
     fileBytes: () => book.current?.fileBytes?.() ?? Promise.resolve(null), // C40.4c: a PDF's bytes, for a copy
+    pageWords: () => book.current?.pageWords?.() ?? Promise.resolve(null), // C40.6: Summarize this page
   }), [move, flash, shownPlaces, openFind, act]);
 
   const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn

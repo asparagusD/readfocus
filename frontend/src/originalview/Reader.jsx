@@ -91,7 +91,8 @@ function useWide() {
  * C40.2 (issue 24): read aloud (useReadAloud, ReadAloudBar): `readAloud()` on the ref starts it from the selection or the
  * first line in view, or stops it; its bar sits over the book; `onReadAloud(on)` hears it open and close. Regions are
  * left unread, as lookup leaves them. C40.2c: Ctrl+Shift+U starts or stops it; the selection's menu has Read aloud from
- * here (the selection's first word).
+ * here (the selection's first word). C40.3: an EPUB's sections too (EpubBook's readAloud); a change of place tells the
+ * hook the reader may have scrolled.
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
@@ -165,6 +166,7 @@ export function Reader({
   }, [regions, shownPages]);
 
   const relocate = useCallback((next) => {
+    if (readingRef.current?.open) readingRef.current.moved(); // C40.3: the reader scrolling, unless read aloud moved it
     setPlace(next);
     onRelocate?.(next);
   }, [onRelocate]);
@@ -508,7 +510,7 @@ export function Reader({
       {onAnnotate && (
         <SelectionMenu menu={menu} onClose={closeMenu} onAnnotate={onAnnotate} onNote={onNewNote} onComment={commentOn}
           onLookUp={lookupClient ? () => lookup.current?.lookUpSelection() : null}
-          onReadAloud={reading.supported && kind === 'pdf' ? reading.start : null} />
+          onReadAloud={reading.supported ? reading.start : null} />
       )}
       {chipFor && (
         <AnnotationChip ref={chipEl} annotation={chipFor} by={chipOpen.by} rectsOf={rectsOf} onCycle={cycleChip}

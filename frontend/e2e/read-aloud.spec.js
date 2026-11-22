@@ -169,11 +169,46 @@ test("Read aloud from here, on the selection's menu, starts at its first word", 
   expect(await page.evaluate(() => document.getSelection().isCollapsed)).toBe(true); // the selection gives way
 });
 
+// C40.3: an EPUB (e2e/fixtures/books/reflow.epub: a cover, then chapters 1-3 of "The lamp on the desk threw a small
+// circle of light, ..."), opened at chapter 1. Each section is a document of its own, with its own highlights.
 test.describe('an EPUB', () => {
   test.use({ book: 'epub' });
-  test('has no Read aloud until it can be read (C40.3)', async ({ page }) => {
+  /** The word marked in a section's own registry. */
+  const sectionWord = async (page) => (await Promise.all(page.frames().filter((f) => f !== page.mainFrame() && !f.isDetached())
+    .map((f) => f.evaluate(() => [...(CSS.highlights.get('rf-read-aloud') ?? [])].map((r) => r.toString()).join('')).catch(() => ''))))
+    .join('');
+
+  test('reads the section in view and marks each word in it; Ctrl+Shift+U stops it', async ({ page }) => {
     await openReader(page);
-    await page.getByRole('button', { name: 'More tools' }).click();
-    await expect(readAloud(page)).toHaveCount(0);
+    await clickTool(page, readAloud(page));
+    await expect(bar(page)).toBeVisible();
+    await expect.poll(async () => (await said(page))[0]?.text).toBe('Chapter 1');
+    await expect.poll(() => sectionWord(page)).not.toBe('');
+    await bar(page).getByRole('button', { name: 'Pause' }).click();
+    expect('The lamp on the desk threw a small circle of light, and inside Chapter').toContain(await sectionWord(page));
+    await page.keyboard.press('Control+Shift+U');
+    await expect(bar(page)).toBeHidden();
+    await expect.poll(() => sectionWord(page)).toBe('');
+  });
+
+  test('it reads on into the next section', async ({ page }) => {
+    await openReader(page);
+    await page.evaluate(() => { window.__wordMs = 1; });
+    await clickTool(page, readAloud(page));
+    await expect.poll(async () => (await said(page)).map((s) => s.text), { timeout: 30_000 }).toContain('Chapter 2');
+    await expect.poll(() => sectionWord(page), { timeout: 10_000 }).not.toBe('');
+  });
+
+  test("Read aloud from here, on a section's selection, starts at its first word", async ({ page }) => {
+    await openReader(page);
+    const a = await wordPoint(page, 'threw');
+    const b = await wordPoint(page, 'circle');
+    await page.mouse.move(a.left + 1, a.y);
+    await page.mouse.down();
+    await page.mouse.move(b.right - 1, b.y, { steps: 8 });
+    await page.mouse.up();
+    await page.mouse.click(a.x + 4, a.y, { button: 'right' });
+    await page.getByRole('menu', { name: 'Selection' }).getByRole('menuitem', { name: /Read aloud from here/ }).click();
+    await expect.poll(async () => (await said(page))[0]?.text).toMatch(/^threw a small circle of light/);
   });
 });

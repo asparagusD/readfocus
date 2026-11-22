@@ -365,6 +365,7 @@ export async function openEpub(source, container, { onRelocate, onLoad, style = 
     prev: () => view.prev(),
     scrollBy: (px) => (px > 0 ? renderer.next(px) : renderer.prev(-px)), // C38.7a: a little, as Up and Down do
     scrolled,
+    viewRect: () => view.getBoundingClientRect(), // C40.3: the part of the page the book shows, for read aloud's follow
     goTo: (target) => view.goTo(target),
     goToFraction: (fraction) => view.goToFraction(fraction),
     /** C38.7a: the book's last words (scrolled: the last section's foot, where its closing card shows). */

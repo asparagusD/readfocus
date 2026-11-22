@@ -3,11 +3,39 @@ import { buildScript, locate } from './readAloud';
 import { createSpeaker, pickVoice, readReadAloud, sortVoices, storeReadAloud } from './speech';
 
 const FOLLOW_PAUSE_MS = 4000; // after the reader scrolls, the view is left alone this long
+const OWN_MOVE_MS = 700; // a move of the place this soon after read aloud moved the view is its own, not the reader's
 const MAX_EMPTY = 30; // pages or sections with nothing to read passed over in a row before it stops
 const MOVES = new Set(['PageUp', 'PageDown', 'Home', 'End', 'ArrowUp', 'ArrowDown', ' ']);
 export const READ_WORD = 'rf-read-aloud'; // the CSS highlight on the word being spoken
 
 export const readAloudSupported = () => Boolean(globalThis.speechSynthesis && globalThis.SpeechSynthesisUtterance);
+
+/** Takes the mark off the spoken word in every window holding it. */
+function unpaint(painted) {
+  for (const win of painted) { try { win.CSS.highlights.delete(READ_WORD); } catch { /* its document is gone */ } }
+  painted.clear();
+}
+
+/** Marks `dom` (ranges) in their own windows' registries; a section's iframe gets the rule in the page's --read-word. */
+function paintWord(painted, dom) {
+  const byWin = new Map();
+  for (const range of dom) {
+    const win = range.startContainer.ownerDocument?.defaultView;
+    if (win?.CSS?.highlights && typeof win.Highlight === 'function') byWin.set(win, [...(byWin.get(win) ?? []), range]);
+  }
+  unpaint(painted);
+  for (const [win, list] of byWin) {
+    const doc = win.document;
+    if (win !== globalThis.window && !doc.head?.querySelector('style[data-rf-read]')) {
+      const style = doc.createElement('style');
+      style.setAttribute('data-rf-read', '');
+      style.textContent = `::highlight(${READ_WORD}) { background-color: ${getComputedStyle(document.documentElement).getPropertyValue('--read-word').trim()}; }`;
+      doc.head?.append(style);
+    }
+    win.CSS.highlights.set(READ_WORD, new win.Highlight(...list));
+    painted.add(win);
+  }
+}
 
 /**
  * Read aloud (C40.2, issue 24, D1) over a book: the renderer's pages (or sections) read in turn with the system's
@@ -15,6 +43,10 @@ export const readAloudSupported = () => Boolean(globalThis.speechSynthesis && gl
  * the reader scrolled in the last few seconds. `source()` gives the renderer's readAloud: { count, runs(unit, skip),
  * range(ref, start, end), from(), show(unit), follow(rect), scroller() }; `skipOf(unit)` its region boxes (math,
  * code, figures, tables), a promise. Stops when the book closes.
+ * C40.3 (issue 24): an EPUB's sections too. A word is marked in its own document's highlight registry (a section's
+ * iframe gets the ::highlight rule in the page's --read-word); `runOf(runs, at, offset)` on the source finds where a
+ * start place falls among its runs (a PDF's runs match by item); `scroller()` is optional, and `moved()`, called on
+ * every change of place, counts as the reader's scrolling unless read aloud has just moved the view itself.
  */
 export function useReadAloud({ source, skipOf = () => Promise.resolve([]) }) {
   const [state, setState] = useState({ open: false, playing: false, unit: null, error: null, ended: false });
@@ -38,18 +70,21 @@ export function useReadAloud({ source, skipOf = () => Promise.resolve([]) }) {
     return () => synth.removeEventListener?.('voiceschanged', list);
   }, []);
 
-  const unmark = () => globalThis.CSS?.highlights?.delete(READ_WORD);
+  const painted = useRef(new Set()); // the windows (the page's, a section's) holding the mark
+  const own = useRef(0); // when read aloud last moved the view
+  const unmark = () => unpaint(painted.current);
   const mark = useCallback((ranges) => {
     const book = source();
     const here = current.current;
     if (!book || !here) return;
     const dom = ranges.map((r) => book.range(here.runs[r.run].ref, r.start, r.end)).filter(Boolean);
-    if (!dom.length) {
-      if (shown.current !== here.unit) { shown.current = here.unit; book.show(here.unit); } // its page is not drawn yet
+    const following = Date.now() - manual.current > FOLLOW_PAUSE_MS;
+    if (!dom.length) { // its page or section is not drawn: brought back once, unless the reader has just moved away
+      if (following && shown.current !== here.unit) { shown.current = here.unit; own.current = Date.now(); book.show(here.unit); }
       return;
     }
-    if (globalThis.CSS?.highlights && globalThis.Highlight) CSS.highlights.set(READ_WORD, new Highlight(...dom));
-    if (Date.now() - manual.current > FOLLOW_PAUSE_MS) book.follow(dom[0].getBoundingClientRect());
+    paintWord(painted.current, dom);
+    if (following) { own.current = Date.now(); book.follow(dom[0].getBoundingClientRect(), dom[0]); }
   }, [source]);
 
   const playUnit = useCallback(async function play(unit, place, empty = 0) {
@@ -60,9 +95,11 @@ export function useReadAloud({ source, skipOf = () => Promise.resolve([]) }) {
       return;
     }
     let runs = [];
+    own.current = Date.now(); // an EPUB's next section is opened to be read: its move is read aloud's
     try {
       runs = await book.runs(unit, await skipOf(unit).catch(() => []));
     } catch { /* an unreadable page reads as an empty one */ }
+    own.current = Date.now();
     if (mine !== session.current) return;
     const script = buildScript(runs);
     if (!script.paragraphs.length) {
@@ -71,9 +108,10 @@ export function useReadAloud({ source, skipOf = () => Promise.resolve([]) }) {
       return;
     }
     current.current = { unit, runs, script };
+    const found = place && place !== 'last' && (book.runOf?.(runs, place.at, place.offset)
+      ?? { run: runs.findIndex((r) => r.ref.item === place.at?.item), offset: place.offset });
     const at = place === 'last' ? { p: script.paragraphs.length - 1, s: 0, c: 0 }
-      : place ? locate(script, runs.findIndex((r) => r.ref.item === place.at?.item), place.offset) ?? { p: 0, s: 0, c: 0 }
-        : { p: 0, s: 0, c: 0 };
+      : found ? locate(script, found.run, found.offset) ?? { p: 0, s: 0, c: 0 } : { p: 0, s: 0, c: 0 };
     setState((s) => ({ ...s, playing: true, unit, error: null, ended: false }));
     speaker.current.play(script, at);
   }, [source, skipOf]);
@@ -155,7 +193,7 @@ export function useReadAloud({ source, skipOf = () => Promise.resolve([]) }) {
   }, []);
 
   useEffect(() => { // the reader's own scrolling: the view stops following for a few seconds
-    const el = state.open ? source()?.scroller() : null;
+    const el = state.open ? source()?.scroller?.() : null;
     if (!el) return undefined;
     const moved = () => { manual.current = Date.now(); };
     const key = (event) => { if (MOVES.has(event.key)) moved(); };
@@ -175,8 +213,14 @@ export function useReadAloud({ source, skipOf = () => Promise.resolve([]) }) {
     unmark();
   }, []);
 
+  /** The place changed: the reader's own scrolling, unless read aloud moved the view just now (C40.3). */
+  const moved = useCallback(() => {
+    if (Date.now() - own.current > OWN_MOVE_MS) manual.current = Date.now();
+  }, []);
+
   return {
     supported: readAloudSupported(),
+    moved,
     ...state,
     voices,
     voice: pickVoice(voices, settings.voice),

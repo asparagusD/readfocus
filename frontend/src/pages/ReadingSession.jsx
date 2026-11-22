@@ -654,7 +654,7 @@ export function ReadingSession() {
               onColour={markup.setColour} ink={markup.ink} onInk={markup.setInk} text={markup.textStyle}
               onText={restyleText} status={markup.status} />
           )}
-          onReadAloud={kind === 'pdf' && readAloudSupported() ? () => reader.current?.readAloud?.() : null}
+          onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null}
           readingAloud={readingAloud}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}

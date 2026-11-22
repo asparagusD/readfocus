@@ -13446,6 +13446,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/src/originalview/epub/EpubBook.jsx",
+      "to": "file:frontend/src/reader/readAloud.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/src/originalview/epub/EpubView.jsx",
       "to": "file:frontend/src/originalview/bookFile.js"
     },

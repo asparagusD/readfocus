@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Hourglass, Lock, LogOut, MessageSquareText, NotebookPen, Pause, Play } from 'lucide-react';
+import { Hourglass, Lock, LogOut, MessageSquareText, NotebookPen, Pause, Play, Speech } from 'lucide-react';
 import { CAP_S, noticeDue, shownSeconds, spokenTime, stopwatch } from './clock';
 import './FocusBar.css';
 
@@ -13,10 +13,13 @@ import './FocusBar.css';
  * C23.8: `readOnly` (another tab writes the session): the time only, no Pause, Resume or End, no idle prompt.
  * C31.1 (issue 3): Notes and Steve, as on the toolbar, open the side panel beside the book; the clock runs on
  * while it is open. Without `onSteve` (a scan read page by page, or a session waiting for its quiz) Steve is left out.
+ * C40.3b (issue 24): Read aloud (`onReadAloud`, pressed while `readingAloud`), as on the toolbar; listening counts as
+ * reading (F6).
  */
 export function FocusBar({
   session, readAt, locked, startLabel, idle, idleLapsed, busy, onStart, onPause, onResume, onEnd, onLeave, onAnswerIdle,
   placing = false, readOnly = false, folio = null, onNotes, notesOpen, notesRef, notesCount, onSteve, steveOpen, steveRef,
+  onReadAloud = null, readingAloud = false,
 }) {
   const [now, setNow] = useState(() => Date.now());
   const [why, setWhy] = useState(false);
@@ -81,6 +84,12 @@ export function FocusBar({
               <NotebookPen size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Notes</span>
             </button>
           )}
+          {onReadAloud && (
+            <button type="button" className="rf-focus-button" onClick={onReadAloud} aria-pressed={readingAloud}
+              aria-label="Read aloud" aria-keyshortcuts="Control+Shift+U" title={readingAloud ? 'Stop reading aloud (Ctrl+Shift+U)' : 'Read aloud (Ctrl+Shift+U)'}>
+              <Speech size={16} strokeWidth={1.75} aria-hidden="true" /><span className="rf-focus-label">Read aloud</span>
+            </button>
+          )}
           {onSteve && (
             <button type="button" className="rf-focus-button" ref={steveRef} onClick={onSteve} aria-expanded={steveOpen}
               aria-controls={steveOpen ? 'rf-side-panel' : undefined} aria-label="Ask Steve">
@@ -104,7 +113,7 @@ export function FocusBar({
           )}
           {(status === 'active' || status === 'paused' || status === 'awaiting_quiz') && !readOnly && (
             <button type="button" className="rf-focus-button rf-focus-button--primary" onClick={onEnd} disabled={busy}>
-              End session
+              End<span className="rf-focus-end-rest"> session</span>
             </button>
           )}
           <button type="button" className="rf-focus-button rf-focus-exit" onClick={onLeave} aria-label="Exit focus mode">

@@ -91,6 +91,8 @@ export function ReadingSession() {
   const [pageView, setPageView] = useStored('rf-pdf-view', 'one'); // C38.4a: Edge's Page view, on this device
   const [pinned, setPinned] = useStored('rf-toolbar-pinned', true); // C38.4b: Edge's toolbar is pinned until unpinned
   const [readingAloud, setReadingAloud] = useState(false); // C40.2: the reader is reading aloud
+  const [listening, setListening] = useState(false); // C40.3b: the voice is speaking (focus mode counts it as reading)
+  const onReadAloud = useCallback((open, speaking) => { setReadingAloud(open); setListening(Boolean(open && speaking)); }, []);
   const [settings, setSettings] = useStored('rf-epub-settings', EPUB_SETTINGS);
   const { user } = useAuth();
   // Hover lookup (C12.8): this user's stored choice, or what they just switched to on this visit.
@@ -196,7 +198,7 @@ export function ReadingSession() {
     setStanding(true);
   }, [sessionData, kind]);
 
-  const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly });
+  const focus = useFocusSession({ bookId, place, reader, wanted: focusWanted && !pagesOnly, listening });
   const inFocus = !pagesOnly && focus.enabled;
   const markup = useMarkupTool(kind, !inFocus); // C39.3: Edge's markup tools; off while focus mode has the toolbar
   const pageMarks = usePageMarks(bookId, kind, place?.kind === 'pdf' ? place.pages : null); // C39.4: ink near the view
@@ -629,7 +631,8 @@ export function ReadingSession() {
             placing={placingRibbon} readOnly={focus.readOnly} folio={place?.folio ?? null}
             onNotes={() => openNotebook()} notesOpen={notebookOpen} notesRef={notesButton}
             notesCount={notepad.notes.length} onSteve={steveHere ? () => toggleSide('steve', steveButton) : undefined}
-            steveOpen={steveOpen} steveRef={steveButton} />
+            steveOpen={steveOpen} steveRef={steveButton}
+            onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null} readingAloud={readingAloud} />
         ) : (
         <ReaderToolbar
           bookTitle={bookTitle}
@@ -736,7 +739,7 @@ export function ReadingSession() {
           onAnnotationNote={noteOnHighlight}
           contents={sessionData.book?.toc}
           start={sessionData.position?.anchor}
-          onReadAloud={setReadingAloud}
+          onReadAloud={onReadAloud}
         />
       </m.main>
       {shownSide && (

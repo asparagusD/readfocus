@@ -212,3 +212,34 @@ test.describe('an EPUB', () => {
     await expect.poll(async () => (await said(page))[0]?.text).toMatch(/^threw a small circle of light/);
   });
 });
+
+// C40.3b (FOCUS_RULES F6, rules version 2026-11-22): listening counts as reading. The page's clock is Playwright's, so
+// the fake voice speaks a word a minute and goes on through ten quiet minutes.
+test.describe('in focus mode', () => {
+  test('no idle prompt while it speaks, heartbeats carry input; the prompt ten quiet minutes after it pauses', async ({ page, api }) => {
+    await page.clock.install();
+    api.bodyStart = { source: 'outline', body_start: { kind: 'pdf', page: 1, title: 'Chapter 1',
+      anchor: { kind: 'pdf', page: 1, quads: [[0, 0, 0, 0]], text: '' } } };
+    await openReader(page);
+    await clickTool(page, page.getByRole('switch', { name: 'Focus mode' }));
+    const focusBar = page.getByRole('region', { name: 'Focus mode' });
+    await focusBar.getByRole('button', { name: 'Start' }).click();
+    await page.evaluate(() => { window.__wordMs = 60_000; });
+    const button = focusBar.getByRole('button', { name: 'Read aloud' });
+    await button.click();
+    await expect(bar(page)).toBeVisible();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    const prompt = page.getByRole('group', { name: 'Still with the book?' });
+
+    await page.clock.runFor(10 * 60_000 + 6_000);
+    await expect(prompt).toHaveCount(0);
+    expect(api.focus.events.map((e) => e.kind)).not.toContain('idle_prompt');
+    const beats = api.focus.events.filter((e) => e.kind === 'heartbeat');
+    expect(beats.length).toBeGreaterThan(10);
+    expect(beats.slice(-5).every((e) => e.had_input)).toBe(true); // the quiet minutes were listening
+
+    await bar(page).getByRole('button', { name: 'Pause' }).click();
+    await page.clock.runFor(10 * 60_000 + 6_000);
+    await expect(prompt).toBeVisible();
+  });
+});

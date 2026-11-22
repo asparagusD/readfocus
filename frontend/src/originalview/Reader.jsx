@@ -89,7 +89,8 @@ function useWide() {
  * `hoverLookup` false leaves selection, long-press and Enter). `regions` (pdf/regions.js, C18.6d)
  * keeps a PDF's math, code, figures and tables out of lookup, as the EPUB's markup already does.
  * C40.2 (issue 24): read aloud (useReadAloud, ReadAloudBar): `readAloud()` on the ref starts it from the selection or the
- * first line in view, or stops it; its bar sits over the book; `onReadAloud(on)` hears it open and close. Regions are
+ * first line in view, or stops it; its bar sits over the book; `onReadAloud(on, speaking)` hears it open and close (C40.3b:
+ * and whether the voice is speaking, for focus mode). Regions are
  * left unread, as lookup leaves them. C40.2c: Ctrl+Shift+U starts or stops it; the selection's menu has Read aloud from
  * here (the selection's first word). C40.3: an EPUB's sections too (EpubBook's readAloud); a change of place tells the
  * hook the reader may have scrolled.
@@ -135,7 +136,8 @@ export function Reader({
   const readingRef = useRef(reading);
   useEffect(() => { readingRef.current = reading; });
   const readingOpen = reading.open;
-  useEffect(() => { onReadAloud?.(readingOpen); }, [readingOpen, onReadAloud]);
+  const speaking = reading.open && reading.playing;
+  useEffect(() => { onReadAloud?.(readingOpen, speaking); }, [readingOpen, speaking, onReadAloud]);
   useEffect(() => {
     const onFindKey = (event) => {
       if (event.defaultPrevented || event.target?.closest?.('[role="dialog"]')) return;

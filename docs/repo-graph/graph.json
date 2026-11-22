@@ -2666,6 +2666,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/marks-frame-rate.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/markup-tools.spec.js",
       "type": "file",
       "role": "config",
@@ -11563,6 +11569,16 @@
     {
       "type": "imports",
       "from": "file:frontend/e2e/login.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/marks-frame-rate.spec.js",
+      "to": "file:frontend/e2e/bigPdf.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/e2e/marks-frame-rate.spec.js",
       "to": "file:frontend/e2e/fixtures.js"
     },
     {

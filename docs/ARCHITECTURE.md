@@ -366,6 +366,22 @@ lookup off: hover, tap or A ─► AnnotationChip: Ask Steve (explain_highlight)
 contents drawer ─► Annotations tab: reading order, colour filter, page, jump
 ```
 
+C39 (issue 23) adds Edge's markup tools (`docs/ANCHORS.md` A12):
+
+```
+toolbar ─► MarkupTools: Add text · Draw · Highlight · Erase (useMarkupTool: one on, Escape stops it)
+   Highlight ─► each settled selection highlighted at once (Edge's ten colours, the last one H's too)
+   Draw ─► InkLayer (SVG in page points) ─► usePageMarks: POST /books/{id}/marks ─► page_marks (036)
+   Erase ─► strokes and highlights a drag passes over: DELETE, one Undo per drag
+   Add text ─► TextBoxes: place, type, retype, move, restyle ─► POST / PATCH /marks/{id}
+right-click / menu key / Shift+F10 on a selection ─► SelectionMenu: Highlight, a colour, Underline, Add comment,
+   Add note, Ask Steve, Look up, Copy
+Add comment (menu, toolbar, chip) ─► CommentEditor ─► annotations.comment ─► CommentMarkers in the margin
+```
+
+`page_marks` is read 20 pages at a time round the pages in view, and only
+the pages drawn carry their strokes and boxes in the DOM.
+
 The book's DOM is never changed: the PDF layer is ours, and an EPUB section
 gets only `Highlight` objects and one `<style>` element. Steve's entry
 points hide while he is switched off, and a question waits for consent.

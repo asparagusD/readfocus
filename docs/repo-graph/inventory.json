@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 1015,
-    "inventoried": 872,
+    "tracked": 1017,
+    "inventoried": 874,
     "excluded": 143
   },
   "files": [
@@ -2346,7 +2346,7 @@
       "path": "docs/PROGRESS.md",
       "language": "markdown",
       "lines": 6491,
-      "size_bytes": 1247200,
+      "size_bytes": 1248718,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5623,6 +5623,22 @@
       "purpose": "Unit tests for readAloud: line joining, paragraph starts, hyphen joins, region and element skips, whitespace, sentence and long-sentence cuts, the character map, locate and wordAt."
     },
     {
+      "path": "frontend/src/reader/speech.js",
+      "language": "javascript",
+      "lines": 123,
+      "size_bytes": 5710,
+      "role": "asset",
+      "purpose": "C40.1 (issue 24, D1): read aloud's voice through the Web Speech API. readReadAloud and storeReadAloud (the voice and speed, 0.5x-2x, kept on this device), stepRate, sortVoices (English natural voices first), pickVoice, voiceLabel, and createSpeaker: plays a script one sentence at a time, names each spoken word, pauses by cancelling and resumes from the last word, skips paragraphs, and restarts from the last word on a speed or voice change."
+    },
+    {
+      "path": "frontend/src/reader/speech.test.js",
+      "language": "javascript",
+      "lines": 156,
+      "size_bytes": 6136,
+      "role": "asset",
+      "purpose": "Unit tests for speech: stored settings, speed steps, voice order and choice, and the speaker over a fake speechSynthesis: sentence order, word boundaries, pause and resume, speed and voice changes, paragraph skips, errors."
+    },
+    {
       "path": "frontend/src/reader/textSize.js",
       "language": "javascript",
       "lines": 34,
@@ -6921,8 +6937,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 874,
-      "size_bytes": 316113,
+      "lines": 876,
+      "size_bytes": 316861,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

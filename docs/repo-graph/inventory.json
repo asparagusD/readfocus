@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 1007,
-    "inventoried": 864,
+    "tracked": 1008,
+    "inventoried": 865,
     "excluded": 143
   },
   "files": [
@@ -2345,8 +2345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6440,
-      "size_bytes": 1232753,
+      "lines": 6442,
+      "size_bytes": 1235022,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -3175,12 +3175,20 @@
       "purpose": "The colour dots of the selection toolbar and the highlight chip (C39.2, issue 23 D3): the handoff's five, then More colours, which opens Edge's red and the deeper five in a second row of one grid; open by itself when the colour in use is one of them; aria-pressed in the chip."
     },
     {
+      "path": "frontend/src/annotations/SelectionMenu.jsx",
+      "language": "jsx",
+      "lines": 113,
+      "size_bytes": 6047,
+      "role": "asset",
+      "purpose": "Edge's right-click menu on a selection (C39.7, issue 23): Highlight in the last colour or one of the first five, Underline (running text), Add note, Ask Steve (when on), Look up, Copy; at a point (the pointer or the selection's end), first item focused, arrows, Home, End, Escape or Tab back to the book, a press outside closes it."
+    },
+    {
       "path": "frontend/src/annotations/SelectionToolbar.css",
       "language": "css",
-      "lines": 101,
-      "size_bytes": 4329,
+      "lines": 164,
+      "size_bytes": 6964,
       "role": "asset",
-      "purpose": "Styles for the selection toolbar: surface, hairline and lift; 28 px dots in --dot-* with a --line-field ring, the last colour ringed; 36 px buttons (44 px on touch); rises 8 px, fade only under reduced motion; the Ask Steve word hidden under 480 px."
+      "purpose": "Styles for the selection toolbar: surface, hairline and lift; 28 px dots in --dot-* with a --line-field ring, the last colour ringed; 36 px buttons (44 px on touch); rises 8 px, fade only under reduced motion; the Ask Steve word hidden under 480 px. C39.7: the right-click menu (.rf-selmenu)."
     },
     {
       "path": "frontend/src/annotations/SelectionToolbar.jsx",
@@ -3353,10 +3361,10 @@
     {
       "path": "frontend/src/annotations/useSelection.js",
       "language": "javascript",
-      "lines": 75,
-      "size_bytes": 3316,
+      "lines": 85,
+      "size_bytes": 3801,
       "role": "asset",
-      "purpose": "Hook for the settled text selection in the book (C21.2): the renderer's selectionPlace() after the mouse is up and the selection stops moving (150 ms), in the page or any EPUB section; marks touch and running text (A8); dismiss() until it changes or a new press starts."
+      "purpose": "Hook for the settled text selection in the book (C21.2): the renderer's selectionPlace() after the mouse is up and the selection stops moving (150 ms), in the page or any EPUB section; marks touch and running text (A8); dismiss() until it changes or a new press starts. C39.7: selectionPlace(book, skipAt, touch), the place read at once (the right-click menu's), shared with the settled selection."
     },
     {
       "path": "frontend/src/components/AccountMenu.css",
@@ -6857,8 +6865,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 866,
-      "size_bytes": 312440,
+      "lines": 867,
+      "size_bytes": 312994,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

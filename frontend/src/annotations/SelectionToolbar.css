@@ -99,3 +99,66 @@
 @media (pointer: coarse) {
   .rf-seltool button { min-inline-size: 44px; block-size: 44px; }
 }
+
+/* C39.7 (issue 23): Edge's right-click menu on a selection, on the same surface as the selection toolbar: a column
+   of items (a colour or line mark, the name, its key), the first five colours in a row under Highlight. */
+.rf-selmenu {
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 14rem;
+  padding: var(--space-1);
+  border: var(--border-hair) solid var(--line-2);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+}
+.rf-selmenu button { font: inherit; cursor: pointer; }
+.rf-selmenu-item {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 36px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+  color: var(--ink);
+  text-align: start;
+}
+.rf-selmenu-item:hover:not(:disabled), .rf-selmenu-item:focus-visible { background: var(--paper-2); }
+.rf-selmenu-item:focus-visible, .rf-selmenu .rf-seltool-dot:focus-visible { outline: var(--focus-ring-width) solid var(--accent); outline-offset: -1px; }
+.rf-selmenu-item:disabled { cursor: not-allowed; opacity: 0.45; }
+.rf-selmenu-item kbd { color: var(--ink-3); font: inherit; font-size: var(--text-label); }
+.rf-selmenu-swatch { inline-size: 12px; block-size: 12px; border-radius: var(--radius-pill); }
+.rf-selmenu-swatch[data-colour] { background: var(--c-hl); box-shadow: inset 0 0 0 var(--border-hair) var(--c-ul); }
+.rf-selmenu-swatch--line[data-colour] { block-size: 3px; background: var(--c-ul); box-shadow: none; }
+.rf-selmenu-colours { display: flex; gap: var(--space-1); padding: 0 var(--space-1) var(--space-1) calc(var(--space-2) + 14px); }
+.rf-selmenu .rf-seltool-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-input);
+  background: transparent;
+}
+.rf-selmenu .rf-seltool-dot > span {
+  inline-size: 22px;
+  block-size: 22px;
+  border: var(--border-strong) solid var(--surface);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 var(--border-hair) var(--line-field);
+}
+.rf-selmenu .rf-seltool-dot[aria-checked="true"] > span { box-shadow: 0 0 0 var(--border-strong) var(--ink-2); }
+.rf-selmenu-sep { block-size: var(--border-hair); margin: var(--space-1) 0; background: var(--line); }
+@media (pointer: coarse) {
+  .rf-selmenu-item { min-block-size: 44px; }
+  .rf-selmenu .rf-seltool-dot { inline-size: 44px; block-size: 44px; }
+}

@@ -6,6 +6,21 @@ const NOT_PROSE = 'math, pre, code, figure, table, svg';
 const keyOf = (anchors) => anchors.map((a) => a.cfi ?? `${a.page}:${a.quads.flat().join(',')}`).join('|');
 
 /**
+ * The book's selection as a place to annotate, now: the renderer's `selectionPlace()` with its `key`, whether it starts
+ * in running text (`prose`, ANCHORS A8) and was made by touch; null when nothing with text is selected. C39.7: the
+ * right-click menu reads it at once, as a right-click can come before the selection has settled.
+ */
+export function selectionPlace(book, skipAt, touch = false) {
+  const found = book.current?.selectionPlace?.();
+  if (!found || !found.anchors.length || found.anchors.some((a) => !a.text)) return null;
+  const start = found.range.startContainer;
+  const element = start.nodeType === 1 ? start : start.parentElement;
+  const first = found.range.getClientRects()[0];
+  const prose = !element?.closest?.(NOT_PROSE) && !(first && skipAt?.(first.left + 1, first.top + first.height / 2));
+  return { ...found, key: keyOf(found.anchors), prose, touch };
+}
+
+/**
  * The settled text selection in the book (C21.2): the renderer's `selectionPlace()` ({anchors, start, end, range,
  * doc}) once the mouse is up and the selection has stopped moving, in the page (`docs` holds `document` for a PDF)
  * or in any EPUB section's document. `place.touch` says it was made by touch, `place.prose` that it starts in
@@ -20,19 +35,14 @@ export function useSelection({ book, docs, paused, skipAt }) {
   const timer = useRef(0);
 
   const read = () => {
-    const found = book.current?.selectionPlace?.();
-    if (!found || !found.anchors.length || found.anchors.some((a) => !a.text)) {
+    const found = selectionPlace(book, skipAt, pointer.current === 'touch');
+    if (!found) {
       dismissed.current = null;
       setPlace(null);
       return;
     }
-    const key = keyOf(found.anchors);
-    if (dismissed.current === key) return;
-    const start = found.range.startContainer;
-    const element = start.nodeType === 1 ? start : start.parentElement;
-    const first = found.range.getClientRects()[0];
-    const prose = !element?.closest?.(NOT_PROSE) && !(first && skipAt?.(first.left + 1, first.top + first.height / 2));
-    setPlace((now) => (now?.key === key ? now : { ...found, key, prose, touch: pointer.current === 'touch' }));
+    if (dismissed.current === found.key) return;
+    setPlace((now) => (now?.key === found.key ? now : found));
   };
 
   const readRef = useRef(read);

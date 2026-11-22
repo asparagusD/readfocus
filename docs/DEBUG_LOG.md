@@ -6068,3 +6068,89 @@ after (it cannot hit the gap on demand).
 
 ### Commit
 fix(ui): mark a sentence's first word as it starts to be read
+
+## 2026-11-23 C40.8 — CI's e2e fails two notebook tests on GitHub's runner since C37
+
+**Status:** fixed
+
+### Symptom
+CI's e2e job (Edge on ubuntu-latest) has failed on every push since C37: on readfocus-2.0 runs 44745649780 (C37),
+44899858165 (C38), 45011470006 (C39), 45053579923 (C40), and on main run 45054000801 (the C37-C40 release, 2026-11-23),
+so deploy-render was skipped (Render had been deployed first by hand). Each time one or two tests of
+`frontend/e2e/notes-drawing.spec.js`; both pass on this machine (Windows, Edge).
+
+    1) [e2e] › e2e/notes-drawing.spec.js:153:1 › C37.7: the notebook slides in on a spring as the book recedes; a close midway reverses, and reopening brings it back
+
+        Error: expect(received).toBeGreaterThan(expected)
+
+        Expected: > 55.4602
+        Received:   55.4602
+
+          164 |   // The close starts from where it was, not from the end or the start, and heads back out; the book comes forward.
+          165 |   expect(Math.abs(closing[0].x - mid.x)).toBeLessThan(travel * 0.25);
+        > 166 |   expect(closing.at(-1).x).toBeGreaterThan(closing[0].x);
+              |                            ^
+            at /home/runner/work/readfocus/readfocus/frontend/e2e/notes-drawing.spec.js:166:28
+
+    2) [e2e] › e2e/notes-drawing.spec.js:359:1 › a page saves as a PNG image, and Excalidraw's other tools are there
+
+        Error: expect(locator).toBeVisible() failed
+
+        Locator: getByRole('dialog', { name: 'Notebook' })
+        Expected: visible
+        Timeout: 5000ms
+        Error: element(s) not found
+
+          375 |   expect((await download).suggestedFilename()).toMatch(/\.png$/);
+          376 |   await page.keyboard.press('Escape'); // closes Excalidraw's dialog, not the notebook
+        > 377 |   await expect(notebook(page)).toBeVisible();
+              |                                ^
+            at /home/runner/work/readfocus/readfocus/frontend/e2e/notes-drawing.spec.js:377:32
+
+Test 1 failed in 4 of the 5 runs, test 2 in 2 of 5.
+
+### Repro
+Not on this machine as the suite runs (both pass in the full run). With the CPU slowed through CDP
+(`Emulation.setCPUThrottlingRate`) in a throwaway copy of the spec: test 1 at 6x took 1 sample in the close's 120 ms
+(`closing[0]` was `closing.at(-1)`, CI's failure) and 3 in the open's 140 ms, 3 of 3 failed. The unmodified test run
+alone (`-g "slides in on a spring" --repeat-each=4`, no throttle) failed 4 of 4 on "the close starts from where it
+was": at Escape the last sample said about 106 points, the first after it about 40. Test 2: focus after the export
+was on Excalidraw's Export button, outside the notebook's layer, so the notebook left Escape alone and the test
+passed; the runner's failure (the notebook closed) needs the focus on the page body, done on purpose in the
+regression test below.
+
+### Hypotheses
+1. Test 1 samples fixed wall-clock windows; on a slow machine a step holds one frame, so its first and last samples
+   are the same. Evidence: CI's 55.4602 = 55.4602; 1 sample at 6x. Result: confirmed.
+2. Test 1's "where it was" (the last sample before Escape) is stale: the spring runs on its own clock (`motion`
+   drives the transform off the main thread) while the editor mounts on the main thread, so a long frame leaves the
+   last sample tens of points behind. Evidence: 106 then 40 with no throttle; with Playwright's fake clock the
+   position barely followed the clock and then jumped. Result: confirmed; the app does what the test means (the
+   close starts midway and turns back out).
+3. Test 2: Escape reached the notebook with Excalidraw's export dialog still open but the focus on the page body
+   (lost from the dialog, as a button that is disabled while it works loses it), and the notebook's handler closed
+   the notebook since the target was not in the canvas. Evidence: the CI symptom; the regression test reproduces it
+   exactly with the focus moved to the body. Result: confirmed as a real weakness of the app; the runner's own path
+   to it is inferred.
+
+### Root cause
+Test 1 (`frontend/e2e/notes-drawing.spec.js`): its sampler assumed frames arrive often, and its assertion took the
+last frame's sample as the position at Escape. Test 2 (`frontend/src/notes/Notebook.jsx` Escape handler): an
+Excalidraw dialog or menu open while the focus is outside it did not count, so Escape closed the whole notebook.
+
+### Fix
+`frontend/src/notes/DrawingEditor.jsx`: `closeOverlay()` closes an open Excalidraw dialog, menu, popup or context menu
+and says whether it did; `Notebook.jsx`: Escape that would close the notebook closes that overlay first. The test's
+sampler now takes at least three frames a step, and "the close starts from where it was" is asserted as what it
+means: strictly between the two ends (not snapped to either), and turning back out past its lowest point (the spring's
+momentum may carry it in a frame or two first). A first attempt that sampled right after Escape, in the same task,
+failed at every speed (that read is not the painted position) and was taken back.
+
+### Regression test
+`frontend/e2e/notes-drawing.spec.js`: "Escape with Excalidraw's dialog open but the focus gone from it closes the
+dialog, not the notebook": failed with `Notebook.jsx` and `DrawingEditor.jsx` stashed (the notebook closed, the CI
+symptom), passes with them. Test 1: 20 of 20 passed at 1x, 3x, 4x and 6x CPU (5 each); the unmodified test failed 4 of
+4 alone. `npx playwright test e2e/notes-drawing.spec.js`: all passed. Proof on GitHub's runner: CI on the push.
+
+### Commit
+fix(notes): keep the notebook open when Escape closes an Excalidraw dialog

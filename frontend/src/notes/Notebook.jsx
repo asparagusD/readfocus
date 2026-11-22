@@ -142,6 +142,8 @@ export function Notebook({ title, pages, state, statuses, range, describe, curre
       if (at && at !== document.body && !layer.current?.contains(at)) return; // Steve's panel, say
       if (layer.current?.querySelector('.rf-drawing-canvas')?.contains(event.target) && tools.current?.idle?.() === false) return;
       event.preventDefault();
+      // C40.8: Excalidraw's dialog or menu, open though the focus has left it, is closed first; the notebook stays.
+      if (tools.current?.closeOverlay?.()) return;
       close();
     };
     window.addEventListener('keydown', onKey, true);

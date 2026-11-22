@@ -98,7 +98,7 @@
       "path": "CLAUDE.md",
       "language": "markdown",
       "lines": 225,
-      "size_bytes": 20101,
+      "size_bytes": 20126,
       "role": "doc",
       "purpose": "Project rules for ReadFocus 2.0: goal, hard constraints, working method, stack, branch model, standard checks, commit format, skills."
     },
@@ -2297,8 +2297,8 @@
     {
       "path": "docs/DEBUG_LOG.md",
       "language": "markdown",
-      "lines": 6070,
-      "size_bytes": 287874,
+      "lines": 6156,
+      "size_bytes": 293501,
       "role": "doc",
       "purpose": "Debug log rules, entry template, and one entry per failure."
     },
@@ -2361,8 +2361,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6507,
-      "size_bytes": 1272571,
+      "lines": 6508,
+      "size_bytes": 1273827,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -2785,8 +2785,8 @@
     {
       "path": "frontend/e2e/notes-drawing.spec.js",
       "language": "javascript",
-      "lines": 556,
-      "size_bytes": 33141,
+      "lines": 582,
+      "size_bytes": 34932,
       "role": "config",
       "purpose": "E2E for the notebook (C37.2; drawing notes since C22.3): 70 % with the book blurred and inert; Excalidraw loads only for a page and asks no other host; shapes, arrows, freehand and text saved as scene JSON; leaving a page uploads its thumbnail, which the list shows and opens; pages turn by arrows and tabs, Go to this place, reopens where left, reference back to the book; delete with Undo; Paste passage; Mermaid; Steve over the 30 %; Lamplight and Escape; full screen on a phone; C37.4: typed notes become pages on the first opening, each deleted after its page, an empty one with no page, a failed save kept and moved next time; a typed note left in the list is read-only and its click moves it; C37.5: each page keeps its own paper (new ruled, older plain, a choice saved and kept by strokes); C37.6: a dropped picture uploaded as WebP (or PNG), kept by path and back after a reload; Export image downloads a PNG; frames, laser and Mermaid there, Text to diagram not."
     },
@@ -4545,8 +4545,8 @@
     {
       "path": "frontend/src/notes/DrawingEditor.jsx",
       "language": "jsx",
-      "lines": 177,
-      "size_bytes": 10278,
+      "lines": 185,
+      "size_bytes": 10848,
       "role": "asset",
       "purpose": "A notebook page's editor (C22.3; C37.2), lazy: Excalidraw 0.18 with AI, export, file and image tools off, our light or dark theme, scene changes to onChange, a ResizeObserver that refreshes its offsets, autofocus only when asked; register hands over finish (a PNG thumbnail), paste (the passage as a text element) and idle (Escape has nothing left to do); C37.3: add(lines) writes notebookItems lines as text elements below the page's content (pageText.js, its faces loaded first), once the opening scene is in, and saves at once; C37.5: a transparent canvas over the page's paper, whose lines follow the view, and the paper kept in every save; C37.6: Excalidraw's full tools but its AI (pictures uploaded through onUpload and read back from signed URLs, the library kept in this browser, frames, laser, Mermaid, Export image as PNG or SVG; no web embeds), pictures in the thumbnail; add() also places a picture from the book, kept by its path. C37.7: register also hands over refresh() (Excalidraw re-reads its offsets once the notebook has settled)."
     },
@@ -4593,8 +4593,8 @@
     {
       "path": "frontend/src/notes/Notebook.jsx",
       "language": "jsx",
-      "lines": 297,
-      "size_bytes": 16235,
+      "lines": 299,
+      "size_bytes": 16403,
       "role": "asset",
       "purpose": "The notebook (C37.2, issue 26): one per book, its pages the drawing notes in book order, a dialog over 70 % of the screen (full screen under 760 px) while the book is blurred and inert; arrows and a page tablist, Go to this place, New page, Paste passage, delete with Undo, the page's reference back to the book; Escape (once Excalidraw is idle), the close button or a click on the blurred book tuck it away and focus goes back; leaving a changed page makes its thumbnail; save line and conflict actions. C37.3: takes something from the book for a page (turns there, the editor adds its lines once); All notes opens the notepad's list; C37.4: says when typed notes are being moved, and a page asked for that is gone shows the opening page; C37.5: the paper picker (ruled, squared, plain, a radio group saved with the page) and the page's number and date at its foot; C37.6: hands the page's signed URLs and the picture upload to the editor. C37.7: slides in on a spring (Motion presence; a crossfade under reduced motion), a close midway reverses, inert while leaving, focus back at once, the editor's offsets refreshed once settled."
     },

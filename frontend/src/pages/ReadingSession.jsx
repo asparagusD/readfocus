@@ -596,7 +596,8 @@ export function ReadingSession() {
     </div>
   );
 
-  // C40.4c: Save and Save as a copy with my marks (a PDF), from the toolbar or Ctrl+S and Ctrl+Shift+S.
+  // C40.4c: Save and Save as a copy with my marks (a PDF; C40.4d: an EPUB's highlights as Markdown), from the toolbar
+  // or Ctrl+S and Ctrl+Shift+S.
   const saveCopy = useSaveCopy({ bookId, kind, title: sessionData?.book?.title, reader, annotations: notes.annotations, pageCount: place?.total ?? 0 });
 
   if (loading) return preparing;
@@ -663,7 +664,8 @@ export function ReadingSession() {
           )}
           onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null}
           readingAloud={readingAloud}
-          file={kind === 'pdf' ? { onSave: saveCopy.save, busy: saveCopy.busy, canPick: saveCopy.canPick } : null}
+          file={{ onSave: saveCopy.save, busy: saveCopy.busy, canPick: saveCopy.canPick,
+            hint: kind === 'epub' ? 'Save my highlights as Markdown' : 'Save a copy with my marks' }}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -745,7 +747,7 @@ export function ReadingSession() {
           contents={sessionData.book?.toc}
           start={sessionData.position?.anchor}
           onReadAloud={onReadAloud}
-          onSaveCopy={kind === 'pdf' ? saveCopy.save : null}
+          onSaveCopy={saveCopy.save}
         />
       </m.main>
       {shownSide && (

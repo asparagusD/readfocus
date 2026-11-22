@@ -86,7 +86,7 @@ function useFullScreen() {
  * Look up and the rest), else at the top of More tools; in More tools on a phone.
  * C40.2 (issue 24): `onReadAloud`: Edge's Read aloud, right after the markup tools and moving with them; pressed while
  * it reads (`readingAloud`). C40.4c: `file` ({ onSave(as), busy, canPick }): Edge's Save and Save as, a copy with my
- * marks, at the bar's end while they fit, the first tools to move into More tools.
+ * marks, at the bar's end while they fit, the first tools to move into More tools. C40.4d: `file.hint` names what is saved.
  */
 export function ReaderToolbar({
   bookTitle, chapter, size, onSize, onBack, visible, onFocusChange, onContents, contentsOpen, contentsRef,
@@ -135,13 +135,13 @@ export function ReaderToolbar({
   const fileTools = file && ( // C40.4c: Edge's Save and Save as
     <div className="rf-toolbar-file" ref={fileBox} role="group" aria-label="Save a copy">
       <button type="button" className="rf-tool" onClick={() => file.onSave(false)} disabled={file.busy}
-        aria-label="Save" aria-keyshortcuts="Control+S" title="Save a copy with my marks (Ctrl+S)">
+        aria-label="Save" aria-keyshortcuts="Control+S" title={`${file.hint ?? 'Save a copy with my marks'} (Ctrl+S)`}>
         <Save size={18} strokeWidth={1.75} aria-hidden="true" />
         <span className="rf-tool-label">Save</span>
       </button>
       {file.canPick && (
         <button type="button" className="rf-tool" onClick={() => file.onSave(true)} disabled={file.busy}
-          aria-label="Save as" aria-keyshortcuts="Control+Shift+S" title="Save a copy with my marks as… (Ctrl+Shift+S)">
+          aria-label="Save as" aria-keyshortcuts="Control+Shift+S" title={`${file.hint ?? 'Save a copy with my marks'} as… (Ctrl+Shift+S)`}>
           <SaveAll size={18} strokeWidth={1.75} aria-hidden="true" />
           <span className="rf-tool-label">Save as</span>
         </button>

@@ -1,5 +1,6 @@
 // Save a copy with my marks (C40.4c, issue 24, D2: Edge's Save and Save as) on the sample PDF (six pages). The reader's
 // highlight with a comment, an ink stroke and a text box are seeded; the copy is read back here with pdf-lib.
+// C40.4d: an EPUB's highlights as Markdown.
 import { readFile } from 'node:fs/promises';
 import { PDFDocument, PDFName } from 'pdf-lib';
 import { test, expect, openReader, clickTool, book } from './fixtures.js';
@@ -92,11 +93,34 @@ test.describe('Save as', () => {
   });
 });
 
+// C40.4d: an EPUB reflows, so Save gives its highlights and comments as Markdown, chapter by chapter.
 test.describe('an EPUB', () => {
   test.use({ book: 'epub' });
-  test('has no Save for a PDF copy', async ({ page }) => {
+  test('Save gives its highlights and comments as Markdown, chapter by chapter; Ctrl+S too', async ({ page, api }) => {
+    api.annotations.push({ id: 'e1', style: 'highlight', color: 'sage', orphaned: false, comment: 'The heart of it',
+      anchors: [{ kind: 'epub', cfi: 'epubcfi(/6/4!/4/4,/1:0,/1:20)', text: 'The lamp on the desk' }],
+      position_start: 1e6 + 10, position_end: 1e6 + 30, text_snapshot: 'The lamp on the desk' });
+    api.annotations.push({ id: 'e2', style: 'underline', color: 'sky', orphaned: false, comment: null,
+      anchors: [{ kind: 'epub', cfi: 'epubcfi(/6/6!/4/4,/1:0,/1:20)', text: 'a small circle of light' }],
+      position_start: 2e6 + 40, position_end: 2e6 + 60, text_snapshot: 'a small circle of light' });
     await openReader(page);
-    await page.getByRole('button', { name: 'More tools' }).click();
-    await expect(save(page)).toHaveCount(0);
+    const downloaded = page.waitForEvent('download');
+    await clickTool(page, save(page));
+    const file = await downloaded;
+    expect(file.suggestedFilename()).toBe('Walden (my highlights).md');
+    const md = await readFile(await file.path(), 'utf8');
+    expect(md).toContain('# Walden: my highlights');
+    const blocks = md.split('## ').slice(1).map((block) => block.split('\n').filter(Boolean));
+    expect(blocks[0].slice(0, 2)).toEqual(['Chapter 1', '> The lamp on the desk']);
+    expect(blocks[0][2]).toMatch(/^Highlight \(Sage\)/); // and its page, once the pages are counted
+    expect(blocks[0][3]).toBe('**Comment:** The heart of it');
+    expect(blocks[1].slice(0, 2)).toEqual(['Chapter 2', '> a small circle of light']);
+    expect(blocks[1][2]).toMatch(/^Underline \(Sky\)/);
+    await expect(page.getByText('Saved your highlights: Walden (my highlights).md')).toBeVisible();
+
+    await book(page).focus();
+    const again = page.waitForEvent('download');
+    await page.keyboard.press('Control+s');
+    expect((await again).suggestedFilename()).toBe('Walden (my highlights).md');
   });
 });

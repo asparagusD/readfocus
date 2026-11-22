@@ -1,12 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import { fetchApi } from '../lib/api';
 import { useToast } from '../components/ui/toastContext';
+import { chapterFor, marksMarkdown } from './marksMarkdown';
 
 const MARK_PAGES = 100; // pages of marks asked for at a time (the API returns at most 5,000 a request)
 
 /** A file name for the copy: the title without the characters a file system refuses. */
-export const copyName = (title, ext = 'pdf') => `${String(title || 'Book').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)} (with my marks).${ext}`;
-
+export const copyName = (title, ext = 'pdf', what = 'with my marks') => `${String(title || 'Book').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)} (${what}).${ext}`;
 /** Our colour names as Paper's CSS colours (a published page is light), read from the tokens. */
 export function paperColours(doc = document) {
   const probe = doc.createElement('span');
@@ -48,6 +48,7 @@ async function deliver(blob, name, handle) {
  * underlines, comments, ink and text boxes written in (saveCopy.js, with pdf-lib loaded only now). Save downloads it;
  * Save as asks where first (the browser's file picker, where it has one: asked before anything else, while the click
  * still counts). An encrypted PDF downloads as published, with a note. `reader` is the Reader's ref.
+ * C40.4d: an EPUB reflows, so its copy is its highlights and comments as Markdown (marksMarkdown.js), chapter by chapter.
  */
 export function useSaveCopy({ bookId, kind, title, reader, annotations, pageCount }) {
   const { toast } = useToast();
@@ -56,18 +57,36 @@ export function useSaveCopy({ bookId, kind, title, reader, annotations, pageCoun
   const canPick = typeof globalThis.showSaveFilePicker === 'function';
 
   const save = useCallback(async (as = false) => {
-    if (working.current || kind !== 'pdf') return;
-    const name = copyName(title);
+    if (working.current) return;
+    const epub = kind === 'epub';
+    const name = epub ? copyName(title, 'md', 'my highlights') : copyName(title);
     let handle = null;
     if (as && canPick) {
       try {
-        handle = await globalThis.showSaveFilePicker({ suggestedName: name, types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+        handle = await globalThis.showSaveFilePicker({ suggestedName: name, types: [epub
+          ? { description: 'Markdown', accept: { 'text/markdown': ['.md'] } } : { description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
       } catch (error) {
         if (error?.name === 'AbortError') return; // the reader closed the picker
       }
     }
     working.current = true;
     setBusy(true);
+    if (epub) {
+      try {
+        const toc = reader.current?.toc() ?? [];
+        const text = marksMarkdown({ title, annotations: (annotations ?? []).filter((a) => a.anchors?.[0]?.kind === 'epub'),
+          chapterOf: (a) => chapterFor(toc, a), pageOf: (a) => reader.current?.pageLabel(a) ?? '' });
+        await deliver(new Blob([text], { type: 'text/markdown' }), name, handle);
+        toast({ kind: 'success', message: handle ? `Saved ${handle.name ?? name}.` : `Saved your highlights: ${name}` });
+      } catch (error) {
+        console.warn('save highlights failed', error);
+        toast({ kind: 'warning', message: "Your highlights weren't saved. Try again." });
+      } finally {
+        working.current = false;
+        setBusy(false);
+      }
+      return;
+    }
     const probe = paperColours();
     try {
       const marks = [];

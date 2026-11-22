@@ -1,8 +1,8 @@
 {
   "version": 1,
   "counts": {
-    "tracked": 1013,
-    "inventoried": 870,
+    "tracked": 1015,
+    "inventoried": 872,
     "excluded": 143
   },
   "files": [
@@ -2345,8 +2345,8 @@
     {
       "path": "docs/PROGRESS.md",
       "language": "markdown",
-      "lines": 6446,
-      "size_bytes": 1240245,
+      "lines": 6491,
+      "size_bytes": 1247200,
       "role": "doc",
       "purpose": "Sprint tracker: open issues, one row per subchunk for C0-C1, and the C2 plan."
     },
@@ -5607,6 +5607,22 @@
       "purpose": "Unit tests for openAhead: each part warmed once, PDF.js only for a PDF, a failed load tried again; /open asked once per click and taken once by the reader; a stale or failed /open not used."
     },
     {
+      "path": "frontend/src/reader/readAloud.js",
+      "language": "javascript",
+      "lines": 201,
+      "size_bytes": 9019,
+      "role": "asset",
+      "purpose": "C40.1 (issue 24): read aloud's text. pdfRuns (a PDF page's text items, with spaces, paragraph starts and region skips) and epubRuns (an EPUB section's text nodes, code, math, figures and tables skipped) become runs; buildScript cuts them into paragraphs and sentences of at most 240 characters, each character mapped to its run; locate and wordAt go from a place to the spoken text and from a spoken word back to its runs."
+    },
+    {
+      "path": "frontend/src/reader/readAloud.test.js",
+      "language": "javascript",
+      "lines": 119,
+      "size_bytes": 6704,
+      "role": "asset",
+      "purpose": "Unit tests for readAloud: line joining, paragraph starts, hyphen joins, region and element skips, whitespace, sentence and long-sentence cuts, the character map, locate and wordAt."
+    },
+    {
       "path": "frontend/src/reader/textSize.js",
       "language": "javascript",
       "lines": 34,
@@ -6905,8 +6921,8 @@
     {
       "path": "tools/repo_graph/purposes.json",
       "language": "json",
-      "lines": 872,
-      "size_bytes": 315422,
+      "lines": 874,
+      "size_bytes": 316113,
       "role": "script",
       "purpose": "Hand-written one-line purpose for every inventoried file, written after reading it."
     },

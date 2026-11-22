@@ -117,6 +117,14 @@ export default function DrawingEditor({ content, dark, passage, register, onChan
       return !state.editingTextElement && !state.newElement && !state.multiElement && !state.openDialog
         && !state.openMenu && !state.openPopup && !state.openSidebar && !state.contextMenu && state.activeTool?.type === 'selection';
     },
+    // C40.8 (DEBUG_LOG 2026-11-23): a dialog, menu or popup of Excalidraw's still open when Escape reaches the notebook
+    // from outside it (its focus lost, as after Export to PNG on a slow machine) is closed here; true when one was.
+    closeOverlay: () => {
+      const state = api.current?.getAppState();
+      if (!state || !(state.openDialog || state.openMenu || state.openPopup || state.contextMenu)) return false;
+      api.current.updateScene({ appState: { openDialog: null, openMenu: null, openPopup: null, contextMenu: null } });
+      return true;
+    },
     add: async (lines) => {
       const editor = await ready.promise;
       await facesFor(lines.filter((l) => l.text));

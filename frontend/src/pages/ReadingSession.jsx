@@ -17,6 +17,7 @@ import { folioShort } from '../originalview/place';
 import { usePlaceSaver } from '../reader/usePlaceSaver';
 import { ReaderToolbar } from '../reader/ReaderToolbar';
 import { readAloudSupported } from '../reader/useReadAloud';
+import { useSaveCopy } from '../reader/useSaveCopy';
 import { useChromeVisible } from '../reader/useChromeVisible';
 import { ContentsDrawer } from '../reader/ContentsDrawer';
 import { useMedia } from '../reader/useMedia';
@@ -595,6 +596,9 @@ export function ReadingSession() {
     </div>
   );
 
+  // C40.4c: Save and Save as a copy with my marks (a PDF), from the toolbar or Ctrl+S and Ctrl+Shift+S.
+  const saveCopy = useSaveCopy({ bookId, kind, title: sessionData?.book?.title, reader, annotations: notes.annotations, pageCount: place?.total ?? 0 });
+
   if (loading) return preparing;
 
   const bookTitle = sessionData.book?.title || 'Your book';
@@ -659,6 +663,7 @@ export function ReadingSession() {
           )}
           onReadAloud={readAloudSupported() ? () => reader.current?.readAloud?.() : null}
           readingAloud={readingAloud}
+          file={kind === 'pdf' ? { onSave: saveCopy.save, busy: saveCopy.busy, canPick: saveCopy.canPick } : null}
           contentsRef={contentsButton}
           lookupOn={hoverLookup}
           onLookupToggle={onLookupToggle}
@@ -740,6 +745,7 @@ export function ReadingSession() {
           contents={sessionData.book?.toc}
           start={sessionData.position?.anchor}
           onReadAloud={onReadAloud}
+          onSaveCopy={kind === 'pdf' ? saveCopy.save : null}
         />
       </m.main>
       {shownSide && (

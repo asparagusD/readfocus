@@ -14,7 +14,7 @@ const DIST = join(ROOT, 'dist');
 
 // Measured at C25.2 (see docs/BENCHMARKS.md) plus about 10%: raise it on purpose, in a commit that says why.
 export const INITIAL_JS_GZIP_BUDGET = 200_000; // 180.4 KB at C25.2
-export const LAZY_PACKAGES = ['pdfjs-dist', 'foliate-js (vendored)', '@excalidraw/excalidraw', 'tesseract.js']; // TipTap left with typed notes (C37.4)
+export const LAZY_PACKAGES = ['pdfjs-dist', 'foliate-js (vendored)', '@excalidraw/excalidraw', 'tesseract.js', 'pdf-lib']; // TipTap left with typed notes (C37.4); pdf-lib for a copy with marks (C40.4c)
 
 const kb = (n) => `${(n / 1000).toFixed(1)} KB`;
 

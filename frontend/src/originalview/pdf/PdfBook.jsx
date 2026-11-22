@@ -431,6 +431,7 @@ export function PdfBook({ bookId, load, zoom = 'fit-page', view: pageView = 'one
       },
       scroller: () => box.current,
     },
+    fileBytes: () => doc.getData(), // C40.4c: the whole file, for a copy with marks (every range read)
   });
 
   const wide = layout ? Math.max(...layout.rows.map((r) => r.pages.at(-1).left + r.pages.at(-1).width)) + GAP : 0;

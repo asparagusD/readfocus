@@ -2810,6 +2810,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/e2e/save-copy.spec.js",
+      "type": "file",
+      "role": "config",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/e2e/scroll-frame-rate.spec.js",
       "type": "file",
       "role": "config",
@@ -4928,6 +4934,12 @@
       "language": "javascript"
     },
     {
+      "id": "file:frontend/src/reader/useSaveCopy.js",
+      "type": "file",
+      "role": "asset",
+      "language": "javascript"
+    },
+    {
       "id": "file:frontend/src/reader/useWordAtPoint.js",
       "type": "file",
       "role": "asset",
@@ -6382,6 +6394,11 @@
       "type": "calls_endpoint",
       "from": "file:frontend/src/pages/Results.jsx",
       "to": "endpoint:GET /sessions/{session_id}"
+    },
+    {
+      "type": "calls_endpoint",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "endpoint:GET /books/{book_id}/marks"
     },
     {
       "type": "calls_endpoint",
@@ -11783,6 +11800,11 @@
     },
     {
       "type": "imports",
+      "from": "file:frontend/e2e/save-copy.spec.js",
+      "to": "file:frontend/e2e/fixtures.js"
+    },
+    {
+      "type": "imports",
       "from": "file:frontend/e2e/scroll-frame-rate.spec.js",
       "to": "file:frontend/e2e/bigPdf.js"
     },
@@ -14324,6 +14346,11 @@
     {
       "type": "imports",
       "from": "file:frontend/src/pages/ReadingSession.jsx",
+      "to": "file:frontend/src/reader/useSaveCopy.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/pages/ReadingSession.jsx",
       "to": "file:frontend/src/steve/SteveContext.js"
     },
     {
@@ -14670,6 +14697,16 @@
       "type": "imports",
       "from": "file:frontend/src/reader/useReadAloud.js",
       "to": "file:frontend/src/reader/speech.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/components/ui/toastContext.js"
+    },
+    {
+      "type": "imports",
+      "from": "file:frontend/src/reader/useSaveCopy.js",
+      "to": "file:frontend/src/lib/api.js"
     },
     {
       "type": "imports",

@@ -71,6 +71,10 @@
 .rf-toolbar-end > .rf-toolbar-markup { display: flex; align-items: center; gap: var(--space-1); }
 .rf-toolbar-end .rf-read-aloud-button .rf-tool-label { display: none; }
 .rf-read-aloud-button[aria-pressed="true"] { background: var(--accent-soft); }
+/* C40.4c: Save and Save as, icons in the bar, named in More tools */
+.rf-toolbar-file { display: flex; align-items: center; gap: var(--space-1); }
+.rf-toolbar-end > .rf-toolbar-file .rf-tool-label { display: none; }
+.rf-toolbar-more .rf-toolbar-file { flex-direction: column; align-items: stretch; }
 .rf-markup-icon { position: relative; display: inline-flex; }
 .rf-markup-swatch {
   position: absolute;

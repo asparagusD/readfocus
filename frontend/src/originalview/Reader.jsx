@@ -93,13 +93,13 @@ function useWide() {
  * and whether the voice is speaking, for focus mode). Regions are
  * left unread, as lookup leaves them. C40.2c: Ctrl+Shift+U starts or stops it; the selection's menu has Read aloud from
  * here (the selection's first word). C40.3: an EPUB's sections too (EpubBook's readAloud); a change of place tells the
- * hook the reader may have scrolled.
+ * hook the reader may have scrolled. C40.4c: `onSaveCopy(as)` hears Ctrl+S and Ctrl+Shift+S; `fileBytes()` on the ref.
  */
 export function Reader({
   kind, bookId, load, title, zoom = 'fit-page', settings = { style: 'publisher', fontSize: 18, lineHeight: null, margins: 'normal' },
   onRelocate, onBookmark, onReady, onBack, label, ref, closing = null, opening = false, status = null, lookupClient = null, hoverLookup = true, regions = null, ocr = null, onAnnotate = null, markup = null, marks = null, onStroke = null, eraser = null, textBoxes = null, annotations = null,
   onAnnotationChange = null, onAnnotationDelete = null, notes = null, onNewNote = null, onOpenNotes = null, onAnnotationNote = null,
-  placing = null, contents = null, start = null, pageView = 'one', mark = null, onReadAloud = null,
+  placing = null, contents = null, start = null, pageView = 'one', mark = null, onReadAloud = null, onSaveCopy = null,
 }) {
   const wide = useWide();
   const book = useRef(null);
@@ -128,6 +128,8 @@ export function Reader({
   const findNext = finder.next;
   const findPrev = finder.prev;
   const findKeyRef = useRef(null);
+  const saveRef = useRef(onSaveCopy);
+  useEffect(() => { saveRef.current = onSaveCopy; });
   // C40.2: read aloud over the renderer's pages, a PDF's regions unread.
   const readSource = useCallback(() => book.current?.readAloud ?? null, []);
   const skipOf = useCallback((unit) => (kind === 'pdf' && regions
@@ -153,6 +155,9 @@ export function Reader({
       } else if (shortcut === 'read-aloud' && readingRef.current?.supported) { // C40.2c: Ctrl+Shift+U, as Edge's
         event.preventDefault();
         readingRef.current.toggle();
+      } else if ((shortcut === 'save' || shortcut === 'save-as') && saveRef.current) { // C40.4c: Ctrl+S, Ctrl+Shift+S
+        event.preventDefault();
+        saveRef.current(shortcut === 'save-as');
       } else if (finding && event.key === 'F3' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         if (event.shiftKey) findPrev();
@@ -431,6 +436,7 @@ export function Reader({
     thumbnail: (n, width) => book.current?.thumbnail?.(n, width) ?? Promise.resolve(null), // C38.6b: a PDF's Pages tab
     pageLabelOf: (n) => book.current?.pageLabelOf?.(n) ?? String(n),
     readAloud: () => readingRef.current.toggle(), // C40.2
+    fileBytes: () => book.current?.fileBytes?.() ?? Promise.resolve(null), // C40.4c: a PDF's bytes, for a copy
   }), [move, flash, shownPlaces, openFind, act]);
 
   const shared = { bookId, load, wide, onRelocate: relocate, onError: setFailure, ref: book, annotations }; // C21.3: drawn

@@ -67,6 +67,14 @@ test("C40.2c: Ctrl+Shift+U reads aloud, as Edge's; Ctrl+U alone stays the browse
   assert.equal(readerShortcut({ key: 'U', code: 'KeyU', ctrlKey: true, shiftKey: true, altKey: true }), null);
 });
 
+test("C40.4c: Ctrl+S saves a copy and Ctrl+Shift+S saves it as, as Edge's", () => {
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', ctrlKey: true }), 'save');
+  assert.equal(readerShortcut({ key: 'S', code: 'KeyS', ctrlKey: true, shiftKey: true }), 'save-as');
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', metaKey: true }), 'save');
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS' }), null);
+  assert.equal(readerShortcut({ key: 's', code: 'KeyS', ctrlKey: true, altKey: true }), null);
+});
+
 test("C38.9: an EPUB's text size steps through its sizes and stops at the ends", () => {
   assert.equal(fontStep(18, 1), 20);
   assert.equal(fontStep(18, -1), 16);

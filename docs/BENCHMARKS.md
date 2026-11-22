@@ -1974,3 +1974,22 @@ phone.
 
 Command: `npx playwright test e2e/marks-frame-rate.spec.js --project=frame-rate` in `frontend/` (runs in the
 standard `npm run test:e2e` too); result in `frontend/test-results/marks-benchmarks.json` (ignored).
+
+## C40.4: pdf-lib for a copy with marks (2026-11-22, issue 24, D2)
+
+pdf-lib 1.17.1 is a frontend dependency (the backend is untouched, so its RSS on Render is not changed). It is
+loaded only when a copy is made: the build puts it in one lazy chunk, and the initial route stays 182.5 KB gzipped.
+
+| Measure | Value |
+|---|---|
+| pdf-lib's minified build, gzipped (zlib, node) | 201.8 KB |
+| Its lazy chunk in our build, gzipped (`check:bundle`) | 206.2 KB |
+| Initial route JS, gzipped | 182.5 KB (unchanged) |
+| Save on C39.9's 300-page PDF (1.2 MB) with 1,500 marks (1,200 strokes of 150 points, 300 text boxes) and 300 highlights (30 with comments): click to download | 2.5 s |
+| JS heap (CDP): before, peak while saving (sampled every 50 ms), after a collection | 7.0 MB, 176.2 MB, 9.8 MB |
+| The copy | 6.5 MB (the strokes' outlines and their points) |
+
+The peak is pdf-lib holding the whole file as objects while it writes; it is given back once the copy is
+downloaded. A phone with a book this heavily marked may be slow to save. One run, Edge on this machine, 1440 x 900,
+1x CPU. Command: a throwaway Playwright test using `e2e/marks-frame-rate.spec.js`'s book and marks (the Save is
+clicked and the heap sampled through CDP); C40.7 keeps it as a bench.
